@@ -141,7 +141,7 @@ body {
 #calendar {
     background-color: #141418;
     max-width: 1220px;
-    overflow-x: hidden;
+    overflow-x: auto !important;
 
 }
 
@@ -170,7 +170,7 @@ td {
 }
 
 .fc-scroller {
-    overflow-x: hidden !important;
+    overflow-x: scroll !important;
 }
 
 .modal-content {

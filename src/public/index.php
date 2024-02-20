@@ -19,6 +19,8 @@
 
     <!-- <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.10/index.global.min.js"></script>
+    <script src='fullcalendar/dist/index.global.js'></script>
+
     <link rel="stylesheet" href="./styles/style.css">
 </head>
 
