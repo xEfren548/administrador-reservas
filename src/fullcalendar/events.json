@@ -1,0 +1,40 @@
+{
+    "events": [
+        {
+            "id": "1",
+            "resourceId": "1",
+            "title": "Juan Perez",
+            "start": "2024-02-20",
+            "end": "2024-02-22",
+            "url": "https://fullcalendar.io/",
+            "total": 3000
+        },
+        {
+            "id": "2",
+            "resourceId": "2",
+            "title": "Maria del Canto",
+            "start": "2024-02-23",
+            "end": "2024-02-25",
+            "url": "https://fullcalendar.io/",
+            "total": 3000
+        },
+        {
+            "id": "3",
+            "resourceId": "3",
+            "title": "Maria Antonieta",
+            "start": "2024-02-21",
+            "end": "2024-02-24",
+            "url": "https://fullcalendar.io/",
+            "total": 3000
+        },
+        {
+            "id": "4",
+            "resourceId": "4",
+            "title": "Chabelo",
+            "start": "2024-02-23",
+            "end": "2024-02-29",
+            "url": "https://fullcalendar.io/",
+            "total": 3000
+        }
+    ]
+}
