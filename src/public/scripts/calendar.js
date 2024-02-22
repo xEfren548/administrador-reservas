@@ -1,7 +1,10 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
 
-    let calendarEvents = "../../fullcalendar/events.json";
-    
+    // const url =  `${process.env.URL}/eventos`;
+    const url = './eventos';
+
+        
+
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'resourceTimelineYear',
@@ -95,13 +98,13 @@ document.addEventListener('DOMContentLoaded', function() {
         ],
         events:
         function(info, successCallback, failureCallback) {
-            fetch(calendarEvents)
+            fetch(url)
                 .then(function(response) {
                     return response.json()
                 })
                 .then(function(data){
                     // console.log(data);
-                    let events = data.events.map(function(event){
+                    let events = data[0].events.map(function(event){
                         return {
                             id: event.id,
                             resourceId: event.resourceId,
@@ -113,14 +116,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     })
                     successCallback(events);
-                    console.log(events);
+                    // console.log(events);
                 })
                 .catch(function (error) {
                     failureCallback(error);
                 })
         },
         eventContent: function(info) {
-            console.log(info);
+            // console.log(info);
             return {
                 html: `
                 <div class="p-1 rounded bg-success bg-gradient" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: "Overpass", sans-serif;">
