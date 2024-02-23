@@ -2,7 +2,7 @@ const express = require('express');
 require('dotenv').config();
 const mongoose = require('mongoose');
 const Evento = require('./models/Evento')
-
+const eventRoutes = require('./routes/eventRoutes'); 
 const path = require('path');
 const app = express();
 
@@ -42,17 +42,6 @@ app.get('/eventos', async (req, res) => {
     }
 });
 
-app.post('/eventos', async (req, res) => {
-    
-});
+app.use('', eventRoutes);
 
-app.put('/eventos/:id', async (req, res) => {
-    try {
-        const idEvento = req.params.id; // Obtener el ID del evento de los parámetros de la URL
-        const nuevoEvento = req.body; // Obtener los datos actualizados del evento desde el cuerpo de la solicitud
-        const resultado = await Reserva.findByIdAndUpdate(idEvento, nuevoEvento, { new: true }); // Buscar y actualizar el evento en la base de datos
-        res.json(resultado); // Devolver el resultado como JSON
-    } catch (error) {
-        res.status(400).json({ message: error.message }); // Si ocurre un error, devolver un mensaje de error con el código de estado 400 (Bad Request)
-    }
-});
+
