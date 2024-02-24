@@ -1,13 +1,16 @@
-[{
-    "title": "MAZAMITLA CABAÑA SUITE CHANDE CAP.2 PAX"
-},
 {
-    "title": "MAZAMITLA CABAÑA SUITE PAULETTE CAP.2 PAX"
-},
-{
-    "title": "MAZAMITLA CABAÑA SUITE DIKARLO CAP.2 PAX"
-},
-{
-    "title": "MAZAMITLA CABAÑA LUNA MIEL1 CAP.2 PAX"
+    "resources": [
+        {
+            "id": "1",
+            "habitaciones": "Cabañas",
+            "title": "MAZAMITLA CABAÑA SUITE CHANDE CAP.2 PAX",
+            "ocupacion_max": "7"
+        },
+        {
+            "id": "2",
+            "habitaciones": "Cabañas",
+            "title": "MAZAMITLA CABAÑA SUITE CHANDE CAP.2 PAX",
+            "ocupacion_max": "7"
+        }
+    ]
 }
-]

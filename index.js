@@ -1,11 +1,11 @@
 const express = require('express');
 require('dotenv').config();
 const mongoose = require('mongoose');
-const Evento = require('./models/Evento')
-const eventRoutes = require('./routes/eventRoutes'); 
 const path = require('path');
 const app = express();
 
+const eventRoutes = require('./routes/eventRoutes'); 
+const habitacionesRoutes = require('./routes/habitacionesRoutes');
 // Configura Express para servir archivos estáticos desde la carpeta 'public'
 
 app.use(express.static(path.join(__dirname, 'src', 'public')));
@@ -31,17 +31,8 @@ async function connect() {
 
 connect();
 
-app.get('/eventos', async (req, res) => {
-    try {
-        const eventos = await Evento.find();
-        console.log(eventos)
-        res.send(eventos);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error al obtener eventos' });
-    }
-});
 
 app.use('', eventRoutes);
+app.use('', habitacionesRoutes);
 
 
