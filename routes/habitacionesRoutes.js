@@ -16,5 +16,7 @@ router.get('/habitaciones', async (req, res) => {
 
 // Ruta para agregar un nuevo evento
 router.post('/habitaciones', habitacionController.agregarHabitacion);
+router.put('/habitaciones/:id', habitacionController.editarHabitacion);
+router.delete('/habitaciones/:id', habitacionController.eliminarHabitacion);
 
 module.exports = router;
