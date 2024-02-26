@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const Habitacion = require('../models/Habitacion');
-// const eventController = require('../controllers/eventController');
+const habitacionController = require('../controllers/habitacionController');
 
 router.get('/habitaciones', async (req, res) => {
     try {
@@ -15,6 +15,6 @@ router.get('/habitaciones', async (req, res) => {
 });
 
 // Ruta para agregar un nuevo evento
-// router.post('/habitaciones', eventController.agregarEvento);
+router.post('/habitaciones', habitacionController.agregarHabitacion);
 
 module.exports = router;

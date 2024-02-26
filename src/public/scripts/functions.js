@@ -21,7 +21,6 @@ document.getElementById('save-event-btn').addEventListener('click', function () 
 
     // Crear un objeto con los datos del formulario
     const formData = {
-        id: '10',
         resourceId: '10',
         title: 'Reserva pepe',
         start: eventStartDate,
