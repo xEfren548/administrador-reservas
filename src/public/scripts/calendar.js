@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', async function() {
 
     // const url =  `${process.env.URL}/eventos`;
-    const url = './eventos';
+    const urlEventos = './eventos';
+    const urlHabitaciones = './habitaciones';
 
         
 
@@ -25,80 +26,31 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         resourceAreaHeaderContent: 'Habitaciones',
         resourceGroupField: 'habitaciones',
-        resources: [{
-                id: "1", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA SUITE CHANDE CAP.2 PAX'
-            },
-            {
-                id: "2", habitaciones: 'Hotel', title: 'MAZAMITLA CABAÑA SUITE PAULETTE CAP.2 PAX'
-            },
-            {
-                habitaciones: 'Hotel', title: ''
-
-            },
-            {
-                id: "3", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA SUITE DIKARLO CAP.2 PAX'
-            },
-            {
-                id: "4", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA LUNA MIEL1 CAP.2 PAX'
-            },
-            {
-                id: "5", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA LUNA MIEL2 CAP.2 PAX'
-            },
-            {
-                id: "6", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA LUNA MIEL3 CAP.2 PAX'
-            },
-            {
-                id: "7", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA ANA CAP.2 PAX'
-            },
-            {
-                id: "8", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA LUZ CAP.2 PAX'
-            },
-            {
-                id: "9", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA GARDENIA1 CAP.6 PAX'
-            },
-            {
-                id: "10", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA LUZ CAP.7 PAX'
-            },
-            {
-                id: "11", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA GARDENIA2 CAP.6 PAX'
-            },
-            {
-                id: "12", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA ANA CAP.10 PAX'
-            },
-            {
-                id: "13", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA LETY CAP.12 PAX'
-            },
-            {
-                id: "14", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA LETY CAP.14 PAX'
-            },
-            {
-                id: "15", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA GARDENIA CAP.14 PAX'
-            },
-            {
-                id: "16", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA GARDENIA CAP.16 PAX'
-            },
-            {
-                id: "17", habitaciones: 'Cabañas', title: 'MAZAMITLA DEPARTAMENTO JADE CAP.4 PAX'
-            },
-            {
-                id: "18", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA RINCONCITO CAP.10 PAX'
-            },
-            {
-                id: "19", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA RINCONCITO CAP.12 PAX'
-            },
-            {
-                id: "20", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA JANNY CAP.14 PAX'
-            },
-            {
-                id: "21", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA MANANTIAL CAP.8 PAX'
-            },
-            {
-                id: "22", habitaciones: 'Cabañas', title: 'MAZAMITLA CABAÑA MANANTIAL CAP.14 PAX'
-            }
-        ],
+        resources: 
+        function(info, successCallback, failureCallback) {
+            fetch(urlHabitaciones)
+                .then(function(response) {
+                    return response.json()
+                })
+                .then(function(data){
+                    // console.log(data);
+                    let resources = data[0].resources.map(function(event){
+                        return {
+                            id: event.id,
+                            habitaciones: event.habitaciones,
+                            title: event.title
+                        }
+                    })
+                    successCallback(resources);
+                    // console.log(resources);
+                })
+                .catch(function (error) {
+                    failureCallback(error);
+                })
+        },
         events:
         function(info, successCallback, failureCallback) {
-            fetch(url)
+            fetch(urlEventos)
                 .then(function(response) {
                     return response.json()
                 })
@@ -156,6 +108,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         eventMouseLeave: function() {
             document.querySelector(".fc-hoverable-event").remove();
         },
+        eventDrop: function(info) {
+            const event = info.event;
+            console.log(info);
+            console.log(event.id)
+        }
     });
     calendar.render();
     
