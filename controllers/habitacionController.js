@@ -1,6 +1,16 @@
 const Habitacion = require('../models/Habitacion');
 const { nanoid } = require('nanoid');
 
+async function obtenerHabitaciones(req, res) { 
+    try {
+        const habitaciones = await Habitacion.find();
+        res.send(habitaciones);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener eventos' });
+    }
+}
+
 async function agregarHabitacion(req, res) { // Create
     try {
         const { habitaciones, title, ocupacion_max } = req.body;
@@ -113,6 +123,7 @@ async function eliminarHabitacion(req, res) {
 
 
 module.exports = {
+    obtenerHabitaciones,
     agregarHabitacion,
     editarHabitacion,
     eliminarHabitacion
