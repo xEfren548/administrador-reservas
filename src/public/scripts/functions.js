@@ -26,7 +26,6 @@ document.getElementById('save-event-btn').addEventListener('click', function () 
         start: eventStartDate,
         end: eventEndDate,
         // eventNights: eventNights,
-        url: "localhost:3005/events/10",
         total: total,
     };
 

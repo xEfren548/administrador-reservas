@@ -13,24 +13,17 @@ async function obtenerEventos(req, res) {
 
 async function agregarEvento(req, res) {
     try {
-        const { resourceId, title, start, end, url, total} = req.body;
+        const id = nanoid();
+        const { resourceId, title, start, end, total} = req.body;
         const reserva = {
-            id: nanoid(),
+            id,
             resourceId,
             title,
             start,
             end,
-            url,
+            url: `${process.env.URL}/eventos/${id}` ,
             total
         }
-        console.log('Desde agregar evento en eventController');
-        console.log(reserva);
-
-        // const nuevoEvento = {
-        //     start: event_start_date,eliminarEvento);
-        //     end: event_end_date,
-        //     total: total
-        // }
 
         // Encuentra el documento existente
         const documento = await Documento.findOne();
