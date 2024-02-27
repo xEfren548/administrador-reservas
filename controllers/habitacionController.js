@@ -20,14 +20,7 @@ async function agregarHabitacion(req, res) { // Create
             title,
             ocupacion_max
         }
-        console.log('Desde agregar evento en eventController');
-        console.log(nuevaHabitacion);
 
-        // const nuevoEvento = {
-        //     start: event_start_date,
-        //     end: event_end_date,
-        //     total: total
-        // }
 
         // Encuentra el documento existente
         const habitacionesExistentes = await Habitacion.findOne();
