@@ -107,6 +107,8 @@ async function eliminarEvento(req, res) {
     try {
         const id = req.params.id;
         const eventosExistentes = await Documento.findOne();
+
+        
         
         if (!eventosExistentes) {
             return res.status(404).json({ mensaje: 'No se encontraron eventos' });
@@ -135,29 +137,45 @@ async function eliminarEvento(req, res) {
 
 async function modificarEvento(req, res) {
     try {
-        const { oldEvent, event } = req.body;
+        const { event, newResource } = req.body;
+
+        console.log('eventoRecibido: ',  event);
 
         // Obtener el ID del evento y la nueva fecha
-        const eventId = oldEvent.id;
+        const eventId = req.params.id;
         const newStartDate = event.start;
         const newEndDate = event.end;
 
         // Buscar el evento existente por su ID
-        const eventoExistente = await Evento.findOne({ id: eventId });
+        const eventosExistentes = await Documento.findOne();
+        
 
-        if (!eventoExistente) {
+        const evento = eventosExistentes.events.find(evento => evento.id === eventId);
+
+
+        if (!evento) {
             return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
+        }else {
+            console.log('evento encontrado: ', evento);
         }
 
+        
+
         // Actualizar la fecha de inicio y fin del evento existente
-        eventoExistente.start = newStartDate;
-        eventoExistente.end = newEndDate;
+        evento.start = newStartDate;
+        evento.end = newEndDate;
+
+        if(newResource){
+            const newResourceId = newResource.id;
+            evento.resourceId = newResourceId;
+
+        }
 
         // Guardar el evento actualizado en la base de datos
-        await eventoExistente.save();
+        await eventosExistentes.save();
 
-        console.log('Evento modificado:', eventoExistente);
-        res.status(200).json({ mensaje: 'Evento modificado correctamente', evento: eventoExistente });
+        console.log('Evento modificado:', evento);
+        res.status(200).json({ mensaje: 'Evento modificado correctamente', evento: evento });
     } catch (error) {
         console.error('Error al modificar el evento:', error);
         res.status(500).json({ error });
@@ -172,3 +190,4 @@ module.exports = {
     eliminarEvento,
     modificarEvento
 };
+

@@ -113,7 +113,20 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.log(info);
             console.log(event.id)
 
-            
+            fetch(`/eventos/${event.id}/modificar`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(info)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Respuesta del servidor: ', data);
+                })
+                .catch(err => {
+                    console.log('Error: ', err);
+                });
         }
     });
     calendar.render();

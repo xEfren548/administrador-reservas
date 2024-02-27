@@ -15,10 +15,18 @@ const eventController = require('../controllers/eventController');
 //     }
 // });
 
+router.get('/eventos/:idevento', (req, res) => {
+    const idevento = req.params.idevento;
+    // Aquí podrías consultar la base de datos u otro almacenamiento para obtener los detalles del evento con el ID proporcionado
+    // Después renderiza una página HTML que muestre los detalles del evento
+    res.render('detalles_evento', { idevento });
+});
+
 // Ruta para agregar un nuevo evento
 router.get('/eventos', eventController.obtenerEventos);
 router.post('/eventos', eventController.agregarEvento);
 router.put('/eventos/:id', eventController.editarEvento);
+router.put('/eventos/:id/modificar', eventController.modificarEvento);
 router.delete('/eventos/:id', eventController.eliminarEvento);
 
 module.exports = router;
