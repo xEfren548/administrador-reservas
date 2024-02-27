@@ -112,6 +112,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             const event = info.event;
             console.log(info);
             console.log(event.id)
+
+            
         }
     });
     calendar.render();
@@ -119,3 +121,4 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     
 });
+

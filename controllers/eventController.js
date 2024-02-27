@@ -133,9 +133,42 @@ async function eliminarEvento(req, res) {
     }
 }
 
+async function modificarEvento(req, res) {
+    try {
+        const { oldEvent, event } = req.body;
+
+        // Obtener el ID del evento y la nueva fecha
+        const eventId = oldEvent.id;
+        const newStartDate = event.start;
+        const newEndDate = event.end;
+
+        // Buscar el evento existente por su ID
+        const eventoExistente = await Evento.findOne({ id: eventId });
+
+        if (!eventoExistente) {
+            return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
+        }
+
+        // Actualizar la fecha de inicio y fin del evento existente
+        eventoExistente.start = newStartDate;
+        eventoExistente.end = newEndDate;
+
+        // Guardar el evento actualizado en la base de datos
+        await eventoExistente.save();
+
+        console.log('Evento modificado:', eventoExistente);
+        res.status(200).json({ mensaje: 'Evento modificado correctamente', evento: eventoExistente });
+    } catch (error) {
+        console.error('Error al modificar el evento:', error);
+        res.status(500).json({ error });
+    }
+}
+
+
 module.exports = {
     obtenerEventos,
     agregarEvento,
     editarEvento,
-    eliminarEvento
+    eliminarEvento,
+    modificarEvento
 };
