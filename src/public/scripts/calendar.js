@@ -1,10 +1,10 @@
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
 
     // const url =  `${process.env.URL}/eventos`;
     const urlEventos = './eventos';
     const urlHabitaciones = './habitaciones';
 
-        
+
 
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         nowIndicator: true,
         dayMaxEvents: true, // allow "more" link when too many events
 
+
         headerToolbar: {
             left: 'today prev,next',
             center: 'title',
@@ -26,55 +27,55 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         resourceAreaHeaderContent: 'Habitaciones',
         resourceGroupField: 'habitaciones',
-        resources: 
-        function(info, successCallback, failureCallback) {
-            fetch(urlHabitaciones)
-                .then(function(response) {
-                    return response.json()
-                })
-                .then(function(data){
-                    // console.log(data);
-                    let resources = data[0].resources.map(function(event){
-                        return {
-                            id: event.id,
-                            habitaciones: event.habitaciones,
-                            title: event.title
-                        }
+        resources:
+            function (info, successCallback, failureCallback) {
+                fetch(urlHabitaciones)
+                    .then(function (response) {
+                        return response.json()
                     })
-                    successCallback(resources);
-                    // console.log(resources);
-                })
-                .catch(function (error) {
-                    failureCallback(error);
-                })
-        },
+                    .then(function (data) {
+                        // console.log(data);
+                        let resources = data[0].resources.map(function (event) {
+                            return {
+                                id: event.id,
+                                habitaciones: event.habitaciones,
+                                title: event.title
+                            }
+                        })
+                        successCallback(resources);
+                        // console.log(resources);
+                    })
+                    .catch(function (error) {
+                        failureCallback(error);
+                    })
+            },
         events:
-        function(info, successCallback, failureCallback) {
-            fetch(urlEventos)
-                .then(function(response) {
-                    return response.json()
-                })
-                .then(function(data){
-                    // console.log(data);
-                    let events = data[0].events.map(function(event){
-                        return {
-                            id: event.id,
-                            resourceId: event.resourceId,
-                            title: event.title,
-                            start: new Date(event.start),
-                            end: new Date(event.end),
-                            url: event.url,
-                            total: event.total
-                        }
+            function (info, successCallback, failureCallback) {
+                fetch(urlEventos)
+                    .then(function (response) {
+                        return response.json()
                     })
-                    successCallback(events);
-                    // console.log(events);
-                })
-                .catch(function (error) {
-                    failureCallback(error);
-                })
-        },
-        eventContent: function(info) {
+                    .then(function (data) {
+                        // console.log(data);
+                        let events = data[0].events.map(function (event) {
+                            return {
+                                id: event.id,
+                                resourceId: event.resourceId,
+                                title: event.title,
+                                start: new Date(event.start),
+                                end: new Date(event.end),
+                                url: event.url,
+                                total: event.total
+                            }
+                        })
+                        successCallback(events);
+                        // console.log(events);
+                    })
+                    .catch(function (error) {
+                        failureCallback(error);
+                    })
+            },
+        eventContent: function (info) {
             // console.log(info);
             return {
                 html: `
@@ -85,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 `
             }
         },
-        eventMouseEnter: function(mouseEnterInfo) {
+        eventMouseEnter: function (mouseEnterInfo) {
             let el = mouseEnterInfo.el;
             el.classList.add("relative");
 
@@ -105,10 +106,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             el.after(newEl);
         },
 
-        eventMouseLeave: function() {
+        eventMouseLeave: function () {
             document.querySelector(".fc-hoverable-event").remove();
         },
-        eventDrop: function(info) {
+        eventDrop: function (info) {
             const event = info.event;
             console.log(info);
             console.log(event.id)
@@ -127,11 +128,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                 .catch(err => {
                     console.log('Error: ', err);
                 });
-        }
+        },
     });
     calendar.render();
-    
 
-    
+
 });
 
