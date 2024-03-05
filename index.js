@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const path = require('path');
 const app = express();
 const exphbs = require('express-handlebars');
-const cors = require('cors');
 
 const eventRoutes = require('./routes/eventRoutes');
 const habitacionesRoutes = require('./routes/habitacionesRoutes');
@@ -13,7 +12,8 @@ const habitacionesRoutes = require('./routes/habitacionesRoutes');
 app.use(express.static(path.join(__dirname, 'src', 'public')));
 app.use(express.json())
 
-app.use(cors());
+
+
 
 
 

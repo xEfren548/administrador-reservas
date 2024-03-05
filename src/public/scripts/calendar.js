@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', async function () {
 
     // const url =  `${process.env.URL}/eventos`;
-    // const urlEventos = './eventos';
-    const urlEventos = 'https://administrador-reservas.onrender.com/eventos'
-    const urlHabitaciones = 'https://administrador-reservas.onrender.com/habitaciones';
+    // const urlEventos = 'https://administrador-reservas.onrender.com/eventos'
+    const urlEventos = './eventos';
+    const urlHabitaciones = './habitaciones';
 
 
 
@@ -30,10 +30,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         resourceGroupField: 'habitaciones',
         resources:
             function (info, successCallback, failureCallback) {
-                fetch(urlHabitaciones, {
-                    mode: 'cors',
-                    credentials: 'include'
-                })
+                fetch(urlHabitaciones)
                     .then(function (response) {
                         return response.json()
                     })
@@ -55,10 +52,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             },
         events:
             function (info, successCallback, failureCallback) {
-                fetch(urlEventos, {
-                    mode: 'cors',
-                    credentials: 'include'
-                })
+                fetch(urlEventos)
                     .then(function (response) {
                         return response.json()
                     })
