@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const path = require('path');
 const app = express();
 const exphbs = require('express-handlebars');
-const cors = require('cors');
 
 const eventRoutes = require('./routes/eventRoutes');
 const habitacionesRoutes = require('./routes/habitacionesRoutes');
@@ -13,18 +12,7 @@ const habitacionesRoutes = require('./routes/habitacionesRoutes');
 app.use(express.static(path.join(__dirname, 'src', 'public')));
 app.use(express.json())
 
-const dominiosPermitidos = ['https://administrador-reservas.onrender.com/', 'https://navarro.integradev.site/'];
-const corsOptions = {
-    origin: function(origin, callback){
-        if(dominiosPermitidos.indexOf(origin) !== -1) {
-            // El origen del Request esta permitido
-            callback(null, true);
-        }else{
-            callback(new Error('No permitido por CORS'))
-        }
-    }
-}
-app.use(cors(corsOptions));
+
 
 
 
