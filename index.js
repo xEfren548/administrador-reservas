@@ -12,7 +12,7 @@ const habitacionesRoutes = require('./routes/habitacionesRoutes');
 app.use(express.static(path.join(__dirname, 'src', 'public')));
 app.use(express.json())
 
-
+app.use(cors());
 
 
 
