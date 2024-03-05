@@ -3,32 +3,18 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const path = require('path');
 const app = express();
-const exphbs = require('express-handlebars');
+const { engine } = require('express-handlebars');
+const routes = require('./routes/indexRoutes'); 
 
-const eventRoutes = require('./routes/eventRoutes');
-const habitacionesRoutes = require('./routes/habitacionesRoutes');
 // Configura Express para servir archivos estáticos desde la carpeta 'public'
-
 app.use(express.static(path.join(__dirname, 'src', 'public')));
 app.use(express.json())
 
 
-
-
-
-
-
 // Configuración del motor de plantillas
-app.set('views', path.join(__dirname, 'views'))
-app.engine('.hbs', exphbs.engine({
-    extname: '.hbs',
-    // Disable the knownHelpersOnly check
-    runtimeOptions: {
-        knownHelpersOnly: false,
-        allowProtoPropertiesByDefault: true
-    }
-}))
-app.set('view engine', '.hbs');
+app.engine('handlebars', engine())
+app.set('view engine', 'handlebars');
+app.set('views', './views');
 
 
 
@@ -51,8 +37,8 @@ async function connect() {
 
 connect();
 
+app.use(routes);
 
-app.use('', eventRoutes);
-app.use('', habitacionesRoutes);
+
 
 
