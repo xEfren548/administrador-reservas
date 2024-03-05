@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 const app = express();
 const exphbs = require('express-handlebars');
+const cors = require('cors');
 
 const eventRoutes = require('./routes/eventRoutes');
 const habitacionesRoutes = require('./routes/habitacionesRoutes');
