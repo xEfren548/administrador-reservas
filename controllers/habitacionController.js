@@ -11,6 +11,30 @@ async function obtenerHabitaciones(req, res) {
     }
 }
 
+async function obtenerHabitacionPorId(id) {
+    try {
+        const habitacionesExistentes = await Habitacion.findOne(); // Buscar el documento que contiene los eventos
+        
+        if (!habitacionesExistentes) {
+            throw new Error('No se encontraron eventos');
+        }
+
+        // Buscar la habitacion por su id
+        const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === id);
+
+        if (!habitacion) {
+            throw new Error('Habitacion no encontrada');
+        }
+
+
+
+        return habitacion;
+    } catch (error) {
+        throw new Error('Error al obtener habitacion por id: ' + error.message);
+    }
+}
+
+
 async function agregarHabitacion(req, res) { // Create
     try {
         const { habitaciones, title, ocupacion_max } = req.body;
@@ -119,5 +143,6 @@ module.exports = {
     obtenerHabitaciones,
     agregarHabitacion,
     editarHabitacion,
-    eliminarHabitacion
+    eliminarHabitacion,
+    obtenerHabitacionPorId
 };

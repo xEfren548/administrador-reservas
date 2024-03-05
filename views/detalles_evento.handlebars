@@ -74,7 +74,7 @@
             <div class="col-xs-12 col-sm-6 no-padding">
 
 
-                <div class="col-xs-1" style="width: 70px;">
+                <div class="col-xs-1 mb-3" style="width: 70px;">
                     <a onclick="myFunction()"><img src="https://panel.hotelgest.com/files/media/male_profile_sm.jpg"
                             id="profile-pic-alone"></a>
                 </div>
@@ -91,12 +91,11 @@
                 <div class="col-xs-9 col-lg-7">
                     <small class="limit-width" data-toggle="tooltip" data-placement="bottom" title=""
                         data-original-title="Saul Suarez  "></small>
-                    <h3 class="detailsRoom" style="margin-bottom: -5px;"> MAZAMITLA CABAÑA SUITE CHANDE CAP.2 PAX 1 - 2
-                        Adultos
+                    <h3 class="detailsRoom" style="margin-bottom: 5px;"> {{habitacion.title}}
                     </h3>
                     <h3 class="bold text-uppercase">
-                        Saul Suarez
-                        (#8725170)
+                        {{evento.title}}
+                        
                     </h3>
 
 
@@ -140,17 +139,17 @@
             <div class="col-xs-12 col-sm-6">
                 <div class="col-xs-6 no-padding-left">
                     <small>Llegada</small>
-                    <h4 class="font-bold"> <i class="fa fa-sign-in" aria-hidden="true"></i> 16/02/2024 </h4>
+                    <h4 class="font-bold"> <i class="fa fa-sign-in" aria-hidden="true"></i> {{evento.start}} </h4>
                 </div>
                 <div class="col-xs-3 no-padding-left">
                     <small> Noches&nbsp;&nbsp;&nbsp;</small>
-                    <h4 class="font-bold"> <i class="fa fa-moon-o" aria-hidden="true"></i> 2</h4>
+                    <h4 class="font-bold"> <i class="fa fa-moon" aria-hidden="true"></i> 2</h4>
                 </div>
                 <div class="col-xs-2 no-padding-left">
                 </div>
                 <div class="col-xs-6 no-padding-left">
                     <small>Salida</small>
-                    <h4 class="font-bold"> <i class="fa fa-sign-out" aria-hidden="true"></i> 18/02/2024</h4>
+                    <h4 class="font-bold"> <i class="fa fa-sign-out" aria-hidden="true"></i> {{evento.end}} </h4>
                 </div>
                 <div class="col-xs-6 no-padding-left">
                     <small> Recibida</small>
@@ -165,8 +164,11 @@
             </div>
         </div>
     </div>
-    <div class="col-5 bg-dark">
+    <div class="col-5">
         <h3>Notas</h3>
+        <div class="card-details" style="background-color: #faf1d2; height: 100%;">
+            <p style="color: black">COMENTARIOS</p>
+        </div>
     </div>
 
 

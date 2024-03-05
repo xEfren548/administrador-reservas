@@ -1,7 +1,10 @@
 const express = require('express');
+const moment = require('moment');
 const router = express.Router();
 
 const eventController = require('../controllers/eventController');
+const habitacionController = require('../controllers/habitacionController');
+
 
 // router.get('/eventos', async (req, res) => {
 //     try {
@@ -32,11 +35,20 @@ router.get('/eventos/:idevento', async (req, res) => {
         const evento = await eventController.obtenerEventoPorId(idEvento);
         eventoJson = JSON.stringify(evento);
         const eventoObjeto = JSON.parse(eventoJson);
+        eventoObjeto.start = moment(eventoObjeto.start).format('DD/MM/YYYY');
+        eventoObjeto.end = moment(eventoObjeto.end).format('DD/MM/YYYY');
+
+        const habitacion = await habitacionController.obtenerHabitacionPorId(eventoObjeto.resourceId);
+        const habitacionJson = JSON.stringify(habitacion);
+        const habitacionObjeto = JSON.parse(habitacionJson);
 
 
         // Renderiza la página HTML con los detalles del evento
         console.log(eventoObjeto);
-        res.render('detalles_evento', { evento: eventoObjeto });
+        res.render('detalles_evento', { 
+            evento: eventoObjeto,
+            habitacion: habitacionObjeto
+        });
     } catch (error) {
         console.error('Error al obtener los detalles del evento:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
