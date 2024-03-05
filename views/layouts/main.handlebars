@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Title</title>
+    <title>Administrador de Reservas</title>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -21,11 +21,75 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.10/index.global.min.js"></script>
     <script src='fullcalendar/dist/index.global.js'></script>
 
-    <link rel="stylesheet" href="./styles/style.css">
+    <link rel="stylesheet" href="/styles/style.css">
 </head>
 
 <body>
-    {{{body}}}    
+    <div class="container-fluid">
+    <div class="row flex-nowrap">
+        <div class="bg-dark col-2 min-vh-100 d-flex flex-column justify-content-between navbar">
+            <div class="bg-dark p-2">
+                <a href="" class="d-flex text-decoration-none mt-1 align-items-center text-white">
+                    <span class="fs-4 d-none d-sm-inline">SideMenu</span>
+                </a>
+                <ul class="nav nav-pills flex-column mt-4 ">
+                    <li class="nav-item py-2 py-sm-0">
+                        <a href="#" class="nav-link text-white">
+                            <i class="fs-5 fa fa-chart-bar"></i><span
+                                class="fs-4 ms-3 d-none d-sm-inline">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item py-2 py-sm-0">
+                        <a href="#" class="nav-link text-white">
+                            <i class="fs-5 fa fa-house"></i><span class="fs-4 ms-3 d-none d-sm-inline">Home</span>
+                        </a>
+                    </li>
+                    <li class="nav-item py-2 py-sm-0">
+                        <a href="#" class="nav-link text-white">
+                            <i class="fs-5 fa fa-table-list"></i><span
+                                class="fs-4 ms-3 d-none d-sm-inline">Calendario</span>
+                        </a>
+                    </li>
+                    <li class="nav-item py-2 py-sm-0">
+                        <a href="#" class="nav-link text-white">
+                            <i class="fs-5 fa fa-table-list"></i><span
+                                class="fs-4 ms-3 d-none d-sm-inline">Habitaciones</span>
+                        </a>
+                    </li>
+                    <li class="nav-item py-2 py-sm-0">
+                        <a href="#" class="nav-link text-white">
+                            <i class="fs-5 fa fa-users"></i><span class="fs-4 ms-3 d-none d-sm-inline">Tarifas</span>
+                        </a>
+                    </li>
+                </ul>
+
+            </div>
+            <div class="dropdown open p-3">
+                <button class="btn border-none dropdown-toggle text-white" type="button" id="triggerId"
+                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-user"></i><span class="ms-2">Efren</span>
+                </button>
+                <div class="dropdown-menu" aria-labelledby="triggerId">
+                    <button class="dropdown-item" href="#">Setting</button>
+                    <button class="dropdown-item" href="#">Profile</button>
+                </div>
+            </div>
+        </div>
+        <!-- Content -->
+        <div class="col content"></div>
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <div class="bg-dark mb-3">
+                    <a name="" id="crear-reserva-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
+                        data-bs-toggle="modal" data-bs-target="#event_entry_modal">Crear reserva</a>
+                </div>
+
+
+            </div>
+            {{{body}}}    
+        </div>
+    </div>
+</div>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
 </body>

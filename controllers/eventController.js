@@ -11,6 +11,31 @@ async function obtenerEventos(req, res) {
     }
 }
 
+async function obtenerEventoPorId(id) {
+    try {
+        const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
+        
+        if (!eventosExistentes) {
+            throw new Error('No se encontraron eventos');
+        }
+
+        // Buscar el evento por su id
+        const evento = eventosExistentes.events.find(evento => evento.id === id);
+
+        if (!evento) {
+            throw new Error('El evento no fue encontrado');
+        }
+
+
+
+        return evento;
+    } catch (error) {
+        throw new Error('Error al obtener el evento por id: ' + error.message);
+    }
+}
+
+
+
 async function agregarEvento(req, res) {
     try {
         const id = nanoid();
@@ -185,6 +210,7 @@ async function modificarEvento(req, res) {
 
 module.exports = {
     obtenerEventos,
+    obtenerEventoPorId,
     agregarEvento,
     editarEvento,
     eliminarEvento,

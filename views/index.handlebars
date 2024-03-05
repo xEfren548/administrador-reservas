@@ -1,0 +1,115 @@
+<div id="calendar"></div>
+
+<!-- Modals -->
+
+<div class="modal fade" id="event_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Crear reserva</h5>
+                <button type="button" class="close" onclick="$('#event_entry_modal').modal('hide');" aria-label="Close">
+                    &times;
+
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label for="event_start_date">Fecha llegada</label>
+                                <input type="date" name="event_start_date" id="event_start_date"
+                                    class="form-control onlydatepicker" placeholder="Event start date">
+                            </div>
+                        </div>
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label for="event_end_date">Fecha salida</label>
+                                <input type="date" name="event_end_date" id="event_end_date" class="form-control"
+                                    placeholder="Event end date">
+                            </div>
+                        </div>
+                        <div class="col-sm-2">
+                            <div class="form-group">
+                                <label for="event_end_date">Noches: </label>
+                                <input type="number" name="event_end_date" id="event_nights" class="form-control"
+                                    placeholder="" min="1">
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="mt-3">Habitación</h3>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="tipologia_habitacion">Tipología</label>
+                                <input type="select" name="tipologia_habitacion" id="tipologia_habitacion"
+                                    class="form-control onlydatepicker" placeholder="Tipología">
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="ocupacion_habitacion">Ocupación Máx.</label>
+                                <input type="number" name="ocupacion_habitacion" id="ocupacion_habitacion"
+                                    class="form-control onlydatepicker" placeholder="Ocupación">
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="ocupacion_habitacion"></label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Unidades: </span>
+                                    </div>
+                                    <input type="number" id="habitacion_unidades" class="form-control"
+                                        aria-label="Unidades" min="1" step="any" max="1" value="1">
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- Cierre row -->
+
+                    <div class="row mt-2">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="ocupacion_habitacion">Total</label>
+                                <div class="input-group ig-shopping-price mb-3">
+                                    <input type="number" class="form-control" id="habitacion_total"
+                                        aria-label="Amount (to the nearest dollar)" min="0.00" placeholder="Total">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">$ M.N.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="ocupacion_habitacion">Descuento</label>
+                                <div class="input-group ig-shopping-price mb-3">
+                                    <input type="number" class="form-control" id="habitacion_descuento"
+                                        aria-label="Descuento" min="0.00" placeholder="Descuento">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"> % </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- Cierre row -->
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="save-event-btn">Save Event</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End popup dialog box -->
+
+
+
+
+
+<!-- Bootstrap JavaScript Libraries -->
+<script src="/scripts/calendar.js"></script>
+<script src="/scripts/functions.js"></script>

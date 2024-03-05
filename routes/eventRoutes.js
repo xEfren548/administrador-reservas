@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 
-const Evento = require('../models/Evento');
 const eventController = require('../controllers/eventController');
 
 // router.get('/eventos', async (req, res) => {
@@ -25,12 +24,25 @@ router.delete('/eventos/:id', eventController.eliminarEvento);
 
 // Rutas con contenido dinamico de handlebars
 
-router.get('/eventos/:idevento', (req, res) => {
-    const idevento = req.params.idevento;
-    // Aquí podrías consultar la base de datos u otro almacenamiento para obtener los detalles del evento con el ID proporcionado
-    // Después renderiza una página HTML que muestre los detalles del evento
-    res.render('detalles_evento', { idevento });
+router.get('/eventos/:idevento', async (req, res) => {
+    try {
+        const idEvento = req.params.idevento;
+        
+        // Llama a la función del controlador de eventos para obtener los detalles del evento
+        const evento = await eventController.obtenerEventoPorId(idEvento);
+        eventoJson = JSON.stringify(evento);
+        const eventoObjeto = JSON.parse(eventoJson);
+
+
+        // Renderiza la página HTML con los detalles del evento
+        console.log(eventoObjeto);
+        res.render('detalles_evento', { evento: eventoObjeto });
+    } catch (error) {
+        console.error('Error al obtener los detalles del evento:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
 });
+
 
 
 
