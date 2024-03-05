@@ -177,3 +177,27 @@ td {
 .modal-content {
     background-color: #141418 !important;
 }
+
+#reservationtools .btn {
+    color: white !important;
+}
+
+#reservationtools .btn:hover {
+    color: gray !important;
+}
+
+
+.enviar-email-btn {
+    color: white !important;
+}
+
+.enviar-email-btn:hover {
+    color: gainsboro !important;
+}
+
+.card-details {
+    font-size: 10px !important;
+    border-radius: 1%;
+    margin: 1rem  !important;
+    padding: 1rem 1rem !important;
+}

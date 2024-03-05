@@ -1,2 +1,179 @@
-<h1>Detalles de evento</h1>
-<h1>{{evento.title}}</h1> 
+<div class="left hidden-xs" id="reservationtools">
+
+    <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Check-In">
+        <li type="button" id="checkin" data-command="checkin" class="btn"><i class="fa fa-sign-in fa-lg"
+                aria-hidden="true"></i></li>
+    </span>
+
+    <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Check-Out">
+        <li type="button" id="checkout" data-command="checkout" class="btn"><i class="fa fa-sign-out fa-lg"
+                aria-hidden="true"></i></li>
+    </span>
+    <span data-toggle="tooltip" data-placement="bottom" title="Cancelar" data-original-title="Cancelar ">
+        <li type="button" id="cancel" data-command="cancel" class="btn btn-cancel"><i class="fa fa-trash fa-lg"
+                aria-hidden="true"></i></li>
+    </span>
+
+    <span title="|">|</span>
+    <span data-toggle="tooltip" data-placement="bottom" title="Editar reserva" data-original-title="Editar reserva">
+        <button type="button" data-toggle="modal" data-target="#editclient" class="btn"><i class="fa fa-pencil"
+                aria-hidden="true"></i>
+            <div class="ripple-container"></div>
+        </button>
+    </span>
+    {{!--
+    <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Reubicar reserva">
+        <button type="button" id="btn-reubicar-reserva" class="btn btn-reubicar-reserva"><i class="fa fa-arrows"
+                aria-hidden="true"></i></button>
+    </span>
+    <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Agrupar reservas">
+        <button type="button" id="btn-MultiBooking" data-toggle="modal" data-target="#modalMultiBooking" class="btn"><i
+                class="fa fa-users" aria-hidden="true"></i></button>
+    </span>
+    <span title="|">|</span>
+    <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Enviar confirmación">
+        <button class="btn" type="button" data-toggle="modal" data-target="#modalSendConfirmation" data-id="">
+            <i class="fa fa-envelope "></i>
+        </button>
+    </span>
+    <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Cobrar">
+        <button type="button" data-toggle="modal" data-target="#modalCheckPayDisabled" class="btn"><i
+                class="fa fa-credit-card" aria-hidden="true"></i></button>
+    </span>
+    <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Llave">
+        <li type="button" data-toggle="modal" data-target="#modalTesa" class="btn">
+            <i class="fa fa-besom"></i><i class="fa fa-key"></i>
+        </li>
+    </span>
+    <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Histórico">
+        <a href="#customer_summary" data-id="9864398" data-toggle="modal" data-target="#modalPreviewCustomer"
+            class="btn btn-previewCustomer">
+            <i class="fa fa-user"></i>
+            <div class="ripple-container"></div>
+        </a>
+    </span>
+
+
+    <span class="popover-action " data-toggle="popover" data-trigger="focus" data-placement="bottom"
+        data-content="<ul class='popover-action-ul'><a href='#' onclick='loadChangeStatusHK($(this))' data-rcode='1619215546' data-id='8725170' class='btn-changestatus' data-action='changestatus'>Cambio de limpieza</a><hr><a href='#' onclick='loadEditRoomHK($(this))' data-cleanroom='0' data-dayweekclean='' data-numdoor='' data-rcode='1619215546' data-rscode='8725170' class='btn-splitBooking' data-action='configRoom'>Configurar limpiezas</a></ul>"
+        data-html="true" data-original-title="" title="">
+        <button class="btn" type="button" style="margin-bottom: -2px;">
+            <i class="fa fa-besom disabled"></i><i class="hkIcon"></i>
+            <div class="ripple-container"></div>
+        </button>
+    </span>
+
+    --}}
+
+</div>
+
+
+<div class="row">
+    <div class="col-7">
+        <div class="row card-details bg-dark">
+            <div class="col-xs-12 col-sm-6 no-padding">
+
+
+                <div class="col-xs-1" style="width: 70px;">
+                    <a onclick="myFunction()"><img src="https://panel.hotelgest.com/files/media/male_profile_sm.jpg"
+                            id="profile-pic-alone"></a>
+                </div>
+                <script>
+                    function myFunction() {
+                        alert("Si utilizas la app hotelgest, podrás ver la cara del huésped y los documentos escaneados.");
+                    }
+                </script>
+
+
+
+
+
+                <div class="col-xs-9 col-lg-7">
+                    <small class="limit-width" data-toggle="tooltip" data-placement="bottom" title=""
+                        data-original-title="Saul Suarez  "></small>
+                    <h3 class="detailsRoom" style="margin-bottom: -5px;"> MAZAMITLA CABAÑA SUITE CHANDE CAP.2 PAX 1 - 2
+                        Adultos
+                    </h3>
+                    <h3 class="bold text-uppercase">
+                        Saul Suarez
+                        (#8725170)
+                    </h3>
+
+
+                    <hr>
+                </div>
+
+
+                <div class="col-xs-12">
+                    <div class="col-xs-12 no-padding-left" style="margin-top: 5px;">
+                    </div>
+                    <h4></h4>
+                    <div class="col-xs-12 no-padding">
+                        <!-- <div class="col-xs-6 no-padding-left" style="margin-bottom: 10px;">
+                                            <small> E-mail</small>
+                                        </div> -->
+                        <h4 class="font-bold" style="margin-top: 5px; margin-bottom:0px;">
+                            <button class="btn btn-style-blue enviar-email-btn" type="button" data-toggle="modal"
+                                data-target="#modalSendConfirmation" data-id="">
+                                <i class="fa fa-envelope "></i> <b>gio771991@gmail.com</b> | Enviar E-mail
+                                <div class="ripple-container"></div>
+                            </button>
+                            <div class="ripple-container"></div>
+                        </h4>
+
+                    </div>
+
+
+                    <br>
+
+
+                    <div class="col-xs-12 no-padding bottomline">
+                        <div class="col-xs-12 no-padding-left">
+                            <!-- <small> Teléfono</small> -->
+                        </div>
+                    </div>
+
+                    <br>
+                </div>
+            </div>
+
+            <div class="col-xs-12 col-sm-6">
+                <div class="col-xs-6 no-padding-left">
+                    <small>Llegada</small>
+                    <h4 class="font-bold"> <i class="fa fa-sign-in" aria-hidden="true"></i> 16/02/2024 </h4>
+                </div>
+                <div class="col-xs-3 no-padding-left">
+                    <small> Noches&nbsp;&nbsp;&nbsp;</small>
+                    <h4 class="font-bold"> <i class="fa fa-moon-o" aria-hidden="true"></i> 2</h4>
+                </div>
+                <div class="col-xs-2 no-padding-left">
+                </div>
+                <div class="col-xs-6 no-padding-left">
+                    <small>Salida</small>
+                    <h4 class="font-bold"> <i class="fa fa-sign-out" aria-hidden="true"></i> 18/02/2024</h4>
+                </div>
+                <div class="col-xs-6 no-padding-left">
+                    <small> Recibida</small>
+                    <h4 class="font-bold">16/02/2024</h4>
+                </div>
+                <div class="col-xs-6 no-padding-left origin">
+                    <small> Origen </small>
+                    <h4 class="font-bold">Recepción </h4>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+    <div class="col-5 bg-dark">
+        <h3>Notas</h3>
+    </div>
+
+
+</div>
+
+
+
+
+
+</div>
