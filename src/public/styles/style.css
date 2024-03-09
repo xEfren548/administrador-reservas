@@ -201,3 +201,9 @@ td {
     margin: 1rem  !important;
     padding: 1rem 1rem !important;
 }
+
+.article-row {
+    background-color: black;
+    margin: 1rem;
+    padding: 1rem; 
+}

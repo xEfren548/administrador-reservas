@@ -69,7 +69,7 @@
 
 
 <div class="row">
-    <div class="col-7">
+    <div class="col-6">
         <div class="row card-details bg-dark">
             <div class="col-xs-12 col-sm-6 no-padding">
 
@@ -95,7 +95,7 @@
                     </h3>
                     <h3 class="bold text-uppercase">
                         {{evento.title}}
-                        
+
                     </h3>
 
 
@@ -164,15 +164,83 @@
             </div>
         </div>
     </div>
-    <div class="col-5">
+    <div class="col-4">
         <h3>Notas</h3>
-        <div class="card-details" style="background-color: #faf1d2; height: 100%;">
+        <div class="card-details m-3" style="background-color: #faf1d2; height: auto; width: 80%;">
             <p style="color: black">COMENTARIOS</p>
         </div>
     </div>
 
 
 </div>
+
+<div class="row mt-3">
+    <div class="col-4">
+        <h3>Artículos</h3>
+        <div class="bg-dark h-auto p-2 rounded-3">
+            <div class="article-row row rounded">
+                <div class="col-8">
+                    <p>1 X Pago a cuenta</p>
+                    <p>Insertado el 17/03/2024</p>
+                </div>
+                <div class="col-4">
+                    <p>$2400</p>
+                </div>
+            </div>
+
+            <div class="article-row row">
+                <div class="col-8">
+                    <p>1 X Pago a cuenta</p>
+                    <p>Insertado el 17/03/2024</p>
+                </div>
+                <div class="col-4">
+                    <p>$2400</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-2">
+        <h3>Facturas</h3>
+        <div class="bg-dark h-auto">
+            <table class="table table-hover table-payment" style="width: auto;">
+                <thead>
+                    <tr>
+                        <th>Nº Fact.</th>
+                        <th>Fecha</th>
+                        <th>Importe</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="rows-payment">
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-3">
+        <h3>Pagos</h3>
+        <span>
+            <a name="" id="" class="btn" href="#" role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
+        </span>
+        <table class="table table-hover table-payment" style="width: auto;">
+            <thead>
+                <tr>
+                    <th>Nº Op.</th>
+                    <th>Fecha</th>
+                    <th>Importe</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="rows-payment">
+
+            </tbody>
+        </table>
+    </div>
+
+</div> {{!-- Cierre row --}}
+
 
 
 
