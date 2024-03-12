@@ -1,0 +1,207 @@
+<h1>Lista de servicios</h1>
+<div class="row" style="width: 95%;">
+    <div class="col-10">
+        <table class="table table-dark table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">Servicio</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Estatus</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Limpieza</td>
+                    <td>Servicio de limpieza</td>
+                    <td>12/03/2024</td>
+                    <td>Pendiente</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modify-service_entry_modal">
+                            <i class="fa fa-pencil" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Limpieza</td>
+                    <td>Servicio de limpieza</td>
+                    <td>13/03/2024</td>
+                    <td>En proceso</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-primary">
+                            <i class="fa fa-pencil" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Traslado</td>
+                    <td>Servicio de Uber</td>
+                    <td>10/03/2024</td>
+                    <td>Terminado</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-primary">
+                            <i class="fa fa-pencil" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+{{!-- Modals --}}
+
+<!-- Modal Alta Servicios -->
+
+<div class="modal fade" id="services_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Modificar Usuario</h5>
+                <button type="button" class="close" onclick="$('#modify-user_entry_modal').modal('hide');" aria-label="Close">
+                    &times;
+
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="user-name">Servicio</label>
+                                <input type="text" name="service-name" id="service-name" class="form-control onlydatepicker"
+                                    placeholder="Nombre servicio">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="service-description">Descripción</label>
+                                <input type="text" name="service-description" id="service-description" class="form-control"
+                                    placeholder="Descripción">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="user-email">Fecha: </label>
+                                <input type="date" name="user-email" id="user-email" class="form-control"
+                                    placeholder="Usuario">
+                            </div>
+                            <div class="col-sm-12 mb-2">
+                                <div class="form-group">
+                                    <label for="user-password">Contraseña: </label>
+                                    <input type="password" name="user-password" id="user-password" class="form-control"
+                                        placeholder="Contraseña">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label for="user-privileges">Estatus: </label>
+
+                            </div>
+                            <div class="row">
+                                <div class="col-8">
+                                <select name="privileges" id="service-status" required>
+                                    <option value="" selected disabled> Selecciona el estado del servicio --
+                                    </option>
+                                    <option value="enproceso">En Proceso</option>
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="Terminado">Terminado</option>
+                                </select>
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div> <!-- Cierre row -->
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="save-user-btn">Modificar Servicio</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Modal Alta usuario -->
+
+
+
+{{!-- Modal modificar usuario --}}
+<div class="modal fade" id="modify-service_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Modificar Usuario</h5>
+                <button type="button" class="close" onclick="$('#modify-service_entry_modal').modal('hide');" aria-label="Close">
+                    &times;
+
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="user-name">Servicio</label>
+                                <input type="text" name="service-name" id="service-name" class="form-control onlydatepicker"
+                                    placeholder="Nombre servicio">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="service-description">Descripción</label>
+                                <input type="text" name="service-description" id="service-description" class="form-control"
+                                    placeholder="Descripción">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="user-email">Fecha: </label>
+                                <input type="date" name="user-email" id="user-email" class="form-control"
+                                    placeholder="Usuario">
+                            </div>
+                            <div class="col-sm-12 mb-2">
+                                <div class="form-group">
+                                    <label for="user-password">Contraseña: </label>
+                                    <input type="password" name="user-password" id="user-password" class="form-control"
+                                        placeholder="Contraseña">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label for="user-privileges">Estatus: </label>
+
+                            </div>
+                            <div class="row">
+                                <div class="col-8">
+                                <select name="privileges" id="service-status" required>
+                                    <option value="" selected disabled> Selecciona el estado del servicio --
+                                    </option>
+                                    <option value="enproceso">En Proceso</option>
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="Terminado">Terminado</option>
+                                </select>
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div> <!-- Cierre row -->
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="save-user-btn">Modificar Servicio</button>
+            </div>
+        </div>
+    </div>
+</div>
