@@ -32,7 +32,7 @@ document.getElementById('save-event-btn').addEventListener('click', function () 
 
     const url = 'localhost:3005/eventos'
 
-    fetch('https://administrador-reservas.onrender.com/eventos', {
+    fetch('./api/eventos', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

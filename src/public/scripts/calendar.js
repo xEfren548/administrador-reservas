@@ -2,8 +2,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // const url =  `${process.env.URL}/eventos`;
     // const urlEventos = 'https://administrador-reservas.onrender.com/eventos'
-    const urlEventos = './eventos';
-    const urlHabitaciones = './habitaciones';
+    const urlEventos = './api/eventos';
+    const urlHabitaciones = './api/habitaciones';
 
 
 
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             console.log(info);
             console.log(event.id)
 
-            fetch(`/eventos/${event.id}/modificar`, {
+            fetch(`/api/eventos/${event.id}/modificar`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
