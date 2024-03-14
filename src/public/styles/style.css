@@ -273,3 +273,7 @@ td {
     margin-top: 10px; /* Ajusta el valor según sea necesario */
     margin-bottom: 20px;
 }
+
+.dataTables_info {
+    color: #fff !important; /* Color del texto */
+}
