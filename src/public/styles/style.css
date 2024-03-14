@@ -207,3 +207,69 @@ td {
     margin: 1rem;
     padding: 1rem; 
 }
+
+/* Estilos Tablas */
+
+/* Aplicar bordes a las celdas de encabezado */
+.table thead th {
+    border: 2px solid gray; /* Color del borde */
+} 
+
+/* Cambiar el color de fondo de los botones de paginación */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    background-color: #007bff; /* Cambia el color de fondo */
+    color: #fff !important; /* Cambia el color del texto */
+}
+
+/* Cambiar el color de fondo del botón activo de paginación */
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background-color: #0056b3; /* Cambia el color de fondo */
+}
+
+/* Cambiar el color de fondo del menú de longitud de página */
+.dataTables_wrapper .dataTables_length select {
+    background-color: #fff; /* Cambia el color de fondo */
+    color: #000; /* Cambia el color del texto */
+}
+
+/* Cambiar el color del borde del menú de longitud de página */
+.dataTables_wrapper .dataTables_length select:focus {
+    border-color: #0056b3; /* Cambia el color del borde */
+}
+
+/* Cambiar el color del texto de las opciones del menú de longitud de página */
+.dataTables_wrapper .dataTables_length select option {
+    color: #fff; /* Cambia el color del texto */
+}
+
+/* Cambiar el color del texto "Show" */
+.dataTables_wrapper .dataTables_length label {
+    color: #fff; /* Cambia el color del texto */
+}
+
+/* Cambiar el color del texto de las opciones del menú de longitud de página */
+.dataTables_wrapper .dataTables_length select option {
+    color: #000; /* Cambia el color del texto */
+}
+
+/* Cambiar el color del texto "Search" */
+.dataTables_wrapper .dataTables_filter label {
+    color: #fff; /* Cambia el color del texto */
+}
+
+/* Cambiar el color del texto dentro del campo de búsqueda */
+.dataTables_wrapper .dataTables_filter input[type="search"] {
+    color: #fff; /* Cambia el color del texto */
+}
+
+/* Aplica margen a los nuevos elementos */
+.dataTables_length,
+.dataTables_filter {
+    margin-bottom: 20px; /* Ajusta el valor según sea necesario */
+}
+
+/* Aplica margen a los botones de paginación */
+.dataTables_paginate .paginate_button {
+    margin-top: 10px; /* Ajusta el valor según sea necesario */
+    margin-bottom: 20px;
+}
