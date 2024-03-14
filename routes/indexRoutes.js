@@ -10,6 +10,10 @@ router.get('/', (req, res) => {
     res.render('index'); 
 });
 
+router.get('/api/racklimpieza', (req, res) => {
+    res.render('rackLimpieza');
+});
+
 router.use('/api', eventRoutes);
 router.use('/api', habitacionesRoutes);
 router.use('/api', userRoutes);

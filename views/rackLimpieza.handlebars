@@ -1,0 +1,45 @@
+<h1>Tabla Rack Limpieza</h1>
+<div class="row" style="width: 95%;">
+    <div class="col-10">
+        <table class="table table-dark table-hover" id="tablaRacklimpieza">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Servicio</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Estatus</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Limpieza</td>
+                    <td>Servicio de limpieza</td>
+                    <td>12/03/2024</td>
+                    <td>Pendiente</td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+
+{{!-- Modals --}}
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var table = document.getElementById("tablaRacklimpieza");
+        if (table) {
+            var dataTable = new DataTable(table, {
+                "order": [], // Puedes especificar aquí el orden inicial de las columnas
+                "paging": true, // Habilita la paginación
+                "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
+                "pageLength": 10 // Establece la longitud de página inicial
+            });
+        }
+    });
+
+
+</script>
