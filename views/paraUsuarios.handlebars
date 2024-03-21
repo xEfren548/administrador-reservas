@@ -1,0 +1,110 @@
+<div class="container">
+    <img src="https://www.bosqueescondido.com.mx/img/contenidos/home/slider/01.jpg" class="img-fluid rounded-3" alt=""
+        width="100%" style="max-height: 300px;" />
+
+    <h1 class="mt-3 mb-3 d-flex justify-content-center">Cabaña Paulette</h1>
+
+    <!-- Primera fila con la imagen y el contenido -->
+    <div class="row">
+        <div class="col-6 d-flex justify-content-center ">
+            <div class="col-xs-1 mb-3 " style="width: 70px;">
+                <img src="https://panel.hotelgest.com/files/media/male_profile_sm.jpg" id="profile-pic-alone"
+                    class="rounded-pill mr-2">
+            </div>
+
+
+            <div class="col-xs-9 col-lg-7 ms-3">
+                <small class="limit-width" data-toggle="tooltip" data-placement="bottom" title=""
+                    data-original-title="Saul Suarez  "></small>
+                <h4 class="detailsRoom" style="margin-bottom: 5px;"> MAZAMITLA CABAÑA SUITE CHANDE CAP.2 PAX 1 - 2
+                    adultos
+                </h4>
+                <p class="bold text-uppercase">
+                    Diana Paola Martinez Guzman
+                    <br>
+                    (#8926527)
+                </p>
+                <hr>
+            </div>
+        </div>  
+        <div class="col-6 ">
+            <div class="row">
+                <div class="col-6">
+                    <div class="col-xs-6 no-padding-left">
+                        <h4>Llegada</h4>
+                        <p class="font-bold"> <i class="fa fa-sign-in" aria-hidden="true"></i> <b> 16/02/2024 </b> </p>
+                    </div>
+                    <div class="col-xs-6 no-padding-left">
+                        <h4>Salida</h4>
+                        <p class="font-bold"> <i class="fa fa-sign-out" aria-hidden="true"></i> <b>19/02/2024</b> </p>
+                    </div>
+                    <div class="col-xs-6 no-padding-left">
+                        <h4>Origen</h4>
+                        <p class="font-bold"><b>Recepción</b> </p>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="col-xs-6 no-padding-left">
+                        <h4> Noches&nbsp;&nbsp;&nbsp;</h4>
+                        <p class="font-bold"> <i class="fa fa-moon" aria-hidden="true"></i> <b>2</b></p>
+                    </div>
+                    <div class="col-xs-6 no-padding-left">
+                        <h4> Recibida</h4>
+                        <p class="font-bold"> <b>10/02/2024</b></p>
+                    </div>
+                </div>
+
+                <div id="weather"></div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Segunda fila para el párrafo -->
+    <div class="row ">
+        <div class="col-6 d-flex justify-content-center">
+            <div class="text-center">
+                <p style="max-width: 500px; word-wrap: break-word;">
+                    Cabaña de estilo único diseñada especialmente para compartir en pareja,
+                    se encuentra en uno de los fraccionamientos más exclusivos de Mazamitla a tan solo
+                    6 min del Centro
+                </p>
+
+                <button type="button" class="btn btn-lg btn-outline-light">
+                    Ver instrucciones de llegada
+                </button>
+
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+<script>
+    // Llamar a la API de OpenWeatherMap
+    const apiKey = '26d8231cf1380644673deb5e34aad872'; // Reemplaza 'TU_CLAVE_DE_API' con tu clave de API de OpenWeatherMap
+    const city = 'Mazamitla'; // Reemplaza 'NOMBRE_DE_LA_CIUDAD' con el nombre de la ciudad que desees
+
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+
+    console.log(url);
+
+    // Realizar solicitud a la API
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const weatherDiv = document.getElementById('weather');
+            const temperature = data.main.temp;
+            const description = data.weather[0].description;
+            const cityName = data.name;
+            const country = data.sys.country;
+
+            weatherDiv.innerHTML = `<h2>Weather in ${cityName}, ${country}</h2>
+                                        <p>Temperature: ${temperature}°C</p>
+                                        <p>Description: ${description}</p>`;
+        })
+        .catch(error => console.error('Error fetching weather data:', error));
+</script>

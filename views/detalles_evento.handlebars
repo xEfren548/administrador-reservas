@@ -165,7 +165,9 @@
         </div>
     </div>
     <div class="col-4">
-        <h3>Notas</h3>
+        <h3 class="d-inline-block mr-3 ml-3">Notas</h3>
+        <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_notes_modal" role="button"><i
+                class="fa fa-plus-circle" aria-hidden="true"></i></a>
         <div class="card-details m-3" style="background-color: #faf1d2; height: auto; width: 80%;">
             <p style="color: black">COMENTARIOS</p>
         </div>
@@ -204,7 +206,7 @@
         <h3>Facturas</h3>
         <div class="bg-dark h-auto">
             <table class="table table-hover table-payment" style="width: auto;">
-                <thead>
+                <thead class="table-dark">
                     <tr>
                         <th>Nº Fact.</th>
                         <th>Fecha</th>
@@ -219,13 +221,12 @@
         </div>
     </div>
 
-    <div class="col-3">
-        <h3>Pagos</h3>
-        <span>
-            <a name="" id="" class="btn" href="#" role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
-        </span>
-        <table class="table table-hover table-payment" style="width: auto;">
-            <thead>
+    <div class="col-5">
+        <h3 class="d-inline-block mr-3 ml-3">Pagos</h3>
+        <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_payment_modal"
+            role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
+        <table class="table table-hover table-payment" style="width: 75%;">
+            <thead class="table-dark">
                 <tr>
                     <th>Nº Op.</th>
                     <th>Fecha</th>
@@ -234,16 +235,142 @@
                 </tr>
             </thead>
             <tbody id="rows-payment">
-
+                <tr>
+                    <td>1</td>
+                    <td>17/03/2024</td>
+                    <td>$2400</td>
+                    <td class="text-center">
+                        <button type="button" class="btn">
+                            <i class="fa fa-pencil" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
 
 </div> {{!-- Cierre row --}}
 
+<div class="row mt-3">
+    <div class="col-4">
+        <h3 class="d-inline-block">Servicios Adicionales</h3>
+        <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_payment_modal"
+            role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
+        <div class="bg-dark h-auto p-2 rounded-3">
+            <div class="article-row row rounded">
+                <div class="col-8">
+                    <p>Servicio</p>
+                    <p>Insertado el 17/03/2024</p>
+                </div>
+                <div class="col-4">
+                    <p></p>
+                </div>
+            </div>
 
-
-
-
-
+            <div class="article-row row">
+                <div class="col-8">
+                    <p>Servicio 2</p>
+                    <p>Insertado el 17/03/2024</p>
+                </div>
+                <div class="col-4">
+                    <p></p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+
+<!-- Modals -->
+
+<div class="modal fade" id="add_payment_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Agregar pago</h5>
+                <button type="button" class="close" onclick="$('#add_payment_modal').modal('hide');" aria-label="Close">
+                    &times;
+
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label for="payment_emision_date">Fecha de emisión</label>
+                                <input type="date" name="payment_emision_date" id="payment_emision_date"
+                                    class="form-control onlydatepicker" placeholder="Fecha de pago">
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="importe_pago">Importe</label>
+                                <input type="number" name="importe_pago" id="importe_pago-habitacion"
+                                    class="form-control" placeholder="0.00 MXN" min="0.00" step="0.01">
+                            </div>
+                        </div>
+
+
+                    </div> <!-- Cierre row -->
+
+                    <div class="row mt-2">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label for="payment-method" class="form-label">Método de pago</label>
+                                <select class="form-select form-select-md" name="payment-method" id="payment_method"
+                                    required>
+                                    <option selected disabled>Selecciona un método de pago</option>
+                                    <option value="tarjeta_debito">Tarjeta de débito</option>
+                                    <option value="tarjeta_credito">Tarjeta de crédito</option>
+                                    <option value="efectivo">Efectivo</option>
+                                    <option value="transferencia">Transferencia</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <div class="row mt-2">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="codigo-operacion-pago">Código de operación</label>
+                                    <input type="text" name="codigo-operacion-pago"
+                                        id="codigo-operacion-pago-habitacion" class="form-control" placeholder="001122">
+                                    <span class="help-text" style="color: gray;font-size: 14px;">No es obligatorio pero
+                                        puede servir de referencia.</span>
+
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div> <!-- Cierre row -->
+
+                    <div class="row">
+                        <div class="ml-2">
+                            <label for="payment-notes" class="form-label">Notas</label>
+                            <textarea class="form-control" name="payment-notes" id="payment-notes" rows="2"
+                                placeholder="Nombre del banco, preautorización, etc."></textarea>
+
+
+                        </div>
+                    </div>
+
+
+
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add-payment-btn">Agregar pago</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End popup dialog box -->
