@@ -1,35 +1,55 @@
 <div class="container">
     <img src="https://www.bosqueescondido.com.mx/img/contenidos/home/slider/01.jpg" class="img-fluid rounded-3" alt=""
         width="100%" style="max-height: 300px;" />
-
     <h1 class="mt-3 mb-3 d-flex justify-content-center">Cabaña Paulette</h1>
 
-    <!-- Primera fila con la imagen y el contenido -->
     <div class="row">
-        <div class="col-6 d-flex justify-content-center ">
-            <div class="col-xs-1 mb-3 " style="width: 70px;">
-                <img src="https://panel.hotelgest.com/files/media/male_profile_sm.jpg" id="profile-pic-alone"
-                    class="rounded-pill mr-2">
+        <div class="col-md-6 col-xl-6 col-xs-12 col-sm-12">
+            <div class="row d-flex justify-content-center">
+                <div class="col-2 ">
+                    <img src="https://panel.hotelgest.com/files/media/male_profile_sm.jpg" id="profile-pic-alone"
+                        class="rounded-pill" style="width: 70px;">
+                </div>
+                <div class="col-6 ps-0">
+                    <h4 class="detailsRoom" style="margin-bottom: 5px;"> MAZAMITLA CABAÑA SUITE CHANDE CAP.2 PAX 1 - 2
+                        adultos
+                    </h4>
+                    <p class="bold text-uppercase">
+                        Diana Paola Martinez Guzman
+                        <br>
+                        (#8926527)
+                    </p>
+                    <hr>
+
+                </div>
+
             </div>
 
 
-            <div class="col-xs-9 col-lg-7 ms-3">
-                <small class="limit-width" data-toggle="tooltip" data-placement="bottom" title=""
-                    data-original-title="Saul Suarez  "></small>
-                <h4 class="detailsRoom" style="margin-bottom: 5px;"> MAZAMITLA CABAÑA SUITE CHANDE CAP.2 PAX 1 - 2
-                    adultos
-                </h4>
-                <p class="bold text-uppercase">
-                    Diana Paola Martinez Guzman
-                    <br>
-                    (#8926527)
-                </p>
-                <hr>
+            <div class="row d-flex justify-content-center">
+                <div class="col-8 ">
+                    <div class="text-center">
+                        <p style="max-width: 500px; word-wrap: break-word;">
+                            Cabaña de estilo único diseñada especialmente para compartir en pareja,
+                            se encuentra en uno de los fraccionamientos más exclusivos de Mazamitla a tan solo
+                            6 min del Centro
+                        </p>
+
+                        <button type="button" class="btn btn-lg btn-outline-light mb-5">
+                            Ver instrucciones de llegada
+                        </button>
+
+                    </div>
+
+                </div>
             </div>
-        </div>  
-        <div class="col-6 ">
+
+        </div>
+
+
+        <div class="col-md-6 col-xl-6 col-xs-12 col-sm-12">
             <div class="row">
-                <div class="col-6">
+                <div class="col-6 text-center">
                     <div class="col-xs-6 no-padding-left">
                         <h4>Llegada</h4>
                         <p class="font-bold"> <i class="fa fa-sign-in" aria-hidden="true"></i> <b> 16/02/2024 </b> </p>
@@ -43,7 +63,7 @@
                         <p class="font-bold"><b>Recepción</b> </p>
                     </div>
                 </div>
-                <div class="col-6">
+                <div class="col-6 text-center">
                     <div class="col-xs-6 no-padding-left">
                         <h4> Noches&nbsp;&nbsp;&nbsp;</h4>
                         <p class="font-bold"> <i class="fa fa-moon" aria-hidden="true"></i> <b>2</b></p>
@@ -54,34 +74,12 @@
                     </div>
                 </div>
 
-                <div id="weather"></div>
+                <div id="weather" class="text-center mb-3"></div>
 
             </div>
         </div>
     </div>
-
-    <!-- Segunda fila para el párrafo -->
-    <div class="row ">
-        <div class="col-6 d-flex justify-content-center">
-            <div class="text-center">
-                <p style="max-width: 500px; word-wrap: break-word;">
-                    Cabaña de estilo único diseñada especialmente para compartir en pareja,
-                    se encuentra en uno de los fraccionamientos más exclusivos de Mazamitla a tan solo
-                    6 min del Centro
-                </p>
-
-                <button type="button" class="btn btn-lg btn-outline-light">
-                    Ver instrucciones de llegada
-                </button>
-
-
-            </div>
-        </div>
-    </div>
-
 </div>
-
-
 
 <script>
     // Llamar a la API de OpenWeatherMap
@@ -101,10 +99,41 @@
             const description = data.weather[0].description;
             const cityName = data.name;
             const country = data.sys.country;
+            const weatherIcon = data.weather[0].icon;
 
-            weatherDiv.innerHTML = `<h2>Weather in ${cityName}, ${country}</h2>
-                                        <p>Temperature: ${temperature}°C</p>
-                                        <p>Description: ${description}</p>`;
+            // Mapeo de los códigos de iconos de OpenWeatherMap a emoji
+            const iconMappings = {
+                "01d": "☀️",
+                "01n": "🌙",
+                "02d": "🌤️",
+                "02n": "🌤️",
+                "03d": "☁️",
+                "03n": "☁️",
+                "04d": "☁️",
+                "04n": "☁️",
+                "09d": "🌧️",
+                "09n": "🌧️",
+                "10d": "🌦️",
+                "10n": "🌦️",
+                "11d": "⛈️",
+                "11n": "⛈️",
+                "13d": "❄️",
+                "13n": "❄️",
+                "50d": "🌫️",
+                "50n": "🌫️"
+            };
+
+            const weatherIconEmoji = iconMappings[weatherIcon] || "❓";
+
+            // Generación del contenido HTML con iconos emoji
+            weatherDiv.innerHTML = `
+            <div style="background-image: linear-gradient(to bottom, #4f81bc, #283e51); padding: 20px; border-radius: 10px;">
+                <h2 style="color: white;">Temperatura actual en ${cityName}, ${country}</h2>
+                <p style="color: white;"><strong>Temperature:</strong> ${temperature}°C ${weatherIconEmoji}</p>
+                <p style="color: white;"><strong>Description:</strong> ${description}</p>
+            </div>
+        `;
         })
         .catch(error => console.error('Error fetching weather data:', error));
+
 </script>
