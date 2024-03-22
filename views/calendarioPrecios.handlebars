@@ -1,0 +1,9 @@
+<h1>Hola mundo</h1>
+
+{{#if habitaciones}}
+  {{#each habitaciones}}
+    <p>{{this.title}}</p> <!-- Acceder al título de cada habitación usando "this" -->
+  {{/each}}
+{{else}}
+  <p>No hay habitaciones</p>
+{{/if}}
