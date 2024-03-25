@@ -1,0 +1,66 @@
+<?PHP
+include_once("functions/funcionesLoggin.php");
+sec_session_start();
+?>
+
+<!DOCTYPE html>
+<html lang="es" class="login-html">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles/styles.css">
+  <link rel="icon" href="route-to-logo">    
+  <title>Iniicar sesión</title>
+</head>
+
+<body class="login-body flex-vcontainer">
+  <main>
+    <div class="login-form">
+      <div>
+          <img src="route-to-logo" alt="Cabañas Navarro">
+          <h1>Cabañas Navarro</h1>
+      </div>
+
+      <div class="form">
+        <form action="">
+          <div class="form-item"><h2>Inicia sesión</h2></div>
+
+          <div class="form-item">
+            <label for="txt-user-email">Dirección de correo electrónico</label>
+            <input id="txt-user-email" name="txt-user-email" type="text">
+          </div>    
+                
+          <div class="form-item">
+            <label for="txt-user-password">Contraseña</label>
+            <input id="txt-user-password" name="txt-user-password" type="password">            
+          </div>
+
+          <div class="form-item">
+            <p id="txt-login-error" class="error"></p>
+          </div>
+
+          <div class="form-item">
+            <button id="btn-login-submit" type="submit">Iniciar sesión</button>
+          </div>          
+        </form>
+        <hr>
+        <div class="to-signup">
+              <p>¿Aún no tienes una cuenta? <a href="route-to-signup">¡Regístrate aquí!</a></p>                                        
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+      <p>&copy; 2024. Cabañas Navarro. Todos los derechos reservados.</p>
+  </footer>
+
+  <script src="assets/vendor_components/jquery-3.3.1/jquery-3.3.1.js"></script>
+  <script src="assets/vendor_components/popper/dist/popper.min.js"></script>
+  <script type="text/javascript" src="jsUlog/sha512.js"></script>
+  <script type="text/javascript" src="jsUlog/forms.js"></script>
+</body>
+
+</html>

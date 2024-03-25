@@ -1,0 +1,128 @@
+<div class="page-info">
+    <h1>Editar alojamiento</h1>
+    <button>Guardar</button>
+</div>
+
+<button class="toggle-collpase-section-button" data-toggle="collapse" data-target="#propertyDetails">+ Detalles de la propiedad</button>
+<div id="propertyDetails" class="chalet-details collapse">
+    <div class="input-group half">
+        <label for="slctchaletAccomodationType">Tipo de alojamiento</label>
+        <select id="slctchaletAccomodationType" name="slctchaletAccomodationType" >
+            <optgroup label="Option group 1">
+                <option value="Option 1">Option 1</option>
+            </optgroup> 
+            <optgroup label="Option group 2">
+                <option value="Option 2">Option 2</option>
+            </optgroup>              
+        </select>
+    </div>
+    <div class="input-group half">
+        <label for="txtChaletName">Nombre</label>
+        <input id="txtChaletName" name="txtChaletName" type="text">
+    </div>
+    <div class="input-group half inline-input-group">
+        <label for="txtChaletPhoneNumber">Teléfono establecimiento</label>
+        <input id="txtChaletPhoneNumber" name="txtChaletPhoneNumber" type="tel">
+    </div>
+    <div class="input-group half">
+        <label for="txtChaletEmail">Email</label>
+        <input id="txtChaletEmail" name="txtChaletEmail" type="email">
+    </div>
+    <div class="input-group half">
+        <label for="txtChaletWebsite">Sitio web</label>
+        <input id="txtChaletWebsite" name="txtChaletWebsite" type="email">
+    </div>
+    <div class="input-group third">
+        <label for="txtChaletMinPpl">Ocupación mínima</label>
+        <input id="txtChaletMinPpl" name="txtChaletMinPpl" type="number">
+    </div>
+    <div class="input-group third">
+        <label for="txtChaletMaxPpl">Ocupación máxima</label>
+        <input id="txtChaletMaxPpl" name="txtChaletMaxPpl" type="number">
+    </div>
+    <div class="input-group third">
+        <label for="txtChaletTourLicense">Licencia turística</label>
+        <input id="txtChaletTourLicense" name="txtChaletTourLicense" type="text">
+    </div>
+</div>
+
+<button class="toggle-collpase-section-button" data-toggle="collapse" data-target="#accomodationDetails">+ Descripción del alojamiento</button>
+<div id="accomodationDetails" class="chalet-details collapse">
+    <div class="input-group">
+        <textarea name="txtAccomodationDetails" rows="10" placeholder="Porporciona una descripción para el alojamiento."></textarea>
+    </div>
+</div>
+
+<button class="toggle-collpase-section-button" data-toggle="collapse" data-target="#additionalInfo">+ Información adicional</button>
+<div id="additionalInfo" class="chalet-details collapse">
+    <div class="input-group">
+        <textarea name="txtAdditionalInfo" rows="10" placeholder="Porporciona información adicional."></textarea>
+    </div>
+</div>
+
+<button class="toggle-collpase-section-button" data-toggle="collapse" data-target="#touristicRate">+ Tasa turística - motor de reservas</button>
+<div id="touristicRate" class="chalet-details collapse">
+    <div class="input-group">
+        <textarea name="txtTouristicRate" rows="10" placeholder="Agrega una tasa turística"></textarea>
+    </div>
+</div>
+
+<button class="toggle-collpase-section-button" data-toggle="collapse" data-target="#legalNote">+ Nota legal</button>
+<div id="legalNote" class="chalet-details collapse">
+    <div class="input-group">
+        <textarea name="txtLegalNote" rows="10" placeholder="Agrgega una nota legal"></textarea>
+    </div>
+</div>
+
+<button class="toggle-collpase-section-button" data-toggle="collapse" data-target="#location">+ Ubicación</button>
+<div id="location" class="chalet-details collapse">
+    <div class="input-group third">
+        <label for="txtState">Provincia / estado</label>
+        <input id="txtState" name="txtState" type="text">
+    </div>
+    <div class="input-group third">
+        <label for="txtPopulation">Población</label>
+        <input id="txtPopulation" name="txtPopulation" type="text">
+    </div>
+    <div class="input-group third">
+        <label for="txtAddressNumber">Número</label>
+        <input id="txtAddressNumber" name="txtAddressNumber" type="number">
+    </div>
+    <div class="input-group third">
+        <label for="txtPostalCode">Código postal</label>
+        <input id="txtPostalCode" name="txtPostalCode" type="number">
+    </div>
+    <div class="input-group third">
+        <label for="txtLat">Latitud</label>
+        <input id="txtLat" name="txtLat" type="number">
+    </div>
+    <div class="input-group third">
+        <label for="txtLong">Longitud</label>
+        <input id="txtLong" name="txtLong" type="number">
+    </div>
+    <div class="input-group third">
+        <label for="txtWeathedWdgt">Widget de clima</label>
+        <input id="txtWeathedWdgt" name="txtWeathedWdgt" type="text">
+    </div>
+    <div class="input-group">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30009.200046370872!2d-103.04062641019756!3d19.91808261265727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x842f08c29d6bb1fb%3A0xb0e0d639aa12c005!2s49500%20Mazamitla%2C%20Jal.!5e0!3m2!1ses-419!2smx!4v1711321362791!5m2!1ses-419!2smx" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+</div>
+
+<button class="toggle-collpase-section-button" data-toggle="collapse" data-target="#photos">+ Fotografías</button>
+<div id="photos" class="chalet-details collapse">
+    <div class="input-group">
+        <div class="photo-carousel">
+            <img src="../public/images/login/chalet.png" alt="Photo description">
+            <img src="../public/images/login/chalet.png" alt="Photo description">
+            <img src="../public/images/login/chalet.png" alt="Photo description">
+        </div>
+        <div class="custom-file-upload">
+            <label for="file-upload">
+                <input id="file-upload" type="file">
+                Subir archivo
+            </label>
+            <span>Ninguna fotografía seleccionada</span>
+        </div>        
+    </div>
+</div>

@@ -56,6 +56,4 @@ router.get('/eventos/:idevento', async (req, res) => {
 });
 
 
-
-
 module.exports = router;

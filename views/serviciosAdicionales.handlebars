@@ -6,6 +6,8 @@
                 <tr>
                     <th scope="col">Servicio</th>
                     <th scope="col">Descripción</th>
+                    <th scope="col">Costo compra</th>
+                    <th scope="col">Costo venta</th>
                     <th scope="col">Fecha</th>
                     <th scope="col">Estatus</th>
                     <th scope="col">Acciones</th>
@@ -15,6 +17,8 @@
                 <tr>
                     <td>Limpieza</td>
                     <td>Servicio de limpieza</td>
+                    <td>$10</td>
+                    <td>$20</td>
                     <td>12/03/2024</td>
                     <td>Pendiente</td>
                     <td class="text-center">
@@ -29,6 +33,8 @@
                 <tr>
                     <td>Limpieza</td>
                     <td>Servicio de limpieza</td>
+                    <td>$10</td>
+                    <td>$20</td>
                     <td>13/03/2024</td>
                     <td>En proceso</td>
                     <td class="text-center">
@@ -43,6 +49,8 @@
                 <tr>
                     <td>Traslado</td>
                     <td>Servicio de Uber</td>
+                    <td>$10</td>
+                    <td>$20</td>
                     <td>10/03/2024</td>
                     <td>Terminado</td>
                     <td class="text-center">
@@ -57,6 +65,8 @@
                 <tr>
                     <td>Traslado</td>
                     <td>Servicio de Uber</td>
+                    <td>$10</td>
+                    <td>$20</td>
                     <td>10/03/2024</td>
                     <td>Terminado</td>
                     <td class="text-center">
@@ -71,6 +81,8 @@
                 <tr>
                     <td>Traslado</td>
                     <td>Servicio de Uber</td>
+                    <td>$10</td>
+                    <td>$20</td>
                     <td>10/03/2024</td>
                     <td>Terminado</td>
                     <td class="text-center">
@@ -85,6 +97,8 @@
                 <tr>
                     <td>Traslado</td>
                     <td>Servicio de Uber</td>
+                    <td>$10</td>
+                    <td>$20</td>
                     <td>10/03/2024</td>
                     <td>Terminado</td>
                     <td class="text-center">
@@ -99,6 +113,8 @@
                 <tr>
                     <td>Traslado</td>
                     <td>Servicio de Uber</td>
+                    <td>$10</td>
+                    <td>$20</td>
                     <td>10/03/2024</td>
                     <td>Terminado</td>
                     <td class="text-center">
@@ -113,6 +129,8 @@
                 <tr>
                     <td>Traslado</td>
                     <td>Servicio de Uber</td>
+                    <td>$10</td>
+                    <td>$20</td>
                     <td>10/03/2024</td>
                     <td>Terminado</td>
                     <td class="text-center">
@@ -127,6 +145,8 @@
                 <tr>
                     <td>Traslado</td>
                     <td>Servicio de Uber</td>
+                    <td>$10</td>
+                    <td>$20</td>
                     <td>10/03/2024</td>
                     <td>Terminado</td>
                     <td class="text-center">
@@ -141,6 +161,8 @@
                 <tr>
                     <td>Traslado</td>
                     <td>Servicio de Uber</td>
+                    <td>$10</td>
+                    <td>$20</td>
                     <td>10/03/2024</td>
                     <td>Terminado</td>
                     <td class="text-center">
@@ -155,6 +177,8 @@
                 <tr>
                     <td>Traslado</td>
                     <td>Servicio de Uber</td>
+                    <td>$10</td>
+                    <td>$20</td>
                     <td>10/03/2024</td>
                     <td>Terminado</td>
                     <td class="text-center">
@@ -169,6 +193,8 @@
                 <tr>
                     <td>Traslado</td>
                     <td>Servicio de Uber</td>
+                    <td>$10</td>
+                    <td>$20</td>
                     <td>10/03/2024</td>
                     <td>Terminado</td>
                     <td class="text-center">
@@ -183,6 +209,8 @@
                 <tr>
                     <td>Traslado</td>
                     <td>Servicio de Uber</td>
+                    <td>$10</td>
+                    <td>$20</td>
                     <td>10/03/2024</td>
                     <td>Terminado</td>
                     <td class="text-center">
@@ -202,9 +230,7 @@
 
 
 {{!-- Modals --}}
-
-<!-- Modal Alta Servicios -->
-
+<!-- Modal slta Sservicios -->
 <div class="modal fade" id="services_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
@@ -230,6 +256,20 @@
                                 <label for="service-description">Descripción</label>
                                 <input type="text" name="service-description" id="service-description" class="form-control"
                                     placeholder="Descripción">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="purchase-cost">Costo de compra</label>
+                                <input type="text" name="purchase-cost" id="purchase-cost" class="form-control"
+                                    placeholder="Costo de compra">
+                            </div>
+                        </div>
+                         <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="selling-cost">Costo de venta</label>
+                                <input type="text" name="selling-cost" id="selling-cost" class="form-control"
+                                    placeholder="Costo de venta">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
@@ -266,17 +306,15 @@
         </div>
     </div>
 </div>
-<!-- End Modal Alta Servicio -->
+<!-- End modal alta servicio -->
 
-
-
-{{!-- Modal modificar usuario --}}
+{{!-- Modal modificar servicio --}}
 <div class="modal fade" id="modify-service_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Modificar Usuario</h5>
+                <h5 class="modal-title" id="modalLabel">Modificar Servicio</h5>
                 <button type="button" class="close" onclick="$('#modify-service_entry_modal').modal('hide');" aria-label="Close">
                     &times;
 
@@ -300,16 +338,23 @@
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
+                                <label for="purchase-cost">Costo de compra</label>
+                                <input type="text" name="purchase-cost" id="purchase-cost" class="form-control"
+                                    placeholder="Costo de compra">
+                            </div>
+                        </div>
+                         <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="selling-cost">Costo de venta</label>
+                                <input type="text" name="selling-cost" id="selling-cost" class="form-control"
+                                    placeholder="Costo de venta">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
                                 <label for="user-email">Fecha: </label>
                                 <input type="date" name="user-email" id="user-email" class="form-control"
                                     placeholder="Usuario">
-                            </div>
-                            <div class="col-sm-12 mb-2">
-                                <div class="form-group">
-                                    <label for="user-password">Contraseña: </label>
-                                    <input type="password" name="user-password" id="user-password" class="form-control"
-                                        placeholder="Contraseña">
-                                </div>
                             </div>
                             <div class="row">
                                 <label for="user-privileges">Estatus: </label>

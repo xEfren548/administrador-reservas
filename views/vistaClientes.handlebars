@@ -1,0 +1,217 @@
+<h1>Lista de clientes</h1>
+<div class="row" style="width: 95%;">
+    <div class="col-10">
+        <table class="table table-dark table-hover" id="tablaClientes">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Apellido</th>
+                    <th scope="col">Teléfono</th>
+                    <th scope="col">Dirección</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Tipo de identificación</th>
+                    <th scope="col">Número de identificación</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Nombre del cliente</td>
+                    <td>Apellido del cliente</td>
+                    <td>Teléfono del cliente</td>
+                    <td>Dirección del cliente</td>
+                    <td>Email del cliente</td>
+                    <td>INE</td>                    
+                    <td>Dirección del cliente</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modify-client_entry_modal">
+                            <i class="fa fa-pencil" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+{{!-- Modals --}}
+
+<!-- Modal alta cliente -->
+<div class="modal fade" id="client_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Alta de cliente</h5>
+                <button type="button" class="close" onclick="$('#client_entry_modal').modal('hide');" aria-label="Close">
+                    &times;
+
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="client-name">Nombre</label>
+                                <input type="text" name="client-name" id="client-name" class="form-control onlydatepicker"
+                                    placeholder="Nombre">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="client-lastname">Apellido</label>
+                                <input type="text" name="client-lastname" id="client-lastname" class="form-control"
+                                    placeholder="Apellido">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="client-phone">Teléfono</label>
+                                <input type="text" name="client-phone" id="client-phone" class="form-control"
+                                    placeholder="Teléfono">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="client-address">Dirección</label>
+                                <input type="text" name="client-address" id="client-address" class="form-control"
+                                    placeholder="Dirección">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="client-email">Email</label>
+                                <input type="text" name="client-email" id="client-email" class="form-control"
+                                    placeholder="Email">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="client-identification">Tipo de identificación</label>
+                                <input type="text" name="client-identification" id="client-identification" class="form-control"
+                                    placeholder="Tipo de identificación">
+                            </div>
+                        </div>                    
+                        <div class="row">
+                            <div class="col-8">
+                            <select name="privileges" id="client-privileges" required>
+                                <option value="" selected disabled> Selecciona el tipo de identificación del cliente--
+                                </option>
+                               
+                                <option value="INE">INE</option>
+                                <option value="Pasaporte">Pasaporte</option>
+                                <option value="Licencia">Licencia</option>
+                            </select>
+
+                            </div>
+
+                        </div>
+                    </div> <!-- Cierre row -->
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="save-client-btn">Agregar Cliente</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Modal Alta cliente -->
+
+{{!-- Modal modificar cliente --}}
+<div class="modal fade" id="modify-client_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Modificar Cliente</h5>
+                <button type="button" class="close" onclick="$('#modify-client_entry_modal').modal('hide');" aria-label="Close">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="client-name">Nombre</label>
+                                <input type="text" name="client-name" id="client-name" class="form-control onlydatepicker"
+                                    placeholder="Nombre">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="client-lastname">Apellido</label>
+                                <input type="text" name="client-lastname" id="client-lastname" class="form-control"
+                                    placeholder="Apellido">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="client-phone">Teléfono</label>
+                                <input type="tel" name="client-phone" id="client-phone" class="form-control"
+                                    placeholder="Teléfono">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="client-address">Dirección</label>
+                                <input type="text" name="client-address" id="client-address" class="form-control"
+                                    placeholder="Dirección">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="client-email">Email</label>
+                                <input type="email" name="client-email" id="client-email" class="form-control"
+                                    placeholder="Email">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label for="client-id-type">Tipo de identificación: </label>
+                        </div>
+                        <div class="row">
+                            <div class="col-8">
+                                <select name="client-id-type" id="client-id-type" required>
+                                    <option value="" selected disabled> Selecciona un tipo de identificación para el cliente--
+                                    </option>
+                                    <option value="INE">INE</option>
+                                    <option value="Pasaporte">Pasaporte</option>
+                                    <option value="Licencia">Licencia</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="client-id-number">Número de identificación</label>
+                                <input type="text" name="client-id-number" id="client-id-number" class="form-control"
+                                    placeholder="Número de identificación">
+                            </div>
+                        </div>
+                    </div> <!-- Cierre row -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="save-client-btn">Modificar Cliente</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var table = document.getElementById("tablaClientes");
+        if (table) {
+            var dataTable = new DataTable(table, {
+                "order": [], // Puedes especificar aquí el orden inicial de las columnas
+                "paging": true, // Habilita la paginación
+                "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
+                "pageLength": 10 // Establece la longitud de página inicial
+            });
+        }
+    });
+</script>

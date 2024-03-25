@@ -16,9 +16,6 @@ app.engine('handlebars', engine())
 app.set('view engine', 'handlebars');
 app.set('views', './views');
 
-
-
-
 const port = process.env.PORT || 3005;
 
 const db_url = process.env.DB_URL;
