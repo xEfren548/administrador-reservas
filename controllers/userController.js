@@ -2,10 +2,20 @@ const Usuario = require('../models/Usuario');
 const { nanoid } = require('nanoid');
 const bcrypt = require('bcrypt');
 
-async function obtenerUsuarios(req, res) { 
+async function mostrarUsuarios(req, res) { 
     try {
         const usuarios = await Usuario.find();
         res.send(usuarios);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener usuarios' });
+    }
+}
+
+async function obtenerUsuarios(req, res) { 
+    try {
+        const usuarios = await Usuario.find();
+        return usuarios;
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener usuarios' });
@@ -131,6 +141,7 @@ async function eliminarUsuario(req, res) {
 
 
 module.exports = {
+    mostrarUsuarios,
     obtenerUsuarios,
     obtenerUsuarioPorId,
     agregarUsuario,

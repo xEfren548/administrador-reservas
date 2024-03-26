@@ -18,13 +18,22 @@ const userController = require('../controllers/userController');
 //     }
 // });
 
-router.get('/', (req, res) => {
-    res.render('vistaUsuarios', {
-        layout: 'users'
-    })
-})
+router.get('/', async (req, res) => {
+    try {
+        const usuarios = await userController.obtenerUsuarios();
+        console.log(usuarios);
+        res.render('vistaUsuarios', {
+            layout: 'users',
+            usuarios: usuarios // Pasar usuarios a la vista
+        });
+        
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).json({ message: 'Error al obtener usuarios' });
+    }
+});
 
-router.get('/obtener-usuarios', userController.obtenerUsuarios)
+router.get('/mostrar-usuarios', userController.mostrarUsuarios) 
 router.post('/crear-usuarios', userController.agregarUsuario)
 router.put('/editar-usuarios/:uuid', userController.editarUsuario)
 router.delete('/eliminar-usuarios/:uuid', userController.eliminarUsuario)
