@@ -22,7 +22,7 @@ router.get('/api/racklimpieza', (req, res) => {
 
 router.use('/api', eventRoutes);
 router.use('/api', habitacionesRoutes);
-router.use('/api', userRoutes);
+router.use('/api/usuarios', userRoutes);
 router.use('/api', serviciosRoutes);
 router.use('/api', clientesRoutes);
 router.use('/api', cabanasRoutes);

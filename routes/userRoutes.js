@@ -1,6 +1,7 @@
 const express = require('express');
-const moment = require('moment');
 const router = express.Router();
+
+const userController = require('../controllers/userController');
 
 // const eventController = require('../controllers/eventController');
 // const habitacionController = require('../controllers/habitacionController');
@@ -17,11 +18,16 @@ const router = express.Router();
 //     }
 // });
 
-router.get('/usuarios', (req, res) => {
+router.get('/', (req, res) => {
     res.render('vistaUsuarios', {
         layout: 'users'
     })
 })
+
+router.get('/obtener-usuarios', userController.obtenerUsuarios)
+router.post('/crear-usuarios', userController.agregarUsuario)
+router.put('/editar-usuarios/:uuid', userController.editarUsuario)
+router.delete('/eliminar-usuarios/:uuid', userController.eliminarUsuario)
 
 // Rutas estáticas
 // router.get('/eventos', eventController.obtenerEventos);
