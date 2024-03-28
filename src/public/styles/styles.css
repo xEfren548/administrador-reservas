@@ -419,6 +419,16 @@ body:not(h1, h2, h3, h4, h5, h6){
     border-radius: 4px;
 }
 
+.page-info button:hover{
+    display: inline-block;
+    width: 10rem;
+    padding: 6px 12px;
+    background-color: rgb(102, 88, 232);
+    color: white;
+    border-style: none;
+    border-radius: 4px;
+}
+
 .chalet-details{
     display: flex;
     flex-wrap: wrap;
@@ -440,10 +450,6 @@ body:not(h1, h2, h3, h4, h5, h6){
     border: none
 }
 
-.chalet-details h2::before{
-    content: " + ";
-}
-
 .chalet-details .half{
     width: 47.5%;
 }
@@ -455,6 +461,7 @@ body:not(h1, h2, h3, h4, h5, h6){
 .chalet-details .inline-input-group{
     display: inline;
     width: 100%;
+    margin: 10px 0;
 }
 
 .input-group{
@@ -509,6 +516,29 @@ body:not(h1, h2, h3, h4, h5, h6){
     outline: 2px solid white;
 }
 
+.chalet-details legend{
+    display: block;
+    font-size: 1.5rem;
+    font-family: "Open Sans", sans-serif;
+    text-align: start;
+}
+
+.option-group{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.checkbox-option{
+    margin: 2px;
+}
+
+.checkbox-option input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    border: solid 2px gray;
+    border-radius: 2px;
+}
+
 .photo-carousel{
     display: flex;
     width: 100%;
@@ -516,24 +546,58 @@ body:not(h1, h2, h3, h4, h5, h6){
     overflow: scroll;
 }
 
-.photo-carousel img{
+.photo-carousel .photo{
     flex-shrink: 0;
+    position: relative;
+    margin: 0;
+    padding: 1.5rem;
+}
+
+
+.photo-carousel .photo:first-child{
+    margin-left: 0;
+}
+
+.photo-carousel .photo:last-child{
+    margin-right: 0;
+}
+
+.photo:hover .delete-photo{
+    display: flex;
+}
+
+.photo .delete-photo{
+    display: none;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 2.5rem;
+    height: 2.5rem;
+    box-sizing: border-box;
+    background-color: transparent;
+    backdrop-filter: blur(10px);
+    color: white;
+    border: solid 1px white;
+    border-radius: 50px;
+}
+
+.delete-photo span{
+    display: inline-block;
+    box-sizing: border-box;
+    font-size: 1.75rem;
+    user-select: none;
+}
+
+.photo img{
     width: 225px;
-    height: 300px;
-    margin: 0 10px;
+    height: 300px; 
     background-color: white;
     background-image: url("../images/login/chalet.png");
     background-repeat: no-repeat;
     background-size: cover;
     font-family: "Open Sans", sans-serif;
-}
-
-.photo-carousel img:first-child{
-    margin-left: 0;
-}
-
-.photo-carousel img:last-child{
-    margin-right: 0;
 }
 
 .custom-file-upload label{

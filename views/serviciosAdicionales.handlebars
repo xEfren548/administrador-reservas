@@ -6,10 +6,14 @@
                 <tr>
                     <th scope="col">Servicio</th>
                     <th scope="col">Descripción</th>
-                    <th scope="col">Costo compra</th>
-                    <th scope="col">Costo venta</th>
-                    <th scope="col">Fecha</th>
-                    <th scope="col">Estatus</th>
+                    <th scope="col">Proveedor</th>
+                    <th scope="col">Administrador de servicios</th>
+                    <th scope="col">Precio base</th>
+                    <th scope="col">1ra comisión</th>
+                    <th scope="col">1er usuario</th>
+                    <th scope="col">2da comisión</th>
+                    <th scope="col">2do usuario</th>
+                    <th scope="col">Precio final</th>
                     <th scope="col">Acciones</th>
                 </tr>
             </thead>
@@ -17,10 +21,22 @@
                 <tr>
                     <td>Limpieza</td>
                     <td>Servicio de limpieza</td>
-                    <td>$10</td>
-                    <td>$20</td>
-                    <td>12/03/2024</td>
-                    <td>Pendiente</td>
+                    <td>Proveedor</td>
+                    <td>Administrador de servicios</td>
+                    <td>$10000</td>
+                    <td>$7500</td>
+                    <td>
+                        <select name="slctFirstUser" id="slctFirstUser">
+                            <option value="Usuario 1">Usuario 1</option>
+                        </select>
+                    </td>
+                    <td>$2500</td>
+                    <td>
+                        <select name="slctSecondUser" id="slctSecondUser">
+                            <option value="Usuario 2">Usuario 2</option>
+                        </select>
+                    </td>
+                    <td>$1000</td>
                     <td class="text-center">
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modify-service_entry_modal">
                             <i class="fa fa-pencil" aria-hidden="true"></i>
@@ -30,278 +46,95 @@
                         </button>
                     </td>
                 </tr>
-                <tr>
-                    <td>Limpieza</td>
-                    <td>Servicio de limpieza</td>
-                    <td>$10</td>
-                    <td>$20</td>
-                    <td>13/03/2024</td>
-                    <td>En proceso</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Traslado</td>
-                    <td>Servicio de Uber</td>
-                    <td>$10</td>
-                    <td>$20</td>
-                    <td>10/03/2024</td>
-                    <td>Terminado</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Traslado</td>
-                    <td>Servicio de Uber</td>
-                    <td>$10</td>
-                    <td>$20</td>
-                    <td>10/03/2024</td>
-                    <td>Terminado</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Traslado</td>
-                    <td>Servicio de Uber</td>
-                    <td>$10</td>
-                    <td>$20</td>
-                    <td>10/03/2024</td>
-                    <td>Terminado</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Traslado</td>
-                    <td>Servicio de Uber</td>
-                    <td>$10</td>
-                    <td>$20</td>
-                    <td>10/03/2024</td>
-                    <td>Terminado</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Traslado</td>
-                    <td>Servicio de Uber</td>
-                    <td>$10</td>
-                    <td>$20</td>
-                    <td>10/03/2024</td>
-                    <td>Terminado</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Traslado</td>
-                    <td>Servicio de Uber</td>
-                    <td>$10</td>
-                    <td>$20</td>
-                    <td>10/03/2024</td>
-                    <td>Terminado</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Traslado</td>
-                    <td>Servicio de Uber</td>
-                    <td>$10</td>
-                    <td>$20</td>
-                    <td>10/03/2024</td>
-                    <td>Terminado</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Traslado</td>
-                    <td>Servicio de Uber</td>
-                    <td>$10</td>
-                    <td>$20</td>
-                    <td>10/03/2024</td>
-                    <td>Terminado</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Traslado</td>
-                    <td>Servicio de Uber</td>
-                    <td>$10</td>
-                    <td>$20</td>
-                    <td>10/03/2024</td>
-                    <td>Terminado</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Traslado</td>
-                    <td>Servicio de Uber</td>
-                    <td>$10</td>
-                    <td>$20</td>
-                    <td>10/03/2024</td>
-                    <td>Terminado</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Traslado</td>
-                    <td>Servicio de Uber</td>
-                    <td>$10</td>
-                    <td>$20</td>
-                    <td>10/03/2024</td>
-                    <td>Terminado</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
             </tbody>
         </table>
-
     </div>
 </div>
 
 
 {{!-- Modals --}}
 <!-- Modal slta Sservicios -->
-<div class="modal fade" id="services_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
-    aria-hidden="true">
+<div class="modal fade" id="services_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Alta de Servicios</h5>
                 <button type="button" class="close" onclick="$('#services_entry_modal').modal('hide');" aria-label="Close">
                     &times;
-
+                </button>
             </div>
             <div class="modal-body">
                 <div class="img-container">
                     <div class="row mt-2">
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="user-name">Servicio</label>
-                                <input type="text" name="service-name" id="service-name" class="form-control onlydatepicker"
-                                    placeholder="Nombre servicio">
+                                <label for="txtService">Servicio</label>
+                                <input type="text" name="txtService" id="txtService" class="form-control" placeholder="Servicio">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="service-description">Descripción</label>
-                                <input type="text" name="service-description" id="service-description" class="form-control"
-                                    placeholder="Descripción">
+                                <label for="txtServiceDescription">Descripción</label>
+                                <input type="text" name="txtServiceDescription" id="txtServiceDescription" class="form-control" placeholder="Descripción">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="purchase-cost">Costo de compra</label>
-                                <input type="text" name="purchase-cost" id="purchase-cost" class="form-control"
-                                    placeholder="Costo de compra">
-                            </div>
-                        </div>
-                         <div class="col-sm-12 mb-2">
-                            <div class="form-group">
-                                <label for="selling-cost">Costo de venta</label>
-                                <input type="text" name="selling-cost" id="selling-cost" class="form-control"
-                                    placeholder="Costo de venta">
+                                <label for="txtSupplier">Proveedor</label>
+                                <input type="text" name="txtSupplier" id="txtSupplier" class="form-control" placeholder="Proveedor">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="user-email">Fecha: </label>
-                                <input type="date" name="user-email" id="user-email" class="form-control"
-                                    placeholder="Usuario">
+                                <label for="txtServiceManager">Administrador de servicios</label>
+                                <input type="text" name="txtServiceManager" id="txtServiceManager" class="form-control" placeholder="Administrador de servicios">
                             </div>
-                            <div class="row">
-                                <label for="user-privileges">Estatus: </label>
-
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtBasePrice">Precio base</label>
+                                <input type="number" name="txtBasePrice" id="txtBasePrice" class="form-control" placeholder="Precio base">
                             </div>
-                            <div class="row">
-                                <div class="col-8">
-                                <select name="privileges" id="service-status" required>
-                                    <option value="" selected disabled> Selecciona el estado del servicio --
-                                    </option>
-                                    <option value="enproceso">En Proceso</option>
-                                    <option value="Pendiente">Pendiente</option>
-                                    <option value="Terminado">Terminado</option>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtFirstCommission">1ra comisión</label>
+                                <input type="number" name="txtFirstCommission" id="txtFirstCommission" class="form-control" placeholder="1ra comisión">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="slctFirstUser">Usuario para 1ra comisión</label>
+                                <select name="slctFirstUser" id="slctFirstUser" class="form-control">
+                                    <option value="Usuario 1">Usuario 1</option>
                                 </select>
-
-                                </div>
-
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtSecondCommission">2da comisión</label>
+                                <input type="number" name="txtSecondCommission" id="txtSecondCommission" class="form-control" placeholder="2da comisión">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="slctSecondUser">Usuario para 2da comisión</label>
+                                <select name="slctSecondUser" id="slctSecondUser" class="form-control">
+                                    <option value="Usuario 2">Usuario 2</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtFinalPrice">Precio final</label>
+                                <input type="number" name="txtFinalPrice" id="txtFinalPrice" class="form-control" placeholder="Precio final">
                             </div>
                         </div>
                     </div> <!-- Cierre row -->
-
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="save-user-btn">Guardar Servicio</button>
+                <button type="button" class="btn btn-primary" id="save-service-btn">Guardar Servicio</button>
             </div>
         </div>
     </div>
@@ -324,58 +157,69 @@
                     <div class="row mt-2">
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="user-name">Servicio</label>
-                                <input type="text" name="service-name" id="service-name" class="form-control onlydatepicker"
-                                    placeholder="Nombre servicio">
+                                <label for="txtService">Servicio</label>
+                                <input type="text" name="txtService" id="txtService" class="form-control" placeholder="Servicio">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="service-description">Descripción</label>
-                                <input type="text" name="service-description" id="service-description" class="form-control"
-                                    placeholder="Descripción">
+                                <label for="txtServiceDescription">Descripción</label>
+                                <input type="text" name="txtServiceDescription" id="txtServiceDescription" class="form-control" placeholder="Descripción">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="purchase-cost">Costo de compra</label>
-                                <input type="text" name="purchase-cost" id="purchase-cost" class="form-control"
-                                    placeholder="Costo de compra">
-                            </div>
-                        </div>
-                         <div class="col-sm-12 mb-2">
-                            <div class="form-group">
-                                <label for="selling-cost">Costo de venta</label>
-                                <input type="text" name="selling-cost" id="selling-cost" class="form-control"
-                                    placeholder="Costo de venta">
+                                <label for="txtSupplier">Proveedor</label>
+                                <input type="text" name="txtSupplier" id="txtSupplier" class="form-control" placeholder="Proveedor">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="user-email">Fecha: </label>
-                                <input type="date" name="user-email" id="user-email" class="form-control"
-                                    placeholder="Usuario">
+                                <label for="txtServiceManager">Administrador de servicios</label>
+                                <input type="text" name="txtServiceManager" id="txtServiceManager" class="form-control" placeholder="Administrador de servicios">
                             </div>
-                            <div class="row">
-                                <label for="user-privileges">Estatus: </label>
-
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtBasePrice">Precio base</label>
+                                <input type="number" name="txtBasePrice" id="txtBasePrice" class="form-control" placeholder="Precio base">
                             </div>
-                            <div class="row">
-                                <div class="col-8">
-                                <select name="privileges" id="service-status" required>
-                                    <option value="" selected disabled> Selecciona el estado del servicio --
-                                    </option>
-                                    <option value="enproceso">En Proceso</option>
-                                    <option value="Pendiente">Pendiente</option>
-                                    <option value="Terminado">Terminado</option>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtFirstCommission">1ra comisión</label>
+                                <input type="number" name="txtFirstCommission" id="txtFirstCommission" class="form-control" placeholder="1ra comisión">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="slctFirstUser">Usuario para 1ra comisión</label>
+                                <select name="slctFirstUser" id="slctFirstUser" class="form-control">
+                                    <option value="Usuario 1">Usuario 1</option>
                                 </select>
-
-                                </div>
-
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtSecondCommission">2da comisión</label>
+                                <input type="number" name="txtSecondCommission" id="txtSecondCommission" class="form-control" placeholder="2da comisión">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="slctSecondUser">Usuario para 2da comisión</label>
+                                <select name="slctSecondUser" id="slctSecondUser" class="form-control">
+                                    <option value="Usuario 2">Usuario 2</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtFinalPrice">Precio final</label>
+                                <input type="number" name="txtFinalPrice" id="txtFinalPrice" class="form-control" placeholder="Precio final">
                             </div>
                         </div>
                     </div> <!-- Cierre row -->
-
                 </div>
             </div>
             <div class="modal-footer">
