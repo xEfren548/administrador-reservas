@@ -1,148 +1,164 @@
 const Usuario = require('../models/Usuario');
-const { nanoid } = require('nanoid');
-const bcrypt = require('bcrypt');
 
-async function mostrarUsuarios(req, res) { 
-    try {
-        const usuarios = await Usuario.find();
-        res.send(usuarios);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error al obtener usuarios' });
+async function logIn(req, res, next){
+    const { email, password } = req.body;
+
+    if(!email || !password){
+        error = new Error("Falta información en el request");
+        error.status = 400;    
+        return next(error);
+    }
+
+    try{
+        const user = await Usuario.findOne({ email });
+        if(!user){
+            error = new Error("Wrong credentials");
+            error.status = 401;    
+            return next(error);
+        }
+
+        const pwdEqual = user.password === password;
+        if(!pwdEqual){
+            error = new Error("Wrong credentials");
+            error.status = 401;    
+            return next(error);
+        }
+
+        console.log("Usuario logeado con éxito");
+        res.status(200).json( {user} );
+
+    } catch(err){
+        return next(err);
     }
 }
 
-async function obtenerUsuarios(req, res) { 
+async function mostrarVistaUsuarios(req, res, next){
     try {
-        const usuarios = await Usuario.find();
-        return usuarios;
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error al obtener usuarios' });
-    }
-}
-
-async function obtenerUsuarioPorId(id) {
-    try {
-        const usuariosExistentes = await Usuario.findOne(); // Buscar el documento que contiene los usuarios
+        req.render = true;
+        const users = await mostrarUsuarios(req, res, next);
         
-        if (!usuariosExistentes) {
-            throw new Error('No se encontraron usuarios');
-        }
-
-        // Buscar el usuario por su id
-        const usuario = usuariosExistentes.events.find(usuario => usuario.uuid === id);
-
-        if (!usuario) {
-            throw new Error('El usuario no fue encontrado');
-        }
-
-
-
-        return usuario;
-    } catch (error) {
-        throw new Error('Error al obtener el usuario por id: ' + error.message);
+    } catch (err) {
+        return next(err);
     }
 }
 
-async function agregarUsuario(req, res) {
+async function mostrarUsuarios(req, res, next) { 
+    let users = [];
     try {
-        const uuid = nanoid();
-        const { firstName, lastName, email, password, privilege, administrator} = req.body;
-        const nuevoUsuario = new Usuario ({
-            uuid,
-            firstName,
-            lastName,
-            email,
-            password,
-            privilege,
-            administrator
-        });
+        users = await Usuario.find({});
 
-        // Encuentra el documento existente
-        const usuarioGuardado = await nuevoUsuario.save();
-        res.status(201).json(usuarioGuardado);
+        console.log("Usuarios mostrados con éxito");
+        if(!req.render){
+            res.status(200).json( {users} );
+        } else if(req.render && req.render === true){
+            res.render('vistaUsuarios', {
+                layout: 'users',
+                users: users
+            });
+        }
 
-
-    } catch (error) {
-        console.error('Error al agregar usuario:', error);
-        res.status(500).send('Error interno del servidor');
+    } catch (err) {
+        return next(err);
     }
 }
 
+async function obtenerUsuarioPorId(req, res, next){
+    const { uuid } = req.params;
 
-async function editarUsuario(req, res) {
-    try {
-        const id = req.params.uuid;
-        const { firstName, lastName, email, password, privilege, administrator } = req.body;
+    if(!uuid){
+        error = new Error("Falta información en la URL.");
+        error.status = 400;    
+        return next(error);
+    }
 
-        // Buscar el usuario por su UUID
-        const usuarioExistente = await Usuario.findOne({ uuid: id });
+    let userToFind;
+    try{
+        userToFind = await Usuario.findById(uuid);
 
-        if (!usuarioExistente) {
-            return res.status(404).json({ mensaje: 'El usuario no fue encontrado' });
-        }
+        console.log("Usuario recuperado con éxito");
+        res.status(200).json( {userToFind} );
+    
+    } catch(err){
+        return next(err);
+    }    
+}
 
-        // Actualizar solo los campos proporcionados
-        if (firstName !== undefined) {
-            usuarioExistente.firstName = firstName;
-        }
+async function agregarUsuario(req, res, next) {
+    const { firstName, lastName, email, password, privilege, administrator } = req.body;
 
-        if (lastName !== undefined) {
-            usuarioExistente.lastName = lastName;
-        }
+    if(!firstName || !lastName || !email || !password || !privilege || !administrator){
+        error = new Error("Falta información en el request");
+        error.status = 400;    
+        return next(error);
+    }
 
-        if (email !== undefined) {
-            usuarioExistente.email = email;
-        }
+    const userToAdd = new Usuario ({
+        firstName, lastName, email, password, privilege, administrator
+    });
 
-        if (password !== undefined) {
-            usuarioExistente.password = password;
-        }
+    try{    
+        await userToAdd.save();
 
-        if (privilege !== undefined) {
-            usuarioExistente.privilege = privilege;
-        }
+        console.log("Usuario agregado con éxito");
+        res.status(200).json( {userToAdd} );
 
-        if (administrator !== undefined) {
-            usuarioExistente.administrator = administrator;
-        }
+    } catch(err){
+        return next(err);
+    }   
+}
 
-        // Guardar el usuario actualizado en la base de datos
-        await usuarioExistente.save();
+async function editarUsuario(req, res, next) {
+    const { uuid } = req.params;
+    const { firstName, lastName, email, password, privilege, administrator } = req.body;
 
-        console.log('Usuario editado:', usuarioExistente);
-        res.status(200).json({ mensaje: 'Usuario editado correctamente', usuario: usuarioExistente });
-    } catch (error) {
-        console.error('Error al editar usuario:', error);
-        res.status(500).json({ error });
+    if(!uuid || (!firstName && !lastName && !email && !password && !privilege && !administrator)){
+        error = new Error("Falta información en el request.");
+        error.status = 400;    
+        return next(error);
+    }
+
+    const updateFields = {};
+    if (firstName) { updateFields.firstName = firstName; }
+    if (lastName) { updateFields.lastName = lastName; }
+    if (email) { updateFields.email = email; }
+    if (password) { updateFields.password = password; }
+    if (privilege) { updateFields.privilege = privilege; }
+    if (administrator) { updateFields.administrator = administrator; }
+
+    try{
+        userToUpdate = await Usuario.findByIdAndUpdate(uuid, updateFields, { new: true });
+
+        console.log("Usuario editado con éxito");
+        res.status(200).json({ userToUpdate });
+    
+    } catch(err){
+        return next(err);
     }
 }
 
-async function eliminarUsuario(req, res) {
-    try {
-        const id = req.params.uuid;
+async function eliminarUsuario(req, res, next) {
+    const { uuid } = req.params;
 
-        // Buscar el usuario por su UUID y eliminarlo
-        const resultado = await Usuario.deleteOne({ uuid: id });
-
-        if (resultado.deletedCount === 0) {
-            return res.status(404).json({ mensaje: 'El usuario no fue encontrado' });
-        }
-
-        res.status(200).json({ mensaje: 'Usuario eliminado correctamente' });
-    } catch (error) {
-        console.error('Error al eliminar usuario:', error);
-        res.status(500).json({ error });
+    if(!uuid){
+        error = new Error("Falta información en el request.");
+        error.status = 400;    
+        return next(error);   
     }
+
+    try{
+        await Usuario.findByIdAndDelete(uuid);
+
+        console.log("Usuario eliminado con éxito");
+        res.status(200).json({ success: true });
+    } catch(err){
+        return next(err);
+    }    
 }
-
-
-
 
 module.exports = {
+    logIn,
+    mostrarVistaUsuarios,
     mostrarUsuarios,
-    obtenerUsuarios,
     obtenerUsuarioPorId,
     agregarUsuario,
     editarUsuario,
