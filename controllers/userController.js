@@ -1,37 +1,5 @@
 const Usuario = require('../models/Usuario');
 
-async function logIn(req, res, next){
-    const { email, password } = req.body;
-
-    if(!email || !password){
-        error = new Error("Falta información en el request");
-        error.status = 400;    
-        return next(error);
-    }
-
-    try{
-        const user = await Usuario.findOne({ email });
-        if(!user){
-            error = new Error("Wrong credentials");
-            error.status = 401;    
-            return next(error);
-        }
-
-        const pwdEqual = user.password === password;
-        if(!pwdEqual){
-            error = new Error("Wrong credentials");
-            error.status = 401;    
-            return next(error);
-        }
-
-        console.log("Usuario logeado con éxito");
-        res.status(200).json( {user} );
-
-    } catch(err){
-        return next(err);
-    }
-}
-
 async function mostrarVistaUsuarios(req, res, next){
     try {
         req.render = true;
@@ -83,31 +51,44 @@ async function obtenerUsuarioPorId(req, res, next){
     }    
 }
 
-async function agregarUsuario(req, res, next) {
+async function editarUsuario(req, res, next) {
     const { firstName, lastName, email, password, privilege, administrator } = req.body;
 
-    if(!firstName || !lastName || !email || !password || !privilege || !administrator){
-        error = new Error("Falta información en el request");
+    console.log(req.body);
+    if (!email || (!firstName && !lastName && !password && !privilege && !administrator)) {
+        error = new Error("Falta información en el request.");
         error.status = 400;    
         return next(error);
     }
 
-    const userToAdd = new Usuario ({
-        firstName, lastName, email, password, privilege, administrator
-    });
+    const updateFields = {};
+    if (firstName) { updateFields.firstName = firstName; }
+    if (lastName) { updateFields.lastName = lastName; }
+    if (password) { updateFields.password = password; }
+    if (privilege) { updateFields.privilege = privilege; }
+    if (administrator) { updateFields.administrator = administrator; }
 
-    try{    
-        await userToAdd.save();
+    try {
+        // Buscar el usuario por su dirección de correo electrónico
+        const userToUpdate = await Usuario.findOneAndUpdate({ email }, updateFields, { new: true });
 
-        console.log("Usuario agregado con éxito");
-        res.status(200).json( {userToAdd} );
+        if (!userToUpdate) {
+            // Si no se encuentra el usuario, devolver un error
+            const error = new Error("El usuario no fue encontrado.");
+            error.status = 404;
+            throw error;
+        }
 
-    } catch(err){
+        console.log("Usuario editado con éxito");
+        res.status(200).json({ userToUpdate });
+    
+    } catch(err) {
         return next(err);
-    }   
+    }
 }
 
-async function editarUsuario(req, res, next) {
+// Maybe this function is not completely necessary.
+async function editarUsuarioPorId(req, res, next) {
     const { uuid } = req.params;
     const { firstName, lastName, email, password, privilege, administrator } = req.body;
 
@@ -156,11 +137,10 @@ async function eliminarUsuario(req, res, next) {
 }
 
 module.exports = {
-    logIn,
     mostrarVistaUsuarios,
     mostrarUsuarios,
     obtenerUsuarioPorId,
-    agregarUsuario,
     editarUsuario,
+    editarUsuarioPorId,
     eliminarUsuario
 }

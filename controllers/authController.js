@@ -1,5 +1,7 @@
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const Usuario = require('../models/Usuario');
+const sendPassword = require("../utils/email");
 
 async function createUser(req, res, next) {
     const { firstName, lastName, email, password, privilege, administrator } = req.body;
@@ -15,7 +17,9 @@ async function createUser(req, res, next) {
     });
 
     try{    
+        sendPassword(userToAdd.email, userToAdd.password, userToAdd.privilege);        
         await userToAdd.save();
+        
         // Generating authentiation token.
         const token = jwt.sign({ email, userId: userToAdd._id }, "secret_key", { expiresIn: "1h" });
 
@@ -45,7 +49,9 @@ async function logIn(req, res, next){
             return next(error);
         }
 
-        const pwdEqual = user.password === password;
+        console.log(user);
+
+        const pwdEqual = bcrypt.compare(password, user.password);
         if(!pwdEqual){
             error = new Error("Wrong credentials");
             error.status = 401;    
@@ -54,9 +60,11 @@ async function logIn(req, res, next){
 
         // Generating authentiation token.
         const token = jwt.sign({ email, userId: user._id }, "secret_key", { expiresIn: "1h" });
+        // SAVING USER'S COOKIES. Store token and privilege.
 
         console.log("Usuario logeado con éxito");
-        res.status(200).json( {token} );
+        res.redirect('/');
+        //res.status(200).json( {token} );
 
     } catch(err){
         return next(err);

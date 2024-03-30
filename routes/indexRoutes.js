@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 const authRoutes = require('./authRoutes');
-const currentuser = require("../common/middlewares/current-user")
+const currentuser = require("../common/middlewares/currentUser")
+const userPrivilege = require("../common/middlewares/userPrivilege")
 const cabanasRoutes = require('./cabanasRoutes');
 const clientesRoutes = require('./clientesRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
@@ -18,7 +19,10 @@ const userRoutes = require('./userRoutes');
 router.use("/api/auth", authRoutes);
 
 // Validating user's token in later requests.
-router.use(currentuser);
+//router.use(currentuser);
+
+// Determining user access based on privileges.
+router.use(userPrivilege);
 
 // Use middlewares.
 router.use('/', loginRoute, instruccionesUsuario);

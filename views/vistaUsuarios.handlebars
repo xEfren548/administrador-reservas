@@ -62,56 +62,52 @@
 </div>
 
 {{!-- Modals --}}
-
 <!-- Modal Alta usuario -->
-
 <div class="modal fade" id="user_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+    <form id="frmNewUser" action="/api/auth/crear-usuario" method="post" class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Alta de Usuario</h5>
                 <button type="button" class="close" onclick="$('#user_entry_modal').modal('hide');" aria-label="Close">
                     &times;
-
             </div>
             <div class="modal-body">
                 <div class="img-container">
                     <div class="row mt-2">
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="user-name">Nombre</label>
-                                <input type="text" name="user-name" id="user-name" class="form-control onlydatepicker"
+                                <label for="txtUserName">Nombre</label>
+                                <input type="text" name="txtUserName" id="txtUserName" class="form-control onlydatepicker"
                                     placeholder="Nombre">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="user-lastname">Apellido</label>
-                                <input type="text" name="user-lastname" id="user-lastname" class="form-control"
+                                <label for="txtUserLastname">Apellido</label>
+                                <input type="text" name="txtUserLastname" id="txtUserLastname" class="form-control"
                                     placeholder="Apellido">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="user-email">Email: </label>
-                                <input type="email" name="user-email" id="user-email" class="form-control"
+                                <label for="txtUserEmail">Email: </label>
+                                <input type="email" name="txtUserEmail" id="txtUserEmail" class="form-control"
                                     placeholder="Email">
                             </div>
                             <div class="col-sm-12 mb-2">
                                 <div class="form-group">
-                                    <label for="user-password">Contraseña: </label>
-                                    <input type="password" name="user-password" id="user-password" class="form-control"
+                                    <label for="txtUserPassword">Contraseña: </label>
+                                    <input type="password" name="txtUserPassword" id="txtUserPassword" class="form-control"
                                         placeholder="Contraseña">
                                 </div>
                             </div>
                             <div class="row">
-                                <label for="user-privileges">Privilegio: </label>
-
+                                <label for="slctUserPrivileges">Privilegio: </label>
                             </div>
                             <div class="row">
                                 <div class="col-8">
-                                    <select name="user-privileges" id="user-privileges-select" required>
+                                    <select name="slctUserPrivileges" id="slctUserPrivileges" required>
                                         <option value="" selected disabled> Selecciona un privilegio para el usuario--
                                         </option>
                                         <option value="Administrador">Administrador</option>
@@ -120,113 +116,113 @@
                                     </select>
 
                                 </div>
-
                             </div>
                         </div>
-
                         <div class="row">
-                            <label for="user-privileges">Administrador ligado: </label>
-
+                            <label for="slctUserAdmin">Administrador ligado: </label>
                         </div>
                         <div class="row">
                             <div class="col-8">
-                                <select name="user-privileges" id="user-privileges-select" required>
+                                <select name="slctUserAdmin" id="slctUserAdmin" required>
                                     <option value="" selected disabled> Selecciona un administrador para el usuario--
                                     </option>
                                     <option value="Juan Lopez">Juan Lopez</option>
                                     <option value="Pepe Juan">Pepe Juan</option>
                                     <option value="Jhon Doe">Jhon Doe</option>
                                 </select>
-
                             </div>
-
                         </div>
+                        <button type="submit" class="btn btn-primary" id="btnSaveUser">Agregar Usuario</button>
                     </div>
-                </div> <!-- Cierre row -->
-
+                </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="save-user-btn">Agregar Usuario</button>
+            <button type="button" class="btn btn-primary">Agregar Usuario</button>
         </div>
-    </div>
-</div>
+    </form>
 </div>
 <!-- End Modal Alta usuario -->
-
-
 
 {{!-- Modal modificar usuario --}}
 <div class="modal fade" id="modify-user_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+    <form id="frmUpdateUser" action="/api/usuarios/editar-usuario" method="post" class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Modificar Usuario</h5>
-                <button type="button" class="close" onclick="$('#modify-user_entry_modal').modal('hide');"
-                    aria-label="Close">
+                <button type="button" class="close" onclick="$('#user_entry_modal').modal('hide');" aria-label="Close">
                     &times;
-
             </div>
             <div class="modal-body">
                 <div class="img-container">
                     <div class="row mt-2">
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="user-name">Nombre</label>
-                                <input type="text" name="user-name" id="user-name" class="form-control onlydatepicker"
+                                <label for="txtUserNameUpd">Nombre</label>
+                                <input type="text" name="txtUserNameUpd" id="txtUserNameUpd" class="form-control onlydatepicker"
                                     placeholder="Nombre">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="user-lastname">Apellido</label>
-                                <input type="text" name="user-lastname" id="user-lastname" class="form-control"
+                                <label for="txtUserLastnameUpd">Apellido</label>
+                                <input type="text" name="txtUserLastnameUpd" id="txtUserLastnameUpd" class="form-control"
                                     placeholder="Apellido">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="user-email">Usuario: </label>
-                                <input type="email" name="user-email" id="user-email" class="form-control"
-                                    placeholder="Usuario">
+                                <label for="txtUserEmailUpd">Email: </label>
+                                <input type="email" name="txtUserEmailUpd" id="txtUserEmailUpd" class="form-control"
+                                    placeholder="Email">
                             </div>
                             <div class="col-sm-12 mb-2">
                                 <div class="form-group">
-                                    <label for="user-password">Contraseña: </label>
-                                    <input type="password" name="user-password" id="user-password" class="form-control"
+                                    <label for="txtUserPasswordUpd">Contraseña: </label>
+                                    <input type="password" name="txtUserPasswordUpd" id="txtUserPasswordUpd" class="form-control"
                                         placeholder="Contraseña">
                                 </div>
                             </div>
                             <div class="row">
-                                <label for="user-privileges">Privilegio: </label>
-
+                                <label for="slctUserPrivilegesUpd">Privilegio: </label>
                             </div>
                             <div class="row">
                                 <div class="col-8">
-                                    <select name="privileges" id="user-privileges" required>
+                                    <select name="slctUserPrivilegesUpd" id="slctUserPrivilegesUpd" required>
                                         <option value="" selected disabled> Selecciona un privilegio para el usuario--
                                         </option>
                                         <option value="Administrador">Administrador</option>
                                         <option value="Vendedor">Vendedor</option>
                                         <option value="Limpieza">Limpieza</option>
                                     </select>
-
                                 </div>
-
                             </div>
                         </div>
-                    </div> <!-- Cierre row -->
-
+                        <div class="row">
+                            <label for="slctUserAdminUpd">Administrador ligado: </label>
+                        </div>
+                        <div class="row">
+                            <div class="col-8">
+                                <select name="slctUserAdminUpd" id="slctUserAdminUpd" required>
+                                    <option value="" selected disabled> Selecciona un administrador para el usuario--
+                                    </option>
+                                    <option value="Juan Lopez">Juan Lopez</option>
+                                    <option value="Pepe Juan">Pepe Juan</option>
+                                    <option value="Jhon Doe">Jhon Doe</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btnUpdateUser">Modificar Usuario</button>
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="save-user-btn">Modificar Usuario</button>
-            </div>
         </div>
-    </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary">Agregar Usuario</button>
+        </div>
+    </form>
 </div>
-
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -239,7 +235,74 @@
                 "pageLength": 10 // Establece la longitud de página inicial
             });
         }
+
+        // Saving new user.
+        var btnSaveUser = document.getElementById("btnSaveUser")
+        btnSaveUser.addEventListener("click", async (event) => {
+            event.preventDefault();
+
+            const data = {
+                firstName: document.getElementById("txtUserName").value,
+                lastName: document.getElementById("txtUserLastname").value,
+                email: document.getElementById("txtUserEmail").value,
+                password: document.getElementById("txtUserPassword").value,
+                privilege: document.getElementById("slctUserPrivileges").value,
+                administrator: document.getElementById("slctUserAdmin").value
+            };
+
+            fetch('/api/auth/crear-usuario', {
+                method: 'POST',
+                headers: {
+
+                // RETRIEVING CURRENT USER'S AUTHORIZATION COOKIE.
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5kZmdkZjM0QGhvdG1haWwuY29tIiwidXNlcklkIjoiNjYwNjA2MTBkZjBhMzc5MzViYzU0NTBiIiwiaWF0IjoxNzExNjcwODAwLCJleHAiOjE3MTE2NzQ0MDB9.u4II-_OwemVrZ2wl0_zMfP6l9yaF305wndmS8n0K0Iw',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Respuesta del servidor:', data);
+            })
+            .catch(error => {
+                console.error('Error al enviar la solicitud:', error);
+            });
+
+        });
+
+        // Updating user info.
+        var btnUpdateUser = document.getElementById("btnUpdateUser")
+        btnUpdateUser.addEventListener("click", async (event) => {
+            event.preventDefault();
+
+            const data = {
+                firstName: document.getElementById("txtUserNameUpd").value,
+                lastName: document.getElementById("txtUserLastnameUpd").value,
+                email: document.getElementById("txtUserEmailUpd").value,
+                password: document.getElementById("txtUserPasswordUpd").value,
+                privilege: document.getElementById("slctUserPrivilegesUpd").value,
+                administrator: document.getElementById("slctUserAdminUpd").value
+            };
+
+            fetch('/api/usuarios/editar-usuario', {
+                method: 'PUT',
+                headers: {
+
+                // RETRIEVING CURRENT USER'S AUTHORIZATION COOKIE.
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5kZmdkZjM0QGhvdG1haWwuY29tIiwidXNlcklkIjoiNjYwNjA2MTBkZjBhMzc5MzViYzU0NTBiIiwiaWF0IjoxNzExNjcwODAwLCJleHAiOjE3MTE2NzQ0MDB9.u4II-_OwemVrZ2wl0_zMfP6l9yaF305wndmS8n0K0Iw',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Respuesta del servidor:', data);
+            })
+            .catch(error => {
+                console.error('Error al enviar la solicitud:', error);
+            });
+
+        });
+
     });
-
-
 </script>

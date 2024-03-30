@@ -18,17 +18,17 @@
       </div>
 
       <div class="form">
-        <form action="">
+        <form action="/api/auth/logIn-usuario" method="post">
           <div class="form-item"><h2>Inicia sesión</h2></div>
 
           <div class="form-item">
-            <label for="txt-user-email">Dirección de correo electrónico</label>
-            <input id="txt-user-email" name="txt-user-email" type="text">
+            <label for="txtUserEmail">Dirección de correo electrónico</label>
+            <input id="txtUserEmail" name="txtUserEmail" type="text">
           </div>    
                 
           <div class="form-item">
-            <label for="txt-user-password">Contraseña</label>
-            <input id="txt-user-password" name="txt-user-password" type="password">            
+            <label for="txtUserPassword">Contraseña</label>
+            <input id="txtUserPassword" name="txtUserPassword" type="password">            
           </div>
 
           <div class="form-item">
@@ -36,7 +36,7 @@
           </div>
 
           <div class="form-item">
-            <button id="btn-login-submit" type="submit">Iniciar sesión</button>
+            <button id="btnLoginSubmit" type="submit">Iniciar sesión</button>
           </div>          
         </form>
         <hr>
@@ -56,6 +56,43 @@
   <script src="assets/vendor_components/popper/dist/popper.min.js"></script>
   <script type="text/javascript" src="jsUlog/sha512.js"></script>
   <script type="text/javascript" src="jsUlog/forms.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Sending form info to correspondong route.
+        var btnLoginSubmit = document.getElementById("btnLoginSubmit")
+        btnLoginSubmit.addEventListener("click", (event) => {
+            event.preventDefault();
+
+            const data = {
+                email: document.getElementById("txtUserEmail").value,
+                password: document.getElementById("txtUserPassword").value
+            };
+
+            fetch('/api/auth/logIn-usuario', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.redirected) {
+                    // Si el servidor redirige al usuario, simplemente redirige al usuario a la nueva ubicación.
+                    window.location.href = response.url;
+                } else {
+                    // Si no hay redirección, maneja la respuesta como lo desees (opcional).
+                    console.log('Respuesta del servidor:', response);
+                }
+            })
+            .catch(error => {
+                console.error('Error al enviar la solicitud:', error);
+            });
+
+        });
+            
+    });
+</script>
 </body>
 
 </html>
