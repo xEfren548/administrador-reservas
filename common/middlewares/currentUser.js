@@ -3,7 +3,8 @@ const jwt = require("jsonwebtoken");
 const currentUser = (req, res, next) => {
     try{
         // Extracting content in request's authorization header to make sure there is an associated token.
-        const token = req.get("Authorization").split(' ')[1];
+        //const token = req.get("Authorization").split(' ')[1];
+        const token = req.session?.token;
         if(!token){
             throw new Error();
         }

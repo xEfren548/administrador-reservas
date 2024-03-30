@@ -1,38 +1,8 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const Usuario = require('../models/Usuario');
-const sendPassword = require("../utils/email");
 
-async function createUser(req, res, next) {
-    const { firstName, lastName, email, password, privilege, administrator } = req.body;
-
-    if(!firstName || !lastName || !email || !password || !privilege || !administrator){
-        error = new Error("Falta información en el request");
-        error.status = 400;    
-        return next(error);
-    }
-
-    const userToAdd = new Usuario ({
-        firstName, lastName, email, password, privilege, administrator
-    });
-
-    try{    
-        sendPassword(userToAdd.email, userToAdd.password, userToAdd.privilege);        
-        await userToAdd.save();
-        
-        // Generating authentiation token.
-        const token = jwt.sign({ email, userId: userToAdd._id }, "secret_key", { expiresIn: "1h" });
-
-        console.log("Usuario agregado con éxito");
-        res.status(200).json( {token} );
-
-    } catch(err){
-        console.log(err);
-        return next(err);
-    }   
-}
-
-async function logIn(req, res, next){
+async function login(req, res, next){
     const { email, password } = req.body;
 
     if(!email || !password){
@@ -49,8 +19,6 @@ async function logIn(req, res, next){
             return next(error);
         }
 
-        console.log(user);
-
         const pwdEqual = bcrypt.compare(password, user.password);
         if(!pwdEqual){
             error = new Error("Wrong credentials");
@@ -60,18 +28,31 @@ async function logIn(req, res, next){
 
         // Generating authentiation token.
         const token = jwt.sign({ email, userId: user._id }, "secret_key", { expiresIn: "1h" });
-        // SAVING USER'S COOKIES. Store token and privilege.
-
+        
+        // Saving user's cookies.
+        req.session = { 
+            token,
+            email: user.email,
+            privilege: user.privilege
+        };        
+        
         console.log("Usuario logeado con éxito");
-        res.redirect('/');
-        //res.status(200).json( {token} );
+        // Uncomment the following line in order to test it on the browser.
+        // res.redirect('/');
+        // Uncomment the following line in order to test it on Postman.
+        res.status(200).json( req.session );
 
     } catch(err){
         return next(err);
     }
 }
 
+async function logout(req, res, next){
+    req.session = null;
+    res.send({ message: "Successfully logged out" });
+}
+
 module.exports = {
-    logIn,
-    createUser
+    login,
+    logout
 }

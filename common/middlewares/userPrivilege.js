@@ -1,8 +1,5 @@
 const userPrivilege = (req, res, next) => {
-    // RETRIEVING CURRENT USER'S PRIVILEGE COOKIE.
-    //const { privilege } = req.user;
-    privilege = "test";
-    
+    const privilege = req.session?.privilege;    
     if(!privilege){
         error = new Error("El usuario require un privilegio");
         error.status = 400;    
@@ -10,9 +7,10 @@ const userPrivilege = (req, res, next) => {
     }
     
     const allowedRoutes = {
-        "test": ['/', '/login', '/api/auth/logIn-usuario', '/api/auth/crear-usuario', '/api/usuarios', '/api/usuarios/mostrar-usuarios', '/api/usuarios/mostrar-usuario/:uuid', '/api/usuarios/editar-usuario', '/api/usuarios/editar-usuario/:uuid', '/api/usuarios/eliminar-usuario/:uuid', '/api/usuarios/crear-usuario', ],
-        'admin': ['/'],
-        'seller': ['/']
+        "test": ['/', '/login', 'api/auth/login', 'api/auth/logout', '/api/usuarios', '/api/usuarios/mostrar-usuarios', '/api/usuarios/mostrar-usuario/:uuid', '/api/usuarios/editar-usuario', '/api/usuarios/editar-usuario/:uuid', '/api/usuarios/eliminar-usuario/:uuid', '/api/usuarios/crear-usuario', ],
+        'Administrador': ['/'],
+        'Vendedor': ['/'],
+        'Limpieza': ['/']
     };
     const currentRoute = req.path;
     const allowedRoutesForUser = allowedRoutes[privilege];

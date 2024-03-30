@@ -1,4 +1,35 @@
+const jwt = require("jsonwebtoken");
 const Usuario = require('../models/Usuario');
+const sendPassword = require("../utils/email");
+
+async function createUser(req, res, next) {
+    const { firstName, lastName, email, password, privilege, administrator } = req.body;
+
+    if(!firstName || !lastName || !email || !password || !privilege || !administrator){
+        error = new Error("Falta información en el request");
+        error.status = 400;    
+        return next(error);
+    }
+
+    const userToAdd = new Usuario ({
+        firstName, lastName, email, password, privilege, administrator
+    });
+
+    try{    
+        sendPassword(userToAdd.email, userToAdd.password, userToAdd.privilege);        
+        await userToAdd.save();
+        
+        // Generating authentiation token.
+        // const token = jwt.sign({ email, userId: userToAdd._id }, "secret_key", { expiresIn: "1h" });
+
+        console.log("Usuario agregado con éxito");
+        res.status(200).json( {success: true} );
+
+    } catch(err){
+        console.log(err);
+        return next(err);
+    }   
+}
 
 async function mostrarVistaUsuarios(req, res, next){
     try {
@@ -137,6 +168,7 @@ async function eliminarUsuario(req, res, next) {
 }
 
 module.exports = {
+    createUser,
     mostrarVistaUsuarios,
     mostrarUsuarios,
     obtenerUsuarioPorId,
