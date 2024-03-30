@@ -19,6 +19,9 @@ app.set('views', './views');
 const port = process.env.PORT || 3005;
 const db_url = process.env.DB_URL;
 
+// Ensures Express correctly handles requests and interprets the necessary headers when using cookie sessions with postman.
+app.set('trust proxy', true);
+
 // Set up all routes.
 app.use(routes);
 

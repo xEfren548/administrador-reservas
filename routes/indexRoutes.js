@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const cookieSession = require("cookie-session");
 
 const authRoutes = require('./authRoutes');
 const currentuser = require("../common/middlewares/currentUser")
@@ -15,17 +16,28 @@ const loginRoute = require("./loginRoute");
 const serviciosRoutes = require('./serviciosRoutes');
 const userRoutes = require('./userRoutes');
 
-// Generate user's token.
-router.use("/api/auth", authRoutes);
+// Formating incoming data.
+router.use(express.json());
+router.use(express.urlencoded( {extended: false} ));
+
+// Enabling cookies.
+router.use(cookieSession({
+    signed: false, // No extra layer of security will be added.
+    secure: false // Can recieve both HTTP and HTTPS request.
+}));
+
+// Public routes
+router.use('/login', loginRoute);
+router.use("/api", authRoutes);
 
 // Validating user's token in later requests.
-//router.use(currentuser);
+router.use(currentuser);
 
 // Determining user access based on privileges.
 router.use(userPrivilege);
 
 // Use middlewares.
-router.use('/', loginRoute, instruccionesUsuario);
+router.use('/', instruccionesUsuario);
 router.use('/api', 
     eventRoutes, 
     habitacionesRoutes, 

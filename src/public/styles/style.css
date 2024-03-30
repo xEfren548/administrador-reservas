@@ -140,7 +140,7 @@ body {
 
 #calendar {
     background-color: #141418;
-    max-width: 1220px;
+    max-width: 70vw;
     overflow-x: auto !important;
     margin: auto !important;
 

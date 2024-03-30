@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 
 router.get('/', userController.mostrarVistaUsuarios);
+router.post('/crear-usuario', userController.createUser);
 router.get('/mostrar-usuarios', userController.mostrarUsuarios);
 router.get('/mostrar-usuario/:uuid', userController.obtenerUsuarioPorId);
 router.put('/editar-usuario', userController.editarUsuario);
