@@ -15,10 +15,11 @@ async function mostrarUsuarios(req, res) {
 async function obtenerUsuarios(req, res) { 
     try {
         const usuarios = await Usuario.find();
-        return usuarios;
+        const usuariosJSON = usuarios.map(usuario => usuario.toObject()); // Convertir documentos de usuario a objetos JSON planos
+        return usuariosJSON;
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Error al obtener usuarios' });
+        throw new Error('Error al obtener usuarios como JSON');
     }
 }
 
