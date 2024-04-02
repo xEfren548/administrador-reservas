@@ -151,7 +151,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Modificar Usuario</h5>
-                <button type="button" class="close" onclick="$('#user_entry_modal').modal('hide');" aria-label="Close">
+                <button type="button" class="close" onclick="$('#modify-user_entry_modal').modal('hide');" aria-label="Close">
                     &times;
             </div>
             <div class="modal-body">
@@ -213,13 +213,12 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="btnUpdateUser">Modificar Usuario</button>
+                        <div class="modal_footer" style="display: flex; justify-content: right; margin: 10px 0;">
+                            <button type="submit" class="btn btn-primary" id="btnUpdateUser">Modificar Usuario</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-primary">Agregar Usuario</button>
         </div>
     </form>
 </div>

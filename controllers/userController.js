@@ -148,6 +148,7 @@ async function editarUsuarioPorId(req, res, next) {
     }
 }
 
+// Maybe this function is not completely necessary.
 async function eliminarUsuario(req, res, next) {
     const { uuid } = req.params;
 

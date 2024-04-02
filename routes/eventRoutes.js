@@ -5,19 +5,6 @@ const router = express.Router();
 const eventController = require('../controllers/eventController');
 const habitacionController = require('../controllers/habitacionController');
 
-
-// router.get('/eventos', async (req, res) => {
-//     try {
-//         const eventos = await Evento.find();
-//         console.log(eventos)
-//         res.send(eventos);
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ message: 'Error al obtener eventos' });
-//     }
-// });
-
-
 // Rutas estáticas
 router.get('/eventos', eventController.obtenerEventos);
 router.post('/eventos', eventController.agregarEvento);
@@ -26,7 +13,6 @@ router.put('/eventos/:id/modificar', eventController.modificarEvento);
 router.delete('/eventos/:id', eventController.eliminarEvento);
 
 // Rutas con contenido dinamico de handlebars
-
 router.get('/eventos/:idevento', async (req, res) => {
     try {
         const idEvento = req.params.idevento;
@@ -41,7 +27,6 @@ router.get('/eventos/:idevento', async (req, res) => {
         const habitacion = await habitacionController.obtenerHabitacionPorId(eventoObjeto.resourceId);
         const habitacionJson = JSON.stringify(habitacion);
         const habitacionObjeto = JSON.parse(habitacionJson);
-
 
         // Renderiza la página HTML con los detalles del evento
         console.log(eventoObjeto);

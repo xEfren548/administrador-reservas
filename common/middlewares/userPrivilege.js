@@ -1,5 +1,6 @@
 const userPrivilege = (req, res, next) => {
-    const privilege = req.session?.privilege;    
+    const privilege = req.session?.privilege;
+     
     if(!privilege){
         error = new Error("El usuario require un privilegio");
         error.status = 400;    
@@ -7,7 +8,7 @@ const userPrivilege = (req, res, next) => {
     }
     
     const allowedRoutes = {
-        "test": ['/', '/login', 'api/auth/login', 'api/auth/logout', '/api/usuarios', '/api/usuarios/mostrar-usuarios', '/api/usuarios/mostrar-usuario/:uuid', '/api/usuarios/editar-usuario', '/api/usuarios/editar-usuario/:uuid', '/api/usuarios/eliminar-usuario/:uuid', '/api/usuarios/crear-usuario', ],
+        "test": ['/', '/login', 'api/auth/login', 'api/auth/logout', '/api/usuarios', '/api/usuarios/mostrar-usuarios', '/api/usuarios/mostrar-usuario/:uuid', '/api/usuarios/editar-usuario', '/api/usuarios/editar-usuario/:uuid', '/api/usuarios/eliminar-usuario/:uuid', '/api/usuarios/crear-usuario', 'api/servicios/', 'api/servicios/crear-servicio'],
         'Administrador': ['/'],
         'Vendedor': ['/'],
         'Limpieza': ['/']
