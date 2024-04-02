@@ -1,81 +1,13 @@
 const express = require('express');
 const router = express.Router();
-
 const userController = require('../controllers/userController');
 
-// const eventController = require('../controllers/eventController');
-// const habitacionController = require('../controllers/habitacionController');
-
-
-// router.get('/eventos', async (req, res) => {
-//     try {
-//         const eventos = await Evento.find();
-//         console.log(eventos)
-//         res.send(eventos);
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ message: 'Error al obtener eventos' });
-//     }
-// });
-
-router.get('/', async (req, res) => {
-    try {
-        const usuarios = await userController.obtenerUsuarios();
-        console.log(usuarios);
-        res.render('vistaUsuarios', {
-            layout: 'users',
-            usuarios: usuarios // Pasar usuarios a la vista
-        });
-        
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ message: 'Error al obtener usuarios' });
-    }
-});
-
-router.get('/mostrar-usuarios', userController.mostrarUsuarios) 
-router.post('/crear-usuarios', userController.agregarUsuario)
-router.put('/editar-usuarios/:uuid', userController.editarUsuario)
-router.delete('/eliminar-usuarios/:uuid', userController.eliminarUsuario)
-
-// Rutas estáticas
-// router.get('/eventos', eventController.obtenerEventos);
-// router.post('/eventos', eventController.agregarEvento);
-// router.put('/eventos/:id', eventController.editarEvento);
-// router.put('/eventos/:id/modificar', eventController.modificarEvento);
-// router.delete('/eventos/:id', eventController.eliminarEvento);
-
-// Rutas con contenido dinamico de handlebars
-
-// router.get('/eventos/:idevento', async (req, res) => {
-//     try {
-//         const idEvento = req.params.idevento;
-        
-//         // Llama a la función del controlador de eventos para obtener los detalles del evento
-//         const evento = await eventController.obtenerEventoPorId(idEvento);
-//         eventoJson = JSON.stringify(evento);
-//         const eventoObjeto = JSON.parse(eventoJson);
-//         eventoObjeto.start = moment(eventoObjeto.start).format('DD/MM/YYYY');
-//         eventoObjeto.end = moment(eventoObjeto.end).format('DD/MM/YYYY');
-
-//         const habitacion = await habitacionController.obtenerHabitacionPorId(eventoObjeto.resourceId);
-//         const habitacionJson = JSON.stringify(habitacion);
-//         const habitacionObjeto = JSON.parse(habitacionJson);
-
-
-//         // Renderiza la página HTML con los detalles del evento
-//         console.log(eventoObjeto);
-//         res.render('detalles_evento', { 
-//             evento: eventoObjeto,
-//             habitacion: habitacionObjeto
-//         });
-//     } catch (error) {
-//         console.error('Error al obtener los detalles del evento:', error);
-//         res.status(500).json({ error: 'Error interno del servidor' });
-//     }
-// });
-
-
-
+router.get('/', userController.mostrarVistaUsuarios);
+router.post('/crear-usuario', userController.createUser);
+router.get('/mostrar-usuarios', userController.mostrarUsuarios);
+router.get('/mostrar-usuario/:uuid', userController.obtenerUsuarioPorId);
+router.put('/editar-usuario', userController.editarUsuario);
+router.put('/editar-usuario/:uuid', userController.editarUsuarioPorId);
+router.delete('/eliminar-usuario/:uuid', userController.eliminarUsuario);
 
 module.exports = router;
