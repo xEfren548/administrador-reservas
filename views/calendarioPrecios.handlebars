@@ -1,29 +1,133 @@
 <h1>Calendario de precios con aumento</h1>
 
 {{#if habitaciones}}
-  {{#each habitaciones}}
-    <p>{{this.title}}</p> <!-- Acceder al título de cada habitación usando "this" -->
-    <div class="table-responsive">
-      <table class="table table-primary">
-        <thead>
-          <tr>
-            <th scope="col">Cabaña</th>
-            {{#each ../daysWithDates}} <!-- Iterar sobre las fechas correspondientes a cada día del año -->
-              <th scope="col">{{this}}</th> <!-- Mostrar cada fecha como encabezado de columna -->
-            {{/each}}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>{{this.title}}</td> <!-- Mostrar el título de la cabaña -->
-            {{#each this.rates}} <!-- Iterar sobre las tarifas de la cabaña -->
-              <td>${{this}}</td> <!-- Mostrar cada tarifa en una columna -->
-            {{/each}}
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  {{/each}}
+{{#each habitaciones}}
+<p>{{this.title}}</p> <!-- Acceder al título de cada habitación usando "this" -->
+<div class="table-responsive">
+  <table class="table table-primary">
+    <thead>
+      <tr>
+        <th scope="col">Cabaña</th>
+        {{#each ../daysWithDates}} <!-- Iterar sobre las fechas correspondientes a cada día del año -->
+        <th scope="col">{{this}}</th> <!-- Mostrar cada fecha como encabezado de columna -->
+        {{/each}}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{this.title}}</td> <!-- Mostrar el título de la cabaña -->
+        {{#each this.rates}} <!-- Iterar sobre las tarifas de la cabaña -->
+        <td>${{this}}</td> <!-- Mostrar cada tarifa en una columna -->
+        {{/each}}
+      </tr>
+    </tbody>
+  </table>
+</div>
+{{/each}}
 {{else}}
-  <p>No hay habitaciones</p>
+<p>No hay habitaciones</p>
 {{/if}}
+
+
+<!-- Modal Actualizar precios -->
+
+<div class="modal fade" id="update_prices_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">Actualización de precios</h5>
+        <button type="button" class="close" onclick="$('#update_prices_modal').modal('hide');" aria-label="Close">
+          &times;
+
+      </div>
+      <div class="modal-body">
+        <div class="img-container">
+          <div class="row mt-2 mb-2">
+            <div class="col-8">
+              <label for="actualizar-precios">Habitación a modificar: </label>
+            </div>
+          </div> <!-- Cierre row -->
+          <select name="actualizar-precios" id="actualizar-precios" class="form-select form-select-md" required>
+            <option value="" selected disabled> Selecciona una cabaña para modificar --
+            </option>
+            {{#if habitaciones}}
+            {{#each habitaciones}}
+            <option value="{{this.title}}">{{this.title}}</option>
+
+            {{/each}}
+            {{else}}
+            <option value="0">No se encontraron habitaciones</option>
+            {{/if}}
+          </select>
+
+          <div class="row">
+
+            <div class="col-12 mb-2 mt-2">
+              <div class="form-group">
+                <label for="user-password">Rango de fechas: </label>
+                <div class="row ">
+                  <div class="col-3">
+                    <input type="date" name="user-password" id="user-password" class="form-control"
+                      placeholder="Contraseña">
+
+                  </div>
+                  <div class="col-1 text-center">
+                    <p>Hasta</p>
+
+                  </div>
+                  <div class="col-3">
+                    <input type="date" name="user-password" id="user-password" class="form-control"
+                      placeholder="Contraseña">
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- Cierre row -->
+
+          <div class="mb-2">
+            <div class="row mb-2">
+              <label for="">¿Quieres aplicar esta tarifa a unos dias concretos?</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="lunes">
+              <label class="form-check-label" for="inlineCheckbox1">Lunes</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="martes">
+              <label class="form-check-label" for="inlineCheckbox2">Martes</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="miercoles">
+              <label class="form-check-label" for="inlineCheckbox3">Miércoles</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="jueves">
+              <label class="form-check-label" for="inlineCheckbox3">jueves</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="viernes">
+              <label class="form-check-label" for="inlineCheckbox3">viernes</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="sabado">
+              <label class="form-check-label" for="inlineCheckbox3">Sábado</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="domingo">
+              <label class="form-check-label" for="inlineCheckbox3">Domingo</label>
+            </div>
+
+          </div>
+
+        </div> <!-- Cierre IMG Container -->
+      </div> <!--Cierre MODAL BODY -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="save-user-btn">Agregar Usuario</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Modal Alta usuario -->
