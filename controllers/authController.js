@@ -38,7 +38,11 @@ async function login(req, res, next){
         
         console.log("Usuario logeado con éxito");
         // Uncomment the following line in order to test it on the browser.
+<<<<<<< HEAD
         res.redirect('/');
+=======
+        // res.redirect('/');
+>>>>>>> 50a8b2bf8e1077e32e943d5ca92f4a68e1f170ef
         // Uncomment the following line in order to test it on Postman.
         res.status(200).json( req.session );
 
