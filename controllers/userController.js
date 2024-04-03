@@ -23,7 +23,7 @@ async function createUser(req, res, next) {
         // const token = jwt.sign({ email, userId: userToAdd._id }, "secret_key", { expiresIn: "1h" });
 
         console.log("Usuario agregado con éxito");
-        res.status(200).json( {success: true} );
+        res.status(200).json( { userToAdd } );
 
     } catch(err){
         console.log(err);

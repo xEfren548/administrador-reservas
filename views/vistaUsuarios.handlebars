@@ -147,7 +147,7 @@
 {{!-- Modal modificar usuario --}}
 <div class="modal fade" id="modify-user_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <form id="frmUpdateUser" action="/api/usuarios/editar-usuario" method="post" class="modal-dialog modal-lg">
+    <form id="frmUpdateUser" action="/api/usuarios/editar-usuario" method="put" class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Modificar Usuario</h5>
@@ -252,9 +252,7 @@
             fetch('/api/usuarios/crear-usuario', {
                 method: 'POST',
                 headers: {
-
-                // RETRIEVING CURRENT USER'S AUTHORIZATION COOKIE.
-                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5kZmdkZjM0QGhvdG1haWwuY29tIiwidXNlcklkIjoiNjYwNjA2MTBkZjBhMzc5MzViYzU0NTBiIiwiaWF0IjoxNzExNjcwODAwLCJleHAiOjE3MTE2NzQ0MDB9.u4II-_OwemVrZ2wl0_zMfP6l9yaF305wndmS8n0K0Iw',
+                    // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
@@ -287,7 +285,7 @@
                 method: 'PUT',
                 headers: {
 
-                // RETRIEVING CURRENT USER'S AUTHORIZATION COOKIE.
+                    // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
                     'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5kZmdkZjM0QGhvdG1haWwuY29tIiwidXNlcklkIjoiNjYwNjA2MTBkZjBhMzc5MzViYzU0NTBiIiwiaWF0IjoxNzExNjcwODAwLCJleHAiOjE3MTE2NzQ0MDB9.u4II-_OwemVrZ2wl0_zMfP6l9yaF305wndmS8n0K0Iw',
                     'Content-Type': 'application/json'
                 },

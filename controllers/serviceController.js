@@ -1,15 +1,16 @@
-const Servicio = require('../models/Servicio');
+const Service = require('../models/Servicio');
 
 async function createService(req, res, next) {
     const { service, description, supplier, serviceManager, basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
 
+    console.log(req.body);
     if (!service || !description || !supplier || !serviceManager || !basePrice || !firstCommission || !firstUser || !secondCommission || !secondUser || !finalPrice) {
         const error = new Error("Falta información en el request");
         error.status = 400;
         return next(error);
     }
 
-    const serviceToAdd = new Servicio({
+    const serviceToAdd = new Service({
         service,
         description,
         supplier,
@@ -56,11 +57,9 @@ async function editService(req, res, next) {
     if (finalPrice) { updateFields.finalPrice = finalPrice; }
 
     try {
-        // Buscar el servicio por su nombre o cualquier otro campo único que puedas tener
         const serviceToUpdate = await Service.findOneAndUpdate({ service }, updateFields, { new: true });
 
         if (!serviceToUpdate) {
-            // Si no se encuentra el servicio, devolver un error
             const error = new Error("El servicio no fue encontrado.");
             error.status = 404;
             throw error;
@@ -110,14 +109,15 @@ async function editServiceById(req, res, next) {
         res.status(200).json({ serviceToUpdate });
     
     } catch(err){
+        console.log(err)
         return next(err);
     }
 }
 
 async function deleteService(req, res, next) {
-    const { serviceName } = req.params;
+    const { service } = req.body;
 
-    if (!serviceName) {
+    if (!service) {
         const error = new Error("Falta información en el request.");
         error.status = 400;    
         return next(error);   
@@ -125,7 +125,7 @@ async function deleteService(req, res, next) {
 
     try {
         // Buscar el servicio por su nombre
-        const serviceToDelete = await Service.findOneAndDelete({ service: serviceName });
+        const serviceToDelete = await Service.findOneAndDelete({ service: service });
 
         if (!serviceToDelete) {
             // Si no se encuentra el servicio, devolver un error

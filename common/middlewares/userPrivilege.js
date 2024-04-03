@@ -8,9 +8,12 @@ const userPrivilege = (req, res, next) => {
     }
     
     const allowedRoutes = {
-        "test": ['/', '/login', 'api/auth/login', 'api/auth/logout', '/api/usuarios', '/api/usuarios/mostrar-usuarios', '/api/usuarios/mostrar-usuario/:uuid', '/api/usuarios/editar-usuario', '/api/usuarios/editar-usuario/:uuid', '/api/usuarios/eliminar-usuario/:uuid', '/api/usuarios/crear-usuario', 'api/servicios/', 'api/servicios/crear-servicio'],
-        'Administrador': ['/'],
+        "test": ['/', '/login', 'api/auth/login', 'api/auth/logout', '/api/usuarios', '/api/usuarios/mostrar-usuarios', '/api/usuarios/mostrar-usuario/:uuid', '/api/usuarios/editar-usuario', '/api/usuarios/editar-usuario/:uuid', '/api/usuarios/eliminar-usuario/:uuid', '/api/usuarios/crear-usuario', 'api/servicios/', 'api/servicios/crear-servicio', 'api/servicios/editar-servicio', 'api/servicios/editar-servicio/:uuid', 'api/servicios/eliminar-servicio', 'api/servicios/eliminar-servicio/:uuid'],
+        
+        'Administrador': ['/','api/servicios/', 'api/servicios/crear-servicio', 'api/servicios/editar-servicio', 'api/servicios/editar-servicio/:uuid', 'api/servicios/eliminar-servicio', 'api/servicios/eliminar-servicio/:uuid'],
+        
         'Vendedor': ['/'],
+        
         'Limpieza': ['/']
     };
     const currentRoute = req.path;

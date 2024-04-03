@@ -43,11 +43,10 @@
     </div>
 </div>
 
-
 {{!-- Modals --}}
 <!-- Modal slta Sservicios -->
 <div class="modal fade" id="services_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+    <form id="frmCreateService" action="/api/servicios/crear-servicio" method="post" class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Alta de Servicios</h5>
@@ -126,103 +125,102 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="save-service-btn">Guardar Servicio</button>
+                <button type="button" class="btn btn-primary" id="btnSaveService">Guardar Servicio</button>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 <!-- End modal alta servicio -->
 
 {{!-- Modal modificar servicio --}}
 <div class="modal fade" id="modify-service_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+    <form id="frmUpdateUser" action="/api/servicios/editar-servicio" method="post" class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Modificar Servicio</h5>
                 <button type="button" class="close" onclick="$('#modify-service_entry_modal').modal('hide');" aria-label="Close">
                     &times;
-
             </div>
             <div class="modal-body">
                 <div class="img-container">
                     <div class="row mt-2">
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="txtService">Servicio</label>
-                                <input type="text" name="txtService" id="txtService" class="form-control" placeholder="Servicio">
+                                <label for="txtServiceUpd">Servicio</label>
+                                <input type="text" name="txtServiceUpd" id="txtServiceUpd" class="form-control" placeholder="Servicio">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="txtServiceDescription">Descripción</label>
-                                <input type="text" name="txtServiceDescription" id="txtServiceDescription" class="form-control" placeholder="Descripción">
+                                <label for="txtServiceDescriptionUpd">Descripción</label>
+                                <input type="text" name="txtServiceDescriptionUpd" id="txtServiceDescriptionUpd" class="form-control" placeholder="Descripción">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="txtSupplier">Proveedor</label>
-                                <input type="text" name="txtSupplier" id="txtSupplier" class="form-control" placeholder="Proveedor">
+                                <label for="txtSupplierUpd">Proveedor</label>
+                                <input type="text" name="txtSupplierUpd" id="txtSupplierUpd" class="form-control" placeholder="Proveedor">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="txtServiceManager">Administrador de servicios</label>
-                                <input type="text" name="txtServiceManager" id="txtServiceManager" class="form-control" placeholder="Administrador de servicios">
+                                <label for="txtServiceManagerUpd">Administrador de servicios</label>
+                                <input type="text" name="txtServiceManagerUpd" id="txtServiceManagerUpd" class="form-control" placeholder="Administrador de servicios">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="txtBasePrice">Precio base</label>
-                                <input type="number" name="txtBasePrice" id="txtBasePrice" class="form-control" placeholder="Precio base">
+                                <label for="txtBasePriceUpd">Precio base</label>
+                                <input type="number" name="txtBasePriceUpd" id="txtBasePriceUpd" class="form-control" placeholder="Precio base">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="txtFirstCommission">1ra comisión</label>
-                                <input type="number" name="txtFirstCommission" id="txtFirstCommission" class="form-control" placeholder="1ra comisión">
+                                <label for="txtFirstCommissionUpd">1ra comisión</label>
+                                <input type="number" name="txtFirstCommissionUpd" id="txtFirstCommissionUpd" class="form-control" placeholder="1ra comisión">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="slctFirstUser">Usuario para 1ra comisión</label>
-                                <select name="slctFirstUser" id="slctFirstUser" class="form-control">
+                                <label for="slctFirstUserUpd">Usuario para 1ra comisión</label>
+                                <select name="slctFirstUserUpd" id="slctFirstUserUpd" class="form-control">
                                     <option value="Usuario 1">Usuario 1</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="txtSecondCommission">2da comisión</label>
-                                <input type="number" name="txtSecondCommission" id="txtSecondCommission" class="form-control" placeholder="2da comisión">
+                                <label for="txtSecondCommissionUpd">2da comisión</label>
+                                <input type="number" name="txtSecondCommissionUpd" id="txtSecondCommissionUpd" class="form-control" placeholder="2da comisión">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="slctSecondUser">Usuario para 2da comisión</label>
-                                <select name="slctSecondUser" id="slctSecondUser" class="form-control">
+                                <label for="slctSecondUserUpd">Usuario para 2da comisión</label>
+                                <select name="slctSecondUserUpd" id="slctSecondUserUpd" class="form-control">
                                     <option value="Usuario 2">Usuario 2</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="txtFinalPrice">Precio final</label>
-                                <input type="number" name="txtFinalPrice" id="txtFinalPrice" class="form-control" placeholder="Precio final">
+                                <label for="txtFinalPriceUpd">Precio final</label>
+                                <input type="number" name="txtFinalPriceUpd" id="txtFinalPriceUpd" class="form-control" placeholder="Precio final">
                             </div>
                         </div>
                     </div> <!-- Cierre row -->
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="save-user-btn">Modificar Servicio</button>
+                <button type="button" class="btn btn-primary" id="btnUpdateService">Modificar Servicio</button>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         var table = document.getElementById("tablaServicios");
         if (table) {
             var dataTable = new DataTable(table, {
@@ -232,7 +230,94 @@
                 "pageLength": 10 // Establece la longitud de página inicial
             });
         }
-    });
 
+        // Saving new service.
+        var btnSaveService = document.getElementById("btnSaveService");
+        if (btnSaveService) {
+            btnSaveService.addEventListener("click", async (event) => {
+                event.preventDefault();
+
+                const data = {
+                    service: document.getElementById("txtService").value,
+                    description: document.getElementById("txtServiceDescription").value,
+                    supplier: document.getElementById("txtSupplier").value,
+                    serviceManager: document.getElementById("txtServiceManager").value,
+                    basePrice: document.getElementById("txtBasePrice").value,
+                    firstCommission: document.getElementById("txtFirstCommission").value,
+                    firstUser: document.getElementById("slctFirstUser").value,
+                    secondCommission: document.getElementById("txtSecondCommission").value,
+                    secondUser: document.getElementById("slctSecondUser").value,
+                    finalPrice: document.getElementById("txtFinalPrice").value
+                };
+
+                fetch('/api/servicios/crear-servicio', {
+                    method: 'POST',
+                    headers: {
+                        // Once logged in, the authorization token stored in the session cookies will automatically be added in each HTTP request.
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Respuesta del servidor:', data);
+                })
+                .catch(error => {
+                    console.error('Error al enviar la solicitud:', error);
+                });
+            });
+        }
+
+        // Updating service info.
+        var btnUpdateService = document.getElementById("btnUpdateService");
+        
+        // Add service name to modal when clicked.
+        const editButtons = document.querySelectorAll('#tablaServicios .btn-primary');
+        editButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const serviceName = row.querySelector('td:first-child').textContent.trim();
+                document.getElementById('txtServiceUpd').value = serviceName;
+
+            });
+        });
+        
+        if (btnUpdateService) {
+            btnUpdateService.addEventListener("click", async (event) => {
+                event.preventDefault();
+
+                const data = {
+                    // service: document.getElementById("txtServiceUpd").value,
+                    service: "aaa",
+                    description: document.getElementById("txtServiceDescriptionUpd").value,
+                    supplier: document.getElementById("txtSupplierUpd").value,
+                    serviceManager: document.getElementById("txtServiceManagerUpd").value,
+                    basePrice: document.getElementById("txtBasePriceUpd").value,
+                    firstCommission: document.getElementById("txtFirstCommissionUpd").value,
+                    firstUser: document.getElementById("slctFirstUserUpd").value,
+                    secondCommission: document.getElementById("txtSecondCommissionUpd").value,
+                    secondUser: document.getElementById("slctSecondUserUpd").value,
+                    finalPrice: document.getElementById("txtFinalPriceUpd").value
+                };
+
+                fetch('/api/servicios/editar-servicio', {
+                    method: 'PUT',
+                    headers: {
+                        // Once logged in, the authorization token stored in the session cookies will automatically be added in each HTTP request.
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Respuesta del servidor:', data);
+                })
+                .catch(error => {
+                    console.error('Error al enviar la solicitud:', error);
+                });
+            });
+        }
+        
+    });
 
 </script>

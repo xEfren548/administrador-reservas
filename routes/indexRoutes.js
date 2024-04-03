@@ -44,7 +44,7 @@ router.use('/api',
     serviciosRoutes, 
     clientesRoutes, 
     cabanasRoutes, 
-    editarCabanaRoutes, 
+    editarCabanaRoutes,
     dashboardRoutes);
 router.use('/api/usuarios', userRoutes);
 
@@ -69,7 +69,7 @@ router.use((err, req, res, next) => {
         res.status(err.status).json({error: err.message})
         return;
     }
-    res.status(500).json({error: "Internal server error: something went wrong"});
+    res.status(500).json({error: "Internal server error: something went wrong: "});
 });
 
 module.exports = router;

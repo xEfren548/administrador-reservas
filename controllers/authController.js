@@ -19,6 +19,10 @@ async function login(req, res, next){
             return next(error);
         }
 
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        console.log(hashedPassword, " ", user.password);
+
         const pwdEqual = bcrypt.compare(password, user.password);
         if(!pwdEqual){
             error = new Error("Wrong credentials");
