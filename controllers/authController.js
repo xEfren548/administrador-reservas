@@ -52,6 +52,11 @@ async function logout(req, res, next){
     res.send({ message: "Successfully logged out" });
 }
 
+async function getlogout(req, res, next){
+    req.session = null;
+    res.send({ message: "Successfully logged out" });
+}
+
 module.exports = {
     login,
     logout
