@@ -7,7 +7,8 @@ const preSchema = new Schema({
         },
     habitaciones: String,
     title: String,
-    ocupacion_max: String   
+    ocupacion_max: String,
+    precio_base: Number
 });
 
 const habitacionesSchema = new Schema({

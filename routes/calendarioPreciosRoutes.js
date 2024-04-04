@@ -1,3 +1,5 @@
+const listaDePreciosController = require('../controllers/listaDePrecios.controller')
+
 const DAYS_IN_YEAR = 365; // Definir DAYS_IN_YEAR a nivel global
 const BASE_RATE = 2800;
 
@@ -27,24 +29,27 @@ router.get('/calendario-precios', async (req, res) => {
         const data = await response.json(); // Espera a que se convierta la respuesta en formato JSON
 
         const habitaciones = data[0].resources.map(habitacion => {
-            const rates = Array.from({ length: DAYS_IN_YEAR }, (_, day) => calculateRate(day + 1)); // Obtener un arreglo con las tarifas
-            return { title: habitacion.title, rates };
+            return { title: habitacion.title, baseRate: habitacion.precio_base };
         });
-        console.log(habitaciones); // Imprime las habitaciones para verificar
+
 
         const daysWithDates = Array.from({ length: DAYS_IN_YEAR }, (_, index) => getDateFromDayOfYear(index + 1)); // Obtener un arreglo con las fechas correspondientes a cada día del año
+
+        console.log(habitaciones);
 
         res.render('calendarioPrecios', {
             layout: 'layoutCalendarioPrecios',
             habitaciones: habitaciones, // Pasa las habitaciones a la plantilla
             daysWithDates: daysWithDates // Pasa el arreglo de fechas a la plantilla
-
         });
     } catch (error) {
         console.log(error);
         res.status(500).send('Error al obtener las habitaciones');
     }
 })
+
+router.post('/api/calendario-precios', listaDePreciosController.agregarNuevoPrecio)
+
 
 // router.get('/eventos/:idevento', async (req, res) => {
 //     try {

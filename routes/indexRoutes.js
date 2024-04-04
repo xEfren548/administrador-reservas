@@ -23,7 +23,7 @@ router.use('/api', habitacionesRoutes);
 router.use('/api', userRoutes);
 router.use('/api', serviciosRoutes);
 router.use('/', instruccionesUsuario);
-router.use('/api', calendarioPrecios); // /api/calendario-precios
+router.use('/', calendarioPrecios); // /api/calendario-precios
 
 
 module.exports = router;
