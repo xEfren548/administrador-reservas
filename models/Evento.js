@@ -1,6 +1,5 @@
 const { Schema, model } = require('mongoose');
 
-
 const reservaSchema = new Schema({
     id: {
         type: String,

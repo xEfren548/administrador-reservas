@@ -6,42 +6,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles/styles.css">
   <link rel="icon" href="route-to-logo">    
-  <title>Iniicar sesión</title>
+  <title>Iniciar sesión</title>
 </head>
 
 <body class="login-body flex-vcontainer">
   <main>
     <div class="login-form">
       <div>
-          <img src="route-to-logo" alt="Cabañas Navarro">
           <h1>Cabañas Navarro</h1>
       </div>
-
       <div class="form">
         <form action="/api/auth/login" method="post">
           <div class="form-item"><h2>Inicia sesión</h2></div>
-
           <div class="form-item">
             <label for="txtUserEmail">Dirección de correo electrónico</label>
-            <input id="txtUserEmail" name="txtUserEmail" type="text">
-          </div>    
-                
+            <input id="txtUserEmail" name="txtUserEmail" type="email">
+          </div>                  
           <div class="form-item">
             <label for="txtUserPassword">Contraseña</label>
             <input id="txtUserPassword" name="txtUserPassword" type="password">            
           </div>
-
           <div class="form-item">
             <p id="txt-login-error" class="error"></p>
           </div>
-
           <div class="form-item">
             <button id="btnLoginSubmit" type="submit">Iniciar sesión</button>
           </div>          
         </form>
         <hr>
         <div class="to-signup">
-              <p>¿Aún no tienes una cuenta? <a href="route-to-signup">¡Regístrate aquí!</a></p>                                        
+          <p>¿Aún no tienes una cuenta? <a href="route-to-signup">¡Regístrate aquí!</a></p>                                        
         </div>
       </div>
 

@@ -1,14 +1,14 @@
 const jwt = require("jsonwebtoken");
 const Usuario = require('../models/Usuario');
 const sendPassword = require("../utils/email");
+const NotFoundError = require("../common/error/not-found-error");
+const BadRequestError = require("../common/error/bad-request-error");
 
 async function createUser(req, res, next) {
     const { firstName, lastName, email, password, privilege, administrator } = req.body;
 
     if(!firstName || !lastName || !email || !password || !privilege || !administrator){
-        error = new Error("Falta información en el request");
-        error.status = 400;    
-        return next(error);
+        return next(new BadRequestError("Missing info in request"));
     }
 
     const userToAdd = new Usuario ({
@@ -65,9 +65,7 @@ async function obtenerUsuarioPorId(req, res, next){
     const { uuid } = req.params;
 
     if(!uuid){
-        error = new Error("Falta información en la URL.");
-        error.status = 400;    
-        return next(error);
+        return next(new BadRequestError("Missing info in URL"));
     }
 
     let userToFind;
@@ -87,9 +85,7 @@ async function editarUsuario(req, res, next) {
 
     console.log(req.body);
     if (!email || (!firstName && !lastName && !password && !privilege && !administrator)) {
-        error = new Error("Falta información en el request.");
-        error.status = 400;    
-        return next(error);
+        return next(new BadRequestError("Missing info in session cookie or request"));
     }
 
     const updateFields = {};
@@ -100,14 +96,9 @@ async function editarUsuario(req, res, next) {
     if (administrator) { updateFields.administrator = administrator; }
 
     try {
-        // Buscar el usuario por su dirección de correo electrónico
         const userToUpdate = await Usuario.findOneAndUpdate({ email }, updateFields, { new: true });
-
         if (!userToUpdate) {
-            // Si no se encuentra el usuario, devolver un error
-            const error = new Error("El usuario no fue encontrado.");
-            error.status = 404;
-            throw error;
+            throw new NotFoundError("User not found");
         }
 
         console.log("Usuario editado con éxito");
@@ -124,9 +115,7 @@ async function editarUsuarioPorId(req, res, next) {
     const { firstName, lastName, email, password, privilege, administrator } = req.body;
 
     if(!uuid || (!firstName && !lastName && !email && !password && !privilege && !administrator)){
-        error = new Error("Falta información en el request.");
-        error.status = 400;    
-        return next(error);
+        return next(new BadRequestError("Missing info in URL or request"));
     }
 
     const updateFields = {};
@@ -153,9 +142,7 @@ async function eliminarUsuario(req, res, next) {
     const { uuid } = req.params;
 
     if(!uuid){
-        error = new Error("Falta información en el request.");
-        error.status = 400;    
-        return next(error);   
+        return next(new BadRequestError("Missing info in URL"));  
     }
 
     try{

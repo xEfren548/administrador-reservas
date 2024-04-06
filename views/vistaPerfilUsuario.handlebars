@@ -1,0 +1,242 @@
+<div class="user-profile">
+    <div class="form-item">
+        <h2>{{req.session.firstName}}  {{req.session.lastName}}</h2>
+        <button class="btn-edit" data-bs-toggle="modal" data-bs-target="#mdlUpdateFullName"><span   class="material-symbols-outlined">edit</span></button>
+    </div>
+    <hr>
+    <div class="form-item">
+        <input id="txtUserEmail" name="txtUserEmail" type="email"   value="{{req.session.email}}" disabled>
+        <button class="btn-edit" data-bs-toggle="modal" data-bs-target="#mdlUpdateEmail"><span   class="material-symbols-outlined">edit</span></button>
+        <label for="txtUserEmail">Dirección de correo electrónico</label>
+    </div>           
+    <div class="form-item">
+        <input id="txtUserPassword" name="txtUserPassword" type="password" value="xxxxxxxxxx" disabled>
+        <button class="btn-edit" data-bs-toggle="modal" data-bs-target="#mdlUpdatePassword"><span class="material-symbols-outlined">edit</span></button>
+        <label for="txtUserPassword">Contraseña</label>
+    </div>        
+</div>
+
+<!-- Update full name modal -->
+<div class="modal fade" id="mdlUpdateFullName" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <form id="frmUpdUSerFullName" action="/api/perfil-usuario/editar-nombre" method="put" class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content update-info">
+            <div class="modal-header">
+                <h2 class="modal-title " id="modalLabel">Editar nombre completo</h2>
+                <button type="button" class="btn-cancel" onclick="$('#mdlUpdateFullName').modal('hide');" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-item">
+                    <label for="txtNewUserName">Nuevo(s) nombre(s)</label>
+                    <input id="txtNewUserName" name="txtNewUserName" type="email">
+                </div>
+                <div class="form-item">
+                    <label for="txtNewUserLastName">Nuevo(s) apellido(s)</label>
+                    <input id="txtNewUserLastName" name="txtNewUserLastName" type="email">
+                </div>
+                <div class="form-item">
+                    <p id="txtUpdFullNameError" name="errMsg" class="error"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-save" id="btnUpdFullName">Guardar cambios</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Update email modal -->
+<div class="modal fade" id="mdlUpdateEmail" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <form id="frmUpdUserEmail" action="/api/perfil-usuario/editar-email" method="put" class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content update-info">
+            <div class="modal-header">
+                <h2 class="modal-title " id="modalLabel">Editar dirección de correo electrónico</h2>
+                <button type="button" class="btn-cancel" onclick="$('#mdlUpdateEmail').modal('hide');" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-item">
+                    <label for="txtUserCurrentEmail">Dirección de correo electrónico actual</label>
+                    <input id="txtUserCurrentEmail" name="txtUserCurrentEmail" type="email">
+                </div>
+                <div class="form-item">
+                    <label for="txtNewUserEmail">Nueva dirección de correo electrónico</label>
+                    <input id="txtNewUserEmail" name="txtNewUserEmail" type="email">
+                </div>
+                <div class="form-item">
+                    <label for="txtConfirmNewUserEmail">Confirmar nueva dirección de correo electrónico</label>
+                    <input id="txtConfirmNewUserEmail" name="txtConfirmNewUserEmail" type="email">
+                </div>
+                <div class="form-item">
+                    <p id="txtUpdEmailError" name="errMsg" class="error"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-save" id="btnUpdEmail">Guardar cambios</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Update password modal -->
+<div class="modal fade" id="mdlUpdatePassword" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <form id="frmUpdUserPwd" action="/api/perfil-usuario/editar-contrasena" method="put" class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content update-info">
+            <div class="modal-header">
+                <h2 class="modal-title " id="modalLabel">Editar contraseña</h2>
+                <button type="button" class="btn-cancel" onclick="$('#mdlUpdatePassword').modal('hide');" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-item">
+                    <label for="txtUserCurrentPassword">Contraseña actual</label>
+                    <input id="txtUserCurrentPassword" name="txtUserCurrentPassword" type="password">
+                </div>
+                <div class="form-item">
+                    <label for="txtUserNewPassword">Nueva contraseña</label>
+                    <input id="txtUserNewPassword" name="txtUserNewPassword" type="password">
+                </div>
+                <div class="form-item">
+                    <label for="txtConfirmUserNewPassword">Confirmar nueva contraseña</label>
+                    <input id="txtConfirmUserNewPassword" name="txtConfirmUserNewPassword" type="password">
+                </div>
+                <div class="form-item">
+                    <p id="txtUpdPasswordError" name="errMsg" class="error"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-save" id="btnUpdPwd">Guardar cambios</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Functions.
+        function clearModal(modal){
+            const inputs = modal.querySelectorAll('input');
+            inputs.forEach(function(input) {
+                input.value = "";
+            });
+            modal.querySelectorAll("p[name='errMsg']")[0].innerHTML = "";
+        }
+
+        // Clearing user's info when closing modal.
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(function(modal) {
+            modal.addEventListener('hidden.bs.modal', () => {
+                clearModal(modal);
+            });
+        });
+
+        // Updating user's full name.
+        const btnUpdFullName = document.getElementById("btnUpdFullName");
+        if (btnUpdFullName) {
+            btnUpdFullName.addEventListener("click", function(event) {
+                event.preventDefault();
+                const data = {
+                    firstName: document.getElementById("txtNewUserName").value.trim(),
+                    lastName: document.getElementById("txtNewUserLastName").value.trim()
+                };
+                fetch("/api/perfil-usuario/editar-nombre", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        document.getElementById("txtUpdFullNameError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta exitosa del servidor:', data);
+                    clearModal(document.getElementById("mdlUpdateFullName"));
+                    $('#mdlUpdateFullName').modal('hide');
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Ha ocurrido un error: ', error);
+                });      
+            });
+        }
+
+        // Updating user's email address.
+        const btnUpdEmail = document.getElementById("btnUpdEmail");
+        if (btnUpdEmail) {
+            btnUpdEmail.addEventListener("click", function(event) {
+                event.preventDefault();
+                const data = {
+                    oldEmail: document.getElementById("txtUserCurrentEmail").value.trim(),
+                    newEmail: document.getElementById("txtNewUserEmail").value.trim(),
+                    confirmNewEmail: document.getElementById("txtConfirmNewUserEmail").value.trim(),
+                };
+                fetch("/api/perfil-usuario/editar-email", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        document.getElementById("txtUpdEmailError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta exitosa del servidor:', data);
+                    clearModal(document.getElementById("mdlUpdateEmail"));
+                    $('#mdlUpdateEmail').modal('hide');
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Ha ocurrido un error: ', error);
+                });          
+            });
+        }
+
+        // Updating user's password.
+        const btnUpdPwd = document.getElementById("btnUpdPwd");
+        if (btnUpdPwd) {
+            btnUpdPwd.addEventListener("click", function(event) {
+                event.preventDefault();
+                const data = {
+                    oldPassword: document.getElementById("txtUserCurrentPassword").value.trim(),
+                    newPassword: document.getElementById("txtUserNewPassword").value.trim(),
+                    confirmNewPassword: document.getElementById("txtConfirmUserNewPassword").value.trim(),
+                };
+                fetch("/api/perfil-usuario/editar-contrasena", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        document.getElementById("txtUpdPasswordError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta exitosa del servidor:', data);
+                    clearModal(document.getElementById("mdlUpdatePassword"));
+                    $('#mdlUpdatePassword').modal('hide');
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Ha ocurrido un error: ', error);
+                });           
+            });
+        }
+
+    });
+
+</script>

@@ -7,129 +7,131 @@
                     <th scope="col">Nombre</th>
                     <th scope="col">Apellido</th>
                     <th scope="col">Teléfono</th>
+                    <th scope="col">Dirección de correo electrónico</th>
                     <th scope="col">Dirección</th>
-                    <th scope="col">Email</th>
                     <th scope="col">Tipo de identificación</th>
                     <th scope="col">Número de identificación</th>
                     <th scope="col">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Nombre del cliente</td>
-                    <td>Apellido del cliente</td>
-                    <td>Teléfono del cliente</td>
-                    <td>Dirección del cliente</td>
-                    <td>Email del cliente</td>
-                    <td>INE</td>                    
-                    <td>Dirección del cliente</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modify-client_entry_modal">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
+                {{#each clients}}
+                    <tr>
+                        <td>{{firstName}}</td>
+                        <td>{{lastName}}</td>
+                        <td> {{phone}}</td>
+                        <td>{{email}}</td>
+                        <td> {{address}}</td>
+                        <td>{{identificationType}}</td>
+                        <td>{{identificationNumber}}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-primary" data-client-email="{{email}}"  data-bs-toggle="modal"
+                                data-bs-target="#modifyClientEntryModal">
+                                <i class="fa fa-pencil" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger" data-client-email="{{email}}">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                            <div class="form-item">
+                                <p name="errMsg" class="error"></p>
+                            </div>
+                        </td>
+                    </tr>
+                {{/each}}                    
             </tbody>
         </table>
-
     </div>
 </div>
 
-{{!-- Modals --}}
-
+<!-- Modals -->
 <!-- Modal alta cliente -->
-<div class="modal fade" id="client_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+<div class="modal fade" id="clientEntryModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+    <form id="frmCreateClient" action="/api/clientes/crear-cliente" method="post"  class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Alta de cliente</h5>
-                <button type="button" class="close" onclick="$('#client_entry_modal').modal('hide');" aria-label="Close">
+                <button type="button" class="close" onclick="$('#clientEntryModal').modal('hide');" aria-label="Close">
                     &times;
-
             </div>
             <div class="modal-body">
                 <div class="img-container">
                     <div class="row mt-2">
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="client-name">Nombre</label>
-                                <input type="text" name="client-name" id="client-name" class="form-control onlydatepicker"
+                                <label for="txtClientName">Nombre</label>
+                                <input type="text" name="txtClientName" id="txtClientName" class="form-control onlydatepicker"
                                     placeholder="Nombre">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="client-lastname">Apellido</label>
-                                <input type="text" name="client-lastname" id="client-lastname" class="form-control"
+                                <label for="txtClientLastname">Apellido</label>
+                                <input type="text" name="txtClientLastname" id="txtClientLastname" class="form-control"
                                     placeholder="Apellido">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="client-phone">Teléfono</label>
-                                <input type="text" name="client-phone" id="client-phone" class="form-control"
+                                <label for="txtClientPhone">Teléfono</label>
+                                <input type="tel" name="txtClientPhone" id="txtClientPhone" class="form-control"
                                     placeholder="Teléfono">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="client-address">Dirección</label>
-                                <input type="text" name="client-address" id="client-address" class="form-control"
+                                <label for="txtClientAddress">Dirección</label>
+                                <input type="text" name="txtClientAddress" id="txtClientAddress" class="form-control"
                                     placeholder="Dirección">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="client-email">Email</label>
-                                <input type="text" name="client-email" id="client-email" class="form-control"
+                                <label for="txtClientEmail">Email</label>
+                                <input type="text" name="txtClientEmail" id="txtClientEmail" class="form-control"
                                     placeholder="Email">
+                            </div>
+                        </div>        
+                        <div class="row">
+                            <div class="col-8">
+                                <label for="slctClientIdType">Tipo de identificación</label>
+                                <select name="slctClientIdType" id="slctClientIdType" required>
+                                    <option value="" selected disabled> Selecciona el tipo de identificación del cliente</option>                         
+                                    <option value="INE">INE</option>
+                                    <option value="Pasaporte">Pasaporte</option>
+                                    <option value="Licencia de conducir">Licencia de conducir</option>
+                                </select>
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="client-identification">Tipo de identificación</label>
-                                <input type="text" name="client-identification" id="client-identification" class="form-control"
+                                <label for="txtClientIdNumber">Número de identificación</label>
+                                <input type="text" name="txtClientIdNumber" id="txtClientIdNumber" class="form-control"
                                     placeholder="Tipo de identificación">
                             </div>
-                        </div>                    
-                        <div class="row">
-                            <div class="col-8">
-                            <select name="privileges" id="client-privileges" required>
-                                <option value="" selected disabled> Selecciona el tipo de identificación del cliente--
-                                </option>
-                               
-                                <option value="INE">INE</option>
-                                <option value="Pasaporte">Pasaporte</option>
-                                <option value="Licencia">Licencia</option>
-                            </select>
-
-                            </div>
-
-                        </div>
-                    </div> <!-- Cierre row -->
-
+                        </div>  
+                    </div>
                 </div>
             </div>
+            <div class="form-item">
+                <p id="txtInsertClientError" name="errMsg" class="error"></p>
+            </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="save-client-btn">Agregar Cliente</button>
+                <button type="button" class="btn btn-primary" id="btnSaveClient">Agregar Cliente</button>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 <!-- End Modal Alta cliente -->
 
-{{!-- Modal modificar cliente --}}
-<div class="modal fade" id="modify-client_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+<!-- Modal modificar cliente -->
+<div class="modal fade" id="modifyClientEntryModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+    <form id="frmUpdateClient" action="/api/servicios/editar-servicio" method="put" class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Modificar Cliente</h5>
-                <button type="button" class="close" onclick="$('#modify-client_entry_modal').modal('hide');" aria-label="Close">
+                <button type="button" class="close" onclick="$('#modifyClientEntryModal').modal('hide');" aria-label="Close">
                     &times;
                 </button>
             </div>
@@ -138,72 +140,72 @@
                     <div class="row mt-2">
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="client-name">Nombre</label>
-                                <input type="text" name="client-name" id="client-name" class="form-control onlydatepicker"
+                                <label for="txtClientNameUpd">Nombre</label>
+                                <input type="text" name="txtClientNameUpd" id="txtClientNameUpd" class="form-control onlydatepicker"
                                     placeholder="Nombre">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="client-lastname">Apellido</label>
-                                <input type="text" name="client-lastname" id="client-lastname" class="form-control"
+                                <label for="txtClientLastnameUpd">Apellido</label>
+                                <input type="text" name="txtClientLastnameUpd" id="txtClientLastnameUpd" class="form-control"
                                     placeholder="Apellido">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="client-phone">Teléfono</label>
-                                <input type="tel" name="client-phone" id="client-phone" class="form-control"
+                                <label for="txtClientPhoneUpd">Teléfono</label>
+                                <input type="tel" name="txtClientPhoneUpd" id="txtClientPhoneUpd" class="form-control"
                                     placeholder="Teléfono">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="client-address">Dirección</label>
-                                <input type="text" name="client-address" id="client-address" class="form-control"
+                                <label for="txtClientAddressUpd">Dirección</label>
+                                <input type="text" name="txtClientAddressUpd" id="txtClientAddressUpd" class="form-control"
                                     placeholder="Dirección">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="client-email">Email</label>
-                                <input type="email" name="client-email" id="client-email" class="form-control"
-                                    placeholder="Email">
+                                <label for="txtClientEmailUpd">Email</label>
+                                <input type="email" name="txtClientEmailUpd" id="txtClientEmailUpd" class="form-control" placeholder="Email" disabled>
                             </div>
                         </div>
                         <div class="row">
-                            <label for="client-id-type">Tipo de identificación: </label>
-                        </div>
-                        <div class="row">
                             <div class="col-8">
-                                <select name="client-id-type" id="client-id-type" required>
-                                    <option value="" selected disabled> Selecciona un tipo de identificación para el cliente--
-                                    </option>
+                                <label for="slctClientIdTypeUpd">Tipo de identificación</label>
+                                <select name="slctClientIdTypeUpd" id="slctClientIdTypeUpd" required>
+                                    <option value="" selected disabled> Selecciona el tipo de identificación del cliente</option>                         
                                     <option value="INE">INE</option>
                                     <option value="Pasaporte">Pasaporte</option>
-                                    <option value="Licencia">Licencia</option>
+                                    <option value="Licencia de conducir">Licencia de conducir</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="client-id-number">Número de identificación</label>
-                                <input type="text" name="client-id-number" id="client-id-number" class="form-control"
-                                    placeholder="Número de identificación">
+                                <label for="txtClientIdNumberUpd">Número de identificación</label>
+                                <input type="text" name="txtClientIdNumberUpd" id="txtClientIdNumberUpd" class="form-control"
+                                    placeholder="Tipo de identificación">
                             </div>
-                        </div>
+                        </div> 
                     </div> <!-- Cierre row -->
                 </div>
             </div>
+            <div class="form-item">
+                <p id="txtUpdClientError" name="errMsg" class="error"></p>
+            </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="save-client-btn">Modificar Cliente</button>
+                <button type="button" class="btn btn-primary" id="btnUpdateClient">Modificar Cliente</button>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
+        // Variables.
         var table = document.getElementById("tablaClientes");
         if (table) {
             var dataTable = new DataTable(table, {
@@ -213,5 +215,147 @@
                 "pageLength": 10 // Establece la longitud de página inicial
             });
         }
+
+        // Functions.
+        function clearModal(modal){
+            const inputs = modal.querySelectorAll('input');
+            inputs.forEach(function(input) {
+                input.value = "";
+            });
+            modal.querySelectorAll("p[name='errMsg']")[0].innerHTML = "";
+        }
+
+        // Clearing user's info when closing modal.
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(function(modal) {
+            modal.addEventListener('hidden.bs.modal', () => {
+                clearModal(modal);
+            });
+        });
+
+        // Saving new client.
+        var btnSaveClient = document.getElementById("btnSaveClient");
+        if (btnSaveClient) {
+            btnSaveClient.addEventListener("click", async (event) => {
+                event.preventDefault();
+
+                const data = {
+                    firstName: document.getElementById("txtClientName").value,
+                    lastName: document.getElementById("txtClientLastname").value,
+                    phone: document.getElementById("txtClientPhone").value,
+                    address: document.getElementById("txtClientAddress").value,
+                    email: document.getElementById("txtClientEmail").value,
+                    identificationType: document.getElementById("slctClientIdType").value,
+                    identificationNumber: document.getElementById("txtClientIdNumber").value
+                };
+
+                fetch('/api/clientes/crear-cliente', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        document.getElementById("txtInsertClientError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta del servidor:', data);
+                    clearModal(document.getElementById("clientEntryModal"));
+                    $('#clientEntryModal').modal('hide');
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error al enviar la solicitud:', error);
+                });
+            });
+        }
+
+        // Updating client info.
+        const editButtons = document.querySelectorAll('#tablaClientes .btn-primary');
+        editButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                document.getElementById('txtClientEmailUpd').value = this.dataset.clientEmail;
+            });
+        });
+        
+        var btnUpdateClient = document.getElementById("btnUpdateClient");
+        if (btnUpdateClient) {
+            btnUpdateClient.addEventListener("click", async (event) => {
+                event.preventDefault();
+                const data = {
+                    firstName: document.getElementById("txtClientNameUpd").value.trim(),
+                    lastName: document.getElementById("txtClientLastnameUpd").value.trim(),
+                    phone: document.getElementById("txtClientPhoneUpd").value.trim(),
+                    address: document.getElementById("txtClientAddressUpd").value.trim(),
+                    email: document.getElementById("txtClientEmailUpd").value.trim(),
+                    identificationType: document.getElementById("slctClientIdTypeUpd").value.trim(),
+                    identificationNumber: document.getElementById("txtClientIdNumberUpd").value.trim()
+                };
+
+                fetch('/api/clientes/editar-cliente', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        document.getElementById("txtUpdClientError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta exitosa del servidor:', data);
+                    clearModal(document.getElementById("modifyClientEntryModal"));
+                    $('#modifyClientEntryModal').modal('hide');
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Ha ocurrido un error: ', error);
+                }); 
+            });
+        }
+        
+        // Deleting client info.
+        const deleteButtons = document.querySelectorAll('#tablaClientes .btn-danger');
+        deleteButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                const data = {
+                    email: this.dataset.clientEmail
+                };
+
+                fetch('/api/clientes/eliminar-cliente', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        this.closest("p[name='errMsg']").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta exitosa del servidor:', data);
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Ha ocurrido un error: ', error);
+                }); 
+            });
+        });        
     });
 </script>

@@ -1,10 +1,10 @@
+const BadRequestError = require("../error/bad-request-error");
+
 const userPrivilege = (req, res, next) => {
     const privilege = req.session?.privilege;
      
-    if(!privilege){
-        error = new Error("El usuario require un privilegio");
-        error.status = 400;    
-        return next(error);
+    if(!privilege){   
+        return next(new BadRequestError("Privilege needed"));
     }
     
     const allowedRoutes = {

@@ -1,3 +1,5 @@
+const BadRequestError = require('../common/error/bad-request-error');
+const NotFoundError = require('../common/error/not-found-error');
 const Service = require('../models/Servicio');
 
 async function createService(req, res, next) {
@@ -5,9 +7,7 @@ async function createService(req, res, next) {
 
     console.log(req.body);
     if (!service || !description || !supplier || !serviceManager || !basePrice || !firstCommission || !firstUser || !secondCommission || !secondUser || !finalPrice) {
-        const error = new Error("Falta información en el request");
-        error.status = 400;
-        return next(error);
+        return next(new BadRequestError("Missing info in request"));
     }
 
     const serviceToAdd = new Service({
@@ -40,9 +40,7 @@ async function editService(req, res, next) {
 
     console.log(req.body);
     if (!service || (!description && !supplier && !serviceManager && !basePrice && !firstCommission && !firstUser && !secondCommission && !secondUser && !finalPrice)) {
-        const error = new Error("Falta información en el request.");
-        error.status = 400;    
-        return next(error);
+        return next(new BadRequestError("Missing info in request"));
     }
 
     const updateFields = {};
@@ -58,11 +56,8 @@ async function editService(req, res, next) {
 
     try {
         const serviceToUpdate = await Service.findOneAndUpdate({ service }, updateFields, { new: true });
-
         if (!serviceToUpdate) {
-            const error = new Error("El servicio no fue encontrado.");
-            error.status = 404;
-            throw error;
+            throw new NotFoundError("Service not found");
         }
 
         console.log("Servicio editado con éxito");
@@ -74,14 +69,13 @@ async function editService(req, res, next) {
 }
 
 // Maybe this function is not completely necessary.
+// This function can update user's name (its unique identifier).
 async function editServiceById(req, res, next) {
     const { uuid } = req.params;
     const { service, description, supplier, serviceManager, basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
 
     if (!uuid || (!service && !description && !supplier && !serviceManager && !basePrice && !firstCommission && !firstUser && !secondCommission && !secondUser && !finalPrice)) {
-        const error = new Error("Falta información en el request.");
-        error.status = 400;    
-        return next(error);
+        return next(new BadRequestError("Missing info in URL or request"));
     }
 
     const updateFields = {};
@@ -98,11 +92,8 @@ async function editServiceById(req, res, next) {
 
     try{
         const serviceToUpdate = await Service.findByIdAndUpdate(uuid, updateFields, { new: true });
-
         if (!serviceToUpdate) {
-            const error = new Error("El servicio no fue encontrado.");
-            error.status = 404;
-            throw error;
+            throw new NotFoundError("Service not found");
         }
 
         console.log("Servicio editado con éxito");
@@ -118,20 +109,13 @@ async function deleteService(req, res, next) {
     const { service } = req.body;
 
     if (!service) {
-        const error = new Error("Falta información en el request.");
-        error.status = 400;    
-        return next(error);   
+        return next(new BadRequestError("Missing info in request"));  
     }
 
     try {
-        // Buscar el servicio por su nombre
         const serviceToDelete = await Service.findOneAndDelete({ service: service });
-
         if (!serviceToDelete) {
-            // Si no se encuentra el servicio, devolver un error
-            const error = new Error("El servicio no fue encontrado.");
-            error.status = 404;
-            throw error;
+            throw new NotFoundError("Service not found");
         }
 
         console.log("Servicio eliminado con éxito");
@@ -146,9 +130,7 @@ async function deleteServiceById(req, res, next) {
     const { uuid } = req.params;
 
     if (!uuid) {
-        const error = new Error("Falta información en el request.");
-        error.status = 400;    
-        return next(error);   
+        return next(new BadRequestError("Missing info in URL"));  
     }
 
     try {

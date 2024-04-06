@@ -148,7 +148,7 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtServiceUpd">Servicio</label>
-                                <input type="text" name="txtServiceUpd" id="txtServiceUpd" class="form-control" placeholder="Servicio">
+                                <input type="text" name="txtServiceUpd" id="txtServiceUpd" class="form-control" placeholder="Servicio" disabled>
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
@@ -267,28 +267,24 @@
                 });
             });
         }
-
-        // Updating service info.
-        var btnUpdateService = document.getElementById("btnUpdateService");
         
-        // Add service name to modal when clicked.
+        // Updating service info.
         const editButtons = document.querySelectorAll('#tablaServicios .btn-primary');
         editButtons.forEach(function(button) {
             button.addEventListener('click', function() {
                 const row = this.closest('tr');
                 const serviceName = row.querySelector('td:first-child').textContent.trim();
                 document.getElementById('txtServiceUpd').value = serviceName;
-
             });
         });
         
+        var btnUpdateService = document.getElementById("btnUpdateService");
         if (btnUpdateService) {
             btnUpdateService.addEventListener("click", async (event) => {
                 event.preventDefault();
 
                 const data = {
-                    // service: document.getElementById("txtServiceUpd").value,
-                    service: "aaa",
+                    service: document.getElementById("txtServiceUpd").value,
                     description: document.getElementById("txtServiceDescriptionUpd").value,
                     supplier: document.getElementById("txtSupplierUpd").value,
                     serviceManager: document.getElementById("txtServiceManagerUpd").value,
@@ -318,6 +314,33 @@
             });
         }
         
+        // Deleting user info.
+        const deleteButtons = document.querySelectorAll('#tablaServicios .btn-danger');
+        deleteButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const serviceName = row.querySelector('td:first-child').textContent.trim();
+                const data = {
+                    service: serviceName
+                };
+
+                fetch('/api/servicios/eliminar-servicio', {
+                    method: 'DELETE',
+                    headers: {
+                        // Once logged in, the authorization token stored in the session cookies will automatically be added in each HTTP request.
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Respuesta del servidor:', data);
+                })
+                .catch(error => {
+                    console.error('Error al enviar la solicitud:', error);
+                });
+            });
+        });        
     });
 
 </script>
