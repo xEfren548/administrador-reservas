@@ -78,6 +78,31 @@ const editUserValidators = [
         })
 ];
 
+const deleteUserValidators = [
+    check('email')
+        .notEmpty().withMessage('Email is required')
+        .isEmail().withMessage('Invalid email format')
+        .custom(async (value, { req }) => {
+            const user = await Usuario.findOne({ email: value });
+            if (!user) {
+                throw new NotFoundError('Email not registered');
+            }
+            return true;
+        }),
+];
+
+async function showUsersView(req, res, next){
+    try {
+        const users = await Usuario.find({}).lean();
+        res.render('vistaUsuarios', {
+            layout: 'users',
+            users: users
+        });
+    } catch (err) {
+        return next(err);
+    }
+}
+
 async function createUser(req, res, next) {
     const { firstName, lastName, email, password, privilege, administrator } = req.body;
     const userToAdd = new Usuario ({
@@ -94,36 +119,6 @@ async function createUser(req, res, next) {
         console.log(err);
         return next(err);
     }   
-}
-
-async function mostrarVistaUsuarios(req, res, next){
-    try {
-        req.render = true;
-        const users = await mostrarUsuarios(req, res, next);
-        
-    } catch (err) {
-        return next(err);
-    }
-}
-
-async function mostrarUsuarios(req, res, next) { 
-    let users = [];
-    try {
-        users = await Usuario.find({});
-
-        console.log("Usuarios mostrados con éxito");
-        if(!req.render){
-            res.status(200).json( {users} );
-        } else if(req.render && req.render === true){
-            res.render('vistaUsuarios', {
-                layout: 'users',
-                users: users
-            });
-        }
-
-    } catch (err) {
-        return next(err);
-    }
 }
 
 async function obtenerUsuarioPorId(req, res, next){
@@ -192,6 +187,22 @@ async function editarUsuarioPorId(req, res, next) {
     }
 }
 
+async function deleteUser(req, res, next) {
+    const { email } = req.body;
+
+    try {
+        const userToDelete = await Usuario.findOneAndDelete({ email });
+        if (!userToDelete) {
+            throw new NotFoundError("Client not found");
+        }
+
+        console.log("Usuario eliminado con éxito");
+        res.status(200).json({ success: true });
+    } catch(err) {
+        return next(err);
+    }    
+}
+
 // Maybe this function is not completely necessary.
 async function eliminarUsuarioPorId(req, res, next) {
     const { uuid } = req.params;
@@ -213,11 +224,12 @@ async function eliminarUsuarioPorId(req, res, next) {
 module.exports = {
     createUserValidators,
     editUserValidators,
+    deleteUserValidators,
+    showUsersView,
     createUser,
-    mostrarVistaUsuarios,
-    mostrarUsuarios,
     obtenerUsuarioPorId,
     editarUsuario,
     editarUsuarioPorId,
+    deleteUser,
     eliminarUsuarioPorId
 }

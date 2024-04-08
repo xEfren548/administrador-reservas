@@ -252,6 +252,7 @@
                 fetch('/api/clientes/crear-cliente', {
                     method: 'POST',
                     headers: {
+                        // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(data)
@@ -301,6 +302,7 @@
                 fetch('/api/clientes/editar-cliente', {
                     method: 'PUT',
                     headers: {
+                        // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(data)
@@ -357,5 +359,6 @@
                 }); 
             });
         });        
+    
     });
 </script>

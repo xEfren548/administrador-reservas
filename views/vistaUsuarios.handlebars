@@ -12,49 +12,26 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Mark</td>
-                    <td>Otto</td>
-                    <td>@mdo</td>
-                    <td>Administrador</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#modify-user_entry_modal">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Jacob</td>
-                    <td>Thornton</td>
-                    <td>@fat</td>
-                    <td>Administrador</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Larry the Bird</td>
-                    <td>@twitter</td>
-                    <td>@twitter</td>
-                    <td>Colaborador</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
+                {{#each users}}
+                    <tr>
+                        <td>{{firstName}}</td>
+                        <td>{{lastName}}</td>
+                        <td>{{email}}</td>
+                        <td>{{privilege}}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-primary" data-client-email="{{email}}" data-bs-toggle="modal"
+                                data-bs-target="#modify-user_entry_modal">
+                                <i class="fa fa-pencil" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger" data-client-email="{{email}}">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                            <div class="form-item">
+                                <p name="errMsg" class="error"></p>
+                            </div>
+                        </td>
+                    </tr>
+                {{/each}}                    
             </tbody>
         </table>
 
@@ -137,8 +114,8 @@
                 </div>
             </div>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-primary">Agregar Usuario</button>
+        <div class="form-item">
+            <p id="txtInsertUserError" name="errMsg" class="error"></p>
         </div>
     </form>
 </div>
@@ -175,7 +152,7 @@
                             <div class="form-group">
                                 <label for="txtUserEmailUpd">Email: </label>
                                 <input type="email" name="txtUserEmailUpd" id="txtUserEmailUpd" class="form-control"
-                                    placeholder="Email">
+                                    placeholder="Email" disabled="true">
                             </div>
                             <div class="col-sm-12 mb-2">
                                 <div class="form-group">
@@ -213,6 +190,9 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="form-item">
+                            <p id="txtUpdUserError" name="errMsg" class="error"></p>
+                        </div>
                         <div class="modal_footer" style="display: flex; justify-content: right; margin: 10px 0;">
                             <button type="submit" class="btn btn-primary" id="btnUpdateUser">Modificar Usuario</button>
                         </div>
@@ -220,11 +200,15 @@
                 </div>
             </div>
         </div>
+        <div class="form-item">
+            <p id="txtUpdUserError" name="errMsg" class="error"></p>
+        </div>
     </form>
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Variables.
         var table = document.getElementById("tablaUsuarios");
         if (table) {
             var dataTable = new DataTable(table, {
@@ -235,71 +219,147 @@
             });
         }
 
+        // Functions.
+        function clearModal(modal){
+            const inputs = modal.querySelectorAll('input');
+            inputs.forEach(function(input) {
+                input.value = "";
+            });
+            modal.querySelectorAll("p[name='errMsg']")[0].innerHTML = "";
+        }
+
+        // Clearing user's info when closing modal.
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(function(modal) {
+            modal.addEventListener('hidden.bs.modal', () => {
+                clearModal(modal);
+            });
+        });
+
         // Saving new user.
         var btnSaveUser = document.getElementById("btnSaveUser")
-        btnSaveUser.addEventListener("click", async (event) => {
-            event.preventDefault();
+        if (btnSaveUser){
+            btnSaveUser.addEventListener("click", async (event) => {
+                event.preventDefault();
 
-            const data = {
-                firstName: document.getElementById("txtUserName").value,
-                lastName: document.getElementById("txtUserLastname").value,
-                email: document.getElementById("txtUserEmail").value,
-                password: document.getElementById("txtUserPassword").value,
-                privilege: document.getElementById("slctUserPrivileges").value,
-                administrator: document.getElementById("slctUserAdmin").value
-            };
+                const data = {
+                    firstName: document.getElementById("txtUserName").value.trim(),
+                    lastName: document.getElementById("txtUserLastname").value.trim(),
+                    email: document.getElementById("txtUserEmail").value.trim(),
+                    password: document.getElementById("txtUserPassword").value.trim(),
+                    privilege: document.getElementById("slctUserPrivileges").value.trim(),
+                    administrator: document.getElementById("slctUserAdmin").value.trim()
+                };
 
-            fetch('/api/usuarios/crear-usuario', {
-                method: 'POST',
-                headers: {
-                    // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Respuesta del servidor:', data);
-            })
-            .catch(error => {
-                console.error('Error al enviar la solicitud:', error);
+                fetch('/api/usuarios/crear-usuario', {
+                    method: 'POST',
+                    headers: {
+                        // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        document.getElementById("txtInsertUserError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta del servidor:', data);
+                    clearModal(document.getElementById("user_entry_modal"));
+                    $('#user_entry_modal').modal('hide');
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error al enviar la solicitud:', error);
+                });
             });
-
-        });
-
+        }
+        
         // Updating user info.
-        var btnUpdateUser = document.getElementById("btnUpdateUser")
-        btnUpdateUser.addEventListener("click", async (event) => {
-            event.preventDefault();
-
-            const data = {
-                firstName: document.getElementById("txtUserNameUpd").value,
-                lastName: document.getElementById("txtUserLastnameUpd").value,
-                email: document.getElementById("txtUserEmailUpd").value,
-                password: document.getElementById("txtUserPasswordUpd").value,
-                privilege: document.getElementById("slctUserPrivilegesUpd").value,
-                administrator: document.getElementById("slctUserAdminUpd").value
-            };
-
-            fetch('/api/usuarios/editar-usuario', {
-                method: 'PUT',
-                headers: {
-
-                    // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
-                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5kZmdkZjM0QGhvdG1haWwuY29tIiwidXNlcklkIjoiNjYwNjA2MTBkZjBhMzc5MzViYzU0NTBiIiwiaWF0IjoxNzExNjcwODAwLCJleHAiOjE3MTE2NzQ0MDB9.u4II-_OwemVrZ2wl0_zMfP6l9yaF305wndmS8n0K0Iw',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Respuesta del servidor:', data);
-            })
-            .catch(error => {
-                console.error('Error al enviar la solicitud:', error);
+        const editButtons = document.querySelectorAll('#tablaUsuarios .btn-primary');
+        editButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                document.getElementById('txtUserEmailUpd').value = this.dataset.clientEmail;
             });
-
         });
 
+        var btnUpdateUser = document.getElementById("btnUpdateUser")
+        if(btnUpdateUser){
+            btnUpdateUser.addEventListener("click", async (event) => {
+                event.preventDefault();
+                const data = {
+                    firstName: document.getElementById("txtUserNameUpd").value.trim(),
+                    lastName: document.getElementById("txtUserLastnameUpd").value.trim(),
+                    email: document.getElementById("txtUserEmailUpd").value.trim(),
+                    password: document.getElementById("txtUserPasswordUpd").value.trim(),
+                    privilege: document.getElementById("slctUserPrivilegesUpd").value.trim(),
+                    administrator: document.getElementById("slctUserAdminUpd").value.trim()
+                };
+
+                fetch('/api/usuarios/editar-usuario', {
+                    method: 'PUT',
+                    headers: {
+                        // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        document.getElementById("txtUpdUserError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta exitosa del servidor:', data);
+                    clearModal(document.getElementById("modify-user_entry_modal"));
+                    $('#modify-user_entry_modal').modal('hide');
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Ha ocurrido un error: ', error);
+                });
+            });
+        }
+
+        // Deleting client info.
+        const deleteButtons = document.querySelectorAll('#tablaUsuarios .btn-danger');
+        deleteButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                const data = {
+                    email: this.dataset.clientEmail
+                };
+
+                fetch('/api/usuarios/eliminar-usuario', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        this.closest("p[name='errMsg']").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta exitosa del servidor:', data);
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Ha ocurrido un error: ', error);
+                }); 
+            });
+        });        
+    
     });
 </script>
