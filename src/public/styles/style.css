@@ -136,13 +136,15 @@ body {
     background-color: #141418;
 }
 
-
+.divcalendar{
+    width: 70%;/*Will give the full container width to calender*/
+}
 
 #calendar {
     background-color: #141418;
-    max-width: 1220px;
-    overflow-x: auto !important;
-    margin: auto !important;
+    overflow-x: auto;
+    /* Arriba | Derecha | Abajo | Izquierda */
+    margin: 1em 22em 0 1em;
 
 }
 

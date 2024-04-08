@@ -69,9 +69,8 @@ body:not(h1, h2, h3, h4, h5, h6){
 }
 
 .login-form img{
-    width: 125px;
-    height: 125px;
-    border-radius: 100%;
+    width: 350px;
+    height: 250px;
 }
 
 .login-form h1{

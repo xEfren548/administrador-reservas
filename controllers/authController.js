@@ -69,6 +69,7 @@ async function login(req, res, next){
 async function logout(req, res, next){
     req.session = null;
     res.send({ message: "Successfully logged out" });
+    res.redirect('/login');
 }
 
 module.exports = {
