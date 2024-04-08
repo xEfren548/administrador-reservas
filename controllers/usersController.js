@@ -3,14 +3,83 @@ const Usuario = require('../models/Usuario');
 const sendPassword = require("../utils/email");
 const NotFoundError = require("../common/error/not-found-error");
 const BadRequestError = require("../common/error/bad-request-error");
+const {check} = require("express-validator");
+
+// No uuid validator has been implemented for those functions that take parameters form the URL.
+const createUserValidators = [
+    check(['firstName', 'lastName'])
+        .notEmpty().withMessage(`Full name is required`)
+        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s']+$/).withMessage("Invalid full name format")
+        .isLength({ max: 255 }).withMessage("Full name must be less than 255 characters"),
+    check('email')
+        .notEmpty().withMessage('Email is required')
+        .isEmail().withMessage('Invalid email format')
+        .custom(async (value, { req }) => {
+            const user = await Usuario.findOne({ email: value });
+            if (user) {
+                throw new NotFoundError('Email already taken');
+            }
+            return true;
+        }),
+    check('password')
+        .notEmpty().withMessage('Password is required'),
+        /*
+        .isLength({ min: 12 }).withMessage('Password must be at least 12 characters long')
+        .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
+        .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
+        .matches(/[0-9]/).withMessage('Password must contain at least one number')
+        .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),
+        */
+    check('privilege')
+        .notEmpty().withMessage('Privilege is required')
+        .isIn(['Administrador', 'Vendedor', 'Limpieza']).withMessage('Invalid privilege'),
+    check('administrator')
+        .notEmpty().withMessage(`Administrator name is required`)
+        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s']+$/).withMessage("Invalid administrator name format")
+        .isLength({ max: 255 }).withMessage("Administrator name must be less than 255 characters")
+];
+
+const editUserValidators = [
+    check(['firstName', 'lastName'])
+        .optional({ checkFalsy: true })
+        .isLength({ max: 255 }).withMessage("Full name must be less than 255 characters"),
+    check('email')
+        .notEmpty().withMessage('Email is required')
+        .isEmail().withMessage('Invalid email format')
+        .custom(async (value, { req }) => {
+            const user = await Usuario.findOne({ email: value });
+            if (!user) {
+                throw new NotFoundError('Email not registered');
+            }
+            return true;
+        }),
+    check('password')
+        .optional({ checkFalsy: true }),
+        /*
+        .isLength({ min: 12 }).withMessage('Password must be at least 12 characters long')
+        .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
+        .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
+        .matches(/[0-9]/).withMessage('Password must contain at least one number')
+        .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),
+        */
+    check('privilege')
+        .optional({ checkFalsy: true })
+        .isIn(['Administrador', 'Vendedor', 'Limpieza']).withMessage('Invalid identification type'),
+    check('administrator')
+        .optional({ checkFalsy: true })
+        .isLength({ max: 255 }).withMessage("Administrator name must be less than 255 characters"),
+    check()
+        .custom((value, { req }) => {
+            const { firstName, lastName, password, privilege, administrator } = req.body;
+            if(!firstName && !lastName && !password && !privilege && !administrator){
+                throw new BadRequestError("There should be at least one field to update.")
+            }
+            return true;
+        })
+];
 
 async function createUser(req, res, next) {
     const { firstName, lastName, email, password, privilege, administrator } = req.body;
-
-    if(!firstName || !lastName || !email || !password || !privilege || !administrator){
-        return next(new BadRequestError("Missing info in request"));
-    }
-
     const userToAdd = new Usuario ({
         firstName, lastName, email, password, privilege, administrator
     });
@@ -19,12 +88,8 @@ async function createUser(req, res, next) {
         sendPassword(userToAdd.email, userToAdd.password, userToAdd.privilege);        
         await userToAdd.save();
         
-        // Generating authentiation token.
-        // const token = jwt.sign({ email, userId: userToAdd._id }, "secret_key", { expiresIn: "1h" });
-
         console.log("Usuario agregado con éxito");
         res.status(200).json( { userToAdd } );
-
     } catch(err){
         console.log(err);
         return next(err);
@@ -82,12 +147,6 @@ async function obtenerUsuarioPorId(req, res, next){
 
 async function editarUsuario(req, res, next) {
     const { firstName, lastName, email, password, privilege, administrator } = req.body;
-
-    console.log(req.body);
-    if (!email || (!firstName && !lastName && !password && !privilege && !administrator)) {
-        return next(new BadRequestError("Missing info in session cookie or request"));
-    }
-
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
@@ -103,21 +162,15 @@ async function editarUsuario(req, res, next) {
 
         console.log("Usuario editado con éxito");
         res.status(200).json({ userToUpdate });
-    
     } catch(err) {
         return next(err);
     }
 }
 
 // Maybe this function is not completely necessary.
-async function editarUsuarioPorId(req, res, next) {
+async function editarUsuarioPorId(req, res, next) {   
     const { uuid } = req.params;
     const { firstName, lastName, email, password, privilege, administrator } = req.body;
-
-    if(!uuid || (!firstName && !lastName && !email && !password && !privilege && !administrator)){
-        return next(new BadRequestError("Missing info in URL or request"));
-    }
-
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
@@ -127,18 +180,20 @@ async function editarUsuarioPorId(req, res, next) {
     if (administrator) { updateFields.administrator = administrator; }
 
     try{
-        userToUpdate = await Usuario.findByIdAndUpdate(uuid, updateFields, { new: true });
+        const userToUpdate = await Usuario.findByIdAndUpdate(uuid, updateFields, { new: true });
+        if (!userToUpdate) {
+            throw new NotFoundError("User not found");
+        }
 
         console.log("Usuario editado con éxito");
         res.status(200).json({ userToUpdate });
-    
     } catch(err){
         return next(err);
     }
 }
 
 // Maybe this function is not completely necessary.
-async function eliminarUsuario(req, res, next) {
+async function eliminarUsuarioPorId(req, res, next) {
     const { uuid } = req.params;
 
     if(!uuid){
@@ -156,11 +211,13 @@ async function eliminarUsuario(req, res, next) {
 }
 
 module.exports = {
+    createUserValidators,
+    editUserValidators,
     createUser,
     mostrarVistaUsuarios,
     mostrarUsuarios,
     obtenerUsuarioPorId,
     editarUsuario,
     editarUsuarioPorId,
-    eliminarUsuario
+    eliminarUsuarioPorId
 }

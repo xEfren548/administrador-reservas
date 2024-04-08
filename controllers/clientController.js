@@ -1,14 +1,15 @@
 const BadRequestError = require('../common/error/bad-request-error');
 const NotFoundError = require('../common/error/not-found-error');
-const RequestValidationError = require('../common/error/request-validation-error');
 const Cliente = require('../models/Cliente');
-const {check, validationResult} = require("express-validator");
+const {check} = require("express-validator");
 
-const validators = [
-    check('firstName', 'lastName')
-        .notEmpty().withMessage(`Full name is required`)
-        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s']+$/).withMessage("Invalid full name format")
-        .isLength({ max: 255 }).withMessage("Full name must be less than 255 characters"),
+const createClientValidators = [
+    check('firstName')
+        .notEmpty().withMessage('First name is required')
+        .isLength({ max: 255 }).withMessage("First name must be less than 255 characters"),
+    check('lastName')
+        .notEmpty().withMessage('Last name is required')
+        .isLength({ max: 255 }).withMessage("Last name must be less than 255 characters"),
     check('phone')
         .notEmpty().withMessage('Phone is required')
         .matches(/^\+?[0-9]{10,15}$/).withMessage('Invalid phone number format')
@@ -20,9 +21,9 @@ const validators = [
         .notEmpty().withMessage('Email is required')
         .isEmail().withMessage('Invalid email format')
         .custom(async (value, { req }) => {
-            const user = await Usuario.findOne({ email: value });
-            if (!user) {
-                throw new Error('Email not registered');
+            const cliente = await Cliente.findOne({ email: value });
+            if (cliente) {
+                throw new BadRequestError("Email already exists");
             }
             return true;
         }),
@@ -32,6 +33,59 @@ const validators = [
     check('identificationNumber')
         .notEmpty().withMessage('Identification number is required')
         .isLength({ max: 255 }).withMessage('Identification number must be less than 255 characters')
+];
+
+const editClientValidators = [
+    check('firstName')
+        .optional({ checkFalsy: true })
+        .isLength({ max: 255 }).withMessage("First name must be less than 255 characters"),
+    check('lastName')
+        .optional({ checkFalsy: true })
+        .isLength({ max: 255 }).withMessage("Last name must be less than 255 characters"),
+    check('phone')
+        .optional({ checkFalsy: true })
+        .matches(/^\+?[0-9]{10,15}$/).withMessage('Invalid phone number format')
+        .isLength({ min: 10, max: 15 }).withMessage('Phone number must be between 10 and 15 digits'),
+    check('address')
+        .optional({ checkFalsy: true })
+        .isLength({ max: 255 }).withMessage('Address must be less than 255 characters'),
+    check('email')
+        .notEmpty().withMessage('Email is required')
+        .isEmail().withMessage('Invalid email format')
+        .custom(async (value, { req }) => {
+            const user = await Cliente.findOne({ email: value });
+            if (!user) {
+                throw new NotFoundError('Email not registered');
+            }
+            return true;
+        }),
+    check('identificationType')
+        .optional({ checkFalsy: true })
+        .isIn(['INE', 'Pasaporte', 'Licencia de conducir']).withMessage('Invalid identification type'),
+    check('identificationNumber')
+        .optional({ checkFalsy: true })
+        .isLength({ max: 255 }).withMessage('Identification number must be less than 255 characters'),
+    check()
+        .custom((value, { req }) => {
+            const { firstName, lastName, phone, address, identificationType, identificationNumber } = req.body;
+            if((!firstName && !lastName && !phone && !address && !identificationType && !identificationNumber)){
+                throw new BadRequestError("There should be at least one field to update.")
+            }
+            return true;
+        })
+];
+
+const deleteClientValidators = [
+    check('email')
+        .notEmpty().withMessage('Email is required')
+        .isEmail().withMessage('Invalid email format')
+        .custom(async (value, { req }) => {
+            const user = await Cliente.findOne({ email: value });
+            if (!user) {
+                throw new NotFoundError('Email not registered');
+            }
+            return true;
+        }),
 ];
 
 async function showClientsView(req, res, next){
@@ -47,16 +101,7 @@ async function showClientsView(req, res, next){
 }
 
 async function createClient(req, res, next) {
-    const errors = validationResult(req);
-    if(!errors.isEmpty()){
-        next(new RequestValidationError(errors.array));
-    }
-
     const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = req.body;
-    if (!firstName || !lastName || !phone || !address || !email || !identificationType || !identificationNumber) {
-        return next(new BadRequestError("Missing info in request"));
-    }
-
     const clienteToAdd = new Cliente({
         firstName,
         lastName,
@@ -72,24 +117,13 @@ async function createClient(req, res, next) {
 
         console.log("Cliente agregado con éxito");
         res.status(200).json({ success: true });
-    
     } catch (err) {
-        console.log(err);
         return next(err);
     }
 }
 
 async function editClient(req, res, next) {
-    const errors = validationResult(req);
-    if(!errors.isEmpty()){
-        next(new RequestValidationError(errors.array));
-    }
-
     const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = req.body;
-    if (!email || (!firstName && !lastName && !phone && !address && !identificationType && !identificationNumber)) {
-        return next(new BadRequestError("Missing info in session cookie or request"));
-    }
-
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
@@ -106,7 +140,6 @@ async function editClient(req, res, next) {
 
         console.log("Cliente editado con éxito");
         res.status(200).json({ clienteToUpdate });
-    
     } catch(err) {
         return next(err);
     }
@@ -114,18 +147,9 @@ async function editClient(req, res, next) {
 
 // Maybe this function is not completely necessary.
 // This function can update user's email (its unique identifier).
-async function editClientById(req, res, next) {
-    const errors = validationResult(req);
-    if(!errors.isEmpty()){
-        next(new RequestValidationError(errors.array));
-    }
-    
+async function editClientById(req, res, next) {   
     const { uuid } = req.params;
     const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = req.body;
-    if (!uuid || (!firstName && !lastName && !phone && !address && !email && !identificationType && !identificationNumber)) {
-        return next(new BadRequestError("Missing info in URL or request"));
-    }
-
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
@@ -143,7 +167,6 @@ async function editClientById(req, res, next) {
 
         console.log("Cliente editado con éxito");
         res.status(200).json({ clienteToUpdate });
-    
     } catch(err) {
         console.log(err)
         return next(err);
@@ -153,10 +176,6 @@ async function editClientById(req, res, next) {
 async function deleteClient(req, res, next) {
     const { email } = req.body;
 
-    if (!email) {
-        return next(new BadRequestError("Missing info in request"));   
-    }
-
     try {
         const clientToDelete = await Cliente.findOneAndDelete({ email });
         if (!clientToDelete) {
@@ -165,7 +184,6 @@ async function deleteClient(req, res, next) {
 
         console.log("Cliente eliminado con éxito");
         res.status(200).json({ success: true });
-        
     } catch(err) {
         return next(err);
     }    
@@ -190,7 +208,9 @@ async function deleteClientById(req, res, next) {
 }
 
 module.exports = {
-    validators,
+    createClientValidators,
+    editClientValidators,
+    deleteClientValidators,
     showClientsView,
     createClient,
     editClient,

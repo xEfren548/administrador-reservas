@@ -67,11 +67,11 @@ router.all("*", (req, res, next) => {
 
 // Error handling middleware.
 router.use((err, req, res, next) => {
-    console.log(err.generateErrors());
     if(err instanceof CustomError){
         res.status(err.statusCode).json({errors: err.generateErrors()});
         return;
     }
+    console.log(err);
     res.status(500).json({errors: [{message: "Internal server error: something went wrong"}]});
 });
 

@@ -1,15 +1,119 @@
 const BadRequestError = require('../common/error/bad-request-error');
 const NotFoundError = require('../common/error/not-found-error');
 const Service = require('../models/Servicio');
+const { check } = require("express-validator");
+
+// No uuid validator has been implemented for those functions that take parameters form the URL.
+const createServiceValidators = [
+    check('service')
+        .notEmpty().withMessage('Service is required')
+        .isLength({ max: 255 }).withMessage('Service must be less than 255 characters')
+        .custom(async (value, { req }) => {
+            const service = await Service.findOne({ service: value });
+            if (service) {
+                throw new NotFoundError("Service alerady exists");
+            }
+            return true;
+        }),
+    check('description')
+        .notEmpty().withMessage('Description is required')
+        .isLength({ max: 255 }).withMessage('Description must be less than 255 characters'),
+    check('supplier')
+        .notEmpty().withMessage('Supplier name is required')
+        .isLength({ max: 255 }).withMessage("Supplier name must be less than 255 characters"),
+    check('serviceManager')
+        .notEmpty().withMessage('Service manager name is required')
+        .isLength({ max: 255 }).withMessage("Service manager name must be less than 255 characters"),
+    check('basePrice')
+        .notEmpty().withMessage('Base price is required')
+        .isNumeric().withMessage('Base price must be a number')
+        .toFloat(),
+    check('firstCommission')
+        .notEmpty().withMessage('Base price is required')
+        .isNumeric().withMessage('First commission must be a number')
+        .toFloat(),
+    check('firstUser')
+        .notEmpty().withMessage('First user name is required')
+        .isLength({ max: 255 }).withMessage("First user name must be less than 255 characters"),
+    check('secondCommission')
+        .notEmpty().withMessage('Base price is required')
+        .isNumeric().withMessage('Second commission must be a number')
+        .toFloat(),
+    check('secondUser')
+        .notEmpty().withMessage('Second user name is required')
+        .isLength({ max: 255 }).withMessage("Second user name must be less than 255 characters"),
+    check('finalPrice')
+        .notEmpty().withMessage('Final price is required')
+        .isNumeric().withMessage('Final price must be a number')
+        .toFloat(),
+];
+
+const editServiceValidators = [
+    check('service')
+        .isLength({ max: 255 }).withMessage('Service must be less than 255 characters')
+        .custom(async (value, { req }) => {
+            const service = await Service.findOne({ service: value });
+            if (!service) {
+                throw new NotFoundError("Service not found");
+            }
+            return true;
+        }),
+    check('description')
+        .optional({ checkFalsy: true })
+        .isLength({ max: 255 }).withMessage('Description must be less than 255 characters'),
+    check('supplier')
+        .optional({ checkFalsy: true })
+        .isLength({ max: 255 }).withMessage("Supplier name must be less than 255 characters"),
+    check('serviceManager')
+        .optional({ checkFalsy: true })
+        .isLength({ max: 255 }).withMessage("Service manager name must be less than 255 characters"),
+    check('basePrice')
+        .optional({ checkFalsy: true })
+        .isNumeric().withMessage('Base price must be a number')
+        .toFloat(),
+    check('firstCommission')
+        .optional({ checkFalsy: true })
+        .isNumeric().withMessage('First commission must be a number')
+        .toFloat(),
+    check('firstUser')
+        .optional({ checkFalsy: true })
+        .isLength({ max: 255 }).withMessage("First user name must be less than 255 characters"),
+    check('secondCommission')
+        .optional({ checkFalsy: true })
+        .isNumeric().withMessage('Second commission must be a number')
+        .toFloat(),
+    check('secondUser')
+        .optional({ checkFalsy: true })
+        .isLength({ max: 255 }).withMessage("Second user name must be less than 255 characters"),
+    check('finalPrice')
+        .optional({ checkFalsy: true })
+        .isNumeric().withMessage('Final price must be a number')
+        .toFloat(),
+    check()
+        .custom((value, { req }) => {
+            const { description, supplier, serviceManager, basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
+            if((!description && !supplier && !serviceManager && !basePrice && !firstCommission && !firstUser && !secondCommission && !secondUser && !finalPrice)){
+                throw new BadRequestError("There should be at least one field to update.")
+            }
+            return true;
+        })
+];
+
+const deleteServiceValidators = [
+    check('service')
+        .notEmpty().withMessage('Service is required')
+        .isLength({ max: 255 }).withMessage('Service must be less than 255 characters')
+        .custom(async (value, { req }) => {
+            const service = await Service.findOne({ service: value });
+            if (!service) {
+                throw new NotFoundError("Service not found");
+            }
+            return true;
+        })
+];
 
 async function createService(req, res, next) {
     const { service, description, supplier, serviceManager, basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
-
-    console.log(req.body);
-    if (!service || !description || !supplier || !serviceManager || !basePrice || !firstCommission || !firstUser || !secondCommission || !secondUser || !finalPrice) {
-        return next(new BadRequestError("Missing info in request"));
-    }
-
     const serviceToAdd = new Service({
         service,
         description,
@@ -28,7 +132,6 @@ async function createService(req, res, next) {
 
         console.log("Servicio agregado con éxito");
         res.status(200).json({ success: true });
-
     } catch (err) {
         console.log(err);
         return next(err);
@@ -37,12 +140,6 @@ async function createService(req, res, next) {
 
 async function editService(req, res, next) {
     const { service, description, supplier, serviceManager, basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
-
-    console.log(req.body);
-    if (!service || (!description && !supplier && !serviceManager && !basePrice && !firstCommission && !firstUser && !secondCommission && !secondUser && !finalPrice)) {
-        return next(new BadRequestError("Missing info in request"));
-    }
-
     const updateFields = {};
     if (description) { updateFields.description = description; }
     if (supplier) { updateFields.supplier = supplier; }
@@ -62,22 +159,16 @@ async function editService(req, res, next) {
 
         console.log("Servicio editado con éxito");
         res.status(200).json({ serviceToUpdate });
-    
     } catch(err) {
         return next(err);
     }
 }
 
 // Maybe this function is not completely necessary.
-// This function can update user's name (its unique identifier).
+// This function can update service's name (its unique identifier).
 async function editServiceById(req, res, next) {
     const { uuid } = req.params;
     const { service, description, supplier, serviceManager, basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
-
-    if (!uuid || (!service && !description && !supplier && !serviceManager && !basePrice && !firstCommission && !firstUser && !secondCommission && !secondUser && !finalPrice)) {
-        return next(new BadRequestError("Missing info in URL or request"));
-    }
-
     const updateFields = {};
     if (service) { updateFields.service = service; }
     if (description) { updateFields.description = description; }
@@ -98,19 +189,13 @@ async function editServiceById(req, res, next) {
 
         console.log("Servicio editado con éxito");
         res.status(200).json({ serviceToUpdate });
-    
     } catch(err){
-        console.log(err)
         return next(err);
     }
 }
 
-async function deleteService(req, res, next) {
+async function deleteService(req, res, next) {  
     const { service } = req.body;
-
-    if (!service) {
-        return next(new BadRequestError("Missing info in request"));  
-    }
 
     try {
         const serviceToDelete = await Service.findOneAndDelete({ service: service });
@@ -129,10 +214,6 @@ async function deleteService(req, res, next) {
 async function deleteServiceById(req, res, next) {
     const { uuid } = req.params;
 
-    if (!uuid) {
-        return next(new BadRequestError("Missing info in URL"));  
-    }
-
     try {
         await Service.findByIdAndDelete(uuid);
 
@@ -144,6 +225,9 @@ async function deleteServiceById(req, res, next) {
 }
 
 module.exports = {
+    createServiceValidators,
+    editServiceValidators,
+    deleteServiceValidators,
     createService,
     editService,
     editServiceById,
