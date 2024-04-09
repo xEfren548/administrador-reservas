@@ -1,15 +1,20 @@
+const BadRequestError = require("../error/bad-request-error");
+
 const userPrivilege = (req, res, next) => {
-    const privilege = req.session?.privilege;    
-    if(!privilege){
-        error = new Error("El usuario require un privilegio");
-        error.status = 400;    
-        return next(error);
+    const privilege = req.session?.privilege;
+     
+    if(!privilege){   
+        return next(new BadRequestError("Privilege needed"));
     }
     
     const allowedRoutes = {
-        "test": ['/', '/login', 'api/auth/login', 'api/auth/logout', '/api/usuarios', '/api/usuarios/mostrar-usuarios', '/api/usuarios/mostrar-usuario/:uuid', '/api/usuarios/editar-usuario', '/api/usuarios/editar-usuario/:uuid', '/api/usuarios/eliminar-usuario/:uuid', '/api/usuarios/crear-usuario', ],
-        'Administrador': ['/'],
+        "test": ['/', '/login', 'api/auth/login', 'api/auth/logout', '/api/usuarios', '/api/usuarios/mostrar-usuarios', '/api/usuarios/mostrar-usuario/:uuid', '/api/usuarios/editar-usuario', '/api/usuarios/editar-usuario/:uuid', '/api/usuarios/eliminar-usuario/:uuid', '/api/usuarios/crear-usuario', 'api/servicios/', 'api/servicios/crear-servicio', 'api/servicios/editar-servicio', 'api/servicios/editar-servicio/:uuid', 'api/servicios/eliminar-servicio', 'api/servicios/eliminar-servicio/:uuid'],
+        
+        "Administrador": ['/','/api/editar-cabana','/instrucciones/:id','/api/instrucciones/','/api/instrucciones/kgUoporxboU1ZLJvGcKm5','/api/servicios','/api/clientes','/api/cabanas','/api/racklimpieza','/api/dashboard','/api/auth/logout','/fullcalendar/dist/index.global.js' ,'/api/eventos', '/api/eventos/:id', '/api/eventos/:id/modificar', '/api/habitaciones', '/api/habitaciones/:id', '/login', 'api/auth/login', 'api/auth/logout', '/api/usuarios', '/api/usuarios/mostrar-usuarios', '/api/usuarios/mostrar-usuario/:uuid', '/api/usuarios/editar-usuario', '/api/usuarios/editar-usuario/:uuid', '/api/usuarios/eliminar-usuario/:uuid', '/api/usuarios/crear-usuario', ],
+        'Test': ['/'],
+        
         'Vendedor': ['/'],
+        
         'Limpieza': ['/']
     };
     const currentRoute = req.path;

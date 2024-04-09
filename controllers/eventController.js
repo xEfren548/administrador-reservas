@@ -34,8 +34,6 @@ async function obtenerEventoPorId(id) {
     }
 }
 
-
-
 async function agregarEvento(req, res) {
     try {
         const id = nanoid();
@@ -206,7 +204,6 @@ async function modificarEvento(req, res) {
         res.status(500).json({ error });
     }
 }
-
 
 module.exports = {
     obtenerEventos,

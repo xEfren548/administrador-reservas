@@ -21,6 +21,7 @@ const userSchema = new Schema({
     },
     privilege: {
         type: String,
+        enum: ['test', 'Administrador', 'Vendedor', 'Limpieza'],
         required: true
     },
     administrator: {

@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         headerToolbar: {
             left: 'today prev,next',
             center: 'title',
-            right: ' resourceTimelineMonth, resourceTimelineYear'
+            right: 'resourceTimelineMonth,resourceTimelineYear'
         },
 
         resourceAreaHeaderContent: 'Habitaciones',

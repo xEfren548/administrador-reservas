@@ -31,6 +31,7 @@
 
 
     <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="/styles/styles.css">
 </head>
 
 <body>
@@ -43,51 +44,72 @@
                     </a>
                     <ul class="nav nav-pills flex-column mt-4 ">
                         <li class="nav-item py-2 py-sm-0">
-                            <a href="#" class="nav-link text-white">
+                            <a href="/api/dashboard" class="nav-link text-white">
                                 <i class="fs-5 fa fa-chart-bar"></i><span
                                     class="fs-4 ms-3 d-none d-sm-inline">Dashboard</span>
                             </a>
                         </li>
                         <li class="nav-item py-2 py-sm-0">
-                            <a href="#" class="nav-link text-white">
+                            <a href="/" class="nav-link text-white">
                                 <i class="fs-5 fa fa-house"></i><span class="fs-4 ms-3 d-none d-sm-inline">Home</span>
                             </a>
                         </li>
                         <li class="nav-item py-2 py-sm-0">
-                            <a href="#" class="nav-link text-white">
-                                <i class="fs-5 fa fa-table-list"></i><span
-                                    class="fs-4 ms-3 d-none d-sm-inline">Calendario</span>
-                            </a>
-                        </li>
-                        <li class="nav-item py-2 py-sm-0">
-                            <a href="#" class="nav-link text-white">
-                                <i class="fs-5 fa fa-table-list"></i><span
-                                    class="fs-4 ms-3 d-none d-sm-inline">Habitaciones</span>
-                            </a>
-                        </li>
-                        <li class="nav-item py-2 py-sm-0">
-                            <a href="#" class="nav-link text-white">
-                                <i class="fs-5 fa fa-users"></i><span
-                                    class="fs-4 ms-3 d-none d-sm-inline">Tarifas</span>
-                            </a>
-                        </li>
-                        <li class="nav-item py-2 py-sm-0">
                             <a href="/api/usuarios" class="nav-link text-white">
-                                <i class="fa fa-user-circle" aria-hidden="true"></i><span
+                                <i class="fas fa-users"></i><span
                                     class="fs-4 ms-3 d-none d-sm-inline">Usuarios</span>
                             </a>
                         </li>
+                        <li class="nav-item py-2 py-sm-0">
+                            <a href="/api/clientes" class="nav-link text-white">
+                                <i class="fa fa-user-circle" aria-hidden="true"></i><span
+                                    class="fs-4 ms-3 d-none d-sm-inline">Clientes</span>
+                            </a>
+                        </li>
+                        <li class="nav-item py-2 py-sm-0">
+                            <a href="/api/servicios" class="nav-link text-white">
+                                <i class="fas fa-spa"></i><span
+                                    class="fs-4 ms-3 d-none d-sm-inline">Servicios Adicionales</span>
+                            </a>
+                        </li>
+                        <li class="nav-item py-2 py-sm-0">
+                            <a href="/api/racklimpieza" class="nav-link text-white">
+                                <i class="fas fa-broom"></i><span
+                                    class="fs-4 ms-3 d-none d-sm-inline">Limpieza</span>
+                            </a>
+                        </li>
+                        <li class="nav-item py-2 py-sm-0">
+                            <a href="/api/cabanas" class="nav-link text-white">
+                                <i class="fas fa-plus"></i></i><span
+                                    class="fs-4 ms-3 d-none d-sm-inline">Alta cabaña</span>
+                            </a>
+                        </li>
+                        <li class="nav-item py-2 py-sm-0">
+                            <a href="/api/editar-cabana" class="nav-link text-white">
+                                <i class="fas fa-pencil-alt"></i></i><span
+                                    class="fs-4 ms-3 d-none d-sm-inline">Editar cabaña</span>
+                            </a>
+                        </li>
+                        <li class="nav-item py-2 py-sm-0">
+                            <a href="/instrucciones/65d92bc351760248871cd30f" class="nav-link text-white">
+                                <i class="far fa-calendar-alt"></i><span
+                                    class="fs-4 ms-3 d-none d-sm-inline">Reserva Cliente cabaña</span>
+                            </a>
+                        </li>
                     </ul>
-
-                </div>
-                <div class="dropdown open p-3">
-                    <button class="btn border-none dropdown-toggle text-white" type="button" id="triggerId"
-                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fa fa-user"></i><span class="ms-2">Efren</span>
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="triggerId">
-                        <button class="dropdown-item" href="#">Setting</button>
-                        <button class="dropdown-item" href="#">Profile</button>
+                    <hr>
+                    <div class="dropdown pb-4">
+                        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png" alt="hugenerd" width="30" height="30" class="rounded-circle">
+                            <span class="d-none d-sm-inline mx-1">Juan Felipe</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+                            <li><a class="dropdown-item" href="#">Settings</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="/api/auth/logout">Sign out</a></li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -97,10 +119,8 @@
                 <div class="calendar-header">
                     <div class="bg-dark mb-3">
                         <a name="" id="crear-reserva-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
-                            data-bs-toggle="modal" data-bs-target="#client_entry_modal">Alta cliente</a>
+                            data-bs-toggle="modal" data-bs-target="#clientEntryModal">Alta cliente</a>
                     </div>
-
-
                 </div>
                 {{{body}}}
             </div>

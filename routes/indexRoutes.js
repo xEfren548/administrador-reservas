@@ -14,7 +14,10 @@ const habitacionesRoutes = require('./habitacionesRoutes');
 const instruccionesUsuario = require('./instruccionesUsuario');
 const loginRoute = require("./loginRoute");
 const serviciosRoutes = require('./serviciosRoutes');
-const userRoutes = require('./userRoutes');
+const userRoutes = require('./usersRoutes');
+const userProfileRoutes = require('./userProfileRoutes');
+const CustomError = require("../common/error/custom-error");
+const NotFoundError = require("../common/error/not-found-error");
 
 // Formating incoming data.
 router.use(express.json());
@@ -31,10 +34,10 @@ router.use('/login', loginRoute);
 router.use("/api", authRoutes);
 
 // Validating user's token in later requests.
-router.use(currentuser);
+//router.use(currentuser);
 
 // Determining user access based on privileges.
-router.use(userPrivilege);
+//router.use(userPrivilege);
 
 // Use middlewares.
 router.use('/', instruccionesUsuario);
@@ -44,9 +47,10 @@ router.use('/api',
     serviciosRoutes, 
     clientesRoutes, 
     cabanasRoutes, 
-    editarCabanaRoutes, 
+    editarCabanaRoutes,
     dashboardRoutes);
 router.use('/api/usuarios', userRoutes);
+router.use('/api/perfil-usuario/', userProfileRoutes);
 
 // Get middlewares.
 router.get('/', (req, res) => {
@@ -58,18 +62,17 @@ router.get('/api/racklimpieza', (req, res) => {
 
 // Not found resource handling middleware.
 router.all("*", (req, res, next) => {
-    const error = new Error("Resource not found");
-    error.status = 404;
-    next(error);
+    next(new NotFoundError("Page not found"));
 });
 
 // Error handling middleware.
 router.use((err, req, res, next) => {
-    if(err.status){
-        res.status(err.status).json({error: err.message})
+    if(err instanceof CustomError){
+        res.status(err.statusCode).json({errors: err.generateErrors()});
         return;
     }
-    res.status(500).json({error: "Internal server error: something went wrong"});
+    console.log(err);
+    res.status(500).json({errors: [{message: "Internal server error: something went wrong"}]});
 });
 
 module.exports = router;

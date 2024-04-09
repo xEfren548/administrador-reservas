@@ -3,14 +3,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 
-.login-html, .login-body{
+html, body{
     margin: 0;
     height: 100%;  
-    /* fon-size is already set to 10px */
-    background-color: #053537;
-    background-image: url("../images/login/chalet.png");
-    background-repeat: no-repeat;
-    background-size: cover;
     font-family: "Open Sans", sans-serif;
 }
 
@@ -25,11 +20,22 @@ body:not(h1, h2, h3, h4, h5, h6){
 .error{
     margin: 0;
     text-align: center;
-    color: red;
+    color: rgb(255, 80, 80);
 }
 
 /* LOGIN
 -------------------------------------------*/
+.login-html, .login-body{
+    margin: 0;
+    height: 100%;  
+    /* fon-size is already set to 10px */
+    background-color: #053537;
+    background-image: url("../images/login/chalet.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    font-family: "Open Sans", sans-serif;
+}
+
 .flex-vcontainer{
     display: flex;
     flex-direction: column;
@@ -56,23 +62,22 @@ body:not(h1, h2, h3, h4, h5, h6){
     flex-direction: column;
     justify-content:center;
     align-items: center;
-    padding: 50px;
+    padding: 75px;
     background-color: #053537;
     text-align: center;
     color: #DD806D;    
 }
 
 .login-form img{
-    width: 125px;
-    height: 125px;
-    border-radius: 100%;
+    width: 350px;
+    height: 250px;
 }
 
 .login-form h1{
     font-size: 2.75em;
     font-weight: 100;
     line-height: 1em;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.3em;
 }
 
 .form{     
@@ -128,7 +133,7 @@ body:not(h1, h2, h3, h4, h5, h6){
     background-color: #111111;
     color:#F6F6DF;
     opacity: 1;
-    outline: 2px solid #DD806D;
+    outline: 1px solid #DD806D;
 }
 
 .form button{
@@ -184,7 +189,7 @@ body:not(h1, h2, h3, h4, h5, h6){
 
 .to-signup a:focus,
 .form button:focus{
-    outline: 2px solid #DD806D;
+    outline: 1px solid #DD806D;
 }
 
 /* DASHBOARD
@@ -313,7 +318,7 @@ body:not(h1, h2, h3, h4, h5, h6){
 }
 
 .dashboard-item-content input:focus{
-    outline: 2px solid white;
+    outline: 1px solid white;
 }
 
 .exit-info{
@@ -381,7 +386,7 @@ body:not(h1, h2, h3, h4, h5, h6){
 }
 
 .exit-card > button:focus{
-    outline: 2px solid white; 
+    outline: 1px solid white; 
 }
 
 .exit-card > button:active{
@@ -513,7 +518,7 @@ body:not(h1, h2, h3, h4, h5, h6){
 .input-group input:focus,
 .input-group select:focus,
 .input-group textarea:focus{
-    outline: 2px solid white;
+    outline: 1px solid white;
 }
 
 .chalet-details legend{
@@ -616,6 +621,337 @@ body:not(h1, h2, h3, h4, h5, h6){
 .custom-file-upload span{
     color: rgba(255, 255, 255, 0.5);
 }
+
+/* PARA USUARIOS
+-------------------------------------------*/
+iframe{
+    width: 100%;
+    height: 450px;
+    margin: 10px 0;
+}
+
+.signature{
+    width: 100%;
+}
+
+.canvas{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.canvas canvas{
+    width: 50%;
+    height: 200px;
+    background-color: white; 
+    border:1px solid #000;
+}
+
+.canvas label{
+    margin: 5px 0;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.buttons{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 0 auto 10px;
+}
+
+.buttons button{
+    display: inline-block;
+    width: 15rem;
+    margin: 0 10px;
+    padding: 6px 12px;
+    color: white;
+    background-color: black;
+    border-style: none;
+    border-radius: 4px;
+}
+
+.buttons button:hover{
+    display: inline-block;
+    width: 15rem;
+    margin: 0 10px;
+    padding: 6px 12px;
+    color: black;
+    background-color: white;
+    border-style: none;
+    border-radius: 4px;
+}
+
+.submit{
+    display: flex;
+    justify-content: right;
+    margin: 20px 0;
+}
+
+.submit button{
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: rgb(82, 71, 182);
+    color: white;
+    border-style: none;
+    border-radius: 4px;
+}
+
+.submit button:hover{
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: rgb(102, 88, 232);
+    color: white;
+    border-style: none;
+    border-radius: 4px;
+}
+
+/* USER PROFILE
+-------------------------------------------*/
+.user-profile{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    width: 500px;
+    margin: 0 auto;
+    padding: 0 75px;
+    background-color: transparent;    
+    color: #F6F6DF;
+}
+
+.user-profile .form-item{
+    position: relative;
+    margin: 20px 0;
+}
+
+.user-profile .form-item:first-child {
+    margin-top: 0;
+}
+
+.user-profile .form-item:last-child {
+    margin-bottom: 0;
+}
+
+.user-profile h2{
+    margin: 0;
+    text-align: center;
+    font-family: "Open Sans", sans-serif;
+    font-size: 2em;
+    font-weight: 100;
+    line-height: 1.8em;
+    letter-spacing: 0.1em;
+}
+
+.user-profile hr{
+    margin: 25px auto;
+    border-top: 1px solid #F6F6DF;
+    border-style:ridge;
+    border-color: #F6F6DF;
+    border-radius: 100%;
+    opacity: 0.2;
+    width: 100%;
+}
+
+.user-profile label{
+    display: block;
+    text-align: center;
+    font-size: 0.75rem;
+}
+
+.user-profile input{
+    box-sizing: border-box;
+    width: 100%;
+    height: 2.75em;
+    margin: 5px 0;
+    padding: 0 15px;
+    background-color: transparent;
+    text-align: center;
+    color: #DD806D;
+    opacity: 1;
+    font-size: 0.9em;
+    letter-spacing: 0.1em;
+    border-radius: 0px;
+    border-style: none;
+    border-bottom: 1px solid #DD806D;
+}
+
+.user-profile input:focus{
+    outline: none;
+}
+
+.form-item:hover > .btn-edit{
+    display: block;
+}
+
+.user-profile .btn-edit{
+    display: none;
+    position: absolute;
+    top: -1px;
+    right: 0;
+    box-sizing: border-box;
+    width: 2.75em;
+    height: 2.75em;
+    background-color: #053537;
+    font-size: 0.9em;
+    color: #F6F6DF;
+    letter-spacing: 0.1em;
+    border-radius: 50px;
+    border-style: none;
+}
+
+.user-profile h2 + .btn-edit{
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.user-profile .btn-edit:hover{    
+    cursor: pointer;
+}
+
+.user-profile .btn-edit:active{
+    color: #053537;
+    background-color: #F6F6DF;
+    outline: none;
+    cursor: pointer;
+}
+
+.btn-edit span{
+    display: inline-block;
+    box-sizing: border-box;
+    text-align: center;
+    border-radius: 50px;
+    user-select: none;
+}
+
+.update-info{     
+    margin: 50px auto;
+    padding: 15px 30px;
+    width: 450px;
+    background-color: transparent;
+    color: #F6F6DF;
+    backdrop-filter: blur(5px);
+}
+
+.update-info .modal-header,
+.update-info .modal-footer{
+    border: none;
+}
+
+.update-info .form-item:first-child {
+    margin-top: 0;
+}
+
+.update-info .form-item:last-child {
+    margin-bottom: 0;
+}
+
+.update-info .form-item{
+    margin: 10px 0;
+}
+
+.update-info h2{
+    text-align: left;
+    font-size: 1.2em;
+    font-weight: 100;
+    line-height: 1.5em;
+    letter-spacing: 0.1em;
+    font-family: "Open Sans", sans-serif;
+}
+
+.update-info label{
+    display: block;
+    font-size: 0.75rem;
+}
+
+.update-info input{
+    box-sizing: border-box;
+    width: 100%;
+    height: 2.75em;
+    margin: 5px 0;
+    padding: 0 15px;
+    background-color: rgba(246, 246, 223, 0.1);
+    color: #F6F6DF;
+    opacity: 1;
+    font-size: 0.9em;
+    letter-spacing: 0.1em;
+    border-radius: 50px;
+    border-style: none;
+    border-width: 100;
+}
+
+.update-info input:focus{
+    background-color: #111111;
+    color:#F6F6DF;
+    opacity: 1;
+    outline: 1px solid #DD806D;
+}
+
+.update-info .btn-cancel{
+    box-sizing: border-box;
+    width: 2.75em;
+    height: 2.75em;
+    margin: 5px 0;
+    background-color: transparent;
+    font-size: 0.9em;
+    color: #F6F6DF;
+    letter-spacing: 0.1em;
+    border-radius: 50px;
+    border-style: none;    
+}
+
+.update-info .btn-cancel:hover{    
+    cursor: pointer;
+}
+
+.update-info .btn-cancel:focus{
+    outline: 1px solid #DD806D;
+}
+
+.update-info .btn-cancel:active{
+    outline: none;
+    cursor: pointer;
+}
+
+.btn-cancel span{
+    display: inline-block;
+    box-sizing: border-box;
+    text-align: center;
+    border-radius: 50px;
+    user-select: none;
+}
+
+.update-info .btn-save{
+    display: block;
+    box-sizing: border-box;
+    height: 2.75em;
+    margin: 0;
+    padding: 0 15px;
+    background-color: #053537;
+    font-size: 0.9em;
+    color: #F6F6DF;
+    letter-spacing: 0.1em;
+    border-radius: 50px;
+    border-style: none;
+    border-width: 100;    
+}
+
+.update-info .btn-save:hover{    
+    cursor: pointer;
+}
+
+.update-info .btn-save:focus{
+    outline: 1px solid #DD806D;
+}
+
+.update-info .btn-save:active{
+    background-color: #111111;
+    outline: none;
+    cursor: pointer;
+}
+
 
 /* FOOTER
 -------------------------------------------*/
