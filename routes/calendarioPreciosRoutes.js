@@ -1,4 +1,4 @@
-const listaDePreciosController = require('../controllers/listaDePrecios.controller')
+const listaDePreciosController = require('../controllers/listaDePrecios.controller')    
 
 const DAYS_IN_YEAR = 365; // Definir DAYS_IN_YEAR a nivel global
 const BASE_RATE = 2800;
@@ -16,26 +16,35 @@ function calculateRate(dayOfYear) {
 function getDateFromDayOfYear(dayOfYear) {
     const date = new Date(new Date().getFullYear(), 0); // Empezar desde el primer día del año actual
     date.setDate(dayOfYear); // Establecer el día del año
-    const options = { day: 'numeric', month: 'short' };
+    const options = { day: 'numeric', month: 'short' , year: 'numeric'};
     return date.toLocaleDateString('es-ES', options); // Devolver la fecha en formato 'DD/MM'
 }
 
 router.get('/calendario-precios', async (req, res) => {
     try {
         const url = 'http://localhost:3005/api/habitaciones'; // Asegúrate de agregar http:// al URL
+        const urlListaPrecios = 'http://localhost:3005/api/calendario-precios'; 
 
         const response = await fetch(url); // Espera a que se complete la solicitud fetch
+        const response2 = await fetch(urlListaPrecios); // es
 
         const data = await response.json(); // Espera a que se convierta la respuesta en formato JSON
+        const data2 = await response2.json(); // 
 
         const habitaciones = data[0].resources.map(habitacion => {
             return { title: habitacion.title, baseRate: habitacion.precio_base };
         });
 
+        const listaPrecios = data2.map(lista => {
+            return { nuevo_precio: lista.nuevo_precio, fechaInicio: lista.fechaInicio, fechaFinal: lista.fechaFinal, habitacion: lista.habitacion }
+        })
 
+        
         const daysWithDates = Array.from({ length: DAYS_IN_YEAR }, (_, index) => getDateFromDayOfYear(index + 1)); // Obtener un arreglo con las fechas correspondientes a cada día del año
+        
 
         console.log(habitaciones);
+        console.log(listaPrecios);
 
         res.render('calendarioPrecios', {
             layout: 'layoutCalendarioPrecios',
@@ -49,6 +58,7 @@ router.get('/calendario-precios', async (req, res) => {
 })
 
 router.post('/api/calendario-precios', listaDePreciosController.agregarNuevoPrecio)
+router.get('/api/calendario-precios', listaDePreciosController.consultarPrecios)
 
 
 // router.get('/eventos/:idevento', async (req, res) => {
