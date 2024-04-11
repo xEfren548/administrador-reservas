@@ -2,15 +2,11 @@ const { Schema, model } = require('mongoose');
 
 // Definición del esquema de precio_base_x_dia
 const precioBaseSchema = new Schema({
-    nuevo_precio: {
+    precio_base: {
         type: Number,
         required: true
     },
-    fechaInicio: {
-        type: Date,
-        
-    },
-    fechaFinal: {
+    fecha: {
         type: Date,
     },
     habitacion: {
@@ -20,6 +16,6 @@ const precioBaseSchema = new Schema({
 });
 
 // Modelo de precio_base_x_dia
-const PrecioBase = model('ListaDePrecios', precioBaseSchema);
+const PrecioBase = model('PrecioBaseXDia', precioBaseSchema);
 
 module.exports = PrecioBase;

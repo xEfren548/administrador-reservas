@@ -1,16 +1,18 @@
-const ListaPrecios = require('../models/ListaPrecios');
+const PrecioBaseXDia = require('../models/PrecioBaseXDia');
+const Habitaciones = require('../models/Habitacion');
 
 // Controlador para agregar nuevos datos
 async function agregarNuevoPrecio(req, res) {
     try {
-        const { nuevo_precio, fechaInicio, fechaFinal, habitacion } = req.body;
+        const { precio_base, fecha, habitacion } = req.body;
 
-        const nuevoPrecio = new ListaPrecios({
-            nuevo_precio,
-            fechaInicio,
-            fechaFinal,
+
+        const nuevoPrecio = new PrecioBaseXDia({
+            precio_base,
+            fecha,
             habitacion
         });
+
 
         await nuevoPrecio.save();
         res.status(201).json({ mensaje: 'Precio base agregado exitosamente.' });
@@ -24,7 +26,7 @@ async function agregarNuevoPrecio(req, res) {
 async function eliminarPrecio(req, res) {
     try {
         const { id } = req.params;
-        await ListaPrecios.findByIdAndDelete(id);
+        await PrecioBaseXDia.findByIdAndDelete(id);
         res.status(200).json({ mensaje: 'Precio base eliminado exitosamente.' });
     } catch (error) {
         console.error(error);
@@ -35,7 +37,7 @@ async function eliminarPrecio(req, res) {
 // Controlador para consultar todos los precios base
 async function consultarPrecios(req, res) {
     try {
-        const precios = await ListaPrecios.find();
+        const precios = await PrecioBaseXDia.find();
         res.status(200).json(precios);
     } catch (error) {
         console.error(error);
@@ -43,8 +45,17 @@ async function consultarPrecios(req, res) {
     }
 }
 
+async function obtenerHabitacionesConPrecios() {
+    try {
+        console.log('Hola mundo')
+    } catch (error) {
+        console.log(error);
+    }
+
+}
 module.exports = {
     agregarNuevoPrecio,
     eliminarPrecio,
-    consultarPrecios
+    consultarPrecios,
+    obtenerHabitacionesConPrecios
 };

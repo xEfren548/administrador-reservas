@@ -8,7 +8,11 @@ const preSchema = new Schema({
     habitaciones: String,
     title: String,
     ocupacion_max: String,
-    precio_base: Number
+
+    precio_base: {
+        type: Schema.Types.ObjectId,
+        ref: 'PrecioBaseXDia'
+    }
 });
 
 const habitacionesSchema = new Schema({
