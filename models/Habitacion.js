@@ -10,8 +10,7 @@ const preSchema = new Schema({
     ocupacion_max: String,
 
     precio_base: {
-        type: Schema.Types.ObjectId,
-        ref: 'PrecioBaseXDia'
+        type: Number
     }
 });
 

@@ -2,14 +2,14 @@ const { Schema, model } = require('mongoose');
 
 // Definición del esquema de precio_base_x_dia
 const precioBaseSchema = new Schema({
-    precio_base: {
+    precio_modificado: {
         type: Number,
         required: true
     },
     fecha: {
         type: Date,
     },
-    habitacion: {
+    habitacionId: {
         type: Schema.Types.ObjectId,
         ref: 'habitaciones' // Referencia al modelo de habitaciones existente
     }

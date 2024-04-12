@@ -1,4 +1,5 @@
 const Habitacion = require('../models/Habitacion');
+const PrecioBaseXDia = require('../models/PrecioBaseXDia');
 const { nanoid } = require('nanoid');
 
 async function obtenerHabitaciones(req, res) { 

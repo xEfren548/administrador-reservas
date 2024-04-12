@@ -1,5 +1,4 @@
 const PrecioBaseXDia = require('../models/PrecioBaseXDia');
-const Habitaciones = require('../models/Habitacion');
 
 // Controlador para agregar nuevos datos
 async function agregarNuevoPrecio(req, res) {
@@ -38,24 +37,28 @@ async function eliminarPrecio(req, res) {
 async function consultarPrecios(req, res) {
     try {
         const precios = await PrecioBaseXDia.find();
-        res.status(200).json(precios);
+        return precios;
     } catch (error) {
         console.error(error);
         res.status(500).json({ mensaje: 'Hubo un error al consultar los precios base.' });
     }
 }
 
-async function obtenerHabitacionesConPrecios() {
+async function consultarPreciosPorId(req, res) {
     try {
-        console.log('Hola mundo')
+        const { id } = req.params;
+        const precio = await PrecioBaseXDia.findById(id);
+        return precio;
     } catch (error) {
-        console.log(error);
+        console.error(error);
+        res.status(500).json({ mensaje: 'Hubo un error al consultar los precios base.' });
     }
-
 }
+
+
 module.exports = {
     agregarNuevoPrecio,
     eliminarPrecio,
     consultarPrecios,
-    obtenerHabitacionesConPrecios
+    consultarPreciosPorId
 };
