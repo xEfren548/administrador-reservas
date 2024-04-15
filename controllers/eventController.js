@@ -125,8 +125,6 @@ async function createReservation(req, res, next) {
             throw new NotFoundError('Chalet does not exist');
         }
         
-        console.log(client);
-        console.log("HOLAA ", client[0]._id);
         const reservationToAdd = {
             client: client[0]._id,
             resourceId: chalet._id,

@@ -70,14 +70,26 @@
         <div class="some-container">
             <iframe src="{{chalet.location}}" allowfullscreen="" loading="lazy"referrerpolicy="no-referrer-when-downgrade"></iframe>
             <div class="submit">
-                <button id="btnSubmitReservation" type="button">Agregar reservación a tu agenda</button>
+                <add-to-calendar-button
+                    name="My Event"
+                    startDate="2022-04-15"
+                    endDate="2022-04-17"
+                    options="['Google', 
+                        'Apple', 
+                        'Outlook.com', 
+                        'Microsoft365', 
+                        'MicrosoftTeams',
+                        'Outlook.com', 
+                        'Yahoo', 
+                        'iCal']"
+                >
+                </add-to-calendar-button>
             </div>
         </div>
 
         <div class="form-item">
             <p id="txtSubmitReservationError" name="errMsg" class="error"></p>
         </div>
-        
     </div>
 
     <!-- Terms and conditions modal -->
@@ -252,4 +264,4 @@
         })
 
          
-    </script>
+</script>

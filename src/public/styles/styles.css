@@ -723,6 +723,11 @@ iframe{
     border-radius: 4px;
 }
 
+add-to-calendar-button{
+    height: 3rem;
+    width: 15rem;
+}
+
 /* USER PROFILE
 -------------------------------------------*/
 .user-profile{
