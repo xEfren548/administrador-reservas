@@ -3,6 +3,7 @@ const { Schema, model } = require('mongoose');
 const preSchema = new Schema({
     habitaciones: {
         type: String,
+<<<<<<< HEAD
         required: true,
     },
     title: {
@@ -22,6 +23,10 @@ const preSchema = new Schema({
         type: String,
         required: true,
     },
+    precio_base: {
+        type: Number,
+        required: true
+    }
 });
 
 const habitacionesSchema = new Schema({

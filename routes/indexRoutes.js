@@ -20,6 +20,7 @@ const calendarioPrecios = require('./calendarioPreciosRoutes');
 const reservationRoutes = require('./reservationRoutes');
 const CustomError = require("../common/error/custom-error");
 const NotFoundError = require("../common/error/not-found-error");
+const calendarioPrecios = require('./calendarioPreciosRoutes');
 
 // Formating incoming data.
 router.use(express.json());
@@ -62,6 +63,13 @@ router.get('/api/racklimpieza', (req, res) => {
     res.render('rackLimpieza');
 });
 
+router.use('/api', eventRoutes);
+router.use('/api', habitacionesRoutes);
+router.use('/api', userRoutes);
+router.use('/api', serviciosRoutes);
+router.use('/', instruccionesUsuario);
+router.use('/', calendarioPrecios);
+
 // Not found resource handling middleware.
 router.all("*", (req, res, next) => {
     next(new NotFoundError("Page not found"));
@@ -76,5 +84,6 @@ router.use((err, req, res, next) => {
     console.log(err);
     res.status(500).json({errors: [{message: "Internal server error: something went wrong"}]});
 });
+
 
 module.exports = router;

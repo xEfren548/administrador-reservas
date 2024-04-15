@@ -1,4 +1,6 @@
 const listaDePreciosController = require('../controllers/listaDePrecios.controller')    
+const precioBaseController = require('../controllers/precioBaseController')    
+const habitacionController = require('../controllers/habitacionController')
 
 const DAYS_IN_YEAR = 365; // Definir DAYS_IN_YEAR a nivel global
 const BASE_RATE = 2800;
@@ -20,33 +22,41 @@ function getDateFromDayOfYear(dayOfYear) {
     return date.toLocaleDateString('es-ES', options); // Devolver la fecha en formato 'DD/MM'
 }
 
+
+
 router.get('/calendario-precios', async (req, res) => {
     try {
-        const url = 'http://localhost:3005/api/habitaciones'; // Asegúrate de agregar http:// al URL
-        const urlListaPrecios = 'http://localhost:3005/api/calendario-precios'; 
+        
+        const url = 'http://localhost:3005/api/habitaciones'; 
 
+        // Obtener las habitaciones
         const response = await fetch(url);
-        const response2 = await fetch(urlListaPrecios);
         const data = await response.json();
-        const data2 = await response2.json();
+        const habitaciones = data[0].resources;
 
-        const habitaciones = data[0].resources.map(habitacion => {
-            return { title: habitacion.title, baseRate: habitacion.precio_base };
-        });
-
-        const listaPrecios = data2.map(lista => {
-            return { nuevo_precio: lista.nuevo_precio, fechaInicio: lista.fechaInicio, fechaFinal: lista.fechaFinal, habitacion: lista.habitacion }
-        })
-
-        const daysWithDates = Array.from({ length: DAYS_IN_YEAR }, (_, index) => getDateFromDayOfYear(index + 1)); // Obtener un arreglo con las fechas correspondientes a cada día del año
+        // Crear un arreglo con las fechas correspondientes a cada día del año
+        const daysWithDates = Array.from({ length: DAYS_IN_YEAR }, (_, index) => getDateFromDayOfYear(index + 1));
 
         console.log(habitaciones);
-        console.log(listaPrecios);
-        
+
+        const preciosHabitacionesData = await precioBaseController.consultarPrecios();
+
+        const preciosHabitaciones = preciosHabitacionesData.map(precioHabitacion => {
+            return {
+                _id: precioHabitacion._id,
+                precio_base: precioHabitacion.precio_base,
+                fecha: precioHabitacion.fecha,
+                habitacionId: precioHabitacion.habitacionId.toString()
+            }
+        })
+
+        console.log(preciosHabitaciones)
+
         res.render('calendarioPrecios', {
             layout: 'layoutCalendarioPrecios',
-            habitaciones: habitaciones,
-            daysWithDates: daysWithDates
+            habitaciones: habitaciones, // Pasa las habitaciones a la plantilla
+            daysWithDates: daysWithDates, // Pasa el arreglo de fechas a la plantilla
+            preciosHabitaciones: preciosHabitaciones // Pasa los precios de las habitaciones a la plantilla
         });
     } catch (error) {
         console.log(error);
@@ -54,7 +64,39 @@ router.get('/calendario-precios', async (req, res) => {
     }
 })
 
-router.post('/api/calendario-precios', listaDePreciosController.agregarNuevoPrecio)
-router.get('/api/calendario-precios', listaDePreciosController.consultarPrecios)
+
+router.post('/api/calendario-precios', precioBaseController.agregarNuevoPrecio)
+router.get('/api/calendario-precios/:id', precioBaseController.consultarPreciosPorId)
+// router.get('/api/calendario-precios', precioBaseController.obtenerHabitacionesConPrecios)
+
+
+
+// router.get('/eventos/:idevento', async (req, res) => {
+//     try {
+//         const idEvento = req.params.idevento;
+
+//         // Llama a la función del controlador de eventos para obtener los detalles del evento
+//         const evento = await eventController.obtenerEventoPorId(idEvento);
+//         eventoJson = JSON.stringify(evento);
+//         const eventoObjeto = JSON.parse(eventoJson);
+//         eventoObjeto.start = moment(eventoObjeto.start).format('DD/MM/YYYY');
+//         eventoObjeto.end = moment(eventoObjeto.end).format('DD/MM/YYYY');
+
+//         const habitacion = await habitacionController.obtenerHabitacionPorId(eventoObjeto.resourceId);
+//         const habitacionJson = JSON.stringify(habitacion);
+//         const habitacionObjeto = JSON.parse(habitacionJson);
+
+
+//         // Renderiza la página HTML con los detalles del evento
+//         console.log(eventoObjeto);
+//         res.render('detalles_evento', { 
+//             evento: eventoObjeto,
+//             habitacion: habitacionObjeto
+//         });
+//     } catch (error) {
+//         console.error('Error al obtener los detalles del evento:', error);
+//         res.status(500).json({ error: 'Error interno del servidor' });
+//     }
+// });
 
 module.exports = router;
