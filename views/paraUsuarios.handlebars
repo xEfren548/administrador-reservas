@@ -1,184 +1,255 @@
-<div class="container">
-    <img src="https://www.bosqueescondido.com.mx/img/contenidos/home/slider/01.jpg" class="img-fluid rounded-3" alt="" width="100%" style="max-height: 300px;" />
-    <h1 class="mt-3 mb-3 d-flex justify-content-center">Cabaña Paulette</h1>
+{{#if reservation}}
+    <div class="container">
+        <img src="https://www.bosqueescondido.com.mx/img/contenidos/home/slider/01.jpg" class="img-fluid rounded-3" alt="" width="100%" style="max-height: 300px;" />
+        <h1 class="mt-3 mb-3 d-flex justify-content-center">{{chalet.title}}</h1>
 
-    <div class="row">
-        <div class="col-md-6 col-xl-6 col-xs-12 col-sm-12">
-            <div class="row d-flex justify-content-center">
-                <div class="col-2 ">
-                    <img src="https://panel.hotelgest.com/files/media/male_profile_sm.jpg" id="profile-pic-alone"
-                        class="rounded-pill" style="width: 70px;">
-                </div>
-                <div class="col-6 ps-0">
-                    <h4 class="detailsRoom" style="margin-bottom: 5px;"> MAZAMITLA CABAÑA SUITE CHANDE CAP.2 PAX 1 - 2
-                        adultos
-                    </h4>
-                    <p class="bold text-uppercase">
-                        Diana Paola Martinez Guzman
-                        <br>
-                        (#8926527)
-                    </p>
-                    <hr>
-                </div>
-            </div>
-            <div class="row d-flex justify-content-center">
-                <div class="col-8 ">
-                    <div class="text-center">
-                        <p style="max-width: 500px; word-wrap: break-word;">
-                            Cabaña de estilo único diseñada especialmente para compartir en pareja,
-                            se encuentra en uno de los fraccionamientos más exclusivos de Mazamitla a tan solo
-                            6 min del Centro
+        <div class="row">
+            <div class="col-md-6 col-xl-6 col-xs-12 col-sm-12">
+                <div class="row d-flex justify-content-center">
+                    <div class="col-2 ">
+                        <img src="https://panel.hotelgest.com/files/media/male_profile_sm.jpg" id="profile-pic-alone"
+                            class="rounded-pill" style="width: 70px;">
+                    </div>
+                    <div class="col-6 ps-0">
+                        <h4 class="detailsRoom" style="margin-bottom: 5px;">{{chalet.habitaciones}}
+                        </h4>
+                        <p class="bold text-uppercase">
+                            {{fullname}}
+                            <br>
+                            (#8926527)
                         </p>
-                        <button type="button" class="btn btn-lg btn-outline-light mb-5">
-                            Ver instrucciones de llegada
-                        </button>
+                        <hr>
                     </div>
                 </div>
+                <div class="row d-flex justify-content-center">
+                    <div class="col-8 ">
+                        <div class="text-center">
+                            <p style="max-width: 500px; word-wrap: break-word;">{{chalet.description}}</p>
+                            <button type="button" class="btn btn-lg btn-outline-light mb-5">
+                                Ver instrucciones de llegada
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-        </div>
+            <div class="col-md-6 col-xl-6 col-xs-12 col-sm-12">
+                <div class="row">
+                    <div class="col-6 text-center">
+                        <div class="col-xs-6 no-padding-left">
+                            <h4>Llegada</h4>
+                            <p class="font-bold"> <i class="fa fa-sign-in" aria-hidden="true"></i> <b>{{reservation.arrivalDate}}</b> </p>
+                        </div>
+                        <div class="col-xs-6 no-padding-left">
+                            <h4>Salida</h4>
+                            <p class="font-bold"> <i class="fa fa-sign-out" aria-hidden="true"></i> <b>{{reservation.departureDate}}</b> </p>
+                        </div>
+                        <div class="col-xs-6 no-padding-left">
+                            <h4>Origen</h4>
+                            <p class="font-bold"><b>Recepción</b> </p>
+                        </div>
+                    </div>
+                    <div class="col-6 text-center">
+                        <div class="col-xs-6 no-padding-left">
+                            <h4> Noches</h4>
+                            <p class="font-bold"> <i class="fa fa-moon" aria-hidden="true"></i> <b>{{reservation.nNights}}</b></p>
+                        </div>
+                        <div class="col-xs-6 no-padding-left">
+                            <h4> Recibida</h4>
+                            <p class="font-bold"> <b>{{reservation.reservationDate}}</b></p>
+                        </div>
+                    </div>
 
-        <div class="col-md-6 col-xl-6 col-xs-12 col-sm-12">
-            <div class="row">
-                <div class="col-6 text-center">
-                    <div class="col-xs-6 no-padding-left">
-                        <h4>Llegada</h4>
-                        <p class="font-bold"> <i class="fa fa-sign-in" aria-hidden="true"></i> <b> 16/02/2024 </b> </p>
-                    </div>
-                    <div class="col-xs-6 no-padding-left">
-                        <h4>Salida</h4>
-                        <p class="font-bold"> <i class="fa fa-sign-out" aria-hidden="true"></i> <b>19/02/2024</b> </p>
-                    </div>
-                    <div class="col-xs-6 no-padding-left">
-                        <h4>Origen</h4>
-                        <p class="font-bold"><b>Recepción</b> </p>
-                    </div>
+                    <div id="weather" class="text-center mb-3"></div>
+
                 </div>
-                <div class="col-6 text-center">
-                    <div class="col-xs-6 no-padding-left">
-                        <h4> Noches</h4>
-                        <p class="font-bold"> <i class="fa fa-moon" aria-hidden="true"></i> <b>2</b></p>
-                    </div>
-                    <div class="col-xs-6 no-padding-left">
-                        <h4> Recibida</h4>
-                        <p class="font-bold"> <b>10/02/2024</b></p>
-                    </div>
-                </div>
-
-                <div id="weather" class="text-center mb-3"></div>
-
             </div>
         </div>
-    </div>
 
-    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30009.200046370872!2d-103.04062641019756!3d1991808261265727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x842f08c29d6bb1fb%3A0xb0e0d639aa12c005!2s49500%20Mazamitla%2C%20Jal!5e0!3m2!1ses-419!2smx!4v1711321362791!5m2!1ses-419!2smx" width="100%" height="450" allowfullscreen="" loading="lazy"referrerpolicy="no-referrer-when-downgrade"></iframe>
-
-    <div class="signature">
-        <div class="canvas">
-            <canvas id="signatureCanvas"></canvas>
-            <label for="signatureCanvas">Ingrese su firma</label>
+        <div class="some-container">
+            <iframe src="{{chalet.location}}" allowfullscreen="" loading="lazy"referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <div class="submit">
+                <button id="btnSubmitReservation" type="button">Agregar reservación a tu agenda</button>
+            </div>
         </div>
-        <div class="buttons">
-            <button onclick="clearCanvas()">Limpiar</button>
-            <button onclick="saveSignature()">Guardar firma</button>
+
+        <div class="form-item">
+            <p id="txtSubmitReservationError" name="errMsg" class="error"></p>
         </div>
         
     </div>
 
-    <div class="submit">
-        <button type="submit">Agregar reservación a tu agenda</button>
+    <!-- Terms and conditions modal -->
+    <div class="modal" id="mdlTerms" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="false">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content update-info">
+                <div class="modal-header">
+                    <h2 class="modal-title">Términos y condiciones</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="form-item">
+                        <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Natus officiis cumque error nostrum nihil totam eius fugit sunt veritatis ducimus, non, ab beatae corporis illo aut? Quibusdam, nihil. Adipisci, quisquam?</p>
+                    </div>
+                    <div class="form-item">
+                        <div class="signature">
+                            <div class="canvas">
+                                <button id="btnClrCanvas" class="delete-signature"><span class="material-symbols-outlined">delete</span></button>
+                                <canvas id="signatureCanvas"></canvas>
+                                <label for="signatureCanvas">Ingrese su firma</label>
+                            </div>   
+                        </div>
+                    </div>
+                    <div class="form-item">
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="chckAcceptTerms" name="chckAcceptTerms" value="Vistas al río">
+                            <label for="chckAcceptTerms">He léido y aceptado los términos y condiciones</label>
+                        </div> 
+                    </div>
+                    <div class="form-item">
+                        <p id="txtTermsError" class="error"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">                               
+                    <button type="button" class="btn-save" id="btnAccept"> Acepto</button>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+{{else}}
+    <h1>Mega error</h1>
+{{/if}}
 
 <script>
-    // Llamar a la API de OpenWeatherMap
-    const apiKey = '26d8231cf1380644673deb5e34aad872'; // Reemplaza 'TU_CLAVE_DE_API' con tu clave de API de OpenWeatherMap
-    const city = 'Mazamitla'; // Reemplaza 'NOMBRE_DE_LA_CIUDAD' con el nombre de la ciudad que desees
+        // Llamar a la API de OpenWeatherMap
+        const apiKey = '26d8231cf1380644673deb5e34aad872'; // Reemplaza 'TU_CLAVE_DE_API' con tu clave de API de OpenWeatherMap
+        const city = 'Mazamitla'; // Reemplaza 'NOMBRE_DE_LA_CIUDAD' con el nombre de la ciudad que desees
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+        console.log(url);
 
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+        // Realizar solicitud a la API
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const weatherDiv = document.getElementById('weather');
+                const temperature = data.main.temp;
+                const description = data.weather[0].description;
+                const cityName = data.name;
+                const country = data.sys.country;
+                const weatherIcon = data.weather[0].icon;
 
-    console.log(url);
+                // Mapeo de los códigos de iconos de OpenWeatherMap a emoji
+                const iconMappings = {
+                    "01d": "☀️",
+                    "01n": "🌙",
+                    "02d": "🌤️",
+                    "02n": "🌤️",
+                    "03d": "☁️",
+                    "03n": "☁️",
+                    "04d": "☁️",
+                    "04n": "☁️",
+                    "09d": "🌧️",
+                    "09n": "🌧️",
+                    "10d": "🌦️",
+                    "10n": "🌦️",
+                    "11d": "⛈️",
+                    "11n": "⛈️",
+                    "13d": "❄️",
+                    "13n": "❄️",
+                    "50d": "🌫️",
+                    "50n": "🌫️"
+                };
 
-    // Realizar solicitud a la API
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            const weatherDiv = document.getElementById('weather');
-            const temperature = data.main.temp;
-            const description = data.weather[0].description;
-            const cityName = data.name;
-            const country = data.sys.country;
-            const weatherIcon = data.weather[0].icon;
+                const weatherIconEmoji = iconMappings[weatherIcon] || "❓";
 
-            // Mapeo de los códigos de iconos de OpenWeatherMap a emoji
-            const iconMappings = {
-                "01d": "☀️",
-                "01n": "🌙",
-                "02d": "🌤️",
-                "02n": "🌤️",
-                "03d": "☁️",
-                "03n": "☁️",
-                "04d": "☁️",
-                "04n": "☁️",
-                "09d": "🌧️",
-                "09n": "🌧️",
-                "10d": "🌦️",
-                "10n": "🌦️",
-                "11d": "⛈️",
-                "11n": "⛈️",
-                "13d": "❄️",
-                "13n": "❄️",
-                "50d": "🌫️",
-                "50n": "🌫️"
-            };
+                // Generación del contenido HTML con iconos emoji
+                weatherDiv.innerHTML = `
+                <div style="background-image: linear-gradient(to bottom, #4f81bc, #283e51); padding: 20px; border-radius: 10px;">
+                    <h2 style="color: white;">Temperatura actual en ${cityName}, ${country}</h2>
+                    <p style="color: white;"><strong>Temperature:</strong> ${temperature}°C ${weatherIconEmoji}</p>
+                    <p style="color: white;"><strong>Description:</strong> ${description}</p>
+                </div>
+            `;
+            })
+            .catch(error => console.error('Error fetching weather data:', error));
 
-            const weatherIconEmoji = iconMappings[weatherIcon] || "❓";
+        // Modal
+        var modal = document.getElementById('mdlTerms');
+        var acceptBtn = document.getElementById("btnAccept");
+        var checkbox = document.getElementById("chckAcceptTerms");
+        var txtTermsError = document.getElementById("txtTermsError")
+        var acceptTerms = false;
 
-            // Generación del contenido HTML con iconos emoji
-            weatherDiv.innerHTML = `
-            <div style="background-image: linear-gradient(to bottom, #4f81bc, #283e51); padding: 20px; border-radius: 10px;">
-                <h2 style="color: white;">Temperatura actual en ${cityName}, ${country}</h2>
-                <p style="color: white;"><strong>Temperature:</strong> ${temperature}°C ${weatherIconEmoji}</p>
-                <p style="color: white;"><strong>Description:</strong> ${description}</p>
-            </div>
-        `;
+        //modal.style.display = "block";
+        
+        // Canvas
+        const canvas = document.getElementById('signatureCanvas');
+        var btnClrCanvas = document.getElementById("btnClrCanvas");
+        var btnSaveCanvas = document.getElementById("btnSaveCanvas");
+        var signatureImage;
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        btnClrCanvas.addEventListener("click", () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        checkbox.checked = false;
+        acceptBtn.addEventListener("click", () => {
+            if (ctx.getImageData(0, 0, canvas.width, canvas.height).data.some(channel => channel !== 0)) {
+                if (!checkbox.checked) {
+                    txtTermsError.innerHTML = "Debes aceptar los términos y condiciones";
+                } else {
+                    signatureImage = canvas.toDataURL();
+                    console.log(signatureImage);
+                    acceptTerms = true;
+                    modal.style.display = "none";
+                }
+            } else {
+                txtTermsError.innerHTML = "Debes ingresar tu firma";
+            }
+        });
+
+        btnSubmitReservation = document.getElementById("btnSubmitReservation");
+        btnSubmitReservation.addEventListener("click", function() {
+            fetch('/api/eventos/submit-reservation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    console.log('Respuesta del servidor:', response);
+                }
+            })
+            .catch(error => {
+                console.error('Error al enviar la solicitud:', error);
+            });                        
         })
-        .catch(error => console.error('Error fetching weather data:', error));
 
-    // Canvas
-    const canvas = document.getElementById('signatureCanvas');
-    const ctx = canvas.getContext('2d');
-    let isDrawing = false;
-    let lastX = 0;
-    let lastY = 0;
-
-    canvas.addEventListener('mousedown', (e) => {
-    isDrawing = true;
-    [lastX, lastY] = [e.offsetX, e.offsetY];
-    });
-
-    canvas.addEventListener('mousemove', (e) => {
-    if (!isDrawing) return;
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(e.offsetX, e.offsetY);
-    ctx.stroke();
-    [lastX, lastY] = [e.offsetX, e.offsetY];
-    });
-
-    canvas.addEventListener('mouseup', () => {
-    isDrawing = false;
-    });
-
-    function clearCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-    function saveSignature() {
-    const signatureImage = canvas.toDataURL();
-    // Aquí puedes enviar la imagen de la firma a tu servidor o hacer lo que desees con ella
-    console.log(signatureImage);
-    }
-
-
-</script>
+         
+    </script>

@@ -1,13 +1,27 @@
 const { Schema, model } = require('mongoose');
 
 const preSchema = new Schema({
-    id: {
+    habitaciones: {
         type: String,
-        unique: true,
-        },
-    habitaciones: String,
-    title: String,
-    ocupacion_max: String
+        required: true,
+    },
+    title: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    description: {
+        type: String,
+        required: true,
+    },
+    ocupacion_max: {
+        type: Number,
+        required: true,
+    },
+    location: {
+        type: String,
+        required: true,
+    },
 });
 
 const habitacionesSchema = new Schema({

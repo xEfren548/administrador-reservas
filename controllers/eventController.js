@@ -1,5 +1,84 @@
 const Documento = require('../models/Evento');
-const { nanoid } = require('nanoid');
+const Habitacion = require('../models/Habitacion');
+const Usuario = require('../models/Usuario');
+const Cliente = require('../models/Cliente');
+const {check} = require("express-validator");
+const BadRequestError = require("../common/error/bad-request-error");
+const NotFoundError = require('../common/error/not-found-error');
+const mongoose = require('mongoose');
+
+const createReservationValidators = [
+    check('clientEmail')
+        .notEmpty().withMessage('Email is required')
+        .isEmail().withMessage('Invalid email format')
+        .custom(async (value, { req }) => {
+            const client = await Cliente.findOne({ email: value });
+            if (!client) {
+                throw new NotFoundError('Client does not exist');
+            }
+            return true;
+        }),
+    check('arrivalDate')
+        .notEmpty().withMessage('Start date is required')
+        .toDate(),
+    check('departureDate')
+        .notEmpty().withMessage('End date is required')
+        .toDate(),
+    check()
+        .custom((value, { req }) => {
+            const start = new Date(req.body.start);
+            const end = new Date(req.body.end);
+            if (start >= end) {
+                throw new BadRequestError('End date must be after start date');
+            }
+            return true;
+        }),
+    check("nNights")
+        .notEmpty().withMessage('Number of nights is required')
+        .isNumeric().withMessage('Number of nights must be a number'),
+    check("chaletName")
+        .notEmpty().withMessage('Chalet name is required')
+        .isLength({ max: 255 }).withMessage("Chalet name must be less than 255 characters")
+        .custom(async (value, { req }) => {
+            const chalets = await Habitacion.findOne();
+            const chalet = chalets.resources.find(chalet => chalet.title === value);
+            if(!chalet){
+                throw new NotFoundError('Chalet does not exist');
+            }
+            return true;
+        }),
+    check("maxOccupation")
+        .notEmpty().withMessage('Max occupation is required')
+        .isNumeric().withMessage('Max occupation must be a number'),
+    check("units")
+        .notEmpty().withMessage('Number of units is required')
+        .isNumeric().withMessage('Number of units must be a number'),
+    check('total')
+        .notEmpty().withMessage('Total amount is required')
+        .isNumeric().withMessage('Total amount must be a number')
+        .toFloat(),
+    check('discount')
+        .notEmpty().withMessage('Discount percentage is required')
+        .isNumeric().withMessage('Discount percentage must be a number')
+        .toFloat()
+        .custom(async (value, { req }) => {
+            if(value <= 0 || value > 100){
+                throw new BadRequestError('Invalid percentage');
+            }
+            return true;
+        }),
+];
+
+const submitReservationValidators = [
+    check()
+        .custom((value, { req }) => {
+            const reservationDetails = req.session.reservationInProgress;
+            if(!reservationDetails){
+                throw new BadRequestError('There is no reservation in progress to be submitted');
+            }
+            return true;
+        }),
+];
 
 async function obtenerEventos(req, res) {
     try {
@@ -25,44 +104,57 @@ async function obtenerEventoPorId(id) {
         if (!evento) {
             throw new Error('El evento no fue encontrado');
         }
-
-
-
         return evento;
     } catch (error) {
         throw new Error('Error al obtener el evento por id: ' + error.message);
     }
 }
 
-async function agregarEvento(req, res) {
-    try {
-        const id = nanoid();
-        const { resourceId, title, start, end, total} = req.body;
-        const reserva = {
-            id,
-            resourceId,
-            title,
-            start,
-            end,
-            url: `${process.env.URL}/eventos/${id}` ,
-            total
+async function createReservation(req, res, next) {
+    const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount } = req.body;
+
+    try{
+        const client = await Cliente.find({ email: clientEmail });
+        if (!client) {
+            throw new NotFoundError('Client does not exist');
         }
 
-        // Encuentra el documento existente
+        const chalets = await Habitacion.findOne();
+        const chalet = chalets.resources.find(chalet => chalet.title === chaletName);
+        if(!chalet){
+            throw new NotFoundError('Chalet does not exist');
+        }
+        
+        console.log(client);
+        console.log("HOLAA ", client[0]._id);
+        const reservationToAdd = {
+            client: client[0]._id,
+            resourceId: chalet._id,
+            arrivalDate: arrivalDate, 
+            departureDate: departureDate,
+            maxOccupation: maxOccupation,
+            nNights: nNights,            
+            url: `${process.env.URL}/eventos/${chalet._id}`,
+            units: units,
+            total: total,
+            discount: discount
+        };
+
         const documento = await Documento.findOne();
-
-        // Agrega el nuevo evento al arreglo de eventos del documento
-        documento.events.push(reserva);
-
-        // Guarda el documento actualizado
+        documento.events.push(reservationToAdd);
         await documento.save();
-
-        console.log('Nuevo evento agregado:', reserva);
-        res.status(201).json({ mensaje: 'Nuevo evento agregado', evento: reserva });
-    } catch (error) {
-        console.error('Error al agregar evento:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        
+        console.log('Nueva reservación agregada:', documento.events[documento.events.length - 1]._id );
+        res.status(200).json({ message: 'Nueva reservación agregada', reservationId:  documento.events[documento.events.length - 1]._id });
+    } catch (err) {
+        console.log(err);
+        return next(err);
     }
+}
+
+async function addReservationToCalendar(req, res, next){  
+    req.session.email = "test@gmail.com";
+    
 }
 
 async function editarEvento(req, res) {
@@ -206,9 +298,12 @@ async function modificarEvento(req, res) {
 }
 
 module.exports = {
+    createReservationValidators,
+    submitReservationValidators,
     obtenerEventos,
     obtenerEventoPorId,
-    agregarEvento,
+    createReservation,
+    addReservationToCalendar,
     editarEvento,
     eliminarEvento,
     modificarEvento

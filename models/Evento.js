@@ -1,20 +1,58 @@
-const { Schema, model } = require('mongoose');
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
 const reservaSchema = new Schema({
-    id: {
+    client: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Cliente'
+    },
+    resourceId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Habitacion'
+    },
+    reservationDate: {
+        type: Date,
+        required: true,
+        default: Date.now
+    },
+    arrivalDate: {
+        type: Date,
+        required: true
+    },
+    departureDate: {
+        type: Date,
+        required: true
+    },
+    maxOccupation: {
+        type: Number,
+        required: true
+    },
+    nNights: {
+        type: Number,
+        required: true
+    },
+    url: {
         type: String,
-        unique: true,
-        },
-    resourceId: String,
-    title: String,
-    start: String,
-    end: String,
-    url: String,
-    total: Number
+        required: true
+    },
+    units: {
+        type: String,
+        required: true
+    },
+    total: {
+        type: Number,
+        required: true
+    },
+    discount: {
+        type: Number,
+        required: true
+    }
 });
 
 const documentSchema = new Schema({
     events: [reservaSchema]
 });
 
-module.exports = model('Documento', documentSchema);
+module.exports = mongoose.model('Documento', documentSchema);

@@ -1,7 +1,6 @@
 <div id="calendar" class=""></div>
 
 <!-- Modals -->
-
 <div class="modal fade" id="event_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
@@ -10,10 +9,26 @@
                 <h5 class="modal-title" id="modalLabel">Crear reserva</h5>
                 <button type="button" class="close" onclick="$('#event_entry_modal').modal('hide');" aria-label="Close">
                     &times;
-
             </div>
             <div class="modal-body">
                 <div class="img-container">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="lblClient">Cliente</label>
+                                <select id="lblClient" name="lblClient" class="form-select form-select-md" required>
+                                    <option value="" selected="true" disabled="true"> Selecciona al cliente para hacer su reserva --</option>
+                                    {{#if clientes}}
+                                        {{#each clientes}}
+                                            <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                                        {{/each}}
+                                    {{else}}
+                                        <option value="0">No se encontraron clientes</option>
+                                    {{/if}}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <div class="row mt-2">
                         <div class="col-sm-5">
                             <div class="form-group">
@@ -32,7 +47,7 @@
                         <div class="col-sm-2">
                             <div class="form-group">
                                 <label for="event_end_date">Noches: </label>
-                                <input type="number" name="event_end_date" id="event_nights" class="form-control"
+                                <input type="number" name="event_nights" id="event_nights" class="form-control"
                                     placeholder="" min="1">
                             </div>
                         </div>
@@ -42,8 +57,16 @@
                         <div class="col-sm-4">
                             <div class="form-group">
                                 <label for="tipologia_habitacion">Tipología</label>
-                                <input type="select" name="tipologia_habitacion" id="tipologia_habitacion"
-                                    class="form-control onlydatepicker" placeholder="Tipología">
+                                <select id="tipologia_habitacion" name="tipologia_habitacion" id="tipologia_habitacion" class="form-select form-select-md" required>
+                                    <option value="" selected="true" disabled="true"> Selecciona una cabaña para modificar --</option>
+                                    {{#if habitaciones}}
+                                        {{#each habitaciones}}
+                                            <option value="{{this.title}}">{{this.title}}</option>
+                                        {{/each}}
+                                    {{else}}
+                                        <option value="0">No se encontraron habitaciones</option>
+                                    {{/if}}
+                                </select>
                             </div>
                         </div>
 
@@ -95,7 +118,9 @@
                             </div>
                         </div>
                     </div> <!-- Cierre row -->
-
+                    <div class="form-item">
+                        <p id="txtReservationError" name="errMsg" class="error"></p>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -105,9 +130,6 @@
     </div>
 </div>
 <!-- End popup dialog box -->
-
-
-
 
 
 <!-- Bootstrap JavaScript Libraries -->

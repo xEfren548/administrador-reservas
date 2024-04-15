@@ -1,4 +1,5 @@
-const { Schema, model } = require('mongoose');
+const  mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 const bcrypt = require("bcrypt");
 
 const userSchema = new Schema({
@@ -28,6 +29,10 @@ const userSchema = new Schema({
         type: String,
         required: true
     },
+    reservation: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Documento.events'
+    },
 });
 
 userSchema.pre("save", async function(done){
@@ -40,4 +45,4 @@ userSchema.pre("save", async function(done){
     done();
 });
 
-module.exports = model('Usuario', userSchema);
+module.exports = mongoose.model('Usuario', userSchema);

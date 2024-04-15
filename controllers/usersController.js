@@ -5,7 +5,7 @@ const NotFoundError = require("../common/error/not-found-error");
 const BadRequestError = require("../common/error/bad-request-error");
 const {check} = require("express-validator");
 
-// No uuid validator has been implemented for those functions that take parameters form the URL.
+// No uuid validator has been implemented for functions that take parameters form the URL.
 const createUserValidators = [
     check(['firstName', 'lastName'])
         .notEmpty().withMessage(`Full name is required`)

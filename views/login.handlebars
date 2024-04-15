@@ -14,8 +14,6 @@
   <main>
     <div class="login-form">
       <div>
-          <h1>Cabañas Navarro</h1>
-          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcReFqHdo5UuI1wsVUsJM_BgQrEwadHdAstyVsvmDP5osg&s" alt="Cabañas Navarro">
           <h1>Rent & Travel</h1>
       </div>
       <div class="form">
@@ -62,8 +60,8 @@
             event.preventDefault();
 
             const data = {
-                email: document.getElementById("txtUserEmail").value,
-                password: document.getElementById("txtUserPassword").value
+                email: document.getElementById("txtUserEmail").value.trim(),
+                password: document.getElementById("txtUserPassword").value.trim()
             };
 
             fetch('/api/auth/login', {
@@ -75,10 +73,8 @@
             })
             .then(response => {
                 if (response.redirected) {
-                    // Si el servidor redirige al usuario, simplemente redirige al usuario a la nueva ubicación.
                     window.location.href = response.url;
                 } else {
-                    // Si no hay redirección, maneja la respuesta como lo desees (opcional).
                     console.log('Respuesta del servidor:', response);
                 }
             })
