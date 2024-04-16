@@ -3,19 +3,11 @@ const PrecioBaseXDia = require('../models/PrecioBaseXDia');
 // Controlador para agregar nuevos datos
 async function agregarNuevoPrecio(req, res) {
     try {
-<<<<<<< HEAD
         const { precio_modificado, fecha, habitacion } = req.body;
 
 
         const nuevoPrecio = new PrecioBaseXDia({
             precio_modificado,
-=======
-        const { precio_base, fecha, habitacion } = req.body;
-
-
-        const nuevoPrecio = new PrecioBaseXDia({
-            precio_base,
->>>>>>> d787274b362d94bdcca4e08a4663192234aedbef
             fecha,
             habitacion
         });
@@ -63,7 +55,6 @@ async function consultarPreciosPorId(req, res) {
     }
 }
 
-<<<<<<< HEAD
 async function modificacionMasivaPrecios(req, res) {
     try {
         const { precio_modificado, fecha, habitacion } = req.body;
@@ -84,8 +75,6 @@ async function modificacionMasivaPrecios(req, res) {
     }
 }
 
-=======
->>>>>>> d787274b362d94bdcca4e08a4663192234aedbef
 
 module.exports = {
     agregarNuevoPrecio,

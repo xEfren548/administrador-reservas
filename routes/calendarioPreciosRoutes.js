@@ -36,11 +36,7 @@ router.get('/calendario-precios', async (req, res) => {
         // Crear un arreglo con las fechas correspondientes a cada día del año
         const daysWithDates = Array.from({ length: DAYS_IN_YEAR }, (_, index) => getDateFromDayOfYear(index + 1));
 
-<<<<<<< HEAD
         // console.log(habitaciones);
-=======
-        console.log(habitaciones);
->>>>>>> d787274b362d94bdcca4e08a4663192234aedbef
 
         const preciosHabitacionesData = await precioBaseController.consultarPrecios();
 
@@ -53,11 +49,7 @@ router.get('/calendario-precios', async (req, res) => {
             }
         })
 
-<<<<<<< HEAD
         // console.log(preciosHabitaciones)
-=======
-        console.log(preciosHabitaciones)
->>>>>>> d787274b362d94bdcca4e08a4663192234aedbef
 
         res.render('calendarioPrecios', {
             layout: 'layoutCalendarioPrecios',
@@ -74,10 +66,7 @@ router.get('/calendario-precios', async (req, res) => {
 
 router.post('/api/calendario-precios', precioBaseController.agregarNuevoPrecio)
 router.get('/api/calendario-precios/:id', precioBaseController.consultarPreciosPorId)
-<<<<<<< HEAD
 // router.post('/api/calendario-precios/masivo')
-=======
->>>>>>> d787274b362d94bdcca4e08a4663192234aedbef
 // router.get('/api/calendario-precios', precioBaseController.obtenerHabitacionesConPrecios)
 
 

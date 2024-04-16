@@ -3,7 +3,6 @@ const { Schema, model } = require('mongoose');
 const preSchema = new Schema({
     habitaciones: {
         type: String,
-<<<<<<< HEAD
         required: true,
     },
     title: {
@@ -26,16 +25,6 @@ const preSchema = new Schema({
     precio_base: {
         type: Number,
         required: true
-=======
-        unique: true,
-        },
-    habitaciones: String,
-    title: String,
-    ocupacion_max: String,
-
-    precio_base: {
-        type: Number
->>>>>>> d787274b362d94bdcca4e08a4663192234aedbef
     }
 });
 
