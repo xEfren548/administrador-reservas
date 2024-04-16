@@ -12,54 +12,31 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Mark</td>
-                    <td>Otto</td>
-                    <td>@mdo</td>
-                    <td>Administrador</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#modify-user_entry_modal">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Jacob</td>
-                    <td>Thornton</td>
-                    <td>@fat</td>
-                    <td>Administrador</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Larry the Bird</td>
-                    <td>@twitter</td>
-                    <td>@twitter</td>
-                    <td>Colaborador</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
+                {{#each users}}
+                    <tr>
+                        <td>{{firstName}}</td>
+                        <td>{{lastName}}</td>
+                        <td>{{email}}</td>
+                        <td>{{privilege}}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-primary" data-client-email="{{email}}" data-bs-toggle="modal"
+                                data-bs-target="#modify-user_entry_modal">
+                                <i class="fa fa-pencil" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger" data-client-email="{{email}}">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                            <div class="form-item">
+                                <p name="errMsg" class="error"></p>
+                            </div>
+                        </td>
+                    </tr>
+                {{/each}}                    
             </tbody>
         </table>
+
     </div>
 </div>
-
 
 {{!-- Modals --}}
 <!-- Modal Alta usuario -->
