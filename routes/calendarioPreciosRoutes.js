@@ -1,4 +1,3 @@
-const listaDePreciosController = require('../controllers/listaDePrecios.controller')    
 const precioBaseController = require('../controllers/precioBaseController')    
 const habitacionController = require('../controllers/habitacionController')
 
@@ -37,7 +36,7 @@ router.get('/calendario-precios', async (req, res) => {
         // Crear un arreglo con las fechas correspondientes a cada día del año
         const daysWithDates = Array.from({ length: DAYS_IN_YEAR }, (_, index) => getDateFromDayOfYear(index + 1));
 
-        console.log(habitaciones);
+        // console.log(habitaciones);
 
         const preciosHabitacionesData = await precioBaseController.consultarPrecios();
 
@@ -50,7 +49,7 @@ router.get('/calendario-precios', async (req, res) => {
             }
         })
 
-        console.log(preciosHabitaciones)
+        // console.log(preciosHabitaciones)
 
         res.render('calendarioPrecios', {
             layout: 'layoutCalendarioPrecios',
@@ -67,6 +66,7 @@ router.get('/calendario-precios', async (req, res) => {
 
 router.post('/api/calendario-precios', precioBaseController.agregarNuevoPrecio)
 router.get('/api/calendario-precios/:id', precioBaseController.consultarPreciosPorId)
+// router.post('/api/calendario-precios/masivo')
 // router.get('/api/calendario-precios', precioBaseController.obtenerHabitacionesConPrecios)
 
 

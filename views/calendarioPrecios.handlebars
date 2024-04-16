@@ -78,7 +78,7 @@
 
                   </div>
                   <div class="col-3">
-                    <input type="date" name="fecha-fin" id="fecha-fin" class="form-control" placeholder="Contraseña">
+                    <input type="date" name="fecha-fin" id="fecha-fin" class="form-control">
                   </div>
 
                 </div>
@@ -169,6 +169,9 @@
     const seleccion = document.getElementById('accion-precios').value;
     const iconoSeleccionado = document.getElementById('icono-seleccionado');
 
+    console.log(seleccion);
+    console.log(iconoSeleccionado);
+
     // Dependiendo de la opción seleccionada, mostramos el icono correspondiente
     switch (seleccion) {
       case 'precio-fijo':
@@ -194,4 +197,80 @@
   document.getElementById('accion-precios').addEventListener('change', function () {
     mostrarIconoSeleccionado();
   });
+
+  const botonFormulario = document.querySelector('#update-prices-btn');
+
+  botonFormulario.addEventListener('click', async function (e) {
+    e.preventDefault();
+
+    // Obtener los datos del formulario
+    const habitacionAmodificar = document.querySelector('#select-cabana').value;
+    const fechaInicio = new Date(document.querySelector('#fecha-inicio').value);
+    const fechaFin = new Date(document.querySelector('#fecha-fin').value);
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    const diasSeleccionados = [];
+    checkboxes.forEach(function (checkbox) {
+      if (checkbox.checked) {
+        diasSeleccionados.push(checkbox.value);
+      }
+    });
+    const accionPrecios = document.querySelector('#accion-precios').value;
+    const valorAccion = document.querySelector('#valor-accion').value;
+
+    // Función para realizar el fetch repetido para cada fecha en el rango
+    async function fetchRepetido(url, fechas) {
+      try {
+        const resultados = [];
+
+        // Iterar sobre cada fecha en el rango
+        for (const fecha of fechas) {
+          // Realizar la solicitud fetch para la fecha actual
+          console.log(resultados)
+          { { !-- const response = await fetch(`${url}/${fecha}`); --} }
+          { { !-- const data = await response.json(); --} }
+
+          // Agregar el resultado al array de resultados
+          { { !--resultados.push(data); --} }
+        }
+
+        return resultados;
+      } catch (error) {
+        console.error('Error al realizar el fetch repetido:', error);
+        throw error;
+      }
+    }
+
+    // Función para obtener un rango de fechas entre la fecha de inicio y la fecha de fin
+    function obtenerRangoFechas(fechaInicio, fechaFin) {
+      const fechas = [];
+      let fechaActual = new Date(fechaInicio);
+
+      while (fechaActual <= fechaFin) {
+        fechas.push(new Date(fechaActual));
+        fechaActual.setDate(fechaActual.getDate() + 1);
+      }
+
+      return fechas;
+    }
+
+    // URL para la solicitud fetch (debes reemplazarla con tu propia URL)
+    const url = 'http://localhost:3005/api/calendario-precios';
+
+    // Obtener el rango de fechas entre fechaInicio y fechaFin
+    const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
+
+    try {
+      // Realizar el fetch repetido para cada fecha en el rango
+      const resultados = await fetchRepetido(url, fechas);
+
+      // Manejar los resultados obtenidos
+      console.log('Resultados de fetch repetido:', resultados);
+      // Aquí puedes realizar cualquier otra acción con los resultados obtenidos
+    } catch (error) {
+      console.error('Error al realizar el fetch repetido:', error);
+      // Aquí puedes manejar el error
+    }
+  });
+
+
 </script>
