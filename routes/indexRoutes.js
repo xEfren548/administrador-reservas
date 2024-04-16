@@ -14,12 +14,17 @@ const habitacionesRoutes = require('./habitacionesRoutes');
 const instruccionesRoutes = require('./instruccionesRoutes');
 const loginRoute = require("./loginRoute");
 const serviciosRoutes = require('./serviciosRoutes');
+<<<<<<< HEAD
 const userRoutes = require('./usersRoutes');
 const userProfileRoutes = require('./userProfileRoutes');
 const calendarioPrecios = require('./calendarioPreciosRoutes');
 const reservationRoutes = require('./reservationRoutes');
 const CustomError = require("../common/error/custom-error");
 const NotFoundError = require("../common/error/not-found-error");
+=======
+const instruccionesUsuario = require('./instruccionesUsuario');
+const calendarioPrecios = require('./calendarioPreciosRoutes');
+>>>>>>> d787274b362d94bdcca4e08a4663192234aedbef
 
 // Formating incoming data.
 router.use(express.json());
@@ -66,6 +71,7 @@ router.use('/api', eventRoutes);
 router.use('/api', habitacionesRoutes);
 router.use('/api', userRoutes);
 router.use('/api', serviciosRoutes);
+<<<<<<< HEAD
 // router.use('/', instruccionesUsuario);
 router.use('/', calendarioPrecios);
 
@@ -83,6 +89,10 @@ router.use((err, req, res, next) => {
     console.log(err);
     res.status(500).json({errors: [{message: "Internal server error: something went wrong"}]});
 });
+=======
+router.use('/', instruccionesUsuario);
+router.use('/', calendarioPrecios); // /api/calendario-precios
+>>>>>>> d787274b362d94bdcca4e08a4663192234aedbef
 
 
 module.exports = router;
