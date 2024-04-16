@@ -54,7 +54,7 @@
             </option>
             {{#if habitaciones}}
             {{#each habitaciones}}
-            <option value="{{this.title}}">{{this.title}}</option>
+            <option value="{{this._id}}">{{this.title}}</option>
 
             {{/each}}
             {{else}}
@@ -169,9 +169,6 @@
     const seleccion = document.getElementById('accion-precios').value;
     const iconoSeleccionado = document.getElementById('icono-seleccionado');
 
-    console.log(seleccion);
-    console.log(iconoSeleccionado);
-
     // Dependiendo de la opción seleccionada, mostramos el icono correspondiente
     switch (seleccion) {
       case 'precio-fijo':
@@ -218,27 +215,50 @@
     const valorAccion = document.querySelector('#valor-accion').value;
 
     // Función para realizar el fetch repetido para cada fecha en el rango
-    async function fetchRepetido(url, fechas) {
-      try {
+    // Función para realizar el fetch repetido para cada fecha en el rango
+async function fetchRepetido(url, fechas) {
+    try {
         const resultados = [];
 
         // Iterar sobre cada fecha en el rango
         for (const fecha of fechas) {
-          // Realizar la solicitud fetch para la fecha actual
-          console.log(resultados)
-          { { !-- const response = await fetch(`${url}/${fecha}`); --} }
-          { { !-- const data = await response.json(); --} }
+            // Obtener el objeto de datos para enviar en la solicitud fetch
+            const datosFetch = {
+                precio_modificado: valorAccion,
+                fecha: fecha,
+                habitacionId: habitacionAmodificar
+            };
 
-          // Agregar el resultado al array de resultados
-          { { !--resultados.push(data); --} }
+            console.log(JSON.stringify(datosFetch));
+
+            // Realizar la solicitud fetch para la fecha actual con los datos especificados
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(datosFetch)
+            });
+
+            // Verificar el estado de la respuesta
+            if (!response.ok) {
+                throw new Error('Error en la solicitud fetch: ' + response.statusText);
+            }
+
+            // Convertir la respuesta a JSON
+            const data = await response.json();
+
+            // Agregar el resultado al array de resultados
+            resultados.push(data);
         }
 
         return resultados;
-      } catch (error) {
+    } catch (error) {
         console.error('Error al realizar el fetch repetido:', error);
         throw error;
-      }
     }
+}
+
 
     // Función para obtener un rango de fechas entre la fecha de inicio y la fecha de fin
     function obtenerRangoFechas(fechaInicio, fechaFin) {

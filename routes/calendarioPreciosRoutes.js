@@ -45,7 +45,7 @@ router.get('/calendario-precios', async (req, res) => {
                 _id: precioHabitacion._id,
                 precio_base: precioHabitacion.precio_base,
                 fecha: precioHabitacion.fecha,
-                habitacionId: precioHabitacion.habitacionId.toString()
+                // habitacionId: precioHabitacion.habitacionId.toString()
             }
         })
 
