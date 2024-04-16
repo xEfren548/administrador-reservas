@@ -20,7 +20,6 @@ const calendarioPrecios = require('./calendarioPreciosRoutes');
 const reservationRoutes = require('./reservationRoutes');
 const CustomError = require("../common/error/custom-error");
 const NotFoundError = require("../common/error/not-found-error");
-const calendarioPrecios = require('./calendarioPreciosRoutes');
 
 // Formating incoming data.
 router.use(express.json());
@@ -67,7 +66,7 @@ router.use('/api', eventRoutes);
 router.use('/api', habitacionesRoutes);
 router.use('/api', userRoutes);
 router.use('/api', serviciosRoutes);
-router.use('/', instruccionesUsuario);
+// router.use('/', instruccionesUsuario);
 router.use('/', calendarioPrecios);
 
 // Not found resource handling middleware.

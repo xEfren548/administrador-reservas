@@ -5,7 +5,7 @@ const path = require('path');
 const app = express();
 const { engine } = require('express-handlebars');
 const routes = require('./routes/indexRoutes'); 
-require('add-to-calendar-button');
+// require('add-to-calendar-button');
 
 // Configura Express para servir archivos estáticos desde la carpeta 'public'
 app.use(express.static(path.join(__dirname, 'src', 'public')));

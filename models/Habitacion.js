@@ -3,7 +3,6 @@ const { Schema, model } = require('mongoose');
 const preSchema = new Schema({
     habitaciones: {
         type: String,
-<<<<<<< HEAD
         required: true,
     },
     title: {

@@ -1,39 +1,37 @@
 <h1>Calendario de precios con aumento</h1>
 
 {{#if habitaciones}}
-  {{#each habitaciones}}
-    <p>{{this.title}}</p> <!-- Título de la habitación -->
-    <div class="table-responsive">
-      <table class="table table-primary">
-        <thead>
-          <tr>
-            <th scope="col">Cabaña</th>
-            {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
-              <th scope="col">{{this}}</th> <!-- Mostrar cada fecha como encabezado de columna -->
-            {{/each}}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>{{this.title}}</td> <!-- Título de la cabaña -->
-            {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
-              <td>${{../this.baseRate}}</td> <!-- Mostrar la tarifa base de la habitación -->
-            {{/each}}
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  {{/each}}
+{{#each habitaciones}}
+<p>{{this.title}}</p> <!-- Título de la habitación -->
+<div class="table-responsive">
+  <table class="table table-primary">
+    <thead>
+      <tr>
+        <th scope="col">Cabaña</th>
+        {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
+        <th scope="col">{{this}}</th> <!-- Mostrar cada fecha como encabezado de columna -->
+        {{/each}}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{this.title}}</td> <!-- Título de la cabaña -->
+        {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
+        <td>${{../this.baseRate}}</td> <!-- Mostrar la tarifa base de la habitación -->
+        {{/each}}
+      </tr>
+    </tbody>
+  </table>
+</div>
+{{/each}}
 {{else}}
-  <p>No hay habitaciones</p>
+<p>No hay habitaciones</p>
 {{/if}}
 
 
 <!-- Modal Actualizar precios -->
-<<<<<<< HEAD
-=======
+<!-- Modal Actualizar precios -->
 
->>>>>>> 48855322456efd736bd28d52e60779a0c6a4fca3
 <div class="modal fade" id="update_prices_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
   aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">
@@ -48,10 +46,10 @@
         <div class="img-container">
           <div class="row mt-2 mb-2">
             <div class="col-8">
-              <label for="actualizar-precios">Habitación a modificar: </label>
+              <label for="select-cabana">Habitación a modificar: </label>
             </div>
           </div> <!-- Cierre row -->
-          <select name="actualizar-precios" id="actualizar-precios" class="form-select form-select-md" required>
+          <select name="select-cabana" id="select-cabana" class="form-select form-select-md" required>
             <option value="" selected disabled> Selecciona una cabaña para modificar --
             </option>
             {{#if habitaciones}}
@@ -68,10 +66,10 @@
 
             <div class="col-12 mb-2 mt-2">
               <div class="form-group">
-                <label for="user-password">Rango de fechas: </label>
+                <label for="rango-fechas">Rango de fechas: </label>
                 <div class="row ">
                   <div class="col-3">
-                    <input type="date" name="user-password" id="user-password" class="form-control"
+                    <input type="date" name="fecha-inicio" id="fecha-inicio" class="form-control"
                       placeholder="Contraseña">
 
                   </div>
@@ -80,8 +78,7 @@
 
                   </div>
                   <div class="col-3">
-                    <input type="date" name="user-password" id="user-password" class="form-control"
-                      placeholder="Contraseña">
+                    <input type="date" name="fecha-fin" id="fecha-fin" class="form-control" placeholder="Contraseña">
                   </div>
 
                 </div>
@@ -92,45 +89,109 @@
 
           <div class="mb-2">
             <div class="row mb-2">
-              <label for="">¿Quieres aplicar esta tarifa a unos dias concretos?</label>
+              <label for="dias-concretos">¿Quieres aplicar esta tarifa a unos dias concretos?</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="lunes">
-              <label class="form-check-label" for="inlineCheckbox1">Lunes</label>
+              <input class="form-check-input" type="checkbox" id="lunes" value="lunes">
+              <label class="form-check-label" for="lunes">Lunes</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="martes">
-              <label class="form-check-label" for="inlineCheckbox2">Martes</label>
+              <input class="form-check-input" type="checkbox" id="martes" value="martes">
+              <label class="form-check-label" for="martes">Martes</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="miercoles">
-              <label class="form-check-label" for="inlineCheckbox3">Miércoles</label>
+              <input class="form-check-input" type="checkbox" id="miercoles" value="miercoles">
+              <label class="form-check-label" for="miercoles">Miércoles</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="jueves">
-              <label class="form-check-label" for="inlineCheckbox3">jueves</label>
+              <input class="form-check-input" type="checkbox" id="jueves" value="jueves">
+              <label class="form-check-label" for="jueves">Jueves</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="viernes">
-              <label class="form-check-label" for="inlineCheckbox3">viernes</label>
+              <input class="form-check-input" type="checkbox" id="viernes" value="viernes">
+              <label class="form-check-label" for="viernes">Viernes</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="sabado">
-              <label class="form-check-label" for="inlineCheckbox3">Sábado</label>
+              <input class="form-check-input" type="checkbox" id="sabado" value="sabado">
+              <label class="form-check-label" for="sabado">Sábado</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="domingo">
-              <label class="form-check-label" for="inlineCheckbox3">Domingo</label>
+              <input class="form-check-input" type="checkbox" id="domingo" value="domingo">
+              <label class="form-check-label" for="domingo">Domingo</label>
             </div>
 
+
+          </div>
+
+          <div class="row">
+            <div class="col-12">
+              <label for="actualizar-precios">En base al precio base de la habitación, ¿qué quieres hacer? </label>
+            </div>
+          </div>
+          <div class="row">
+
+            <div class="col-7">
+              <select name="accion-precios" id="accion-precios" class="form-select form-select-md" required>
+                <option value="precio-fijo">Precio fijo por noche</option>
+                <option value="incrementar-natural">Incrementar precio en valor natural</option>
+                <option value="incrementar-porcentual">Incrementar precio en valor porcentual</option>
+                <option value="disminuir-natural">Disminuir precio en valor natural</option>
+                <option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
+              </select>
+            </div>
+            <div class="col-2">
+              <div class="input-group">
+                <input type="number" name="valor-accion" id="valor-accion" class="form-control" value="0" min="0">
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <span id="icono-seleccionado"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div> <!-- Cierre IMG Container -->
       </div> <!--Cierre MODAL BODY -->
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="save-user-btn">Agregar Usuario</button>
+        <button type="button" class="btn btn-primary" id="update-prices-btn">Actualizar precios</button>
       </div>
     </div>
   </div>
 </div>
 <!-- End Modal Alta usuario -->
+
+<script>
+  // Función para mostrar el icono seleccionado al cargar la página
+  function mostrarIconoSeleccionado() {
+    const seleccion = document.getElementById('accion-precios').value;
+    const iconoSeleccionado = document.getElementById('icono-seleccionado');
+
+    // Dependiendo de la opción seleccionada, mostramos el icono correspondiente
+    switch (seleccion) {
+      case 'precio-fijo':
+        iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
+        break;
+      case 'incrementar-natural':
+      case 'disminuir-natural':
+        iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
+        break;
+      case 'incrementar-porcentual':
+      case 'disminuir-porcentual':
+        iconoSeleccionado.innerHTML = '<i class="fa fa-percent" aria-hidden="true"></i>';
+        break;
+      default:
+        break;
+    }
+  }
+
+  // Llamar a la función al cargar la página para mostrar el icono seleccionado inicialmente
+  mostrarIconoSeleccionado();
+
+  // Agregar un event listener al campo #accion-precios para actualizar el icono seleccionado cuando cambie la selección
+  document.getElementById('accion-precios').addEventListener('change', function () {
+    mostrarIconoSeleccionado();
+  });
+</script>
