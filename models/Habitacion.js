@@ -1,9 +1,8 @@
-const { Schema, model } = require('mongoose');
+const mongoose = require('mongoose');
 
-const preSchema = new Schema({
+const preSchema = new mongoose.Schema({
     habitaciones: {
         type: String,
-<<<<<<< HEAD
         required: true,
     },
     title: {
@@ -29,8 +28,8 @@ const preSchema = new Schema({
     }
 });
 
-const habitacionesSchema = new Schema({
+const habitacionesSchema = new mongoose.Schema({
     resources: [preSchema],
 });
 
-module.exports = model('habitaciones', habitacionesSchema);
+module.exports = mongoose.model('habitaciones', habitacionesSchema);
