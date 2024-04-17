@@ -44,6 +44,8 @@
       </div>
       <div class="modal-body">
         <div class="img-container">
+          <div id="error-modal" class="alert alert-danger" style="display: none;"></div>
+
           <div class="row mt-2 mb-2">
             <div class="col-8">
               <label for="select-cabana">Habitación a modificar: </label>
@@ -214,50 +216,64 @@
     const accionPrecios = document.querySelector('#accion-precios').value;
     const valorAccion = document.querySelector('#valor-accion').value;
 
+    // Validar que la fecha final sea posterior o igual a la fecha inicial
+    if (fechaFin < fechaInicio) {
+      // Mostrar mensaje de error en el modal
+      const errorModal = document.querySelector('#error-modal');
+      errorModal.textContent = 'La fecha de inicio no puede ser posterior a la fecha de fin.';
+      errorModal.style.display = 'block'; // Mostrar el mensaje de error
+      return; // Detener la ejecución del resto del código
+    }
+
+    // Restablecer el mensaje de error en el modal
+    const errorModal = document.querySelector('#error-modal');
+    errorModal.innerHTML = '';
+    errorModal.classList.remove('show');
+
     // Función para realizar el fetch repetido para cada fecha en el rango
     // Función para realizar el fetch repetido para cada fecha en el rango
-async function fetchRepetido(url, fechas) {
-    try {
+    async function fetchRepetido(url, fechas) {
+      try {
         const resultados = [];
 
         // Iterar sobre cada fecha en el rango
         for (const fecha of fechas) {
-            // Obtener el objeto de datos para enviar en la solicitud fetch
-            const datosFetch = {
-                precio_modificado: valorAccion,
-                fecha: fecha,
-                habitacionId: habitacionAmodificar
-            };
+          // Obtener el objeto de datos para enviar en la solicitud fetch
+          const datosFetch = {
+            precio_modificado: valorAccion,
+            fecha: fecha,
+            habitacionId: habitacionAmodificar
+          };
 
-            console.log(JSON.stringify(datosFetch));
+          console.log(JSON.stringify(datosFetch));
 
-            // Realizar la solicitud fetch para la fecha actual con los datos especificados
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(datosFetch)
-            });
+          // Realizar la solicitud fetch para la fecha actual con los datos especificados
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(datosFetch)
+          });
 
-            // Verificar el estado de la respuesta
-            if (!response.ok) {
-                throw new Error('Error en la solicitud fetch: ' + response.statusText);
-            }
+          // Verificar el estado de la respuesta
+          if (!response.ok) {
+            throw new Error('Error en la solicitud fetch: ' + response.statusText);
+          }
 
-            // Convertir la respuesta a JSON
-            const data = await response.json();
+          // Convertir la respuesta a JSON
+          const data = await response.json();
 
-            // Agregar el resultado al array de resultados
-            resultados.push(data);
+          // Agregar el resultado al array de resultados
+          resultados.push(data);
         }
 
         return resultados;
-    } catch (error) {
+      } catch (error) {
         console.error('Error al realizar el fetch repetido:', error);
         throw error;
+      }
     }
-}
 
 
     // Función para obtener un rango de fechas entre la fecha de inicio y la fecha de fin

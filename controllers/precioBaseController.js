@@ -1,15 +1,16 @@
 const PrecioBaseXDia = require('../models/PrecioBaseXDia');
+const mongoose = require('mongoose');
 
 // Controlador para agregar nuevos datos
 async function agregarNuevoPrecio(req, res) {
     try {
-        const { precio_modificado, fecha, habitacion } = req.body;
-
-
+        const { precio_modificado, fecha, habitacionId } = req.body;
+        const objectHabitacionId = new mongoose.Types.ObjectId(habitacionId);        
+        
         const nuevoPrecio = new PrecioBaseXDia({
             precio_modificado,
             fecha,
-            habitacion
+            habitacionId: objectHabitacionId
         });
 
 
