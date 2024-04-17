@@ -19,6 +19,8 @@ const currentUser = (req, res, next) => {
         return next();
 
     } catch(err){
+        const error = new Error("Not authorized");
+        error.status = 401;
         return next(error);
     }
 }

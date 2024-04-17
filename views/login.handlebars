@@ -63,13 +63,13 @@
                 email: document.getElementById("txtUserEmail").value.trim(),
                 password: document.getElementById("txtUserPassword").value.trim()
             };
-
             fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
+                
             })
             .then(response => {
                 if (response.redirected) {

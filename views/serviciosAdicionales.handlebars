@@ -12,32 +12,36 @@
                     <th scope="col">1ra comisión</th>
                     <th scope="col">1er usuario</th>
                     <th scope="col">2da comisión</th>
-                    <th scope="col">2do usuario</th>
                     <th scope="col">Precio final</th>
                     <th scope="col">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Limpieza</td>
-                    <td>Servicio de limpieza</td>
-                    <td>Proveedor</td>
-                    <td>Administrador de servicios</td>
-                    <td>$10000</td>
-                    <td>$7500</td>
-                    <td>Usuario 1</td>
-                    <td>$2500</td>
-                    <td>Usuario 2</td>
-                    <td>$1000</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modify-service_entry_modal">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
+                {{#each servicios}}
+                    <tr>
+                        <td>{{service}}</td>
+                        <td>{{description}}</td>
+                        <td> {{supplier}}</td>
+                        <td>{{serviceManager}}</td>
+                        <td> {{basePrice}}</td>
+                        <td>{{firstCommission}}</td>
+                        <td>{{firstUser}}</td>
+                        <td>{{secondCommission}}</td>
+                        <td>{{finalPrice}}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-primary" data-client-email="{{email}}"  data-bs-toggle="modal"
+                                data-bs-target="#modifyClientEntryModal">
+                                <i class="fa fa-pencil" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger" data-client-email="{{email}}">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                            <div class="form-item">
+                                <p name="errMsg" class="error"></p>
+                            </div>
+                        </td>
+                    </tr>
+                {{/each}}  
             </tbody>
         </table>
     </div>
