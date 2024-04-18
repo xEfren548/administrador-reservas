@@ -30,7 +30,6 @@
 
 
 <!-- Modal Actualizar precios -->
-<!-- Modal Actualizar precios -->
 
 <div class="modal fade" id="update_prices_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
   aria-hidden="true">
@@ -56,7 +55,7 @@
             </option>
             {{#if habitaciones}}
             {{#each habitaciones}}
-            <option value="{{this._id}}">{{this.title}}</option>
+            <option value="{{this._id}}" data-precio-base="{{this.precio_base}}">{{this.title}}</option>
 
             {{/each}}
             {{else}}
@@ -82,43 +81,59 @@
                   <div class="col-3">
                     <input type="date" name="fecha-fin" id="fecha-fin" class="form-control">
                   </div>
-
                 </div>
               </div>
             </div>
 
           </div> <!-- Cierre row -->
 
+          <div class="row mb-2">
+            <div class="col-3">
+              <label for="precio-base-input">Precio Base Estándar</label>
+              <div class="input-group">
+                <input type="number" name="precio-base-input" id="precio-base-input-id"
+                  class="text-center form-control form-control-sm" value="0" disabled>
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text" style="font-size: 15px;">
+                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="mb-2">
             <div class="row mb-2">
               <label for="dias-concretos">¿Quieres aplicar esta tarifa a unos dias concretos?</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="lunes" value="lunes">
+              <input class="form-check-input" type="checkbox" id="checkbox-lunes" value="lunes" checked>
               <label class="form-check-label" for="lunes">Lunes</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="martes" value="martes">
+              <input class="form-check-input" type="checkbox" id="checkbox-martes" value="martes" checked>
               <label class="form-check-label" for="martes">Martes</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="miercoles" value="miercoles">
+              <input class="form-check-input" type="checkbox" id="checkbox-miercoles" value="miercoles" checked>
               <label class="form-check-label" for="miercoles">Miércoles</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="jueves" value="jueves">
+              <input class="form-check-input" type="checkbox" id="checkbox-jueves" value="jueves" checked>
               <label class="form-check-label" for="jueves">Jueves</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="viernes" value="viernes">
+              <input class="form-check-input" type="checkbox" id="checkbox-viernes" value="viernes" checked>
               <label class="form-check-label" for="viernes">Viernes</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="sabado" value="sabado">
+              <input class="form-check-input" type="checkbox" id="checkbox-sabado" value="sabado" checked>
               <label class="form-check-label" for="sabado">Sábado</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="domingo" value="domingo">
+              <input class="form-check-input" type="checkbox" id="checkbox-domingo" value="domingo" checked>
               <label class="form-check-label" for="domingo">Domingo</label>
             </div>
 
@@ -197,6 +212,13 @@
     mostrarIconoSeleccionado();
   });
 
+  document.getElementById('select-cabana').addEventListener('change', function () {
+    const selectElement = document.getElementById('select-cabana');
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const precioBase = selectedOption.getAttribute('data-precio-base');
+    document.getElementById('precio-base-input-id').value = precioBase;
+  });
+
   const botonFormulario = document.querySelector('#update-prices-btn');
 
   botonFormulario.addEventListener('click', async function (e) {
@@ -214,7 +236,11 @@
       }
     });
     const accionPrecios = document.querySelector('#accion-precios').value;
-    const valorAccion = document.querySelector('#valor-accion').value;
+    const valorAccion = parseInt(document.querySelector('#valor-accion').value);
+    const precioCabana = parseInt(document.querySelector('#precio-base-input-id').value);
+    let precioFinal = 0
+
+    
 
     // Validar que la fecha final sea posterior o igual a la fecha inicial
     if (fechaFin < fechaInicio) {
@@ -230,7 +256,30 @@
     errorModal.innerHTML = '';
     errorModal.classList.remove('show');
 
-    // Función para realizar el fetch repetido para cada fecha en el rango
+    // Validacion para actualizar el precio natural o precio porcentual
+    const seleccion = document.getElementById('accion-precios').value;
+    
+    switch (seleccion) {
+      case 'precio-fijo':
+        precioFinal = valorAccion;
+        break;
+      case 'incrementar-natural':
+        precioFinal = precioCabana + valorAccion;
+        break;
+      case 'disminuir-natural':
+        precioFinal = precioCabana - valorAccion;
+        break;
+      case 'incrementar-porcentual':
+        precioFinal = precioCabana * (valorAccion / 100) + precioCabana;
+        break;
+      case 'disminuir-porcentual':
+        let pre = precioCabana * (valorAccion / 100)
+        precioFinal = precioCabana - pre;
+        break;
+    }
+
+    console.log(precioFinal);
+
     // Función para realizar el fetch repetido para cada fecha en el rango
     async function fetchRepetido(url, fechas) {
       try {
@@ -240,7 +289,7 @@
         for (const fecha of fechas) {
           // Obtener el objeto de datos para enviar en la solicitud fetch
           const datosFetch = {
-            precio_modificado: valorAccion,
+            precio_modificado: precioFinal,
             fecha: fecha,
             habitacionId: habitacionAmodificar
           };
@@ -282,11 +331,20 @@
       let fechaActual = new Date(fechaInicio);
 
       while (fechaActual <= fechaFin) {
-        fechas.push(new Date(fechaActual));
+        if (diasSeleccionados.includes(obtenerNombreDia(fechaActual))) {
+          fechas.push(new Date(fechaActual));
+        }
         fechaActual.setDate(fechaActual.getDate() + 1);
       }
 
       return fechas;
+    }
+
+    // Función para obtener el nombre del día de la semana
+    function obtenerNombreDia(fecha) {
+      const diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+      console.log([fecha.getDay()]);
+      return diasSemana[fecha.getDay()];
     }
 
     // URL para la solicitud fetch (debes reemplazarla con tu propia URL)
