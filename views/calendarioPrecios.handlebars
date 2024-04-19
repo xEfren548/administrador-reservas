@@ -71,7 +71,7 @@
                 <div class="row ">
                   <div class="col-3">
                     <input type="date" name="fecha-inicio" id="fecha-inicio" class="form-control"
-                      placeholder="Contraseña">
+                      placeholder="Contraseña" required>
 
                   </div>
                   <div class="col-1 text-center">
@@ -79,7 +79,7 @@
 
                   </div>
                   <div class="col-3">
-                    <input type="date" name="fecha-fin" id="fecha-fin" class="form-control">
+                    <input type="date" name="fecha-fin" id="fecha-fin" class="form-control" required>
                   </div>
                 </div>
               </div>
@@ -240,13 +240,11 @@
     const precioCabana = parseInt(document.querySelector('#precio-base-input-id').value);
     let precioFinal = 0
 
-    
-
     // Validar que la fecha final sea posterior o igual a la fecha inicial
-    if (fechaFin < fechaInicio) {
+    if (fechaInicio === '' || fechaFin === '') {
       // Mostrar mensaje de error en el modal
       const errorModal = document.querySelector('#error-modal');
-      errorModal.textContent = 'La fecha de inicio no puede ser posterior a la fecha de fin.';
+      errorModal.textContent = 'Por favor, seleccione una fecha de inicio y una fecha de fin.';
       errorModal.style.display = 'block'; // Mostrar el mensaje de error
       return; // Detener la ejecución del resto del código
     }
@@ -258,7 +256,7 @@
 
     // Validacion para actualizar el precio natural o precio porcentual
     const seleccion = document.getElementById('accion-precios').value;
-    
+
     switch (seleccion) {
       case 'precio-fijo':
         precioFinal = valorAccion;
@@ -355,14 +353,38 @@
 
     try {
       // Realizar el fetch repetido para cada fecha en el rango
+
       const resultados = await fetchRepetido(url, fechas);
+
+      if (resultados.length === 0) {
+        throw new Error('No hay fechas seleccionadas para actualizar.');
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: '¡Completado!',
+        text: 'Precios actualizados correctamente.',
+        confirmButtonText: 'Aceptar'
+      }).then((result) => {
+        // Verificar si el usuario hizo clic en el botón de confirmación
+        if (result.isConfirmed) {
+          // Actualizar la página
+          location.reload();
+        }
+      });
+
 
       // Manejar los resultados obtenidos
       console.log('Resultados de fetch repetido:', resultados);
       // Aquí puedes realizar cualquier otra acción con los resultados obtenidos
     } catch (error) {
       console.error('Error al realizar el fetch repetido:', error);
-      // Aquí puedes manejar el error
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Hubo un problema al actualizar los precios. Por favor, verifica que todos los campos están completos o intenta de nuevo más tarde.',
+        confirmButtonText: 'Aceptar'
+      });
     }
   });
 
