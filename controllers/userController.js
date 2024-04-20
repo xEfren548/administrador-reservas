@@ -11,7 +11,6 @@ async function createUser(req, res, next) {
         return next(error);
     }
 
-<<<<<<< HEAD
 async function obtenerUsuarios(req, res) { 
     try {
         const usuarios = await Usuario.find();
@@ -22,11 +21,6 @@ async function obtenerUsuarios(req, res) {
         throw new Error('Error al obtener usuarios como JSON');
     }
 }
-=======
-    const userToAdd = new Usuario ({
-        firstName, lastName, email, password, privilege, administrator
-    });
->>>>>>> 50a8b2bf8e1077e32e943d5ca92f4a68e1f170ef
 
     try{    
         sendPassword(userToAdd.email, userToAdd.password, userToAdd.privilege);        

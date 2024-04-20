@@ -48,6 +48,18 @@ const createServiceValidators = [
         .toFloat(),
 ];
 
+async function mostrarServicios(req, res, next) { 
+    try {
+        const servicios = await Service.find({}).lean();
+        res.render('serviciosAdicionales', {
+            layout: 'services',
+            servicios: servicios
+        });
+    } catch (err) {
+        return next(err);
+    }
+}
+
 const editServiceValidators = [
     check('service')
         .isLength({ max: 255 }).withMessage('Service must be less than 255 characters')
@@ -232,5 +244,6 @@ module.exports = {
     editService,
     editServiceById,
     deleteService,
-    deleteServiceById
+    deleteServiceById,
+    mostrarServicios
 }

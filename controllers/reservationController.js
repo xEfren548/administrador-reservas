@@ -7,6 +7,7 @@ async function showReservationsView(req, res, next){
         const url = 'http://localhost:3005/api/habitaciones';
         const response = await fetch(url);
         const data = await response.json();
+        console.log(data);
         const habitaciones = data[0].resources.map(habitacion => {
             return { title: habitacion.title, baseRate: habitacion.precio_base };
         });
@@ -21,7 +22,7 @@ async function showReservationsView(req, res, next){
         });
     } catch (error) {
         console.log(error);
-        return next(err);
+        return next(error);
     }
 }
 

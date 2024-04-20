@@ -1,39 +1,36 @@
 <h1>Calendario de precios con aumento</h1>
 
 {{#if habitaciones}}
-  {{#each habitaciones}}
-    <p>{{this.title}}</p> <!-- Título de la habitación -->
-    <div class="table-responsive">
-      <table class="table table-primary">
-        <thead>
-          <tr>
-            <th scope="col">Cabaña</th>
-            {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
-              <th scope="col">{{this}}</th> <!-- Mostrar cada fecha como encabezado de columna -->
-            {{/each}}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>{{this.title}}</td> <!-- Título de la cabaña -->
-            {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
-              <td>${{../this.baseRate}}</td> <!-- Mostrar la tarifa base de la habitación -->
-            {{/each}}
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  {{/each}}
+{{#each habitaciones}}
+<p>{{this.title}}</p> <!-- Título de la habitación -->
+<div class="table-responsive">
+  <table class="table table-primary">
+    <thead>
+      <tr>
+        <th scope="col">Cabaña</th>
+        {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
+        <th scope="col">{{this}}</th> <!-- Mostrar cada fecha como encabezado de columna -->
+        {{/each}}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{this.title}}</td> <!-- Título de la cabaña -->
+        {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
+        <td>${{../this.baseRate}}</td> <!-- Mostrar la tarifa base de la habitación -->
+        {{/each}}
+      </tr>
+    </tbody>
+  </table>
+</div>
+{{/each}}
 {{else}}
-  <p>No hay habitaciones</p>
+<p>No hay habitaciones</p>
 {{/if}}
 
 
 <!-- Modal Actualizar precios -->
-<<<<<<< HEAD
-=======
 
->>>>>>> 48855322456efd736bd28d52e60779a0c6a4fca3
 <div class="modal fade" id="update_prices_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
   aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">
@@ -46,17 +43,19 @@
       </div>
       <div class="modal-body">
         <div class="img-container">
+          <div id="error-modal" class="alert alert-danger" style="display: none;"></div>
+
           <div class="row mt-2 mb-2">
             <div class="col-8">
-              <label for="actualizar-precios">Habitación a modificar: </label>
+              <label for="select-cabana">Habitación a modificar: </label>
             </div>
           </div> <!-- Cierre row -->
-          <select name="actualizar-precios" id="actualizar-precios" class="form-select form-select-md" required>
+          <select name="select-cabana" id="select-cabana" class="form-select form-select-md" required>
             <option value="" selected disabled> Selecciona una cabaña para modificar --
             </option>
             {{#if habitaciones}}
             {{#each habitaciones}}
-            <option value="{{this.title}}">{{this.title}}</option>
+            <option value="{{this._id}}" data-precio-base="{{this.precio_base}}">{{this.title}}</option>
 
             {{/each}}
             {{else}}
@@ -68,11 +67,11 @@
 
             <div class="col-12 mb-2 mt-2">
               <div class="form-group">
-                <label for="user-password">Rango de fechas: </label>
+                <label for="rango-fechas">Rango de fechas: </label>
                 <div class="row ">
                   <div class="col-3">
-                    <input type="date" name="user-password" id="user-password" class="form-control"
-                      placeholder="Contraseña">
+                    <input type="date" name="fecha-inicio" id="fecha-inicio" class="form-control"
+                      placeholder="Contraseña" required>
 
                   </div>
                   <div class="col-1 text-center">
@@ -80,57 +79,314 @@
 
                   </div>
                   <div class="col-3">
-                    <input type="date" name="user-password" id="user-password" class="form-control"
-                      placeholder="Contraseña">
+                    <input type="date" name="fecha-fin" id="fecha-fin" class="form-control" required>
                   </div>
-
                 </div>
               </div>
             </div>
 
           </div> <!-- Cierre row -->
 
+          <div class="row mb-2">
+            <div class="col-3">
+              <label for="precio-base-input">Precio Base Estándar</label>
+              <div class="input-group">
+                <input type="number" name="precio-base-input" id="precio-base-input-id"
+                  class="text-center form-control form-control-sm" value="0" disabled>
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text" style="font-size: 15px;">
+                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="mb-2">
             <div class="row mb-2">
-              <label for="">¿Quieres aplicar esta tarifa a unos dias concretos?</label>
+              <label for="dias-concretos">¿Quieres aplicar esta tarifa a unos dias concretos?</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="lunes">
-              <label class="form-check-label" for="inlineCheckbox1">Lunes</label>
+              <input class="form-check-input" type="checkbox" id="checkbox-lunes" value="lunes" checked>
+              <label class="form-check-label" for="lunes">Lunes</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="martes">
-              <label class="form-check-label" for="inlineCheckbox2">Martes</label>
+              <input class="form-check-input" type="checkbox" id="checkbox-martes" value="martes" checked>
+              <label class="form-check-label" for="martes">Martes</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="miercoles">
-              <label class="form-check-label" for="inlineCheckbox3">Miércoles</label>
+              <input class="form-check-input" type="checkbox" id="checkbox-miercoles" value="miercoles" checked>
+              <label class="form-check-label" for="miercoles">Miércoles</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="jueves">
-              <label class="form-check-label" for="inlineCheckbox3">jueves</label>
+              <input class="form-check-input" type="checkbox" id="checkbox-jueves" value="jueves" checked>
+              <label class="form-check-label" for="jueves">Jueves</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="viernes">
-              <label class="form-check-label" for="inlineCheckbox3">viernes</label>
+              <input class="form-check-input" type="checkbox" id="checkbox-viernes" value="viernes" checked>
+              <label class="form-check-label" for="viernes">Viernes</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="sabado">
-              <label class="form-check-label" for="inlineCheckbox3">Sábado</label>
+              <input class="form-check-input" type="checkbox" id="checkbox-sabado" value="sabado" checked>
+              <label class="form-check-label" for="sabado">Sábado</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="inlineCheckbox3" value="domingo">
-              <label class="form-check-label" for="inlineCheckbox3">Domingo</label>
+              <input class="form-check-input" type="checkbox" id="checkbox-domingo" value="domingo" checked>
+              <label class="form-check-label" for="domingo">Domingo</label>
             </div>
 
+
+          </div>
+
+          <div class="row">
+            <div class="col-12">
+              <label for="actualizar-precios">En base al precio base de la habitación, ¿qué quieres hacer? </label>
+            </div>
+          </div>
+          <div class="row">
+
+            <div class="col-7">
+              <select name="accion-precios" id="accion-precios" class="form-select form-select-md" required>
+                <option value="precio-fijo">Precio fijo por noche</option>
+                <option value="incrementar-natural">Incrementar precio en valor natural</option>
+                <option value="incrementar-porcentual">Incrementar precio en valor porcentual</option>
+                <option value="disminuir-natural">Disminuir precio en valor natural</option>
+                <option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
+              </select>
+            </div>
+            <div class="col-2">
+              <div class="input-group">
+                <input type="number" name="valor-accion" id="valor-accion" class="form-control" value="0" min="0">
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <span id="icono-seleccionado"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div> <!-- Cierre IMG Container -->
       </div> <!--Cierre MODAL BODY -->
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="save-user-btn">Agregar Usuario</button>
+        <button type="button" class="btn btn-primary" id="update-prices-btn">Actualizar precios</button>
       </div>
     </div>
   </div>
 </div>
 <!-- End Modal Alta usuario -->
+
+<script>
+  // Función para mostrar el icono seleccionado al cargar la página
+  function mostrarIconoSeleccionado() {
+    const seleccion = document.getElementById('accion-precios').value;
+    const iconoSeleccionado = document.getElementById('icono-seleccionado');
+
+    // Dependiendo de la opción seleccionada, mostramos el icono correspondiente
+    switch (seleccion) {
+      case 'precio-fijo':
+        iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
+        break;
+      case 'incrementar-natural':
+      case 'disminuir-natural':
+        iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
+        break;
+      case 'incrementar-porcentual':
+      case 'disminuir-porcentual':
+        iconoSeleccionado.innerHTML = '<i class="fa fa-percent" aria-hidden="true"></i>';
+        break;
+      default:
+        break;
+    }
+  }
+
+  // Llamar a la función al cargar la página para mostrar el icono seleccionado inicialmente
+  mostrarIconoSeleccionado();
+
+  // Agregar un event listener al campo #accion-precios para actualizar el icono seleccionado cuando cambie la selección
+  document.getElementById('accion-precios').addEventListener('change', function () {
+    mostrarIconoSeleccionado();
+  });
+
+  document.getElementById('select-cabana').addEventListener('change', function () {
+    const selectElement = document.getElementById('select-cabana');
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const precioBase = selectedOption.getAttribute('data-precio-base');
+    document.getElementById('precio-base-input-id').value = precioBase;
+  });
+
+  const botonFormulario = document.querySelector('#update-prices-btn');
+
+  botonFormulario.addEventListener('click', async function (e) {
+    e.preventDefault();
+
+    // Obtener los datos del formulario
+    const habitacionAmodificar = document.querySelector('#select-cabana').value;
+    const fechaInicio = new Date(document.querySelector('#fecha-inicio').value);
+    const fechaFin = new Date(document.querySelector('#fecha-fin').value);
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    const diasSeleccionados = [];
+    checkboxes.forEach(function (checkbox) {
+      if (checkbox.checked) {
+        diasSeleccionados.push(checkbox.value);
+      }
+    });
+    const accionPrecios = document.querySelector('#accion-precios').value;
+    const valorAccion = parseInt(document.querySelector('#valor-accion').value);
+    const precioCabana = parseInt(document.querySelector('#precio-base-input-id').value);
+    let precioFinal = 0
+
+    // Validar que la fecha final sea posterior o igual a la fecha inicial
+    if (fechaInicio === '' || fechaFin === '') {
+      // Mostrar mensaje de error en el modal
+      const errorModal = document.querySelector('#error-modal');
+      errorModal.textContent = 'Por favor, seleccione una fecha de inicio y una fecha de fin.';
+      errorModal.style.display = 'block'; // Mostrar el mensaje de error
+      return; // Detener la ejecución del resto del código
+    }
+
+    // Restablecer el mensaje de error en el modal
+    const errorModal = document.querySelector('#error-modal');
+    errorModal.innerHTML = '';
+    errorModal.classList.remove('show');
+
+    // Validacion para actualizar el precio natural o precio porcentual
+    const seleccion = document.getElementById('accion-precios').value;
+
+    switch (seleccion) {
+      case 'precio-fijo':
+        precioFinal = valorAccion;
+        break;
+      case 'incrementar-natural':
+        precioFinal = precioCabana + valorAccion;
+        break;
+      case 'disminuir-natural':
+        precioFinal = precioCabana - valorAccion;
+        break;
+      case 'incrementar-porcentual':
+        precioFinal = precioCabana * (valorAccion / 100) + precioCabana;
+        break;
+      case 'disminuir-porcentual':
+        let pre = precioCabana * (valorAccion / 100)
+        precioFinal = precioCabana - pre;
+        break;
+    }
+
+    console.log(precioFinal);
+
+    // Función para realizar el fetch repetido para cada fecha en el rango
+    async function fetchRepetido(url, fechas) {
+      try {
+        const resultados = [];
+
+        // Iterar sobre cada fecha en el rango
+        for (const fecha of fechas) {
+          // Obtener el objeto de datos para enviar en la solicitud fetch
+          const datosFetch = {
+            precio_modificado: precioFinal,
+            fecha: fecha,
+            habitacionId: habitacionAmodificar
+          };
+
+          console.log(JSON.stringify(datosFetch));
+
+          // Realizar la solicitud fetch para la fecha actual con los datos especificados
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(datosFetch)
+          });
+
+          // Verificar el estado de la respuesta
+          if (!response.ok) {
+            throw new Error('Error en la solicitud fetch: ' + response.statusText);
+          }
+
+          // Convertir la respuesta a JSON
+          const data = await response.json();
+
+          // Agregar el resultado al array de resultados
+          resultados.push(data);
+        }
+
+        return resultados;
+      } catch (error) {
+        console.error('Error al realizar el fetch repetido:', error);
+        throw error;
+      }
+    }
+
+
+    // Función para obtener un rango de fechas entre la fecha de inicio y la fecha de fin
+    function obtenerRangoFechas(fechaInicio, fechaFin) {
+      const fechas = [];
+      let fechaActual = new Date(fechaInicio);
+
+      while (fechaActual <= fechaFin) {
+        if (diasSeleccionados.includes(obtenerNombreDia(fechaActual))) {
+          fechas.push(new Date(fechaActual));
+        }
+        fechaActual.setDate(fechaActual.getDate() + 1);
+      }
+
+      return fechas;
+    }
+
+    // Función para obtener el nombre del día de la semana
+    function obtenerNombreDia(fecha) {
+      const diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+      console.log([fecha.getDay()]);
+      return diasSemana[fecha.getDay()];
+    }
+
+    // URL para la solicitud fetch (debes reemplazarla con tu propia URL)
+    const url = 'http://localhost:3005/api/calendario-precios';
+
+    // Obtener el rango de fechas entre fechaInicio y fechaFin
+    const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
+
+    try {
+      // Realizar el fetch repetido para cada fecha en el rango
+
+      const resultados = await fetchRepetido(url, fechas);
+
+      if (resultados.length === 0) {
+        throw new Error('No hay fechas seleccionadas para actualizar.');
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: '¡Completado!',
+        text: 'Precios actualizados correctamente.',
+        confirmButtonText: 'Aceptar'
+      }).then((result) => {
+        // Verificar si el usuario hizo clic en el botón de confirmación
+        if (result.isConfirmed) {
+          // Actualizar la página
+          location.reload();
+        }
+      });
+
+
+      // Manejar los resultados obtenidos
+      console.log('Resultados de fetch repetido:', resultados);
+      // Aquí puedes realizar cualquier otra acción con los resultados obtenidos
+    } catch (error) {
+      console.error('Error al realizar el fetch repetido:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Hubo un problema al actualizar los precios. Por favor, verifica que todos los campos están completos o intenta de nuevo más tarde.',
+        confirmButtonText: 'Aceptar'
+      });
+    }
+  });
+
+
+</script>

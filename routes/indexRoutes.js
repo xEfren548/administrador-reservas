@@ -35,11 +35,11 @@ router.use(cookieSession({
 router.use('/login', loginRoute);
 router.use("/api", authRoutes);
 
-// Validating user's token in later requests.
-//router.use(currentuser);
+//Validating user's token in later requests.
+router.use(currentuser);
 
-// Determining user access based on privileges.
-//router.use(userPrivilege);
+//Determining user access based on privileges.
+router.use(userPrivilege);
 
 // Use middlewares.
 router.use('/', 
@@ -55,7 +55,6 @@ router.use('/api',
     dashboardRoutes);
 router.use('/api/usuarios', userRoutes);
 router.use('/api/perfil-usuario/', userProfileRoutes);
-
 // Get middlewares.
 router.get('/', reservationRoutes);
 router.get('/api/racklimpieza', (req, res) => {
@@ -67,7 +66,6 @@ router.use('/api', habitacionesRoutes);
 router.use('/api', userRoutes);
 router.use('/api', serviciosRoutes);
 router.use('/', calendarioPrecios);
-
 // Not found resource handling middleware.
 router.all("*", (req, res, next) => {
     next(new NotFoundError("Page not found"));
@@ -75,13 +73,11 @@ router.all("*", (req, res, next) => {
 
 // Error handling middleware.
 router.use((err, req, res, next) => {
-    if(err instanceof CustomError){
-        res.status(err.statusCode).json({errors: err.generateErrors()});
+    if(err.status){
+        res.status(err.status).json({error: err.message})
         return;
     }
-    console.log(err);
-    res.status(500).json({errors: [{message: "Internal server error: something went wrong"}]});
+    res.status(500).json({error: "Internal server error: something went wrong"});
 });
-
 
 module.exports = router;

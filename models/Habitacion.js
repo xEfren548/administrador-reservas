@@ -153,7 +153,11 @@ const livingRoomSchema = new mongoose.Schema({
 const propertyDetailsSchema = new mongoose.Schema({
     accomodationType: {
         type: String,
+<<<<<<< HEAD
         required: true
+=======
+        required: true,
+>>>>>>> 18a14c358301b6bce8540978c5739530e96861e9
     },
     name: {
         type: String,

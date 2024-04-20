@@ -3,7 +3,6 @@ const bcrypt = require("bcrypt");
 const Usuario = require('../models/Usuario');
 const BadRequestError = require("../common/error/bad-request-error");
 const {check} = require("express-validator");
-
 const validators = [
     check('email')
         .notEmpty().withMessage('Email is required')
@@ -36,7 +35,7 @@ const validators = [
 
 async function login(req, res, next){
     const { email } = req.body;
-
+    console.log("entra");
     try{
         const user = await Usuario.findOne({ email });
         if(!user){
