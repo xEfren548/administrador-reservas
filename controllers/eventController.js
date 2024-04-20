@@ -5,7 +5,6 @@ const Cliente = require('../models/Cliente');
 const {check} = require("express-validator");
 const BadRequestError = require("../common/error/bad-request-error");
 const NotFoundError = require('../common/error/not-found-error');
-const mongoose = require('mongoose');
 
 const createReservationValidators = [
     check('clientEmail')
@@ -120,7 +119,7 @@ async function createReservation(req, res, next) {
         }
 
         const chalets = await Habitacion.findOne();
-        const chalet = chalets.resources.find(chalet => chalet.title === chaletName);
+        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
         if(!chalet){
             throw new NotFoundError('Chalet does not exist');
         }
@@ -148,11 +147,6 @@ async function createReservation(req, res, next) {
         console.log(err);
         return next(err);
     }
-}
-
-async function addReservationToCalendar(req, res, next){  
-    req.session.email = "test@gmail.com";
-    
 }
 
 async function editarEvento(req, res) {
@@ -301,7 +295,6 @@ module.exports = {
     obtenerEventos,
     obtenerEventoPorId,
     createReservation,
-    addReservationToCalendar,
     editarEvento,
     eliminarEvento,
     modificarEvento

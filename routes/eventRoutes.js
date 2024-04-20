@@ -8,7 +8,6 @@ const validationRequest = require('../common/middlewares/validation-request');
 // Rutas estáticas
 router.get('/eventos', eventController.obtenerEventos);
 router.post('/eventos/create-reservation', eventController.createReservationValidators, validationRequest, eventController.createReservation);
-router.post('/eventos/submit-reservation', eventController.submitReservationValidators, validationRequest, eventController.addReservationToCalendar);
 router.put('/eventos/:id', eventController.editarEvento);
 router.put('/eventos/:id/modificar', eventController.modificarEvento);
 router.delete('/eventos/:id', eventController.eliminarEvento);

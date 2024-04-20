@@ -1,7 +1,7 @@
 <form id="frmEditAccomodation" action="">
     <div class="page-info">
-        <h1>Editar alojamiento</h1>
-        <button type="submit">Editar</button>
+        <h1>Agregar cabaña</h1>
+        <button id="btnCreateChalet" type="submit">Guardar</button>
     </div>
 
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#propertyDetails">+ Detalles de la propiedad</button>
@@ -53,34 +53,6 @@
             <legend>Generales</legend>
             <hr>
             <div class="option-group">
-                <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSatelliteChannels" name="chkboxSatelliteChannels" value="Canales vía satélite">
-                    <label for="chkboxSatelliteChannels">Canales vía satélite</label>
-                </div>
-                <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxDisabledAdapted" name="chkboxDisabledAdapted" value="Adaptado para discapacitados">
-                    <label for="chkboxDisabledAdapted">Adaptado para discapacitados</label>
-                </div>
-                <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxIron" name="chkboxIron" value="Plancha">
-                    <label for="chkboxIron">Plancha</label>
-                </div>
-                <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxPetsAllowed" name="chkboxPetsAllowed" value="Admite animales">
-                    <label for="chkboxPetsAllowed">Admite animales</label>
-                </div>
-                <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxAllergicFriendlyRooms" name="chkboxAllergicFriendlyRooms" value="Habitaciones aptas para alérgicos">
-                    <label for="chkboxAllergicFriendlyRooms">Habitaciones aptas para alérgicos</label>
-                </div>
-                <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSolarium" name="chkboxSolarium" value="Solárium">
-                    <label for="chkboxSolarium">Solárium</label>
-                </div>
-                <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxMosquitoNet" name="chkboxMosquitoNet" value="Mosquitera">
-                    <label for="chkboxMosquitoNet">Mosquitera</label>
-                </div>
                 <div class="checkbox-option">
                     <input type="checkbox" id="chkboxSatelliteChannels" name="chkboxSatelliteChannels" value="Canales vía satélite">
                     <label for="chkboxSatelliteChannels">Canales vía satélite</label>
@@ -350,29 +322,29 @@
                     <label for="chkboxIndoorPool">Piscina interior</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxHiking" name="chkboxHiking" value="Senderismo">
-                    <label for="chkboxHiking">Senderismo</label>
-                </div>
-                <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxMasseuse" name="chkboxMasseuse" value="Masajista">
-                    <label for="chkboxMasseuse">Masajista</label>
+                    <input type="checkbox" id="chkboxSnorkeling" name="chkboxSnorkeling" value="Snorkel">
+                    <label for="chkboxSnorkeling">Snorkel</label>
                 </div>
                 <div class="checkbox-option">
                     <input type="checkbox" id="chkboxPrivatePool" name="chkboxPrivatePool" value="Piscina privada">
                     <label for="chkboxPrivatePool">Piscina privada</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxGolfCourseNearby" name="chkboxGolfCourseNearby" value="Campo de golf (a menos de 3 km)">
-                    <label for="chkboxGolfCourseNearby">Campo de golf (a menos de 3 km)</label>
-                </div>
-                <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSnorkeling" name="chkboxSnorkeling" value="Snorkel">
-                    <label for="chkboxSnorkeling">Snorkel</label>
-                </div>
-                <div class="checkbox-option">
                     <input type="checkbox" id="chkboxChildrensPlayground" name="chkboxChildrensPlayground" value="Zona de juegos infantil">
                     <label for="chkboxChildrensPlayground">Zona de juegos infantil</label>
                 </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" id="chkboxHiking" name="chkboxHiking" value="Senderismo">
+                    <label for="chkboxHiking">Senderismo</label>
+                </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" id="chkboxMasseuse" name="chkboxMasseuse" value="Masajista">
+                    <label for="chkboxMasseuse">Masajista</label>
+                </div>                
+                <div class="checkbox-option">
+                    <input type="checkbox" id="chkboxGolfCourseNearby" name="chkboxGolfCourseNearby" value="Campo de golf (a menos de 3 km)">
+                    <label for="chkboxGolfCourseNearby">Campo de golf (a menos de 3 km)</label>
+                </div>                                
             </div>
         </fieldset>
         <fieldset class="inline-input-group">
@@ -384,17 +356,17 @@
                     <label for="chkboxPaidParking">Parking de pago</label>
                 </div>
                 <div class="checkbox-option">
+                    <input type="checkbox" id="chkboxPublicParking" name="chkboxPublicParking" value="Parking público">
+                    <label for="chkboxPublicParking">Parking público</label>
+                </div>
+                <div class="checkbox-option">
                     <input type="checkbox" id="chkboxFreeParking" name="chkboxFreeParking" value="Parking gratis">
                     <label for="chkboxFreeParking">Parking gratis</label>
                 </div>
                 <div class="checkbox-option">
                     <input type="checkbox" id="chkboxPrivateParking" name="chkboxPrivateParking" value="Parking privado">
                     <label for="chkboxPrivateParking">Parking privado</label>
-                </div>
-                <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxPublicParking" name="chkboxPublicParking" value="Parking público">
-                    <label for="chkboxPublicParking">Parking público</label>
-                </div>
+                </div>         
             </div>
         </fieldset>
         <fieldset class="inline-input-group">
@@ -461,7 +433,6 @@
                     <input type="checkbox" id="chkboxPrivateBathroom" name="chkboxPrivateBathroom" value="Baño privado">
                     <label for="chkboxPrivateBathroom">Baño privado</label>
                 </div>
-
             </div>
         </fieldset>
         <fieldset class="inline-input-group">
@@ -655,28 +626,28 @@
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#accomodationDetails">+ Descripción del alojamiento</button>
     <div id="accomodationDetails" class="chalet-details collapse">
         <div class="input-group">
-            <textarea name="txtAccomodationDetails" rows="10" placeholder="Porporciona una descripción para el alojamiento."></textarea>
+            <textarea id="txtAccomodationDetails" name="txtAccomodationDetails" rows="10" placeholder="Porporciona una descripción para el alojamiento."></textarea>
         </div>
     </div>
 
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#additionalDetails">+ Descripción adicional del alojamiento</button>
     <div id="additionalDetails" class="chalet-details collapse">
         <div class="input-group">
-            <textarea name="txtAdditionalDetails" rows="10" placeholder="Porporciona una descripción adicional para el alojamiento."></textarea>
+            <textarea id="txtAdditionalDetails" name="txtAdditionalDetails" rows="10" placeholder="Porporciona una descripción adicional para el alojamiento."></textarea>
         </div>
     </div>
 
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#touristicRate">+ Tasa turística - motor de reservas</button>
     <div id="touristicRate" class="chalet-details collapse">
         <div class="input-group">
-            <textarea name="txtTouristicRate" rows="10" placeholder="Agrega una tasa turística"></textarea>
+            <textarea id="txtTouristicRate" name="txtTouristicRate" rows="10" placeholder="Agrega una tasa turística"></textarea>
         </div>
     </div>
 
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#legalNote">+ Nota legal</button>
     <div id="legalNote" class="chalet-details collapse">
         <div class="input-group">
-            <textarea name="txtLegalNote" rows="10" placeholder="Agrgega una nota legal"></textarea>
+            <textarea id="txtLegalNote" name="txtLegalNote" rows="10" placeholder="Agrgega una nota legal"></textarea>
         </div>
     </div>
 
@@ -711,7 +682,7 @@
             <input id="txtWeathedWdgt" name="txtWeathedWdgt" type="text">
         </div>
         <div class="input-group">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30009.200046370872!2d-103.04062641019756!3d19.91808261265727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x842f08c29d6bb1fb%3A0xb0e0d639aa12c005!2s49500%20Mazamitla%2C%20Jal.!5e0!3m2!1ses-419!2smx!4v1711321362791!5m2!1ses-419!2smx" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <iframe id="map" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30009.200046370872!2d-103.04062641019756!3d19.91808261265727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x842f08c29d6bb1fb%3A0xb0e0d639aa12c005!2s49500%20Mazamitla%2C%20Jal.!5e0!3m2!1ses-419!2smx!4v1711321362791!5m2!1ses-419!2smx" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
     </div>
 
@@ -741,8 +712,221 @@
             </div>        
         </div>
     </div>
+
+    <div class="form-item">
+        <p id="txtCreateChaletError" name="errMsg" class="error"></p>
+    </div>
 </form>
 
 <script>
-    
+    document.addEventListener("DOMContentLoaded", function () {
+        // Saving new chalet.
+        var btnCreateChalet = document.getElementById("btnCreateChalet")
+        if (btnCreateChalet){
+            btnCreateChalet.addEventListener("click", async (event) => {
+                event.preventDefault();
+
+                const data = {
+                    propertyDetails: {
+                        accomodationType: document.getElementById("slctchaletAccomodationType").value.trim(),
+                        name: document.getElementById("txtChaletName").value.trim(),
+                        phoneNumber: document.getElementById("txtChaletPhoneNumber").value.trim(),
+                        email: document.getElementById("txtChaletEmail").value.trim(),
+                        website: document.getElementById("txtChaletWebsite").value.trim(),
+                        minOccupancy: document.getElementById("txtChaletMinPpl").value.trim(),
+                        maxOccupancy: document.getElementById("txtChaletMaxPpl").value.trim(),
+                        tourLicense: document.getElementById("txtChaletTourLicense").value.trim()
+                    },
+                    accommodationFeatures: {
+                        generalFeatures: {                            
+                            satelliteTV: document.getElementById("chkboxSatelliteChannels").checked,
+                            disabledAccessible: document.getElementById("chkboxDisabledAdapted").checked,
+                            iron: document.getElementById("chkboxIron").checked,
+                            petsAllowed: document.getElementById("chkboxPetsAllowed").checked,
+                            allergyFriendlyRooms: document.getElementById("chkboxAllergicFriendlyRooms").checked,
+                            solarium: document.getElementById("chkboxSolarium").checked,
+                            mosquitoNet: document.getElementById("chkboxMosquitoNet").checked,
+                            airConditioningInMainRooms: document.getElementById("chkboxMainBedroomAirConditioning").checked,
+                            connectingRooms: document.getElementById("chkboxConnectedRooms").checked,
+                            airConditioningThroughoutProperty: document.getElementById("chkboxAirConditioningAllAccommodation").checked,
+                            tiledFloorOrMarble: document.getElementById("chkboxTileMarbleFloor").checked,
+                            fireplace: document.getElementById("chkboxFireplace").checked,
+                            ironingFacilities: document.getElementById("chkboxClothesIron").checked,
+                            hardwoodOrParquetFloors: document.getElementById("chkboxWoodParquetFloor").checked,
+                            noSmokingAllowed: document.getElementById("chkboxNoSmokingEntireProperty").checked,
+                            wardrobe: document.getElementById("chkboxWardrobe").checked,
+                            carpetedFloor: document.getElementById("chkboxCarpetFloor").checked,
+                            expressCheckInCheckOut: document.getElementById("chkboxExpressCheckInOut").checked,
+                            soundproofing: document.getElementById("chkboxSoundproofing").checked,
+                            telephone: document.getElementById("chkboxTelephone").checked,
+                            terrace: document.getElementById("chkboxTerrace").checked,
+                            balcony: document.getElementById("chkboxBalcony").checked,
+                            buffetBreakfast: document.getElementById("chkboxBuffetBreakfast").checked,
+                            safeDepositBox: document.getElementById("chkboxSafe").checked,
+                            wifi: document.getElementById("chkboxWifi").checked,
+                            breakfastInRoom: document.getElementById("chkboxRoomServiceBreakfast").checked,
+                            heating: document.getElementById("chkboxHeating").checked,
+                            extraLongBeds: document.getElementById("chkboxExtraLongBeds").checked,
+                            roomService: document.getElementById("chkboxRoomService").checked,
+                            fan: document.getElementById("chkboxFan").checked,
+                            dressingRoom: document.getElementById("chkboxDressingRoom").checked,
+                            smokers: document.getElementById("chkboxSmokingAllowed").checked
+                        },
+                        views: {
+                            cityView: document.getElementById("chkboxCityViews").checked,
+                            mountainView: document.getElementById("chkboxMountainViews").checked,
+                            poolView: document.getElementById("chkboxPoolViews").checked,
+                            landmarkView: document.getElementById("chkboxLandmarkViews").checked,
+                            gardenView: document.getElementById("chkboxGardenViews").checked,
+                            lakeView: document.getElementById("chkboxLakeViews").checked,
+                            seaView: document.getElementById("chkboxSeaViews").checked,
+                            patioView: document.getElementById("chkboxCourtyardViews").checked,
+                            riverView: document.getElementById("chkboxRiverViews").checked
+                        },
+                        activities: {
+                            turkishBath: document.getElementById("chkboxTurkishBath").checked,
+                            gym: document.getElementById("chkboxGym").checked,
+                            thermalBaths: document.getElementById("chkboxThermalBaths").checked,
+                            minigolf: document.getElementById("chkboxMiniGolf").checked,
+                            canoeing: document.getElementById("chkboxCanoeing").checked,
+                            spa: document.getElementById("chkboxSpa").checked,
+                            casino: document.getElementById("chkboxCasino").checked,
+                            library: document.getElementById("chkboxLibrary").checked,
+                            horseRiding: document.getElementById("chkboxEquestrianCenter").checked,
+                            cycling: document.getElementById("chkboxCycling").checked,
+                            billiards: document.getElementById("chkboxBilliards").checked,
+                            bowling: document.getElementById("chkboxBowling").checked,
+                            gameRoom: document.getElementById("chkboxGameRoom").checked,
+                            barbecueFacilities: document.getElementById("chkboxBBQFacilities").checked,
+                            diving: document.getElementById("chkboxDiving").checked,
+                            fishing: document.getElementById("chkboxFishing").checked,
+                            jacuzzi: document.getElementById("chkboxJacuzzi").checked,
+                            heatedPool: document.getElementById("chkboxHeatedPool").checked,
+                            sauna: document.getElementById("chkboxSauna").checked,
+                            karaoke: document.getElementById("chkboxKaraoke").checked,
+                            indoorPool: document.getElementById("chkboxIndoorPool").checked,
+                            outdoorPool: document.getElementById("chkboxOutdoorPool").checked,
+                            snorkeling: document.getElementById("chkboxSnorkeling").checked,
+                            privatePool: document.getElementById("chkboxPrivatePool").checked,
+                            childrensPlayground: document.getElementById("chkboxChildrensPlayground").checked,
+                            hiking: document.getElementById("chkboxHiking").checked,
+                            masseuse: document.getElementById("chkboxMasseuse").checked,
+                            golfCourse: document.getElementById("chkboxGolfCourseNearby").checked,
+                        },
+                        parking: {
+                            paidParking: document.getElementById("chkboxPaidParking").checked,
+                            publicParking: document.getElementById("chkboxPublicParking").checked,
+                            freeParking: document.getElementById("chkboxFreeParking").checked,
+                            privateParking: document.getElementById("chkboxPrivateParking").checked
+                        },
+                        restroomFeatures: {
+                            bathrobe: document.getElementById("chkboxBathrobe").checked,
+                            bidet: document.getElementById("chkboxBidet").checked,
+                            freeToiletries: document.getElementById("chkboxFreeToiletries").checked,
+                            additionalToilet: document.getElementById("chkboxAdditionalToilet").checked,
+                            sharedToilet: document.getElementById("chkboxSharedToilet").checked,
+                            sauna: document.getElementById("chkboxSauna").checked,
+                            bathtub: document.getElementById("chkboxBathtub").checked,
+                            hairdryer: document.getElementById("chkboxHairdryer").checked,
+                            jacuzzi: document.getElementById("chkboxJacuzzi").checked,
+                            shower: document.getElementById("chkboxShower").checked,
+                            additionalBathroom: document.getElementById("chkboxAdditionalBathroom").checked,
+                            slippers: document.getElementById("chkboxSlippers").checked,
+                            sharedBathroom: document.getElementById("chkboxSharedBathroom").checked,
+                            designerBathroom: document.getElementById("chkboxDesignerBathroom").checked,
+                            privateBathroom: document.getElementById("chkboxPrivateBathroom").checked
+                        },
+                        kitchen: {
+                            minibar: document.getElementById("chkboxMinibar").checked,
+                            barbecue: document.getElementById("chkboxBarbecue").checked,
+                            blender: document.getElementById("chkboxBlender").checked,
+                            refrigerator: document.getElementById("chkboxRefrigerator").checked,
+                            electricKettle: document.getElementById("chkboxElectricKettle").checked,
+                            oven: document.getElementById("chkboxOven").checked,
+                            stove: document.getElementById("chkboxStove").checked,
+                            ceramicCooktop: document.getElementById("chkboxCeramicCooktop").checked,
+                            teapot: document.getElementById("chkboxTeapot").checked,
+                            coffeeMaker: document.getElementById("chkboxCoffeeMaker").checked,
+                            toaster: document.getElementById("chkboxToaster").checked,
+                            washingMachine: document.getElementById("chkboxWashingMachine").checked,
+                            dryer: document.getElementById("chkboxDryer").checked,
+                            dishwasher: document.getElementById("chkboxDishwasher").checked,
+                            cookingUtensils: document.getElementById("chkboxCookingUtensils").checked,
+                            kitchenArea: document.getElementById("chkboxKitchenArea").checked,
+                            diningArea: document.getElementById("chkboxDiningArea").checked,
+                            fridge: document.getElementById("chkboxFridge").checked,
+                            microwave: document.getElementById("chkboxMicrowave").checked
+                        },
+                        sport: {
+                            paddleTennis: document.getElementById("chkboxPaddleCourt").checked,
+                            gym: document.getElementById("chkboxGym").checked,                                   basketballCourt: document.getElementById("chkboxBasketballCourt").checked,
+                            darts: document.getElementById("chkboxDarts").checked,
+                            windsurfing: document.getElementById("chkboxWindsurf").checked,                            
+                            skiSchool: document.getElementById("chkboxSkiSchool").checked,
+                            footballField: document.getElementById("chkboxFootballField").checked,
+                            skiing: document.getElementById("chkboxSkiing").checked,
+                            pingPong: document.getElementById("chkboxPingPongTable").checked,
+                            squash: document.getElementById("chkboxSquashCourt").checked,
+                            indoorFootballCourt: document.getElementById("chkboxFutsalField").checked,
+                            tennisCourt: document.getElementById("chkboxTennisCourt").checked,
+                        },
+                        livingRoom: {
+                            doubleSofaBed: document.getElementById("chkboxDoubleSofaBed").checked,
+                            individualSofaBed: document.getElementById("chkboxSingleSofaBed").checked,
+                            tv: document.getElementById("chkboxTV").checked,
+                            satelliteTV: document.getElementById("chkboxSatelliteTV").checked,
+                            snackBar: document.getElementById("chkboxSnackBar").checked
+                        }
+                    },                
+                    additionalInfo: {
+                        nBeds: document.getElementById("txtBeds").value.trim(),
+                        nRestrooms: document.getElementById("txtRestrooms").value.trim(),
+                        bedroomSize: document.getElementById("bedroomSize").value.trim(),
+                        capacity: document.getElementById("txtCapacity").value.trim(),
+                        extraCleaningCost: document.getElementById("txtExtraCost").value.trim(),
+                    },
+                    accomodationDescription: document.getElementById("txtAccomodationDetails").value.trim(),
+                    additionalAccomodationDescription: document.getElementById("txtAdditionalDetails").value.trim(),
+                    touristicRate: document.getElementById("txtTouristicRate").value.trim(),
+                    legalNotice: document.getElementById("txtLegalNote").value.trim(),
+                    location: {
+                        state: document.getElementById("txtState").value.trim(),
+                        population: document.getElementById("txtPopulation").value.trim(),
+                        addressNumber: document.getElementById("txtAddressNumber").value.trim(),
+                        postalCode: document.getElementById("txtPostalCode").value.trim(),
+                        latitude: document.getElementById("txtLat").value.trim(),
+                        longitude: document.getElementById("txtLong").value.trim(),
+                        weatherWidget: document.getElementById("txtWeathedWdgt").value.trim(),
+                        iFrame: document.getElementById("map").src.trim(),
+                    },
+                    images: ["url1", "url2", "url3"]
+                };
+
+                fetch('/api/cabanas/crear-cabana', {
+                    method: 'POST',
+                    headers: {
+                        // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        document.getElementById("txtCreateChaletError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta del servidor:', data);
+                    //location.reload();
+                })
+                .catch(error => {
+                    console.error('Error al enviar la solicitud:', error);
+                });
+            });
+        }
+
+    });
 </script>
