@@ -1,18 +1,17 @@
-const listaDePreciosController = require('../controllers/listaDePrecios.controller')    
 const precioBaseController = require('../controllers/precioBaseController')    
 const habitacionController = require('../controllers/habitacionController')
 
 const DAYS_IN_YEAR = 365; // Definir DAYS_IN_YEAR a nivel global
-const BASE_RATE = 2800;
 
 const express = require('express');
 const moment = require('moment');
 const router = express.Router();
 
-function calculateRate(dayOfYear) {
-    // Aquí puedes implementar la lógica para calcular la tarifa
-    // Puedes ajustar esta lógica según tus necesidades
-    return BASE_RATE + (dayOfYear % 10) * 10; // Ejemplo de tarifa variable
+function getDaysInYear() {
+    const currentDate = new Date(); // Get the current date
+    const currentYear = currentDate.getFullYear(); // Get the current year
+    const isLeapYear = (currentYear % 4 === 0 && currentYear % 100 !== 0) || currentYear % 400 === 0; // Check if it's a leap year
+    return isLeapYear ? 366 : 365; // Return 366 days for leap years and 365 days for non-leap years
 }
 
 function getDateFromDayOfYear(dayOfYear) {
@@ -35,28 +34,20 @@ router.get('/calendario-precios', async (req, res) => {
         const habitaciones = data[0].resources;
 
         // Crear un arreglo con las fechas correspondientes a cada día del año
-        const daysWithDates = Array.from({ length: DAYS_IN_YEAR }, (_, index) => getDateFromDayOfYear(index + 1));
+        const daysWithDates = Array.from({ length: getDaysInYear() }, (_, index) => getDateFromDayOfYear(index + 1));
 
-        console.log(habitaciones);
+        // console.log(habitaciones);
 
         const preciosHabitacionesData = await precioBaseController.consultarPrecios();
+        // console.log(preciosHabitacionesData);
 
-        const preciosHabitaciones = preciosHabitacionesData.map(precioHabitacion => {
-            return {
-                _id: precioHabitacion._id,
-                precio_base: precioHabitacion.precio_base,
-                fecha: precioHabitacion.fecha,
-                habitacionId: precioHabitacion.habitacionId.toString()
-            }
-        })
-
-        console.log(preciosHabitaciones)
+        // console.log(preciosHabitaciones)
 
         res.render('calendarioPrecios', {
             layout: 'layoutCalendarioPrecios',
             habitaciones: habitaciones, // Pasa las habitaciones a la plantilla
             daysWithDates: daysWithDates, // Pasa el arreglo de fechas a la plantilla
-            preciosHabitaciones: preciosHabitaciones // Pasa los precios de las habitaciones a la plantilla
+            preciosHabitaciones: preciosHabitacionesData // Pasa los precios de las habitaciones a la plantilla
         });
     } catch (error) {
         console.log(error);
@@ -67,6 +58,7 @@ router.get('/calendario-precios', async (req, res) => {
 
 router.post('/api/calendario-precios', precioBaseController.agregarNuevoPrecio)
 router.get('/api/calendario-precios/:id', precioBaseController.consultarPreciosPorId)
+// router.post('/api/calendario-precios/masivo')
 // router.get('/api/calendario-precios', precioBaseController.obtenerHabitacionesConPrecios)
 
 

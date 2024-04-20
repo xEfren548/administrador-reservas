@@ -1,15 +1,16 @@
 const PrecioBaseXDia = require('../models/PrecioBaseXDia');
+const mongoose = require('mongoose');
 
 // Controlador para agregar nuevos datos
 async function agregarNuevoPrecio(req, res) {
     try {
-        const { precio_base, fecha, habitacion } = req.body;
-
-
+        const { precio_modificado, fecha, habitacionId } = req.body;
+        const objectHabitacionId = new mongoose.Types.ObjectId(habitacionId);        
+        
         const nuevoPrecio = new PrecioBaseXDia({
-            precio_base,
+            precio_modificado,
             fecha,
-            habitacion
+            habitacionId: objectHabitacionId
         });
 
 
@@ -52,6 +53,26 @@ async function consultarPreciosPorId(req, res) {
     } catch (error) {
         console.error(error);
         res.status(500).json({ mensaje: 'Hubo un error al consultar los precios base.' });
+    }
+}
+
+async function modificacionMasivaPrecios(req, res) {
+    try {
+        const { precio_modificado, fecha, habitacion } = req.body;
+
+
+        const nuevoPrecio = new PrecioBaseXDia({
+            precio_modificado,
+            fecha,
+            habitacion
+        });
+
+
+        await nuevoPrecio.save();
+        res.status(201).json({ mensaje: 'Precio base agregado exitosamente.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: 'Hubo un error al agregar el precio base.' });
     }
 }
 

@@ -38,12 +38,15 @@ async function obtenerHabitacionPorId(id) {
 
 async function agregarHabitacion(req, res) { // Create
     try {
-        const { habitaciones, title, ocupacion_max } = req.body;
+        const { habitaciones, title, description, ocupacion_max, location, precio_base    } = req.body;
         const nuevaHabitacion = {
             id: nanoid(),
             habitaciones,
             title,
-            ocupacion_max
+            description,
+            ocupacion_max,
+            location,
+            precio_base
         }
 
 

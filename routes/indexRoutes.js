@@ -65,6 +65,7 @@ router.use('/api', eventRoutes);
 router.use('/api', habitacionesRoutes);
 router.use('/api', userRoutes);
 router.use('/api', serviciosRoutes);
+router.use('/', instruccionesUsuario);
 router.use('/', calendarioPrecios);
 // Not found resource handling middleware.
 router.all("*", (req, res, next) => {
