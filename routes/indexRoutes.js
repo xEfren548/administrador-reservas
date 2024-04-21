@@ -36,10 +36,10 @@ router.use('/login', loginRoute);
 router.use("/api", authRoutes);
 
 //Validating user's token in later requests.
-router.use(currentuser);
+//router.use(currentuser);
 
 //Determining user access based on privileges.
-router.use(userPrivilege);
+//router.use(userPrivilege);
 
 // Use middlewares.
 router.use('/', 
@@ -77,7 +77,7 @@ router.use((err, req, res, next) => {
         res.status(err.status).json({error: err.message})
         return;
     }
-    res.status(500).json({error: "Internal server error: something went wrong"});
+    res.status(500).json({error: "Internal server error: something went wrong", message: err.message });
 });
 
 module.exports = router;

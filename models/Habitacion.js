@@ -153,40 +153,36 @@ const livingRoomSchema = new mongoose.Schema({
 const propertyDetailsSchema = new mongoose.Schema({
     accomodationType: {
         type: String,
-<<<<<<< HEAD
-        required: true
-=======
-        required: true,
->>>>>>> 18a14c358301b6bce8540978c5739530e96861e9
+        ////required: true
     },
     name: {
         type: String,
-        required: true,
+        //required: true,
         unique: true
     },
     phoneNumber: {
         type: String,
-        required: true
+        //required: true
     },
     email: {
         type: String,
-        required: true
+        //required: true
     },
     website: {
         type: String,
-        required: true
+        //required: true
     },
     minOccupancy: {
         type: Number,
-        required: true
+        //required: true
     },
     maxOccupancy: {
         type: Number,
-        required: true
+        //required: true
     },
     tourLicense: {
         type: String,
-        required: true
+        //required: true
     }
 });
 
@@ -204,60 +200,62 @@ const accommodationFeaturesSchema = new mongoose.Schema({
 const additionalInfoSchema = new mongoose.Schema({
     nBeds: {
         type: Number,
-        required: true
+        //required: true
     },
     nRestrooms: {
         type: Number,
-        required: true
+        //required: true
     },
     bedroomSize: {
         type: Number,
-        required: true
+        //required: true
     },
     capacity: {
         type: Number,
-        required: true
+        //required: true
     },
     extraCleaningCost: {
         type: Number,
-        required: true
+        //required: true
     }
 });
 
+/*
 const locationSchema = new mongoose.Schema({
     state: {
         type: String,
-        required: true
+        //required: true
     },
     population: {
         type: String,
-        required: true
+        //required: true
     },
     addressNumber: {
         type: Number,
-        required: true
+        //required: true
     },
     postalCode: {
         type: Number,
-        required: true
+        //required: true
     },
     latitude: {
         type: Number,
-        required: true
+        //required: true
     },
     longitude: {
         type: Number,
-        required: true
+        //required: true
     },
     weatherWidget: {
         type: String,
-        required: true
+        //required: true
     },
     iFrame: {
         type: String,
-        required: true
+        //required: true
     }
 });
+*/
 
 //--------------------------------------------------
 
@@ -265,27 +263,30 @@ const preSchema = new mongoose.Schema({
     propertyDetails: propertyDetailsSchema,
     accommodationFeatures: accommodationFeaturesSchema,
     additionalInfo: additionalInfoSchema,
-    location: locationSchema,
+    //location: locationSchema,
+    location: {
+        type: String,
+        //required: true
+    },
     accomodationDescription: {
         type: String,
-        required: true
+        //required: true
     },
     additionalAccomodationDescription: {
         type: String,
-        required: true
+        //required: true
     },
     touristicRate: {
         type: String,
-        required: true
+        //required: true
     },
     legalNotice: {
         type: String,
-        required: true
-    },
-    
+        //required: true
+    },    
     images: {
         type: [String],
-        required: true
+        //required: true
     }
 });
 

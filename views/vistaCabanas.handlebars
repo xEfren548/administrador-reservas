@@ -689,23 +689,10 @@
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#photos">+ Fotografías</button>
     <div id="photos" class="chalet-details collapse">
         <div class="input-group">
-            <div class="photo-carousel">
-                <div class="photo">
-                    <button class="delete-photo"><span class="material-symbols-outlined">delete</span></button>
-                    <img src="../public/images/login/chalet.png" alt="Photo description">
-                </div>
-                <div class="photo">
-                    <button class="delete-photo"><span class="material-symbols-outlined">delete</span></button>
-                    <img src="../public/images/login/chalet.png" alt="Photo description">
-                </div>
-                <div class="photo">
-                    <button class="delete-photo"><span class="material-symbols-outlined">delete</span></button>
-                    <img src="../public/images/login/chalet.png" alt="Photo description">
-                </div>
-            </div>
+            <div id="photoCarousel" class="photo-carousel"></div>
             <div class="custom-file-upload">
                 <label for="file-upload">
-                    <input id="file-upload" type="file">
+                    <input id="file-upload" type="file" multiple>
                     Subir archivo
                 </label>
                 <span>Ninguna fotografía seleccionada</span>
@@ -720,12 +707,44 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Upload chalet images.
+        var fileUpload = document.getElementById('file-upload');
+        fileUpload.files = null;
+        const photoCarousel = document.getElementById('photoCarousel');
+
+        fileUpload.addEventListener('change', function(event) {
+            const files = event.target.files;
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                const imageURL = URL.createObjectURL(file);
+
+                const photoDiv = document.createElement('div');
+                photoDiv.classList.add('photo');
+                const img = document.createElement('img');
+                img.src = imageURL;
+
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('delete-photo');
+                deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
+                deleteButton.addEventListener('click', function() {
+                    photoDiv.remove();
+                });
+
+                photoDiv.appendChild(deleteButton);
+                photoDiv.appendChild(img);
+                photoCarousel.appendChild(photoDiv);
+            }
+        });
+
         // Saving new chalet.
         var btnCreateChalet = document.getElementById("btnCreateChalet")
         if (btnCreateChalet){
             btnCreateChalet.addEventListener("click", async (event) => {
                 event.preventDefault();
 
+                // Creating JSON for text data.
                 const data = {
                     propertyDetails: {
                         accomodationType: document.getElementById("slctchaletAccomodationType").value.trim(),
@@ -889,6 +908,7 @@
                     additionalAccomodationDescription: document.getElementById("txtAdditionalDetails").value.trim(),
                     touristicRate: document.getElementById("txtTouristicRate").value.trim(),
                     legalNotice: document.getElementById("txtLegalNote").value.trim(),
+                    /*
                     location: {
                         state: document.getElementById("txtState").value.trim(),
                         population: document.getElementById("txtPopulation").value.trim(),
@@ -899,9 +919,9 @@
                         weatherWidget: document.getElementById("txtWeathedWdgt").value.trim(),
                         iFrame: document.getElementById("map").src.trim(),
                     },
-                    images: ["url1", "url2", "url3"]
-                };
-
+                    */
+                    location: "Temporary location"
+                };                                    
                 fetch('/api/cabanas/crear-cabana', {
                     method: 'POST',
                     headers: {
@@ -918,13 +938,36 @@
                     }
                     return response.json();
                 })
-                .then(data => {
+                .then(async data => {
                     console.log('Respuesta del servidor:', data);
-                    //location.reload();
+
+                    try {
+                        const formData = new FormData();
+                        const files = fileUpload.files;
+                        for (let i = 0; i < files.length; i++) {
+                            formData.append('images', files[i]);
+                        }
+
+                        const response = await fetch('/api/cabanas/subir-imagenes-cabana', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        if (response.ok) {
+                            console.log('Image uploaded successfully.', data);                            
+                        } else {
+                            console.log('Error uploading image.', data);
+                            const error = response.statusText;
+                            document.getElementById("txtCreateChaletError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
+                            throw new Error('Error en la solicitud: ' + error);
+                        }
+                    } catch (error) {
+                        console.error('Error al enviar la solicitud:', error);
+                    }                    
                 })
                 .catch(error => {
                     console.error('Error al enviar la solicitud:', error);
                 });
+
             });
         }
 

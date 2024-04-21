@@ -3,6 +3,8 @@ const Habitacion = require('../models/Habitacion');
 const NotFoundError = require("../common/error/not-found-error");
 const BadRequestError = require("../common/error/bad-request-error");
 const {check} = require("express-validator");
+const ftp = require('basic-ftp');
+const bcrypt = require('bcrypt');
 
 const createChaletValidators = [
     // propertyDetails validations.
@@ -113,21 +115,23 @@ const createChaletValidators = [
 
     // legalNotice validations.
     check('legalNotice')
-        .notEmpty().withMessage('Legal notice is required'),
+        .notEmpty().withMessage('Legal notice is required')
+];
 
-    // Validaciones para images
-    check('images')
-        .isArray().withMessage('Images must be an array'),
-    check('images.*')
-        .notEmpty().withMessage('Image URLs are required')
-        .isURL().withMessage('Invalid image URL')
+const uploadChaletFilesValidators = [
+    check()
+    .custom(async (value, { req }) => {
+        if(!req.files){
+            throw new BadRequestError('Upload pictures of the chalet');
+        }
+        return true;
+    })
 ];
 
 async function createChalet(req, res, next) {
-    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, images} = req.body;
+    console.log(req.body);
 
-    console.log("ADITTIONAL INFO: ", additionalInfo);
-    console.log("LOCATION: ", location);
+    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, images} = req.body;
     
     const chaletToAdd = {
         propertyDetails, 
@@ -147,14 +151,50 @@ async function createChalet(req, res, next) {
         await chalets.save();
         
         console.log("Cabaña agregada con éxito");
-        res.status(200).json( { chaletToAdd } );
+        req.session.chaletAdded = chalets.resources[chalets.resources.length - 1].propertyDetails.name;
+        console.log("Respuesta del servidor:", { chaletAdded: req.session.chaletAdded });
+        res.status(200).json({ success: true });
     } catch(err){
         console.log(err);
         return next(err);
-    }   
+    }
+}
+
+async function uploadChaletFiles(req, res, next) {
+    console.log(req.files);
+
+    const client = new ftp.Client();
+
+    try {
+        await client.access({
+            host: 'integradev.site',
+            user: 'navarro@integradev.site',
+            password: 'Nav@rro2024',
+            secure: false
+        });
+
+        await client.cd('cabanas-navarro');
+        for (let i = 0; i < req.files.length; i++) {
+            const localFilePath = req.files[i].path;
+            //const remoteFileName = req.files[i].filename;
+            const remoteFileName = await bcrypt.hash(req.session.chaletAdded, 10) + '-' + req.files[i].filename;
+            await client.uploadFrom(localFilePath, remoteFileName);
+            console.log(`Archivo '${remoteFileName}' subido con éxito`);
+        }
+
+        console.log("Archivos subidos con éxito");
+        res.status(200).json( { message: "Archivos subidos con éxito" } );
+    } catch (error) {
+        console.error("Error:", error);
+    } finally {
+        delete req.session.chaletAdded;
+        await client.close();
+    }
 }
 
 module.exports = {
     createChaletValidators,
-    createChalet
+    uploadChaletFilesValidators,
+    createChalet,
+    uploadChaletFiles
 }
