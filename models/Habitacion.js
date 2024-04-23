@@ -266,27 +266,20 @@ const preSchema = new mongoose.Schema({
     //location: locationSchema,
     location: {
         type: String,
-        //required: true
+        required: true,
     },
-    accomodationDescription: {
-        type: String,
-        //required: true
+    precio_base: {
+        type: Number,
+        required: true
     },
-    additionalAccomodationDescription: {
-        type: String,
-        //required: true
+    precio_base_2noches: {
+        type: Number
     },
-    touristicRate: {
-        type: String,
-        //required: true
+    costo_base: {
+        type: Number
     },
-    legalNotice: {
-        type: String,
-        //required: true
-    },    
-    images: {
-        type: [String],
-        //required: true
+    costo_base_2noches: {
+        type: Number
     }
 });
 
