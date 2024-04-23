@@ -5,8 +5,8 @@ const mongoose = require('mongoose');
 async function agregarNuevoPrecio(req, res) {
     try {
         const { precio_modificado, fecha, habitacionId } = req.body;
-        const objectHabitacionId = new mongoose.Types.ObjectId(habitacionId);        
-        
+        const objectHabitacionId = new mongoose.Types.ObjectId(habitacionId);
+
         const nuevoPrecio = new PrecioBaseXDia({
             precio_modificado,
             fecha,
@@ -76,10 +76,57 @@ async function modificacionMasivaPrecios(req, res) {
     }
 }
 
+async function eliminarRegistroPrecio(req, res) {
+    try {
+
+        const { fecha, habitacionId } = req.query;
+
+        const resultado = await PrecioBaseXDia.findOneAndDelete({ fecha: new Date(fecha), habitacionId: habitacionId });
+
+        if (!resultado) {
+            return res.status(404).json({ message: 'No se encontró ningún registro para eliminar' });
+        }
+
+        res.status(200).json({ message: 'Registro eliminado correctamente' });
+    } catch (error) {
+        console.error('Error al eliminar el registro de precio:', error);
+        res.status(500).json({ error: 'Error al eliminar el registro de precio' });
+    }
+}
+
+// Función para verificar si existe un registro con la misma fecha y habitación
+// Función para verificar si existe un registro con la misma fecha y habitación
+async function verificarExistenciaRegistro(req, res) {
+    try {
+        const { fecha, habitacionId } = req.query;
+        console.log(fecha, habitacionId);
+
+        // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
+        const fechaAjustada = new Date(fecha);
+        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+
+        console.log(fechaAjustada);
+
+        const response = await PrecioBaseXDia.findOne({ fecha: fechaAjustada, habitacionId: habitacionId });
+        const existeRegistro = response !== null;
+        console.log({existeRegistro});
+
+        res.json({ existeRegistro: existeRegistro });
+    } catch (error) {
+        console.error('Error al verificar la existencia del registro:', error);
+        throw error;
+    }
+}
+
+
+
+
 
 module.exports = {
     agregarNuevoPrecio,
     eliminarPrecio,
     consultarPrecios,
-    consultarPreciosPorId
+    consultarPreciosPorId,
+    eliminarRegistroPrecio,
+    verificarExistenciaRegistro
 };

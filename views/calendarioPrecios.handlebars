@@ -226,8 +226,10 @@
 
     // Obtener los datos del formulario
     const habitacionAmodificar = document.querySelector('#select-cabana').value;
-    const fechaInicio = new Date(document.querySelector('#fecha-inicio').value);
-    const fechaFin = new Date(document.querySelector('#fecha-fin').value);
+    const fechaInicioString = document.querySelector('#fecha-inicio').value; // Obtener el valor del input de tipo date
+    const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
+    const fechaFinString = document.querySelector('#fecha-fin').value; // Obtener el valor del input de tipo date
+    const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
     const diasSeleccionados = [];
     checkboxes.forEach(function (checkbox) {
@@ -239,6 +241,8 @@
     const valorAccion = parseInt(document.querySelector('#valor-accion').value);
     const precioCabana = parseInt(document.querySelector('#precio-base-input-id').value);
     let precioFinal = 0
+
+
 
     // Validar que la fecha final sea posterior o igual a la fecha inicial
     if (fechaInicio === '' || fechaFin === '') {
@@ -285,34 +289,39 @@
 
         // Iterar sobre cada fecha en el rango
         for (const fecha of fechas) {
+          const existeRegistro = await verificarExistenciaRegistro(url, fecha, habitacionAmodificar);
+
           // Obtener el objeto de datos para enviar en la solicitud fetch
-          const datosFetch = {
-            precio_modificado: precioFinal,
-            fecha: fecha,
-            habitacionId: habitacionAmodificar
-          };
+          if (!existeRegistro) {
+            // Obtener el objeto de datos para enviar en la solicitud fetch
+            const datosFetch = {
+              precio_modificado: precioFinal,
+              fecha: fecha,
+              habitacionId: habitacionAmodificar
+            };
 
-          console.log(JSON.stringify(datosFetch));
+            console.log(JSON.stringify(datosFetch));
 
-          // Realizar la solicitud fetch para la fecha actual con los datos especificados
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(datosFetch)
-          });
+            // Realizar la solicitud fetch para la fecha actual con los datos especificados
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(datosFetch)
+            });
 
-          // Verificar el estado de la respuesta
-          if (!response.ok) {
-            throw new Error('Error en la solicitud fetch: ' + response.statusText);
+            // Verificar el estado de la respuesta
+            if (!response.ok) {
+              throw new Error('Error en la solicitud fetch: ' + response.statusText);
+            }
+
+            // Convertir la respuesta a JSON
+            const data = await response.json();
+
+            // Agregar el resultado al array de resultados
+            resultados.push(data);
           }
-
-          // Convertir la respuesta a JSON
-          const data = await response.json();
-
-          // Agregar el resultado al array de resultados
-          resultados.push(data);
         }
 
         return resultados;
@@ -334,22 +343,74 @@
         }
         fechaActual.setDate(fechaActual.getDate() + 1);
       }
-
       return fechas;
     }
 
     // Función para obtener el nombre del día de la semana
     function obtenerNombreDia(fecha) {
       const diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
-      console.log([fecha.getDay()]);
       return diasSemana[fecha.getDay()];
     }
+
+    // Función para verificar la existencia de un registro para una fecha y habitación específicas
+    async function verificarExistenciaRegistro(url, fecha, habitacionId) {
+      try {
+        const formattedDate = formatDate(fecha); // Formatear la fecha para la URL
+        const formattedUrl = `${url}?fecha=${formattedDate}&habitacionId=${habitacionId}`
+        const response = await fetch(formattedUrl, {
+          method: 'GET'
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al verificar la existencia del registro:', response.statusText);
+        }
+
+        const data = await response.json(); // Obtener el JSON de la respuesta
+
+        console.log('Data existe registro:', data.existeRegistro); // Imprimir los datos recibidos
+
+        return data.existeRegistro; // Devuelve true si el registro existe, false de lo contrario
+      } catch (error) {
+        console.error('Error al verificar la existencia del registro:', error);
+        throw error;
+      }
+    }
+
+    // Función para eliminar un registro existente para una fecha y habitación específicas
+    async function eliminarRegistroExistente(url, fecha, habitacionId) {
+      try {
+        const formattedDate = formatDate(fecha); // Formatear la fecha para la URL
+        const response = await fetch(`${url}?fecha=${formattedDate}&habitacionId=${habitacionId}`, {
+          method: 'DELETE'
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al eliminar el registro existente:', response.statusText);
+        }
+
+        console.log(`Registro eliminado para la fecha ${formattedDate} y habitación ${habitacionId}`);
+      } catch (error) {
+        console.error('Error al eliminar el registro existente:', error);
+        throw error;
+      }
+    }
+
+    // Función para formatear la fecha en el formato requerido para la URL
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+      const day = date.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+      return `${year}-${month}-${day}`;
+    }
+
 
     // URL para la solicitud fetch (debes reemplazarla con tu propia URL)
     const url = 'http://localhost:3005/api/calendario-precios';
 
     // Obtener el rango de fechas entre fechaInicio y fechaFin
     const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
+
+
 
     try {
       // Realizar el fetch repetido para cada fecha en el rango
@@ -378,7 +439,7 @@
       console.log('Resultados de fetch repetido:', resultados);
       // Aquí puedes realizar cualquier otra acción con los resultados obtenidos
     } catch (error) {
-      console.error('Error al realizar el fetch repetido:', error);
+      console.error('Error al realizar el fetch repetido:', error.message);
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -387,6 +448,7 @@
       });
     }
   });
+
 
 
 </script>
