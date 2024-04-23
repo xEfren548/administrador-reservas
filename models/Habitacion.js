@@ -25,6 +25,15 @@ const preSchema = new Schema({
     precio_base: {
         type: Number,
         required: true
+    },
+    precio_base_2noches: {
+        type: Number
+    },
+    costo_base: {
+        type: Number
+    },
+    costo_base_2noches: {
+        type: Number
     }
 });
 

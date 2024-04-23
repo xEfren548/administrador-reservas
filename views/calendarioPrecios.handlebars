@@ -55,7 +55,9 @@
             </option>
             {{#if habitaciones}}
             {{#each habitaciones}}
-            <option value="{{this._id}}" data-precio-base="{{this.precio_base}}">{{this.title}}</option>
+            <option value="{{this._id}}" data-precio-base="{{this.precio_base}}"
+              data-precio-base2+noches="{{this.precio_base_2noches}}" data-costo-base="{{this.costo_base}}"
+              data-costo-base2+noches="{{this.costo_base_2noches}}">{{this.title}}</option>
 
             {{/each}}
             {{else}}
@@ -92,6 +94,48 @@
               <label for="precio-base-input">Precio Base Estándar</label>
               <div class="input-group">
                 <input type="number" name="precio-base-input" id="precio-base-input-id"
+                  class="text-center form-control form-control-sm" value="0" disabled>
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text" style="font-size: 15px;">
+                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-3">
+              <label for="precio-base-input">Precio Base 2+ noches</label>
+              <div class="input-group">
+                <input type="number" name="precio-base2+-input" id="precio-base2+input-id"
+                  class="text-center form-control form-control-sm" value="0" disabled>
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text" style="font-size: 15px;">
+                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-3">
+              <label for="precio-base-input">Costo Base</label>
+              <div class="input-group">
+                <input type="number" name="costo-base-input" id="costo-base-input-id"
+                  class="text-center form-control form-control-sm" value="0" disabled>
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text" style="font-size: 15px;">
+                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-3">
+              <label for="precio-base-input">Costo Base 2+ noches</label>
+              <div class="input-group">
+                <input type="number" name="costo-base2+-input" id="costo-base2+input-id"
                   class="text-center form-control form-control-sm" value="0" disabled>
                 <div class="input-group-append">
                   <div class="input-group-append">
@@ -148,7 +192,8 @@
           <div class="row">
 
             <div class="col-7">
-              <select name="accion-precios" id="accion-precios" class="form-select form-select-md" required>
+              <select name="accion-precios" id="accion-precios" class="form-select form-select-md seleccion-precio"
+                required>
                 <option value="precio-fijo">Precio fijo por noche</option>
                 <option value="incrementar-natural">Incrementar precio en valor natural</option>
                 <option value="incrementar-porcentual">Incrementar precio en valor porcentual</option>
@@ -159,6 +204,99 @@
             <div class="col-2">
               <div class="input-group">
                 <input type="number" name="valor-accion" id="valor-accion" class="form-control" value="0" min="0">
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <span id="icono-seleccionado"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-12">
+              <label for="actualizar-precios">En base al precio base de 2+ noches, ¿qué quieres hacer? </label>
+            </div>
+          </div>
+          <div class="row">
+
+            <div class="col-7">
+              <select name="accion-precios-preciobase2+" id="accion-precios-preciobase2+"
+                class="form-select form-select-md seleccion-precio" required>
+                <option value="precio-fijo">Precio fijo por noche</option>
+                <option value="incrementar-natural">Incrementar precio en valor natural</option>
+                <option value="incrementar-porcentual">Incrementar precio en valor porcentual</option>
+                <option value="disminuir-natural">Disminuir precio en valor natural</option>
+                <option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
+              </select>
+            </div>
+            <div class="col-2">
+              <div class="input-group">
+                <input type="number" name="valor-preciobase2noches" id="valor-preciobase2noches" class="form-control"
+                  value="0" min="0">
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <span id="icono-seleccionado"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <label for="actualizar-precios">En base al costo base de la habitación, ¿qué quieres hacer? </label>
+            </div>
+          </div>
+          <div class="row">
+
+            <div class="col-7">
+              <select name="accion-precios-costobase" id="accion-precios-costobase"
+                class="form-select form-select-md seleccion-precio" required>
+                <option value="precio-fijo">Precio fijo por noche</option>
+                <option value="incrementar-natural">Incrementar precio en valor natural</option>
+                <option value="incrementar-porcentual">Incrementar precio en valor porcentual</option>
+                <option value="disminuir-natural">Disminuir precio en valor natural</option>
+                <option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
+              </select>
+            </div>
+            <div class="col-2">
+              <div class="input-group">
+                <input type="number" name="valor-costobase" id="valor-costobase" class="form-control" value="0" min="0">
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <span id="icono-seleccionado"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <label for="actualizar-precios">En base al costo base de 2+ noches, ¿qué quieres hacer? </label>
+            </div>
+          </div>
+          <div class="row">
+
+            <div class="col-7">
+              <select name="accion-precios-costobase2+" id="accion-precios-costobase2+"
+                class="form-select form-select-md seleccion-precio" required>
+                <option value="precio-fijo">Precio fijo por noche</option>
+                <option value="incrementar-natural">Incrementar precio en valor natural</option>
+                <option value="incrementar-porcentual">Incrementar precio en valor porcentual</option>
+                <option value="disminuir-natural">Disminuir precio en valor natural</option>
+                <option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
+              </select>
+            </div>
+            <div class="col-2">
+              <div class="input-group">
+                <input type="number" name="valor-costobase2noches" id="valor-costobase2noches" class="form-control"
+                  value="0" min="0">
                 <div class="input-group-append">
                   <div class="input-group-append">
                     <span class="input-group-text">
@@ -183,47 +321,64 @@
 <script>
   // Función para mostrar el icono seleccionado al cargar la página
   function mostrarIconoSeleccionado() {
-    const seleccion = document.getElementById('accion-precios').value;
-    const iconoSeleccionado = document.getElementById('icono-seleccionado');
+    const selects = document.querySelectorAll('.seleccion-precio');
+    selects.forEach(select => {
+      const seleccion = select.value;
+      const iconoSeleccionado = select.parentElement.nextElementSibling.querySelector('#icono-seleccionado');
 
-    // Dependiendo de la opción seleccionada, mostramos el icono correspondiente
-    switch (seleccion) {
-      case 'precio-fijo':
-        iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
-        break;
-      case 'incrementar-natural':
-      case 'disminuir-natural':
-        iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
-        break;
-      case 'incrementar-porcentual':
-      case 'disminuir-porcentual':
-        iconoSeleccionado.innerHTML = '<i class="fa fa-percent" aria-hidden="true"></i>';
-        break;
-      default:
-        break;
-    }
+      // Dependiendo de la opción seleccionada, mostramos el icono correspondiente
+      switch (seleccion) {
+        case 'precio-fijo':
+          iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
+          break;
+        case 'incrementar-natural':
+        case 'disminuir-natural':
+          iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
+          break;
+        case 'incrementar-porcentual':
+        case 'disminuir-porcentual':
+          iconoSeleccionado.innerHTML = '<i class="fa fa-percent" aria-hidden="true"></i>';
+          break;
+        default:
+          break;
+      }
+    });
   }
 
   // Llamar a la función al cargar la página para mostrar el icono seleccionado inicialmente
   mostrarIconoSeleccionado();
 
   // Agregar un event listener al campo #accion-precios para actualizar el icono seleccionado cuando cambie la selección
-  document.getElementById('accion-precios').addEventListener('change', function () {
-    mostrarIconoSeleccionado();
+  document.querySelectorAll('.seleccion-precio').forEach(select => {
+    select.addEventListener('change', function () {
+      mostrarIconoSeleccionado();
+    });
   });
 
   document.getElementById('select-cabana').addEventListener('change', function () {
     const selectElement = document.getElementById('select-cabana');
     const selectedOption = selectElement.options[selectElement.selectedIndex];
+
     const precioBase = selectedOption.getAttribute('data-precio-base');
     document.getElementById('precio-base-input-id').value = precioBase;
+
+    const precioBase2noches = selectedOption.getAttribute('data-precio-base2+noches');
+    document.getElementById('precio-base2+input-id').value = precioBase2noches;
+
+    const costoBase = selectedOption.getAttribute('data-costo-base');
+    document.getElementById('costo-base-input-id').value = costoBase;
+
+    const costoBase2noches = selectedOption.getAttribute('data-costo-base2+noches');
+    document.getElementById('costo-base2+input-id').value = costoBase2noches;
+
+
   });
 
   const botonFormulario = document.querySelector('#update-prices-btn');
 
   botonFormulario.addEventListener('click', async function (e) {
+    console.log('click al boton formulario');
     e.preventDefault();
-
     // Obtener los datos del formulario
     const habitacionAmodificar = document.querySelector('#select-cabana').value;
     const fechaInicioString = document.querySelector('#fecha-inicio').value; // Obtener el valor del input de tipo date
@@ -238,11 +393,17 @@
       }
     });
     const accionPrecios = document.querySelector('#accion-precios').value;
+
     const valorAccion = parseInt(document.querySelector('#valor-accion').value);
+    const valorPrecioBase2noches = parseInt(document.querySelector('#valor-preciobase2noches').value);
+    const valorCostoBase = parseInt(document.querySelector('#valor-costobase').value);
+    const valorCostoBase2noches = parseInt(document.querySelector('#valor-costobase2noches').value);
+
     const precioCabana = parseInt(document.querySelector('#precio-base-input-id').value);
     let precioFinal = 0
-
-
+    let precioBaseFinal2noches = 0;
+    let costoBaseFinal = 0;
+    let costoBaseFinal2noches = 0;
 
     // Validar que la fecha final sea posterior o igual a la fecha inicial
     if (fechaInicio === '' || fechaFin === '') {
@@ -260,6 +421,9 @@
 
     // Validacion para actualizar el precio natural o precio porcentual
     const seleccion = document.getElementById('accion-precios').value;
+    const seleccionPrecioBase2noches = document.getElementById('accion-precios-preciobase2+').value;
+    const seleccionCostoBase = document.getElementById('accion-precios-costobase').value
+    const seleccionCostoBase2noches = document.getElementById('accion-precios-costobase2+').value;
 
     switch (seleccion) {
       case 'precio-fijo':
@@ -280,48 +444,111 @@
         break;
     }
 
-    console.log(precioFinal);
+    switch (seleccionPrecioBase2noches) {
+      case 'precio-fijo':
+        precioBaseFinal2noches = valorCostoBase;
+        break;
+      case 'incrementar-natural':
+        precioBaseFinal2noches = precioCabana + valorCostoBase;
+        break;
+      case 'disminuir-natural':
+        precioBaseFinal2noches = precioCabana - valorCostoBase;
+        break;
+      case 'incrementar-porcentual':
+        precioBaseFinal2noches = precioCabana * (valorCostoBase / 100) + precioCabana;
+        break;
+      case 'disminuir-porcentual':
+        let pre = precioCabana * (valorCostoBase / 100)
+        precioBaseFinal2noches = precioCabana - pre;
+        break;
+    }
+
+    switch (seleccionCostoBase) {
+      case 'precio-fijo':
+        costoBaseFinal = valorPrecioBase2noches;
+        break;
+      case 'incrementar-natural':
+        costoBaseFinal = precioCabana + valorPrecioBase2noches;
+        break;
+      case 'disminuir-natural':
+        costoBaseFinal = precioCabana - valorPrecioBase2noches;
+        break;
+      case 'incrementar-porcentual':
+        costoBaseFinal = precioCabana * (valorPrecioBase2noches / 100) + precioCabana;
+        break;
+      case 'disminuir-porcentual':
+        let pre = precioCabana * (valorPrecioBase2noches / 100)
+        costoBaseFinal = precioCabana - pre;
+        break;
+    }
+
+    switch (seleccionCostoBase2noches) {
+      case 'precio-fijo':
+        costoBaseFinal2noches = valorCostoBase2noches;
+        break;
+      case 'incrementar-natural':
+        costoBaseFinal2noches = precioCabana + valorCostoBase2noches;
+        break;
+      case 'disminuir-natural':
+        costoBaseFinal2noches = precioCabana - valorCostoBase2noches;
+        break;
+      case 'incrementar-porcentual':
+        costoBaseFinal2noches = precioCabana * (valorCostoBase2noches / 100) + precioCabana;
+        break;
+      case 'disminuir-porcentual':
+        let pre = precioCabana * (valorCostoBase2noches / 100)
+        costoBaseFinal2noches = precioCabana - pre;
+        break;
+    }
+
 
     // Función para realizar el fetch repetido para cada fecha en el rango
     async function fetchRepetido(url, fechas) {
       try {
         const resultados = [];
+        console.log('ejecutando fetch repetido...');
 
         // Iterar sobre cada fecha en el rango
         for (const fecha of fechas) {
           const existeRegistro = await verificarExistenciaRegistro(url, fecha, habitacionAmodificar);
 
-          // Obtener el objeto de datos para enviar en la solicitud fetch
-          if (!existeRegistro) {
-            // Obtener el objeto de datos para enviar en la solicitud fetch
-            const datosFetch = {
-              precio_modificado: precioFinal,
-              fecha: fecha,
-              habitacionId: habitacionAmodificar
-            };
-
-            console.log(JSON.stringify(datosFetch));
-
-            // Realizar la solicitud fetch para la fecha actual con los datos especificados
-            const response = await fetch(url, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(datosFetch)
-            });
-
-            // Verificar el estado de la respuesta
-            if (!response.ok) {
-              throw new Error('Error en la solicitud fetch: ' + response.statusText);
-            }
-
-            // Convertir la respuesta a JSON
-            const data = await response.json();
-
-            // Agregar el resultado al array de resultados
-            resultados.push(data);
+          if (existeRegistro) {
+            await eliminarRegistroExistente(url, fecha, habitacionAmodificar);
           }
+
+          // Solucionar el if para que cuando exista el usuario, se borre el registro y añada el nuevo registro-
+          // Obtener el objeto de datos para enviar en la solicitud fetch
+          const datosFetch = {
+            precio_modificado: precioFinal,
+            precio_base_2noches: precioBaseFinal2noches,
+            costo_base: costoBaseFinal,
+            costo_base_2noches: costoBaseFinal2noches,
+            fecha: fecha,
+            habitacionId: habitacionAmodificar
+          };
+
+          console.log(JSON.stringify(datosFetch));
+
+          // Realizar la solicitud fetch para la fecha actual con los datos especificados
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(datosFetch)
+          });
+
+          // Verificar el estado de la respuesta
+          if (!response.ok) {
+            throw new Error('Error en la solicitud fetch: ' + response.statusText);
+          }
+
+          // Convertir la respuesta a JSON
+          const data = await response.json();
+
+          // Agregar el resultado al array de resultados
+          resultados.push(data);
+
         }
 
         return resultados;
@@ -447,7 +674,7 @@
         confirmButtonText: 'Aceptar'
       });
     }
-  });
+  })
 
 
 

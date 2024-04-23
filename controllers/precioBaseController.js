@@ -4,11 +4,14 @@ const mongoose = require('mongoose');
 // Controlador para agregar nuevos datos
 async function agregarNuevoPrecio(req, res) {
     try {
-        const { precio_modificado, fecha, habitacionId } = req.body;
+        const { precio_modificado, precio_base_2noches, costo_base, costo_base_2noches, fecha, habitacionId } = req.body;
         const objectHabitacionId = new mongoose.Types.ObjectId(habitacionId);
 
         const nuevoPrecio = new PrecioBaseXDia({
             precio_modificado,
+            precio_base_2noches,
+            costo_base,
+            costo_base_2noches,
             fecha,
             habitacionId: objectHabitacionId
         });
@@ -56,32 +59,16 @@ async function consultarPreciosPorId(req, res) {
     }
 }
 
-async function modificacionMasivaPrecios(req, res) {
-    try {
-        const { precio_modificado, fecha, habitacion } = req.body;
-
-
-        const nuevoPrecio = new PrecioBaseXDia({
-            precio_modificado,
-            fecha,
-            habitacion
-        });
-
-
-        await nuevoPrecio.save();
-        res.status(201).json({ mensaje: 'Precio base agregado exitosamente.' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ mensaje: 'Hubo un error al agregar el precio base.' });
-    }
-}
-
 async function eliminarRegistroPrecio(req, res) {
     try {
 
         const { fecha, habitacionId } = req.query;
 
-        const resultado = await PrecioBaseXDia.findOneAndDelete({ fecha: new Date(fecha), habitacionId: habitacionId });
+        // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
+        const fechaAjustada = new Date(fecha);
+        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+
+        const resultado = await PrecioBaseXDia.findOneAndDelete({ fecha: fechaAjustada, habitacionId: habitacionId });
 
         if (!resultado) {
             return res.status(404).json({ message: 'No se encontró ningún registro para eliminar' });
@@ -99,17 +86,14 @@ async function eliminarRegistroPrecio(req, res) {
 async function verificarExistenciaRegistro(req, res) {
     try {
         const { fecha, habitacionId } = req.query;
-        console.log(fecha, habitacionId);
 
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
 
-        console.log(fechaAjustada);
 
         const response = await PrecioBaseXDia.findOne({ fecha: fechaAjustada, habitacionId: habitacionId });
         const existeRegistro = response !== null;
-        console.log({existeRegistro});
 
         res.json({ existeRegistro: existeRegistro });
     } catch (error) {
