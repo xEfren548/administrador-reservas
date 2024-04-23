@@ -307,11 +307,18 @@
               </div>
             </div>
           </div>
+          <div class="row mt-2">
+            <small>IMPORTANTE: Este será el nuevo registro, por lo que si hay alguno anterior para esas fechas, se
+              eliminará.</small>
+          </div>
 
         </div> <!-- Cierre IMG Container -->
       </div> <!--Cierre MODAL BODY -->
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" id="update-prices-btn">Actualizar precios</button>
+        <div class="spinner-border" role="status" id="spinner">
+          <span class="visually-hidden">Loading...</span>
+        </div>
       </div>
     </div>
   </div>
@@ -641,12 +648,19 @@
 
     try {
       // Realizar el fetch repetido para cada fecha en el rango
+      document.getElementById('spinner').style.display = 'block';
+      Swal.close();
 
       const resultados = await fetchRepetido(url, fechas);
+
 
       if (resultados.length === 0) {
         throw new Error('No hay fechas seleccionadas para actualizar.');
       }
+
+      
+      document.getElementById('spinner').style.display = 'none';
+
 
       Swal.fire({
         icon: 'success',
@@ -667,6 +681,8 @@
       // Aquí puedes realizar cualquier otra acción con los resultados obtenidos
     } catch (error) {
       console.error('Error al realizar el fetch repetido:', error.message);
+      document.getElementById('spinner').style.display = 'none';
+
       Swal.fire({
         icon: 'error',
         title: 'Error',
