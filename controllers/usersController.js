@@ -22,14 +22,12 @@ const createUserValidators = [
             return true;
         }),
     check('password')
-        .notEmpty().withMessage('Password is required'),
-        /*
+        .notEmpty().withMessage('Password is required')
         .isLength({ min: 12 }).withMessage('Password must be at least 12 characters long')
         .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
         .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
         .matches(/[0-9]/).withMessage('Password must contain at least one number')
-        .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),
-        */
+        .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),        
     check('privilege')
         .notEmpty().withMessage('Privilege is required')
         .isIn(['Administrador', 'Vendedor', 'Limpieza']).withMessage('Invalid privilege'),
@@ -54,14 +52,12 @@ const editUserValidators = [
             return true;
         }),
     check('password')
-        .optional({ checkFalsy: true }),
-        /*
+        .optional({ checkFalsy: true })
         .isLength({ min: 12 }).withMessage('Password must be at least 12 characters long')
         .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
         .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
         .matches(/[0-9]/).withMessage('Password must contain at least one number')
         .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),
-        */
     check('privilege')
         .optional({ checkFalsy: true })
         .isIn(['Administrador', 'Vendedor', 'Limpieza']).withMessage('Invalid identification type'),

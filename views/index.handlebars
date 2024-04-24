@@ -59,12 +59,12 @@
                                 <label for="tipologia_habitacion">Tipología</label>
                                 <select id="tipologia_habitacion" name="tipologia_habitacion" id="tipologia_habitacion" class="form-select form-select-md" required>
                                     <option value="" selected="true" disabled="true"> Selecciona una cabaña para modificar --</option>
-                                    {{#if habitaciones}}
-                                        {{#each habitaciones}}
-                                            <option value="{{this.title}}">{{this.title}}</option>
+                                    {{#if chalets}}
+                                        {{#each chalets}}
+                                            <option value="{{this.name}}">{{this.name}}</option>
                                         {{/each}}
                                     {{else}}
-                                        <option value="0">No se encontraron habitaciones</option>
+                                        <option value="0">No se encontraron cabañas</option>
                                     {{/if}}
                                 </select>
                             </div>

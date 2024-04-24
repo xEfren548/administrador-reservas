@@ -25,11 +25,16 @@ const createReservationValidators = [
         .toDate(),
     check()
         .custom((value, { req }) => {
-            const start = new Date(req.body.start);
-            const end = new Date(req.body.end);
-            if (start >= end) {
-                throw new BadRequestError('End date must be after start date');
-            }
+            const arrivalDate = new Date(req.body.arrivalDate);
+            const departureDate = new Date(req.body.departureDate);
+            const currentDate = new Date();
+
+            if (arrivalDate <= currentDate) {
+                throw new BadRequestError('Arrival date must be after the current date');
+            }            
+            if (arrivalDate >= departureDate) {
+                throw new BadRequestError('Departure date must be after arrival date');
+            }            
             return true;
         }),
     check("nNights")

@@ -73,8 +73,8 @@ router.all("*", (req, res, next) => {
 
 // Error handling middleware.
 router.use((err, req, res, next) => {
-    if(err.status){
-        res.status(err.status).json({error: err.message})
+    if(err.statusCode){
+        res.status(err.statusCode).json({error: err.generateErrors()})
         return;
     }
     res.status(500).json({error: "Internal server error: something went wrong", message: err.message });

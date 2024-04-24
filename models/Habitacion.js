@@ -220,7 +220,6 @@ const additionalInfoSchema = new mongoose.Schema({
     }
 });
 
-/*
 const locationSchema = new mongoose.Schema({
     state: {
         type: String,
@@ -255,7 +254,43 @@ const locationSchema = new mongoose.Schema({
         //required: true
     }
 });
-*/
+
+const othersSchema = new mongoose.Schema({
+    basePrice: {
+        type: Number,
+        //required: true
+    },
+    basePrice2nights: {
+        type: Number,
+        //required: true
+    },
+    baseCost: {
+        type: Number,
+        //required: true
+    },
+    baseCost2nights: {
+        type: Number,
+        //required: true
+    },
+    arrivalTime: {
+        type: Date,
+        //required: true
+    },
+    departureTime: {
+        type: Date,
+        //required: true
+    },
+    admin: {
+        type: mongoose.Schema.Types.ObjectId,
+        //required: true,
+        ref: 'Usuario'
+    },
+    janitor: {
+        type: mongoose.Schema.Types.ObjectId,
+        //required: true,
+        ref: 'Usuario'
+    },
+});
 
 //--------------------------------------------------
 
@@ -263,11 +298,7 @@ const preSchema = new mongoose.Schema({
     propertyDetails: propertyDetailsSchema,
     accommodationFeatures: accommodationFeaturesSchema,
     additionalInfo: additionalInfoSchema,
-    //location: locationSchema,
-    location: {
-        type: String,
-        //required: true
-    },
+    location: locationSchema,
     accomodationDescription: {
         type: String,
         //required: true
@@ -283,7 +314,8 @@ const preSchema = new mongoose.Schema({
     legalNotice: {
         type: String,
         //required: true
-    },    
+    },
+    others: othersSchema,
     images: {
         type: [String],
         //required: true

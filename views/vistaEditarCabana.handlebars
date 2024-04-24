@@ -1,3 +1,4 @@
+{{#each chalets}}
 <form id="frmEditAccomodation" action="">
     <div class="page-info">
         <h1>Editar alojamiento</h1>
@@ -8,7 +9,7 @@
     <div id="propertyDetails" class="chalet-details collapse">
         <div class="input-group half">
             <label for="slctchaletAccomodationType">Tipo de alojamiento</label>
-            <select id="slctchaletAccomodationType" name="slctchaletAccomodationType" >
+            <select id="slctchaletAccomodationType" name="slctchaletAccomodationType" value="{{propertyDetails.accomodationType}}">
                 <optgroup label="Option group 1">
                     <option value="Option 1">Option 1</option>
                 </optgroup> 
@@ -19,31 +20,31 @@
         </div>
         <div class="input-group half">
             <label for="txtChaletName">Nombre</label>
-            <input id="txtChaletName" name="txtChaletName" type="text">
+            <input id="txtChaletName" name="txtChaletName" type="text" value="{{propertyDetails.name}}">
         </div>
         <div class="input-group half inline-input-group">
             <label for="txtChaletPhoneNumber">Teléfono establecimiento</label>
-            <input id="txtChaletPhoneNumber" name="txtChaletPhoneNumber" type="tel">
+            <input id="txtChaletPhoneNumber" name="txtChaletPhoneNumber" type="tel" value="{{propertyDetails.phoneNumber}}">
         </div>
         <div class="input-group half">
             <label for="txtChaletEmail">Email</label>
-            <input id="txtChaletEmail" name="txtChaletEmail" type="email">
+            <input id="txtChaletEmail" name="txtChaletEmail" type="email" value="{{propertyDetails.email}}">
         </div>
         <div class="input-group half">
             <label for="txtChaletWebsite">Sitio web</label>
-            <input id="txtChaletWebsite" name="txtChaletWebsite" type="email">
+            <input id="txtChaletWebsite" name="txtChaletWebsite" type="email" value="{{propertyDetails.website}}">
         </div>
         <div class="input-group third">
             <label for="txtChaletMinPpl">Ocupación mínima</label>
-            <input id="txtChaletMinPpl" name="txtChaletMinPpl" type="number">
+            <input id="txtChaletMinPpl" name="txtChaletMinPpl" type="number" value="{{propertyDetails.minOccupancy}}">
         </div>
         <div class="input-group third">
             <label for="txtChaletMaxPpl">Ocupación máxima</label>
-            <input id="txtChaletMaxPpl" name="txtChaletMaxPpl" type="number">
+            <input id="txtChaletMaxPpl" name="txtChaletMaxPpl" type="number" value="{{propertyDetails.maxOccupancy}}">
         </div>
         <div class="input-group third">
             <label for="txtChaletTourLicense">Licencia turística</label>
-            <input id="txtChaletTourLicense" name="txtChaletTourLicense" type="text">
+            <input id="txtChaletTourLicense" name="txtChaletTourLicense" type="text" value="{{propertyDetails.tourLicense}}">
         </div>
     </div>
 
@@ -632,51 +633,51 @@
     <div id="additionalInfo" class="chalet-details collapse">
         <div class="input-group half">
             <label for="txtBeds">Camas</label>
-            <input id="txtBeds" name="txtBeds" type="number">
+            <input id="txtBeds" name="txtBeds" type="number" value="{{additionalInfo.nBeds}}">
         </div>
         <div class="input-group half">
             <label for="txtRestrooms">Baños</label>
-            <input id="txtRestrooms" name="txtRestrooms" type="number">
+            <input id="txtRestrooms" name="txtRestrooms" type="number" value="{{additionalInfo.nRestrooms}}">
         </div>
         <div class="input-group half">
             <label for="bedroomSize">Tamaño de la habitación en m2</label>
-            <input id="bedroomSize" name="bedroomSize" type="number">
+            <input id="bedroomSize" name="bedroomSize" type="number" value="{{additionalInfo.bedroomSize}}">
         </div>
         <div class="input-group half">
             <label for="txtCapacity">Capacidad máxima de personas</label>
-            <input id="txtCapacity" name="txtCapacity" type="number">
+            <input id="txtCapacity" name="txtCapacity" type="number" value="{{additionalInfo.capacity}}">
         </div>
         <div class="input-group half">
             <label for="txtExtraCost">Coste extra por reserva por limpiar esta unidad</label>
-            <input id="txtExtraCost" name="txtExtraCost" type="number">
+            <input id="txtExtraCost" name="txtExtraCost" type="number" value="{{additionalInfo.extraCleaningCost}}">
         </div>
     </div>
 
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#accomodationDetails">+ Descripción del alojamiento</button>
     <div id="accomodationDetails" class="chalet-details collapse">
         <div class="input-group">
-            <textarea name="txtAccomodationDetails" rows="10" placeholder="Porporciona una descripción para el alojamiento."></textarea>
+            <textarea name="txtAccomodationDetails" rows="10" placeholder="Porporciona una descripción para el alojamiento.">{{accomodationDescription}}</textarea>
         </div>
     </div>
 
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#additionalDetails">+ Descripción adicional del alojamiento</button>
     <div id="additionalDetails" class="chalet-details collapse">
         <div class="input-group">
-            <textarea name="txtAdditionalDetails" rows="10" placeholder="Porporciona una descripción adicional para el alojamiento."></textarea>
+            <textarea name="txtAdditionalDetails" rows="10" placeholder="Porporciona una descripción adicional para el alojamiento.">{{additionalAccomodationDescription}}</textarea>
         </div>
     </div>
 
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#touristicRate">+ Tasa turística - motor de reservas</button>
     <div id="touristicRate" class="chalet-details collapse">
         <div class="input-group">
-            <textarea name="txtTouristicRate" rows="10" placeholder="Agrega una tasa turística"></textarea>
+            <textarea name="txtTouristicRate" rows="10" placeholder="Agrega una tasa turística">{{touristicRate}}</textarea>
         </div>
     </div>
 
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#legalNote">+ Nota legal</button>
     <div id="legalNote" class="chalet-details collapse">
         <div class="input-group">
-            <textarea name="txtLegalNote" rows="10" placeholder="Agrgega una nota legal"></textarea>
+            <textarea name="txtLegalNote" rows="10" placeholder="Agrega una nota legal">{{legalNotice}}</textarea>
         </div>
     </div>
 
@@ -742,3 +743,4 @@
         </div>
     </div>
 </form>
+{{/each}}
