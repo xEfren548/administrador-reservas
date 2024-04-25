@@ -18,6 +18,7 @@ const userRoutes = require('./usersRoutes');
 const userProfileRoutes = require('./userProfileRoutes');
 const calendarioPrecios = require('./calendarioPreciosRoutes');
 const reservationRoutes = require('./reservationRoutes');
+const rackLimpiezaRoutes = require('./rackLimpiezaRoutes');
 const CustomError = require("../common/error/custom-error");
 const NotFoundError = require("../common/error/not-found-error");
 
@@ -57,9 +58,8 @@ router.use('/api/usuarios', userRoutes);
 router.use('/api/perfil-usuario/', userProfileRoutes);
 // Get middlewares.
 router.get('/', reservationRoutes);
-router.get('/api/racklimpieza', (req, res) => {
-    res.render('rackLimpieza');
-});
+
+router.use('/', rackLimpiezaRoutes);
 
 router.use('/api', eventRoutes);
 router.use('/api', habitacionesRoutes);
