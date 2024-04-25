@@ -7,7 +7,11 @@ router.get('/rackLimpieza', async(req, res) => {
     try {
 
         const services = await rackLimpiezaController.getAllServicesMongo(req, res); // Pass req and res to the controller function
-
+        console.log(services)
+        services.forEach(service => {
+            service._id = service._id.toString();
+            service.id_reserva = service.id_reserva.toString();
+        });
         res.render('rackLimpieza', {
             services: services
         });

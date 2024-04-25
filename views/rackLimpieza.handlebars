@@ -1,4 +1,5 @@
 <h1>Tabla Rack Limpieza</h1>
+{{#if services.length}}
 <div class="row" style="width: 95%;">
     <div class="col-10">
         <table class="table table-dark table-hover" id="tablaRacklimpieza">
@@ -11,25 +12,22 @@
                 </tr>
             </thead>
             <tbody>
-                {{#if services}}
                 {{#each services}}
                 <tr>
-                    <td>{{lookup this 'id_reserva'}}</td>
-                    <td>{{lookup this 'descripcion'}}</td>
-                    <td>{{lookup this 'fecha'}}</td>
-                    <td>{{lookup this 'status'}}</td>
+                    <td>{{this.nombreHabitacion}}</td>
+                    <td>{{this.descripcion}}</td>
+                    <td>{{this.fecha}}</td>
+                    <td>{{this.status}}</td>
                 </tr>
                 {{/each}}
-                {{else}}
-                <tr>
-                    <td colspan="4">No se encontraron servicios</td>
-                </tr>
-                {{/if}}
             </tbody>
         </table>
-
     </div>
 </div>
+{{else}}
+<p>No se encontraron servicios</p>
+{{/if}}
+
 
 
 {{!-- Modals --}}

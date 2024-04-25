@@ -1,6 +1,6 @@
 const RackLimpieza = require('../models/RackLimpieza');
 const Documento = require('../models/Evento');
-const Habitacion = require('../models/Habitacion');
+const habitacionController = require('../controllers/habitacionController');
 const mongoose = require('mongoose');
 
 async function getAllServices(req, res, next) {
@@ -17,7 +17,7 @@ async function getAllServices(req, res, next) {
 async function getAllServicesMongo(req, res, next) {
     try {
 
-        const services = await RackLimpieza.find()
+        const services = await RackLimpieza.find().lean()
         return services
     } catch (error) {
         console.log(error.message);
@@ -40,8 +40,6 @@ async function createService(req, res, next) {
     try {
         const { id_reserva, descripcion, fecha, status } = req.body;
 
-        console.log(id_reserva)
-
         const documento = await Documento.findOne({ 'events._id': id_reserva });
 
         if (!documento) {
@@ -54,12 +52,11 @@ async function createService(req, res, next) {
             return res.status(404).send('Evento not found'); // Si no se encuentra el evento, devolver un error 404
         }
 
-        
+        const resourceId = evento.resourceId.toString();
 
-        const resourceId = evento.resourceId;
+        const habitacion = await habitacionController.obtenerHabitacionPorId(resourceId);
 
-        console.log(resourceId);
-
+        const nombreHabitacion = habitacion.propertyDetails.name
 
 
         const servicio = {
@@ -67,7 +64,7 @@ async function createService(req, res, next) {
             descripcion,
             fecha,
             status,
-            resourceId
+            nombreHabitacion
         }
 
         const service = new RackLimpieza(servicio);
