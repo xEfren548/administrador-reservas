@@ -76,11 +76,56 @@ async function createService(req, res, next) {
     }
 }
 
+async function modifyService(req, res, next) {
+    const { descripcion, fecha, status } = req.body;
+    const { id } = req.params;
+
+    const updateFields = {};
+
+    if (descripcion) { updateFields.descripcion = descripcion; }
+    if (fecha) { updateFields.fecha = fecha; }
+    if (status) { updateFields.status = status; }
+
+
+    try {
+        // Buscar el usuario por su dirección de correo electrónico
+        const updateService = await RackLimpieza.findOneAndUpdate({ _id: id }, updateFields, { new: true });
+
+        if (!updateService) {
+            // Si no se encuentra el usuario, devolver un error
+            const error = new Error("El servicio no fue encontrado.");
+            error.status = 404;
+            throw error;
+        }
+
+        console.log("Servicio editado con éxito");
+        res.status(200).json({ updateService });
+    } catch (e) {
+        console.log(e.message);
+        res.send({ error: e.message });
+    }
+
+}
+
+async function deleteService(req, res, next) {
+    try {
+        const { id } = req.params;
+        await RackLimpieza.findByIdAndDelete(id);
+        console.log("Servicio eliminado con éxito");
+        res.status(200).json({ success: true });
+    } catch (e) {
+        console.log(e.message);
+        res.send({ error: e.message });
+    }
+}
+
 
 
 module.exports = {
     getAllServices,
     getAllServicesMongo,
     getSpecificServicesMongo,
-    createService
+    createService,
+    modifyService,
+    deleteService
 }
