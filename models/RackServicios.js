@@ -1,6 +1,6 @@
 const { Schema, model } = require('mongoose');
 
-const rackLimpiezaSchema = new Schema({
+const rackServiciosSchema = new Schema({
     id_reserva: {
         type: Schema.Types.ObjectId,
         ref: 'documentos',
@@ -24,7 +24,7 @@ const rackLimpiezaSchema = new Schema({
     
 });
 
-const RackLimpieza = model('racklimpieza', rackLimpiezaSchema);
+const RackServicios = model('rackservicios', rackServiciosSchema);
 
 
-module.exports = RackLimpieza;
+module.exports = RackServicios;
