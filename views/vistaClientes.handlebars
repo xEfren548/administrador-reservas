@@ -338,6 +338,7 @@
                 fetch('/api/clientes/eliminar-cliente', {
                     method: 'DELETE',
                     headers: {
+                        // Once logged in, the authorization token stored in the session cookies will automatically be added in each HTTP request.
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(data)

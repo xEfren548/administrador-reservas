@@ -686,6 +686,60 @@
         </div>
     </div>
 
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#other-data">+ Otros</button>
+    <div id="other-data" class="chalet-details collapse">
+        <div class="input-group third">
+            <label for="txtBasePrice">Precio base</label>
+            <input id="txtBasePrice" name="txtBasePrice" type="number">
+        </div>
+        <div class="input-group third">
+            <label for="txtBasePrice2Nights">Precio base por 2 noches</label>
+            <input id="txtBasePrice2Nights" name="txtBasePrice2Nights" type="number">
+        </div>
+        <div class="input-group third">
+            <label for="txtBaseCost">Costo base</label>
+            <input id="txtBaseCost" name="txtBaseCost" type="number">
+        </div>
+        <div class="input-group third">
+            <label for="txtBaseCost2Nights">Costo base por dos noches</label>
+            <input id="txtBaseCost2Nights" name="txtBaseCost2Nights" type="number">
+        </div>
+        <div class="input-group third">
+            <label for="txtArrivalTime">Hora de llegada</label>
+            <input id="txtArrivalTime" name="txtArrivalTime" type="time">
+        </div>
+        <div class="input-group third">
+            <label for="txtDepartureTime">Hora de salida</label>
+            <input id="txtDepartureTime" name="txtDepartureTime" type="time">
+        </div>
+        <div class="input-group third">
+            <label for="txtState">Administrador asociado</label>
+            <select id="slctAdmin" name="slctAdmin" class="form-select form-select-md">
+                <option selected="true" disabled="true"> Selecciona un administrador para la cabaña --</option>
+                {{#if admins}}
+                    {{#each admins}}
+                        <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                    {{/each}}
+                {{else}}
+                    <option value="0">No se encontraron administradores</option>
+                {{/if}}
+            </select>
+        </div>
+        <div class="input-group third">
+            <label for="slctJanitor">Personal de limpieza asociado</label>
+            <select id="slctJanitor" name="slctJanitor" class="form-select form-select-md">
+                <option selected="true" disabled="true"> Selecciona el personal de limpieza para la cabaña --</option>
+                {{#if janitors}}
+                    {{#each janitors}}
+                        <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                    {{/each}}
+                {{else}}
+                    <option value="0">No se encontraró el personal de limpieza</option>
+                {{/if}}
+            </select>
+        </div>
+    </div>
+
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#photos">+ Fotografías</button>
     <div id="photos" class="chalet-details collapse">
         <div class="input-group">
@@ -708,18 +762,16 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // Upload chalet images.
-        var fileUpload = document.getElementById('file-upload');
-        fileUpload.files = null;
+        const fileUpload = document.getElementById('file-upload');
         const photoCarousel = document.getElementById('photoCarousel');
+        const formData = new FormData();
 
         fileUpload.addEventListener('change', function(event) {
             const files = event.target.files;
 
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-
                 const imageURL = URL.createObjectURL(file);
-
                 const photoDiv = document.createElement('div');
                 photoDiv.classList.add('photo');
                 const img = document.createElement('img');
@@ -729,12 +781,15 @@
                 deleteButton.classList.add('delete-photo');
                 deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
                 deleteButton.addEventListener('click', function() {
+                    formData.delete('images', file);
                     photoDiv.remove();
                 });
 
                 photoDiv.appendChild(deleteButton);
                 photoDiv.appendChild(img);
                 photoCarousel.appendChild(photoDiv);
+
+                formData.append('images', file);
             }
         });
 
@@ -878,7 +933,8 @@
                         },
                         sport: {
                             paddleTennis: document.getElementById("chkboxPaddleCourt").checked,
-                            gym: document.getElementById("chkboxGym").checked,                                   basketballCourt: document.getElementById("chkboxBasketballCourt").checked,
+                            gym: document.getElementById("chkboxGym").checked,                                   
+                            basketballCourt: document.getElementById("chkboxBasketballCourt").checked,
                             darts: document.getElementById("chkboxDarts").checked,
                             windsurfing: document.getElementById("chkboxWindsurf").checked,                            
                             skiSchool: document.getElementById("chkboxSkiSchool").checked,
@@ -908,7 +964,6 @@
                     additionalAccomodationDescription: document.getElementById("txtAdditionalDetails").value.trim(),
                     touristicRate: document.getElementById("txtTouristicRate").value.trim(),
                     legalNotice: document.getElementById("txtLegalNote").value.trim(),
-                    /*
                     location: {
                         state: document.getElementById("txtState").value.trim(),
                         population: document.getElementById("txtPopulation").value.trim(),
@@ -918,9 +973,17 @@
                         longitude: document.getElementById("txtLong").value.trim(),
                         weatherWidget: document.getElementById("txtWeathedWdgt").value.trim(),
                         iFrame: document.getElementById("map").src.trim(),
-                    },
-                    */
-                    location: "Temporary location"
+                    },                    
+                    others: {
+                        basePrice: document.getElementById("txtBasePrice").value.trim(),
+                        basePrice2nights: document.getElementById("txtBasePrice2Nights").value.trim(),
+                        baseCost: document.getElementById("txtBaseCost").value.trim(),
+                        baseCost2nights: document.getElementById("txtBaseCost2Nights").value.trim(),                                                
+                        arrivalTime: document.getElementById("txtArrivalTime").value.trim(),
+                        departureTime: document.getElementById("txtDepartureTime").value.trim(),
+                        admin: document.getElementById("slctAdmin").value.trim(),
+                        janitor: document.getElementById("slctJanitor").value.trim(),
+                    }                    
                 };                                    
                 fetch('/api/cabanas/crear-cabana', {
                     method: 'POST',
@@ -942,23 +1005,19 @@
                     console.log('Respuesta del servidor:', data);
 
                     try {
-                        const formData = new FormData();
-                        const files = fileUpload.files;
-                        for (let i = 0; i < files.length; i++) {
-                            formData.append('images', files[i]);
-                        }
-
                         const response = await fetch('/api/cabanas/subir-imagenes-cabana', {
                             method: 'POST',
                             body: formData
                         });
                         if (response.ok) {
-                            console.log('Image uploaded successfully.', data);                            
+                            console.log('Image uploaded successfully.', data);
+                            window.location.href = "/";
                         } else {
                             console.log('Error uploading image.', data);
                             const error = response.statusText;
                             document.getElementById("txtCreateChaletError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
                             throw new Error('Error en la solicitud: ' + error);
+                            window.location.href = "/";
                         }
                     } catch (error) {
                         console.error('Error al enviar la solicitud:', error);

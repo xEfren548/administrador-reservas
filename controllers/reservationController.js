@@ -1,23 +1,26 @@
 express = require("express");
 const Cliente = require('../models/Cliente');
+const Habitacion = require("../models/Habitacion");
 router = express.Router();
 
-async function showReservationsView(req, res, next){
+async function showReservationsView(req, res, next) {
     try {
         const url = 'http://localhost:3005/api/habitaciones';
         const response = await fetch(url);
         const data = await response.json();
-        console.log(data);
-        const habitaciones = data[0].resources.map(habitacion => {
-            return { title: habitacion.title, baseRate: habitacion.precio_base };
-        });
-        console.log(habitaciones);        
+        console.log(data[0].resources);
+
+        const chalets = data[0].resources.map(chalet => ({
+            name: chalet.propertyDetails.name,
+            basePrice: chalet.others.basePrice
+        }));
+        console.log("Estos son los chalets: ", chalets);
 
         const clientes = await Cliente.find({}).lean();
-        console.log(clientes),
-        
+        console.log(clientes);
+
         res.render('index', {
-            habitaciones: habitaciones,
+            chalets: chalets,
             clientes: clientes
         });
     } catch (error) {

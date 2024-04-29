@@ -41,7 +41,6 @@ userSchema.pre("save", async function(done){
         const hashedPassword = await bcrypt.hash(this.password, saltRounds);
         this.set("password", hashedPassword);
     }
-
     done();
 });
 

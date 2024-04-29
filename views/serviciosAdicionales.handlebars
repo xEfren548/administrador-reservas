@@ -29,11 +29,11 @@
                         <td>{{secondCommission}}</td>
                         <td>{{finalPrice}}</td>
                         <td class="text-center">
-                            <button type="button" class="btn btn-primary" data-client-email="{{email}}"  data-bs-toggle="modal"
-                                data-bs-target="#modifyClientEntryModal">
+                            <button type="button" class="btn btn-primary" data-service-name="{{service}}"  data-bs-toggle="modal"
+                                data-bs-target="#modify-service_entry_modal">
                                 <i class="fa fa-pencil" aria-hidden="true"></i>
                             </button>
-                            <button type="button" class="btn btn-danger" data-client-email="{{email}}">
+                            <button type="button" class="btn btn-danger" data-service-name="{{service}}">
                                 <i class="fa fa-trash" aria-hidden="true"></i>
                             </button>
                             <div class="form-item">
@@ -48,7 +48,7 @@
 </div>
 
 {{!-- Modals --}}
-<!-- Modal slta Sservicios -->
+<!-- Modal alta Servicios -->
 <div class="modal fade" id="services_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
     <form id="frmCreateService" action="/api/servicios/crear-servicio" method="post" class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -127,6 +127,9 @@
                         </div>
                     </div> <!-- Cierre row -->
                 </div>
+            </div>
+            <div class="form-item">
+                <p id="txtCreateServiceError" name="errMsg" class="error"></p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="btnSaveService">Guardar Servicio</button>
@@ -216,6 +219,9 @@
                     </div> <!-- Cierre row -->
                 </div>
             </div>
+            <div class="form-item">
+                <p id="txtEditServiceError" name="errMsg" class="error"></p>
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="btnUpdateService">Modificar Servicio</button>
             </div>
@@ -234,6 +240,23 @@
                 "pageLength": 10 // Establece la longitud de página inicial
             });
         }
+
+        // Functions.
+        function clearModal(modal){
+            const inputs = modal.querySelectorAll('input');
+            inputs.forEach(function(input) {
+                input.value = "";
+            });
+            modal.querySelectorAll("p[name='errMsg']")[0].innerHTML = "";
+        }
+
+        // Clearing service's info when closing modal.
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(function(modal) {
+            modal.addEventListener('hidden.bs.modal', () => {
+                clearModal(modal);
+            });
+        });
 
         // Saving new service.
         var btnSaveService = document.getElementById("btnSaveService");
@@ -262,9 +285,19 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        document.getElementById("txtCreateServiceError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     console.log('Respuesta del servidor:', data);
+                    clearModal(document.getElementById("services_entry_modal"));
+                    $('#services_entry_modal').modal('hide');
+                    location.reload();
                 })
                 .catch(error => {
                     console.error('Error al enviar la solicitud:', error);
@@ -276,9 +309,7 @@
         const editButtons = document.querySelectorAll('#tablaServicios .btn-primary');
         editButtons.forEach(function(button) {
             button.addEventListener('click', function() {
-                const row = this.closest('tr');
-                const serviceName = row.querySelector('td:first-child').textContent.trim();
-                document.getElementById('txtServiceUpd').value = serviceName;
+                document.getElementById('txtServiceUpd').value = this.dataset.serviceName;
             });
         });
         
@@ -308,9 +339,19 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        document.getElementById("txtEditServiceError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     console.log('Respuesta del servidor:', data);
+                    clearModal(document.getElementById("modify-service_entry_modal"));
+                    $('#modify-service_entry_modal').modal('hide');
+                    location.reload();
                 })
                 .catch(error => {
                     console.error('Error al enviar la solicitud:', error);
@@ -322,10 +363,8 @@
         const deleteButtons = document.querySelectorAll('#tablaServicios .btn-danger');
         deleteButtons.forEach(function(button) {
             button.addEventListener('click', function() {
-                const row = this.closest('tr');
-                const serviceName = row.querySelector('td:first-child').textContent.trim();
                 const data = {
-                    service: serviceName
+                    service: this.dataset.serviceName
                 };
 
                 fetch('/api/servicios/eliminar-servicio', {
@@ -336,9 +375,17 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        this.closest("p[name='errMsg']").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     console.log('Respuesta del servidor:', data);
+                    location.reload();
                 })
                 .catch(error => {
                     console.error('Error al enviar la solicitud:', error);
