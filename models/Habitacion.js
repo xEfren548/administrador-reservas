@@ -303,14 +303,6 @@ const preSchema = new mongoose.Schema({
         type: String,
         //required: true
     },
-    additionalAccomodationDescription: {
-        type: String,
-        //required: true
-    },
-    touristicRate: {
-        type: String,
-        //required: true
-    },
     legalNotice: {
         type: String,
         //required: true

@@ -55,10 +55,10 @@ router.get('/calendario-precios', async (req, res) => {
     }
 })
 
-
-router.post('/api/calendario-precios', precioBaseController.agregarNuevoPrecio)
+router.get('/api/calendario-precios', precioBaseController.verificarExistenciaRegistro);
+router.post('/api/calendario-precios', precioBaseController.agregarNuevoPrecio);
 router.get('/api/calendario-precios/:id', precioBaseController.consultarPreciosPorId)
-// router.post('/api/calendario-precios/masivo')
+router.delete('/api/calendario-precios', precioBaseController.eliminarRegistroPrecio);
 // router.get('/api/calendario-precios', precioBaseController.obtenerHabitacionesConPrecios)
 
 
