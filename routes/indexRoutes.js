@@ -36,10 +36,10 @@ router.use('/login', loginRoute);
 router.use("/api", authRoutes);
 
 //Validating user's token in later requests.
-//router.use(currentuser);
+router.use(currentuser);
 
 //Determining user access based on privileges.
-//router.use(userPrivilege);
+router.use(userPrivilege);
 
 router.use("/download", express.static("download"));
 
