@@ -18,6 +18,7 @@ const userRoutes = require('./usersRoutes');
 const userProfileRoutes = require('./userProfileRoutes');
 const calendarioPrecios = require('./calendarioPreciosRoutes');
 const reservationRoutes = require('./reservationRoutes');
+const sideMenuRoutes = require('./sideMenuRoutes');
 const CustomError = require("../common/error/custom-error");
 const NotFoundError = require("../common/error/not-found-error");
 
@@ -42,6 +43,8 @@ router.use("/api", authRoutes);
 //router.use(userPrivilege);
 
 router.use("/download", express.static("download"));
+
+router.use('/', sideMenuRoutes);
 
 router.use('/', 
     instruccionesRoutes,
