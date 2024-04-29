@@ -56,6 +56,10 @@ async function createRackService(req, res, next) {
 
         const habitacion = await habitacionController.obtenerHabitacionPorId(resourceId);
 
+        if (!habitacion) {
+            return res.status(404).send('Habitacion not found'); // Si no se encuentra el evento, devolver un error 404
+        }
+
         const nombreHabitacion = habitacion.propertyDetails.name
 
 

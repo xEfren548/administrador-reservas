@@ -8,17 +8,19 @@ const rackServiciosController = require('../controllers/rackServiciosController'
 router.get('/rackservicios', async (req, res) => {
     try {
 
-        // const services = await rackServiciosController.getAllServicesMongo(req, res); // Pass req and res to the controller function
-        // console.log(services)
-        // services.forEach(service => {
-        //     service._id = service._id.toString();
-        //     service.id_reserva = service.id_reserva.toString();
-        //     service.fecha = moment.utc(service.fecha).format('DD-MM-YYYY');
-        // });
+        const services = await rackServiciosController.getAllRackServicesMongo(req, res); // Pass req and res to the controller function
+        console.log(services)
+        services.forEach(service => {
+            service._id = service._id.toString();
+            service.id_reserva = service.id_reserva.toString();
+            service.fecha = moment.utc(service.fecha).format('DD-MM-YYYY');
+        });
+
+
 
         res.render('rackServicios', {
             layout: 'layoutRackLimpieza',
-            // services: services
+            services: services
         });
 
     } catch (error) {
@@ -27,9 +29,9 @@ router.get('/rackservicios', async (req, res) => {
     }
 });
 
-// router.get('/api/racklimpieza', rackLimpiezaController.getAllServices)
-// router.post('/api/racklimpieza', rackLimpiezaController.createService)
-// router.put('/api/racklimpieza/:id', rackLimpiezaController.modifyService);
-// router.delete('/api/racklimpieza/:id', rackLimpiezaController.deleteService);
+router.get('/api/rackservicios', rackServiciosController.getAllRackServices)
+router.post('/api/rackservicios', rackServiciosController.createRackService)
+router.put('/api/rackservicios/:id', rackServiciosController.modifyRackService);
+router.delete('/api/rackservicios/:id', rackServiciosController.deleteRackService);
 
 module.exports = router;
