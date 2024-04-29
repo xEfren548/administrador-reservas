@@ -715,7 +715,7 @@
         <div class="input-group third">
             <label for="txtState">Administrador asociado</label>
             <select id="slctAdmin" name="slctAdmin" class="form-select form-select-md">
-                <option value="" selected="true" disabled="true"> Selecciona un administrador para la cabaña --</option>
+                <option selected="true" disabled="true"> Selecciona un administrador para la cabaña --</option>
                 {{#if admins}}
                     {{#each admins}}
                         <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
@@ -728,7 +728,7 @@
         <div class="input-group third">
             <label for="slctJanitor">Personal de limpieza asociado</label>
             <select id="slctJanitor" name="slctJanitor" class="form-select form-select-md">
-                <option value="" selected="true" disabled="true"> Selecciona el personal de limpieza para la cabaña --</option>
+                <option selected="true" disabled="true"> Selecciona el personal de limpieza para la cabaña --</option>
                 {{#if janitors}}
                     {{#each janitors}}
                         <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
@@ -764,7 +764,8 @@
         // Upload chalet images.
         const fileUpload = document.getElementById('file-upload');
         const photoCarousel = document.getElementById('photoCarousel');
-        const formData = new FormData(); // Objeto FormData para almacenar las imágenes
+        const formData = new FormData();
+
         fileUpload.addEventListener('change', function(event) {
             const files = event.target.files;
 
@@ -788,7 +789,7 @@
                 photoDiv.appendChild(img);
                 photoCarousel.appendChild(photoDiv);
 
-                formData.append('images', file); // Agregar la nueva imagen al FormData
+                formData.append('images', file);
             }
         });
 
@@ -1004,14 +1005,6 @@
                     console.log('Respuesta del servidor:', data);
 
                     try {
-                        /*
-                        const formData = new FormData();
-                        const files = fileUpload.files;
-                        for (let i = 0; i < files.length; i++) {
-                            formData.append('images', files[i]);
-                        }
-                        */
-
                         const response = await fetch('/api/cabanas/subir-imagenes-cabana', {
                             method: 'POST',
                             body: formData

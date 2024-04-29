@@ -41,7 +41,8 @@ router.use("/api", authRoutes);
 //Determining user access based on privileges.
 //router.use(userPrivilege);
 
-// Use middlewares.
+router.use("/download", express.static("download"));
+
 router.use('/', 
     instruccionesRoutes,
     calendarioPrecios);
@@ -55,7 +56,7 @@ router.use('/api',
     dashboardRoutes);
 router.use('/api/usuarios', userRoutes);
 router.use('/api/perfil-usuario/', userProfileRoutes);
-// Get middlewares.
+
 router.get('/', reservationRoutes);
 router.get('/api/racklimpieza', (req, res) => {
     res.render('rackLimpieza');
@@ -66,6 +67,7 @@ router.use('/api', habitacionesRoutes);
 router.use('/api', userRoutes);
 router.use('/api', serviciosRoutes);
 router.use('/', calendarioPrecios);
+
 // Not found resource handling middleware.
 router.all("*", (req, res, next) => {
     next(new NotFoundError("Page not found"));

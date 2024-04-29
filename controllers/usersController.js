@@ -40,6 +40,7 @@ const createUserValidators = [
 const editUserValidators = [
     check(['firstName', 'lastName'])
         .optional({ checkFalsy: true })
+        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s']+$/).withMessage("Invalid full name format")
         .isLength({ max: 255 }).withMessage("Full name must be less than 255 characters"),
     check('email')
         .notEmpty().withMessage('Email is required')

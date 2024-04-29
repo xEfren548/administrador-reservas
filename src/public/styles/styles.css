@@ -483,10 +483,11 @@ body:not(h1, h2, h3, h4, h5, h6){
     background-color: rgb(50, 50, 50);
 }
 
-.input-group select optgroup{
+.input-group optgroup option,
+.input-group option{
     font-style: normal;
-    font-weight: 700;
-    color: inherit;
+    font-weight: 100;
+    color: black;
 }
 
 .input-group label,

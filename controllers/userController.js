@@ -109,9 +109,7 @@ async function editarUsuario(req, res, next) {
     try {
         // Buscar el usuario por su dirección de correo electrónico
         const userToUpdate = await Usuario.findOneAndUpdate({ email }, updateFields, { new: true });
-
         if (!userToUpdate) {
-            // Si no se encuentra el usuario, devolver un error
             const error = new Error("El usuario no fue encontrado.");
             error.status = 404;
             throw error;
@@ -119,7 +117,6 @@ async function editarUsuario(req, res, next) {
 
         console.log("Usuario editado con éxito");
         res.status(200).json({ userToUpdate });
-    
     } catch(err) {
         return next(err);
     }
