@@ -1,0 +1,157 @@
+<h1>Tabla Rack Limpieza</h1>
+{{#if services.length}}
+<div class="row" style="width: 95%;">
+    <div class="col-10">
+        <table class="table table-dark table-hover text-center" id="tablaRacklimpieza">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Habitación</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Estatus</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each services}}
+                <tr>
+                    <td>{{this.nombreHabitacion}}</td>
+                    <td>{{this.descripcion}}</td>
+                    <td>{{this.fecha}}</td>
+                    <td>{{this.status}}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#editarRackLimpiezaModal" data-service-id="{{this._id}}"
+                            onclick="mostrarInfoServicio('{{this._id}}')"><i class="fa fa-pencil"
+                                aria-hidden="true"></i>
+                    </td>
+
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{else}}
+<p>No se encontraron servicios</p>
+{{/if}}
+
+
+
+{{!-- Modals --}}
+<div class="modal fade" id="editarRackLimpiezaModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <form id="frmUpdateUser" action="/api/usuarios/editar-usuario" method="put" class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Modificar Estatus</h5>
+                <button type="button" class="close" onclick="$('#editarRackLimpiezaModal').modal('hide');"
+                    aria-label="Close">
+                    &times;
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-12 mb-2">
+                            <div class="mb-3">
+                                <label for="" class="form-label">Modificar estatus: </label>
+                                <select class="form-select form-select-md" name="modificar-status"
+                                    id="modificar-status">
+                                    <option selected value="0" disabled>Selecciona uno: </option>
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="En proceso">En proceso</option>
+                                    <option value="Completado">Completado</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <div class="form-item">
+                            <p id="txtUpdUserError" name="errMsg" class="error"></p>
+                        </div>
+                        <div class="modal_footer" style="display: flex; justify-content: right; margin: 10px 0;">
+                            <button type="button" class="btn btn-primary" id="btnUpdateService">Modificar
+                                estatus</button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-item">
+            <p id="txtUpdUserError" name="errMsg" class="error"></p>
+        </div>
+    </form>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var table = document.getElementById("tablaRacklimpieza");
+        if (table) {
+            var dataTable = new DataTable(table, {
+                "order": [], // Puedes especificar aquí el orden inicial de las columnas
+                "paging": true, // Habilita la paginación
+                "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
+                "pageLength": 10 // Establece la longitud de página inicial
+            });
+        }
+    });
+
+    function mostrarInfoServicio(serviceId) {
+        // Use serviceId to perform actions specific to the clicked service
+        console.log("Service ID:", serviceId);
+        const modificarStatusSelect = document.querySelector("#modificar-status");
+        const btnUpdateService = document.querySelector("#btnUpdateService");
+
+
+        btnUpdateService.addEventListener("click", function (e) {
+            e.preventDefault();
+            const status = modificarStatusSelect.value;
+            console.log("Status:", status);
+
+
+
+            try {
+                fetch(`http://localhost:3005/api/rackservicios/${serviceId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        status: status
+                    })
+                })
+
+                if (status == "0") {
+                    throw new Error("Selecciona un status para continuar.");
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Completado!',
+                    text: 'Estatus actualizado correctamente.',
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    // Verificar si el usuario hizo clic en el botón de confirmación
+                    if (result.isConfirmed) {
+                        // Actualizar la página
+                        location.reload();
+                    }
+                });
+            } catch (error) {
+                console.error(error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message,
+                    confirmButtonText: 'Aceptar'
+                });
+
+            }
+        });
+    }
+
+
+
+</script>
