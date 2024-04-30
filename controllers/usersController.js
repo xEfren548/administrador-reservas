@@ -92,7 +92,6 @@ async function showUsersView(req, res, next){
     try {
         const users = await Usuario.find({}).lean();
         res.render('vistaUsuarios', {
-            layout: 'users',
             users: users
         });
     } catch (err) {

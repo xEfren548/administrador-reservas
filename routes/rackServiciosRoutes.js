@@ -19,7 +19,6 @@ router.get('/rackservicios', async (req, res) => {
 
 
         res.render('rackServicios', {
-            layout: 'layoutRackLimpieza',
             services: services
         });
 
