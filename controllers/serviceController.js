@@ -52,7 +52,6 @@ async function mostrarServicios(req, res, next) {
     try {
         const servicios = await Service.find({}).lean();
         res.render('serviciosAdicionales', {
-            layout: 'services',
             servicios: servicios
         });
     } catch (err) {
