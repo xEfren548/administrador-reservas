@@ -354,7 +354,6 @@ async function showChaletsView(req, res, next){
         const janitors = await Usuario.find({privilege: "Limpieza"}).lean();
 
         res.render('vistaCabanas', {
-            layout: 'cabanas',
             admins: admins,
             janitors: janitors
         });
@@ -527,7 +526,6 @@ async function showEditChaletsView(req, res, next){
         console.log("Images downloaded successfully ");
 
         res.render('vistaEditarCabana', {
-            layout: 'editarCabana',
             chalets: chalets,
             admins: admins,
             janitors: janitors

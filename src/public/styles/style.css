@@ -130,6 +130,10 @@ body {
     font-size: 16px !important;
 }
 
+.navbar-bg {
+    background-color: #343a40 !important;
+}
+
 .content {
     margin-left: 250px;
     /* Igual al ancho del navbar */
