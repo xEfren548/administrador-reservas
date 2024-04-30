@@ -134,6 +134,10 @@ body {
     background-color: #343a40 !important;
 }
 
+.fc-license-message {
+    display: none !important;
+}
+
 .content {
     margin-left: 250px;
     /* Igual al ancho del navbar */
