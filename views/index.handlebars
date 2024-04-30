@@ -1,3 +1,12 @@
+<div class="calendar-header">
+    <div class="bg-dark mb-3">
+        <a name="" id="crear-reserva-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
+            data-bs-toggle="modal" data-bs-target="#event_entry_modal">Crear reserva</a>
+    </div>
+
+
+</div>
+
 <div id="calendar" class=""></div>
 
 <!-- Modals -->
@@ -17,13 +26,14 @@
                             <div class="form-group">
                                 <label for="lblClient">Cliente</label>
                                 <select id="lblClient" name="lblClient" class="form-select form-select-md" required>
-                                    <option value="" selected="true" disabled="true"> Selecciona al cliente para hacer su reserva --</option>
+                                    <option value="" selected="true" disabled="true"> Selecciona al cliente para hacer
+                                        su reserva --</option>
                                     {{#if clientes}}
-                                        {{#each clientes}}
-                                            <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
-                                        {{/each}}
+                                    {{#each clientes}}
+                                    <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                                    {{/each}}
                                     {{else}}
-                                        <option value="0">No se encontraron clientes</option>
+                                    <option value="0">No se encontraron clientes</option>
                                     {{/if}}
                                 </select>
                             </div>
@@ -135,4 +145,3 @@
 <!-- Bootstrap JavaScript Libraries -->
 <script src="/scripts/calendar.js"></script>
 <script src="/scripts/functions.js"></script>
-
