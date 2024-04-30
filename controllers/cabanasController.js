@@ -526,6 +526,7 @@ async function showEditChaletsView(req, res, next){
         console.log("Images downloaded successfully ");
 
         res.render('vistaEditarCabana', {
+            layout: 'editarCabana',
             chalets: chalets,
             admins: admins,
             janitors: janitors
