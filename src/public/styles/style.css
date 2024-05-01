@@ -115,9 +115,27 @@ body {
     /* Añade desplazamiento vertical si es necesario */
 }
 
+#nav {
+    color: white !important;
+}
+
+.nav-link {
+    color: white !important;
+    font-size: 16px !important;
+
+}
+
 .navbar,
 .navbar * {
     font-size: 16px !important;
+}
+
+.navbar-bg {
+    background-color: #343a40 !important;
+}
+
+.fc-license-message {
+    display: none !important;
 }
 
 .content {
@@ -128,7 +146,7 @@ body {
 }
 
 .calendar-container {
-    height: 100%;
+    max-height: 100%;
 }
 
 .calendar,
@@ -144,7 +162,7 @@ body {
     background-color: #141418;
     overflow-x: auto;
     /* Arriba | Derecha | Abajo | Izquierda */
-    margin: 1em 22em 0 1em;
+    margin: 1em 3em 0 3em;
 
 }
 
@@ -280,6 +298,9 @@ td {
     color: #fff !important; /* Color del texto */
 }
 
+#spinner {
+    display: none;
+}
 .table-prices{
     overflow-x: auto;
     margin: 1em 22em 0 1em;

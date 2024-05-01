@@ -1,6 +1,15 @@
-<h1>Lista de servicios</h1>
-<div class="row" style="width: 95%;">
+<div class="calendar-header">
+    <div class="bg-dark mb-3">
+        <a name="" id="crear-servicio-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
+            data-bs-toggle="modal" data-bs-target="#services_entry_modal">Alta de servicios</a>
+    </div>
+
+
+</div>
+
+<div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
     <div class="col-10">
+        <h1>Lista de servicios</h1>
         <table class="table table-dark table-hover" id="tablaServicios">
             <thead class="table-light">
                 <tr>
@@ -18,43 +27,46 @@
             </thead>
             <tbody>
                 {{#each servicios}}
-                    <tr>
-                        <td>{{service}}</td>
-                        <td>{{description}}</td>
-                        <td> {{supplier}}</td>
-                        <td>{{serviceManager}}</td>
-                        <td> {{basePrice}}</td>
-                        <td>{{firstCommission}}</td>
-                        <td>{{firstUser}}</td>
-                        <td>{{secondCommission}}</td>
-                        <td>{{finalPrice}}</td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-primary" data-client-email="{{email}}"  data-bs-toggle="modal"
-                                data-bs-target="#modifyClientEntryModal">
-                                <i class="fa fa-pencil" aria-hidden="true"></i>
-                            </button>
-                            <button type="button" class="btn btn-danger" data-client-email="{{email}}">
-                                <i class="fa fa-trash" aria-hidden="true"></i>
-                            </button>
-                            <div class="form-item">
-                                <p name="errMsg" class="error"></p>
-                            </div>
-                        </td>
-                    </tr>
-                {{/each}}  
+                <tr>
+                    <td>{{service}}</td>
+                    <td>{{description}}</td>
+                    <td> {{supplier}}</td>
+                    <td>{{serviceManager}}</td>
+                    <td> {{basePrice}}</td>
+                    <td>{{firstCommission}}</td>
+                    <td>{{firstUser}}</td>
+                    <td>{{secondCommission}}</td>
+                    <td>{{finalPrice}}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-primary" data-service-name="{{service}}"
+                            data-bs-toggle="modal" data-bs-target="#modify-service_entry_modal">
+                            <i class="fa fa-pencil" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger" data-service-name="{{service}}">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                        <div class="form-item">
+                            <p name="errMsg" class="error"></p>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
             </tbody>
         </table>
     </div>
 </div>
 
 {{!-- Modals --}}
-<!-- Modal slta Sservicios -->
-<div class="modal fade" id="services_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-    <form id="frmCreateService" action="/api/servicios/crear-servicio" method="post" class="modal-dialog modal-lg" role="document">
+<!-- Modal alta Servicios -->
+<div class="modal fade" id="services_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <form id="frmCreateService" action="/api/servicios/crear-servicio" method="post" class="modal-dialog modal-lg"
+        role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Alta de Servicios</h5>
-                <button type="button" class="close" onclick="$('#services_entry_modal').modal('hide');" aria-label="Close">
+                <button type="button" class="close" onclick="$('#services_entry_modal').modal('hide');"
+                    aria-label="Close">
                     &times;
                 </button>
             </div>
@@ -64,37 +76,43 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtService">Servicio</label>
-                                <input type="text" name="txtService" id="txtService" class="form-control" placeholder="Servicio">
+                                <input type="text" name="txtService" id="txtService" class="form-control"
+                                    placeholder="Servicio">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtServiceDescription">Descripción</label>
-                                <input type="text" name="txtServiceDescription" id="txtServiceDescription" class="form-control" placeholder="Descripción">
+                                <input type="text" name="txtServiceDescription" id="txtServiceDescription"
+                                    class="form-control" placeholder="Descripción">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtSupplier">Proveedor</label>
-                                <input type="text" name="txtSupplier" id="txtSupplier" class="form-control" placeholder="Proveedor">
+                                <input type="text" name="txtSupplier" id="txtSupplier" class="form-control"
+                                    placeholder="Proveedor">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtServiceManager">Administrador de servicios</label>
-                                <input type="text" name="txtServiceManager" id="txtServiceManager" class="form-control" placeholder="Administrador de servicios">
+                                <input type="text" name="txtServiceManager" id="txtServiceManager" class="form-control"
+                                    placeholder="Administrador de servicios">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtBasePrice">Precio base</label>
-                                <input type="number" name="txtBasePrice" id="txtBasePrice" class="form-control" placeholder="Precio base">
+                                <input type="number" name="txtBasePrice" id="txtBasePrice" class="form-control"
+                                    placeholder="Precio base">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtFirstCommission">1ra comisión</label>
-                                <input type="number" name="txtFirstCommission" id="txtFirstCommission" class="form-control" placeholder="1ra comisión">
+                                <input type="number" name="txtFirstCommission" id="txtFirstCommission"
+                                    class="form-control" placeholder="1ra comisión">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
@@ -108,17 +126,22 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtSecondCommission">2da comisión</label>
-                                <input type="number" name="txtSecondCommission" id="txtSecondCommission" class="form-control" placeholder="2da comisión">
+                                <input type="number" name="txtSecondCommission" id="txtSecondCommission"
+                                    class="form-control" placeholder="2da comisión">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtFinalPrice">Precio final</label>
-                                <input type="number" name="txtFinalPrice" id="txtFinalPrice" class="form-control" placeholder="Precio final">
+                                <input type="number" name="txtFinalPrice" id="txtFinalPrice" class="form-control"
+                                    placeholder="Precio final">
                             </div>
                         </div>
                     </div> <!-- Cierre row -->
                 </div>
+            </div>
+            <div class="form-item">
+                <p id="txtCreateServiceError" name="errMsg" class="error"></p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="btnSaveService">Guardar Servicio</button>
@@ -131,11 +154,13 @@
 {{!-- Modal modificar servicio --}}
 <div class="modal fade" id="modify-service_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <form id="frmUpdateUser" action="/api/servicios/editar-servicio" method="post" class="modal-dialog modal-lg" role="document">
+    <form id="frmUpdateUser" action="/api/servicios/editar-servicio" method="post" class="modal-dialog modal-lg"
+        role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Modificar Servicio</h5>
-                <button type="button" class="close" onclick="$('#modify-service_entry_modal').modal('hide');" aria-label="Close">
+                <button type="button" class="close" onclick="$('#modify-service_entry_modal').modal('hide');"
+                    aria-label="Close">
                     &times;
             </div>
             <div class="modal-body">
@@ -144,37 +169,43 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtServiceUpd">Servicio</label>
-                                <input type="text" name="txtServiceUpd" id="txtServiceUpd" class="form-control" placeholder="Servicio" disabled>
+                                <input type="text" name="txtServiceUpd" id="txtServiceUpd" class="form-control"
+                                    placeholder="Servicio" disabled>
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtServiceDescriptionUpd">Descripción</label>
-                                <input type="text" name="txtServiceDescriptionUpd" id="txtServiceDescriptionUpd" class="form-control" placeholder="Descripción">
+                                <input type="text" name="txtServiceDescriptionUpd" id="txtServiceDescriptionUpd"
+                                    class="form-control" placeholder="Descripción">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtSupplierUpd">Proveedor</label>
-                                <input type="text" name="txtSupplierUpd" id="txtSupplierUpd" class="form-control" placeholder="Proveedor">
+                                <input type="text" name="txtSupplierUpd" id="txtSupplierUpd" class="form-control"
+                                    placeholder="Proveedor">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtServiceManagerUpd">Administrador de servicios</label>
-                                <input type="text" name="txtServiceManagerUpd" id="txtServiceManagerUpd" class="form-control" placeholder="Administrador de servicios">
+                                <input type="text" name="txtServiceManagerUpd" id="txtServiceManagerUpd"
+                                    class="form-control" placeholder="Administrador de servicios">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtBasePriceUpd">Precio base</label>
-                                <input type="number" name="txtBasePriceUpd" id="txtBasePriceUpd" class="form-control" placeholder="Precio base">
+                                <input type="number" name="txtBasePriceUpd" id="txtBasePriceUpd" class="form-control"
+                                    placeholder="Precio base">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtFirstCommissionUpd">1ra comisión</label>
-                                <input type="number" name="txtFirstCommissionUpd" id="txtFirstCommissionUpd" class="form-control" placeholder="1ra comisión">
+                                <input type="number" name="txtFirstCommissionUpd" id="txtFirstCommissionUpd"
+                                    class="form-control" placeholder="1ra comisión">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
@@ -188,17 +219,22 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtSecondCommissionUpd">2da comisión</label>
-                                <input type="number" name="txtSecondCommissionUpd" id="txtSecondCommissionUpd" class="form-control" placeholder="2da comisión">
+                                <input type="number" name="txtSecondCommissionUpd" id="txtSecondCommissionUpd"
+                                    class="form-control" placeholder="2da comisión">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtFinalPriceUpd">Precio final</label>
-                                <input type="number" name="txtFinalPriceUpd" id="txtFinalPriceUpd" class="form-control" placeholder="Precio final">
+                                <input type="number" name="txtFinalPriceUpd" id="txtFinalPriceUpd" class="form-control"
+                                    placeholder="Precio final">
                             </div>
                         </div>
                     </div> <!-- Cierre row -->
                 </div>
+            </div>
+            <div class="form-item">
+                <p id="txtEditServiceError" name="errMsg" class="error"></p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="btnUpdateService">Modificar Servicio</button>
@@ -218,6 +254,23 @@
                 "pageLength": 10 // Establece la longitud de página inicial
             });
         }
+
+        // Functions.
+        function clearModal(modal) {
+            const inputs = modal.querySelectorAll('input');
+            inputs.forEach(function (input) {
+                input.value = "";
+            });
+            modal.querySelectorAll("p[name='errMsg']")[0].innerHTML = "";
+        }
+
+        // Clearing service's info when closing modal.
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(function (modal) {
+            modal.addEventListener('hidden.bs.modal', () => {
+                clearModal(modal);
+            });
+        });
 
         // Saving new service.
         var btnSaveService = document.getElementById("btnSaveService");
@@ -245,26 +298,34 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Respuesta del servidor:', data);
-                })
-                .catch(error => {
-                    console.error('Error al enviar la solicitud:', error);
-                });
+                    .then(response => {
+                        if (!response.ok) {
+                            const error = response.statusText;
+                            document.getElementById("txtCreateServiceError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
+                            throw new Error('Error en la solicitud: ' + error);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Respuesta del servidor:', data);
+                        clearModal(document.getElementById("services_entry_modal"));
+                        $('#services_entry_modal').modal('hide');
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error al enviar la solicitud:', error);
+                    });
             });
         }
-        
+
         // Updating service info.
         const editButtons = document.querySelectorAll('#tablaServicios .btn-primary');
-        editButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                const row = this.closest('tr');
-                const serviceName = row.querySelector('td:first-child').textContent.trim();
-                document.getElementById('txtServiceUpd').value = serviceName;
+        editButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                document.getElementById('txtServiceUpd').value = this.dataset.serviceName;
             });
         });
-        
+
         var btnUpdateService = document.getElementById("btnUpdateService");
         if (btnUpdateService) {
             btnUpdateService.addEventListener("click", async (event) => {
@@ -290,24 +351,32 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Respuesta del servidor:', data);
-                })
-                .catch(error => {
-                    console.error('Error al enviar la solicitud:', error);
-                });
+                    .then(response => {
+                        if (!response.ok) {
+                            const error = response.statusText;
+                            document.getElementById("txtEditServiceError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                            throw new Error('Error en la solicitud: ' + error);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Respuesta del servidor:', data);
+                        clearModal(document.getElementById("modify-service_entry_modal"));
+                        $('#modify-service_entry_modal').modal('hide');
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error al enviar la solicitud:', error);
+                    });
             });
         }
-        
+
         // Deleting user info.
         const deleteButtons = document.querySelectorAll('#tablaServicios .btn-danger');
-        deleteButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                const row = this.closest('tr');
-                const serviceName = row.querySelector('td:first-child').textContent.trim();
+        deleteButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
                 const data = {
-                    service: serviceName
+                    service: this.dataset.serviceName
                 };
 
                 fetch('/api/servicios/eliminar-servicio', {
@@ -318,15 +387,23 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Respuesta del servidor:', data);
-                })
-                .catch(error => {
-                    console.error('Error al enviar la solicitud:', error);
-                });
+                    .then(response => {
+                        if (!response.ok) {
+                            const error = response.statusText;
+                            this.closest("p[name='errMsg']").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                            throw new Error('Error en la solicitud: ' + error);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Respuesta del servidor:', data);
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error al enviar la solicitud:', error);
+                    });
             });
-        });        
+        });
     });
 
 </script>

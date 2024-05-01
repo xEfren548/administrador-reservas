@@ -18,6 +18,8 @@ const userRoutes = require('./usersRoutes');
 const userProfileRoutes = require('./userProfileRoutes');
 const calendarioPrecios = require('./calendarioPreciosRoutes');
 const reservationRoutes = require('./reservationRoutes');
+const rackLimpiezaRoutes = require('./rackLimpiezaRoutes');
+const rackServiciosRoutes = require('./rackServiciosRoutes');
 const CustomError = require("../common/error/custom-error");
 const NotFoundError = require("../common/error/not-found-error");
 
@@ -36,12 +38,13 @@ router.use('/login', loginRoute);
 router.use("/api", authRoutes);
 
 //Validating user's token in later requests.
-//router.use(currentuser);
+// router.use(currentuser);
 
 //Determining user access based on privileges.
-//router.use(userPrivilege);
+// router.use(userPrivilege);
 
-// Use middlewares.
+router.use("/download", express.static("download"));
+
 router.use('/', 
     instruccionesRoutes,
     calendarioPrecios);
@@ -55,17 +58,18 @@ router.use('/api',
     dashboardRoutes);
 router.use('/api/usuarios', userRoutes);
 router.use('/api/perfil-usuario/', userProfileRoutes);
-// Get middlewares.
+
 router.get('/', reservationRoutes);
-router.get('/api/racklimpieza', (req, res) => {
-    res.render('rackLimpieza');
-});
+
+router.use('/', rackLimpiezaRoutes);
+router.use('/', rackServiciosRoutes);
 
 router.use('/api', eventRoutes);
 router.use('/api', habitacionesRoutes);
 router.use('/api', userRoutes);
 router.use('/api', serviciosRoutes);
 router.use('/', calendarioPrecios);
+
 // Not found resource handling middleware.
 router.all("*", (req, res, next) => {
     next(new NotFoundError("Page not found"));
@@ -73,8 +77,8 @@ router.all("*", (req, res, next) => {
 
 // Error handling middleware.
 router.use((err, req, res, next) => {
-    if(err.status){
-        res.status(err.status).json({error: err.message})
+    if(err.statusCode){
+        res.status(err.statusCode).json({error: err.generateErrors()})
         return;
     }
     res.status(500).json({error: "Internal server error: something went wrong", message: err.message });

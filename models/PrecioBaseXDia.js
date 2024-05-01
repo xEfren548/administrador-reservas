@@ -6,6 +6,18 @@ const precioBaseSchema = new Schema({
         type: Number,
         required: true
     },
+    precio_base_2noches: {
+        type: Number,
+        required: true
+    },
+    costo_base: {
+        type: Number,
+        required: true
+    },
+    costo_base_2noches: {
+        type: Number,
+        required: true
+    },
     fecha: {
         type: Date,
     },

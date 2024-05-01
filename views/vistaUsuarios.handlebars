@@ -1,6 +1,15 @@
-<h1>Lista de usuarios</h1>
-<div class="row" style="width: 95%;">
+<div class="calendar-header">
+    <div class="bg-dark mb-3">
+        <a name="" id="crear-reserva-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
+            data-bs-toggle="modal" data-bs-target="#user_entry_modal">Alta de Usuario</a>
+    </div>
+
+
+</div>
+
+<div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
     <div class="col-10">
+        <h1>Lista de usuarios</h1>
         <table class="table table-dark table-hover" id="tablaUsuarios">
             <thead class="table-light">
                 <tr>
@@ -13,25 +22,25 @@
             </thead>
             <tbody>
                 {{#each users}}
-                    <tr>
-                        <td>{{firstName}}</td>
-                        <td>{{lastName}}</td>
-                        <td>{{email}}</td>
-                        <td> {{privilege}}</td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-primary" data-client-email="{{email}}"  data-bs-toggle="modal"
-                                data-bs-target="#modifyClientEntryModal">
-                                <i class="fa fa-pencil" aria-hidden="true"></i>
-                            </button>
-                            <button type="button" class="btn btn-danger" data-client-email="{{email}}">
-                                <i class="fa fa-trash" aria-hidden="true"></i>
-                            </button>
-                            <div class="form-item">
-                                <p name="errMsg" class="error"></p>
-                            </div>
-                        </td>
-                    </tr>
-                {{/each}}       
+                <tr>
+                    <td>{{firstName}}</td>
+                    <td>{{lastName}}</td>
+                    <td>{{email}}</td>
+                    <td>{{privilege}}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-primary" data-client-email="{{email}}"
+                            data-bs-toggle="modal" data-bs-target="#modify-user_entry_modal">
+                            <i class="fa fa-pencil" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger" data-client-email="{{email}}">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                        <div class="form-item">
+                            <p name="errMsg" class="error"></p>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
             </tbody>
         </table>
 
@@ -55,8 +64,8 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtUserName">Nombre</label>
-                                <input type="text" name="txtUserName" id="txtUserName" class="form-control onlydatepicker"
-                                    placeholder="Nombre">
+                                <input type="text" name="txtUserName" id="txtUserName"
+                                    class="form-control onlydatepicker" placeholder="Nombre">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
@@ -75,8 +84,8 @@
                             <div class="col-sm-12 mb-2">
                                 <div class="form-group">
                                     <label for="txtUserPassword">Contraseña: </label>
-                                    <input type="password" name="txtUserPassword" id="txtUserPassword" class="form-control"
-                                        placeholder="Contraseña">
+                                    <input type="password" name="txtUserPassword" id="txtUserPassword"
+                                        class="form-control" placeholder="Contraseña">
                                 </div>
                             </div>
                             <div class="row">
@@ -128,7 +137,8 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Modificar Usuario</h5>
-                <button type="button" class="close" onclick="$('#modify-user_entry_modal').modal('hide');" aria-label="Close">
+                <button type="button" class="close" onclick="$('#modify-user_entry_modal').modal('hide');"
+                    aria-label="Close">
                     &times;
             </div>
             <div class="modal-body">
@@ -137,15 +147,15 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtUserNameUpd">Nombre</label>
-                                <input type="text" name="txtUserNameUpd" id="txtUserNameUpd" class="form-control onlydatepicker"
-                                    placeholder="Nombre">
+                                <input type="text" name="txtUserNameUpd" id="txtUserNameUpd"
+                                    class="form-control onlydatepicker" placeholder="Nombre">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtUserLastnameUpd">Apellido</label>
-                                <input type="text" name="txtUserLastnameUpd" id="txtUserLastnameUpd" class="form-control"
-                                    placeholder="Apellido">
+                                <input type="text" name="txtUserLastnameUpd" id="txtUserLastnameUpd"
+                                    class="form-control" placeholder="Apellido">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
@@ -157,8 +167,8 @@
                             <div class="col-sm-12 mb-2">
                                 <div class="form-group">
                                     <label for="txtUserPasswordUpd">Contraseña: </label>
-                                    <input type="password" name="txtUserPasswordUpd" id="txtUserPasswordUpd" class="form-control"
-                                        placeholder="Contraseña">
+                                    <input type="password" name="txtUserPasswordUpd" id="txtUserPasswordUpd"
+                                        class="form-control" placeholder="Contraseña">
                                 </div>
                             </div>
                             <div class="row">
@@ -220,9 +230,9 @@
         }
 
         // Functions.
-        function clearModal(modal){
+        function clearModal(modal) {
             const inputs = modal.querySelectorAll('input');
-            inputs.forEach(function(input) {
+            inputs.forEach(function (input) {
                 input.value = "";
             });
             modal.querySelectorAll("p[name='errMsg']")[0].innerHTML = "";
@@ -230,7 +240,7 @@
 
         // Clearing user's info when closing modal.
         const modals = document.querySelectorAll('.modal');
-        modals.forEach(function(modal) {
+        modals.forEach(function (modal) {
             modal.addEventListener('hidden.bs.modal', () => {
                 clearModal(modal);
             });
@@ -238,7 +248,7 @@
 
         // Saving new user.
         var btnSaveUser = document.getElementById("btnSaveUser")
-        if (btnSaveUser){
+        if (btnSaveUser) {
             btnSaveUser.addEventListener("click", async (event) => {
                 event.preventDefault();
 
@@ -259,36 +269,36 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        const error = response.statusText;
-                        document.getElementById("txtInsertUserError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
-                        throw new Error('Error en la solicitud: ' + error);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Respuesta del servidor:', data);
-                    clearModal(document.getElementById("user_entry_modal"));
-                    $('#user_entry_modal').modal('hide');
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error('Error al enviar la solicitud:', error);
-                });
+                    .then(response => {
+                        if (!response.ok) {
+                            const error = response.statusText;
+                            document.getElementById("txtInsertUserError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
+                            throw new Error('Error en la solicitud: ' + error);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Respuesta del servidor:', data);
+                        clearModal(document.getElementById("user_entry_modal"));
+                        $('#user_entry_modal').modal('hide');
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error al enviar la solicitud:', error);
+                    });
             });
         }
-        
+
         // Updating user info.
         const editButtons = document.querySelectorAll('#tablaUsuarios .btn-primary');
-        editButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
+        editButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
                 document.getElementById('txtUserEmailUpd').value = this.dataset.clientEmail;
             });
         });
 
         var btnUpdateUser = document.getElementById("btnUpdateUser")
-        if(btnUpdateUser){
+        if (btnUpdateUser) {
             btnUpdateUser.addEventListener("click", async (event) => {
                 event.preventDefault();
                 const data = {
@@ -308,30 +318,30 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        const error = response.statusText;
-                        document.getElementById("txtUpdUserError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
-                        throw new Error('Error en la solicitud: ' + error);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Respuesta exitosa del servidor:', data);
-                    clearModal(document.getElementById("modify-user_entry_modal"));
-                    $('#modify-user_entry_modal').modal('hide');
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error('Ha ocurrido un error: ', error);
-                });
+                    .then(response => {
+                        if (!response.ok) {
+                            const error = response.statusText;
+                            document.getElementById("txtUpdUserError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                            throw new Error('Error en la solicitud: ' + error);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Respuesta exitosa del servidor:', data);
+                        clearModal(document.getElementById("modify-user_entry_modal"));
+                        $('#modify-user_entry_modal').modal('hide');
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Ha ocurrido un error: ', error);
+                    });
             });
         }
 
         // Deleting client info.
         const deleteButtons = document.querySelectorAll('#tablaUsuarios .btn-danger');
-        deleteButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
+        deleteButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
                 const data = {
                     email: this.dataset.clientEmail
                 };
@@ -343,23 +353,23 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        const error = response.statusText;
-                        this.closest("p[name='errMsg']").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
-                        throw new Error('Error en la solicitud: ' + error);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Respuesta exitosa del servidor:', data);
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error('Ha ocurrido un error: ', error);
-                }); 
+                    .then(response => {
+                        if (!response.ok) {
+                            const error = response.statusText;
+                            this.closest("p[name='errMsg']").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                            throw new Error('Error en la solicitud: ' + error);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Respuesta exitosa del servidor:', data);
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Ha ocurrido un error: ', error);
+                    });
             });
-        });        
-    
+        });
+
     });
 </script>

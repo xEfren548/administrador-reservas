@@ -92,7 +92,6 @@ async function showClientsView(req, res, next){
     try {
         const clients = await Cliente.find({}).lean();
         res.render('vistaClientes', {
-            layout: 'clientes',
             clients: clients
         });
     } catch (err) {

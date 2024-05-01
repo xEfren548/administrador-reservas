@@ -1,6 +1,13 @@
-<h1>Lista de clientes</h1>
-<div class="row" style="width: 95%;">
+<div class="calendar-header">
+    <div class="bg-dark mb-3">
+        <a name="" id="crear-reserva-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
+            data-bs-toggle="modal" data-bs-target="#clientEntryModal">Alta cliente</a>
+    </div>
+</div>
+
+<div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
     <div class="col-10">
+        <h1>Lista de clientes</h1>
         <table class="table table-dark table-hover" id="tablaClientes">
             <thead class="table-light">
                 <tr>
@@ -16,28 +23,28 @@
             </thead>
             <tbody>
                 {{#each clients}}
-                    <tr>
-                        <td>{{firstName}}</td>
-                        <td>{{lastName}}</td>
-                        <td> {{phone}}</td>
-                        <td>{{email}}</td>
-                        <td> {{address}}</td>
-                        <td>{{identificationType}}</td>
-                        <td>{{identificationNumber}}</td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-primary" data-client-email="{{email}}"  data-bs-toggle="modal"
-                                data-bs-target="#modifyClientEntryModal">
-                                <i class="fa fa-pencil" aria-hidden="true"></i>
-                            </button>
-                            <button type="button" class="btn btn-danger" data-client-email="{{email}}">
-                                <i class="fa fa-trash" aria-hidden="true"></i>
-                            </button>
-                            <div class="form-item">
-                                <p name="errMsg" class="error"></p>
-                            </div>
-                        </td>
-                    </tr>
-                {{/each}}                    
+                <tr>
+                    <td>{{firstName}}</td>
+                    <td>{{lastName}}</td>
+                    <td> {{phone}}</td>
+                    <td>{{email}}</td>
+                    <td> {{address}}</td>
+                    <td>{{identificationType}}</td>
+                    <td>{{identificationNumber}}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-primary" data-client-email="{{email}}"
+                            data-bs-toggle="modal" data-bs-target="#modifyClientEntryModal">
+                            <i class="fa fa-pencil" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger" data-client-email="{{email}}">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                        <div class="form-item">
+                            <p name="errMsg" class="error"></p>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
             </tbody>
         </table>
     </div>
@@ -47,7 +54,8 @@
 <!-- Modal alta cliente -->
 <div class="modal fade" id="clientEntryModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <form id="frmCreateClient" action="/api/clientes/crear-cliente" method="post"  class="modal-dialog modal-lg" role="document">
+    <form id="frmCreateClient" action="/api/clientes/crear-cliente" method="post" class="modal-dialog modal-lg"
+        role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Alta de cliente</h5>
@@ -60,8 +68,8 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtClientName">Nombre</label>
-                                <input type="text" name="txtClientName" id="txtClientName" class="form-control onlydatepicker"
-                                    placeholder="Nombre">
+                                <input type="text" name="txtClientName" id="txtClientName"
+                                    class="form-control onlydatepicker" placeholder="Nombre">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
@@ -91,12 +99,13 @@
                                 <input type="text" name="txtClientEmail" id="txtClientEmail" class="form-control"
                                     placeholder="Email">
                             </div>
-                        </div>        
+                        </div>
                         <div class="row">
                             <div class="col-8">
                                 <label for="slctClientIdType">Tipo de identificación</label>
                                 <select name="slctClientIdType" id="slctClientIdType" required>
-                                    <option value="" selected disabled> Selecciona el tipo de identificación del cliente</option>                         
+                                    <option value="" selected disabled> Selecciona el tipo de identificación del cliente
+                                    </option>
                                     <option value="INE">INE</option>
                                     <option value="Pasaporte">Pasaporte</option>
                                     <option value="Licencia de conducir">Licencia de conducir</option>
@@ -109,7 +118,7 @@
                                 <input type="text" name="txtClientIdNumber" id="txtClientIdNumber" class="form-control"
                                     placeholder="Tipo de identificación">
                             </div>
-                        </div>  
+                        </div>
                     </div>
                 </div>
             </div>
@@ -127,11 +136,13 @@
 <!-- Modal modificar cliente -->
 <div class="modal fade" id="modifyClientEntryModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <form id="frmUpdateClient" action="/api/servicios/editar-servicio" method="put" class="modal-dialog modal-lg" role="document">
+    <form id="frmUpdateClient" action="/api/servicios/editar-servicio" method="put" class="modal-dialog modal-lg"
+        role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Modificar Cliente</h5>
-                <button type="button" class="close" onclick="$('#modifyClientEntryModal').modal('hide');" aria-label="Close">
+                <button type="button" class="close" onclick="$('#modifyClientEntryModal').modal('hide');"
+                    aria-label="Close">
                     &times;
                 </button>
             </div>
@@ -141,15 +152,15 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtClientNameUpd">Nombre</label>
-                                <input type="text" name="txtClientNameUpd" id="txtClientNameUpd" class="form-control onlydatepicker"
-                                    placeholder="Nombre">
+                                <input type="text" name="txtClientNameUpd" id="txtClientNameUpd"
+                                    class="form-control onlydatepicker" placeholder="Nombre">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtClientLastnameUpd">Apellido</label>
-                                <input type="text" name="txtClientLastnameUpd" id="txtClientLastnameUpd" class="form-control"
-                                    placeholder="Apellido">
+                                <input type="text" name="txtClientLastnameUpd" id="txtClientLastnameUpd"
+                                    class="form-control" placeholder="Apellido">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
@@ -162,21 +173,23 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtClientAddressUpd">Dirección</label>
-                                <input type="text" name="txtClientAddressUpd" id="txtClientAddressUpd" class="form-control"
-                                    placeholder="Dirección">
+                                <input type="text" name="txtClientAddressUpd" id="txtClientAddressUpd"
+                                    class="form-control" placeholder="Dirección">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtClientEmailUpd">Email</label>
-                                <input type="email" name="txtClientEmailUpd" id="txtClientEmailUpd" class="form-control" placeholder="Email" disabled>
+                                <input type="email" name="txtClientEmailUpd" id="txtClientEmailUpd" class="form-control"
+                                    placeholder="Email" disabled>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-8">
                                 <label for="slctClientIdTypeUpd">Tipo de identificación</label>
                                 <select name="slctClientIdTypeUpd" id="slctClientIdTypeUpd" required>
-                                    <option value="" selected disabled> Selecciona el tipo de identificación del cliente</option>                         
+                                    <option value="" selected disabled> Selecciona el tipo de identificación del cliente
+                                    </option>
                                     <option value="INE">INE</option>
                                     <option value="Pasaporte">Pasaporte</option>
                                     <option value="Licencia de conducir">Licencia de conducir</option>
@@ -186,10 +199,10 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtClientIdNumberUpd">Número de identificación</label>
-                                <input type="text" name="txtClientIdNumberUpd" id="txtClientIdNumberUpd" class="form-control"
-                                    placeholder="Tipo de identificación">
+                                <input type="text" name="txtClientIdNumberUpd" id="txtClientIdNumberUpd"
+                                    class="form-control" placeholder="Tipo de identificación">
                             </div>
-                        </div> 
+                        </div>
                     </div> <!-- Cierre row -->
                 </div>
             </div>
@@ -217,9 +230,9 @@
         }
 
         // Functions.
-        function clearModal(modal){
+        function clearModal(modal) {
             const inputs = modal.querySelectorAll('input');
-            inputs.forEach(function(input) {
+            inputs.forEach(function (input) {
                 input.value = "";
             });
             modal.querySelectorAll("p[name='errMsg']")[0].innerHTML = "";
@@ -227,7 +240,7 @@
 
         // Clearing user's info when closing modal.
         const modals = document.querySelectorAll('.modal');
-        modals.forEach(function(modal) {
+        modals.forEach(function (modal) {
             modal.addEventListener('hidden.bs.modal', () => {
                 clearModal(modal);
             });
@@ -257,34 +270,34 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        const error = response.statusText;
-                        document.getElementById("txtInsertClientError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
-                        throw new Error('Error en la solicitud: ' + error);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Respuesta del servidor:', data);
-                    clearModal(document.getElementById("clientEntryModal"));
-                    $('#clientEntryModal').modal('hide');
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error('Error al enviar la solicitud:', error);
-                });
+                    .then(response => {
+                        if (!response.ok) {
+                            const error = response.statusText;
+                            document.getElementById("txtInsertClientError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
+                            throw new Error('Error en la solicitud: ' + error);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Respuesta del servidor:', data);
+                        clearModal(document.getElementById("clientEntryModal"));
+                        $('#clientEntryModal').modal('hide');
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error al enviar la solicitud:', error);
+                    });
             });
         }
 
         // Updating client info.
         const editButtons = document.querySelectorAll('#tablaClientes .btn-primary');
-        editButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
+        editButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
                 document.getElementById('txtClientEmailUpd').value = this.dataset.clientEmail;
             });
         });
-        
+
         var btnUpdateClient = document.getElementById("btnUpdateClient");
         if (btnUpdateClient) {
             btnUpdateClient.addEventListener("click", async (event) => {
@@ -307,30 +320,30 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        const error = response.statusText;
-                        document.getElementById("txtUpdClientError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
-                        throw new Error('Error en la solicitud: ' + error);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Respuesta exitosa del servidor:', data);
-                    clearModal(document.getElementById("modifyClientEntryModal"));
-                    $('#modifyClientEntryModal').modal('hide');
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error('Ha ocurrido un error: ', error);
-                }); 
+                    .then(response => {
+                        if (!response.ok) {
+                            const error = response.statusText;
+                            document.getElementById("txtUpdClientError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                            throw new Error('Error en la solicitud: ' + error);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Respuesta exitosa del servidor:', data);
+                        clearModal(document.getElementById("modifyClientEntryModal"));
+                        $('#modifyClientEntryModal').modal('hide');
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Ha ocurrido un error: ', error);
+                    });
             });
         }
-        
+
         // Deleting client info.
         const deleteButtons = document.querySelectorAll('#tablaClientes .btn-danger');
-        deleteButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
+        deleteButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
                 const data = {
                     email: this.dataset.clientEmail
                 };
@@ -338,27 +351,28 @@
                 fetch('/api/clientes/eliminar-cliente', {
                     method: 'DELETE',
                     headers: {
+                        // Once logged in, the authorization token stored in the session cookies will automatically be added in each HTTP request.
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        const error = response.statusText;
-                        this.closest("p[name='errMsg']").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
-                        throw new Error('Error en la solicitud: ' + error);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Respuesta exitosa del servidor:', data);
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error('Ha ocurrido un error: ', error);
-                }); 
+                    .then(response => {
+                        if (!response.ok) {
+                            const error = response.statusText;
+                            this.closest("p[name='errMsg']").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
+                            throw new Error('Error en la solicitud: ' + error);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Respuesta exitosa del servidor:', data);
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Ha ocurrido un error: ', error);
+                    });
             });
-        });        
-    
+        });
+
     });
 </script>
