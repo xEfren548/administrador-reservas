@@ -18,9 +18,15 @@ async function generateSideMenu (req, res, next) {
     try{
         const privileges = {     
             "Administrador": [
-                {'d': ["route/d", "class d"]},
-                {'e': ["route/e", "class e"]},
-                {'f': ["route/f", "class f"]},
+                {'Dashboard': ["/api/dashboard", "class d"]},
+                {'Home': ["/", "class e"]},
+                {'Usuarios': ["/api/usuarios", "class f"]},
+                {'Clientes': ["/api/clientes/mostrar-clientes", "class f"]},
+                {'Servicios adicionales': ["/api/servicios", "class f"]},
+                {'Limpieza': ["/api/racklimpieza", "class f"]},
+                {'Alta cabaña': ["/api/cabanas", "class f"]},
+                {'Editar cabaña': ["/api/cabanas/editar-cabana", "class f"]},
+                {'Reserva cliente cabaña': ["/instrucciones/", "class f"]},
             ],
             'Test': [
                 {'g': ["route/g", "class g"]},
