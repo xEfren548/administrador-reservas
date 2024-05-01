@@ -60,7 +60,7 @@ async function login(req, res, next){
         console.log(req.session);
         res.redirect('/');
         // Uncomment the following line in order to test it on Postman.
-        // res.status(200).json( req.session );
+        //res.status(200).json( req.session );
     } catch(err){
         return next(err);
     }
@@ -68,7 +68,7 @@ async function login(req, res, next){
 
 async function logout(req, res, next){
     req.session = null;
-    res.send({ message: "Successfully logged out" });
+    console.log("Successfully logged out")
     res.redirect('/login');
 }
 

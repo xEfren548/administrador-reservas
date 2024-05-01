@@ -22,7 +22,7 @@ const userSchema = new Schema({
     },
     privilege: {
         type: String,
-        enum: ['test', 'Administrador', 'Vendedor', 'Limpieza'],
+        enum: ['Administrador', 'Vendedor', 'Limpieza', 'Servicios adicionales', 'Dueño de cabañas', 'Inversionistas', 'Cliente'],
         required: true
     },
     administrator: {

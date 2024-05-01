@@ -21,8 +21,6 @@ function getDateFromDayOfYear(dayOfYear) {
     return date.toLocaleDateString('es-ES', options); // Devolver la fecha en formato 'DD/MM'
 }
 
-
-
 router.get('/calendario-precios', async (req, res) => {
     try {
         

@@ -2,22 +2,131 @@ const BadRequestError = require("../error/bad-request-error");
 
 const userPrivilege = (req, res, next) => {
     const privilege = req.session?.privilege;
-     
     console.log(req.session?.privilege)
-
     if(!privilege){   
         return next(new BadRequestError("Privilege needed"));
     }
     
-    const allowedRoutes = {
-        "test": ['/', '/login', 'api/auth/login', 'api/auth/logout', '/api/usuarios', '/api/usuarios/mostrar-usuarios', '/api/usuarios/mostrar-usuario/:uuid', '/api/usuarios/editar-usuario', '/api/usuarios/editar-usuario/:uuid', '/api/usuarios/eliminar-usuario/:uuid', '/api/usuarios/crear-usuario', 'api/servicios/', 'api/servicios/crear-servicio', 'api/servicios/editar-servicio', 'api/servicios/editar-servicio/:uuid', 'api/servicios/eliminar-servicio', 'api/servicios/eliminar-servicio/:uuid'],
-        
-        "Administrador": ['/','/api/perfil-usuario','/api/auth/crear-usuario','/api/usuarios/crear-usuario','/api/clientes/mostrar-clientes','/api/habitaciones','/resources','/api/editar-cabana','/instrucciones/:id','/api/instrucciones/','/api/instrucciones/kgUoporxboU1ZLJvGcKm5','/api/servicios','/api/clientes','/api/cabanas','/api/racklimpieza','/api/dashboard','/api/auth/logout','/fullcalendar/dist/index.global.js' ,'/api/eventos', '/api/eventos/:id', '/api/eventos/:id/modificar', '/api/habitaciones', '/api/habitaciones/:id', '/login', 'api/auth/login', 'api/auth/logout', '/api/usuarios', '/api/usuarios/mostrar-usuarios', '/api/usuarios/mostrar-usuario/:uuid', '/api/usuarios/editar-usuario', '/api/usuarios/editar-usuario/:uuid', '/api/usuarios/eliminar-usuario/:uuid', '/api/usuarios/crear-usuario', ],
-        'Test': ['/'],
-        
-        'Vendedor': ['/'],
-        
-        'Limpieza': ['/']
+    const allowedRoutes = {       
+        "Administrador": [
+            "/instrucciones/:uuid",
+            "/calendario-precios",
+            "/api/calendario-precios",
+            "/api/calendario-precios/:id",
+            "/api/eventos",
+            "/api/eventos/create-reservation",
+            "/api/eventos/:id",
+            "/api/eventos/:id/modificar",
+            "/api/eventos/:id",
+            "/api/eventos/:idevento",
+            "/api/habitaciones",
+            "/api/habitaciones/:id",
+            "/api/servicios",
+            "/api/servicios/crear-servicio",
+            "/api/servicios/editar-servicio",
+            "/api/servicios/editar-servicio/:uuid",
+            "/api/servicios/eliminar-servicio",
+            "/api/servicios/eliminar-servicio/:uuid",
+            "/api/clientes/mostrar-clientes",
+            "/api/clientes/crear-cliente",
+            "/api/clientes/editar-cliente",
+            "/api/clientes/editar-cliente/:uuid",
+            "/api/clientes/eliminar-cliente",
+            "/api/clientes/eliminar-cliente/:uuid",
+            "/api/cabanas",
+            "/api/cabanas/crear-cabana",
+            "/api/cabanas/subir-imagenes-cabana",
+            "/api/cabanas/editar-cabana",
+            "/api/editar-cabana",
+            "/api/dashboard",
+            "/api/usuarios/",
+            "/api/usuarios/crear-usuario",
+            "/api/usuarios/mostrar-usuario/:uuid",
+            "/api/usuarios/editar-usuario",
+            "/api/usuarios/editar-usuario/:uuid",
+            "/api/usuarios/eliminar-usuario/",
+            "/api/usuarios/eliminar-usuario/:uuid",
+            "/api/perfil-usuario/",
+            "/api/perfil-usuario/editar-nombre",
+            "/api/perfil-usuario/editar-nombre/:uuid",
+            "/api/perfil-usuario/editar-email",
+            "/api/perfil-usuario/editar-email/:uuid",
+            "/api/perfil-usuario/editar-contrasena",
+            "/api/perfil-usuario/editar-contrasena/:uuid",
+            "/",
+            "/api/racklimpieza",
+        ],
+        'Vendedor': [
+            "/calendario-precios",
+            "/api/calendario-precios",
+            "/api/calendario-precios/:id",
+            "/instrucciones/:uuid",
+            "/api/dashboard",
+            "/api/perfil-usuario/",
+            "/api/perfil-usuario/editar-nombre",
+            "/api/perfil-usuario/editar-nombre/:uuid",
+            "/api/perfil-usuario/editar-email",
+            "/api/perfil-usuario/editar-email/:uuid",
+            "/api/perfil-usuario/editar-contrasena",
+            "/api/perfil-usuario/editar-contrasena/:uuid",
+        ],
+        'Limpieza': [
+            "/api/racklimpieza",
+            "/api/dashboard",
+            "/api/perfil-usuario/",
+            "/api/perfil-usuario/editar-nombre",
+            "/api/perfil-usuario/editar-nombre/:uuid",
+            "/api/perfil-usuario/editar-email",
+            "/api/perfil-usuario/editar-email/:uuid",
+            "/api/perfil-usuario/editar-contrasena",
+            "/api/perfil-usuario/editar-contrasena/:uuid",            
+        ],
+        'Servicios adicionales': [
+            "/api/servicios",
+            "/api/servicios/crear-servicio",
+            "/api/servicios/editar-servicio",
+            "/api/servicios/editar-servicio/:uuid",
+            "/api/servicios/eliminar-servicio",
+            "/api/servicios/eliminar-servicio/:uuid",
+            "/api/dashboard",
+            "/api/perfil-usuario/",
+            "/api/perfil-usuario/editar-nombre",
+            "/api/perfil-usuario/editar-nombre/:uuid",
+            "/api/perfil-usuario/editar-email",
+            "/api/perfil-usuario/editar-email/:uuid",
+            "/api/perfil-usuario/editar-contrasena",
+            "/api/perfil-usuario/editar-contrasena/:uuid",   
+        ], 
+        'Dueño de cabañas': [
+            "/api/dashboard",
+            "/api/perfil-usuario/",
+            "/api/perfil-usuario/editar-nombre",
+            "/api/perfil-usuario/editar-nombre/:uuid",
+            "/api/perfil-usuario/editar-email",
+            "/api/perfil-usuario/editar-email/:uuid",
+            "/api/perfil-usuario/editar-contrasena",
+            "/api/perfil-usuario/editar-contrasena/:uuid", 
+        ], 
+        'Inversionistas': [
+            "/api/dashboard",
+            "/api/perfil-usuario/",
+            "/api/perfil-usuario/editar-nombre",
+            "/api/perfil-usuario/editar-nombre/:uuid",
+            "/api/perfil-usuario/editar-email",
+            "/api/perfil-usuario/editar-email/:uuid",
+            "/api/perfil-usuario/editar-contrasena",
+            "/api/perfil-usuario/editar-contrasena/:uuid", 
+        ], 
+        'Cliente': [
+            "/",
+            "/api/perfil-usuario/",
+            "/api/perfil-usuario/editar-nombre",
+            "/api/perfil-usuario/editar-nombre/:uuid",
+            "/api/perfil-usuario/editar-email",
+            "/api/perfil-usuario/editar-email/:uuid",
+            "/api/perfil-usuario/editar-contrasena",
+            "/api/perfil-usuario/editar-contrasena/:uuid", 
+        ]
     };
     const currentRoute = req.path;
     const allowedRoutesForUser = allowedRoutes[privilege];

@@ -16,12 +16,7 @@ const validators = [
 
 async function generateSideMenu (req, res, next) {
     try{
-        const privileges = {
-            "test": [
-                {'a': ["route/a", "class a"]},
-                {'b': ["route/b", "class b"]},
-                {'c': ["route/c", "class c"]},
-            ],        
+        const privileges = {     
             "Administrador": [
                 {'d': ["route/d", "class d"]},
                 {'e': ["route/e", "class e"]},

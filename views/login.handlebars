@@ -68,11 +68,11 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(data)
-                
+                body: JSON.stringify(data)                
             })
             .then(response => {
-                if (response.redirected) {
+                if (response.ok) {
+                    console.log("Wiii");
                     window.location.href = response.url;
                 } else {
                     console.log('Respuesta del servidor:', response);
