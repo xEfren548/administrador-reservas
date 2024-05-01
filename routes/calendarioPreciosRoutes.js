@@ -21,6 +21,38 @@ function getDateFromDayOfYear(dayOfYear) {
     return date.toLocaleDateString('es-ES', options); // Devolver la fecha en formato 'DD/MM'
 }
 
+function pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData){
+    var matrixhabitaciones = [];
+
+    const dayOfYear = date => Math.floor((date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+    habitaciones.forEach((habitacion,index) => {
+        var habitacionesyprecio = {
+            name: habitacion.title,
+            precios: []
+        }
+        var matrix = [];
+        for(var a = 1; a <= daysWithDates.length; a++) {
+            matrix.push([]);
+        }
+        preciosHabitacionesData.forEach((element) => {
+            let currentTime = new Date(element.fecha).getTime();
+            //adds 1 day to the element.date so it matches the index correctly
+            let updatedTIme = new Date(currentTime + 24 * 60 * 60 * 1000);
+            //console.log(dayOfYear(updatedTIme));
+            //console.log(habitacion)
+            if(habitacion._id == element.habitacionId){
+                //console.log(index);
+                matrix[dayOfYear(updatedTIme) - 1] = element.precio_modificado;
+            };
+        });
+        habitacionesyprecio.precios.push(matrix);
+        //console.log(matrix);
+        matrixhabitaciones.push(habitacionesyprecio)
+    });
+    //console.log(matrixhabitaciones);
+    return matrixhabitaciones;
+}
+
 
 
 router.get('/calendario-precios', async (req, res) => {
@@ -36,18 +68,23 @@ router.get('/calendario-precios', async (req, res) => {
         // Crear un arreglo con las fechas correspondientes a cada día del año
         const daysWithDates = Array.from({ length: getDaysInYear() }, (_, index) => getDateFromDayOfYear(index + 1));
 
-        // console.log(habitaciones);
+        //console.log(habitaciones);
 
         const preciosHabitacionesData = await precioBaseController.consultarPrecios();
-        // console.log(preciosHabitacionesData);
+        //console.log(preciosHabitacionesData);
+        
+       
+        const pricexday = pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData);
 
-        // console.log(preciosHabitaciones)
+        //console.log(habitaciones);
+
 
         res.render('calendarioPrecios', {
             layout: 'layoutCalendarioPrecios',
             habitaciones: habitaciones, // Pasa las habitaciones a la plantilla
             daysWithDates: daysWithDates, // Pasa el arreglo de fechas a la plantilla
-            preciosHabitaciones: preciosHabitacionesData // Pasa los precios de las habitaciones a la plantilla
+            preciosHabitaciones: preciosHabitacionesData, // Pasa los precios de las habitaciones a la plantilla
+            pricexday: pricexday
         });
     } catch (error) {
         console.log(error);

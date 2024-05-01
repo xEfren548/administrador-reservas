@@ -1,33 +1,34 @@
 <h1>Calendario de precios con aumento</h1>
-
-{{#if habitaciones}}
-{{#each habitaciones}}
-<p>{{this.title}}</p> <!-- Título de la habitación -->
-<div class="table-responsive">
-  <table class="table table-primary">
-    <thead>
-      <tr>
-        <th scope="col">Cabaña</th>
-        {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
-        <th scope="col">{{this}}</th> <!-- Mostrar cada fecha como encabezado de columna -->
-        {{/each}}
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>{{this.title}}</td> <!-- Título de la cabaña -->
-        {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
-        <td>${{../this.baseRate}}</td> <!-- Mostrar la tarifa base de la habitación -->
-        {{/each}}
-      </tr>
-    </tbody>
-  </table>
+<div class="table-prices">
+  {{#if pricexday}}
+  {{#each pricexday}}
+  <p>{{this.name}}</p> <!-- Título de la habitación -->
+  <div class="table-responsive">
+    <table class="table table-primary">
+      <thead>
+        <tr>
+          <th scope="col">Cabaña</th>
+          {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
+          <th scope="col">{{this}}</th> <!-- Mostrar cada fecha como encabezado de columna -->
+          {{/each}}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{this.name}}</td> <!-- Título de la cabaña -->
+          {{#each precios}}
+            {{#each this}}
+              <td>${{this}}</td> <!-- Mostrar la tarifa base de la habitación -->
+            {{/each}}
+          {{/each}}
+      </tbody>
+    </table>
 </div>
 {{/each}}
 {{else}}
 <p>No hay habitaciones</p>
 {{/if}}
-
+</div>
 
 <!-- Modal Actualizar precios -->
 

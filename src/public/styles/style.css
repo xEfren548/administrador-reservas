@@ -279,3 +279,8 @@ td {
 .dataTables_info {
     color: #fff !important; /* Color del texto */
 }
+
+.table-prices{
+    overflow-x: auto;
+    margin: 1em 22em 0 1em;
+}
