@@ -39,6 +39,10 @@ router.get('/eventos/:idevento', async (req, res) => {
 
         const pagos = await pagoController.obtenerPagos(idEvento);
         console.log(pagos);
+
+        pagos.forEach(pago => {
+            pago.fechaPago = moment(pago.fechaPago).format('DD/MM/YYYY');
+        })
         
         // console.log(habitacionObjeto);
 
@@ -47,7 +51,8 @@ router.get('/eventos/:idevento', async (req, res) => {
         res.render('detalles_evento', { 
             evento: eventoObjeto,
             habitacion: habitacionObjeto,
-            cliente: cliente
+            cliente: cliente,
+            pagos: pagos
         });
     } catch (error) {
         console.error('Error al obtener los detalles del evento:', error);

@@ -10,6 +10,16 @@ async function obtenerPagos(idReservacion) {
     }
 }
 
+async function obtenerPagoPorId(req, res) {
+    try {
+        const { id } = req.params;
+        const pago = await Pago.findById(id);
+        res.send(pago);
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
 async function registrarPago(req, res) {
     try {
         const { fechaPago, importe, metodoPago, codigoOperacion, reservacionId, notas } = req.body;
@@ -40,9 +50,9 @@ async function editarPago(req, res) {
             importe,
             metodoPago,
             codigoOperacion,
-            reservacionId: reservacionId.toString(),
             notas
         });
+        console.log(pago)
         res.status(200).json({ mensaje: 'Pago editado correctamente.' });
     } catch (e) {
         console.error(e);
@@ -66,6 +76,7 @@ async function eliminarPago(req, res) {
 
 module.exports = {
     obtenerPagos,
+    obtenerPagoPorId,
     registrarPago,
     editarPago,
     eliminarPago,
