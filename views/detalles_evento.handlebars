@@ -75,27 +75,22 @@
 
 
                 <div class="col-xs-1 mb-3" style="width: 70px;">
-                    <a onclick="myFunction()"><img src="https://panel.hotelgest.com/files/media/male_profile_sm.jpg"
-                            id="profile-pic-alone"></a>
+                    <a onclick=""><img src="https://panel.hotelgest.com/files/media/male_profile_sm.jpg"
+                            id="profile-pic-alone" class="rounded-circle"></a>
                 </div>
-                <script>
-                    function myFunction() {
-                        alert("Si utilizas la app hotelgest, podrás ver la cara del huésped y los documentos escaneados.");
-                    }
-                </script>
+
 
 
 
 
 
                 <div class="col-xs-9 col-lg-7">
-                    <small class="limit-width" data-toggle="tooltip" data-placement="bottom" title=""
-                        data-original-title="Saul Suarez  "></small>
-                    <h3 class="detailsRoom" style="margin-bottom: 5px;"> {{habitacion.title}}
+                    <small class="limit-width" data-toggle="tooltip" data-placement="bottom" title="{{habitacion.propertyDetails.name}}"
+                        data-original-title="{{habitacion.propertyDetails.name}}"></small>
+                    <h3 class="detailsRoom fs-4 fw-bolder" style="margin-bottom: 5px;"> {{habitacion.propertyDetails.name}}
                     </h3>
-                    <h3 class="bold text-uppercase">
-                        {{evento.title}}
-
+                    <h3 class="bold text-uppercase fs-5">
+                        {{cliente.firstName}} {{cliente.lastName}}
                     </h3>
 
 
@@ -108,13 +103,22 @@
                     </div>
                     <h4></h4>
                     <div class="col-xs-12 no-padding">
-                        <!-- <div class="col-xs-6 no-padding-left" style="margin-bottom: 10px;">
-                                            <small> E-mail</small>
-                                        </div> -->
-                        <h4 class="font-bold" style="margin-top: 5px; margin-bottom:0px;">
+                        <h4 class="fw-bold fs-6" style="margin-top: 5px; margin-bottom:0px;">
                             <button class="btn btn-style-blue enviar-email-btn" type="button" data-toggle="modal"
                                 data-target="#modalSendConfirmation" data-id="">
-                                <i class="fa fa-envelope "></i> <b>gio771991@gmail.com</b> | Enviar E-mail
+                                <i class="fa fa-envelope "></i> <b>{{cliente.email}}</b> | Enviar E-mail
+                                <div class="ripple-container"></div>
+                            </button>
+                            <div class="ripple-container"></div>
+                        </h4>
+
+                    </div>
+                    
+                    <div class="col-xs-12 no-padding">
+                        <h4 class="fw-bold fs-6" style="margin-top: 5px; margin-bottom:0px;">
+                            <button class="btn btn-style-blue enviar-email-btn" type="button" data-toggle="modal"
+                                data-target="#modalSendConfirmation" data-id="">
+                                <i class="fa fa-phone" aria-hidden="true"></i> <b>{{cliente.phone}}</b> | Teléfono
                                 <div class="ripple-container"></div>
                             </button>
                             <div class="ripple-container"></div>
@@ -126,12 +130,6 @@
                     <br>
 
 
-                    <div class="col-xs-12 no-padding bottomline">
-                        <div class="col-xs-12 no-padding-left">
-                            <!-- <small> Teléfono</small> -->
-                        </div>
-                    </div>
-
                     <br>
                 </div>
             </div>
@@ -139,21 +137,21 @@
             <div class="col-xs-12 col-sm-6">
                 <div class="col-xs-6 no-padding-left">
                     <small>Llegada</small>
-                    <h4 class="font-bold"> <i class="fa fa-sign-in" aria-hidden="true"></i> {{evento.start}} </h4>
+                    <h4 class="font-bold"> <i class="fa fa-sign-in" aria-hidden="true"></i> {{evento.arrivalDate}} </h4>
                 </div>
                 <div class="col-xs-3 no-padding-left">
                     <small> Noches&nbsp;&nbsp;&nbsp;</small>
-                    <h4 class="font-bold"> <i class="fa fa-moon" aria-hidden="true"></i> 2</h4>
+                    <h4 class="font-bold"> <i class="fa fa-moon" aria-hidden="true"></i> {{evento.nNights}}</h4>
                 </div>
                 <div class="col-xs-2 no-padding-left">
                 </div>
                 <div class="col-xs-6 no-padding-left">
                     <small>Salida</small>
-                    <h4 class="font-bold"> <i class="fa fa-sign-out" aria-hidden="true"></i> {{evento.end}} </h4>
+                    <h4 class="font-bold"> <i class="fa fa-sign-out" aria-hidden="true"></i> {{evento.departureDate}} </h4>
                 </div>
                 <div class="col-xs-6 no-padding-left">
                     <small> Recibida</small>
-                    <h4 class="font-bold">16/02/2024</h4>
+                    <h4 class="font-bold">{{evento.reservationDate}}</h4>
                 </div>
                 <div class="col-xs-6 no-padding-left origin">
                     <small> Origen </small>
