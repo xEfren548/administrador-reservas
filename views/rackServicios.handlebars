@@ -1,7 +1,6 @@
-<h1>Tabla Rack Limpieza</h1>
-{{#if services.length}}
-<div class="row" style="width: 95%;">
+<div class="row flex-nowrap justify-content-center mt-3 " style="width: 95%;">
     <div class="col-10">
+        <h1>Rack Servicios</h1>
         <table class="table table-dark table-hover text-center" id="tablaRacklimpieza">
             <thead class="table-light">
                 <tr>
@@ -13,6 +12,7 @@
                 </tr>
             </thead>
             <tbody>
+                {{#if services.length}}
                 {{#each services}}
                 <tr>
                     <td>{{this.nombreHabitacion}}</td>
