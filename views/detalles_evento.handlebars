@@ -684,26 +684,39 @@
     async function eliminarPago(idPago) {
         console.log(idPago);
         try {
-            const response = await fetch(`http://localhost:3005/api/pagos/${idPago}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+            const confirmacion = await Swal.fire({
+                icon: 'warning',
+                title: '¿Estás seguro?',
+                text: 'Esta acción eliminará el pago de forma permanente.',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
             });
 
-            if (response.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Completado!',
-                    text: 'Pago eliminado correctamente.',
-                    confirmButtonText: 'Aceptar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        location.reload();
+            if (confirmacion.isConfirmed) {
+                const response = await fetch(`http://localhost:3005/api/pagos/${idPago}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
                     }
                 });
-            } else {
-                throw new Error('Error al eliminar el pago. Por favor, inténtalo de nuevo más tarde.');
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: 'Pago eliminado correctamente.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            location.reload();
+                        }
+                    });
+                } else {
+                    throw new Error('Error al eliminar el pago. Por favor, inténtalo de nuevo más tarde.');
+                }
             }
         } catch (error) {
             Swal.fire({
@@ -714,6 +727,7 @@
             });
         }
     }
+
 
 
 
