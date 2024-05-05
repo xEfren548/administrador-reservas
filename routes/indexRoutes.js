@@ -19,6 +19,7 @@ const userProfileRoutes = require('./userProfileRoutes');
 const calendarioPrecios = require('./calendarioPreciosRoutes');
 const reservationRoutes = require('./reservationRoutes');
 const sideMenuRoutes = require('./sideMenuRoutes');
+const costosRoutes = require('./costosRoutes');
 const CustomError = require("../common/error/custom-error");
 const NotFoundError = require("../common/error/not-found-error");
 
@@ -37,7 +38,7 @@ router.use('/login', loginRoute);
 router.use("/api", authRoutes);
 
 //Validating user's token in later requests.
-router.use(currentuser);
+//router.use(currentuser);
 
 //Determining user access based on privileges.
 //router.use(userPrivilege);
@@ -55,7 +56,9 @@ router.use('/api',
     clientesRoutes, 
     cabanasRoutes, 
     editarCabanaRoutes,
-    dashboardRoutes);
+    dashboardRoutes,
+    costosRoutes
+);
 router.use('/api/usuarios', userRoutes);
 router.use('/api/perfil-usuario/', userProfileRoutes);
 
@@ -64,11 +67,6 @@ router.get('/api/racklimpieza', (req, res) => {
     res.render('rackLimpieza');
 });
 
-router.use('/api', eventRoutes);
-router.use('/api', habitacionesRoutes);
-router.use('/api', userRoutes);
-router.use('/api', serviciosRoutes);
-router.use('/', calendarioPrecios);
 
 // Not found resource handling middleware.
 router.all("*", (req, res, next) => {

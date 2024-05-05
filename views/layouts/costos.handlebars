@@ -31,6 +31,7 @@
 
 
     <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="/styles/styles.css">
 </head>
 
 <body>
@@ -38,30 +39,24 @@
         <div class="row flex-nowrap">
             <div class="bg-dark col-2 min-vh-100 d-flex flex-column justify-content-between navbar">
                 <div id="side-menu" class="bg-dark p-2"></div>
-            <!-- Content -->
-            <div class="col content"></div>
-            <div class="calendar-container">
-                <div class="calendar-header">
-                    <div class="bg-dark mb-3">
-                        <a name="" id="actualizar-precios-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
-                            data-bs-toggle="modal" data-bs-target="#update_prices_modal">Actualizar precios</a>
-                    </div>
-    
-
-                </div>
-                {{{body}}}
             </div>
+        <!-- Content -->
+        <div class="col content"></div>
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <div class="bg-dark mb-3">
+                    <a name="" id="crear-reserva-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
+                        data-bs-toggle="modal" data-bs-target="#user_entry_modal">Alta de costos</a>
+                </div>
+
+
+            </div>
+            {{{body}}}    
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
-        integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-        
+</div>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
     {{!-- cdn data tables --}}
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 

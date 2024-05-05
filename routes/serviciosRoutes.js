@@ -4,7 +4,7 @@ const serviceController = require('../controllers/serviceController');
 const validationRequest = require('../common/middlewares/validation-request');
 
 
-router.get('/servicios', serviceController.mostrarServicios);
+router.get('/servicios', serviceController.showServicesValidators, validationRequest, serviceController.mostrarServicios);
 router.post('/servicios/crear-servicio', serviceController.createServiceValidators, validationRequest, serviceController.createService);
 router.put('/servicios/editar-servicio', serviceController.editServiceValidators, validationRequest, serviceController.editService);
 router.put('/servicios/editar-servicio/:uuid', serviceController.editServiceValidators, validationRequest, serviceController.editServiceById);

@@ -11,12 +11,14 @@ const serviceSchema = new mongoose.Schema({
         required: true
     },
     supplier: {
-        type: String,
-        required: true
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Usuario'
     },
     serviceManager: {
-        type: String,
-        required: true
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Usuario'
     },
     basePrice: {
         type: Number,
@@ -27,16 +29,18 @@ const serviceSchema = new mongoose.Schema({
         required: true
     },
     firstUser: {
-        type: String,
-        required: true
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Usuario'
     },
     secondCommission: {
         type: Number,
         required: true
     },
     secondUser: {
-        type: String,
-        required: true
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Usuario'
     },
     finalPrice: {
         type: Number,
