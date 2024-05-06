@@ -69,7 +69,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 clientId: event.client,
                             }
                         })
-                        
                         successCallback(events);
                         // console.log(events);
                     })
@@ -79,15 +78,15 @@ document.addEventListener('DOMContentLoaded', async function () {
             },
         eventContent: function (info) {
 
-            
+
             // console.log(data);
 
 
-            // console.log(info);
+            console.log(info);
             return {
                 html: `
                 <div class="p-1 rounded bg-success bg-gradient" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: "Overpass", sans-serif;">
-                    <div>${eventData.firstName} ${eventData.lastName}</div>
+                    <div>Reserva</div>
                     <div><b>Total: $ ${info.event.extendedProps.total}</b></div>
                 </div>
                 `
