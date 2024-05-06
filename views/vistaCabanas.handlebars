@@ -9,12 +9,8 @@
         <div class="input-group half">
             <label for="slctchaletAccomodationType">Tipo de alojamiento</label>
             <select id="slctchaletAccomodationType" name="slctchaletAccomodationType" >
-                <optgroup label="Option group 1">
-                    <option value="Option 1">Option 1</option>
-                </optgroup> 
-                <optgroup label="Option group 2">
-                    <option value="Option 2">Option 2</option>
-                </optgroup>              
+                <option value="Cabaña">Cabaña</option>
+                <option value="Habitación">Habitación</option>       
             </select>
         </div>
         <div class="input-group half">
@@ -800,6 +796,13 @@
                 event.preventDefault();
 
                 // Creating JSON for text data.
+                
+                const arrivalTime1 = document.getElementById("txtArrivalTime").value.trim();
+                const departureTime1 =  document.getElementById("txtDepartureTime").value.trim();
+                const arrivalTimeMinutes = parseInt(arrivalTime1.split(':')[0]);
+                const arrivalTimeHours = parseInt(arrivalTime1.split(':')[1]);
+                const departureTimeMinutes = parseInt(arrivalTime1.split(':')[0]);
+                const departureTimeHours = parseInt(departureTime1.split(':')[1]);
                 const data = {
                     propertyDetails: {
                         accomodationType: document.getElementById("slctchaletAccomodationType").value.trim(),
@@ -979,8 +982,10 @@
                         basePrice2nights: document.getElementById("txtBasePrice2Nights").value.trim(),
                         baseCost: document.getElementById("txtBaseCost").value.trim(),
                         baseCost2nights: document.getElementById("txtBaseCost2Nights").value.trim(),                                                
-                        arrivalTime: document.getElementById("txtArrivalTime").value.trim(),
-                        departureTime: document.getElementById("txtDepartureTime").value.trim(),
+                        arrivalTimeMinutes: arrivalTimeMinutes,
+                        arrivalTimeHours: arrivalTimeHours,
+                        departureTimeMinutes: departureTimeMinutes,
+                        departureTimeHours: departureTimeHours,
                         admin: document.getElementById("slctAdmin").value.trim(),
                         janitor: document.getElementById("slctJanitor").value.trim(),
                     }                    

@@ -6,7 +6,6 @@ const {check} = require("express-validator");
 const ftp = require('basic-ftp');
 const Usuario = require("../models/Usuario");
 const fs = require('fs');
-
 const createChaletValidators = [
     // propertyDetails validations.
     check('propertyDetails.accomodationType')
@@ -139,10 +138,10 @@ const createChaletValidators = [
     check('others.baseCost2nights')
         .notEmpty().withMessage('Base cost for 2 nights is required')
         .isNumeric().withMessage('Base cost must be a number'),
-    check('others.arrivalTime')
+    check('others.arrivalTimeMinutes')
         .notEmpty().withMessage('Arrival time is required')
         .toDate(),
-    check('others.departureTime')
+    check('others.departureTimeMinutes')
         .notEmpty().withMessage('Departure time is required')
         .toDate(),
     check("others.admin")
@@ -375,13 +374,13 @@ async function createChalet(req, res, next) {
     if (!janitor) {
         throw new NotFoundError("Janitor not found");
     }
-    
+    console.log(req.body);
     const newArrivalTime = new Date();
-    newArrivalTime.setHours(parseInt(others.arrivalTime.split(':')[0], 10));
-    newArrivalTime.setMinutes(parseInt(others.arrivalTime.split(':')[1], 10));
+    newArrivalTime.setHours(others.arrivalTimeHours);
+    newArrivalTime.setMinutes(others.arrivalTimeMinutes);
     const newDepartureTime = new Date();
-    newDepartureTime.setHours(parseInt(others.departureTime.split(':')[0], 10));
-    newDepartureTime.setMinutes(parseInt(others.departureTime.split(':')[1], 10));
+    newDepartureTime.setHours(others.departureTimeMinutes);
+    newDepartureTime.setMinutes(others.departureTimeHours);
 
     const chaletToAdd = {
         propertyDetails, 
@@ -427,9 +426,9 @@ async function uploadChaletFiles(req, res, next) {
     try {
         const chalets = await Habitacion.findOne();
         const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
-        if(!chalet){
-            throw new NotFoundError('Chalet does not exists');
-        }
+        //if(!chalet){
+        //    throw new NotFoundError('Chalet does not exists');
+        //} ¿porque abriamos de validar contra algo que tenemos guardado dentro de nuestra sesión ?
 
         await client.access({
             host: 'integradev.site',
