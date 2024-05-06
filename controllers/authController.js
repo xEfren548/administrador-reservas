@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const Usuario = require('../models/Usuario');
 const BadRequestError = require("../common/error/bad-request-error");
 const {check} = require("express-validator");
+
 const validators = [
     check('email')
         .notEmpty().withMessage('Email is required')
@@ -57,9 +58,9 @@ async function login(req, res, next){
         console.log("Usuario logeado con éxito");
         // Uncomment the following line in order to test it on the browser.
         console.log(req.session);
-        res.redirect('/');
+        res.redirect('/api/dashboard');
         // Uncomment the following line in order to test it on Postman.
-        // res.status(200).json( req.session );
+        //res.status(200).json( req.session );
     } catch(err){
         return next(err);
     }
@@ -67,7 +68,7 @@ async function login(req, res, next){
 
 async function logout(req, res, next){
     req.session = null;
-    res.send({ message: "Successfully logged out" });
+    console.log("Successfully logged out")
     res.redirect('/login');
 }
 

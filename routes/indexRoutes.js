@@ -21,6 +21,8 @@ const reservationRoutes = require('./reservationRoutes');
 const rackLimpiezaRoutes = require('./rackLimpiezaRoutes');
 const rackServiciosRoutes = require('./rackServiciosRoutes');
 const pagosRoutes = require('./pagosRoutes');
+const sideMenuRoutes = require('./sideMenuRoutes');
+const costosRoutes = require('./costosRoutes');
 const CustomError = require("../common/error/custom-error");
 const NotFoundError = require("../common/error/not-found-error");
 
@@ -39,12 +41,13 @@ router.use('/login', loginRoute);
 router.use("/api", authRoutes);
 
 //Validating user's token in later requests.
-// router.use(currentuser);
+router.use(currentuser);
 
 //Determining user access based on privileges.
-// router.use(userPrivilege);
+router.use(userPrivilege);
 
 router.use("/download", express.static("download"));
+router.use('/', sideMenuRoutes);
 
 router.use('/', 
     instruccionesRoutes,
@@ -56,7 +59,9 @@ router.use('/api',
     clientesRoutes, 
     cabanasRoutes, 
     editarCabanaRoutes,
-    dashboardRoutes);
+    dashboardRoutes,
+    costosRoutes
+);
 router.use('/api/usuarios', userRoutes);
 router.use('/api/perfil-usuario/', userProfileRoutes);
 

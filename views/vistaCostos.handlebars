@@ -1,0 +1,342 @@
+<h1>Costos de cabañas</h1>
+<div class="row" style="width: 95%;">
+    <div class="col-10">
+        <table class="table table-dark table-hover" id="tablaUsuarios">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Nombre del costo</th>
+                    <th scope="col">Categoría</th>
+                    <th scope="col">Comisión</th>
+                    <th scope="col">Monto</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each costs}}
+                    <tr>
+                        <td>{{costName}}</td>
+                        <td>{{category}}</td>
+                        <td>{{commission}}</td>
+                        <td>{{amount}}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-primary" data-cost-name="{{costName}}" data-bs-toggle="modal"
+                                data-bs-target="#modify-user_entry_modal">
+                                <i class="fa fa-pencil" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger" data-cost-name="{{costName}}">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                            <div class="form-item">
+                                <p name="errMsg" class="error"></p>
+                            </div>
+                        </td>
+                    </tr>
+                {{/each}}                    
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Alta usuario -->
+<div class="modal fade" id="user_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <form id="frmNewUser" action="/api/auth/crear-usuario" method="post" class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Alta de costo</h5>
+                <button type="button" class="close" onclick="$('#user_entry_modal').modal('hide');" aria-label="Close">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-12 mb-2">
+                            <div class="row">
+                                <label for="txtCostName">Nombre: </label>
+                            </div>
+                            <div class="row">
+                                <div class="col-8">
+                                    <input type="text" name="txtCostName" id="txtCostName" class="form-control"
+                                        placeholder="Nombre">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label for="slctUserCategory">Categoría: </label>
+                            </div>
+                            <div class="row">
+                                <div class="col-8">
+                                    <select name="slctUserCategory" id="slctUserCategory" required>
+                                        <option value="" selected disabled> Selecciona una categoría para el costo--
+                                        </option>
+                                        <option value="Dueño">Dueño</option>
+                                        <option value="Gerente">Gerente</option>
+                                        <option value="Vendedor">Vendedor</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label for="slctUserCommission">Comisión: </label>
+                            </div>
+                            <div class="row">
+                                <div class="col-8">
+                                    <select name="slctUserCommission" id="slctUserCommission" required>
+                                        <option value="" selected disabled> Selecciona una comisión para el costo--
+                                        </option>
+                                        <option value="Aumento porcentual">Aumento porcentual</option>
+                                        <option value="Aumento por costo fijo">Aumento por costo fijo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label for="txtUserAmount">Monto: </label>
+                            </div>
+                            <div class="row">
+                                <div class="col-8">
+                                    <input type="number" name="txtUserAmount" id="txtUserAmount" class="form-control"
+                                        placeholder="Monto">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btnSaveUser">Agregar costo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-item">
+            <p id="txtInsertUserError" name="errMsg" class="error"></p>
+        </div>
+    </form>
+</div>
+<!-- End Modal Alta usuario -->
+
+<!-- Modal modificar usuario -->
+<div class="modal fade" id="modify-user_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <form id="frmUpdateUser" action="/api/usuarios/editar-usuario" method="put" class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Modificar costo</h5>
+                <button type="button" class="close" onclick="$('#modify-user_entry_modal').modal('hide');" aria-label="Close">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-12 mb-2">
+                            <div class="row">
+                                <label for="txtCostNameUpd">Nombre: </label>
+                            </div>
+                            <div class="row">
+                                <div class="col-8">
+                                    <input type="text" name="txtCostNameUpd" id="txtCostNameUpd" class="form-control"
+                                        placeholder="Nombre" disabled>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label for="slctUserCategoryUpd">Categoría: </label>
+                            </div>
+                            <div class="row">
+                                <div class="col-8">
+                                    <select name="slctUserCategoryUpd" id="slctUserCategoryUpd" required>
+                                        <option value="" selected disabled> Selecciona una categoría para el costo--
+                                        </option>
+                                        <option value="Dueño">Dueño</option>
+                                        <option value="Gerente">Gerente</option>
+                                        <option value="Vendedor">Vendedor</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label for="slctUserCommissionUpd">Comisión: </label>
+                            </div>
+                            <div class="row">
+                                <div class="col-8">
+                                    <select name="slctUserCommissionUpd" id="slctUserCommissionUpd" required>
+                                        <option value="" selected disabled> Selecciona una comisión para el costo--
+                                        </option>
+                                        <option value="Aumento porcentual">Aumento porcentual</option>
+                                        <option value="Aumento por costo fijo">Aumento por costo fijo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label for="txtUserAmountUpd">Monto: </label>
+                            </div>
+                            <div class="row">
+                                <div class="col-8">
+                                    <input type="text" name="txtUserAmountUpd" id="txtUserAmountUpd" class="form-control"
+                                        placeholder="Monto">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-item">
+                            <p id="txtUpdUserError" name="errMsg" class="error"></p>
+                        </div>
+                        <div class="modal_footer" style="display: flex; justify-content: right; margin: 10px 0;">
+                            <button type="submit" class="btn btn-primary" id="btnUpdateUser">Modificar costo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-item">
+            <p id="txtUpdUserError" name="errMsg" class="error"></p>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Variables.
+        var table = document.getElementById("tablaUsuarios");
+        if (table) {
+            var dataTable = new DataTable(table, {
+                "order": [], // Puedes especificar aquí el orden inicial de las columnas
+                "paging": true, // Habilita la paginación
+                "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
+                "pageLength": 10 // Establece la longitud de página inicial
+            });
+        }
+
+        // Functions.
+        function clearModal(modal){
+            const inputs = modal.querySelectorAll('input');
+            inputs.forEach(function(input) {
+                input.value = "";
+            });
+            modal.querySelectorAll("p[name='errMsg']")[0].innerHTML = "";
+        }
+
+        // Clearing user's info when closing modal.
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(function(modal) {
+            modal.addEventListener('hidden.bs.modal', () => {
+                clearModal(modal);
+            });
+        });
+
+        // Saving new user.
+        var btnSaveUser = document.getElementById("btnSaveUser")
+        if (btnSaveUser){
+            btnSaveUser.addEventListener("click", async (event) => {
+                event.preventDefault();
+
+                const data = {
+                    costName: document.getElementById("txtCostName").value.trim(),
+                    category: document.getElementById("slctUserCategory").value.trim(),
+                    commission: document.getElementById("slctUserCommission").value.trim(),
+                    amount: document.getElementById("txtUserAmount").value.trim()
+                };
+
+                fetch('/api/costos/crear-costo', {
+                    method: 'POST',
+                    headers: {
+                        // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        document.getElementById("txtInsertUserError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta del servidor:', data);
+                    clearModal(document.getElementById("user_entry_modal"));
+                    $('#user_entry_modal').modal('hide');
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error al enviar la solicitud:', error);
+                });
+            });
+        }
+        
+        // Updating user info.
+        const editButtons = document.querySelectorAll('#tablaUsuarios .btn-primary');
+        editButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                document.getElementById('txtCostNameUpd').value = this.dataset.costName;
+            });
+        });
+
+        var btnUpdateUser = document.getElementById("btnUpdateUser")
+        if(btnUpdateUser){
+            btnUpdateUser.addEventListener("click", async (event) => {
+                event.preventDefault();
+                const data = {
+                    costName: document.getElementById("txtCostNameUpd").value.trim(),
+                    category: document.getElementById("slctUserCategoryUpd").value.trim(),
+                    commission: document.getElementById("slctUserCommissionUpd").value.trim(),
+                    amount: document.getElementById("txtUserAmountUpd").value.trim()
+                };
+
+                fetch('/api/costos/editar-costo', {
+                    method: 'PUT',
+                    headers: {
+                        // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        document.getElementById("txtUpdUserError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta exitosa del servidor:', data);
+                    clearModal(document.getElementById("modify-user_entry_modal"));
+                    $('#modify-user_entry_modal').modal('hide');
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Ha ocurrido un error: ', error);
+                });
+            });
+        }
+
+        // Deleting client info.
+        const deleteButtons = document.querySelectorAll('#tablaUsuarios .btn-danger');
+        deleteButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                const data = {
+                    costName: this.dataset.costName
+                };
+
+                fetch('/api/costos/eliminar-costo', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        const error = response.statusText;
+                        this.closest("p[name='errMsg']").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
+                        throw new Error('Error en la solicitud: ' + error);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta exitosa del servidor:', data);
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Ha ocurrido un error: ', error);
+                }); 
+            });
+        });        
+    
+    });
+</script>

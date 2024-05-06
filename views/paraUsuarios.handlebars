@@ -1,7 +1,7 @@
 {{#if reservation}}
     <div class="container">
         <img src="https://www.bosqueescondido.com.mx/img/contenidos/home/slider/01.jpg" class="img-fluid rounded-3" alt="" width="100%" style="max-height: 300px;" />
-        <h1 class="mt-3 mb-3 d-flex justify-content-center">{{chalet.title}}</h1>
+        <h1 class="mt-3 mb-3 d-flex justify-content-center">{{chalet.propertyDetails.name}}</h1>
 
         <div class="row">
             <div class="col-md-6 col-xl-6 col-xs-12 col-sm-12">
@@ -11,7 +11,7 @@
                             class="rounded-pill" style="width: 70px;">
                     </div>
                     <div class="col-6 ps-0">
-                        <h4 class="detailsRoom" style="margin-bottom: 5px;">{{chalet.habitaciones}}
+                        <h4 class="detailsRoom" style="margin-bottom: 5px;">{{chalet.propertyDetails.propertyDetails}}
                         </h4>
                         <p class="bold text-uppercase">
                             {{fullname}}
@@ -24,7 +24,7 @@
                 <div class="row d-flex justify-content-center">
                     <div class="col-8 ">
                         <div class="text-center">
-                            <p style="max-width: 500px; word-wrap: break-word;">{{chalet.description}}</p>
+                            <p style="max-width: 500px; word-wrap: break-word;">{{chalet.accomodationDescription}}</p>
                             <button type="button" class="btn btn-lg btn-outline-light mb-5">
                                 Ver instrucciones de llegada
                             </button>
@@ -68,7 +68,8 @@
         </div>
 
         <div class="some-container">
-            <iframe src="{{chalet.location}}" allowfullscreen="" loading="lazy"referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <iframe src="{{chalet.location.iFrame}}" allowfullscreen="" loading="lazy"referrerpolicy="no-referrer-when-downgrade"></iframe>
+            
             <div class="submit">
                 <add-to-calendar-button
                     name="My Event"

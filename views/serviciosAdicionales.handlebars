@@ -1,12 +1,3 @@
-<div class="calendar-header">
-    <div class="bg-dark mb-3">
-        <a name="" id="crear-servicio-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
-            data-bs-toggle="modal" data-bs-target="#services_entry_modal">Alta de servicios</a>
-    </div>
-
-
-</div>
-
 <div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
     <div class="col-10">
         <h1>Lista de servicios</h1>
@@ -21,36 +12,38 @@
                     <th scope="col">1ra comisión</th>
                     <th scope="col">1er usuario</th>
                     <th scope="col">2da comisión</th>
+                    <th scope="col">2do usuario</th>
                     <th scope="col">Precio final</th>
                     <th scope="col">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                {{#each servicios}}
-                <tr>
-                    <td>{{service}}</td>
-                    <td>{{description}}</td>
-                    <td> {{supplier}}</td>
-                    <td>{{serviceManager}}</td>
-                    <td> {{basePrice}}</td>
-                    <td>{{firstCommission}}</td>
-                    <td>{{firstUser}}</td>
-                    <td>{{secondCommission}}</td>
-                    <td>{{finalPrice}}</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary" data-service-name="{{service}}"
-                            data-bs-toggle="modal" data-bs-target="#modify-service_entry_modal">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger" data-service-name="{{service}}">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                        <div class="form-item">
-                            <p name="errMsg" class="error"></p>
-                        </div>
-                    </td>
-                </tr>
-                {{/each}}
+                {{#each services}}
+                    <tr>
+                        <td>{{service}}</td>
+                        <td>{{description}}</td>
+                        <td> {{supplier}}</td>
+                        <td>{{serviceManager}}</td>
+                        <td> {{basePrice}}</td>
+                        <td>{{firstCommission}}</td>
+                        <td>{{firstUser}}</td>
+                        <td>{{secondCommission}}</td>
+                        <td>{{secondUser}}</td>
+                        <td>{{finalPrice}}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-primary" data-service-name="{{service}}"  data-bs-toggle="modal"
+                                data-bs-target="#modify-service_entry_modal">
+                                <i class="fa fa-pencil" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger" data-service-name="{{service}}">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                            <div class="form-item">
+                                <p name="errMsg" class="error"></p>
+                            </div>
+                        </td>
+                    </tr>
+                {{/each}}  
             </tbody>
         </table>
     </div>
@@ -90,15 +83,23 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtSupplier">Proveedor</label>
-                                <input type="text" name="txtSupplier" id="txtSupplier" class="form-control"
-                                    placeholder="Proveedor">
+                                <select name="txtSupplier" id="txtSupplier" class="form-control">
+                                    <option value="" selected disabled>Selecciona un usuario</option>
+                                    {{#each users}}
+                                        <option value="{{email}}">{{firstName}} {{lastName}}</option>
+                                    {{/each}}
+                                </select>
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtServiceManager">Administrador de servicios</label>
-                                <input type="text" name="txtServiceManager" id="txtServiceManager" class="form-control"
-                                    placeholder="Administrador de servicios">
+                                <select name="txtServiceManager" id="txtServiceManager" class="form-control">
+                                    <option value="" selected disabled>Selecciona un usuario</option>
+                                    {{#each additionalServiceUsers}}
+                                        <option value="{{email}}">{{firstName}} {{lastName}}</option>
+                                    {{/each}}
+                                </select>
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
@@ -119,15 +120,28 @@
                             <div class="form-group">
                                 <label for="slctFirstUser">Usuario para 1ra comisión</label>
                                 <select name="slctFirstUser" id="slctFirstUser" class="form-control">
-                                    <option value="Usuario 1">Usuario 1</option>
+                                    <option value="" selected disabled>Selecciona un usuario</option>
+                                    {{#each additionalServiceUsers}}
+                                        <option value="{{email}}">{{firstName}} {{lastName}}</option>
+                                    {{/each}}
                                 </select>
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtSecondCommission">2da comisión</label>
-                                <input type="number" name="txtSecondCommission" id="txtSecondCommission"
-                                    class="form-control" placeholder="2da comisión">
+                                <input type="number" name="txtSecondCommission" id="txtSecondCommission" class="form-control" placeholder="2da comisión">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="slctSecondUser">Usuario para 2da comisión</label>
+                                <select name="slctSecondUser" id="slctSecondUser" class="form-control">
+                                    <option value="" selected disabled>Selecciona un usuario</option>
+                                    {{#each additionalServiceUsers}}
+                                        <option value="{{email}}">{{firstName}} {{lastName}}</option>
+                                    {{/each}}
+                                </select>
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
@@ -162,6 +176,7 @@
                 <button type="button" class="close" onclick="$('#modify-service_entry_modal').modal('hide');"
                     aria-label="Close">
                     &times;
+                </button>
             </div>
             <div class="modal-body">
                 <div class="img-container">
@@ -183,15 +198,23 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtSupplierUpd">Proveedor</label>
-                                <input type="text" name="txtSupplierUpd" id="txtSupplierUpd" class="form-control"
-                                    placeholder="Proveedor">
+                                <select name="txtSupplierUpd" id="txtSupplierUpd" class="form-control">
+                                    <option value="" selected disabled>Selecciona un usuario</option>
+                                    {{#each users}}
+                                        <option value="{{email}}">{{firstName}} {{lastName}}</option>
+                                    {{/each}}
+                                </select>
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtServiceManagerUpd">Administrador de servicios</label>
-                                <input type="text" name="txtServiceManagerUpd" id="txtServiceManagerUpd"
-                                    class="form-control" placeholder="Administrador de servicios">
+                                <select name="txtServiceManagerUpd" id="txtServiceManagerUpd" class="form-control">
+                                    <option value="" selected disabled>Selecciona un usuario</option>
+                                    {{#each additionalServiceUsers}}
+                                        <option value="{{email}}">{{firstName}} {{lastName}}</option>
+                                    {{/each}}
+                                </select>
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
@@ -212,15 +235,29 @@
                             <div class="form-group">
                                 <label for="slctFirstUserUpd">Usuario para 1ra comisión</label>
                                 <select name="slctFirstUserUpd" id="slctFirstUserUpd" class="form-control">
-                                    <option value="Usuario 1">Usuario 1</option>
+                                    <option value="" selected disabled>Selecciona un usuario</option>
+                                    {{#each additionalServiceUsers}}
+                                        <option value="{{email}}">{{firstName}} {{lastName}}</option>
+                                    {{/each}}
                                 </select>
                             </div>
+                            
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtSecondCommissionUpd">2da comisión</label>
-                                <input type="number" name="txtSecondCommissionUpd" id="txtSecondCommissionUpd"
-                                    class="form-control" placeholder="2da comisión">
+                                <input type="number" name="txtSecondCommissionUpd" id="txtSecondCommissionUpd" class="form-control" placeholder="2da comisión">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="slctSecondUserUpd">Usuario para 2da comisión</label>
+                                <select name="slctSecondUserUpd" id="slctSecondUserUpd" class="form-control">
+                                    <option value="" selected disabled>Selecciona un usuario</option>
+                                    {{#each additionalServiceUsers}}
+                                        <option value="{{email}}">{{firstName}} {{lastName}}</option>
+                                    {{/each}}
+                                </select>                                
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
@@ -279,15 +316,16 @@
                 event.preventDefault();
 
                 const data = {
-                    service: document.getElementById("txtService").value,
-                    description: document.getElementById("txtServiceDescription").value,
-                    supplier: document.getElementById("txtSupplier").value,
-                    serviceManager: document.getElementById("txtServiceManager").value,
-                    basePrice: document.getElementById("txtBasePrice").value,
-                    firstCommission: document.getElementById("txtFirstCommission").value,
-                    firstUser: document.getElementById("slctFirstUser").value,
-                    secondCommission: document.getElementById("txtSecondCommission").value,
-                    finalPrice: document.getElementById("txtFinalPrice").value
+                    service: document.getElementById("txtService").value.trim(),
+                    description: document.getElementById("txtServiceDescription").value.trim(),
+                    supplier: document.getElementById("txtSupplier").value.trim(),
+                    serviceManager: document.getElementById("txtServiceManager").value.trim(),
+                    basePrice: document.getElementById("txtBasePrice").value.trim(),
+                    firstCommission: document.getElementById("txtFirstCommission").value.trim(),
+                    firstUser: document.getElementById("slctFirstUser").value.trim(),
+                    secondCommission: document.getElementById("txtSecondCommission").value.trim(),
+                    secondUser: document.getElementById("slctSecondUser").value.trim(),
+                    finalPrice: document.getElementById("txtFinalPrice").value.trim()
                 };
 
                 fetch('/api/servicios/crear-servicio', {
@@ -332,15 +370,16 @@
                 event.preventDefault();
 
                 const data = {
-                    service: document.getElementById("txtServiceUpd").value,
-                    description: document.getElementById("txtServiceDescriptionUpd").value,
-                    supplier: document.getElementById("txtSupplierUpd").value,
-                    serviceManager: document.getElementById("txtServiceManagerUpd").value,
-                    basePrice: document.getElementById("txtBasePriceUpd").value,
-                    firstCommission: document.getElementById("txtFirstCommissionUpd").value,
-                    firstUser: document.getElementById("slctFirstUserUpd").value,
-                    secondCommission: document.getElementById("txtSecondCommissionUpd").value,
-                    finalPrice: document.getElementById("txtFinalPriceUpd").value
+                    service: document.getElementById("txtServiceUpd").value.trim(),
+                    description: document.getElementById("txtServiceDescriptionUpd").value.trim(),
+                    supplier: document.getElementById("txtSupplierUpd").value.trim(),
+                    serviceManager: document.getElementById("txtServiceManagerUpd").value.trim(),
+                    basePrice: document.getElementById("txtBasePriceUpd").value.trim(),
+                    firstCommission: document.getElementById("txtFirstCommissionUpd").value.trim(),
+                    firstUser: document.getElementById("slctFirstUserUpd").value.trim(),
+                    secondCommission: document.getElementById("txtSecondCommissionUpd").value.trim(),
+                    secondUser: document.getElementById("slctSecondUserUpd").value.trim(),
+                    finalPrice: document.getElementById("txtFinalPriceUpd").value.trim()
                 };
 
                 fetch('/api/servicios/editar-servicio', {
