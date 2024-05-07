@@ -305,3 +305,27 @@ td {
     overflow-x: auto;
     margin: 1em 22em 0 1em;
 }
+
+.nota-container {
+    position: relative;
+}
+
+.nota-container:hover {
+    background-color: #e6e6e6;
+}
+
+.btn-eliminar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 5px 10px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-eliminar:hover {
+    background-color: darkred;
+}

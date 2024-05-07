@@ -48,8 +48,9 @@ const reservaSchema = new Schema({
     discount: {
         type: Number,
         required: true
-    }
-});
+    },
+    notes: [{texto: String}]
+}); 
 
 const documentSchema = new Schema({
     events: [reservaSchema]

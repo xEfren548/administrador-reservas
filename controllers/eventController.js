@@ -2,7 +2,7 @@ const Documento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const Usuario = require('../models/Usuario');
 const Cliente = require('../models/Cliente');
-const {check} = require("express-validator");
+const { check } = require("express-validator");
 const BadRequestError = require("../common/error/bad-request-error");
 const NotFoundError = require('../common/error/not-found-error');
 
@@ -31,10 +31,10 @@ const createReservationValidators = [
 
             if (arrivalDate <= currentDate) {
                 throw new BadRequestError('Arrival date must be after the current date');
-            }            
+            }
             if (arrivalDate >= departureDate) {
                 throw new BadRequestError('Departure date must be after arrival date');
-            }            
+            }
             return true;
         }),
     check("nNights")
@@ -46,7 +46,7 @@ const createReservationValidators = [
         .custom(async (value, { req }) => {
             const chalets = await Habitacion.findOne();
             const chalet = chalets.resources.find(chalet => chalet.title === value);
-            if(!chalet){
+            if (!chalet) {
                 throw new NotFoundError('Chalet does not exist');
             }
             return true;
@@ -66,7 +66,7 @@ const createReservationValidators = [
         .isNumeric().withMessage('Discount percentage must be a number')
         .toFloat()
         .custom(async (value, { req }) => {
-            if(value <= 0 || value > 100){
+            if (value <= 0 || value > 100) {
                 throw new BadRequestError('Invalid percentage');
             }
             return true;
@@ -77,7 +77,7 @@ const submitReservationValidators = [
     check()
         .custom((value, { req }) => {
             const reservationDetails = req.session.reservationInProgress;
-            if(!reservationDetails){
+            if (!reservationDetails) {
                 throw new BadRequestError('There is no reservation in progress to be submitted');
             }
             return true;
@@ -97,7 +97,7 @@ async function obtenerEventos(req, res) {
 async function obtenerEventoPorId(id) {
     try {
         const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
-        
+
         if (!eventosExistentes) {
             throw new Error('No se encontraron eventos');
         }
@@ -117,7 +117,7 @@ async function obtenerEventoPorId(id) {
 async function createReservation(req, res, next) {
     const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount } = req.body;
 
-    try{
+    try {
         const client = await Cliente.find({ email: clientEmail });
         if (!client) {
             throw new NotFoundError('Client does not exist');
@@ -125,18 +125,18 @@ async function createReservation(req, res, next) {
 
         const chalets = await Habitacion.findOne();
         const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
-        if(!chalet){
+        if (!chalet) {
             throw new NotFoundError('Chalet does not exist');
         }
-        
+
         const reservationToAdd = {
             client: client[0]._id,
             resourceId: chalet._id,
-            arrivalDate: arrivalDate, 
+            arrivalDate: arrivalDate,
             departureDate: departureDate,
             maxOccupation: maxOccupation,
-            nNights: nNights,            
-            url: `${process.env.URL}/eventos/${chalet._id}`,
+            nNights: nNights,
+            url: `${process.env.URL}/api/eventos/${chalet._id}`,
             units: units,
             total: total,
             discount: discount
@@ -145,9 +145,9 @@ async function createReservation(req, res, next) {
         const documento = await Documento.findOne();
         documento.events.push(reservationToAdd);
         await documento.save();
-        
-        console.log('Nueva reservación agregada:', documento.events[documento.events.length - 1]._id );
-        res.status(200).json({ message: 'Nueva reservación agregada', reservationId:  documento.events[documento.events.length - 1]._id });
+
+        console.log('Nueva reservación agregada:', documento.events[documento.events.length - 1]._id);
+        res.status(200).json({ message: 'Nueva reservación agregada', reservationId: documento.events[documento.events.length - 1]._id });
     } catch (err) {
         console.log(err);
         return next(err);
@@ -161,7 +161,7 @@ async function editarEvento(req, res) {
 
         // Fetch existing rooms from the database
         const eventosExistentes = await Documento.findOne();
-        
+
         if (!eventosExistentes) {
             return res.status(404).json({ mensaje: 'No se encontraron habitaciones' });
         }
@@ -177,7 +177,7 @@ async function editarEvento(req, res) {
 
 
         // Update only the provided fields
-        if (resourceId !== undefined && resourceId !== null){
+        if (resourceId !== undefined && resourceId !== null) {
             evento.resourceId = resourceId;
         }
 
@@ -220,8 +220,8 @@ async function eliminarEvento(req, res) {
         const id = req.params.id;
         const eventosExistentes = await Documento.findOne();
 
-        
-        
+
+
         if (!eventosExistentes) {
             return res.status(404).json({ mensaje: 'No se encontraron eventos' });
         }
@@ -241,7 +241,7 @@ async function eliminarEvento(req, res) {
 
         console.log('Evento eliminado con éxito');
         res.status(200).json({ mensaje: 'Evento eliminado correctamente' });
-    } catch(error){
+    } catch (error) {
         console.error('Error al eliminar el evento:', error);
         res.status(500).json({ error });
     }
@@ -251,7 +251,7 @@ async function modificarEvento(req, res) {
     try {
         const { event, newResource } = req.body;
 
-        console.log('eventoRecibido: ',  event);
+        console.log('eventoRecibido: ', event);
 
         // Obtener el ID del evento y la nueva fecha
         const eventId = req.params.id;
@@ -260,24 +260,24 @@ async function modificarEvento(req, res) {
 
         // Buscar el evento existente por su ID
         const eventosExistentes = await Documento.findOne();
-        
+
 
         const evento = eventosExistentes.events.find(evento => evento.id === eventId);
 
 
         if (!evento) {
             return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
-        }else {
+        } else {
             console.log('evento encontrado: ', evento);
         }
 
-        
+
 
         // Actualizar la fecha de inicio y fin del evento existente
         evento.start = newStartDate;
         evento.end = newEndDate;
 
-        if(newResource){
+        if (newResource) {
             const newResourceId = newResource.id;
             evento.resourceId = newResourceId;
 
@@ -294,6 +294,84 @@ async function modificarEvento(req, res) {
     }
 }
 
+async function crearNota(req, res) {
+    const idReserva = req.params.id;
+    const { texto } = req.body;
+    console.log(texto);
+    console.log(req.body);
+
+    try {
+        const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
+
+        if (!eventosExistentes) {
+            throw new Error('No se encontraron eventos');
+        }
+
+        // Buscar el evento por su id
+        const evento = eventosExistentes.events.find(evento => evento._id.toString() === idReserva);
+
+        if (!evento) {
+            throw new Error('El evento no fue encontrado');
+        }
+
+        evento.notes.push({ texto });
+        
+        await eventosExistentes.save();
+
+        res.status(200).json({ message: 'Nueva nota agregada exitosamente a la reserva.' });
+
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Error al obtener eventos' });
+    }
+}
+
+async function eliminarNota(req, res) {
+    console.log('Desde eliminar nota')
+    const idReserva = req.query.idReserva; // Obtener el ID de la reserva desde los parámetros de la consulta
+    const idNota = req.query.idNota; // Obtener el ID de la nota a eliminar desde los parámetros de la consulta
+
+    console.log(idReserva, idNota)
+
+    try {
+        // Buscar el documento que contiene los eventos
+        const documento = await Documento.findOne();
+        
+        if (!documento) {
+            throw new Error('No se encontraron eventos');
+        }
+
+        console.log(documento);
+        // Buscar el evento por su ID dentro del array de eventos
+        const evento = documento.events.find(evento => evento._id.toString() === idReserva);
+
+
+        if (!evento) {
+            throw new Error('El evento no fue encontrado');
+        }
+
+        // Encontrar la nota por su ID dentro del array de notas del evento
+        const indexNota = evento.notes.findIndex(nota => nota._id.toString() === idNota);
+
+        if (indexNota === -1) {
+            throw new Error('La nota no fue encontrada en el evento');
+        }
+
+        // Eliminar la nota del array de notas del evento
+        evento.notes.splice(indexNota, 1);
+
+        // Guardar el documento actualizado en la base de datos
+        await documento.save();
+
+        res.status(200).json({ message: 'Nota eliminada exitosamente de la reserva.' });
+    } catch (error) {
+        // Manejar cualquier error y enviar una respuesta de error al cliente
+        console.error('Error al eliminar la nota:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+}
+
 module.exports = {
     createReservationValidators,
     submitReservationValidators,
@@ -302,6 +380,8 @@ module.exports = {
     createReservation,
     editarEvento,
     eliminarEvento,
-    modificarEvento
+    modificarEvento,
+    crearNota,
+    eliminarNota
 };
 

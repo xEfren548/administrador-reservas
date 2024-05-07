@@ -11,12 +11,13 @@ async function showReservationsView(req, res, next) {
 
         const chalets = data[0].resources.map(chalet => ({
             name: chalet.propertyDetails.name,
-            basePrice: chalet.others.basePrice
+            basePrice: chalet.others.basePrice,
+            pax: chalet.propertyDetails.maxOccupancy
         }));
         console.log("Estos son los chalets: ", chalets);
 
         const clientes = await Cliente.find({}).lean();
-        console.log(clientes);
+        console.log(chalets);
 
         res.render('index', {
             chalets: chalets,

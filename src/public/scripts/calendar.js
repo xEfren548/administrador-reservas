@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             // console.log(data);
 
 
-            console.log(info);
+            // console.log(info);
             return {
                 html: `
                 <div class="p-1 rounded bg-success bg-gradient" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: "Overpass", sans-serif;">

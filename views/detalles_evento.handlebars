@@ -1,6 +1,6 @@
 <div class="left hidden-xs" id="reservationtools">
 
-    <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Check-In">
+    {{!-- <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Check-In">
         <li type="button" id="checkin" data-command="checkin" class="btn"><i class="fa fa-sign-in fa-lg"
                 aria-hidden="true"></i></li>
     </span>
@@ -8,16 +8,16 @@
     <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Check-Out">
         <li type="button" id="checkout" data-command="checkout" class="btn"><i class="fa fa-sign-out fa-lg"
                 aria-hidden="true"></i></li>
-    </span>
+    </span> --}}
     <span data-toggle="tooltip" data-placement="bottom" title="Cancelar" data-original-title="Cancelar ">
-        <li type="button" id="cancel" data-command="cancel" class="btn btn-cancel"><i class="fa fa-trash fa-lg"
-                aria-hidden="true"></i></li>
+        <li type="button" id="eliminar-reserva-btn" data-command="cancel" class="btn btn-cancel"><i
+                class="fa fa-trash fa-lg" aria-hidden="true"></i></li>
     </span>
 
     <span title="|">|</span>
     <span data-toggle="tooltip" data-placement="bottom" title="Editar reserva" data-original-title="Editar reserva">
-        <button type="button" data-toggle="modal" data-target="#editclient" class="btn"><i class="fa fa-pencil"
-                aria-hidden="true"></i>
+        <button type="button" data-bs-toggle="modal" data-bs-target="#edit_event_modal" class="btn"><i
+                class="fa fa-pencil" aria-hidden="true"></i>
             <div class="ripple-container"></div>
         </button>
     </span>
@@ -120,7 +120,8 @@
                         <h4 class="fw-bold fs-6" style="margin-top: 5px; margin-bottom:0px;">
                             <button class="btn btn-style-blue enviar-email-btn" type="button" data-toggle="modal"
                                 data-target="#modalSendConfirmation" data-id="">
-                                <i class="fa fa-phone" aria-hidden="true"></i> <b>{{cliente.phone}}</b> | Teléfono
+                                <i class="fa fa-mobile-phone" aria-hidden="true"></i> <b>{{cliente.phone}}</b> | Enviar
+                                Whatsapp
                                 <div class="ripple-container"></div>
                             </button>
                             <div class="ripple-container"></div>
@@ -174,11 +175,20 @@
                 class="fa fa-plus-circle" aria-hidden="true"></i></a>
         <div class="card-details m-3" style="background-color: #faf1d2; height: auto; width: 80%;">
             <p style="color: black">COMENTARIOS</p>
+            {{#if evento.notes}}
+            {{#each evento.notes}}
+            <div class="nota-container">
+                <p class="text-black fs-5">{{this.texto}}</p>
+                <button class="btn btn-eliminar btn-sm" style="display: none;" onclick="eliminarNota('{{this._id}}')"><i
+                        class="fa fa-trash" aria-hidden="true"></i></button>
+
+            </div>
+            {{/each}}
+            {{/if}}
         </div>
     </div>
-
-
 </div>
+
 
 <div class="row mt-3">
     <div class="col-4">
@@ -206,30 +216,12 @@
         </div>
     </div>
 
-    <div class="col-3">
-        <h3>Facturas</h3>
-        <div class="bg-dark h-auto">
-            <table class="table table-hover table-payment" style="width: auto;">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Nº Fact.</th>
-                        <th>Fecha</th>
-                        <th>Importe</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="rows-payment">
 
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="col-5">
+    <div class="col-4">
         <h3 class="d-inline-block mr-3 ml-3">Pagos</h3>
         <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_payment_modal"
             role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
-        <table class="table table-hover table-payment" style="width: 75%;">
+        <table class="table table-hover table-payment" style="width: 100%;">
             <thead class="table-dark">
                 <tr>
                     <th>Nº Op.</th>
@@ -283,6 +275,24 @@
         </table>
     </div>
 
+    <div class="col-4">
+        <h3>Facturas</h3>
+        <div class="bg-dark h-auto">
+            <table class="table table-hover table-payment" style="width: 100%;">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nº Fact.</th>
+                        <th>Fecha</th>
+                        <th>Importe</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="rows-payment">
+
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div> {{!-- Cierre row --}}
 
 <div class="row mt-3">
@@ -502,7 +512,189 @@
 </div>
 <!-- End popup dialog box -->
 
+
+<!-- Modal editar reserva -->
+<div class="modal fade" id="edit_event_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Editar reserva</h5>
+                <button type="button" class="close" onclick="$('#edit_event_modal').modal('hide');" aria-label="Close">
+                    &times;
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <div class="mb-3">
+                                    <label for="" class="form-label">Cliente</label>
+                                    <input type="text" class="form-control" name="" id="name-cliente"
+                                        aria-describedby="helpId" placeholder="" />
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label for="event_start_date">Fecha llegada</label>
+                                <input type="date" name="event_start_date" id="event_start_date"
+                                    class="form-control onlydatepicker" placeholder="Event start date">
+                            </div>
+                        </div>
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label for="event_end_date">Fecha salida</label>
+                                <input type="date" name="event_end_date" id="event_end_date" class="form-control"
+                                    placeholder="Event end date">
+                            </div>
+                        </div>
+                        <div class="col-sm-2">
+                            <div class="form-group">
+                                <label for="event_end_date">Noches: </label>
+                                <input type="number" name="event_nights" id="event_nights" class="form-control"
+                                    placeholder="" min="1" disabled>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="mt-3">Habitación</h3>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="tipologia_habitacion">Tipología</label>
+                                <select id="tipologia_habitacion" name="tipologia_habitacion" id="tipologia_habitacion"
+                                    class="form-select form-select-md" required>
+                                    <option value="" selected="true" disabled="true"> Selecciona una cabaña para
+                                        modificar --</option>
+                                    {{#if chalets}}
+                                    {{#each chalets}}
+                                    <option value="{{this.name}}" data-bs-pax="{{this.pax}}">{{this.name}}</option>
+                                    {{/each}}
+                                    {{else}}
+                                    <option value="0">No se encontraron cabañas</option>
+                                    {{/if}}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="ocupacion_habitacion">Ocupación Máx.</label>
+                                <input type="number" name="ocupacion_habitacion" id="ocupacion_habitacion"
+                                    class="form-control" placeholder="Ocupación" readonly>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="ocupacion_habitacion"></label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Unidades: </span>
+                                    </div>
+                                    <input type="number" id="habitacion_unidades"
+                                        class="form-control bg-light text-black" aria-label="Unidades" min="1"
+                                        step="any" max="1" value="1">
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- Cierre row -->
+
+                    <div class="row mt-2">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="ocupacion_habitacion">Total</label>
+                                <div class="input-group ig-shopping-price mb-3">
+                                    <input type="number" class="form-control bg-light text-black" id="habitacion_total"
+                                        aria-label="Amount (to the nearest dollar)" min="0.00" placeholder="Total">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">$ M.N.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="ocupacion_habitacion">Descuento</label>
+                                <div class="input-group ig-shopping-price mb-3">
+                                    <input type="number" class="form-control bg-light text-black"
+                                        id="habitacion_descuento" aria-label="Descuento" min="0.00"
+                                        placeholder="Descuento">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"> % </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- Cierre row -->
+                    <div class="form-item">
+                        <p id="txtReservationError" name="errMsg" class="error"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="save-event-btn">Editar reserva</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End popup dialog box -->
+
+{{!-- Modal Agregar Notas --}}
+
+<div class="modal fade" id="add_notes_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Agregar nota</h5>
+                <button type="button" class="close" onclick="$('#add_notes_modal').modal('hide');" aria-label="Close">
+                    &times;
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row">
+                        <div class="ml-2">
+                            <label for="add-note-input" class="form-label">Notas</label>
+                            <textarea class="form-control" name="add-note-input" id="add-note-input" rows="3"
+                                placeholder="Añade una nueva nota para esta reserva"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add-note-btn">Agregar nota</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{!-- End Modal Notas --}}
+
+
 <script>
+    // Obtener todos los contenedores de nota
+    const notaContainers = document.querySelectorAll('.nota-container');
+
+    // Agregar evento de mouseenter a cada contenedor de nota
+    notaContainers.forEach(container => {
+        container.addEventListener('mouseenter', () => {
+            // Mostrar el botón de eliminar al hacer hover
+            const btnEliminar = container.querySelector('.btn-eliminar');
+            btnEliminar.style.display = 'block';
+        });
+
+        // Agregar evento de mouseleave a cada contenedor de nota
+        container.addEventListener('mouseleave', () => {
+            // Ocultar el botón de eliminar al dejar de hacer hover
+            const btnEliminar = container.querySelector('.btn-eliminar');
+            btnEliminar.style.display = 'none';
+        });
+    });
 
     const editPaymentModal = document.getElementById('edit_payment_modal');
     const editPaymentBtn = document.querySelector('#edit-payment-btn');
@@ -728,7 +920,136 @@
         }
     }
 
+    const eliminarReservaBtn = document.querySelector('#eliminar-reserva-btn')
+    eliminarReservaBtn.addEventListener('click', async function (event) {
+        try {
+            const reservacionId = document.querySelector('#reservacion_id').value;
 
+            const confirmacion = await Swal.fire({
+                icon: 'warning',
+                title: '¿Estás seguro?',
+                text: 'Esta acción eliminará la reserva de forma permanente.',
+                showCancelButton: true,
+            });
+
+            if (confirmacion.isConfirmed) {
+                const response = await fetch(`http://localhost:3005/api/eventos/${reservacionId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    });
+
+    const addNoteBtn = document.querySelector('#add-note-btn');
+
+    addNoteBtn.addEventListener('click', async function (event) {
+        event.preventDefault();
+
+        try {
+            const reservacionId = document.querySelector('#reservacion_id').value;
+            const noteInput = document.querySelector('#add-note-input').value;
+
+            if (!noteInput || noteInput === undefined) {
+                throw new Error('Ingresa una nota para la reserva.');
+            }
+
+            const bodyNota = {
+                texto: noteInput
+            };
+
+            const response = await fetch(`http://localhost:3005/api/eventos/${reservacionId}/notas`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(bodyNota)
+            })
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Completado!',
+                    text: 'Nota agregada correctamente.',
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                });
+
+            } else {
+                throw new Error('Error al agregar la nota. Por favor, inténtalo de nuevo más tarde.');
+            }
+
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: e.message,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    });
+
+    async function eliminarNota(idNota) {
+
+        try {
+            const reservacionId = document.querySelector('#reservacion_id').value;
+
+            const confirmacion = await Swal.fire({
+                icon: 'warning',
+                title: '¿Estás seguro?',
+                text: 'Esta acción eliminará la nota de forma permanente.',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            })
+            if (confirmacion.isConfirmed) {
+
+                const response = await fetch(`http://localhost:3005/api/notas?idReserva=${reservacionId}&idNota=${idNota}`, {
+                    method: 'DELETE', // O el método HTTP que estés utilizando para eliminar la nota
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: 'Nota eliminada correctamente.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            location.reload();
+                        }
+                    });
+
+                } else {
+                    throw new Error('Error al eliminar la nota. Por favor, inténtalo de nuevo más tarde.');
+                }
+            }
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: e.message,
+                confirmButtonText: 'Aceptar'
+            })
+        }
+    }
 
 
 

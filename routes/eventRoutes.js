@@ -15,6 +15,10 @@ router.put('/eventos/:id', eventController.editarEvento);
 router.put('/eventos/:id/modificar', eventController.modificarEvento);
 router.delete('/eventos/:id', eventController.eliminarEvento);
 
+router.post('/eventos/:id/notas', eventController.crearNota);
+router.delete('/notas', eventController.eliminarNota);
+
+
 // Rutas con contenido dinamico de handlebars
 router.get('/eventos/:idevento', async (req, res) => {
     try {
@@ -38,7 +42,6 @@ router.get('/eventos/:idevento', async (req, res) => {
         const cliente = clientes[0]
 
         const pagos = await pagoController.obtenerPagos(idEvento);
-        console.log(pagos);
 
         pagos.forEach(pago => {
             pago.fechaPago = moment(pago.fechaPago).format('DD/MM/YYYY');

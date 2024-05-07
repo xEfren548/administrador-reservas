@@ -88,7 +88,7 @@ async function generateSideMenu (req, res, next) {
                 </ul>
             </div>`;  
 
-        console.log("ESTE ES EL MENU ENTREGADO: ", sideMenuContent);
+        // console.log("ESTE ES EL MENU ENTREGADO: ", sideMenuContent);
 
         res.status(200).json({sideMenuContent});
     } catch(err){
