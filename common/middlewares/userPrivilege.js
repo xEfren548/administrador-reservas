@@ -56,6 +56,8 @@ const userPrivilege = (req, res, next) => {
             "/api/perfil-usuario/editar-contrasena/:uuid",
             "/",
             "/api/racklimpieza",
+            "/racklimpieza",
+            "/rackservicios",
         ],
         'Vendedor': [
             "/sidemenu",

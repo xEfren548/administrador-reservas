@@ -799,10 +799,10 @@
                 
                 const arrivalTime1 = document.getElementById("txtArrivalTime").value.trim();
                 const departureTime1 =  document.getElementById("txtDepartureTime").value.trim();
-                const arrivalTimeMinutes = parseInt(arrivalTime1.split(':')[0]);
-                const arrivalTimeHours = parseInt(arrivalTime1.split(':')[1]);
-                const departureTimeMinutes = parseInt(arrivalTime1.split(':')[0]);
-                const departureTimeHours = parseInt(departureTime1.split(':')[1]);
+                const arrivalTimeMinutes = parseInt(arrivalTime1.split(':')[1]);
+                const arrivalTimeHours = parseInt(arrivalTime1.split(':')[0]);
+                const departureTimeMinutes = parseInt(arrivalTime1.split(':')[1]);
+                const departureTimeHours = parseInt(departureTime1.split(':')[0]);
                 const data = {
                     propertyDetails: {
                         accomodationType: document.getElementById("slctchaletAccomodationType").value.trim(),

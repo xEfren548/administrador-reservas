@@ -138,12 +138,6 @@ const createChaletValidators = [
     check('others.baseCost2nights')
         .notEmpty().withMessage('Base cost for 2 nights is required')
         .isNumeric().withMessage('Base cost must be a number'),
-    check('others.arrivalTimeMinutes')
-        .notEmpty().withMessage('Arrival time is required')
-        .toDate(),
-    check('others.departureTimeMinutes')
-        .notEmpty().withMessage('Departure time is required')
-        .toDate(),
     check("others.admin")
         .notEmpty().withMessage("Administrator's name is required")
         .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
@@ -375,12 +369,16 @@ async function createChalet(req, res, next) {
         throw new NotFoundError("Janitor not found");
     }
     console.log(req.body);
+    const arrivalTimeHours = parseInt(others.arrivalTimeHours);
+    const arrivalTimeMinutes = parseInt(others.arrivalTimeMinutes);
+    const departureTimeHours = parseInt(others.departureTimeHours);
+    const departureTimeMinutes = parseInt(others.departureTimeMinutes);
     const newArrivalTime = new Date();
-    newArrivalTime.setHours(others.arrivalTimeHours);
-    newArrivalTime.setMinutes(others.arrivalTimeMinutes);
+    newArrivalTime.setHours(arrivalTimeHours);
+    newArrivalTime.setMinutes(arrivalTimeMinutes);
     const newDepartureTime = new Date();
-    newDepartureTime.setHours(others.departureTimeMinutes);
-    newDepartureTime.setMinutes(others.departureTimeHours);
+    newDepartureTime.setHours(departureTimeMinutes);
+    newDepartureTime.setMinutes(departureTimeHours);
 
     const chaletToAdd = {
         propertyDetails, 
