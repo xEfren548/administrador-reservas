@@ -423,20 +423,20 @@ async function uploadChaletFiles(req, res, next) {
 
     try {
         const chalets = await Habitacion.findOne();
-        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
-        //if(!chalet){
-        //    throw new NotFoundError('Chalet does not exists');
-        //} ¿porque abriamos de validar contra algo que tenemos guardado dentro de nuestra sesión ?
-
+        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
+        if(!chalet){
+            throw new NotFoundError('Chalet does not exists');
+        }
+        console.log(req.session)
         await client.access({
             host: 'integradev.site',
-            user: 'navarro@integradev.site',
+            user: 'navarro@navarro.integradev.site',
             password: 'Nav@rro2024',
             secure: false
         });
 
-        await client.cd('cabanas-navarro');
         for (let i = 0; i < req.files.length; i++) {
+            console.log(req.files[i].path);
             const localFilePath = req.files[i].path;
             const remoteFileName = req.session.chaletAdded + '-' + req.files[i].filename;
             await client.uploadFrom(localFilePath, remoteFileName);
@@ -470,11 +470,10 @@ async function getChaletFiles(chalets) {
     try {
         await client.access({
             host: 'integradev.site',
-            user: 'navarro@integradev.site',
+            user: 'navarro@navarro.integradev.site',
             password: 'Nav@rro2024',
             secure: false
         });
-        await client.cd('cabanas-navarro');
 
         for(const chalet of chalets){
             if(chalet.hasOwnProperty("images")){
@@ -523,7 +522,6 @@ async function showEditChaletsView(req, res, next){
         console.log("Images downloaded successfully ");
 
         res.render('vistaEditarCabana', {
-            layout: 'editarCabana',
             chalets: chalets,
             admins: admins,
             janitors: janitors

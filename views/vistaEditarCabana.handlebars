@@ -803,6 +803,7 @@
             
             let fileUpload = form.querySelector("#file-upload");
             let abc = fileUpload.getAttribute("data-smt");
+            const photoCarousel = form.querySelector("#photoCarousel");
             console.log("Current form: " + form.id);            
             console.log("File upload: " + fileUpload.outerHTML);
             console.log("abc: " + abc);
@@ -810,9 +811,7 @@
             fileUpload.addEventListener('change', (event) => {
                 test(form.id, fileUpload.outerHTML, abc);
             });
-            
-            
-            /*
+        
             fileUpload.addEventListener('change', function(event) {
                 console.log("2 Current form: " + form.id);
                 const files = event.target.files;
@@ -842,7 +841,6 @@
                     formData.append('images', file);
                 }            
             });
-            */
 
             // Updating chalet.
             form.addEventListener("submit", async (event) => {
