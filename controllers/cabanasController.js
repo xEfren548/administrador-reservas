@@ -423,12 +423,16 @@ async function uploadChaletFiles(req, res, next) {
 
     try {
         const chalets = await Habitacion.findOne();
+        var chalet = "";
         if (req.session.chaletAdded){
-            const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
+            //console.log("entra")
+            //console.log(req.session.chaletAdded)
+            chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
+            //console.log(chalets)
         }else if (req.session.chaletUpdated){
-            const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
+            chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
         }
-        
+        console.log(chalet)
         if(!chalet){
             throw new NotFoundError('Chalet does not exists');
         }
@@ -466,6 +470,7 @@ async function uploadChaletFiles(req, res, next) {
     } finally {
         delete req.session.chaletAdded;
         await client.close();
+        window.location.href = "/";
     }
 }
 
