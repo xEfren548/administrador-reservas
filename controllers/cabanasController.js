@@ -423,7 +423,12 @@ async function uploadChaletFiles(req, res, next) {
 
     try {
         const chalets = await Habitacion.findOne();
-        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
+        if (req.session.chaletAdded){
+            const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
+        }else if (req.session.chaletUpdated){
+            const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
+        }
+        
         if(!chalet){
             throw new NotFoundError('Chalet does not exists');
         }
