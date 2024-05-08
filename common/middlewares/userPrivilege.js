@@ -57,7 +57,7 @@ const userPrivilege = (req, res, next) => {
             "/",
             "/api/racklimpieza",
             "/racklimpieza",
-            "/rackservicios",
+            "/rackservicios"
         ],
         'Vendedor': [
             "/sidemenu",

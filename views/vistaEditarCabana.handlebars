@@ -749,7 +749,7 @@
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#photos">+ Fotografías</button>
     <div id="photos" class="chalet-details collapse">
         <div class="input-group">
-            <div id="photoCarousel" class="photo-carousel">
+            <div id="photoCarousel {{propertyDetails.name}}" class="photo-carousel">
                 {{#each this.images}}
                 <div class="photo">
                     <button type="button" class="delete-photo"><span class="material-symbols-outlined">delete</span></button>
@@ -759,7 +759,7 @@
             </div>
             <div class="custom-file-upload">
                 <label for="file-upload">
-                    <input id="file-upload" type="file" multiple data-smt="smt{{this.propertyDetails.name}}">
+                    <input id="file-upload" type="file" multiple name="file{{this.propertyDetails.name}}">
                     Subir archivo
                 </label>
                 <span>Ninguna fotografía seleccionada</span>
@@ -769,18 +769,25 @@
 </form>
 {{/each}}
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+
 <script>
-    function test(id, html, abc) {
-        alert("Holaa");
-        console.log("2 Current form: " + id);            
-        console.log("2 Current form children: " + html);
-        console.log("2 abc: " + abc);
-    }
-        
+
     // Change forms.
     document.addEventListener("DOMContentLoaded", function(){     
         const slctFormSelector = document.getElementById('slctFormSelector');
         slctFormSelector.value = "";
+        let filename = ""
+        let pothocname = ""
+        let fileUpload = ""
+        let photoCarousel = ""
+        let formData = new FormData();
+        let chaletsget = ""
+        let datajson = {}
+        $.get("/getchaletsRoutes", function(data, status){
+            datajson = data
+        });
         slctFormSelector.addEventListener('change', function(event) {
             const selectedFormId = event.target.value;
             const forms = document.getElementsByName('form');
@@ -788,59 +795,69 @@
                 const form = forms[i];
                 if (form.id === selectedFormId) {
                     form.style.display = 'block';
+                    // Upload chalet images.
+
+                    let name = form.querySelector("#txtChaletName");
+
+                    console.log(name.value);
+
+                    filename = "file" + name.value
+
+                    pothocname = "photoCarousel " + name.value
+
+                    console.log(filename);
+                    console.log(pothocname);
+                    
+                    fileUpload = document.getElementsByName(filename);
+                    photoCarousel = document.getElementById(pothocname);
+                    console.log(fileUpload)
+                    console.log(photoCarousel)
+
+                    console.log(datajson[0].resources);
+                    datajson[0].resources.forEach((element) => console.log(element.images))
+
+                    //fetch('/getchaletsRoutes')
+                    //.then(response => response.json())
+                    //.then(data =>{
+                    //    datajson = data;
+                    //} );
+                    //console.log(datajson)
+
                 } else {
                     form.style.display = 'none';
                 }
             }
         });
-        
+
+        let archivos = document.getElementById('file-upload')
+        archivos.addEventListener('change', function(event) {
+            const files = event.target.files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const imageURL = URL.createObjectURL(file);
+                const photoDiv = document.createElement('div');
+                photoDiv.classList.add('photo');
+                const img = document.createElement('img');
+                img.src = imageURL;
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('delete-photo');
+                deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
+                deleteButton.addEventListener('click', function() {
+                    formData.delete('images', file);
+                    photoDiv.remove();
+                });
+                photoDiv.appendChild(deleteButton);
+                photoDiv.appendChild(img);
+                photoCarousel.appendChild(photoDiv);
+                console.log("Saludos desde ");
+                formData.append('images', file);
+            }            
+        });
+
+    
         // Submit form info.
         const forms = document.getElementsByName("form");
         forms.forEach(function(form) {
-
-            // Upload chalet images.
-            let formData = new FormData();
-            
-            let fileUpload = form.querySelector("#file-upload");
-            let abc = fileUpload.getAttribute("data-smt");
-            const photoCarousel = form.querySelector("#photoCarousel");
-            console.log("Current form: " + form.id);            
-            console.log("File upload: " + fileUpload.outerHTML);
-            console.log("abc: " + abc);
-
-            fileUpload.addEventListener('change', (event) => {
-                test(form.id, fileUpload.outerHTML, abc);
-            });
-        
-            fileUpload.addEventListener('change', function(event) {
-                console.log("2 Current form: " + form.id);
-                const files = event.target.files;
-
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    const imageURL = URL.createObjectURL(file);
-                    const photoDiv = document.createElement('div');
-                    photoDiv.classList.add('photo');
-                    const img = document.createElement('img');
-                    img.src = imageURL;
-
-                    const deleteButton = document.createElement('button');
-                    deleteButton.classList.add('delete-photo');
-                    deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
-                    deleteButton.addEventListener('click', function() {
-                        formData.delete('images', file);
-                        photoDiv.remove();
-                    });
-
-                    photoDiv.appendChild(deleteButton);
-                    photoDiv.appendChild(img);
-                    photoCarousel.appendChild(photoDiv);
-
-                    console.log("Saludos desde ");
-
-                    formData.append('images', file);
-                }            
-            });
 
             // Updating chalet.
             form.addEventListener("submit", async (event) => {
@@ -1033,6 +1050,7 @@
                     }                    
                 };  
                 fetch('/api/cabanas/editar-cabana', {
+
                     method: 'POST',
                     headers: {
                         // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.

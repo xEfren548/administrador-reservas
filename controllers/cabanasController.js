@@ -341,6 +341,16 @@ const editChaletValidators = [
         }),
 ];
 
+async function showChaletsData(req, res, next){
+    try {
+        const chalets = await Habitacion.find();
+        res.send(chalets);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener eventos' });
+    }
+}
+
 async function showChaletsView(req, res, next){
     try {  
         const admins = await Usuario.find({privilege: "Administrador"}).lean();
@@ -368,7 +378,7 @@ async function createChalet(req, res, next) {
     if (!janitor) {
         throw new NotFoundError("Janitor not found");
     }
-    console.log(req.body);
+    //console.log(req.body);
     const arrivalTimeHours = parseInt(others.arrivalTimeHours);
     const arrivalTimeMinutes = parseInt(others.arrivalTimeMinutes);
     const departureTimeHours = parseInt(others.departureTimeHours);
@@ -417,7 +427,7 @@ async function createChalet(req, res, next) {
 }
 
 async function uploadChaletFiles(req, res, next) {
-    console.log(req.files);
+    //console.log(req.files);
 
     const client = new ftp.Client();
 
@@ -432,11 +442,11 @@ async function uploadChaletFiles(req, res, next) {
         }else if (req.session.chaletUpdated){
             chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
         }
-        console.log(chalet)
+        //console.log(chalet)
         if(!chalet){
             throw new NotFoundError('Chalet does not exists');
         }
-        console.log(req.session)
+        //console.log(req.session)
         await client.access({
             host: 'integradev.site',
             user: 'navarro@navarro.integradev.site',
@@ -445,7 +455,7 @@ async function uploadChaletFiles(req, res, next) {
         });
 
         for (let i = 0; i < req.files.length; i++) {
-            console.log(req.files[i].path);
+            //console.log(req.files[i].path);
             const localFilePath = req.files[i].path;
             const remoteFileName = req.session.chaletAdded + '-' + req.files[i].filename;
             await client.uploadFrom(localFilePath, remoteFileName);
@@ -470,7 +480,6 @@ async function uploadChaletFiles(req, res, next) {
     } finally {
         delete req.session.chaletAdded;
         await client.close();
-        window.location.href = "/";
     }
 }
 
@@ -519,10 +528,10 @@ async function showEditChaletsView(req, res, next){
         }
         const admins = await Usuario.find({privilege: "Administrador"}).lean();
         const janitors = await Usuario.find({privilege: "Limpieza"}).lean();
-        console.log("CHALETS: ", chalets);
-        console.log("CHALETS2222: ", chalets[0].others.admin[0]);
-        console.log("ADMINS: ", admins);
-        console.log("JANITORS: ", janitors);
+        //console.log("CHALETS: ", chalets);
+        //console.log("CHALETS2222: ", chalets[0].others.admin[0]);
+        //console.log("ADMINS: ", admins);
+        //console.log("JANITORS: ", janitors);
         
         // This could go on login.
         if(req.session.filesRetrieved !== undefined){
@@ -545,8 +554,8 @@ async function showEditChaletsView(req, res, next){
 async function editChalet(req, res, next){
     const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others} = req.body;
 
-    console.log(others.admin);
-    console.log(propertyDetails.name);
+    console.log("entra");
+    //console.log(propertyDetails.name);
     const admin = await Usuario.findOne({email: others.admin, privilege: "Administrador"});
     if (!admin) {
         throw new NotFoundError("Admin not found");
@@ -587,6 +596,8 @@ async function editChalet(req, res, next){
     try{ 
         const habitacion = await Habitacion.findOne();
         let chalets = habitacion.resources;
+
+        //console.log(propertyDetails)
     
         const indexToUpdate = chalets.findIndex(chalet => chalet.propertyDetails.name === propertyDetails.name);
         if (indexToUpdate === -1) {
@@ -612,5 +623,6 @@ module.exports = {
     createChalet,
     uploadChaletFiles,
     showEditChaletsView,
-    editChalet
+    editChalet,
+    showChaletsData
 }

@@ -12,6 +12,7 @@ const editarCabanaRoutes = require("./editarCabanaRoutes");
 const eventRoutes = require('./eventRoutes');
 const habitacionesRoutes = require('./habitacionesRoutes');
 const instruccionesRoutes = require('./instruccionesRoutes');
+const getchaletsRoutes = require('./getchaletsRoutes');
 const loginRoute = require("./loginRoute");
 const serviciosRoutes = require('./serviciosRoutes');
 const userRoutes = require('./usersRoutes');
@@ -39,6 +40,7 @@ router.use(cookieSession({
 // Public routes
 router.use('/login', loginRoute);
 router.use("/api", authRoutes);
+router.use("/getchaletsRoutes", getchaletsRoutes)
 
 //Validating user's token in later requests.
 router.use(currentuser);
