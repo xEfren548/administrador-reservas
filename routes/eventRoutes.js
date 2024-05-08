@@ -4,8 +4,10 @@ const router = express.Router();
 const eventController = require('../controllers/eventController');
 const habitacionController = require('../controllers/habitacionController');
 const pagoController = require('../controllers/pagoController');
-
+const Service = require('../models/Servicio');
 const Cliente = require('../models/Cliente');
+const RackServicios = require('../models/RackServicios');
+
 const validationRequest = require('../common/middlewares/validation-request');
 
 // Rutas estáticas
@@ -43,19 +45,35 @@ router.get('/eventos/:idevento', async (req, res) => {
 
         const pagos = await pagoController.obtenerPagos(idEvento);
 
+        const servicios = await Service.find().lean();
+        // console.log(servicios)
+
+        const rackServicios = await RackServicios.find({id_reserva: idEvento}).lean();
+        console.log(rackServicios)
+
+        let pagoTotal = 0
         pagos.forEach(pago => {
             pago.fechaPago = moment(pago.fechaPago).format('DD/MM/YYYY');
+            pagoTotal += pago.importe;
         })
+
+        eventoObjeto.pagoTotal = pagoTotal
+
+        rackServicios.forEach(service => {
+            service.fecha = moment(service.fecha).format('DD/MM/YYYY');
+        })
+
         
         // console.log(habitacionObjeto);
 
         // Renderiza la página HTML con los detalles del evento
-        console.log(eventoObjeto);
         res.render('detalles_evento', { 
             evento: eventoObjeto,
             habitacion: habitacionObjeto,
             cliente: cliente,
-            pagos: pagos
+            pagos: pagos,
+            servicios: servicios,
+            rackServicios: rackServicios
         });
     } catch (error) {
         console.error('Error al obtener los detalles del evento:', error);

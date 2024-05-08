@@ -14,10 +14,10 @@ async function showReservationsView(req, res, next) {
             basePrice: chalet.others.basePrice,
             pax: chalet.propertyDetails.maxOccupancy
         }));
-        console.log("Estos son los chalets: ", chalets);
+        // console.log("Estos son los chalets: ", chalets);
 
         const clientes = await Cliente.find({}).lean();
-        console.log(chalets);
+        // console.log(chalets);
 
         res.render('index', {
             chalets: chalets,

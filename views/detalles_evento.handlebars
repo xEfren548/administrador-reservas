@@ -163,6 +163,10 @@
                 </div>
 
                 <input type="hidden" id="reservacion_id" name="reservacion_id" value="{{evento._id}}">
+                <input type="hidden" id="total-reserva-value" name="total-reserva-value" value="{{evento.total}}">
+                <input type="hidden" id="descuento-total-reserva" name="descuento-total-reserva"
+                    value="{{evento.discount}}">
+                <input type="hidden" id="pagos-totales" name="pagos-totales" value="{{evento.pagoTotal}}">
 
 
 
@@ -221,58 +225,103 @@
         <h3 class="d-inline-block mr-3 ml-3">Pagos</h3>
         <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_payment_modal"
             role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
-        <table class="table table-hover table-payment" style="width: 100%;">
-            <thead class="table-dark">
-                <tr>
-                    <th>Nº Op.</th>
-                    <th>Fecha</th>
-                    <th>Importe</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="rows-payment">
-                {{#if pagos}}
-                {{#each pagos}}
-                <tr>
-                    <td>
-                        <span data-toggle="tooltip" data-html="true"
-                            title="{{this.codigoOperacion}} - {{this.notas}}  - {{this.metodoPago}} -  {{this.fechaPago}} ">
-                            <i class="fa fa-info-circle"></i>
-                        </span>
-                    </td>
-                    <td>{{this.fechaPago}}</td>
-                    <td>${{this.importe}}</td>
-                    <td class="text-center">
-                        <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#edit_payment_modal"
-                            data-payment-id="{{this._id}}">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn" onclick="eliminarPago('{{this._id}}')">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                    {{/each}}
-                    {{else}}
-                    <td colspan="4" class="text-center">No se han agregado pagos</td>
-                    {{/if}}
+        <div class="bg-dark">
+
+            <table class="table table-hover table-payment" style="width: 100%;">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nº Op.</th>
+                        <th>Fecha</th>
+                        <th>Importe</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="rows-payment">
+                    {{#if pagos}}
+                    {{#each pagos}}
+                    <tr>
+                        <td>
+                            <span data-toggle="tooltip" data-html="true"
+                                title="{{this.codigoOperacion}} - {{this.notas}}  - {{this.metodoPago}} -  {{this.fechaPago}} ">
+                                <i class="fa fa-info-circle"></i>
+                            </span>
+                        </td>
+                        <td>{{this.fechaPago}}</td>
+                        <td>${{this.importe}}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn" data-bs-toggle="modal"
+                                data-bs-target="#edit_payment_modal" data-payment-id="{{this._id}}">
+                                <i class="fa fa-pencil" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn" onclick="eliminarPago('{{this._id}}')">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                        </td>
+                        {{/each}}
+                        {{else}}
+                        <td colspan="4" class="text-center">No se han agregado pagos</td>
+                        {{/if}}
+                    </tr>
+                </tbody>
+            </table>
+            <div class="row total-section fs-5 p-3">
+
+                <div class="col-6 mb-2">
+                    <label class="text-white fw-bold">Total </label>
+                </div>
+
+                <div class="col-6 text-right mb-2">
+                    <div class="badge badge-primary"
+                        style="padding: 10px; min-width: 85px;margin: 0px; background-color: #e3e9f5;color: #213888;">
+                        <span>$ </span>
+                        <span id="total-reserva">$ 222</span>
+                        <span> MXN</span>
+                    </div>
+                </div>
+
+                <div class="col-6 mb-2">
+                    <label class="text-white fw-bold">IVA </label>
+                </div>
+
+                <div class="col-6 text-right mb-2">
+                    <div class="badge badge-primary"
+                        style="padding: 10px; min-width: 85px;margin: 0px; background-color: #ffecd7;color: #213888;">
+                        <span>$ </span>
+                        <span id="total-iva">$ 0</span>
+                        <span> MXN</span>
+                    </div>
+                </div>
+
+                <div class="col-6 mb-2">
+                    <label class="text-white fw-bold">Pagado </label>
+                </div>
+
+                <div class="col-6 text-right mb-2">
+                    <div class="badge badge-primary"
+                        style="padding: 10px; min-width: 85px;margin: 0px; background-color: #e3e9f5;color: #213888;">
+                        <span>$ </span>
+                        <span id="total-pagado">$ 0</span>
+                        <span> MXN</span>
+                    </div>
+                </div>
+
+                <div class="col-6 mb-2">
+                    <label class="text-white fw-bolder">Pendiente </label>
+                </div>
+
+                <div class="col-6 text-right mb-2">
+                    <div class="badge badge-danger"
+                        style="padding: 10px; min-width: 85px;margin: 0px; background-color: #fededc;color: #f85959;">
+                        <span>$ </span>
+                        <span id="total-pendiente" class="fw-bold fs-5">$ 222</span>
+                        <span> MXN</span>
+                    </div>
+                </div>
 
 
+            </div>
+        </div>
 
-                    {{!--
-                    <td>1</td>
-                    <td>17/03/2024</td>
-                    <td>$2400</td>
-                    <td class="text-center">
-                        <button type="button" class="btn">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td> --}}
-                </tr>
-            </tbody>
-        </table>
     </div>
 
     <div class="col-4">
@@ -298,34 +347,32 @@
 <div class="row mt-3">
     <div class="col-4">
         <h3 class="d-inline-block">Servicios Adicionales</h3>
-        <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_payment_modal"
+        <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_services_modal"
             role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
         <div class="bg-dark h-auto p-2 rounded-3">
+            {{#if rackServicios}}
+            {{#each rackServicios}}
             <div class="article-row row rounded">
                 <div class="col-8">
-                    <p>Servicio</p>
-                    <p>Insertado el 17/03/2024</p>
+                    <p>{{this.descripcion}}</p>
+                    <p>Insertado el {{this.fecha}}</p>
                 </div>
                 <div class="col-4">
                     <p></p>
                 </div>
             </div>
-
-            <div class="article-row row">
-                <div class="col-8">
-                    <p>Servicio 2</p>
-                    <p>Insertado el 17/03/2024</p>
-                </div>
-                <div class="col-4">
-                    <p></p>
-                </div>
+            {{/each}}
+            {{else}}
+            <div class="article-row row rounded">
+                <p>No hay servicios adicionales para esta reserva</p>
             </div>
         </div>
+        {{/if}}
     </div>
 </div>
 
 
-<!-- Modals -->
+<!-- Modals agregar pago -->
 
 <div class="modal fade" id="add_payment_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
@@ -674,6 +721,65 @@
 </div>
 
 {{!-- End Modal Notas --}}
+
+
+
+{{!-- Modal Agregar servicios adicionales --}}
+<div class="modal fade" id="add_services_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Agregar servicios adicionales</h5>
+                <button type="button" class="close" onclick="$('#add_services_modal').modal('hide');"
+                    aria-label="Close">
+                    &times;
+
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label for="select-service">Servicio: </label>
+                                <select name="select-service" id="select-service-id" class="form-select form-select-md"
+                                    required>
+                                    <option value="0" selected="true" disabled="true"> Selecciona un servicio --
+                                    </option>
+                                    {{#if servicios}}
+                                    {{#each servicios}}
+                                    <option value="{{this.service}}" data-bs-id="{{this._id}}"
+                                        data-bs-description="{{this.description}}">{{this.service}}</option>
+                                    {{/each}}
+                                    {{else}}
+                                    <option value="-1">No se encontraron servicios</option>
+                                    {{/if}}
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="row">
+                        <div class="ml-2">
+                            <label for="description-services" class="form-label">Descripcion servicio: </label>
+                            <textarea class="form-control" name="description-services" id="description-service" rows="2"
+                                placeholder="Descripción del servicio" readonly></textarea>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add-service-btn">Agregar servicio</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{!-- Fin Modal agregar servicios adicionales --}}
 
 
 <script>
@@ -1050,6 +1156,105 @@
             })
         }
     }
+
+    function calcularTotales() {
+        const totalReservaInput = document.querySelector('#total-reserva')
+        const totalIvaInput = document.querySelector('#total-iva')
+        const totalPagado = document.querySelector('#total-pagado')
+        const totalPendiente = document.querySelector('#total-pendiente')
+
+        const pagosTotales = document.querySelector('#pagos-totales').value
+
+        const totalReserva = document.querySelector('#total-reserva-value').value
+        const descuentoTotalReserva = document.querySelector('#descuento-total-reserva').value
+
+        const iva = 0.16
+
+        let preTotal = totalReserva * (descuentoTotalReserva / 100);
+        let total = totalReserva - preTotal;
+        console.log(total)
+
+        totalReservaInput.textContent = total;
+
+        let totalIva = total * iva;
+        totalIvaInput.textContent = totalIva;
+
+        totalPagado.textContent = pagosTotales;
+
+        totalPendiente.textContent = totalReserva - pagosTotales;
+
+    }
+
+    calcularTotales()
+
+    const selectServiceInput = document.getElementById('select-service-id');
+    const descriptionService = document.getElementById('description-service');
+
+    selectServiceInput.addEventListener('change', function () {
+        const selectedOption = selectServiceInput.options[selectServiceInput.selectedIndex];
+        const description = selectedOption.getAttribute('data-bs-description');
+
+
+        if (description != undefined && description != null && description.trim() !== '') {
+            descriptionService.value = description;
+        } else {
+            descriptionService.value = ''
+        }
+
+    });
+
+    const addServiceBtn = document.querySelector('#add-service-btn');
+
+    addServiceBtn.addEventListener('click', async function (event) {
+        event.preventDefault();
+
+        try {
+            const reservacionId = document.querySelector('#reservacion_id').value;
+            const newService = {
+                id_reserva: reservacionId,
+                descripcion: descriptionService.value,
+                fecha: Date.now(),
+                status: 'Pendiente'
+            }
+
+
+
+            const response = await fetch(`http://localhost:3005/api/rackServicios`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newService)
+
+                })
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Completado!',
+                    text: 'Servicio agregado correctamente.',
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                });
+            } else {
+                throw new Error('Error al agregar el servicio. Por favor, inténtalo de nuevo más tarde.');
+            }
+
+
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: e.message,
+                confirmButtonText: 'Aceptar'
+            })
+        }
+    });
+
 
 
 

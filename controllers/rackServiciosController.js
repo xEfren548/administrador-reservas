@@ -14,7 +14,7 @@ async function getAllRackServices(req, res, next) {
     }
 }
 
-async function getAllRackServicesMongo(req, res, next) {
+async function getAllRackServicesMongo(req, res, next, id) {
     try {
 
         const services = await RackServicios.find().lean()
