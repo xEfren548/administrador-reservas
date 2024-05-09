@@ -749,14 +749,7 @@
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#photos">+ Fotografías</button>
     <div id="photos" class="chalet-details collapse">
         <div class="input-group">
-            <div id="photoCarousel {{propertyDetails.name}}" class="photo-carousel">
-                {{#each this.images}}
-                <div class="photo">
-                    <button type="button" class="delete-photo"><span class="material-symbols-outlined">delete</span></button>
-                    <img src="https://navarro.integradev.site/navarro/{{this}}" alt="Photo description">
-                </div>
-                {{/each}}
-            </div>
+            <div id="photoCarousel {{propertyDetails.name}}" class="photo-carousel"></div>
             <div class="custom-file-upload">
                 <label for="file-upload">
                     <input id="file-upload" type="file" multiple name="file{{this.propertyDetails.name}}">
@@ -785,10 +778,13 @@
         let formData = new FormData();
         let chaletsget = ""
         let datajson = {}
+        let imagesarray = []
+        let indexadvance = 0
         $.get("/getchaletsRoutes", function(data, status){
             datajson = data
         });
         slctFormSelector.addEventListener('change', function(event) {
+            imagesarray = [];
             const selectedFormId = event.target.value;
             const forms = document.getElementsByName('form');
             for (let i = 0; i < forms.length; i++) {
@@ -799,29 +795,49 @@
 
                     let name = form.querySelector("#txtChaletName");
 
-                    console.log(name.value);
+                    //console.log(name.value);
 
                     filename = "file" + name.value
 
                     pothocname = "photoCarousel " + name.value
 
-                    console.log(filename);
+                   // console.log(filename);
                     console.log(pothocname);
                     
                     fileUpload = document.getElementsByName(filename);
                     photoCarousel = document.getElementById(pothocname);
-                    console.log(fileUpload)
-                    console.log(photoCarousel)
+                   // console.log(fileUpload)
+                   // console.log(photoCarousel)
 
-                    console.log(datajson[0].resources);
-                    datajson[0].resources.forEach((element) => console.log(element.images))
-
-                    //fetch('/getchaletsRoutes')
-                    //.then(response => response.json())
-                    //.then(data =>{
-                    //    datajson = data;
-                    //} );
-                    //console.log(datajson)
+                    //console.log(datajson[0].resources);
+                    datajson[0].resources.forEach(function (element){
+                        //console.log(element.images);
+                        if(element.propertyDetails.name == name.value){
+                            console.log(element.propertyDetails.name)
+                            element.images.forEach(function (image,index){
+                            const photoDiv = document.createElement('div');
+                            photoDiv.classList.add('photo');
+                            const img = document.createElement('img');
+                            img.src = "https://navarro.integradev.site/navarro/" + image;
+                            const deleteButton = document.createElement('button');
+                            deleteButton.classList.add('delete-photo');
+                            deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
+                            deleteButton.addEventListener('click', function() {
+                                imagesarray.splice(index - indexadvance,1)
+                                photoDiv.remove();
+                                indexadvance = indexadvance + 1
+                                console.log(imagesarray)
+                            });
+                            photoDiv.appendChild(deleteButton);
+                            photoDiv.appendChild(img);
+                            photoCarousel.appendChild(photoDiv);
+                           // console.log("Saludos desde ");
+                            imagesarray.push(image.toString())
+                           // console.log(imagesarray)
+                            });
+                            
+                        };
+                    });
 
                 } else {
                     form.style.display = 'none';
@@ -834,6 +850,7 @@
             const files = event.target.files;
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
+               // console.log(file);
                 const imageURL = URL.createObjectURL(file);
                 const photoDiv = document.createElement('div');
                 photoDiv.classList.add('photo');
@@ -849,8 +866,10 @@
                 photoDiv.appendChild(deleteButton);
                 photoDiv.appendChild(img);
                 photoCarousel.appendChild(photoDiv);
-                console.log("Saludos desde ");
+             //   console.log("Saludos desde ");
                 formData.append('images', file);
+              //  console.log(formData);
+             //   console.log(imagesarray)
             }            
         });
 
@@ -1047,8 +1066,10 @@
                         departureTime: form.querySelector("#txtDepartureTime").value.trim(),
                         admin: form.querySelector("#slctAdmin").value.trim(),
                         janitor: form.querySelector("#slctJanitor").value.trim(),
-                    }                    
-                };  
+                    },
+                    images: imagesarray                    
+                };
+                //console.log(imagesarray)  
                 fetch('/api/cabanas/editar-cabana', {
 
                     method: 'POST',
@@ -1072,7 +1093,7 @@
                     try {
                         const response = await fetch('/api/cabanas/subir-imagenes-cabana', {
                             method: 'POST',
-                            body: formData
+                            body: formData,
                         });
                         if (response.ok) {
                             console.log('Image uploaded successfully.', data);

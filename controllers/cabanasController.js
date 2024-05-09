@@ -367,7 +367,7 @@ async function showChaletsView(req, res, next){
 }
 
 async function createChalet(req, res, next) {
-    console.log(req.body);
+    //console.log(req.body);
 
     const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others} = req.body;
     const admin = await Usuario.findOne({email: others.admin, privilege: "Administrador"});
@@ -427,6 +427,7 @@ async function createChalet(req, res, next) {
 }
 
 async function uploadChaletFiles(req, res, next) {
+    //console.log("entraupload")
     //console.log(req.files);
 
     const client = new ftp.Client();
@@ -460,7 +461,7 @@ async function uploadChaletFiles(req, res, next) {
             const remoteFileName = req.session.chaletAdded + '-' + req.files[i].filename;
             await client.uploadFrom(localFilePath, remoteFileName);
             console.log(`Archivo '${remoteFileName}' subido con éxito`);
-
+            //console.log(chalet.images)
             chalet.images.push(remoteFileName);
             await chalets.save();
 
@@ -478,7 +479,6 @@ async function uploadChaletFiles(req, res, next) {
     } catch (error) {
         console.error("Error:", error);
     } finally {
-        delete req.session.chaletAdded;
         await client.close();
     }
 }
@@ -552,9 +552,9 @@ async function showEditChaletsView(req, res, next){
 }
 
 async function editChalet(req, res, next){
-    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others} = req.body;
+    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others,images} = req.body;
 
-    console.log("entra");
+    //console.log("imagenes" + images.imagesarray);
     //console.log(propertyDetails.name);
     const admin = await Usuario.findOne({email: others.admin, privilege: "Administrador"});
     if (!admin) {
@@ -590,7 +590,8 @@ async function editChalet(req, res, next){
             departureTime: newDepartureTime,
             admin: admin._id,
             janitor: janitor._id,
-        }
+        },
+        images
     };
 
     try{ 
