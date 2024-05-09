@@ -50,7 +50,9 @@ document.addEventListener("DOMContentLoaded", function () {
             total: document.getElementById('habitacion_total').value.trim(),
             discount: document.getElementById('habitacion_descuento').value.trim(),
         };
-        fetch('/api/eventos/create-reservation', {
+
+        console.log(formData);
+        fetch('/api/eventos', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -69,10 +71,33 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.log('Respuesta exitosa del servidor:', data);
                 clearModal(document.getElementById("event_entry_modal"));
                 $('#event_entry_modal').modal('hide');
+                Swal.fire({
+                    title: 'Reserva creada',
+                    text: 'La reserva ha sido creada con éxito.',
+                    icon: 'success',
+                    showCancelButton: false,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // location.reload();
+                        window.location.href = `http://localhost:3005/api/eventos/${data.reservationId}`
+                    }
+                });
                 //window.location.href = 'http://localhost:3005/instrucciones/' + data.reservationId;
             })
             .catch(error => {
                 console.error('Ha ocurrido un error: ', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: `Ha ocurrido un error al crear la reserva: ${error.message}`,
+                    icon: 'error',
+                    showCancelButton: false,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Aceptar'
+                })
             });
     })
 

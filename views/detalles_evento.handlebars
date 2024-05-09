@@ -1073,7 +1073,7 @@
                 texto: noteInput
             };
 
-            const response = await fetch(`http://localhost:3005/api/eventos/${reservacionId}/notas`, {
+            const response = await fetch(`http://localhost:3005/api/notas/${reservacionId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1181,7 +1181,7 @@
 
         totalPagado.textContent = pagosTotales;
 
-        totalPendiente.textContent = totalReserva - pagosTotales;
+        totalPendiente.textContent = total - pagosTotales;
 
     }
 

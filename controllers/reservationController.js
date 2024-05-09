@@ -7,7 +7,7 @@ async function showReservationsView(req, res, next) {
     try {
         const habitaciones = await Habitacion.find();
         const data = habitaciones;
-        console.log(data);
+        // console.log(data);
 
         const chalets = data[0].resources.map(chalet => ({
             name: chalet.propertyDetails.name,
