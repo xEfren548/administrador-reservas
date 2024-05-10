@@ -97,7 +97,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             el.classList.add("relative");
 
             let newEl = document.createElement("div");
-            console.log(mouseEnterInfo.event)
             let newElTitle = mouseEnterInfo.event.id;
             let newElTotal = mouseEnterInfo.event.extendedProps.total;
             newEl.innerHTML = `

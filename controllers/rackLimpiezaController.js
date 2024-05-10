@@ -40,6 +40,7 @@ async function createService(req, res, next) {
     try {
         const { id_reserva, descripcion, fecha, status } = req.body;
 
+
         const documento = await Documento.findOne({ 'events._id': id_reserva });
 
         if (!documento) {
@@ -70,6 +71,47 @@ async function createService(req, res, next) {
         const service = new RackLimpieza(servicio);
         await service.save();
         res.send(service);
+    } catch (error) {
+        console.log(error.message);
+        res.status(200).send('Something went wrong while creating service.');
+    }
+}
+
+async function createServiceForReservation(req, res, next) {
+    try {
+        console.log(req)
+        const { id_reserva, descripcion, fecha, status } = req;
+
+
+        const documento = await Documento.findOne({ 'events._id': id_reserva });
+
+        if (!documento) {
+            return res.status(404).send('Documento not found'); // Si no se encuentra el documento, devolver un error 404
+        }
+
+        const evento = documento.events.find(event => event._id == id_reserva);
+
+        if (!evento) {
+            return res.status(404).send('Evento not found'); // Si no se encuentra el evento, devolver un error 404
+        }
+
+        const resourceId = evento.resourceId.toString();
+
+        const habitacion = await habitacionController.obtenerHabitacionPorId(resourceId);
+
+        const nombreHabitacion = habitacion.propertyDetails.name
+
+
+        const servicio = {
+            id_reserva: new mongoose.Types.ObjectId(id_reserva),
+            descripcion,
+            fecha,
+            status,
+            nombreHabitacion
+        }
+
+        const service = new RackLimpieza(servicio);
+        await service.save();
     } catch (error) {
         console.log(error.message);
         res.status(200).send('Something went wrong while creating service.');
@@ -126,6 +168,7 @@ module.exports = {
     getAllServicesMongo,
     getSpecificServicesMongo,
     createService,
+    createServiceForReservation,
     modifyService,
     deleteService
 }

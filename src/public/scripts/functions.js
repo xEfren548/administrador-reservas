@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Creating new reservation.
     document.getElementById('save-event-btn').addEventListener('click', function () {
+
         // Crear un objeto con los datos del formulario
         const formData = {
             clientEmail: document.getElementById("lblClient").value.trim(),
@@ -51,7 +52,8 @@ document.addEventListener("DOMContentLoaded", function () {
             discount: document.getElementById('habitacion_descuento').value.trim(),
         };
 
-        console.log(formData);
+
+
         fetch('/api/eventos', {
             method: 'POST',
             headers: {
@@ -85,6 +87,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         window.location.href = `http://localhost:3005/api/eventos/${data.reservationId}`
                     }
                 });
+
+                
                 //window.location.href = 'http://localhost:3005/instrucciones/' + data.reservationId;
             })
             .catch(error => {

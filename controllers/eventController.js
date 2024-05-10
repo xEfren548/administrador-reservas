@@ -1,6 +1,7 @@
 const Documento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const Usuario = require('../models/Usuario');
+const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const Cliente = require('../models/Cliente');
 const { check } = require("express-validator");
 const BadRequestError = require("../common/error/bad-request-error");
@@ -85,6 +86,7 @@ const submitReservationValidators = [
 ];
 
 async function obtenerEventos(req, res) {
+    const {id} = req.params;
     try {
         const eventos = await Documento.find();
         res.send(eventos);
@@ -114,6 +116,27 @@ async function obtenerEventoPorId(id) {
     }
 }
 
+async function obtenerEventoPorIdRoute(req, res) {
+    try {
+        const { id } = req.params;
+        const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
+
+        if (!eventosExistentes) {
+            throw new Error('No se encontraron eventos');
+        }
+
+        // Buscar el evento por su id
+        const evento = eventosExistentes.events.find(evento => evento.id === id);
+
+        if (!evento) {
+            throw new Error('El evento no fue encontrado');
+        }
+        res.send(evento);
+    } catch (error) {
+        throw new Error('Error al obtener el evento por id: ' + error.message);
+    }
+}
+
 async function createReservation(req, res, next) {
     const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount } = req.body;
 
@@ -122,8 +145,6 @@ async function createReservation(req, res, next) {
         if (!client) {
             throw new NotFoundError('Client does not exist');
         }
-
-        console.log(chaletName)
 
         const chalets = await Habitacion.findOne();
         const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
@@ -144,12 +165,32 @@ async function createReservation(req, res, next) {
             discount: discount
         };
 
+        
+
         const documento = await Documento.findOne();
         documento.events.push(reservationToAdd);
         await documento.save();
 
+        const idReserva = documento.events[documento.events.length - 1]._id.toString()
+        const descripcionLimpieza = 'Limpieza para la habitación ' + chaletName;
+        const fechaLimpieza = new Date(departureDate)
+        fechaLimpieza.setDate(fechaLimpieza.getDate()+ 1)
+        const statusLimpieza = 'Pendiente'
+
+        console.log(idReserva)
+        console.log(descripcionLimpieza)
+        console.log(fechaLimpieza)
+        console.log(statusLimpieza)
+
+        await rackLimpiezaController.createServiceForReservation({
+            id_reserva: idReserva,
+            descripcion: descripcionLimpieza,
+            fecha: fechaLimpieza,
+            status: statusLimpieza
+        })
+
         console.log('Nueva reservación agregada:', documento.events[documento.events.length - 1]._id);
-        res.status(200).json({ message: 'Nueva reservación agregada', reservationId: documento.events[documento.events.length - 1]._id });
+        res.status(200).send({ message: 'Nueva reservación agregada', reservationId: documento.events[documento.events.length - 1]._id });
     } catch (err) {
         console.log(err);
         return next(err);
@@ -379,6 +420,7 @@ module.exports = {
     submitReservationValidators,
     obtenerEventos,
     obtenerEventoPorId,
+    obtenerEventoPorIdRoute,
     createReservation,
     editarEvento,
     eliminarEvento,

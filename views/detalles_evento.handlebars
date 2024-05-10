@@ -577,8 +577,9 @@
                             <div class="form-group">
                                 <div class="mb-3">
                                     <label for="" class="form-label">Cliente</label>
-                                    <input type="text" class="form-control" name="" id="name-cliente"
-                                        aria-describedby="helpId" placeholder="" />
+                                    <input type="text" class="form-control" name="" id="edit-name-cliente"
+                                        aria-describedby="helpId" placeholder=""
+                                        value="{{cliente.firstName}} {{cliente.lastName}}" readonly>
                                 </div>
 
                             </div>
@@ -588,95 +589,26 @@
                         <div class="col-sm-5">
                             <div class="form-group">
                                 <label for="event_start_date">Fecha llegada</label>
-                                <input type="date" name="event_start_date" id="event_start_date"
+                                <input type="date" name="event_start_date" id="edit_start_date"
                                     class="form-control onlydatepicker" placeholder="Event start date">
                             </div>
                         </div>
                         <div class="col-sm-5">
                             <div class="form-group">
                                 <label for="event_end_date">Fecha salida</label>
-                                <input type="date" name="event_end_date" id="event_end_date" class="form-control"
+                                <input type="date" name="event_end_date" id="edit_end_date" class="form-control"
                                     placeholder="Event end date">
                             </div>
                         </div>
                         <div class="col-sm-2">
                             <div class="form-group">
                                 <label for="event_end_date">Noches: </label>
-                                <input type="number" name="event_nights" id="event_nights" class="form-control"
+                                <input type="number" name="event_nights" id="edit_nights" class="form-control"
                                     placeholder="" min="1" disabled>
                             </div>
                         </div>
                     </div>
-                    <h3 class="mt-3">Habitación</h3>
-                    <div class="row">
-                        <div class="col-sm-4">
-                            <div class="form-group">
-                                <label for="tipologia_habitacion">Tipología</label>
-                                <select id="tipologia_habitacion" name="tipologia_habitacion" id="tipologia_habitacion"
-                                    class="form-select form-select-md" required>
-                                    <option value="" selected="true" disabled="true"> Selecciona una cabaña para
-                                        modificar --</option>
-                                    {{#if chalets}}
-                                    {{#each chalets}}
-                                    <option value="{{this.name}}" data-bs-pax="{{this.pax}}">{{this.name}}</option>
-                                    {{/each}}
-                                    {{else}}
-                                    <option value="0">No se encontraron cabañas</option>
-                                    {{/if}}
-                                </select>
-                            </div>
-                        </div>
 
-                        <div class="col-sm-4">
-                            <div class="form-group">
-                                <label for="ocupacion_habitacion">Ocupación Máx.</label>
-                                <input type="number" name="ocupacion_habitacion" id="ocupacion_habitacion"
-                                    class="form-control" placeholder="Ocupación" readonly>
-                            </div>
-                        </div>
-
-                        <div class="col-sm-4">
-                            <div class="form-group">
-                                <label for="ocupacion_habitacion"></label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Unidades: </span>
-                                    </div>
-                                    <input type="number" id="habitacion_unidades"
-                                        class="form-control bg-light text-black" aria-label="Unidades" min="1"
-                                        step="any" max="1" value="1">
-                                </div>
-                            </div>
-                        </div>
-                    </div> <!-- Cierre row -->
-
-                    <div class="row mt-2">
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="ocupacion_habitacion">Total</label>
-                                <div class="input-group ig-shopping-price mb-3">
-                                    <input type="number" class="form-control bg-light text-black" id="habitacion_total"
-                                        aria-label="Amount (to the nearest dollar)" min="0.00" placeholder="Total">
-                                    <div class="input-group-append">
-                                        <span class="input-group-text">$ M.N.</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="ocupacion_habitacion">Descuento</label>
-                                <div class="input-group ig-shopping-price mb-3">
-                                    <input type="number" class="form-control bg-light text-black"
-                                        id="habitacion_descuento" aria-label="Descuento" min="0.00"
-                                        placeholder="Descuento">
-                                    <div class="input-group-append">
-                                        <span class="input-group-text"> % </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> <!-- Cierre row -->
                     <div class="form-item">
                         <p id="txtReservationError" name="errMsg" class="error"></p>
                     </div>
@@ -942,6 +874,8 @@
         }
     });
 
+    // Obtener los datos para editar el pago e incrustarlos en el modal
+
     editPaymentModal.addEventListener('show.bs.modal', async function (event) {
         const button = event.relatedTarget; // Botón que abrió el modal
         paymentId = button.getAttribute('data-payment-id'); // ID del pago
@@ -962,6 +896,24 @@
             throw new Error('Error al obtener los datos del pago: ', error);
         }
     });
+
+    async function obtenerDatosDeReserva() {
+        try {
+            const reservacionId = document.querySelector('#reservacion_id').value;
+
+            const response = await fetch(`http://localhost:3005/api/eventos/route/${reservacionId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const data = await response.json(); // Esperar a que la promesa se resuelva
+            return data;
+        } catch (error) {
+            throw new Error(error);
+        }
+    }
 
     async function obtenerDatosDePago(paymentId) {
         try {
@@ -1158,32 +1110,36 @@
     }
 
     function calcularTotales() {
-        const totalReservaInput = document.querySelector('#total-reserva')
-        const totalIvaInput = document.querySelector('#total-iva')
-        const totalPagado = document.querySelector('#total-pagado')
-        const totalPendiente = document.querySelector('#total-pendiente')
+        const totalReservaInput = document.querySelector('#total-reserva');
+        const totalIvaInput = document.querySelector('#total-iva');
+        const totalPagado = document.querySelector('#total-pagado');
+        const totalPendiente = document.querySelector('#total-pendiente');
 
-        const pagosTotales = document.querySelector('#pagos-totales').value
+        const pagosTotales = parseFloat(document.querySelector('#pagos-totales').value);
 
-        const totalReserva = document.querySelector('#total-reserva-value').value
-        const descuentoTotalReserva = document.querySelector('#descuento-total-reserva').value
+        const totalReserva = parseFloat(document.querySelector('#total-reserva-value').value);
+        const descuentoTotalReserva = parseFloat(document.querySelector('#descuento-total-reserva').value);
 
-        const iva = 0.16
+        const iva = 0.16;
 
         let preTotal = totalReserva * (descuentoTotalReserva / 100);
         let total = totalReserva - preTotal;
-        console.log(total)
+        total = total.toFixed(2); // Formatear a dos decimales como máximo
+        console.log(total);
 
         totalReservaInput.textContent = total;
 
         let totalIva = total * iva;
+        totalIva = totalIva.toFixed(2); // Formatear a dos decimales como máximo
         totalIvaInput.textContent = totalIva;
 
-        totalPagado.textContent = pagosTotales;
+        totalPagado.textContent = pagosTotales.toFixed(2); // Formatear a dos decimales como máximo
 
-        totalPendiente.textContent = total - pagosTotales;
-
+        let totalPendienteValue = total - pagosTotales;
+        totalPendienteValue = totalPendienteValue.toFixed(2); // Formatear a dos decimales como máximo
+        totalPendiente.textContent = totalPendienteValue;
     }
+
 
     calcularTotales()
 
@@ -1254,6 +1210,64 @@
             })
         }
     });
+
+
+
+
+
+    const editReservationModal = document.getElementById('edit_event_modal');
+    editReservationModal.addEventListener('show.bs.modal', async function (event) {
+        console.log('Modal abierto')
+        const nightsInput = document.querySelector('#edit_nights');
+        const arrivalDateInput = document.getElementById('edit_start_date')
+        const departureDateInput = document.getElementById('edit_end_date')
+
+        try {
+            const datosReserva = await obtenerDatosDeReserva();
+            console.log(datosReserva);
+            const { arrivalDate, departureDate, nNights } = datosReserva;
+            console.log(arrivalDate, departureDate, nNights);
+
+            arrivalDateInput.value = arrivalDate.substring(0, 10);
+            departureDateInput.value = departureDate.substring(0, 10);
+            nightsInput.value = nNights;
+
+
+
+        } catch (error) {
+            console.error('Error al obtener los datos de reserva:', error);
+            throw new Error('Error al obtener los datos de reserva: ', error);
+        }
+    });
+
+    const nightsInput = document.querySelector('#edit_nights');
+    const arrivalDateInput = document.getElementById('edit_start_date')
+    const departureDateInput = document.getElementById('edit_end_date')
+
+
+    arrivalDateInput.addEventListener('change', calculateNightDifference);
+    departureDateInput.addEventListener('change', calculateNightDifference);
+
+
+
+
+    function calculateNightDifference() {
+        console.log('Desde calcular noches')
+        const arrivalValue = new Date(arrivalDateInput.value);
+        const departureValue = new Date(departureDateInput.value);
+
+        // Verifica si las fechas son válidas
+        if (!isNaN(arrivalValue) && !isNaN(departureValue) && departureValue >= arrivalValue) {
+            const timeDifference = departureValue.getTime() - arrivalValue.getTime();
+            const nightDifference = Math.ceil(timeDifference / (1000 * 3600 * 24)); // Calcula la diferencia en días
+
+            nightsInput.value = nightDifference
+        } else {
+            nightsInput.value = 0
+        }
+    }
+
+
 
 
 

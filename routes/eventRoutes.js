@@ -12,6 +12,7 @@ const validationRequest = require('../common/middlewares/validation-request');
 
 // Rutas estáticas
 router.get('/eventos', eventController.obtenerEventos);
+router.get('/eventos/route/:id', eventController.obtenerEventoPorIdRoute);
 router.post('/eventos',  eventController.createReservation);
 router.put('/eventos/:id', eventController.editarEvento);
 router.put('/eventos/:id/modificar', eventController.modificarEvento);
@@ -49,7 +50,6 @@ router.get('/eventos/:idevento', async (req, res) => {
         // console.log(servicios)
 
         const rackServicios = await RackServicios.find({id_reserva: idEvento}).lean();
-        console.log(rackServicios)
 
         let pagoTotal = 0
         pagos.forEach(pago => {

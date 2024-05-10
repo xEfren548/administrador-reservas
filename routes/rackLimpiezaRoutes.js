@@ -8,7 +8,6 @@ router.get('/rackLimpieza', async (req, res) => {
     try {
 
         const services = await rackLimpiezaController.getAllServicesMongo(req, res); // Pass req and res to the controller function
-        console.log(services)
         services.forEach(service => {
             service._id = service._id.toString();
             service.id_reserva = service.id_reserva.toString();
@@ -27,6 +26,7 @@ router.get('/rackLimpieza', async (req, res) => {
 
 router.get('/api/racklimpieza', rackLimpiezaController.getAllServices)
 router.post('/api/racklimpieza', rackLimpiezaController.createService)
+router.post('/api/racklimpieza/reservations', rackLimpiezaController.createServiceForReservation)
 router.put('/api/racklimpieza/:id', rackLimpiezaController.modifyService);
 router.delete('/api/racklimpieza/:id', rackLimpiezaController.deleteService);
 
