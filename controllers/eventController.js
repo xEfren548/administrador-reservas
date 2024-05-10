@@ -200,7 +200,7 @@ async function createReservation(req, res, next) {
 async function editarEvento(req, res) {
     try {
         const id = req.params.id;
-        const { resourceId, title, start, end, url, total } = req.body;
+        const { resourceId, nNights, arrivalDate, departureDate, url, total } = req.body;
 
         // Fetch existing rooms from the database
         const eventosExistentes = await Documento.findOne();
@@ -224,16 +224,16 @@ async function editarEvento(req, res) {
             evento.resourceId = resourceId;
         }
 
-        if (title !== undefined && title !== null) {
-            evento.title = title;
+        if (nNights !== undefined && nNights !== null) {
+            evento.nNights = nNights;
         }
 
-        if (start !== undefined && start !== null) {
-            evento.start = start;
+        if (arrivalDate !== undefined && arrivalDate !== null) {
+            evento.arrivalDate = arrivalDate;
         }
 
-        if (end !== undefined && end !== null) {
-            evento.end = end;
+        if (departureDate !== undefined && departureDate !== null) {
+            evento.departureDate = departureDate;
         }
 
         if (url !== undefined && url !== null) {

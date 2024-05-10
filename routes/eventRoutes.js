@@ -31,9 +31,11 @@ router.get('/eventos/:idevento', async (req, res) => {
         const evento = await eventController.obtenerEventoPorId(idEvento);
         eventoJson = JSON.stringify(evento);
         const eventoObjeto = JSON.parse(eventoJson);
-        eventoObjeto.arrivalDate = moment(eventoObjeto.arrivalDate).format('DD/MM/YYYY');
-        eventoObjeto.departureDate = moment(eventoObjeto.departureDate).format('DD/MM/YYYY');
-        eventoObjeto.reservationDate = moment(eventoObjeto.reservationDate).format('DD/MM/YYYY');
+        console.log(eventoObjeto);
+        eventoObjeto.arrivalDate = moment.utc(eventoObjeto.arrivalDate).format('DD/MM/YYYY');
+        eventoObjeto.departureDate = moment.utc(eventoObjeto.departureDate).format('DD/MM/YYYY');
+        eventoObjeto.reservationDate = moment.utc(eventoObjeto.reservationDate).format('DD/MM/YYYY');
+
 
         const habitacion = await habitacionController.obtenerHabitacionPorId(eventoObjeto.resourceId);
         const habitacionJson = JSON.stringify(habitacion);
@@ -53,14 +55,14 @@ router.get('/eventos/:idevento', async (req, res) => {
 
         let pagoTotal = 0
         pagos.forEach(pago => {
-            pago.fechaPago = moment(pago.fechaPago).format('DD/MM/YYYY');
+            pago.fechaPago = moment.utc(pago.fechaPago).format('DD/MM/YYYY');
             pagoTotal += pago.importe;
         })
 
         eventoObjeto.pagoTotal = pagoTotal
 
         rackServicios.forEach(service => {
-            service.fecha = moment(service.fecha).format('DD/MM/YYYY');
+            service.fecha = moment.utc(service.fecha).format('DD/MM/YYYY');
         })
 
         

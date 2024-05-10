@@ -79,19 +79,14 @@
                             id="profile-pic-alone" class="rounded-circle"></a>
                 </div>
 
-
-
-
-
-
                 <div class="col-xs-9 col-lg-7">
                     <small class="limit-width" data-toggle="tooltip" data-placement="bottom"
                         title="{{habitacion.propertyDetails.name}}"
                         data-original-title="{{habitacion.propertyDetails.name}}"></small>
-                    <h3 class="detailsRoom fs-4 fw-bolder" style="margin-bottom: 5px;">
+                    <h3 class="detailsRoom fs-4 fw-bolder text-uppercase" style="margin-bottom: 5px;">
                         {{habitacion.propertyDetails.name}}
                     </h3>
-                    <h3 class="bold text-uppercase fs-5">
+                    <h3 class="bold text-uppercase fs-5 text-uppercase">
                         {{cliente.firstName}} {{cliente.lastName}}
                     </h3>
 
@@ -781,7 +776,6 @@
                 notas: notas
             };
 
-            console.log(bodyNuevoPago);
 
             const response = await fetch(`http://localhost:3005/api/pagos`, {
                 method: 'POST',
@@ -882,7 +876,6 @@
 
         try {
             const datosDePago = await obtenerDatosDePago(paymentId);
-            console.log(datosDePago);
             const { fechaPago, importe, metodoPago, codigoOperacion, notas, reservacionId } = datosDePago;
             const fechaFormateada = datosDePago.fechaPago.substring(0, 10); // Recortar la fecha para eliminar la parte de la hora
 
@@ -895,6 +888,55 @@
             console.error('Error al obtener los datos del pago:', error);
             throw new Error('Error al obtener los datos del pago: ', error);
         }
+    });
+
+    const editReserveBtn = document.querySelector('#save-event-btn')
+    editReserveBtn.addEventListener('click', async function (event) {
+        event.preventDefault();
+        const nightsInput = document.querySelector('#edit_nights').value;
+        const arrivalDateInput = document.getElementById('edit_start_date').value
+        const departureDateInput = document.getElementById('edit_end_date').value
+
+        const reservacionId = document.querySelector('#reservacion_id').value;
+
+
+        try {
+            const nuevasFechas = {
+                nNights: nightsInput,
+                arrivalDate: arrivalDateInput,
+                departureDate: departureDateInput
+            }
+
+            const response = await fetch(`http://localhost:3005/api/eventos/${reservacionId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(nuevasFechas)
+            });
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Completado!',
+                    text: 'Reserva actualizada correctamente.',
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                });
+            } else {
+                throw new Error('Error al actualizar la reserva. Por favor, inténtalo de nuevo más tarde.');
+            }
+
+
+
+        } catch (error) {
+            console.error('Error al enviar los datos de la reserva :', error);
+            throw new Error('Error al enviar los datos de la reserva : ', error);
+        }
+
     });
 
     async function obtenerDatosDeReserva() {
@@ -932,7 +974,6 @@
     }
 
     async function eliminarPago(idPago) {
-        console.log(idPago);
         try {
             const confirmacion = await Swal.fire({
                 icon: 'warning',
@@ -1125,7 +1166,6 @@
         let preTotal = totalReserva * (descuentoTotalReserva / 100);
         let total = totalReserva - preTotal;
         total = total.toFixed(2); // Formatear a dos decimales como máximo
-        console.log(total);
 
         totalReservaInput.textContent = total;
 
@@ -1217,16 +1257,13 @@
 
     const editReservationModal = document.getElementById('edit_event_modal');
     editReservationModal.addEventListener('show.bs.modal', async function (event) {
-        console.log('Modal abierto')
         const nightsInput = document.querySelector('#edit_nights');
         const arrivalDateInput = document.getElementById('edit_start_date')
         const departureDateInput = document.getElementById('edit_end_date')
 
         try {
             const datosReserva = await obtenerDatosDeReserva();
-            console.log(datosReserva);
             const { arrivalDate, departureDate, nNights } = datosReserva;
-            console.log(arrivalDate, departureDate, nNights);
 
             arrivalDateInput.value = arrivalDate.substring(0, 10);
             departureDateInput.value = departureDate.substring(0, 10);
@@ -1252,7 +1289,6 @@
 
 
     function calculateNightDifference() {
-        console.log('Desde calcular noches')
         const arrivalValue = new Date(arrivalDateInput.value);
         const departureValue = new Date(departureDateInput.value);
 
@@ -1266,11 +1302,5 @@
             nightsInput.value = 0
         }
     }
-
-
-
-
-
-
 
 </script>
