@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     // const urlEventos = 'https://administrador-reservas.onrender.com/eventos'
     const urlEventos = './api/eventos';
     const urlHabitaciones = './api/habitaciones';
-
+    const urlClientes = './api/clientes/show-clients';
 
 
     var calendarEl = document.getElementById('calendar');
@@ -35,12 +35,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                         return response.json()
                     })
                     .then(function (data) {
-                        // console.log(data);
                         let resources = data[0].resources.map(function (event) {
                             return {
-                                id: event.id,
-                                habitaciones: event.habitaciones,
-                                title: event.title
+                                id: event._id,
+                                habitaciones: 'Cabañas',
+                                title: event.propertyDetails.name
                             }
                         })
                         successCallback(resources);
@@ -60,13 +59,14 @@ document.addEventListener('DOMContentLoaded', async function () {
                         // console.log(data);
                         let events = data[0].events.map(function (event) {
                             return {
-                                id: event.id,
+                                id: event._id,
                                 resourceId: event.resourceId,
                                 title: event.title,
-                                start: new Date(event.start),
-                                end: new Date(event.end),
+                                start: new Date(event.arrivalDate),
+                                end: new Date(event.departureDate),
                                 url: event.url,
-                                total: event.total
+                                total: event.total,
+                                clientId: event.client,
                             }
                         })
                         successCallback(events);
@@ -77,11 +77,16 @@ document.addEventListener('DOMContentLoaded', async function () {
                     })
             },
         eventContent: function (info) {
+
+
+            // console.log(data);
+
+
             // console.log(info);
             return {
                 html: `
                 <div class="p-1 rounded bg-success bg-gradient" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: "Overpass", sans-serif;">
-                    <div>${info.event.title}</div>
+                    <div>Reserva</div>
                     <div><b>Total: $ ${info.event.extendedProps.total}</b></div>
                 </div>
                 `
@@ -92,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             el.classList.add("relative");
 
             let newEl = document.createElement("div");
-            let newElTitle = mouseEnterInfo.event.title;
+            let newElTitle = mouseEnterInfo.event.id;
             let newElTotal = mouseEnterInfo.event.extendedProps.total;
             newEl.innerHTML = `
             <div
@@ -133,6 +138,28 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
     calendar.render();
 
+    async function getClients(idClient) {
+        try {
+            fetch(`/api/clientes/show-clients/${idClient}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // console.log('Respuesta del servidor: ', data);
+                    eventData = data[0]
+                    console.log(eventData);
+
+                })
+                .catch(err => {
+                    console.log('Error: ', err);
+                });
+        } catch (err) {
+            console.log(err);
+        }
+    }
 
 });
 

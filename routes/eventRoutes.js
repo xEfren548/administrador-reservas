@@ -4,16 +4,23 @@ const router = express.Router();
 const eventController = require('../controllers/eventController');
 const habitacionController = require('../controllers/habitacionController');
 const pagoController = require('../controllers/pagoController');
-
+const Service = require('../models/Servicio');
 const Cliente = require('../models/Cliente');
+const RackServicios = require('../models/RackServicios');
+
 const validationRequest = require('../common/middlewares/validation-request');
 
 // Rutas estáticas
 router.get('/eventos', eventController.obtenerEventos);
-router.post('/eventos/create-reservation', eventController.createReservationValidators, validationRequest, eventController.createReservation);
+router.get('/eventos/route/:id', eventController.obtenerEventoPorIdRoute);
+router.post('/eventos',  eventController.createReservation);
 router.put('/eventos/:id', eventController.editarEvento);
 router.put('/eventos/:id/modificar', eventController.modificarEvento);
 router.delete('/eventos/:id', eventController.eliminarEvento);
+
+router.post('/notas/:id', eventController.crearNota);
+router.delete('/notas', eventController.eliminarNota);
+
 
 // Rutas con contenido dinamico de handlebars
 router.get('/eventos/:idevento', async (req, res) => {
@@ -24,9 +31,11 @@ router.get('/eventos/:idevento', async (req, res) => {
         const evento = await eventController.obtenerEventoPorId(idEvento);
         eventoJson = JSON.stringify(evento);
         const eventoObjeto = JSON.parse(eventoJson);
-        eventoObjeto.arrivalDate = moment(eventoObjeto.arrivalDate).format('DD/MM/YYYY');
-        eventoObjeto.departureDate = moment(eventoObjeto.departureDate).format('DD/MM/YYYY');
-        eventoObjeto.reservationDate = moment(eventoObjeto.reservationDate).format('DD/MM/YYYY');
+        console.log(eventoObjeto);
+        eventoObjeto.arrivalDate = moment.utc(eventoObjeto.arrivalDate).format('DD/MM/YYYY');
+        eventoObjeto.departureDate = moment.utc(eventoObjeto.departureDate).format('DD/MM/YYYY');
+        eventoObjeto.reservationDate = moment.utc(eventoObjeto.reservationDate).format('DD/MM/YYYY');
+
 
         const habitacion = await habitacionController.obtenerHabitacionPorId(eventoObjeto.resourceId);
         const habitacionJson = JSON.stringify(habitacion);
@@ -38,21 +47,35 @@ router.get('/eventos/:idevento', async (req, res) => {
         const cliente = clientes[0]
 
         const pagos = await pagoController.obtenerPagos(idEvento);
-        console.log(pagos);
 
+        const servicios = await Service.find().lean();
+        // console.log(servicios)
+
+        const rackServicios = await RackServicios.find({id_reserva: idEvento}).lean();
+
+        let pagoTotal = 0
         pagos.forEach(pago => {
-            pago.fechaPago = moment(pago.fechaPago).format('DD/MM/YYYY');
+            pago.fechaPago = moment.utc(pago.fechaPago).format('DD/MM/YYYY');
+            pagoTotal += pago.importe;
         })
+
+        eventoObjeto.pagoTotal = pagoTotal
+
+        rackServicios.forEach(service => {
+            service.fecha = moment.utc(service.fecha).format('DD/MM/YYYY');
+        })
+
         
         // console.log(habitacionObjeto);
 
         // Renderiza la página HTML con los detalles del evento
-        console.log(eventoObjeto);
         res.render('detalles_evento', { 
             evento: eventoObjeto,
             habitacion: habitacionObjeto,
             cliente: cliente,
-            pagos: pagos
+            pagos: pagos,
+            servicios: servicios,
+            rackServicios: rackServicios
         });
     } catch (error) {
         console.error('Error al obtener los detalles del evento:', error);

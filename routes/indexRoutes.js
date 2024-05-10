@@ -43,10 +43,10 @@ router.use("/api", authRoutes);
 router.use("/getchaletsRoutes", getchaletsRoutes)
 
 //Validating user's token in later requests.
-router.use(currentuser);
+// router.use(currentuser);
 
 //Determining user access based on privileges.
-router.use(userPrivilege);
+// router.use(userPrivilege);
 
 router.use("/download", express.static("download"));
 router.use('/', sideMenuRoutes);

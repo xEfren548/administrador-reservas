@@ -1,6 +1,6 @@
 <div class="left hidden-xs" id="reservationtools">
 
-    <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Check-In">
+    {{!-- <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Check-In">
         <li type="button" id="checkin" data-command="checkin" class="btn"><i class="fa fa-sign-in fa-lg"
                 aria-hidden="true"></i></li>
     </span>
@@ -8,16 +8,16 @@
     <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Check-Out">
         <li type="button" id="checkout" data-command="checkout" class="btn"><i class="fa fa-sign-out fa-lg"
                 aria-hidden="true"></i></li>
-    </span>
+    </span> --}}
     <span data-toggle="tooltip" data-placement="bottom" title="Cancelar" data-original-title="Cancelar ">
-        <li type="button" id="cancel" data-command="cancel" class="btn btn-cancel"><i class="fa fa-trash fa-lg"
-                aria-hidden="true"></i></li>
+        <li type="button" id="eliminar-reserva-btn" data-command="cancel" class="btn btn-cancel"><i
+                class="fa fa-trash fa-lg" aria-hidden="true"></i></li>
     </span>
 
     <span title="|">|</span>
     <span data-toggle="tooltip" data-placement="bottom" title="Editar reserva" data-original-title="Editar reserva">
-        <button type="button" data-toggle="modal" data-target="#editclient" class="btn"><i class="fa fa-pencil"
-                aria-hidden="true"></i>
+        <button type="button" data-bs-toggle="modal" data-bs-target="#edit_event_modal" class="btn"><i
+                class="fa fa-pencil" aria-hidden="true"></i>
             <div class="ripple-container"></div>
         </button>
     </span>
@@ -79,19 +79,14 @@
                             id="profile-pic-alone" class="rounded-circle"></a>
                 </div>
 
-
-
-
-
-
                 <div class="col-xs-9 col-lg-7">
                     <small class="limit-width" data-toggle="tooltip" data-placement="bottom"
                         title="{{habitacion.propertyDetails.name}}"
                         data-original-title="{{habitacion.propertyDetails.name}}"></small>
-                    <h3 class="detailsRoom fs-4 fw-bolder" style="margin-bottom: 5px;">
+                    <h3 class="detailsRoom fs-4 fw-bolder text-uppercase" style="margin-bottom: 5px;">
                         {{habitacion.propertyDetails.name}}
                     </h3>
-                    <h3 class="bold text-uppercase fs-5">
+                    <h3 class="bold text-uppercase fs-5 text-uppercase">
                         {{cliente.firstName}} {{cliente.lastName}}
                     </h3>
 
@@ -120,7 +115,8 @@
                         <h4 class="fw-bold fs-6" style="margin-top: 5px; margin-bottom:0px;">
                             <button class="btn btn-style-blue enviar-email-btn" type="button" data-toggle="modal"
                                 data-target="#modalSendConfirmation" data-id="">
-                                <i class="fa fa-phone" aria-hidden="true"></i> <b>{{cliente.phone}}</b> | Teléfono
+                                <i class="fa fa-mobile-phone" aria-hidden="true"></i> <b>{{cliente.phone}}</b> | Enviar
+                                Whatsapp
                                 <div class="ripple-container"></div>
                             </button>
                             <div class="ripple-container"></div>
@@ -162,6 +158,10 @@
                 </div>
 
                 <input type="hidden" id="reservacion_id" name="reservacion_id" value="{{evento._id}}">
+                <input type="hidden" id="total-reserva-value" name="total-reserva-value" value="{{evento.total}}">
+                <input type="hidden" id="descuento-total-reserva" name="descuento-total-reserva"
+                    value="{{evento.discount}}">
+                <input type="hidden" id="pagos-totales" name="pagos-totales" value="{{evento.pagoTotal}}">
 
 
 
@@ -174,11 +174,20 @@
                 class="fa fa-plus-circle" aria-hidden="true"></i></a>
         <div class="card-details m-3" style="background-color: #faf1d2; height: auto; width: 80%;">
             <p style="color: black">COMENTARIOS</p>
+            {{#if evento.notes}}
+            {{#each evento.notes}}
+            <div class="nota-container">
+                <p class="text-black fs-5">{{this.texto}}</p>
+                <button class="btn btn-eliminar btn-sm" style="display: none;" onclick="eliminarNota('{{this._id}}')"><i
+                        class="fa fa-trash" aria-hidden="true"></i></button>
+
+            </div>
+            {{/each}}
+            {{/if}}
         </div>
     </div>
-
-
 </div>
+
 
 <div class="row mt-3">
     <div class="col-4">
@@ -206,10 +215,114 @@
         </div>
     </div>
 
-    <div class="col-3">
+
+    <div class="col-4">
+        <h3 class="d-inline-block mr-3 ml-3">Pagos</h3>
+        <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_payment_modal"
+            role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
+        <div class="bg-dark">
+
+            <table class="table table-hover table-payment" style="width: 100%;">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nº Op.</th>
+                        <th>Fecha</th>
+                        <th>Importe</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="rows-payment">
+                    {{#if pagos}}
+                    {{#each pagos}}
+                    <tr>
+                        <td>
+                            <span data-toggle="tooltip" data-html="true"
+                                title="{{this.codigoOperacion}} - {{this.notas}}  - {{this.metodoPago}} -  {{this.fechaPago}} ">
+                                <i class="fa fa-info-circle"></i>
+                            </span>
+                        </td>
+                        <td>{{this.fechaPago}}</td>
+                        <td>${{this.importe}}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn" data-bs-toggle="modal"
+                                data-bs-target="#edit_payment_modal" data-payment-id="{{this._id}}">
+                                <i class="fa fa-pencil" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn" onclick="eliminarPago('{{this._id}}')">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                        </td>
+                        {{/each}}
+                        {{else}}
+                        <td colspan="4" class="text-center">No se han agregado pagos</td>
+                        {{/if}}
+                    </tr>
+                </tbody>
+            </table>
+            <div class="row total-section fs-5 p-3">
+
+                <div class="col-6 mb-2">
+                    <label class="text-white fw-bold">Total </label>
+                </div>
+
+                <div class="col-6 text-right mb-2">
+                    <div class="badge badge-primary"
+                        style="padding: 10px; min-width: 85px;margin: 0px; background-color: #e3e9f5;color: #213888;">
+                        <span>$ </span>
+                        <span id="total-reserva">$ 222</span>
+                        <span> MXN</span>
+                    </div>
+                </div>
+
+                <div class="col-6 mb-2">
+                    <label class="text-white fw-bold">IVA </label>
+                </div>
+
+                <div class="col-6 text-right mb-2">
+                    <div class="badge badge-primary"
+                        style="padding: 10px; min-width: 85px;margin: 0px; background-color: #ffecd7;color: #213888;">
+                        <span>$ </span>
+                        <span id="total-iva">$ 0</span>
+                        <span> MXN</span>
+                    </div>
+                </div>
+
+                <div class="col-6 mb-2">
+                    <label class="text-white fw-bold">Pagado </label>
+                </div>
+
+                <div class="col-6 text-right mb-2">
+                    <div class="badge badge-primary"
+                        style="padding: 10px; min-width: 85px;margin: 0px; background-color: #e3e9f5;color: #213888;">
+                        <span>$ </span>
+                        <span id="total-pagado">$ 0</span>
+                        <span> MXN</span>
+                    </div>
+                </div>
+
+                <div class="col-6 mb-2">
+                    <label class="text-white fw-bolder">Pendiente </label>
+                </div>
+
+                <div class="col-6 text-right mb-2">
+                    <div class="badge badge-danger"
+                        style="padding: 10px; min-width: 85px;margin: 0px; background-color: #fededc;color: #f85959;">
+                        <span>$ </span>
+                        <span id="total-pendiente" class="fw-bold fs-5">$ 222</span>
+                        <span> MXN</span>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-4">
         <h3>Facturas</h3>
         <div class="bg-dark h-auto">
-            <table class="table table-hover table-payment" style="width: auto;">
+            <table class="table table-hover table-payment" style="width: 100%;">
                 <thead class="table-dark">
                     <tr>
                         <th>Nº Fact.</th>
@@ -224,98 +337,37 @@
             </table>
         </div>
     </div>
-
-    <div class="col-5">
-        <h3 class="d-inline-block mr-3 ml-3">Pagos</h3>
-        <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_payment_modal"
-            role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
-        <table class="table table-hover table-payment" style="width: 75%;">
-            <thead class="table-dark">
-                <tr>
-                    <th>Nº Op.</th>
-                    <th>Fecha</th>
-                    <th>Importe</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="rows-payment">
-                {{#if pagos}}
-                {{#each pagos}}
-                <tr>
-                    <td>
-                        <span data-toggle="tooltip" data-html="true"
-                            title="{{this.codigoOperacion}} - {{this.notas}}  - {{this.metodoPago}} -  {{this.fechaPago}} ">
-                            <i class="fa fa-info-circle"></i>
-                        </span>
-                    </td>
-                    <td>{{this.fechaPago}}</td>
-                    <td>${{this.importe}}</td>
-                    <td class="text-center">
-                        <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#edit_payment_modal"
-                            data-payment-id="{{this._id}}">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn" onclick="eliminarPago('{{this._id}}')">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                    {{/each}}
-                    {{else}}
-                    <td colspan="4" class="text-center">No se han agregado pagos</td>
-                    {{/if}}
-
-
-
-                    {{!--
-                    <td>1</td>
-                    <td>17/03/2024</td>
-                    <td>$2400</td>
-                    <td class="text-center">
-                        <button type="button" class="btn">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td> --}}
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
 </div> {{!-- Cierre row --}}
 
 <div class="row mt-3">
     <div class="col-4">
         <h3 class="d-inline-block">Servicios Adicionales</h3>
-        <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_payment_modal"
+        <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_services_modal"
             role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
         <div class="bg-dark h-auto p-2 rounded-3">
+            {{#if rackServicios}}
+            {{#each rackServicios}}
             <div class="article-row row rounded">
                 <div class="col-8">
-                    <p>Servicio</p>
-                    <p>Insertado el 17/03/2024</p>
+                    <p>{{this.descripcion}}</p>
+                    <p>Insertado el {{this.fecha}}</p>
                 </div>
                 <div class="col-4">
                     <p></p>
                 </div>
             </div>
-
-            <div class="article-row row">
-                <div class="col-8">
-                    <p>Servicio 2</p>
-                    <p>Insertado el 17/03/2024</p>
-                </div>
-                <div class="col-4">
-                    <p></p>
-                </div>
+            {{/each}}
+            {{else}}
+            <div class="article-row row rounded">
+                <p>No hay servicios adicionales para esta reserva</p>
             </div>
         </div>
+        {{/if}}
     </div>
 </div>
 
 
-<!-- Modals -->
+<!-- Modals agregar pago -->
 
 <div class="modal fade" id="add_payment_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
@@ -502,7 +554,180 @@
 </div>
 <!-- End popup dialog box -->
 
+
+<!-- Modal editar reserva -->
+<div class="modal fade" id="edit_event_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Editar reserva</h5>
+                <button type="button" class="close" onclick="$('#edit_event_modal').modal('hide');" aria-label="Close">
+                    &times;
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <div class="mb-3">
+                                    <label for="" class="form-label">Cliente</label>
+                                    <input type="text" class="form-control" name="" id="edit-name-cliente"
+                                        aria-describedby="helpId" placeholder=""
+                                        value="{{cliente.firstName}} {{cliente.lastName}}" readonly>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label for="event_start_date">Fecha llegada</label>
+                                <input type="date" name="event_start_date" id="edit_start_date"
+                                    class="form-control onlydatepicker" placeholder="Event start date">
+                            </div>
+                        </div>
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label for="event_end_date">Fecha salida</label>
+                                <input type="date" name="event_end_date" id="edit_end_date" class="form-control"
+                                    placeholder="Event end date">
+                            </div>
+                        </div>
+                        <div class="col-sm-2">
+                            <div class="form-group">
+                                <label for="event_end_date">Noches: </label>
+                                <input type="number" name="event_nights" id="edit_nights" class="form-control"
+                                    placeholder="" min="1" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-item">
+                        <p id="txtReservationError" name="errMsg" class="error"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="save-event-btn">Editar reserva</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End popup dialog box -->
+
+{{!-- Modal Agregar Notas --}}
+
+<div class="modal fade" id="add_notes_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Agregar nota</h5>
+                <button type="button" class="close" onclick="$('#add_notes_modal').modal('hide');" aria-label="Close">
+                    &times;
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row">
+                        <div class="ml-2">
+                            <label for="add-note-input" class="form-label">Notas</label>
+                            <textarea class="form-control" name="add-note-input" id="add-note-input" rows="3"
+                                placeholder="Añade una nueva nota para esta reserva"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add-note-btn">Agregar nota</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{!-- End Modal Notas --}}
+
+
+
+{{!-- Modal Agregar servicios adicionales --}}
+<div class="modal fade" id="add_services_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Agregar servicios adicionales</h5>
+                <button type="button" class="close" onclick="$('#add_services_modal').modal('hide');"
+                    aria-label="Close">
+                    &times;
+
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label for="select-service">Servicio: </label>
+                                <select name="select-service" id="select-service-id" class="form-select form-select-md"
+                                    required>
+                                    <option value="0" selected="true" disabled="true"> Selecciona un servicio --
+                                    </option>
+                                    {{#if servicios}}
+                                    {{#each servicios}}
+                                    <option value="{{this.service}}" data-bs-id="{{this._id}}"
+                                        data-bs-description="{{this.description}}">{{this.service}}</option>
+                                    {{/each}}
+                                    {{else}}
+                                    <option value="-1">No se encontraron servicios</option>
+                                    {{/if}}
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="row">
+                        <div class="ml-2">
+                            <label for="description-services" class="form-label">Descripcion servicio: </label>
+                            <textarea class="form-control" name="description-services" id="description-service" rows="2"
+                                placeholder="Descripción del servicio" readonly></textarea>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add-service-btn">Agregar servicio</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{!-- Fin Modal agregar servicios adicionales --}}
+
+
 <script>
+    // Obtener todos los contenedores de nota
+    const notaContainers = document.querySelectorAll('.nota-container');
+
+    // Agregar evento de mouseenter a cada contenedor de nota
+    notaContainers.forEach(container => {
+        container.addEventListener('mouseenter', () => {
+            // Mostrar el botón de eliminar al hacer hover
+            const btnEliminar = container.querySelector('.btn-eliminar');
+            btnEliminar.style.display = 'block';
+        });
+
+        // Agregar evento de mouseleave a cada contenedor de nota
+        container.addEventListener('mouseleave', () => {
+            // Ocultar el botón de eliminar al dejar de hacer hover
+            const btnEliminar = container.querySelector('.btn-eliminar');
+            btnEliminar.style.display = 'none';
+        });
+    });
 
     const editPaymentModal = document.getElementById('edit_payment_modal');
     const editPaymentBtn = document.querySelector('#edit-payment-btn');
@@ -551,7 +776,6 @@
                 notas: notas
             };
 
-            console.log(bodyNuevoPago);
 
             const response = await fetch(`http://localhost:3005/api/pagos`, {
                 method: 'POST',
@@ -644,13 +868,14 @@
         }
     });
 
+    // Obtener los datos para editar el pago e incrustarlos en el modal
+
     editPaymentModal.addEventListener('show.bs.modal', async function (event) {
         const button = event.relatedTarget; // Botón que abrió el modal
         paymentId = button.getAttribute('data-payment-id'); // ID del pago
 
         try {
             const datosDePago = await obtenerDatosDePago(paymentId);
-            console.log(datosDePago);
             const { fechaPago, importe, metodoPago, codigoOperacion, notas, reservacionId } = datosDePago;
             const fechaFormateada = datosDePago.fechaPago.substring(0, 10); // Recortar la fecha para eliminar la parte de la hora
 
@@ -664,6 +889,73 @@
             throw new Error('Error al obtener los datos del pago: ', error);
         }
     });
+
+    const editReserveBtn = document.querySelector('#save-event-btn')
+    editReserveBtn.addEventListener('click', async function (event) {
+        event.preventDefault();
+        const nightsInput = document.querySelector('#edit_nights').value;
+        const arrivalDateInput = document.getElementById('edit_start_date').value
+        const departureDateInput = document.getElementById('edit_end_date').value
+
+        const reservacionId = document.querySelector('#reservacion_id').value;
+
+
+        try {
+            const nuevasFechas = {
+                nNights: nightsInput,
+                arrivalDate: arrivalDateInput,
+                departureDate: departureDateInput
+            }
+
+            const response = await fetch(`http://localhost:3005/api/eventos/${reservacionId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(nuevasFechas)
+            });
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Completado!',
+                    text: 'Reserva actualizada correctamente.',
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                });
+            } else {
+                throw new Error('Error al actualizar la reserva. Por favor, inténtalo de nuevo más tarde.');
+            }
+
+
+
+        } catch (error) {
+            console.error('Error al enviar los datos de la reserva :', error);
+            throw new Error('Error al enviar los datos de la reserva : ', error);
+        }
+
+    });
+
+    async function obtenerDatosDeReserva() {
+        try {
+            const reservacionId = document.querySelector('#reservacion_id').value;
+
+            const response = await fetch(`http://localhost:3005/api/eventos/route/${reservacionId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const data = await response.json(); // Esperar a que la promesa se resuelva
+            return data;
+        } catch (error) {
+            throw new Error(error);
+        }
+    }
 
     async function obtenerDatosDePago(paymentId) {
         try {
@@ -682,7 +974,6 @@
     }
 
     async function eliminarPago(idPago) {
-        console.log(idPago);
         try {
             const confirmacion = await Swal.fire({
                 icon: 'warning',
@@ -728,9 +1019,288 @@
         }
     }
 
+    const eliminarReservaBtn = document.querySelector('#eliminar-reserva-btn')
+    eliminarReservaBtn.addEventListener('click', async function (event) {
+        try {
+            const reservacionId = document.querySelector('#reservacion_id').value;
+
+            const confirmacion = await Swal.fire({
+                icon: 'warning',
+                title: '¿Estás seguro?',
+                text: 'Esta acción eliminará la reserva de forma permanente.',
+                showCancelButton: true,
+            });
+
+            if (confirmacion.isConfirmed) {
+                const response = await fetch(`http://localhost:3005/api/eventos/${reservacionId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    });
+
+    const addNoteBtn = document.querySelector('#add-note-btn');
+
+    addNoteBtn.addEventListener('click', async function (event) {
+        event.preventDefault();
+
+        try {
+            const reservacionId = document.querySelector('#reservacion_id').value;
+            const noteInput = document.querySelector('#add-note-input').value;
+
+            if (!noteInput || noteInput === undefined) {
+                throw new Error('Ingresa una nota para la reserva.');
+            }
+
+            const bodyNota = {
+                texto: noteInput
+            };
+
+            const response = await fetch(`http://localhost:3005/api/notas/${reservacionId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(bodyNota)
+            })
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Completado!',
+                    text: 'Nota agregada correctamente.',
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                });
+
+            } else {
+                throw new Error('Error al agregar la nota. Por favor, inténtalo de nuevo más tarde.');
+            }
+
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: e.message,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    });
+
+    async function eliminarNota(idNota) {
+
+        try {
+            const reservacionId = document.querySelector('#reservacion_id').value;
+
+            const confirmacion = await Swal.fire({
+                icon: 'warning',
+                title: '¿Estás seguro?',
+                text: 'Esta acción eliminará la nota de forma permanente.',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            })
+            if (confirmacion.isConfirmed) {
+
+                const response = await fetch(`http://localhost:3005/api/notas?idReserva=${reservacionId}&idNota=${idNota}`, {
+                    method: 'DELETE', // O el método HTTP que estés utilizando para eliminar la nota
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: 'Nota eliminada correctamente.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            location.reload();
+                        }
+                    });
+
+                } else {
+                    throw new Error('Error al eliminar la nota. Por favor, inténtalo de nuevo más tarde.');
+                }
+            }
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: e.message,
+                confirmButtonText: 'Aceptar'
+            })
+        }
+    }
+
+    function calcularTotales() {
+        const totalReservaInput = document.querySelector('#total-reserva');
+        const totalIvaInput = document.querySelector('#total-iva');
+        const totalPagado = document.querySelector('#total-pagado');
+        const totalPendiente = document.querySelector('#total-pendiente');
+
+        const pagosTotales = parseFloat(document.querySelector('#pagos-totales').value);
+
+        const totalReserva = parseFloat(document.querySelector('#total-reserva-value').value);
+        const descuentoTotalReserva = parseFloat(document.querySelector('#descuento-total-reserva').value);
+
+        const iva = 0.16;
+
+        let preTotal = totalReserva * (descuentoTotalReserva / 100);
+        let total = totalReserva - preTotal;
+        total = total.toFixed(2); // Formatear a dos decimales como máximo
+
+        totalReservaInput.textContent = total;
+
+        let totalIva = total * iva;
+        totalIva = totalIva.toFixed(2); // Formatear a dos decimales como máximo
+        totalIvaInput.textContent = totalIva;
+
+        totalPagado.textContent = pagosTotales.toFixed(2); // Formatear a dos decimales como máximo
+
+        let totalPendienteValue = total - pagosTotales;
+        totalPendienteValue = totalPendienteValue.toFixed(2); // Formatear a dos decimales como máximo
+        totalPendiente.textContent = totalPendienteValue;
+    }
+
+
+    calcularTotales()
+
+    const selectServiceInput = document.getElementById('select-service-id');
+    const descriptionService = document.getElementById('description-service');
+
+    selectServiceInput.addEventListener('change', function () {
+        const selectedOption = selectServiceInput.options[selectServiceInput.selectedIndex];
+        const description = selectedOption.getAttribute('data-bs-description');
+
+
+        if (description != undefined && description != null && description.trim() !== '') {
+            descriptionService.value = description;
+        } else {
+            descriptionService.value = ''
+        }
+
+    });
+
+    const addServiceBtn = document.querySelector('#add-service-btn');
+
+    addServiceBtn.addEventListener('click', async function (event) {
+        event.preventDefault();
+
+        try {
+            const reservacionId = document.querySelector('#reservacion_id').value;
+            const newService = {
+                id_reserva: reservacionId,
+                descripcion: descriptionService.value,
+                fecha: Date.now(),
+                status: 'Pendiente'
+            }
+
+
+
+            const response = await fetch(`http://localhost:3005/api/rackServicios`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newService)
+
+                })
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Completado!',
+                    text: 'Servicio agregado correctamente.',
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                });
+            } else {
+                throw new Error('Error al agregar el servicio. Por favor, inténtalo de nuevo más tarde.');
+            }
+
+
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: e.message,
+                confirmButtonText: 'Aceptar'
+            })
+        }
+    });
 
 
 
 
+
+    const editReservationModal = document.getElementById('edit_event_modal');
+    editReservationModal.addEventListener('show.bs.modal', async function (event) {
+        const nightsInput = document.querySelector('#edit_nights');
+        const arrivalDateInput = document.getElementById('edit_start_date')
+        const departureDateInput = document.getElementById('edit_end_date')
+
+        try {
+            const datosReserva = await obtenerDatosDeReserva();
+            const { arrivalDate, departureDate, nNights } = datosReserva;
+
+            arrivalDateInput.value = arrivalDate.substring(0, 10);
+            departureDateInput.value = departureDate.substring(0, 10);
+            nightsInput.value = nNights;
+
+
+
+        } catch (error) {
+            console.error('Error al obtener los datos de reserva:', error);
+            throw new Error('Error al obtener los datos de reserva: ', error);
+        }
+    });
+
+    const nightsInput = document.querySelector('#edit_nights');
+    const arrivalDateInput = document.getElementById('edit_start_date')
+    const departureDateInput = document.getElementById('edit_end_date')
+
+
+    arrivalDateInput.addEventListener('change', calculateNightDifference);
+    departureDateInput.addEventListener('change', calculateNightDifference);
+
+
+
+
+    function calculateNightDifference() {
+        const arrivalValue = new Date(arrivalDateInput.value);
+        const departureValue = new Date(departureDateInput.value);
+
+        // Verifica si las fechas son válidas
+        if (!isNaN(arrivalValue) && !isNaN(departureValue) && departureValue >= arrivalValue) {
+            const timeDifference = departureValue.getTime() - arrivalValue.getTime();
+            const nightDifference = Math.ceil(timeDifference / (1000 * 3600 * 24)); // Calcula la diferencia en días
+
+            nightsInput.value = nightDifference
+        } else {
+            nightsInput.value = 0
+        }
+    }
 
 </script>

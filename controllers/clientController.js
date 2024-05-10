@@ -99,6 +99,17 @@ async function showClientsView(req, res, next){
     }
 }
 
+async function showClients(req, res, next){
+    try {
+        const { id } = req.params;
+        console.log(id);
+        const clients = await Cliente.find({_id: id});
+        res.send(clients);
+    } catch (err) {
+        return next(err);
+    }
+}
+
 async function createClient(req, res, next) {
     const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = req.body;
     const clienteToAdd = new Cliente({
@@ -211,6 +222,7 @@ module.exports = {
     editClientValidators,
     deleteClientValidators,
     showClientsView,
+    showClients,
     createClient,
     editClient,
     editClientById,
