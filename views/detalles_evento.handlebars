@@ -21,6 +21,14 @@
             <div class="ripple-container"></div>
         </button>
     </span>
+
+    <span data-toggle="tooltip" data-placement="bottom" title="Enviar Reserva a Cliente"
+        data-original-title="Enviar Reserva a Cliente">
+        <button type="button" data-bs-toggle="modal" class="btn" onclick="copiarURL()">
+            <i class="fa fa-share-alt" aria-hidden="true"></i>
+            <div class="ripple-container"></div>
+        </button>
+    </span>
     {{!--
     <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Reubicar reserva">
         <button type="button" id="btn-reubicar-reserva" class="btn btn-reubicar-reserva"><i class="fa fa-arrows"
@@ -339,32 +347,7 @@
     </div>
 </div> {{!-- Cierre row --}}
 
-<div class="row mt-3">
-    <div class="col-4">
-        <h3 class="d-inline-block">Servicios Adicionales</h3>
-        <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_services_modal"
-            role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
-        <div class="bg-dark h-auto p-2 rounded-3">
-            {{#if rackServicios}}
-            {{#each rackServicios}}
-            <div class="article-row row rounded">
-                <div class="col-8">
-                    <p>{{this.descripcion}}</p>
-                    <p>Insertado el {{this.fecha}}</p>
-                </div>
-                <div class="col-4">
-                    <p></p>
-                </div>
-            </div>
-            {{/each}}
-            {{else}}
-            <div class="article-row row rounded">
-                <p>No hay servicios adicionales para esta reserva</p>
-            </div>
-        </div>
-        {{/if}}
-    </div>
-</div>
+
 
 
 <!-- Modals agregar pago -->
@@ -676,7 +659,8 @@
                                     {{#if servicios}}
                                     {{#each servicios}}
                                     <option value="{{this.service}}" data-bs-id="{{this._id}}"
-                                        data-bs-description="{{this.description}}">{{this.service}}</option>
+                                        data-bs-description="{{this.description}}" data-bs-price="{{this.finalPrice}}">
+                                        {{this.service}}</option>
                                     {{/each}}
                                     {{else}}
                                     <option value="-1">No se encontraron servicios</option>
@@ -693,7 +677,20 @@
                         <div class="ml-2">
                             <label for="description-services" class="form-label">Descripcion servicio: </label>
                             <textarea class="form-control" name="description-services" id="description-service" rows="2"
-                                placeholder="Descripción del servicio" readonly></textarea>
+                                placeholder="Descripción del servicio"></textarea>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-3">
+                            <label for="description-services" class="form-label" style="margin-bottom: 0px;">Costo: </label>
+                            <div class="input-group ig-shopping-price">
+                                <input type="number" class="form-control bg-light text-black" id="price-service"
+                                    aria-label="Amount (to the nearest dollar)" min="0.00" placeholder="Total" readonly>
+                                <div class="input-group-append">
+                                    <span class="input-group-text">$ M.N.</span>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
@@ -1198,16 +1195,24 @@
 
     const selectServiceInput = document.getElementById('select-service-id');
     const descriptionService = document.getElementById('description-service');
+    const priceService = document.getElementById('price-service');
 
     selectServiceInput.addEventListener('change', function () {
         const selectedOption = selectServiceInput.options[selectServiceInput.selectedIndex];
         const description = selectedOption.getAttribute('data-bs-description');
+        const price = selectedOption.getAttribute('data-bs-price');
 
 
         if (description != undefined && description != null && description.trim() !== '') {
             descriptionService.value = description;
         } else {
             descriptionService.value = ''
+        }
+
+        if (price != undefined && price != null && price.trim() !== '') {
+            priceService.value = price;
+        } else {
+            priceService.value = ''
         }
 
     });
@@ -1314,6 +1319,28 @@
         } else {
             nightsInput.value = 0
         }
+    }
+
+    function copiarURL() {
+        // URL que deseas copiar al portapapeles
+        const reservacionId = document.querySelector('#reservacion_id').value;
+
+        var url = `http://localhost:3005/instrucciones/${reservacionId}`;
+
+        // Crear un elemento de entrada para almacenar el URL
+        var input = document.createElement('input');
+        input.setAttribute('value', url);
+        document.body.appendChild(input);
+
+        // Seleccionar y copiar el URL al portapapeles
+        input.select();
+        document.execCommand('copy');
+
+        // Eliminar el elemento de entrada
+        document.body.removeChild(input);
+
+        // Mostrar una notificación de que el URL se copió al portapapeles
+        alert('URL copiado al portapapeles: ' + url);
     }
 
 </script>
