@@ -65,9 +65,7 @@ router.get('/eventos/:idevento', async (req, res) => {
             service.fecha = moment.utc(service.fecha).format('DD/MM/YYYY');
         })
 
-        
-        // console.log(habitacionObjeto);
-
+    
         // Renderiza la página HTML con los detalles del evento
         res.render('detalles_evento', { 
             evento: eventoObjeto,

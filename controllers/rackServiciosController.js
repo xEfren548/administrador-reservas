@@ -38,7 +38,11 @@ async function getSpecificRackServicesMongo(req, res, next) {
 
 async function createRackService(req, res, next) {
     try {
-        const { id_reserva, descripcion, fecha, status } = req.body;
+        const { id_reserva, id_servicio, descripcion, fecha, status, costo } = req.body;
+
+        if (!id_servicio || !id_reserva) {
+            return res.status(400).send('Servicio requerido'); // Si no se encuentra el documento, devolver un error 404
+        }
 
         const documento = await Documento.findOne({ 'events._id': id_reserva });
 
@@ -65,10 +69,12 @@ async function createRackService(req, res, next) {
 
         const servicio = {
             id_reserva: new mongoose.Types.ObjectId(id_reserva),
+            id_servicio: new mongoose.Types.ObjectId(id_servicio),
             descripcion,
             fecha,
             status,
-            nombreHabitacion
+            nombreHabitacion,
+            costo
         }
 
         const service = new RackServicios(servicio);
