@@ -1038,6 +1038,19 @@
                         'Content-Type': 'application/json',
                     },
                 });
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: 'Reserva eliminada correctamente.',
+                        confirmButtonText: 'Aceptar',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/'
+
+                        }
+                    })
+                }
             }
         } catch (error) {
             Swal.fire({

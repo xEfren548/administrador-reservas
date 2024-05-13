@@ -86,7 +86,7 @@ const submitReservationValidators = [
 ];
 
 async function obtenerEventos(req, res) {
-    const {id} = req.params;
+    const { id } = req.params;
     try {
         const eventos = await Documento.find();
         res.send(eventos);
@@ -159,22 +159,32 @@ async function createReservation(req, res, next) {
             departureDate: departureDate,
             maxOccupation: maxOccupation,
             nNights: nNights,
-            url: `${process.env.URL}/api/eventos/${chalet._id}`,
+            url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
             units: units,
             total: total,
             discount: discount
         };
 
-        
+
 
         const documento = await Documento.findOne();
         documento.events.push(reservationToAdd);
         await documento.save();
 
+
+        // Guardar la reserva actualizada en la base de datos
+        const documento2 = await Documento.findOne()
+        
         const idReserva = documento.events[documento.events.length - 1]._id.toString()
+        const url = `http://${process.env.URL}/api/eventos/${idReserva}`;
+        const evento = documento2.events.find(habitacion => habitacion.id === idReserva);
+        
+        evento.url = url;
+        await documento2.save();
+
         const descripcionLimpieza = 'Limpieza para la habitación ' + chaletName;
         const fechaLimpieza = new Date(departureDate)
-        fechaLimpieza.setDate(fechaLimpieza.getDate()+ 1)
+        fechaLimpieza.setDate(fechaLimpieza.getDate() + 1)
         const statusLimpieza = 'Pendiente'
 
         console.log(idReserva)
@@ -358,7 +368,7 @@ async function crearNota(req, res) {
         }
 
         evento.notes.push({ texto });
-        
+
         await eventosExistentes.save();
 
         res.status(200).json({ message: 'Nueva nota agregada exitosamente a la reserva.' });
@@ -380,7 +390,7 @@ async function eliminarNota(req, res) {
     try {
         // Buscar el documento que contiene los eventos
         const documento = await Documento.findOne();
-        
+
         if (!documento) {
             throw new Error('No se encontraron eventos');
         }
