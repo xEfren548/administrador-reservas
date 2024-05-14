@@ -63,7 +63,8 @@ const createReservationValidators = [
         .isNumeric().withMessage('Total amount must be a number')
         .toFloat(),
     check('discount')
-        .notEmpty().withMessage('Discount percentage is required')
+        .optional()
+        .if(value => value !== '')
         .isNumeric().withMessage('Discount percentage must be a number')
         .toFloat()
         .custom(async (value, { req }) => {
