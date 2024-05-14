@@ -236,8 +236,8 @@
         {{/if}}
 
 
-            {{#if rackServicios}}
-            {{#each rackServicios}}
+        {{#if rackServicios}}
+        {{#each rackServicios}}
         <div class="bg-dark h-auto pt-1 pr-1 pl-1 pb-1 rounded-3">
             <div class="article-row row rounded">
                 <div class="col-8">
@@ -252,11 +252,11 @@
                 </div>
             </div>
         </div>
-            {{/each}}
+        {{/each}}
         {{/if}}
     </div>
 
-    <input type="hidden" value="{{rackServicios.totalServicios}}" id="total-servicios"> 
+    <input type="hidden" value="{{rackServicios.totalServicios}}" id="total-servicios">
 
 
     <div class="col-4 col-sm-12 col-md-12 col-lg-4 col-xl-4">
@@ -1205,7 +1205,7 @@
         const totalIvaInput = document.querySelector('#total-iva');
         const totalPagado = document.querySelector('#total-pagado');
         const totalPendiente = document.querySelector('#total-pendiente');
-        
+
         const totalServicios = parseFloat(document.querySelector('#total-servicios').value);
 
         const pagosTotales = parseFloat(document.querySelector('#pagos-totales').value);
