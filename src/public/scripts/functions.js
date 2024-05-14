@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 });
 
-                
+
                 //window.location.href = 'http://localhost:3005/instrucciones/' + data.reservationId;
             })
             .catch(error => {
@@ -131,7 +131,48 @@ document.addEventListener("DOMContentLoaded", function () {
             ocupacionInput.value = 0
         }
 
+        obtenerTotalReserva()
+
     });
+
+    arrivalDate.addEventListener('change', obtenerTotalReserva);
+
+    // Agregar un listener para el evento change a departureDate
+    departureDate.addEventListener('change', obtenerTotalReserva);
+
+    async function obtenerTotalReserva() {
+        const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
+        const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
+
+
+        if (arrivalDate.value && departureDate.value && tipologiaSelect.value) {
+            // Aquí puedes ejecutar la acción deseada
+            console.log("Los tres elementos tienen un valor. Ejecutar acción...");
+            const fechas = obtenerRangoFechas(fechaInicio, fechaFin)
+            console.log(fechas)
+        }
+
+
+
+
+
+
+
+    }
+
+    function obtenerRangoFechas(fechaInicio, fechaFin) {
+        const fechas = [];
+        let fechaActual = new Date(fechaInicio);
+
+        while (fechaActual < fechaFin) {
+            fechas.push(new Date(fechaActual));
+            fechaActual.setDate(fechaActual.getDate() + 1);
+        }
+        return fechas;
+    }
+
+    
+
 
 
 
