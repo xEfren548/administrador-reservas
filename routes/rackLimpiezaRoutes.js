@@ -2,12 +2,22 @@ const express = require('express');
 const moment = require('moment');
 const router = express.Router();
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
+const RackLimpieza = require('../models/RackLimpieza');
 
 
 router.get('/rackLimpieza', async (req, res) => {
     try {
+        console.log(req.session)
+        const usuarioLogueado = req.session.userId;
+        let services; // Declarar la variable fuera de los bloques if/else
 
-        const services = await rackLimpiezaController.getAllServicesMongo(req, res); // Pass req and res to the controller function
+        if (req.session.privilege === 'Limpieza'){
+            services = await RackLimpieza.find({encargadoLimpieza: usuarioLogueado}).lean();
+        } else {
+            services = await RackLimpieza.find().lean();
+        }
+
+        // Procesar los servicios obtenidos
         services.forEach(service => {
             service._id = service._id.toString();
             service.id_reserva = service.id_reserva.toString();
@@ -23,6 +33,7 @@ router.get('/rackLimpieza', async (req, res) => {
         res.send({ error: error.message });
     }
 });
+
 
 router.get('/api/racklimpieza', rackLimpiezaController.getAllServices)
 router.post('/api/racklimpieza', rackLimpiezaController.createService)

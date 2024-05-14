@@ -34,8 +34,8 @@ async function generateSideMenu (req, res, next) {
                 {'Reserva cliente cabaña': ["/instrucciones/", "far fa-calendar-alt"]},                
             ],            
             'Limpieza': [
-                {'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"]},
-                {'Limpieza': ["/api/racklimpieza", "fas fa-broom"]},
+                {'Dashboard': ["/dashboard", "fs-5 fa fa-chart-bar"]},
+                {'Limpieza': ["/racklimpieza", "fas fa-broom"]},
             ],
             'Servicios adicionales': [
                 {'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"]},

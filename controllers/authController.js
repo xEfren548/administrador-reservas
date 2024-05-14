@@ -52,7 +52,8 @@ async function login(req, res, next){
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
-            privilege: user.privilege
+            privilege: user.privilege,
+            userId: user._id.toString()
         };        
         
         console.log("Usuario logeado con éxito");

@@ -6,6 +6,11 @@ const rackLimpiezaSchema = new Schema({
         ref: 'documentos',
         required: true
     },
+    encargadoLimpieza: {
+        type: Schema.Types.ObjectId,
+        ref: 'usuarios',
+        required: true
+    },
     descripcion: {
         type: String,
         required: true
