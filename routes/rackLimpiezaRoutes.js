@@ -7,7 +7,6 @@ const RackLimpieza = require('../models/RackLimpieza');
 
 router.get('/rackLimpieza', async (req, res) => {
     try {
-        console.log(req.session)
         const usuarioLogueado = req.session.userId;
         let services; // Declarar la variable fuera de los bloques if/else
 
