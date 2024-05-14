@@ -47,7 +47,6 @@ const reservaSchema = new Schema({
     },
     discount: {
         type: Number,
-        required: true
     },
     notes: [{texto: String}]
 }); 

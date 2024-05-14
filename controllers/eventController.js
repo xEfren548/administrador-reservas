@@ -46,7 +46,7 @@ const createReservationValidators = [
         .isLength({ max: 255 }).withMessage("Chalet name must be less than 255 characters")
         .custom(async (value, { req }) => {
             const chalets = await Habitacion.findOne();
-            const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+            const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.body.chaletName);
             if (!chalet) {
                 throw new NotFoundError('Chalet does not exist');
             }
@@ -140,6 +140,8 @@ async function obtenerEventoPorIdRoute(req, res) {
 
 async function createReservation(req, res, next) {
     const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount } = req.body;
+
+    console.log(req.body)
 
     try {
         const client = await Cliente.find({ email: clientEmail });
