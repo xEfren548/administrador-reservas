@@ -149,7 +149,39 @@ document.addEventListener("DOMContentLoaded", function () {
             // Aquí puedes ejecutar la acción deseada
             console.log("Los tres elementos tienen un valor. Ejecutar acción...");
             const fechas = obtenerRangoFechas(fechaInicio, fechaFin)
-            console.log(fechas)
+
+            const resultados = []
+
+            try {
+
+                for (const fecha of fechas) {
+                    const year = fecha.getFullYear();
+                    const month = (fecha.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+                    const day = fecha.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+                    const formatedDate = `${year}-${month}-${day}`;
+                    console.log(formatedDate);
+
+                    const response = await fetch(`http://localhost:3005/api/consulta-fechas?fecha=${formatedDate}`);
+
+                    // Verificar el estado de la respuesta
+                    if (!response.ok) {
+                        throw new Error('Error en la solicitud fetch: ' + response.statusText);
+                    }
+
+                    // Convertir la respuesta a JSON
+                    console.log(response)
+                    const data = await response.json();
+
+                    // Agregar el resultado al array de resultados
+                    resultados.push(data);
+
+                }
+                console.log(resultados)
+            } catch (error) {
+                console.error('Ha ocurrido un error: ', error.message);
+
+            }
+
         }
 
 
@@ -171,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return fechas;
     }
 
-    
+
 
 
 

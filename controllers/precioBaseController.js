@@ -59,6 +59,22 @@ async function consultarPreciosPorId(req, res) {
     }
 }
 
+async function consultarPreciosPorFecha(req, res) {
+    try {
+        const { fecha } = req.query;
+        // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
+        const fechaAjustada = new Date(fecha);
+        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+        console.log(fechaAjustada);
+        const precio = await PrecioBaseXDia.findOne({ fecha: fechaAjustada });
+        console.log(precio);
+        res.send(precio);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: 'Hubo un error al consultar los precios base.' });
+    }
+}
+
 async function eliminarRegistroPrecio(req, res) {
     try {
 
@@ -111,6 +127,7 @@ module.exports = {
     eliminarPrecio,
     consultarPrecios,
     consultarPreciosPorId,
+    consultarPreciosPorFecha,
     eliminarRegistroPrecio,
     verificarExistenciaRegistro
 };
