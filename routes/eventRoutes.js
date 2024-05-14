@@ -61,9 +61,14 @@ router.get('/eventos/:idevento', async (req, res) => {
 
         eventoObjeto.pagoTotal = pagoTotal
 
+        let totalServicios = 0;
         rackServicios.forEach(service => {
             service.fecha = moment.utc(service.fecha).format('DD/MM/YYYY');
+            totalServicios += service.costo
+
         })
+
+        rackServicios.totalServicios = totalServicios
 
     
         // Renderiza la página HTML con los detalles del evento
