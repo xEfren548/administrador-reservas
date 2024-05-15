@@ -67,14 +67,17 @@
                         <div class="col-sm-4">
                             <div class="form-group">
                                 <label for="tipologia_habitacion">Tipología</label>
-                                <select name="tipologia_habitacion" id="tipologia_habitacion" class="form-select form-select-md" required>
-                                    <option value="" selected="true" disabled="true"> Selecciona una cabaña para modificar --</option>
+                                <select name="tipologia_habitacion" id="tipologia_habitacion"
+                                    class="form-select form-select-md" required>
+                                    <option value="" selected="true" disabled="true"> Selecciona una cabaña para
+                                        modificar --</option>
                                     {{#if chalets}}
-                                        {{#each chalets}}
-                                            <option value="{{this.name}}" data-bs-pax="{{this.pax}}">{{this.name}}</option>
-                                        {{/each}}
+                                    {{#each chalets}}
+                                    <option value="{{this.name}}" data-bs-pax="{{this.pax}}" data-bs-id="{{this.id}}">
+                                        {{this.name}}</option>
+                                    {{/each}}
                                     {{else}}
-                                        <option value="0">No se encontraron cabañas</option>
+                                    <option value="0">No se encontraron cabañas</option>
                                     {{/if}}
                                 </select>
                             </div>
@@ -85,6 +88,7 @@
                                 <label for="ocupacion_habitacion">Ocupación Máx.</label>
                                 <input type="number" name="ocupacion_habitacion" id="ocupacion_habitacion"
                                     class="form-control" placeholder="Ocupación" readonly>
+                                <input type="hidden" id="id_cabana">
                             </div>
                         </div>
 
@@ -95,8 +99,9 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Unidades: </span>
                                     </div>
-                                    <input type="number" id="habitacion_unidades" class="form-control bg-light text-black"
-                                        aria-label="Unidades" min="1" step="any" max="1" value="1">
+                                    <input type="number" id="habitacion_unidades"
+                                        class="form-control bg-light text-black" aria-label="Unidades" min="1"
+                                        step="any" max="1" value="1">
                                 </div>
                             </div>
                         </div>
@@ -107,8 +112,9 @@
                             <div class="form-group">
                                 <label for="ocupacion_habitacion">Total</label>
                                 <div class="input-group ig-shopping-price mb-3">
-                                    <input type="number" class="form-control bg-light text-black" id="habitacion_total"
-                                        aria-label="Amount (to the nearest dollar)" min="0.00" placeholder="Total">
+                                    <input type="number" class="form-control bg-light text-black fw-bold"
+                                        id="habitacion_total" aria-label="Amount (to the nearest dollar)" min="0.00"
+                                        placeholder="Total" readonly>
                                     <div class="input-group-append">
                                         <span class="input-group-text">$ M.N.</span>
                                     </div>
@@ -117,10 +123,11 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group">
-                                <label for="ocupacion_habitacion">Descuento</label>
+                                <label for="descuento_altotal">Descuento</label>
                                 <div class="input-group ig-shopping-price mb-3">
-                                    <input type="number" class="form-control bg-light text-black" id="habitacion_descuento"
-                                        aria-label="Descuento" min="0.00" placeholder="Descuento">
+                                    <input type="number" class="form-control bg-light text-black"
+                                        id="habitacion_descuento" aria-label="Descuento" min="0" max="100"
+                                        placeholder="Descuento">
                                     <div class="input-group-append">
                                         <span class="input-group-text"> % </span>
                                     </div>
@@ -128,13 +135,34 @@
                             </div>
                         </div>
                     </div> <!-- Cierre row -->
+
+                    <div class="row mt-2">
+                        <div class="col-sm-8">
+                            <div class="form-group">
+                                <label for="ocupacion_habitacion">Total con descuento</label>
+                                <div class="input-group ig-shopping-price mb-3">
+                                    <input type="number" class="form-control bg-light text-black fw-bold"
+                                        id="habitacion_totalcondescuento" aria-label="Amount (to the nearest dollar)"
+                                        min="0.00" placeholder="Total con descuento" readonly>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">$ M.N.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div> <!-- Cierre row -->
                     <div class="form-item">
                         <p id="txtReservationError" name="errMsg" class="error"></p>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="save-event-btn">Save Event</button>
+                <button type="button" class="btn btn-primary" id="save-event-btn">
+                    <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
+                    <span class="spinner-text">Crear Reserva</span>
+                    
+                    </button>
             </div>
         </div>
     </div>
