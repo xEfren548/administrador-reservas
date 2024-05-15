@@ -48,6 +48,11 @@ const reservaSchema = new Schema({
     discount: {
         type: Number,
         required: true
+    },
+    termsAccepted: {
+        type: Boolean,
+        required: true,
+        default: false
     }
 });
 

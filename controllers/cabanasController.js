@@ -6,6 +6,26 @@ const {check} = require("express-validator");
 const ftp = require('basic-ftp');
 const Usuario = require("../models/Usuario");
 const fs = require('fs');
+
+const showCreateChaletViewValidators = [
+    check()
+        .custom(async (value, { req }) => {
+            const admin = await Usuario.findOne({privilege: "Administrador"});
+            if(!admin){
+                throw new NotFoundError('No administrator found');
+            }
+            return true;
+        }),
+    check()
+        .custom(async (value, { req }) => {
+            const admin = await Usuario.findOne({privilege: "Limpieza"});
+            if(!admin){
+                throw new NotFoundError('No janitor found');
+            }
+            return true;
+        }),
+];
+
 const createChaletValidators = [
     // propertyDetails validations.
     check('propertyDetails.accomodationType')
@@ -350,7 +370,14 @@ const editChaletValidators = [
 async function showChaletsView(req, res, next){
     try {  
         const admins = await Usuario.find({privilege: "Administrador"}).lean();
+        if (!admins) {
+            throw new NotFoundError("No admin found");
+        }
+
         const janitors = await Usuario.find({privilege: "Limpieza"}).lean();
+        if (!janitors) {
+            throw new NotFoundError("No janitor found");
+        }
 
         res.render('vistaCabanas', {
             admins: admins,
@@ -366,15 +393,18 @@ async function createChalet(req, res, next) {
     console.log(req.body);
 
     const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others} = req.body;
+    
     const admin = await Usuario.findOne({email: others.admin, privilege: "Administrador"});
     if (!admin) {
         throw new NotFoundError("Admin not found");
     }
+
     const janitor = await Usuario.findOne({email: others.janitor, privilege: "Limpieza"});
     if (!janitor) {
         throw new NotFoundError("Janitor not found");
     }
     console.log(req.body);
+    
     const newArrivalTime = new Date();
     newArrivalTime.setHours(others.arrivalTimeHours);
     newArrivalTime.setMinutes(others.arrivalTimeMinutes);
@@ -600,8 +630,10 @@ async function editChalet(req, res, next){
 }
 
 module.exports = {
+    showCreateChaletViewValidators,
     createChaletValidators,
     uploadChaletFilesValidators,
+    editChaletValidators,
     showChaletsView,
     createChalet,
     uploadChaletFiles,

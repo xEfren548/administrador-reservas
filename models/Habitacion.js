@@ -249,10 +249,6 @@ const locationSchema = new mongoose.Schema({
         type: String,
         //required: true
     },
-    iFrame: {
-        type: String,
-        //required: true
-    }
 });
 
 const othersSchema = new mongoose.Schema({
