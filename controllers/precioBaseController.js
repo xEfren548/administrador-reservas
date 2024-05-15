@@ -1,4 +1,5 @@
 const PrecioBaseXDia = require('../models/PrecioBaseXDia');
+const Habitacion = require('../models/Habitacion');
 const mongoose = require('mongoose');
 
 // Controlador para agregar nuevos datos
@@ -61,13 +62,35 @@ async function consultarPreciosPorId(req, res) {
 
 async function consultarPreciosPorFecha(req, res) {
     try {
-        const { fecha } = req.query;
+        const { fecha, habitacionid } = req.query;
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
         console.log(fechaAjustada);
-        const precio = await PrecioBaseXDia.findOne({ fecha: fechaAjustada });
+        let precio = await PrecioBaseXDia.findOne({ fecha: fechaAjustada, habitacionId: habitacionid });
         console.log(precio);
+
+        if (precio === null) {
+            const habitacionesExistentes = await Habitacion.findOne(); // Buscar el documento que contiene los eventos
+
+            if (!habitacionesExistentes) {
+                throw new Error('No se encontraron eventos');
+            }
+
+            // Buscar la habitacion por su id
+            const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === habitacionid);
+
+            if (!habitacion) {
+                throw new Error('Habitacion no encontrada');
+            }
+
+            console.log(habitacion)
+
+            precio = {
+                precio_modificado: habitacion.others.basePrice,
+                precio_base_2noches: habitacion.others.baseCost2nights
+            }
+        }
         res.send(precio);
     } catch (error) {
         console.error(error);

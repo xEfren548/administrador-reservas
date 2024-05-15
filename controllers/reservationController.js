@@ -12,7 +12,8 @@ async function showReservationsView(req, res, next) {
         const chalets = data[0].resources.map(chalet => ({
             name: chalet.propertyDetails.name,
             basePrice: chalet.others.basePrice,
-            pax: chalet.propertyDetails.maxOccupancy
+            pax: chalet.propertyDetails.maxOccupancy,
+            id: chalet._id.toString()
         }));
         // console.log("Estos son los chalets: ", chalets);
 
