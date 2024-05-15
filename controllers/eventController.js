@@ -46,8 +46,8 @@ const createReservationValidators = [
         .isLength({ max: 255 }).withMessage("Chalet name must be less than 255 characters")
         .custom(async (value, { req }) => {
             const chalets = await Habitacion.findOne();
-            const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.body.chaletName);
-            if (!chalet) {
+            const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
+            if(!chalet){
                 throw new NotFoundError('Chalet does not exist');
             }
             return true;
@@ -138,6 +138,42 @@ async function obtenerEventoPorIdRoute(req, res) {
     }
 }
 
+function sendMsg(){
+    var botId = '309015222295382';
+    var phoneNbr = '523322771302';
+    var bearerToken = 'EAALMKpnwZCeoBO2VCd8WEfAYa1rf6QTPKmaArGe5DwpLLfmylZBGuH1TxOJd9ztIyHS5PKKcTN5SqX7xALj8ZCIEKcioKAinqkW9pKd6G9MZCxfXd7m2azbJSc31KvZCPm4JLyZCgA7RFvWddS3PJuVDmym3mxOuck5ZAXdJZBmPpLjYHoK6CBGXxRZAiZCoDg5Cmtk6Bd19njUqOOrdISPhgZD';
+
+    var url = 'https://graph.facebook.com/v15.0/' + botId + '/messages';
+    var data = {
+        messaging_product: 'whatsapp',
+        to: phoneNbr,
+        type: 'template',
+        template: {
+            name:'hello_world',
+            language:{ code: 'en_US' }
+        }
+    };
+
+    var postReq = {
+    method: 'POST',
+    headers: {
+        'Authorization': 'Bearer ' + bearerToken,
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data),
+    json: true
+    };
+
+    fetch(url, postReq)
+    .then(data => {
+        return data.json()
+    })
+    .then(res => {
+        console.log(res)
+    })
+    .catch(error => console.log(error));
+}
+
 async function createReservation(req, res, next) {
     const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount } = req.body;
 
@@ -151,9 +187,12 @@ async function createReservation(req, res, next) {
 
         const chalets = await Habitacion.findOne();
         const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
-        if (!chalet) {
-            throw new NotFoundError('Chalet does not exist');
+        if(!chalet){
+            throw new NotFoundError('Chalet does not exist 2');
         }
+        
+        arrivalDate.setHours(arrivalDate.getHours() + chalet.others.arrivalTime.getHours());
+        departureDate.setHours(departureDate.getHours() + chalet.others.departureTime.getHours());
 
         const reservationToAdd = {
             client: client[0]._id,
@@ -181,6 +220,7 @@ async function createReservation(req, res, next) {
         const idReserva = documento.events[documento.events.length - 1]._id.toString()
         const url = `http://${process.env.URL}/api/eventos/${idReserva}`;
         const evento = documento2.events.find(habitacion => habitacion.id === idReserva);
+        sendMsg();
         
         evento.url = url;
         await documento2.save();

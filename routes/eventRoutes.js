@@ -17,9 +17,8 @@ router.post('/eventos', eventController.createReservationValidators, validationR
 router.put('/eventos/:id', eventController.editarEvento);
 router.put('/eventos/:id/modificar', eventController.modificarEvento);
 router.delete('/eventos/:id', eventController.eliminarEvento);
-
 router.post('/notas/:id', eventController.crearNota);
-router.delete('/notas', eventController.eliminarNota);
+router.delete('/notas', eventController.eliminarNota)
 
 
 // Rutas con contenido dinamico de handlebars
