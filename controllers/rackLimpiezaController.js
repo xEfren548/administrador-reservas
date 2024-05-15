@@ -57,7 +57,8 @@ async function createService(req, res, next) {
 
         const habitacion = await habitacionController.obtenerHabitacionPorId(resourceId);
 
-        const nombreHabitacion = habitacion.propertyDetails.name
+        const nombreHabitacion = habitacion.propertyDetails.name;
+        const encargadoLimpieza = habitacion.others.janitor;
 
 
         const servicio = {
@@ -65,7 +66,8 @@ async function createService(req, res, next) {
             descripcion,
             fecha,
             status,
-            nombreHabitacion
+            nombreHabitacion,
+            encargadoLimpieza
         }
 
         const service = new RackLimpieza(servicio);
@@ -100,6 +102,7 @@ async function createServiceForReservation(req, res, next) {
         const habitacion = await habitacionController.obtenerHabitacionPorId(resourceId);
 
         const nombreHabitacion = habitacion.propertyDetails.name
+        const encargadoLimpieza = habitacion.others.janitor;
 
 
         const servicio = {
@@ -107,7 +110,8 @@ async function createServiceForReservation(req, res, next) {
             descripcion,
             fecha,
             status,
-            nombreHabitacion
+            nombreHabitacion,
+            encargadoLimpieza: new mongoose.Types.ObjectId(encargadoLimpieza)
         }
 
         const service = new RackLimpieza(servicio);

@@ -21,6 +21,14 @@
             <div class="ripple-container"></div>
         </button>
     </span>
+
+    <span data-toggle="tooltip" data-placement="bottom" title="Enviar Reserva a Cliente"
+        data-original-title="Enviar Reserva a Cliente">
+        <button type="button" data-bs-toggle="modal" class="btn" onclick="copiarURL()">
+            <i class="fa fa-share-alt" aria-hidden="true"></i>
+            <div class="ripple-container"></div>
+        </button>
+    </span>
     {{!--
     <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Reubicar reserva">
         <button type="button" id="btn-reubicar-reserva" class="btn btn-reubicar-reserva"><i class="fa fa-arrows"
@@ -189,34 +197,69 @@
 </div>
 
 
+
 <div class="row mt-3">
-    <div class="col-4">
-        <h3>Artículos</h3>
-        <div class="bg-dark h-auto p-2 rounded-3">
+    <div class="col-4 col-sm-12 col-md-12 col-lg-4 col-xl-4">
+        <h3 class="d-inline-block text-wrap">Artículos / </h3>
+        <h3>Servicios Adicionales <a name="" id="" class="btn btn-dark" data-bs-toggle="modal"
+                data-bs-target="#add_services_modal" role="button"><i class="fa fa-plus-circle"
+                    aria-hidden="true"></i></a></h3>
+
+        <div class="bg-dark h-auto pt-1 pr-1 pl-1 pb-1 rounded-3">
             <div class="article-row row rounded">
                 <div class="col-8">
-                    <p>1 X Pago a cuenta</p>
-                    <p>Insertado el 17/03/2024</p>
-                </div>
-                <div class="col-4">
-                    <p>$2400</p>
-                </div>
-            </div>
+                    <p>Reservación {{evento.nNights}} noches</p>
 
-            <div class="article-row row">
-                <div class="col-8">
-                    <p>1 X Pago a cuenta</p>
-                    <p>Insertado el 17/03/2024</p>
                 </div>
-                <div class="col-4">
-                    <p>$2400</p>
+                <div class="col-4 text-right">
+                    <p class="fs-5">
+                        <span class="badge bg-info">$ {{evento.total}}</span>
+                    </p>
                 </div>
             </div>
         </div>
+
+        {{#if evento.discount}}
+        <div class="bg-dark h-auto pt-1 pr-1 pl-1 pb-1 rounded-3">
+            <div class="article-row row rounded">
+                <div class="col-8">
+                    <p>Descuento</p>
+
+                </div>
+                <div class="col-4 text-right">
+                    <p class="fs-5">
+                        <span class="badge bg-info">{{evento.discount}}%</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {{/if}}
+
+
+        {{#if rackServicios}}
+        {{#each rackServicios}}
+        <div class="bg-dark h-auto pt-1 pr-1 pl-1 pb-1 rounded-3">
+            <div class="article-row row rounded">
+                <div class="col-8">
+                    <p>{{this.descripcion}}</p>
+                    <p>Insertado el {{this.fecha}}</p>
+                </div>
+                <div class="col-4 text-right">
+                    <p class="fs-5">
+                        <span class="badge bg-info">$ {{this.costo}}</span>
+                    </p>
+
+                </div>
+            </div>
+        </div>
+        {{/each}}
+        {{/if}}
     </div>
 
+    <input type="hidden" value="{{rackServicios.totalServicios}}" id="total-servicios">
 
-    <div class="col-4">
+
+    <div class="col-4 col-sm-12 col-md-12 col-lg-4 col-xl-4">
         <h3 class="d-inline-block mr-3 ml-3">Pagos</h3>
         <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_payment_modal"
             role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
@@ -269,7 +312,7 @@
                     <div class="badge badge-primary"
                         style="padding: 10px; min-width: 85px;margin: 0px; background-color: #e3e9f5;color: #213888;">
                         <span>$ </span>
-                        <span id="total-reserva">$ 222</span>
+                        <span id="total-reserva"> 222</span>
                         <span> MXN</span>
                     </div>
                 </div>
@@ -282,7 +325,7 @@
                     <div class="badge badge-primary"
                         style="padding: 10px; min-width: 85px;margin: 0px; background-color: #ffecd7;color: #213888;">
                         <span>$ </span>
-                        <span id="total-iva">$ 0</span>
+                        <span id="total-iva"> 0</span>
                         <span> MXN</span>
                     </div>
                 </div>
@@ -295,7 +338,7 @@
                     <div class="badge badge-primary"
                         style="padding: 10px; min-width: 85px;margin: 0px; background-color: #e3e9f5;color: #213888;">
                         <span>$ </span>
-                        <span id="total-pagado">$ 0</span>
+                        <span id="total-pagado"> 0</span>
                         <span> MXN</span>
                     </div>
                 </div>
@@ -308,7 +351,7 @@
                     <div class="badge badge-danger"
                         style="padding: 10px; min-width: 85px;margin: 0px; background-color: #fededc;color: #f85959;">
                         <span>$ </span>
-                        <span id="total-pendiente" class="fw-bold fs-5">$ 222</span>
+                        <span id="total-pendiente" class="fw-bold fs-5"> 222</span>
                         <span> MXN</span>
                     </div>
                 </div>
@@ -319,7 +362,7 @@
 
     </div>
 
-    <div class="col-4">
+    <div class="col-4 col-sm-12 col-md-12 col-lg-4 col-xl-4">
         <h3>Facturas</h3>
         <div class="bg-dark h-auto">
             <table class="table table-hover table-payment" style="width: 100%;">
@@ -339,32 +382,7 @@
     </div>
 </div> {{!-- Cierre row --}}
 
-<div class="row mt-3">
-    <div class="col-4">
-        <h3 class="d-inline-block">Servicios Adicionales</h3>
-        <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_services_modal"
-            role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
-        <div class="bg-dark h-auto p-2 rounded-3">
-            {{#if rackServicios}}
-            {{#each rackServicios}}
-            <div class="article-row row rounded">
-                <div class="col-8">
-                    <p>{{this.descripcion}}</p>
-                    <p>Insertado el {{this.fecha}}</p>
-                </div>
-                <div class="col-4">
-                    <p></p>
-                </div>
-            </div>
-            {{/each}}
-            {{else}}
-            <div class="article-row row rounded">
-                <p>No hay servicios adicionales para esta reserva</p>
-            </div>
-        </div>
-        {{/if}}
-    </div>
-</div>
+
 
 
 <!-- Modals agregar pago -->
@@ -425,7 +443,8 @@
                                     <label for="codigo-operacion-pago">Código de operación</label>
                                     <input type="text" name="codigo-operacion-pago"
                                         id="codigo-operacion-pago-habitacion" class="form-control" placeholder="001122">
-                                    <span class="help-text" style="color: gray;font-size: 14px;">No es obligatorio pero
+                                    <span class="help-text" style="color: gray;font-size: 14px;">No es obligatorio
+                                        pero
                                         puede servir de referencia.</span>
 
                                 </div>
@@ -521,7 +540,8 @@
                                     <input type="text" name="edit_codigo-operacion-pago"
                                         id="edit-codigo-operacion-pago-habitacion" class="form-control"
                                         placeholder="001122">
-                                    <span class="help-text" style="color: gray;font-size: 14px;">No es obligatorio pero
+                                    <span class="help-text" style="color: gray;font-size: 14px;">No es obligatorio
+                                        pero
                                         puede servir de referencia.</span>
 
                                 </div>
@@ -675,8 +695,9 @@
                                     </option>
                                     {{#if servicios}}
                                     {{#each servicios}}
-                                    <option value="{{this.service}}" data-bs-id="{{this._id}}"
-                                        data-bs-description="{{this.description}}">{{this.service}}</option>
+                                    <option value="{{this.service}}" data-bs-serviceId="{{this._id}}"
+                                        data-bs-description="{{this.description}}" data-bs-price="{{this.finalPrice}}">
+                                        {{this.service}}</option>
                                     {{/each}}
                                     {{else}}
                                     <option value="-1">No se encontraron servicios</option>
@@ -693,7 +714,23 @@
                         <div class="ml-2">
                             <label for="description-services" class="form-label">Descripcion servicio: </label>
                             <textarea class="form-control" name="description-services" id="description-service" rows="2"
-                                placeholder="Descripción del servicio" readonly></textarea>
+                                placeholder="Descripción del servicio"></textarea>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-3">
+                            <label for="description-services" class="form-label" style="margin-bottom: 0px;">Costo:
+                            </label>
+                            <div class="input-group ig-shopping-price">
+                                <input type="number" class="form-control bg-light text-black" id="price-service"
+                                    aria-label="Amount (to the nearest dollar)" min="0.00" placeholder="Total" readonly>
+                                <div class="input-group-append">
+                                    <span class="input-group-text">$ M.N.</span>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="id-servicio">
+
                         </div>
                     </div>
 
@@ -1038,6 +1075,19 @@
                         'Content-Type': 'application/json',
                     },
                 });
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: 'Reserva eliminada correctamente.',
+                        confirmButtonText: 'Aceptar',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/'
+
+                        }
+                    })
+                }
             }
         } catch (error) {
             Swal.fire({
@@ -1156,6 +1206,8 @@
         const totalPagado = document.querySelector('#total-pagado');
         const totalPendiente = document.querySelector('#total-pendiente');
 
+        const totalServicios = parseFloat(document.querySelector('#total-servicios').value);
+
         const pagosTotales = parseFloat(document.querySelector('#pagos-totales').value);
 
         const totalReserva = parseFloat(document.querySelector('#total-reserva-value').value);
@@ -1163,10 +1215,16 @@
 
         const iva = 0.16;
 
+        console.log(descuentoTotalReserva);
+        if (isNaN(descuentoTotalReserva) || descuentoTotalReserva === undefined || descuentoTotalReserva === null) {
+            descuentoTotalReserva = 0;
+        }
         let preTotal = totalReserva * (descuentoTotalReserva / 100);
         let total = totalReserva - preTotal;
+        total += totalServicios;
         total = total.toFixed(2); // Formatear a dos decimales como máximo
 
+        console.log(totalServicios)
         totalReservaInput.textContent = total;
 
         let totalIva = total * iva;
@@ -1185,10 +1243,14 @@
 
     const selectServiceInput = document.getElementById('select-service-id');
     const descriptionService = document.getElementById('description-service');
+    const priceService = document.getElementById('price-service');
+    const idServicio = document.getElementById('id-servicio');
 
     selectServiceInput.addEventListener('change', function () {
         const selectedOption = selectServiceInput.options[selectServiceInput.selectedIndex];
         const description = selectedOption.getAttribute('data-bs-description');
+        const price = selectedOption.getAttribute('data-bs-price');
+        const serviceId = selectedOption.getAttribute('data-bs-serviceId');
 
 
         if (description != undefined && description != null && description.trim() !== '') {
@@ -1196,6 +1258,14 @@
         } else {
             descriptionService.value = ''
         }
+
+        if (price != undefined && price != null && price.trim() !== '') {
+            priceService.value = price;
+        } else {
+            priceService.value = ''
+        }
+
+        idServicio.value = serviceId;
 
     });
 
@@ -1208,12 +1278,12 @@
             const reservacionId = document.querySelector('#reservacion_id').value;
             const newService = {
                 id_reserva: reservacionId,
+                id_servicio: idServicio.value,
                 descripcion: descriptionService.value,
                 fecha: Date.now(),
-                status: 'Pendiente'
+                status: 'Pendiente',
+                costo: priceService.value
             }
-
-
 
             const response = await fetch(`http://localhost:3005/api/rackServicios`,
                 {
@@ -1237,7 +1307,7 @@
                     }
                 });
             } else {
-                throw new Error('Error al agregar el servicio. Por favor, inténtalo de nuevo más tarde.');
+                throw new Error('Error al agregar el servicio. Por favor, inténtalo de nuevo más tarde o verifica que todos los campos están completos');
             }
 
 
@@ -1301,6 +1371,28 @@
         } else {
             nightsInput.value = 0
         }
+    }
+
+    function copiarURL() {
+        // URL que deseas copiar al portapapeles
+        const reservacionId = document.querySelector('#reservacion_id').value;
+
+        var url = `http://localhost:3005/instrucciones/${reservacionId}`;
+
+        // Crear un elemento de entrada para almacenar el URL
+        var input = document.createElement('input');
+        input.setAttribute('value', url);
+        document.body.appendChild(input);
+
+        // Seleccionar y copiar el URL al portapapeles
+        input.select();
+        document.execCommand('copy');
+
+        // Eliminar el elemento de entrada
+        document.body.removeChild(input);
+
+        // Mostrar una notificación de que el URL se copió al portapapeles
+        alert('URL copiado al portapapeles: ' + url);
     }
 
 </script>

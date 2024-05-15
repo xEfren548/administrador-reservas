@@ -35,16 +35,21 @@ const validators = [
 ];
 
 async function login(req, res, next){
-    const { email } = req.body;
-    console.log("entra");
+    const { email, password } = req.body;
+
     try{
         const user = await Usuario.findOne({ email });
         if(!user){
             return next(new BadRequestError("Wrong credentials"));
         }
 
+        const pwdEqual = await bcrypt.compare(password, user.password);
+        if(!pwdEqual){
+            return next(new BadRequestError("Wrong credentials"));
+        }
+
         // Generating authentiation token.
-        const token = jwt.sign({ email, userId: user._id }, "secret_key", { expiresIn: "1h" });
+        const token = jwt.sign({ email, userId: user._id }, "secret_key", { expiresIn: "5h" });
         
         // Saving user's cookies.
         req.session = { 
@@ -54,6 +59,8 @@ async function login(req, res, next){
             email: user.email,
             privilege: user.privilege,
             id: user._id
+            privilege: user.privilege,
+            userId: user._id.toString()
         };        
         
         console.log("Usuario logeado con éxito");
@@ -78,3 +85,5 @@ module.exports = {
     login,
     logout
 }
+
+

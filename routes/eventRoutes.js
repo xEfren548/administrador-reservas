@@ -13,13 +13,12 @@ const validationRequest = require('../common/middlewares/validation-request');
 // Rutas estáticas
 router.get('/eventos', eventController.obtenerEventos);
 router.get('/eventos/route/:id', eventController.obtenerEventoPorIdRoute);
-router.post('/eventos',  eventController.createReservation);
+router.post('/eventos', eventController.createReservationValidators, validationRequest, eventController.createReservation);
 router.put('/eventos/:id', eventController.editarEvento);
 router.put('/eventos/:id/modificar', eventController.modificarEvento);
 router.delete('/eventos/:id', eventController.eliminarEvento);
-
 router.post('/notas/:id', eventController.crearNota);
-router.delete('/notas', eventController.eliminarNota);
+router.delete('/notas', eventController.eliminarNota)
 
 
 // Rutas con contenido dinamico de handlebars
@@ -61,13 +60,16 @@ router.get('/eventos/:idevento', async (req, res) => {
 
         eventoObjeto.pagoTotal = pagoTotal
 
+        let totalServicios = 0;
         rackServicios.forEach(service => {
             service.fecha = moment.utc(service.fecha).format('DD/MM/YYYY');
+            totalServicios += service.costo
+
         })
 
-        
-        // console.log(habitacionObjeto);
+        rackServicios.totalServicios = totalServicios
 
+    
         // Renderiza la página HTML con los detalles del evento
         res.render('detalles_evento', { 
             evento: eventoObjeto,

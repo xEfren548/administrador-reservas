@@ -49,8 +49,13 @@ const reservaSchema = new Schema({
         type: Number,
         required: true
     },
-    notes: [{texto: String}]
-}); 
+    notes: [{texto: String}],        
+    termsAccepted: {
+        type: Boolean,
+        required: true,
+        default: false
+    }
+});
 
 const documentSchema = new Schema({
     events: [reservaSchema]

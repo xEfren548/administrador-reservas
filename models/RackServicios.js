@@ -6,6 +6,11 @@ const rackServiciosSchema = new Schema({
         ref: 'documentos',
         required: true
     },
+    id_servicio: {
+        type: Schema.Types.ObjectId,
+        ref:'servicios',
+        required: true
+    },
     descripcion: {
         type: String,
         required: true
@@ -20,6 +25,10 @@ const rackServiciosSchema = new Schema({
     },
     nombreHabitacion: {
         type: String
+    },
+    costo: {
+        type: Number,
+        required: true
     }
     
 });
