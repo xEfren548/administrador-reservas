@@ -149,6 +149,8 @@ document.addEventListener("DOMContentLoaded", function () {
             // Aquí puedes ejecutar la acción deseada
             console.log("Los tres elementos tienen un valor. Ejecutar acción...");
             const fechas = obtenerRangoFechas(fechaInicio, fechaFin)
+            const nNights = document.getElementById("event_nights").value.trim();
+
 
             const resultados = []
 
@@ -177,6 +179,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 }
                 console.log(resultados)
+                let totalPrecios = 0
+
+                resultados.forEach(resultado => {
+                    if(nNights > 1) {
+                        totalPrecios += resultado.precio_base_2noches
+                    } else {
+                        totalPrecios += resultado.precio_modificado
+                    }
+                })
+
+                console.log("Total precios: ", totalPrecios)
             } catch (error) {
                 console.error('Ha ocurrido un error: ', error.message);
 
