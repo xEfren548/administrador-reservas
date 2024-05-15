@@ -71,12 +71,12 @@ const createServiceValidators = [
         .isNumeric().withMessage('Base price must be a number')
         .toFloat(),
     check('firstCommission')
-        .notEmpty().withMessage('Base price is required')
+        .notEmpty().withMessage('First commission is required')
         .isNumeric().withMessage('First commission must be a number')
         .toFloat(),
     check('firstUser')
         .notEmpty().withMessage('First user email is required')
-        .isEmail().withMessage('Invalid email format')
+        .isEmail().withMessage('Invalid first user email format')
         .custom(async (value, { req }) => {
             const janitor1 = await Usuario.findOne({ email: value, privilege: "Servicios adicionales" });
             if (!janitor1) {
@@ -85,12 +85,12 @@ const createServiceValidators = [
             return true;
         }),
     check('secondCommission')
-        .notEmpty().withMessage('Base price is required')
+        .notEmpty().withMessage('Second commission is required')
         .isNumeric().withMessage('Second commission must be a number')
         .toFloat(),
     check('secondUser')
         .notEmpty().withMessage('Second user email is required')
-        .isEmail().withMessage('Invalid email format')
+        .isEmail().withMessage('Invalid second user email format')
         .custom(async (value, { req }) => {
             const janitor2 = await Usuario.findOne({ email: value, privilege: "Servicios adicionales" });
             if (!janitor2) {
@@ -273,8 +273,7 @@ async function createService(req, res, next) {
     try {
         await serviceToAdd.save();
 
-        console.log("Servicio agregado con éxito");
-        res.status(200).json({ success: true });
+        res.status(200).json({ success: true, message: "Servicio agregado con éxito" });
     } catch (err) {
         console.log(err);
         return next(err);
@@ -324,8 +323,7 @@ async function editService(req, res, next) {
             throw new NotFoundError("Service not found");
         }
 
-        console.log("Servicio editado con éxito");
-        res.status(200).json({ serviceToUpdate });
+        res.status(200).json({ success: true, message: "Servicio editado con éxito" });
     } catch(err) {
         return next(err);
     }
@@ -370,8 +368,7 @@ async function deleteService(req, res, next) {
             throw new NotFoundError("Service not found");
         }
 
-        console.log("Servicio eliminado con éxito");
-        res.status(200).json({ success: true });
+        res.status(200).json({ success: true, message: "Servicio eliminado con éxito" });
     } catch(err) {
         return next(err);
     }    

@@ -37,7 +37,7 @@
     </div>
 </div>
 
-<!-- Modal Alta usuario -->
+<!-- Modal alta costos -->
 <div class="modal fade" id="user_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
     <form id="frmNewUser" action="/api/auth/crear-usuario" method="post" class="modal-dialog modal-lg">
@@ -108,9 +108,9 @@
         </div>
     </form>
 </div>
-<!-- End Modal Alta usuario -->
+<!-- End modal alta costos -->
 
-<!-- Modal modificar usuario -->
+<!-- Modal modificar costos -->
 <div class="modal fade" id="modify-user_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
     <form id="frmUpdateUser" action="/api/usuarios/editar-usuario" method="put" class="modal-dialog modal-lg">
@@ -217,7 +217,7 @@
             });
         });
 
-        // Saving new user.
+        // Saving new cost.
         var btnSaveUser = document.getElementById("btnSaveUser")
         if (btnSaveUser){
             btnSaveUser.addEventListener("click", async (event) => {
@@ -240,25 +240,45 @@
                 })
                 .then(response => {
                     if (!response.ok) {
-                        const error = response.statusText;
-                        document.getElementById("txtInsertUserError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
-                        throw new Error('Error en la solicitud: ' + error);
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
                     }
                     return response.json();
                 })
-                .then(data => {
-                    console.log('Respuesta del servidor:', data);
-                    clearModal(document.getElementById("user_entry_modal"));
-                    $('#user_entry_modal').modal('hide');
-                    location.reload();
+                .then(data => {                   
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            clearModal(document.getElementById("user_entry_modal"));
+                            $('#user_entry_modal').modal('hide');
+                            location.reload();
+                        }
+                    }); 
                 })
                 .catch(error => {
-                    console.error('Error al enviar la solicitud:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
                 });
             });
         }
         
-        // Updating user info.
+        // Updating cost info.
         const editButtons = document.querySelectorAll('#tablaUsuarios .btn-primary');
         editButtons.forEach(function(button) {
             button.addEventListener('click', function() {
@@ -287,25 +307,45 @@
                 })
                 .then(response => {
                     if (!response.ok) {
-                        const error = response.statusText;
-                        document.getElementById("txtUpdUserError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
-                        throw new Error('Error en la solicitud: ' + error);
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
                     }
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Respuesta exitosa del servidor:', data);
-                    clearModal(document.getElementById("modify-user_entry_modal"));
-                    $('#modify-user_entry_modal').modal('hide');
-                    location.reload();
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            clearModal(document.getElementById("modify-user_entry_modal"));
+                            $('#modify-user_entry_modal').modal('hide');
+                            location.reload();
+                        }
+                    }); 
                 })
                 .catch(error => {
-                    console.error('Ha ocurrido un error: ', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
                 });
             });
         }
 
-        // Deleting client info.
+        // Deleting cost info.
         const deleteButtons = document.querySelectorAll('#tablaUsuarios .btn-danger');
         deleteButtons.forEach(function(button) {
             button.addEventListener('click', function() {
@@ -322,18 +362,38 @@
                 })
                 .then(response => {
                     if (!response.ok) {
-                        const error = response.statusText;
-                        this.closest("p[name='errMsg']").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
-                        throw new Error('Error en la solicitud: ' + error);
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
                     }
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Respuesta exitosa del servidor:', data);
-                    location.reload();
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            location.reload();
+                        }
+                    }); 
                 })
                 .catch(error => {
-                    console.error('Ha ocurrido un error: ', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
                 }); 
             });
         });        

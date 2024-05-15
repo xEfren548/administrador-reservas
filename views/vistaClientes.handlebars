@@ -1,10 +1,3 @@
-<div class="calendar-header">
-    <div class="bg-dark mb-3">
-        <a name="" id="crear-reserva-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
-            data-bs-toggle="modal" data-bs-target="#clientEntryModal">Alta cliente</a>
-    </div>
-</div>
-
 <div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
     <div class="col-10">
         <h1>Lista de clientes</h1>
@@ -270,23 +263,43 @@
                     },
                     body: JSON.stringify(data)
                 })
-                    .then(response => {
-                        if (!response.ok) {
-                            const error = response.statusText;
-                            document.getElementById("txtInsertClientError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
-                            throw new Error('Error en la solicitud: ' + error);
+                .then(response => {
+                    if (!response.ok) {
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            clearModal(document.getElementById("clientEntryModal"));
+                            $('#clientEntryModal').modal('hide');
+                            location.reload();
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Respuesta del servidor:', data);
-                        clearModal(document.getElementById("clientEntryModal"));
-                        $('#clientEntryModal').modal('hide');
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error('Error al enviar la solicitud:', error);
-                    });
+                    });                    
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
+                });
             });
         }
 
@@ -320,23 +333,44 @@
                     },
                     body: JSON.stringify(data)
                 })
-                    .then(response => {
-                        if (!response.ok) {
-                            const error = response.statusText;
-                            document.getElementById("txtUpdClientError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
-                            throw new Error('Error en la solicitud: ' + error);
+                .then(response => {
+                    if (!response.ok) {
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            clearModal(document.getElementById("modifyClientEntryModal"));
+                            $('#modifyClientEntryModal').modal('hide');
+                            location.reload();
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Respuesta exitosa del servidor:', data);
-                        clearModal(document.getElementById("modifyClientEntryModal"));
-                        $('#modifyClientEntryModal').modal('hide');
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error('Ha ocurrido un error: ', error);
-                    });
+                    }); 
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
+                });
             });
         }
 
@@ -356,22 +390,44 @@
                     },
                     body: JSON.stringify(data)
                 })
-                    .then(response => {
-                        if (!response.ok) {
-                            const error = response.statusText;
-                            this.closest("p[name='errMsg']").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
-                            throw new Error('Error en la solicitud: ' + error);
+                .then(response => {
+                    if (!response.ok) {
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            clearModal(document.getElementById("clientEntryModal"));
+                            $('#clientEntryModal').modal('hide');
+                            location.reload();
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Respuesta exitosa del servidor:', data);
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error('Ha ocurrido un error: ', error);
-                    });
-            });
+                    });                    
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
+                });
+            });            
         });
 
     });

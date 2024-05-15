@@ -8,6 +8,7 @@
   <link rel="icon" href="route-to-logo">    
   <title>Iniciar sesión</title>
   <title>Inicar sesión</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body class="login-body flex-vcontainer">
@@ -71,17 +72,28 @@
                 body: JSON.stringify(data)                
             })
             .then(response => {
-                if (response.ok) {
-                    console.log("Wiii");
-                    window.location.href = response.url;
-                } else {
-                    console.log('Respuesta del servidor:', response);
+                if (!response.ok) {
+                    response.json().then(errorData => {
+                        const errors = errorData.error;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                            confirmButtonText: 'Aceptar'
+                        });   
+                    });                    
+                    throw new Error('Error en la solicitud');
                 }
+                window.location.href = response.url;
             })
             .catch(error => {
-                console.error('Error al enviar la solicitud:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al enviar la solicitud: ' + error,
+                    confirmButtonText: 'Aceptar'
+                }); 
             });
-
         });
             
     });
