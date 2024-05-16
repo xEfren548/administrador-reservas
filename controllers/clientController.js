@@ -92,6 +92,7 @@ async function showClientsView(req, res, next){
     try {
         const clients = await Cliente.find({}).lean();
         res.render('vistaClientes', {
+            layout: 'clientes',
             clients: clients
         });
     } catch (err) {
@@ -126,7 +127,7 @@ async function createClient(req, res, next) {
         await clienteToAdd.save();
 
         console.log("Cliente agregado con éxito");
-        res.status(200).json({ success: true });
+        res.status(200).json({ success: true, message: "Client successfully created"});
     } catch (err) {
         return next(err);
     }
@@ -149,7 +150,7 @@ async function editClient(req, res, next) {
         }
 
         console.log("Cliente editado con éxito");
-        res.status(200).json({ clienteToUpdate });
+        res.status(200).json({ success: true, message: "Cliente editado con éxito" });
     } catch(err) {
         return next(err);
     }
@@ -193,7 +194,7 @@ async function deleteClient(req, res, next) {
         }
 
         console.log("Cliente eliminado con éxito");
-        res.status(200).json({ success: true });
+        res.status(200).json({ success: true, message: "Cliente eliminado con éxito" });
     } catch(err) {
         return next(err);
     }    

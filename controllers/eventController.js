@@ -207,8 +207,6 @@ async function createReservation(req, res, next) {
             discount: discount
         };
 
-
-
         const documento = await Documento.findOne();
         documento.events.push(reservationToAdd);
         await documento.save();
@@ -242,8 +240,7 @@ async function createReservation(req, res, next) {
             status: statusLimpieza
         })
 
-        console.log('Nueva reservación agregada:', documento.events[documento.events.length - 1]._id);
-        res.status(200).send({ message: 'Nueva reservación agregada', reservationId: documento.events[documento.events.length - 1]._id });
+        res.status(200).json({ success: true, reservationId: documento.events[documento.events.length - 1]._id, message: "Reservación agregada con éxito" });
     } catch (err) {
         console.log(err);
         return next(err);

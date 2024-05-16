@@ -150,8 +150,7 @@ async function updateUserFullName(req, res, next) {
         if (firstName) { req.session.firstName = updateFields.firstName; }
         if (lastName) { req.session.lastName = updateFields.lastName; }
         
-        console.log("Editaste tu nombre con éxito");
-        res.status(200).json({ userToUpdate });
+        res.status(200).json({ success: true, message: "Nombre editado con éxito" });
     } catch(err){
         return next(err);
     }    
@@ -174,7 +173,6 @@ async function updateUserFullNameById(req, res, next) {
         if (firstName) { req.session.firstName = updateFields.firstName; }
         if (lastName) { req.session.lastName = updateFields.lastName; }
 
-        console.log("Usuario editado con éxito");
         res.status(200).json({ userToUpdate });
     } catch(err){
         return next(err);
@@ -195,8 +193,7 @@ async function updateUserEmail(req, res, next) {
 
         req.session.email = updateFields.email;
     
-        console.log("Editaste tu dirección con éxito");
-        res.status(200).json({ userToUpdate });
+        res.status(200).json({ success: true, message: "Email editado con éxito" });
     } catch(err){
         return next(err);
     }
@@ -238,8 +235,7 @@ async function updateUserPassword(req, res, next) {
         userToUpdate.password = newPassword;
         await userToUpdate.save();
     
-        console.log("Contraseña actualizada con éxito");
-        res.status(200).json({ message: "Contraseña actualizada con éxito" });
+        res.status(200).json({ success: true, message: "Contraseña editada con éxito" });
     } catch(err){
         return next(err);
     }

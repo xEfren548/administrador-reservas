@@ -3,8 +3,6 @@
         <a name="" id="crear-reserva-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
             data-bs-toggle="modal" data-bs-target="#user_entry_modal">Alta de Usuario</a>
     </div>
-
-
 </div>
 
 <div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
@@ -109,22 +107,30 @@
                         </div>
                         <div class="row">
                             <div class="col-8">
-                                <select name="slctUserAdmin" id="slctUserAdmin" required>
-                                    <option value="" selected disabled> Selecciona un administrador para el usuario--
-                                    </option>
-                                    <option value="Juan Lopez">Juan Lopez</option>
-                                    <option value="Pepe Juan">Pepe Juan</option>
-                                    <option value="Jhon Doe">Jhon Doe</option>
+                                <select id="slctUserAdmin" name="slctUserAdmin" class="form-select form-select-md">
+                                    <option value="" selected="true" disabled="true"> Selecciona un administrador para el usuario --</option>
+                                    {{#if admins}}
+                                        {{#each admins}}
+                                            <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
+                                        {{/each}}
+                                    {{else}}
+                                        <option value="0">No se encontraron administradores</option>
+                                    {{/if}}
                                 </select>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="btnSaveUser">Agregar Usuario</button>
+                        <div class="form-item">
+                            <p id="txtInsertUserError" name="errMsg" class="error"></p>
+                        </div>
+                        <div class="modal_footer" style="display: flex; justify-content: right; margin: 10px 0;">
+                            <button type="submit" class="btn btn-primary" id="btnSaveUser">Modificar Usuario</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="form-item">
-            <p id="txtInsertUserError" name="errMsg" class="error"></p>
+            <p id="txtUpdUserError" name="errMsg" class="error"></p>
         </div>
     </form>
 </div>
@@ -164,30 +170,30 @@
                                 <input type="email" name="txtUserEmailUpd" id="txtUserEmailUpd" class="form-control"
                                     placeholder="Email" disabled="true">
                             </div>
-                            <div class="col-sm-12 mb-2">
-                                <div class="form-group">
-                                    <label for="txtUserPasswordUpd">Contraseña: </label>
-                                    <input type="password" name="txtUserPasswordUpd" id="txtUserPasswordUpd"
-                                        class="form-control" placeholder="Contraseña">
-                                </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtUserPasswordUpd">Contraseña: </label>
+                                <input type="password" name="txtUserPasswordUpd" id="txtUserPasswordUpd"
+                                    class="form-control" placeholder="Contraseña">
                             </div>
-                            <div class="row">
-                                <label for="slctUserPrivilegesUpd">Privilegio: </label>
-                            </div>
-                            <div class="row">
-                                <div class="col-8">
-                                    <select name="slctUserPrivilegesUpd" id="slctUserPrivilegesUpd" required>
-                                        <option value="" selected disabled> Selecciona un privilegio para el usuario--
-                                        </option>
-                                        <option value="Administrador">Administrador</option>
-                                        <option value="Vendedor">Vendedor</option>
-                                        <option value="Limpieza">Limpieza</option>
-                                        <option value="Servicios adicionales">Servicios adicionales</option>
-                                        <option value="Dueño de cabañas">Dueño de cabañas</option>
-                                        <option value="Inversionistas">Inversionistas</option>
-                                        <option value="Cliente">Cliente</option>                                        
-                                    </select>
-                                </div>
+                        </div>
+                        <div class="row">
+                            <label for="slctUserPrivilegesUpd">Privilegio: </label>
+                        </div>
+                        <div class="row">
+                            <div class="col-8">
+                                <select name="slctUserPrivilegesUpd" id="slctUserPrivilegesUpd" required>
+                                    <option value="" selected disabled> Selecciona un privilegio para el usuario--
+                                    </option>
+                                    <option value="">Selecciona una opción</option>
+                                    <option value="Administrador">Administrador</option>
+                                    <option value="Vendedor">Vendedor</option>
+                                    <option value="Limpieza">Limpieza</option>
+                                    <option value="Servicios adicionales">Servicios adicionales</option>
+                                    <option value="Dueño de cabañas">Dueño de cabañas</option>
+                                    <option value="Inversionistas">Inversionistas</option>                                   
+                                </select>
                             </div>
                         </div>
                         <div class="row">
@@ -195,13 +201,16 @@
                         </div>
                         <div class="row">
                             <div class="col-8">
-                                <select name="slctUserAdminUpd" id="slctUserAdminUpd" required>
-                                    <option value="" selected disabled> Selecciona un administrador para el usuario--
-                                    </option>
-                                    <option value="Juan Lopez">Juan Lopez</option>
-                                    <option value="Pepe Juan">Pepe Juan</option>
-                                    <option value="Jhon Doe">Jhon Doe</option>
-                                </select>
+                                <select id="slctUserAdminUpd" name="slctUserAdminUpd" class="form-select form-select-md">
+                                    <option value="" selected="true" disabled="true"> Selecciona un administrador para el usuario --</option>
+                                    {{#if admins}}
+                                        {{#each admins}}
+                                            <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                                        {{/each}}
+                                    {{else}}
+                                        <option value="0">No se encontraron administradores</option>
+                                    {{/if}}
+                                </select>                            
                             </div>
                         </div>
                         <div class="form-item">
@@ -273,23 +282,43 @@
                     },
                     body: JSON.stringify(data)
                 })
-                    .then(response => {
-                        if (!response.ok) {
-                            const error = response.statusText;
-                            document.getElementById("txtInsertUserError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
-                            throw new Error('Error en la solicitud: ' + error);
+                .then(response => {
+                    if (!response.ok) {
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            clearModal(document.getElementById("user_entry_modal"));
+                            $('#user_entry_modal').modal('hide');
+                            location.reload();
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Respuesta del servidor:', data);
-                        clearModal(document.getElementById("user_entry_modal"));
-                        $('#user_entry_modal').modal('hide');
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error('Error al enviar la solicitud:', error);
-                    });
+                    }); 
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
+                });
             });
         }
 
@@ -311,7 +340,7 @@
                     email: document.getElementById("txtUserEmailUpd").value.trim(),
                     password: document.getElementById("txtUserPasswordUpd").value.trim(),
                     privilege: document.getElementById("slctUserPrivilegesUpd").value.trim(),
-                    administrator: document.getElementById("slctUserAdminUpd").value.trim()
+                    administrator: document.getElementById("slctUserAdmin").value.trim()
                 };
 
                 fetch('/api/usuarios/editar-usuario', {
@@ -322,23 +351,43 @@
                     },
                     body: JSON.stringify(data)
                 })
-                    .then(response => {
-                        if (!response.ok) {
-                            const error = response.statusText;
-                            document.getElementById("txtUpdUserError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
-                            throw new Error('Error en la solicitud: ' + error);
+                .then(response => {
+                    if (!response.ok) {
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            clearModal(document.getElementById("modify-user_entry_modal"));
+                            $('#modify-user_entry_modal').modal('hide');
+                            location.reload();
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Respuesta exitosa del servidor:', data);
-                        clearModal(document.getElementById("modify-user_entry_modal"));
-                        $('#modify-user_entry_modal').modal('hide');
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error('Ha ocurrido un error: ', error);
-                    });
+                    }); 
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
+                });
             });
         }
 
@@ -357,21 +406,41 @@
                     },
                     body: JSON.stringify(data)
                 })
-                    .then(response => {
-                        if (!response.ok) {
-                            const error = response.statusText;
-                            this.closest("p[name='errMsg']").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
-                            throw new Error('Error en la solicitud: ' + error);
+                .then(response => {
+                    if (!response.ok) {
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            location.reload();
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Respuesta exitosa del servidor:', data);
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error('Ha ocurrido un error: ', error);
-                    });
+                    }); 
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
+                });
             });
         });
 

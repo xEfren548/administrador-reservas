@@ -80,7 +80,7 @@ async function generateSideMenu (req, res, next) {
                     <span class="d-none d-sm-inline mx-1">${req.session.firstName}</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
-                    <li><a class="dropdown-item" href="#">Settings</a></li>
+                    <li><a class="dropdown-item" href="/api/perfil-usuario">Settings</a></li>
                     <li>
                         <hr class="dropdown-divider">
                     </li>

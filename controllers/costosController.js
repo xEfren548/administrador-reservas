@@ -89,8 +89,7 @@ async function createCost(req, res, next) {
     try {
         await costToAdd.save();
 
-        console.log("Costo agregado con éxito");
-        res.status(200).json({ costToAdd });
+        res.status(200).json({ success: true, message: "Costo agregado con éxito" });
     } catch (err) {
         console.log(err);
         return next(err);
@@ -110,8 +109,7 @@ async function editCost(req, res, next) {
             throw new NotFoundError("Cost not found");
         }
 
-        console.log("Costo editado con éxito");
-        res.status(200).json({ costToUpdate });
+        res.status(200).json({ success: true, message: "Costo modificado con éxito" });
     } catch (err) {
         return next(err);
     }
@@ -126,8 +124,7 @@ async function deleteCost(req, res, next) {
             throw new NotFoundError("Cost not found");
         }
 
-        console.log("Costo eliminado con éxito");
-        res.status(200).json({ success: true });
+        res.status(200).json({ success: true, message: "Costo eliminado con éxito"});
     } catch(err) {
         return next(err);
     }  

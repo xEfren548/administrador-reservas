@@ -796,7 +796,6 @@
                 event.preventDefault();
 
                 // Creating JSON for text data.
-                
                 const arrivalTime1 = document.getElementById("txtArrivalTime").value.trim();
                 const departureTime1 =  document.getElementById("txtDepartureTime").value.trim();
                 const arrivalTimeMinutes = parseInt(arrivalTime1.split(':')[1]);
@@ -1000,9 +999,16 @@
                 })
                 .then(response => {
                     if (!response.ok) {
-                        const error = response.statusText;
-                        document.getElementById("txtCreateChaletError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
-                        throw new Error('Error en la solicitud: ' + error);
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
                     }
                     return response.json();
                 })
@@ -1015,21 +1021,45 @@
                             body: formData
                         });
                         if (response.ok) {
-                            console.log('Image uploaded successfully.', data);
-                            window.location.href = "/";
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Completado!',
+                                text: data.message + '.',
+                                confirmButtonText: 'Aceptar'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = "/";
+                                }
+                            });                             
                         } else {
-                            console.log('Error uploading image.', data);
-                            const error = response.statusText;
-                            document.getElementById("txtCreateChaletError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
-                            throw new Error('Error en la solicitud: ' + error);
+                            response.json().then(errorData => {
+                                const errors = errorData.error;
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                    confirmButtonText: 'Aceptar'
+                                });   
+                            });                    
+                            throw new Error('Error en la solicitud');
                             window.location.href = "/";
                         }
                     } catch (error) {
-                        console.error('Error al enviar la solicitud:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                            confirmButtonText: 'Aceptar'
+                        }); 
                     }                    
                 })
                 .catch(error => {
-                    console.error('Error al enviar la solicitud:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
                 });
 
             });

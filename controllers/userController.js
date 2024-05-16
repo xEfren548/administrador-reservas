@@ -34,7 +34,6 @@ const createUserValidators = [
         .notEmpty().withMessage('Privilege is required')
         .isIn(['Administrador', 'Vendedor', 'Limpieza', 'Servicios adicionales', 'Dueño de cabañas', 'Inversionistas', 'Cliente']).withMessage('Invalid privilege'),
     check('administrator')
-        .notEmpty().withMessage(`Administrator name is required`)
         .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s']+$/).withMessage("Invalid administrator name format")
         .isLength({ max: 255 }).withMessage("Administrator name must be less than 255 characters")
 ];
