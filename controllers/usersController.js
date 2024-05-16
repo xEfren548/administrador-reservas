@@ -23,11 +23,11 @@ const createUserValidators = [
         }),
     check('password')
         .notEmpty().withMessage('Password is required')
-        .isLength({ min: 12 }).withMessage('Password must be at least 12 characters long')
+        //.isLength({ min: 12 }).withMessage('Password must be at least 12 characters long')
         .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
         .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
-        .matches(/[0-9]/).withMessage('Password must contain at least one number')
-        .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),        
+        .matches(/[0-9]/).withMessage('Password must contain at least one number'),
+        //.matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),        
     check('privilege')
         .notEmpty().withMessage('Privilege is required')
         .isIn(['Administrador', 'Vendedor', 'Limpieza']).withMessage('Invalid privilege'),
@@ -91,8 +91,10 @@ const deleteUserValidators = [
 async function showUsersView(req, res, next){
     try {
         const users = await Usuario.find({}).lean();
+        const admins = await Usuario.find({privilege: "Administrador"}).lean();
         res.render('vistaUsuarios', {
-            users: users
+            users: users,
+            admins: admins
         });
     } catch (err) {
         return next(err);

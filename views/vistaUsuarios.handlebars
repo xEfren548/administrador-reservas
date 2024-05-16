@@ -81,27 +81,29 @@
                                 <input type="email" name="txtUserEmail" id="txtUserEmail" class="form-control"
                                     placeholder="Email">
                             </div>
-                            <div class="col-sm-12 mb-2">
-                                <div class="form-group">
-                                    <label for="txtUserPassword">Contraseña: </label>
-                                    <input type="password" name="txtUserPassword" id="txtUserPassword"
-                                        class="form-control" placeholder="Contraseña">
-                                </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtUserPassword">Contraseña: </label>
+                                <input type="password" name="txtUserPassword" id="txtUserPassword"
+                                    class="form-control" placeholder="Contraseña">
                             </div>
-                            <div class="row">
-                                <label for="slctUserPrivileges">Privilegio: </label>
-                            </div>
-                            <div class="row">
-                                <div class="col-8">
-                                    <select name="slctUserPrivileges" id="slctUserPrivileges" required>
-                                        <option value="" selected disabled> Selecciona un privilegio para el usuario--
-                                        </option>
-                                        <option value="Administrador">Administrador</option>
-                                        <option value="Vendedor">Vendedor</option>
-                                        <option value="Limpieza">Limpieza</option>
-                                    </select>
-
-                                </div>
+                        </div>
+                        <div class="row">
+                            <label for="slctUserPrivileges">Privilegio: </label>
+                        </div>
+                        <div class="row">
+                            <div class="col-8">
+                                <select name="slctUserPrivileges" id="slctUserPrivileges" required>
+                                    <option value="" selected disabled> Selecciona un privilegio para el usuario--</option>
+                                    <option value="">Selecciona una opción</option>
+                                    <option value="Administrador">Administrador</option>
+                                    <option value="Vendedor">Vendedor</option>
+                                    <option value="Limpieza">Limpieza</option>
+                                    <option value="Servicios adicionales">Servicios adicionales</option>
+                                    <option value="Dueño de cabañas">Dueño de cabañas</option>
+                                    <option value="Inversionistas">Inversionistas</option>
+                                </select>
                             </div>
                         </div>
                         <div class="row">
@@ -112,19 +114,24 @@
                                 <select name="slctUserAdmin" id="slctUserAdmin" required>
                                     <option value="" selected disabled> Selecciona un administrador para el usuario--
                                     </option>
-                                    <option value="Juan Lopez">Juan Lopez</option>
-                                    <option value="Pepe Juan">Pepe Juan</option>
-                                    <option value="Jhon Doe">Jhon Doe</option>
+                                    {{#each admins}}
+                                        <option value={{_id}}>{{firstName}} {{lastName}}</option>
+                                    {{/each}} 
                                 </select>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="btnSaveUser">Agregar Usuario</button>
+                        <div class="form-item">
+                            <p id="txtInsertUserError" name="errMsg" class="error"></p>
+                        </div>
+                        <div class="modal_footer" style="display: flex; justify-content: right; margin: 10px 0;">
+                            <button type="submit" class="btn btn-primary" id="btnSaveUser">Modificar Usuario</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="form-item">
-            <p id="txtInsertUserError" name="errMsg" class="error"></p>
+            <p id="txtUpdUserError" name="errMsg" class="error"></p>
         </div>
     </form>
 </div>
@@ -164,30 +171,30 @@
                                 <input type="email" name="txtUserEmailUpd" id="txtUserEmailUpd" class="form-control"
                                     placeholder="Email" disabled="true">
                             </div>
-                            <div class="col-sm-12 mb-2">
-                                <div class="form-group">
-                                    <label for="txtUserPasswordUpd">Contraseña: </label>
-                                    <input type="password" name="txtUserPasswordUpd" id="txtUserPasswordUpd"
-                                        class="form-control" placeholder="Contraseña">
-                                </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtUserPasswordUpd">Contraseña: </label>
+                                <input type="password" name="txtUserPasswordUpd" id="txtUserPasswordUpd"
+                                    class="form-control" placeholder="Contraseña">
                             </div>
-                            <div class="row">
-                                <label for="slctUserPrivilegesUpd">Privilegio: </label>
-                            </div>
-                            <div class="row">
-                                <div class="col-8">
-                                    <select name="slctUserPrivilegesUpd" id="slctUserPrivilegesUpd" required>
-                                        <option value="" selected disabled> Selecciona un privilegio para el usuario--
-                                        </option>
-                                        <option value="Administrador">Administrador</option>
-                                        <option value="Vendedor">Vendedor</option>
-                                        <option value="Limpieza">Limpieza</option>
-                                        <option value="Servicios adicionales">Servicios adicionales</option>
-                                        <option value="Dueño de cabañas">Dueño de cabañas</option>
-                                        <option value="Inversionistas">Inversionistas</option>
-                                        <option value="Cliente">Cliente</option>                                        
-                                    </select>
-                                </div>
+                        </div>
+                        <div class="row">
+                            <label for="slctUserPrivilegesUpd">Privilegio: </label>
+                        </div>
+                        <div class="row">
+                            <div class="col-8">
+                                <select name="slctUserPrivilegesUpd" id="slctUserPrivilegesUpd" required>
+                                    <option value="" selected disabled> Selecciona un privilegio para el usuario--
+                                    </option>
+                                    <option value="">Selecciona una opción</option>
+                                    <option value="Administrador">Administrador</option>
+                                    <option value="Vendedor">Vendedor</option>
+                                    <option value="Limpieza">Limpieza</option>
+                                    <option value="Servicios adicionales">Servicios adicionales</option>
+                                    <option value="Dueño de cabañas">Dueño de cabañas</option>
+                                    <option value="Inversionistas">Inversionistas</option>                                   
+                                </select>
                             </div>
                         </div>
                         <div class="row">
@@ -198,9 +205,9 @@
                                 <select name="slctUserAdminUpd" id="slctUserAdminUpd" required>
                                     <option value="" selected disabled> Selecciona un administrador para el usuario--
                                     </option>
-                                    <option value="Juan Lopez">Juan Lopez</option>
-                                    <option value="Pepe Juan">Pepe Juan</option>
-                                    <option value="Jhon Doe">Jhon Doe</option>
+                                    {{#each admins}}
+                                        <option value={{_id}}>{{firstName}} {{lastName}}</option>
+                                    {{/each}} 
                                 </select>
                             </div>
                         </div>

@@ -58,7 +58,7 @@ async function login(req, res, next){
             lastName: user.lastName,
             email: user.email,
             privilege: user.privilege,
-            id: user._id
+            id: user._id,
             privilege: user.privilege,
             userId: user._id.toString()
         };        

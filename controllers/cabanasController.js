@@ -545,7 +545,8 @@ async function showEditChaletsView(req, res, next){
         var chalets = await Habitacion.findOne().lean();
         chalets = chalets.resources;
         for(const chalet of chalets){
-            const admin = await Usuario.findById(chalet.others.admin); 
+            const admin = await Usuario.findById(chalet.others.admin);
+             console.log(chalet.others.admin)
             chalet.others.admin = [admin.email, admin.firstName + " " + admin.lastName];
         }
         for(const chalet of chalets){

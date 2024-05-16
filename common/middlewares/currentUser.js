@@ -24,7 +24,7 @@ const currentUser = (req, res, next) => {
         return next();
 
     } catch(err){
-        console.log("Smnth else");
+        //console.log("Smnth else");
         return next(new NotAuthorizedError());
     }
 }
