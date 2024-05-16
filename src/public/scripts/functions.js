@@ -65,51 +65,55 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             body: JSON.stringify(formData)
         })
-        .then(response => {
-            if (!response.ok) {
-                response.json().then(errorData => {
-                    const errors = errorData.error;
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                        confirmButtonText: 'Aceptar'
-                    });   
-                });                    
-                throw new Error('Error en la solicitud');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Respuesta exitosa del servidor:', data);
-            Swal.fire({
-                icon: 'success',
-                title: 'Reserva creada',
-                text: data.message,
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Aceptar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    clearModal(document.getElementById("event_entry_modal"));
-                    $('#event_entry_modal').modal('hide');
-                    window.location.href = `http://localhost:3005/api/eventos/${data.reservationId}`
+            .then(response => {
+                if (!response.ok) {
+                    response.json().then(errorData => {
+                        const errors = errorData.error;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                            confirmButtonText: 'Aceptar'
+                        });
+                    });
+                    throw new Error('Error en la solicitud');
                 }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Respuesta exitosa del servidor:', data);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Reserva creada',
+                    text: data.message,
+                    showCancelButton: false,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        clearModal(document.getElementById("event_entry_modal"));
+                        $('#event_entry_modal').modal('hide');
+                        window.location.href = `http://localhost:3005/api/eventos/${data.reservationId}`
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Ha ocurrido un error: ', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: `Ha ocurrido un error al crear la reserva: ${error.message}`,
+                    showCancelButton: false,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Aceptar'
+                });
+
+                spinner.classList.add('d-none');
+                spinnerText.textContent = 'Crear Reserva'; // Limpiar el texto
+                document.getElementById('save-event-btn').disabled = false; // Habilitar el botón
             });
-        })
-        .catch(error => {
-            console.error('Ha ocurrido un error: ', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: `Ha ocurrido un error al crear la reserva: ${error.message}`,                
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Aceptar'
-            });
-        });
     })
 
     const nightsInput = document.querySelector('#event_nights');
