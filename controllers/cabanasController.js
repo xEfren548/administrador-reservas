@@ -397,6 +397,7 @@ async function createChalet(req, res, next) {
     //console.log(req.body);
 
     const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others} = req.body;
+    console.log(req.body);
     
     const admin = await Usuario.findOne({email: others.admin, privilege: "Administrador"});
     if (!admin) {
@@ -407,7 +408,11 @@ async function createChalet(req, res, next) {
     if (!janitor) {
         throw new NotFoundError("Janitor not found");
     }
-    console.log(req.body);
+
+    const arrivalTimeHours = parseInt(others.arrivalTimeHours);
+    const arrivalTimeMinutes = parseInt(others.arrivalTimeMinutes);
+    const departureTimeHours = parseInt(others.departureTimeHours);
+    const departureTimeMinutes = parseInt(others.departureTimeMinutes);
     
     const newArrivalTime = new Date();
     newArrivalTime.setHours(arrivalTimeHours);
@@ -445,7 +450,8 @@ async function createChalet(req, res, next) {
         console.log("Cabaña agregada con éxito");
         req.session.chaletAdded = chalets.resources[chalets.resources.length - 1].propertyDetails.name;
         console.log("Respuesta del servidor:", { chaletAdded: req.session.chaletAdded });
-        res.status(200).json({ success: true });
+
+        res.status(200).json({ success: true, message: "Cabaña agregada con éxito "});
     } catch(err){
         console.log(err);
         return next(err);
@@ -501,7 +507,7 @@ async function uploadChaletFiles(req, res, next) {
         }
 
         console.log("Archivos subidos con éxito");
-        res.status(200).json( { message: "Archivos subidos con éxito" } );
+        res.status(200).json( { success: true, message: "Archivos subidos con éxito" } );
     } catch (error) {
         console.error("Error:", error);
     } finally {
@@ -544,8 +550,10 @@ async function showEditChaletsView(req, res, next){
     try {
         var chalets = await Habitacion.findOne().lean();
         chalets = chalets.resources;
+        console.log(chalets);
         for(const chalet of chalets){
             const admin = await Usuario.findById(chalet.others.admin); 
+            console.log("ADMIIIN : ", admin);
             chalet.others.admin = [admin.email, admin.firstName + " " + admin.lastName];
         }
         for(const chalet of chalets){
@@ -623,20 +631,20 @@ async function editChalet(req, res, next){
     try{ 
         const habitacion = await Habitacion.findOne();
         let chalets = habitacion.resources;
-
-        //console.log(propertyDetails)
     
         const indexToUpdate = chalets.findIndex(chalet => chalet.propertyDetails.name === propertyDetails.name);
         if (indexToUpdate === -1) {
             throw new NotFoundError("Chalet not found");
         }
         chalets[indexToUpdate] = chalet;    
+
         await Habitacion.findOneAndUpdate({}, { resources: chalets });
 
         console.log("Cabaña actualizada con éxito");
         req.session.chaletUpdated = chalets[indexToUpdate].propertyDetails.name;
         console.log("Respuesta del servidor:", { chaletUpdated: req.session.chaletUpdated });
-        res.status(200).json({ success: true });
+
+        res.status(200).json({ success: true, message: "Cabaña ediatda con éxito"});
     } catch(err){
         console.log(err);
         return next(err);

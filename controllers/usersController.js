@@ -32,9 +32,15 @@ const createUserValidators = [
         .notEmpty().withMessage('Privilege is required')
         .isIn(['Administrador', 'Vendedor', 'Limpieza']).withMessage('Invalid privilege'),
     check('administrator')
-        .notEmpty().withMessage(`Administrator name is required`)
-        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s']+$/).withMessage("Invalid administrator name format")
-        .isLength({ max: 255 }).withMessage("Administrator name must be less than 255 characters")
+        .notEmpty().withMessage("Administrator's name is required")
+        .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
+        .custom(async (value, { req }) => {
+            const admin = await Usuario.findOne({email: value, privilege: "Administrador"});
+            if(!admin){
+                throw new NotFoundError('Administrator does not exist');
+            }
+            return true;
+        }),
 ];
 
 const editUserValidators = [
@@ -64,7 +70,15 @@ const editUserValidators = [
         .isIn(['Administrador', 'Vendedor', 'Limpieza']).withMessage('Invalid identification type'),
     check('administrator')
         .optional({ checkFalsy: true })
-        .isLength({ max: 255 }).withMessage("Administrator name must be less than 255 characters"),
+        .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
+        .custom(async (value, { req }) => {
+            console.log("¿ADMIN? ", value);
+            const admin = await Usuario.findOne({email: value, privilege: "Administrador"});
+            if(!admin){
+                throw new NotFoundError('Administrator does not existsssssss');
+            }
+            return true;
+        }),
     check()
         .custom((value, { req }) => {
             const { firstName, lastName, password, privilege, administrator } = req.body;
@@ -91,8 +105,18 @@ const deleteUserValidators = [
 async function showUsersView(req, res, next){
     try {
         const users = await Usuario.find({}).lean();
+        if (!users) {
+            throw new NotFoundError("No users found");
+        }
+
+        const admins = await Usuario.find({privilege: "Administrador"}).lean();
+        if (!admins) {
+            throw new NotFoundError("No admin found");
+        }
+
         res.render('vistaUsuarios', {
-            users: users
+            users: users,
+            admins: admins
         });
     } catch (err) {
         return next(err);
@@ -109,8 +133,7 @@ async function createUser(req, res, next) {
         sendPassword(userToAdd.email, userToAdd.password, userToAdd.privilege);        
         await userToAdd.save();
         
-        console.log("Usuario agregado con éxito");
-        res.status(200).json( { userToAdd } );
+        res.status(200).json( { success: true, message: "Usuario agregado con éxito"} );
     } catch(err){
         console.log(err);
         return next(err);
@@ -151,8 +174,7 @@ async function editarUsuario(req, res, next) {
             throw new NotFoundError("User not found");
         }
 
-        console.log("Usuario editado con éxito");
-        res.status(200).json({ userToUpdate });
+        res.status(200).json({ success: true, message: "Usuario editado con éxito" });
     } catch(err) {
         return next(err);
     }
@@ -192,8 +214,7 @@ async function deleteUser(req, res, next) {
             throw new NotFoundError("Client not found");
         }
 
-        console.log("Usuario eliminado con éxito");
-        res.status(200).json({ success: true });
+        res.status(200).json({ success: true, message: "Usuario eliminado con éxito" });
     } catch(err) {
         return next(err);
     }    

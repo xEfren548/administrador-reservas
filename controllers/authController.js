@@ -58,7 +58,7 @@ async function login(req, res, next){
             lastName: user.lastName,
             email: user.email,
             privilege: user.privilege,
-            id: user._id
+            id: user._id,
             privilege: user.privilege,
             userId: user._id.toString()
         };        
@@ -67,6 +67,7 @@ async function login(req, res, next){
         // Uncomment the following line in order to test it on the browser.
         console.log(req.session);
         res.redirect('/api/dashboard');
+        
         // Uncomment the following line in order to test it on Postman.
         //res.status(200).json( req.session );
     } catch(err){
