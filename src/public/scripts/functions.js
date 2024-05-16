@@ -109,6 +109,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     confirmButtonText: 'Aceptar'
                 })
             });
+
+            spinner.classList.add('d-none');
+            spinnerText.textContent = 'Crear Reserva'; // Limpiar el texto
+            document.getElementById('save-event-btn').disabled = false; // Habilitar el botón
     })
 
 
