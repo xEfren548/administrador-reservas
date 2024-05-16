@@ -35,7 +35,7 @@ const createUserValidators = [
         .notEmpty().withMessage("Administrator's name is required")
         .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
         .custom(async (value, { req }) => {
-            const admin = await Usuario.findOne({email: value, privilege: "Administrador"});
+            const admin = await Usuario.findOne({_id: value, privilege: {"$in": ["Administrador", "Vendedor"]}});
             if(!admin){
                 throw new NotFoundError('Administrator does not exist');
             }
@@ -60,11 +60,11 @@ const editUserValidators = [
         }),
     check('password')
         .optional({ checkFalsy: true })
-        .isLength({ min: 12 }).withMessage('Password must be at least 12 characters long')
+        //.isLength({ min: 12 }).withMessage('Password must be at least 12 characters long')
         .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
         .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
-        .matches(/[0-9]/).withMessage('Password must contain at least one number')
-        .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),
+        .matches(/[0-9]/).withMessage('Password must contain at least one number'),
+        //.matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),
     check('privilege')
         .optional({ checkFalsy: true })
         .isIn(['Administrador', 'Vendedor', 'Limpieza']).withMessage('Invalid identification type'),
@@ -72,8 +72,8 @@ const editUserValidators = [
         .optional({ checkFalsy: true })
         .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
         .custom(async (value, { req }) => {
-            console.log("¿ADMIN? ", value);
-            const admin = await Usuario.findOne({email: value, privilege: "Administrador"});
+            //console.log("¿ADMIN? ", value);
+            const admin = await Usuario.findOne({_id: value, privilege: {"$in": ["Administrador", "Vendedor"]}});
             if(!admin){
                 throw new NotFoundError('Administrator does not existsssssss');
             }
@@ -109,7 +109,7 @@ async function showUsersView(req, res, next){
             throw new NotFoundError("No users found");
         }
 
-        const admins = await Usuario.find({privilege: "Administrador"}).lean();
+        const admins = await Usuario.find({"$or": [{"privilege": "Administrador"}, {"privilege": "Vendedor"}]}).lean();
         if (!admins) {
             throw new NotFoundError("No admin found");
         }
@@ -124,9 +124,9 @@ async function showUsersView(req, res, next){
 }
 
 async function createUser(req, res, next) {
-    const { firstName, lastName, email, password, privilege, administrator } = req.body;
+    const { firstName, lastName, email, password, privilege, administrator, adminname } = req.body;
     const userToAdd = new Usuario ({
-        firstName, lastName, email, password, privilege, administrator
+        firstName, lastName, email, password, privilege, administrator,adminname
     });
 
     try{    
@@ -160,13 +160,14 @@ async function obtenerUsuarioPorId(req, res, next){
 }
 
 async function editarUsuario(req, res, next) {
-    const { firstName, lastName, email, password, privilege, administrator } = req.body;
+    const { firstName, lastName, email, password, privilege, administrator,adminname } = req.body;
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
     if (password) { updateFields.password = password; }
     if (privilege) { updateFields.privilege = privilege; }
     if (administrator) { updateFields.administrator = administrator; }
+    if (adminname) { updateFields.adminname = adminname; }
 
     try {
         const userToUpdate = await Usuario.findOneAndUpdate({ email }, updateFields, { new: true });
@@ -183,7 +184,7 @@ async function editarUsuario(req, res, next) {
 // Maybe this function is not completely necessary.
 async function editarUsuarioPorId(req, res, next) {   
     const { uuid } = req.params;
-    const { firstName, lastName, email, password, privilege, administrator } = req.body;
+    const { firstName, lastName, email, password, privilege, administrator,adminname } = req.body;
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
@@ -191,6 +192,7 @@ async function editarUsuarioPorId(req, res, next) {
     if (password) { updateFields.password = password; }
     if (privilege) { updateFields.privilege = privilege; }
     if (administrator) { updateFields.administrator = administrator; }
+    if (adminname) { updateFields.adminname = adminname; }
 
     try{
         const userToUpdate = await Usuario.findByIdAndUpdate(uuid, updateFields, { new: true });
