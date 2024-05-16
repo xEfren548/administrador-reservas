@@ -336,23 +336,43 @@
                     },
                     body: JSON.stringify(data)
                 })
-                    .then(response => {
-                        if (!response.ok) {
-                            const error = response.statusText;
-                            document.getElementById("txtCreateServiceError").innerHTML = "Error en la solicitud: " + error.toLowerCase() + ".";
-                            throw new Error('Error en la solicitud: ' + error);
+                .then(response => {
+                    if (!response.ok) {
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            clearModal(document.getElementById("services_entry_modal"));
+                            $('#services_entry_modal').modal('hide');
+                            location.reload();
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Respuesta del servidor:', data);
-                        clearModal(document.getElementById("services_entry_modal"));
-                        $('#services_entry_modal').modal('hide');
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error('Error al enviar la solicitud:', error);
-                    });
+                    }); 
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
+                });
             });
         }
 
@@ -392,20 +412,40 @@
                 })
                     .then(response => {
                         if (!response.ok) {
-                            const error = response.statusText;
-                            document.getElementById("txtEditServiceError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
-                            throw new Error('Error en la solicitud: ' + error);
+                            response.json().then(errorData => {
+                                const errors = errorData.error;
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                    confirmButtonText: 'Aceptar'
+                                });   
+                            });                    
+                            throw new Error('Error en la solicitud');
                         }
                         return response.json();
                     })
                     .then(data => {
-                        console.log('Respuesta del servidor:', data);
-                        clearModal(document.getElementById("modify-service_entry_modal"));
-                        $('#modify-service_entry_modal').modal('hide');
-                        location.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Completado!',
+                            text: data.message + '.',
+                            confirmButtonText: 'Aceptar'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                clearModal(document.getElementById("modify-service_entry_modal"));
+                                $('#modify-service_entry_modal').modal('hide');
+                                location.reload();
+                            }
+                        }); 
                     })
                     .catch(error => {
-                        console.error('Error al enviar la solicitud:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                            confirmButtonText: 'Aceptar'
+                        }); 
                     });
             });
         }
@@ -426,21 +466,41 @@
                     },
                     body: JSON.stringify(data)
                 })
-                    .then(response => {
-                        if (!response.ok) {
-                            const error = response.statusText;
-                            this.closest("p[name='errMsg']").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
-                            throw new Error('Error en la solicitud: ' + error);
+                .then(response => {
+                    if (!response.ok) {
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            location.reload();
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Respuesta del servidor:', data);
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error('Error al enviar la solicitud:', error);
-                    });
+                    }); 
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
+                });
             });
         });
     });

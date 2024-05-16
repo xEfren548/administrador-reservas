@@ -67,6 +67,7 @@ async function login(req, res, next){
         // Uncomment the following line in order to test it on the browser.
         console.log(req.session);
         res.redirect('/api/dashboard');
+        
         // Uncomment the following line in order to test it on Postman.
         //res.status(200).json( req.session );
     } catch(err){

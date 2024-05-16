@@ -136,6 +136,7 @@
                     firstName: document.getElementById("txtNewUserName").value.trim(),
                     lastName: document.getElementById("txtNewUserLastName").value.trim()
                 };
+
                 fetch("/api/perfil-usuario/editar-nombre", {
                     method: "PUT",
                     headers: {
@@ -145,21 +146,41 @@
                 })
                 .then(response => {
                     if (!response.ok) {
-                        const error = response.statusText;
-                        document.getElementById("txtUpdFullNameError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
-                        throw new Error('Error en la solicitud: ' + error);
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
                     }
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Respuesta exitosa del servidor:', data);
-                    clearModal(document.getElementById("mdlUpdateFullName"));
-                    $('#mdlUpdateFullName').modal('hide');
-                    location.reload();
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            clearModal(document.getElementById("mdlUpdateFullName"));
+                            $('#mdlUpdateFullName').modal('hide');
+                            location.reload();
+                        }
+                    }); 
                 })
                 .catch(error => {
-                    console.error('Ha ocurrido un error: ', error);
-                });      
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
+                });                      
             });
         }
 
@@ -173,6 +194,7 @@
                     newEmail: document.getElementById("txtNewUserEmail").value.trim(),
                     confirmNewEmail: document.getElementById("txtConfirmNewUserEmail").value.trim(),
                 };
+
                 fetch("/api/perfil-usuario/editar-email", {
                     method: "PUT",
                     headers: {
@@ -182,20 +204,40 @@
                 })
                 .then(response => {
                     if (!response.ok) {
-                        const error = response.statusText;
-                        document.getElementById("txtUpdEmailError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
-                        throw new Error('Error en la solicitud: ' + error);
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
                     }
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Respuesta exitosa del servidor:', data);
-                    clearModal(document.getElementById("mdlUpdateEmail"));
-                    $('#mdlUpdateEmail').modal('hide');
-                    location.reload();
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            clearModal(document.getElementById("mdlUpdateEmail"));
+                            $('#mdlUpdateEmail').modal('hide');
+                            location.reload();
+                        }
+                    }); 
                 })
                 .catch(error => {
-                    console.error('Ha ocurrido un error: ', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
                 });          
             });
         }
@@ -210,6 +252,7 @@
                     newPassword: document.getElementById("txtUserNewPassword").value.trim(),
                     confirmNewPassword: document.getElementById("txtConfirmUserNewPassword").value.trim(),
                 };
+
                 fetch("/api/perfil-usuario/editar-contrasena", {
                     method: "PUT",
                     headers: {
@@ -219,20 +262,40 @@
                 })
                 .then(response => {
                     if (!response.ok) {
-                        const error = response.statusText;
-                        document.getElementById("txtUpdPasswordError").innerHTML = "Error en la soliciutud: " + error.toLowerCase() + ".";
-                        throw new Error('Error en la solicitud: ' + error);
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
                     }
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Respuesta exitosa del servidor:', data);
-                    clearModal(document.getElementById("mdlUpdatePassword"));
-                    $('#mdlUpdatePassword').modal('hide');
-                    location.reload();
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            clearModal(document.getElementById("mdlUpdatePassword"));
+                            $('#mdlUpdatePassword').modal('hide');
+                            location.reload();
+                        }
+                    }); 
                 })
                 .catch(error => {
-                    console.error('Ha ocurrido un error: ', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
                 });           
             });
         }
