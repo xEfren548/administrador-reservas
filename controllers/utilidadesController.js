@@ -23,9 +23,12 @@ async function calcularComisiones(req, res) {
                 break;
             } else {
                 user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                counter+= 1;
+                if (counter >=2 ) {
+                    user.privilege = "Gerente de ventas"
+                }
                 let costos = await Costos.find({category: user.privilege});
                 console.log(costos)
-                counter+= 1;
                 finalComission += comission
                 console.log(counter)
 
