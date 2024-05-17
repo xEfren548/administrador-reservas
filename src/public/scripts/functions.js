@@ -243,13 +243,17 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
         }
+    }
 
+    async function obtenerComisiones() {
+        try {
+            const response = await fetch('http://localhost:3005/api/utilidades');
+            const data = response.json();
+            console.log(data);
 
-
-
-
-
-
+        } catch (error) {
+            console.log(error.message);
+        }
     }
 
     function obtenerRangoFechas(fechaInicio, fechaFin) {
@@ -262,6 +266,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         return fechas;
     }
+
+    obtenerComisiones();
 
 
 
