@@ -29,6 +29,10 @@ const userSchema = new Schema({
         type: String,
         required: true
     },
+    adminname: {
+        type: String,
+        required: true
+    },
     reservation: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Documento.events'
