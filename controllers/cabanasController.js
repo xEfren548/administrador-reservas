@@ -34,7 +34,7 @@ const createChaletValidators = [
         .isIn(['Habitación', 'Cabaña']).withMessage('Invalid accomodation type'),
     check('propertyDetails.name')
         .notEmpty().withMessage('Name is required')
-        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s']+$/).withMessage("Invalid property name format")
+        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s0-9']+$/).withMessage("Invalid property name format")
         .isLength({ max: 255 }).withMessage("Name must be less than 255 characters")
         .custom(async (value, { req }) => {
             const chalets = await Habitacion.findOne();
@@ -198,7 +198,7 @@ const editChaletValidators = [
         .isIn(['Habitación', 'Cabaña']).withMessage('Invalid accomodation type'),
     check('propertyDetails.name')
         .optional({ checkFalsy: true })
-        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s']+$/).withMessage("Invalid property name format")
+        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s0-9']+$/).withMessage("Invalid property name format")
         .isLength({ max: 255 }).withMessage("Name must be less than 255 characters")
         .custom(async (value, { req }) => {
             if (value) { // Verifica si se proporciona un valor antes de realizar la validación
@@ -559,6 +559,16 @@ async function showEditChaletsView(req, res, next){
         for(const chalet of chalets){
             const janitor = await Usuario.findById(chalet.others.janitor); 
             chalet.others.janitor = [janitor.email, janitor.firstName + " " + janitor.lastName];
+        }
+        for(const chalet of chalets){
+            console.log(chalet.others.arrivalTime)
+            let arrivalstr = chalet.others.arrivalTime.toString();
+            let departurestr = chalet.others.departureTime.toString();
+            let arrival = arrivalstr.split(':')[0].slice(-2) + ":" + arrivalstr.split(':')[1]
+            let departure = departurestr.split(':')[0].slice(-2) + ":" + arrivalstr.split(':')[1]
+            chalet.others.arrivalTime = arrival;
+            chalet.others.departureTime = departure;
+            console.log(chalet.others.arrivalTime)
         }
         const admins = await Usuario.find({privilege: "Administrador"}).lean();
         const janitors = await Usuario.find({privilege: "Limpieza"}).lean();

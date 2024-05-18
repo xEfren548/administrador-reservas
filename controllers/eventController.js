@@ -191,6 +191,8 @@ async function createReservation(req, res, next) {
             throw new NotFoundError('Chalet does not exist 2');
         }
         
+        //console.log(chalet)
+
         arrivalDate.setHours(arrivalDate.getHours() + chalet.others.arrivalTime.getHours());
         departureDate.setHours(departureDate.getHours() + chalet.others.departureTime.getHours());
 
