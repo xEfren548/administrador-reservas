@@ -6,6 +6,7 @@ const Cliente = require('../models/Cliente');
 const { check } = require("express-validator");
 const BadRequestError = require("../common/error/bad-request-error");
 const NotFoundError = require('../common/error/not-found-error');
+const SendMessages = require('../common/tasks/send-messages');
 
 const createReservationValidators = [
     check('clientEmail')
@@ -138,42 +139,6 @@ async function obtenerEventoPorIdRoute(req, res) {
     }
 }
 
-function sendMsg(){
-    var botId = '309015222295382';
-    var phoneNbr = '523322771302';
-    var bearerToken = 'EAALMKpnwZCeoBO2VCd8WEfAYa1rf6QTPKmaArGe5DwpLLfmylZBGuH1TxOJd9ztIyHS5PKKcTN5SqX7xALj8ZCIEKcioKAinqkW9pKd6G9MZCxfXd7m2azbJSc31KvZCPm4JLyZCgA7RFvWddS3PJuVDmym3mxOuck5ZAXdJZBmPpLjYHoK6CBGXxRZAiZCoDg5Cmtk6Bd19njUqOOrdISPhgZD';
-
-    var url = 'https://graph.facebook.com/v15.0/' + botId + '/messages';
-    var data = {
-        messaging_product: 'whatsapp',
-        to: phoneNbr,
-        type: 'template',
-        template: {
-            name:'hello_world',
-            language:{ code: 'en_US' }
-        }
-    };
-
-    var postReq = {
-    method: 'POST',
-    headers: {
-        'Authorization': 'Bearer ' + bearerToken,
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data),
-    json: true
-    };
-
-    fetch(url, postReq)
-    .then(data => {
-        return data.json()
-    })
-    .then(res => {
-        console.log(res)
-    })
-    .catch(error => console.log(error));
-}
-
 async function createReservation(req, res, next) {
     const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount } = req.body;
 
@@ -211,14 +176,12 @@ async function createReservation(req, res, next) {
         documento.events.push(reservationToAdd);
         await documento.save();
 
-
         // Guardar la reserva actualizada en la base de datos
         const documento2 = await Documento.findOne()
         
         const idReserva = documento.events[documento.events.length - 1]._id.toString()
         const url = `http://${process.env.URL}/api/eventos/${idReserva}`;
         const evento = documento2.events.find(habitacion => habitacion.id === idReserva);
-        sendMsg();
         
         evento.url = url;
         await documento2.save();
@@ -239,6 +202,9 @@ async function createReservation(req, res, next) {
             fecha: fechaLimpieza,
             status: statusLimpieza
         })
+        
+        console.log("SendMessages.sendReminders");
+        SendMessages.sendReservationConfirmation(client[0], chalet, reservationToAdd);
 
         res.status(200).json({ success: true, reservationId: documento.events[documento.events.length - 1]._id, message: "Reservación agregada con éxito" });
     } catch (err) {
