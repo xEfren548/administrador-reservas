@@ -88,7 +88,7 @@ async function consultarPreciosPorFecha(req, res) {
 
             precio = {
                 precio_modificado: habitacion.others.basePrice,
-                precio_base_2noches: habitacion.others.baseCost2nights
+                precio_base_2noches: habitacion.others.basePrice2nights
             }
         }
         res.send(precio);

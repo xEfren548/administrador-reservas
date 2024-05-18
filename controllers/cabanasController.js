@@ -553,7 +553,7 @@ async function showEditChaletsView(req, res, next){
         console.log(chalets);
         for(const chalet of chalets){
             const admin = await Usuario.findById(chalet.others.admin); 
-            console.log("ADMIIIN : ", admin);
+            //console.log("ADMIIIN : ", admin);
             chalet.others.admin = [admin.email, admin.firstName + " " + admin.lastName];
         }
         for(const chalet of chalets){
