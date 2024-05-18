@@ -19,9 +19,23 @@ const createCostValidators = [
     check('commission')
         .notEmpty().withMessage('Commission is required')
         .isIn(['Aumento porcentual', 'Aumento por costo fijo']).withMessage('Invalid commission'),
-    check('amount')
-        .notEmpty().withMessage('Amount is required')
-        .isNumeric().withMessage('Amount must be a number')
+    check()
+        .custom(async (value, { req }) => {
+            const {amount, minAmount, maxAmount } = req.body;
+            console.log("amount: ", amount);
+            console.log("minAmount: ", minAmount);
+            console.log("maxAmount: ", maxAmount);
+            if(amount && (minAmount || maxAmount)){
+                throw new BadRequestError("Incoherent amounts")
+            }
+            if(!amount && !(minAmount && maxAmount)){
+                throw new BadRequestError("Both min and max amounts must be provided")
+            }
+            if(parseFloat(minAmount) >= parseFloat(maxAmount)){
+                throw new BadRequestError("Min amount must be less than max amount")
+            }
+            return true;
+        }),
 ];
 
 const editCostValidators = [
@@ -44,8 +58,25 @@ const editCostValidators = [
         .optional({ checkFalsy: true })
         .isNumeric().withMessage('Amount must be a number'),
     check()
+        .custom(async (value, { req }) => {
+            const {amount, minAmount, maxAmount } = req.body;
+            console.log("amount: ", amount);
+            console.log("minAmount: ", minAmount);
+            console.log("maxAmount: ", maxAmount);
+            if(amount && (minAmount || maxAmount)){
+                throw new BadRequestError("Incoherent amounts")
+            }
+            if(!amount && !(minAmount && maxAmount)){
+                throw new BadRequestError("Both min and max amounts must be provided")
+            }
+            if(parseFloat(minAmount) >= parseFloat(maxAmount)){
+                throw new BadRequestError("Min amount must be less than max amount")
+            }
+            return true;
+        }),
+    check()
         .custom((value, { req }) => {
-            const { category, commission, amount } = req.body;
+            const { category, commission, amount, minAmount, maxAmount } = req.body;
             if (!category && !commission && !amount) {
                 throw new BadRequestError("There should be at least one field to update.")
             }
@@ -78,12 +109,14 @@ async function showCostsView(req, res, next) {
 }
 
 async function createCost(req, res, next) {
-    const { costName, category, commission, amount } = req.body;
+    const { costName, category, commission, amount, minAmount, maxAmount } = req.body;
     const costToAdd = new Costo({
         costName,
         category,
         commission,
-        amount
+        amount,
+        minAmount,
+        maxAmount 
     });
 
     try {
@@ -97,11 +130,13 @@ async function createCost(req, res, next) {
 }
 
 async function editCost(req, res, next) {
-    const { costName, category, commission, amount } = req.body;
+    const { costName, category, commission, amount, minAmount, maxAmount } = req.body;
     const updateFields = {};
     if (category) { updateFields.category = category; }
     if (commission) { updateFields.commission = commission; }
-    if (amount) { updateFields.amount = amount; }
+    if (amount) { updateFields.amount = amount; } else { updateFields.amount = 0; }
+    if (minAmount) { updateFields.minAmount = minAmount; } else { updateFields.minAmount = 0; }
+    if (maxAmount) { updateFields.maxAmount = maxAmount; } else { updateFields.maxAmount = 0; }
 
     try {
         const costToUpdate = await Costo.findOneAndUpdate({ costName }, updateFields, { new: true });
@@ -109,7 +144,7 @@ async function editCost(req, res, next) {
             throw new NotFoundError("Cost not found");
         }
 
-        res.status(200).json({ success: true, message: "Costo modificado con éxito" });
+        res.status(200).json({ success: true, message: "Costo editado con éxito" });
     } catch (err) {
         return next(err);
     }

@@ -19,7 +19,15 @@ const costSchema = new Schema({
     },
     amount: {
         type: Number,
-        required: true
+        default: 0
+    },
+    minAmount: {
+        type: Number,
+        default: 0
+    },
+    maxAmount: {
+        type: Number,
+        default: 0
     }
 });
 

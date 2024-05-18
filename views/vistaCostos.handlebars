@@ -8,6 +8,8 @@
                     <th scope="col">Categoría</th>
                     <th scope="col">Comisión</th>
                     <th scope="col">Monto</th>
+                    <th scope="col">Monto mínimo (si aplica)</th>
+                    <th scope="col">Monto máximo (si aplica)</th>
                     <th scope="col">Acciones</th>
                 </tr>
             </thead>
@@ -17,7 +19,27 @@
                         <td>{{costName}}</td>
                         <td>{{category}}</td>
                         <td>{{commission}}</td>
-                        <td>{{amount}}</td>
+                        <td>
+                            {{#if amount}}
+                                {{amount}}
+                            {{else}}
+                                0
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#if minAmount}}
+                                {{minAmount}}
+                            {{else}}
+                                0
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#if maxAmount}}
+                                {{maxAmount}}
+                            {{else}}
+                                0
+                            {{/if}}
+                        </td>
                         <td class="text-center">
                             <button type="button" class="btn btn-primary" data-cost-name="{{costName}}" data-bs-toggle="modal"
                                 data-bs-target="#modify-user_entry_modal">
@@ -40,7 +62,7 @@
 <!-- Modal alta costos -->
 <div class="modal fade" id="user_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <form id="frmNewUser" action="/api/auth/crear-usuario" method="post" class="modal-dialog modal-lg">
+    <form id="frmNewUser" action="/api/costos/crear-costo" method="post" class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Alta de costo</h5>
@@ -88,13 +110,37 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="row">
-                                <label for="txtUserAmount">Monto: </label>
+                            <div id="amount" style="display: none;">
+                                <div class="row">
+                                    <label for="txtUserAmount">Monto: </label>
+                                </div>
+                                <div class="row">
+                                    <div class="col-8">
+                                        <input type="number" name="txtUserAmount" id="txtUserAmount" class="form-control"
+                                            placeholder="Monto">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="row">
-                                <div class="col-8">
-                                    <input type="number" name="txtUserAmount" id="txtUserAmount" class="form-control"
-                                        placeholder="Monto">
+                            <div id="minAmount" style="display: none;">
+                                <div class="row">
+                                    <label for="txtUserMinAmount">Monto mínimo: </label>
+                                </div>
+                                <div class="row">
+                                    <div class="col-8">
+                                        <input type="number" name="txtUserMinAmount" id="txtUserMinAmount" class="form-control"
+                                            placeholder="Monto mínimo">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="maxAmount" style="display: none;">
+                                <div class="row">
+                                    <label for="txtUserMaxAmount">Monto máximo: </label>
+                                </div>
+                                <div class="row">
+                                    <div class="col-8">
+                                        <input type="number" name="txtUserMaxAmount" id="txtUserMaxAmount" class="form-control"
+                                            placeholder="Monto máximo">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -161,13 +207,37 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="row">
-                                <label for="txtUserAmountUpd">Monto: </label>
+                            <div id="updAmount">
+                                <div class="row">
+                                    <label for="txtUserAmountUpd">Monto: </label>
+                                </div>
+                                <div class="row">
+                                    <div class="col-8">
+                                        <input type="text" name="txtUserAmountUpd" id="txtUserAmountUpd" class="form-control"
+                                            placeholder="Monto">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="row">
-                                <div class="col-8">
-                                    <input type="text" name="txtUserAmountUpd" id="txtUserAmountUpd" class="form-control"
-                                        placeholder="Monto">
+                            <div id="updMinAmount" style="display: none;">
+                                <div class="row">
+                                    <label for="txtUserMinAmountUpd">Monto mínimo: </label>
+                                </div>
+                                <div class="row">
+                                    <div class="col-8">
+                                        <input type="number" name="txtUserMinAmountUpd" id="txtUserMinAmountUpd" class="form-control"
+                                            placeholder="Monto mínimo">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="updMaxAmount" style="display: none;">
+                                <div class="row">
+                                    <label for="txtUserMaxAmountUpd">Monto máximo: </label>
+                                </div>
+                                <div class="row">
+                                    <div class="col-8">
+                                        <input type="number" name="txtUserMaxAmountUpd" id="txtUserMaxAmountUpd" class="form-control"
+                                            placeholder="Monto máximo">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -217,6 +287,21 @@
             });
         });
 
+        // Showing fields depending on cost category
+        var slctUserCategory = document.getElementById("slctUserCategory");
+        slctUserCategory.addEventListener("change", () => {
+            if(slctUserCategory.value == "Vendedor"){
+                document.getElementById("amount").style.display = "none";
+                document.getElementById("minAmount").style.display = "block";
+                document.getElementById("maxAmount").style.display = "block";
+            }
+            else{
+                document.getElementById("amount").style.display = "block";
+                document.getElementById("minAmount").style.display = "none";
+                document.getElementById("maxAmount").style.display = "none";
+            }
+        });
+
         // Saving new cost.
         var btnSaveUser = document.getElementById("btnSaveUser")
         if (btnSaveUser){
@@ -227,7 +312,9 @@
                     costName: document.getElementById("txtCostName").value.trim(),
                     category: document.getElementById("slctUserCategory").value.trim(),
                     commission: document.getElementById("slctUserCommission").value.trim(),
-                    amount: document.getElementById("txtUserAmount").value.trim()
+                    amount: document.getElementById("txtUserAmount").value.trim(),
+                    minAmount: document.getElementById("txtUserMinAmount").value.trim(),
+                    maxAmount: document.getElementById("txtUserMaxAmount").value.trim()
                 };
 
                 fetch('/api/costos/crear-costo', {
@@ -277,6 +364,21 @@
                 });
             });
         }
+
+        // Showing fields depending on cost category
+        var slctUserCategoryUpd = document.getElementById("slctUserCategoryUpd");
+        slctUserCategoryUpd.addEventListener("change", () => {
+            if(slctUserCategoryUpd.value == "Vendedor"){
+                document.getElementById("updAmount").style.display = "none";
+                document.getElementById("updMinAmount").style.display = "block";
+                document.getElementById("updMaxAmount").style.display = "block";
+            }
+            else{
+                document.getElementById("updAmount").style.display = "block";
+                document.getElementById("updMinAmount").style.display = "none";
+                document.getElementById("updMaxAmount").style.display = "none";
+            }
+        });
         
         // Updating cost info.
         const editButtons = document.querySelectorAll('#tablaUsuarios .btn-primary');
@@ -294,7 +396,9 @@
                     costName: document.getElementById("txtCostNameUpd").value.trim(),
                     category: document.getElementById("slctUserCategoryUpd").value.trim(),
                     commission: document.getElementById("slctUserCommissionUpd").value.trim(),
-                    amount: document.getElementById("txtUserAmountUpd").value.trim()
+                    amount: document.getElementById("txtUserAmountUpd").value.trim(),
+                    minAmount: document.getElementById("txtUserMinAmountUpd").value.trim(),
+                    maxAmount: document.getElementById("txtUserMaxAmountUpd").value.trim()
                 };
 
                 fetch('/api/costos/editar-costo', {

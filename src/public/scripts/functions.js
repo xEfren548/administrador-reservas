@@ -262,6 +262,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         return fechas;
     }
+<<<<<<< HEAD
+=======
 
 
 
@@ -269,4 +271,5 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
+>>>>>>> 29caafed9112092eee0f78d22208fb169a2c78b3
 });
