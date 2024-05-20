@@ -6,7 +6,7 @@ async function calcularComisiones(req, res) {
         const loggedUserId = req.session.id;
         console.log(loggedUserId)
 
-        
+
 
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
         let comission = 100
@@ -14,28 +14,37 @@ async function calcularComisiones(req, res) {
         let counter = 0
         while (true) {
             if (user.privilege === 'Administrador') {
-                counter+= 1;
+                counter += 1;
                 if (counter === 1) {
-                    finalComission = 400
+                    let costos = await Costos.find({ category: "Gerente" });
+
+                    if (costos.comisison === "Aumento por costo fijo") {
+                        finalComission += costos.amount_max;
+                    }
+
                 } else {
                     finalComission += comission
                 }
                 break;
             } else {
                 user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
-                counter+= 1;
-                if (counter >=2 ) {
-                    user.privilege = "Gerente de ventas"
+                counter += 1;
+                if (counter >= 2) {
+                    user.privilege = "Gerente"
                 }
-                let costos = await Costos.find({category: user.privilege});
-                console.log(costos)
-                finalComission += comission
+                let costos = await Costos.find({ category: user.privilege });
+
+                if (costos.comisison === "Aumento por costo fijo") {
+                    finalComission += costos.amount_max;
+                } 
+                
                 console.log(counter)
 
             }
         }
 
         console.log(finalComission)
+        res.send(finalComission);
     } catch (err) {
         res.status(404).send(err.message);
     }
