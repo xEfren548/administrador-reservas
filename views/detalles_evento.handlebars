@@ -312,7 +312,7 @@
                     <div class="badge badge-primary"
                         style="padding: 10px; min-width: 85px;margin: 0px; background-color: #e3e9f5;color: #213888;">
                         <span>$ </span>
-                        <span id="total-reserva"> 222</span>
+                        <span id="total-reserva"> </span>
                         <span> MXN</span>
                     </div>
                 </div>
@@ -351,7 +351,7 @@
                     <div class="badge badge-danger"
                         style="padding: 10px; min-width: 85px;margin: 0px; background-color: #fededc;color: #f85959;">
                         <span>$ </span>
-                        <span id="total-pendiente" class="fw-bold fs-5"> 222</span>
+                        <span id="total-pendiente" class="fw-bold fs-5"> </span>
                         <span> MXN</span>
                     </div>
                 </div>
@@ -1211,7 +1211,7 @@
         const pagosTotales = parseFloat(document.querySelector('#pagos-totales').value);
 
         const totalReserva = parseFloat(document.querySelector('#total-reserva-value').value);
-        const descuentoTotalReserva = parseFloat(document.querySelector('#descuento-total-reserva').value);
+        let descuentoTotalReserva = parseFloat(document.querySelector('#descuento-total-reserva').value);
 
         const iva = 0.16;
 

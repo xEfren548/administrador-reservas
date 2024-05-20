@@ -159,6 +159,24 @@ async function obtenerUsuarioPorId(req, res, next){
     }    
 }
 
+async function obtenerUsuarioPorIdMongo(uuid){
+
+    if(!uuid){
+        return next(new BadRequestError("Missing info in URL"));
+    }
+
+    let userToFind;
+    try{
+        userToFind = await Usuario.findById(uuid).lean();
+
+        console.log("Usuario recuperado con éxito");
+        return userToFind;
+    
+    } catch(err){
+        return err;
+    }    
+}
+
 async function editarUsuario(req, res, next) {
     const { firstName, lastName, email, password, privilege, administrator,adminname } = req.body;
     const updateFields = {};
@@ -247,6 +265,7 @@ module.exports = {
     showUsersView,
     createUser,
     obtenerUsuarioPorId,
+    obtenerUsuarioPorIdMongo,
     editarUsuario,
     editarUsuarioPorId,
     deleteUser,

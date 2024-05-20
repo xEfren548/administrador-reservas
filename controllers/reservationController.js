@@ -44,7 +44,8 @@ async function showReservationsView(req, res, next) {
         if(!clientes){
             throw new NotFoundError("No client not found");
         }
-        console.log(clientes);
+
+        console.log(req.session)
 
         res.render('index', {
             chalets: chalets,
