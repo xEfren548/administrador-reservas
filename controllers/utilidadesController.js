@@ -7,44 +7,47 @@ async function calcularComisiones(req, res) {
         console.log(loggedUserId)
 
 
+        let counter = 0
 
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
-        let comission = 100
         let finalComission = 0
-        let counter = 0
+        
         while (true) {
+            // console.log(user)
             if (user.privilege === 'Administrador') {
                 counter += 1;
-                if (counter === 1) {
                     let costos = await Costos.find({ category: "Gerente" });
 
                     if (costos.comisison === "Aumento por costo fijo") {
-                        finalComission += costos.amount_max;
+                        finalComission += costos.maxAmount;
                     }
 
-                } else {
-                    finalComission += comission
-                }
+
                 break;
             } else {
-                user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                
                 counter += 1;
-                if (counter >= 2) {
+                console.log(counter)
+                if (counter >= 2 && user.privilege !== "Administrador") {
                     user.privilege = "Gerente"
                 }
-                let costos = await Costos.find({ category: user.privilege });
+                let costos = await Costos.findOne({ category: user.privilege })
 
-                if (costos.comisison === "Aumento por costo fijo") {
-                    finalComission += costos.amount_max;
+                if (costos.commission == "Aumento por costo fijo") {
+                    finalComission += costos.maxAmount;
                 } 
-                
-                console.log(counter)
+
+                user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                if (!user) {
+                    res.status(400).send({ message: "user not found" })
+                }
+
 
             }
         }
 
         console.log(finalComission)
-        res.send(finalComission);
+        res.status(200).send({finalComission});
     } catch (err) {
         res.status(404).send(err.message);
     }
