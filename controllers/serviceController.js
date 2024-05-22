@@ -50,7 +50,7 @@ const createServiceValidators = [
         .notEmpty().withMessage('Supplier email is required')
         .isEmail().withMessage('Invalid email format')
         .custom(async (value, { req }) => {
-            const supplier = await Usuario.findOne({ email: value });
+            const supplier = await Usuario.findOne({ email: value, privilege: "Servicios adicionales" });
             if (!supplier) {
                 throw new NotFoundError("Supplier does not exist");
             }
@@ -60,7 +60,7 @@ const createServiceValidators = [
         .notEmpty().withMessage('Service manager email is required')
         .isEmail().withMessage('Invalid email format')
         .custom(async (value, { req }) => {
-            const serviceManager = await Usuario.findOne({ email: value, privilege: "Servicios adicionales" });
+            const serviceManager = await Usuario.findOne({ email: value});
             if (!serviceManager) {
                 throw new NotFoundError("Service manager does not exist");
             }
@@ -74,30 +74,30 @@ const createServiceValidators = [
         .notEmpty().withMessage('First commission is required')
         .isNumeric().withMessage('First commission must be a number')
         .toFloat(),
-    check('firstUser')
-        .notEmpty().withMessage('First user email is required')
-        .isEmail().withMessage('Invalid first user email format')
-        .custom(async (value, { req }) => {
-            const janitor1 = await Usuario.findOne({ email: value, privilege: "Servicios adicionales" });
-            if (!janitor1) {
-                throw new NotFoundError("Janitor does not exist");
-            }
-            return true;
-        }),
+    //check('firstUser')
+    //    .notEmpty().withMessage('First user email is required')
+    //    .isEmail().withMessage('Invalid first user email format')
+    //    .custom(async (value, { req }) => {
+    //        const janitor1 = await Usuario.findOne({ email: value, privilege: "Servicios adicionales" });
+    //        if (!janitor1) {
+    //            throw new NotFoundError("Janitor does not exist");
+    //        }
+    //        return true;
+    //    }),
     check('secondCommission')
         .notEmpty().withMessage('Second commission is required')
         .isNumeric().withMessage('Second commission must be a number')
         .toFloat(),
-    check('secondUser')
-        .notEmpty().withMessage('Second user email is required')
-        .isEmail().withMessage('Invalid second user email format')
-        .custom(async (value, { req }) => {
-            const janitor2 = await Usuario.findOne({ email: value, privilege: "Servicios adicionales" });
-            if (!janitor2) {
-                throw new NotFoundError("Janitor 2 does not exist");
-            }
-            return true;
-        }),
+    //check('secondUser')
+    //    .notEmpty().withMessage('Second user email is required')
+    //    .isEmail().withMessage('Invalid second user email format')
+    //    .custom(async (value, { req }) => {
+    //        const janitor2 = await Usuario.findOne({ email: value, privilege: "Servicios adicionales" });
+    //        if (!janitor2) {
+    //            throw new NotFoundError("Janitor 2 does not exist");
+    //        }
+    //        return true;
+    //    }),
     check('finalPrice')
         .notEmpty().withMessage('Final price is required')
         .isNumeric().withMessage('Final price must be a number')
@@ -131,30 +131,30 @@ const editServiceValidators = [
         .optional({ checkFalsy: true })
         .isNumeric().withMessage('First commission must be a number')
         .toFloat(),
-    check('firstUser')
-        .optional({ checkFalsy: true })
-        .isEmail().withMessage('Invalid email format')
-        .custom(async (value, { req }) => {
-            const janitor1 = await Usuario.findOne({ email: value, privilege: "Servicios adicionales" });
-            if (!janitor1) {
-                throw new NotFoundError("Janitor 1 does not exists");
-            }
-            return true;
-        }),
+    //check('firstUser')
+    //    .optional({ checkFalsy: true })
+    //    .isEmail().withMessage('Invalid email format')
+    //    .custom(async (value, { req }) => {
+    //        const janitor1 = await Usuario.findOne({ email: value, privilege: "Servicios adicionales" });
+    //        if (!janitor1) {
+    //            throw new NotFoundError("Janitor 1 does not exists");
+    //        }
+    //        return true;
+    //    }),
     check('secondCommission')
         .optional({ checkFalsy: true })
         .isNumeric().withMessage('Second commission must be a number')
         .toFloat(),
-    check('secondUser')
-        .optional({ checkFalsy: true })
-        .isEmail().withMessage('Invalid email format')
-        .custom(async (value, { req }) => {
-            const janitor2 = await Usuario.findOne({ email: value, privilege: "Servicios adicionales" });
-            if (!janitor2) {
-                throw new NotFoundError("Janitor 2 does not exists");
-            }
-            return true;
-        }),
+    //check('secondUser')
+    //    .optional({ checkFalsy: true })
+    //    .isEmail().withMessage('Invalid email format')
+    //    .custom(async (value, { req }) => {
+    //        const janitor2 = await Usuario.findOne({ email: value, privilege: "Servicios adicionales" });
+    //        if (!janitor2) {
+    //            throw new NotFoundError("Janitor 2 does not exists");
+    //        }
+    //        return true;
+    //    }),
     check('finalPrice')
         .optional({ checkFalsy: true })
         .isNumeric().withMessage('Final price must be a number')
@@ -192,9 +192,7 @@ async function mostrarServicios(req, res, next) {
         const promises = services.map(async service => {
             const supplier = await Usuario.findById(service.supplier);
             const serviceManager = await Usuario.findById(service.serviceManager);
-            const firstUser = await Usuario.findById(service.firstUser);
-            const secondUser = await Usuario.findById(service.secondUser);
-            if (!supplier || !serviceManager || !firstUser || !secondUser) {
+            if (!supplier || !serviceManager) {
                 throw new NotFoundError("Error finding related users");
             }
 
@@ -205,15 +203,13 @@ async function mostrarServicios(req, res, next) {
                 serviceManager: serviceManager.firstName + ' ' + serviceManager.lastName,
                 basePrice: service.basePrice,
                 firstCommission: service.firstCommission,
-                firstUser: firstUser.firstName + ' ' + firstUser.lastName,
                 secondCommission: service.secondCommission,
-                secondUser: secondUser.firstName + ' ' + secondUser.lastName,
                 finalPrice: service.finalPrice,
             };
         });
         const services2 = await Promise.all(promises);
 
-        const users = await Usuario.find({}).lean();
+        const users = await Usuario.find({privilege: "Administrador"}).lean();
         if (!users) {
             throw new NotFoundError("No users found");
         }
@@ -224,7 +220,6 @@ async function mostrarServicios(req, res, next) {
         }
 
         res.render('serviciosAdicionales', {
-            layout: 'services',
             services: services2,
             users: users,
             additionalServiceUsers: additionalServiceUsers
@@ -247,16 +242,6 @@ async function createService(req, res, next) {
         throw new NotFoundError("Service manager not found");
     }
 
-    const firstUserToAdd = await Usuario.findOne({email: firstUser});
-    if(!firstUserToAdd){
-        throw new NotFoundError("First user not found");
-    }
-    
-    const secondUserToAdd = await Usuario.findOne({email: secondUser});
-    if(!secondUserToAdd){
-        throw new NotFoundError("Second user not found");
-    }
-
     const serviceToAdd = new Service({
         service,
         description,
@@ -264,9 +249,7 @@ async function createService(req, res, next) {
         serviceManager: serviceManagerToAdd._id,
         basePrice,
         firstCommission,
-        firstUser: firstUserToAdd._id,
         secondCommission,
-        secondUser: secondUserToAdd._id,
         finalPrice
     });
 
@@ -300,21 +283,7 @@ async function editService(req, res, next) {
     }
     if (basePrice) { updateFields.basePrice = basePrice; }
     if (firstCommission) { updateFields.firstCommission = firstCommission; }
-    if (firstUser) { 
-        const firstUserToAdd = await Usuario.findOne({email: firstUser});
-        if(!firstUserToAdd){
-            throw new NotFoundError("First user not found");
-        }
-        updateFields.firstUser = firstUserToAdd._id; 
-    }
     if (secondCommission) { updateFields.secondCommission = secondCommission; }
-    if (secondUser) { 
-        const secondUserToAdd = await Usuario.findOne({email: secondUser});
-        if(!secondUserToAdd){
-            throw new NotFoundError("First user not found");
-        }
-        updateFields.secondUser = secondUserToAdd._id; 
-    }
     if (finalPrice) { updateFields.finalPrice = finalPrice; }
 
     try {

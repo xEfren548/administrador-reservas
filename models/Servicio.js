@@ -28,19 +28,9 @@ const serviceSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    firstUser: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: 'Usuario'
-    },
     secondCommission: {
         type: Number,
         required: true
-    },
-    secondUser: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: 'Usuario'
     },
     finalPrice: {
         type: Number,
