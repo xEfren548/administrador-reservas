@@ -8,7 +8,7 @@ const RackLimpieza = require('../models/RackLimpieza');
 router.get('/rackLimpieza', async (req, res) => {
     try {
         const usuarioLogueado = req.session.userId;
-        let services; // Declarar la variable fuera de los bloques if/else
+        let services; 
 
         if (req.session.privilege === 'Limpieza'){
             services = await RackLimpieza.find({encargadoLimpieza: usuarioLogueado}).lean();

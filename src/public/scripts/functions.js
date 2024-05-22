@@ -180,6 +180,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         if (arrivalDate.value && departureDate.value && tipologiaSelect.value) {
+
+            const calculandoPreciosElement = document.getElementById('calculando-precios');
+            calculandoPreciosElement.style.display = 'block';
             // Aquí puedes ejecutar la acción deseada
             console.log("Los tres elementos tienen un valor. Ejecutar acción...");
             const fechas = obtenerRangoFechas(fechaInicio, fechaFin)
@@ -204,7 +207,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
 
                     // Convertir la respuesta a JSON
-                    console.log(response)
                     const data = await response.json();
 
                     // Agregar el resultado al array de resultados
@@ -234,22 +236,34 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
 
                 console.log("Total precios: ", totalPrecios)
+
+                const comisionUsuarios = await obtenerComisiones()
+                totalPrecios += comisionUsuarios
+                console.log("Total precios con comisiones: ", totalPrecios)
                 const totalInput = document.getElementById('habitacion_total')
                 totalInput.value = totalPrecios
 
             } catch (error) {
                 console.error('Ha ocurrido un error: ', error.message);
 
+            } finally {
+                // Ocultar la leyenda de "Calculando precios..."
+                calculandoPreciosElement.style.display = 'none';
             }
 
         }
+    }
 
+    async function obtenerComisiones() {
+        try {
+            const response = await fetch('http://localhost:3005/api/utilidades');
+            const data = await response.json();
+            const finalComission = data.finalComission
+            return finalComission
 
-
-
-
-
-
+        } catch (error) {
+            console.log(error.message);
+        }
     }
 
     function obtenerRangoFechas(fechaInicio, fechaFin) {
@@ -262,4 +276,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         return fechas;
     }
+
+    obtenerComisiones();
+
+
+
+
+
+
+
 });
