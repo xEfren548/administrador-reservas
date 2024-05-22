@@ -15,7 +15,7 @@ function sendTemplateMsg(clientInfo, template, params){
     console.log("sendTemplateMsg");
 
     const botId = '142727708934806';
-    const bearerToken = 'EAAPpZA66k5CYBO4RIzH9jczblCW2TtXfqH4jT5cE7LXOcDl5KefTcJL3PKa5eS72TcgosUaDx4aCZAkQHnNZCSPJ4loKg4Tkp7JxaPMHHtTxUxgKBZC9EEd69DdYdfezAXBKaaLZAZCAYYN9iJa0WWadx2P49x42sRueqcTtLPqZB0oEh2zhdH0cD954VkUTaJvfxZAmfp7fVzWncba4';
+    const bearerToken = 'EAAPpZA66k5CYBOyH8qdKujxZBuXuCeKSmeO8M3L1Uqok1Sano9TtgZAQ7AoROw8VxF9pGgOP88W3QCXzZAQfItLQp5jSBpGVPWDkkRGyqG2HN6kIx91jKF0RTT4ZCdsZAtF0KXrLiTIUeSfxlU6DQbtZAJdzfOi8xVeEwBe9RKZA7CjgJyDuNrZC9XkO3ERvSmCWa5UbODw2IQkbCBnIO';
     const formatedParams = createParamsArray(params);
     console.log(formatedParams);
 
