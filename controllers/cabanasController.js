@@ -565,7 +565,7 @@ async function showEditChaletsView(req, res, next){
             let arrivalstr = chalet.others.arrivalTime.toString();
             let departurestr = chalet.others.departureTime.toString();
             let arrival = arrivalstr.split(':')[0].slice(-2) + ":" + arrivalstr.split(':')[1]
-            let departure = departurestr.split(':')[0].slice(-2) + ":" + arrivalstr.split(':')[1]
+            let departure = departurestr.split(':')[0].slice(-2) + ":" + departurestr.split(':')[1]
             chalet.others.arrivalTime = arrival;
             chalet.others.departureTime = departure;
             console.log(chalet.others.arrivalTime)
@@ -608,14 +608,15 @@ async function editChalet(req, res, next){
     if (!janitor) {
         throw new NotFoundError("Janitor not found");
     }
-    
+    console.log(others.departureTime)
+    console.log(others.arrivalTime)
     const newArrivalTime = new Date();
     newArrivalTime.setHours(parseInt(others.arrivalTime.split(':')[0], 10));
     newArrivalTime.setMinutes(parseInt(others.arrivalTime.split(':')[1], 10));
     const newDepartureTime = new Date();
     newDepartureTime.setHours(parseInt(others.departureTime.split(':')[0], 10));
     newDepartureTime.setMinutes(parseInt(others.departureTime.split(':')[1], 10));
-
+    console.log(newDepartureTime)
     const chalet = {
         propertyDetails, 
         accommodationFeatures, 
@@ -638,6 +639,8 @@ async function editChalet(req, res, next){
         images
     };
 
+    console.log(chalet)
+
     try{ 
         const habitacion = await Habitacion.findOne();
         let chalets = habitacion.resources;
@@ -654,7 +657,7 @@ async function editChalet(req, res, next){
         req.session.chaletUpdated = chalets[indexToUpdate].propertyDetails.name;
         console.log("Respuesta del servidor:", { chaletUpdated: req.session.chaletUpdated });
 
-        res.status(200).json({ success: true, message: "Cabaña ediatda con éxito"});
+        res.status(200).json({ success: true, message: "Cabaña editada con éxito"});
     } catch(err){
         console.log(err);
         return next(err);

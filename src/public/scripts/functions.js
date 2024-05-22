@@ -262,14 +262,4 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         return fechas;
     }
-<<<<<<< HEAD
-=======
-
-
-
-
-
-
-
->>>>>>> 29caafed9112092eee0f78d22208fb169a2c78b3
 });
