@@ -19,6 +19,7 @@ const getViewValidators = [
             if(!reservation){
                 throw new NotFoundError('Reservation does not exist');
             }
+            console.log(reservation);
 
             const client = await Cliente.findById(reservation.client.toString());
             if(!client){
@@ -28,7 +29,7 @@ const getViewValidators = [
             const chalets = await Habitacion.findOne();
             const chalet = chalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
             if(!chalet){
-                throw new NotFoundError('Chalet does not exist');
+                throw new NotFoundError('Chalet does not exist 1');
             }
 
             return true;
