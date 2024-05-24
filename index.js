@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 const app = express();
 const { engine } = require('express-handlebars');
-const routes = require('./routes/indexRoutes'); 
+const routes = require('./routes/indexRoutes');
 const schedule = require('node-schedule');
 const Evento = require('./models/Evento');
 const Cliente = require('./models/Cliente');
@@ -17,7 +17,13 @@ app.use(express.static(path.join(__dirname, 'src', 'public')));
 app.use(express.json())
 
 // Configuración del motor de plantillas
-app.engine('handlebars', engine())
+app.engine('handlebars', engine({
+    helpers: {
+        json: function (context) {
+            return JSON.stringify(context);
+        }
+    }
+}));
 app.set('view engine', 'handlebars');
 app.set('views', './views');
 
@@ -31,7 +37,7 @@ app.set('trust proxy', true);
 app.use(routes);
 
 // Connecting app to Mongoose
-mongoose.connect(db_url).then(async ()=>{
+mongoose.connect(db_url).then(async () => {
     app.listen(port, () => {
         console.log(`App is running on port ${port}`);
     })
@@ -42,7 +48,7 @@ mongoose.connect(db_url).then(async ()=>{
         await SendMessages.sendThanks();
     });
     */
-    
+
     // Para mantener la aplicación escuchando
     process.on('SIGINT', () => {
         job.cancel(); // Cancela el scheduler cuando se detiene la aplicación
@@ -50,6 +56,6 @@ mongoose.connect(db_url).then(async ()=>{
         process.exit();
     });
 
-}).catch((err)=>{
+}).catch((err) => {
     console.log('failed to connect' + err.message);
 });
