@@ -68,16 +68,51 @@ async function mostrarUtilidadesPorUsuario(req, res) {
 
         }
 
+        let totalEarnings = 0
+
+        const currentMonth = moment().month(); // Mes actual (0-11)
+        const currentYear = moment().year(); // Año actual
+        const utilidadesPorMes = Array(12).fill(0); // Inicializa un array con 12 elementos, todos con valor 0
+
         utilidades.forEach(utilidad => {
             utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`
             utilidad.fecha = moment.utc(utilidad.fecha).format('DD/MM/YYYY');
+            const utilidadFecha = moment.utc(utilidad.fecha, 'DD/MM/YYYY');
+
+            if (utilidadFecha.month() === currentMonth && utilidadFecha.year() === currentYear) {
+                // Asignar nombre del usuario y formatear fecha
+                utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`;
+                utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
+                
+                // Sumar al total de comisiones
+                totalEarnings += utilidad.monto;
+
+                
+            }
+
+            const monthIndex = utilidadFecha.month(); // Obtiene el índice del mes (0-11)
+            utilidadesPorMes[monthIndex] += utilidad.monto;
 
         })
+
+        utilidadesPorMes.forEach((total, index) => {
+            const monthName = moment().month(index).format('MMMM');
+            console.log(`${monthName}: ${total}`);
+        });
+
+        console.log(utilidadesPorMes)
+
+
+        const limit = 1000;
+
 
         console.log(utilidades);
 
         res.render('vistaUtilidades', {
-            utilidades: utilidades
+            utilidades: utilidades,
+            totalEarnings,
+            limit,
+            utilidadesPorMes
         })
 
     } catch (error) {
@@ -119,8 +154,8 @@ async function editarComision(req, res) {
 
         await Utilidades.findByIdAndUpdate(id, updateFields);
         res.status(200).send({ message: "Comision updated" });
-    
-    } catch(error) {
+
+    } catch (error) {
         console.log(error.message);
         res.status(200).send('Something went wrong while editing utility.');
     }
@@ -133,7 +168,7 @@ async function eliminarComision(req, res) {
         await Utilidades.findByIdAndDelete(id);
         res.status(200).send({ message: "Comision deleted" });
 
-    } catch(error) {
+    } catch (error) {
         console.log(error.message);
         res.status(200).send('Something went wrong while deleting utility.');
     }

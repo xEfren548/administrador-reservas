@@ -1,6 +1,21 @@
-<div class="row flex-nowrap justify-content-center mt-3 " style="width: 95%;">
-    <div class="col-10">
-        <h1>Mis Utilidades</h1>
+<div class="row flex-column justify-content-center mt-3 " style="width: 95%;">
+    <h1 class="mt-5">Gráficas de Utilidades</h1>
+    <div class="row flex-nowrap mb-3 ">
+        <div class="col-6 h-100 w-75">
+            <canvas id="chart-line" class="w-100 h-100" style="max-width: 100%; max-height: 400px;"></canvas>
+        </div>
+
+        <div class="col-6 h-100 w-75">
+            <p>Comisiones del mes: <strong>${{totalEarnings}}</strong></p>
+            <canvas id="doughnut-chart" class="w-100 h-100" style="max-width: 100%; max-height: 200px;"></canvas>
+        </div>
+
+    </div>
+
+
+    <div class="col-12">
+
+        <h1 class="mt-3">Mis Utilidades</h1>
         <table class="table table-dark table-hover text-center" id="tablaUtilidades">
             <thead class="table-light">
                 <tr>
@@ -8,7 +23,7 @@
                     <th scope="col">Monto</th>
                     <th scope="col">Fecha</th>
                     <th scope="col">Usuario</th>
-                    
+
                 </tr>
             </thead>
             <tbody>
@@ -27,7 +42,7 @@
                 <tr>
                     <td colspan="4">No se encontraron utilidades</td>
                 </tr>
-                
+
                 {{/if}}
             </tbody>
         </table>
@@ -150,6 +165,144 @@
             }
         });
     }
+
+
+    let utilidadesPorMes = {{json utilidadesPorMes}}
+    console.log(utilidadesPorMes)
+    var lineChartData = {
+        labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+        datasets: [{
+            label: "Comisión del mes",
+            tension: 0.4,
+            borderWidth: 4,
+            pointRadius: 5,
+            pointBackgroundColor: "rgba(255, 99, 132, 0.8)",
+            pointBorderColor: "transparent",
+            borderColor: "rgba(255, 99, 132, 0.8)",
+            backgroundColor: "transparent",
+            fill: true,
+            data: utilidadesPorMes,
+            maxBarThickness: 6
+        }],
+    };
+
+    // Opciones para el gráfico de líneas
+    var lineChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false,
+            }
+        },
+        interaction: {
+            intersect: false,
+            mode: 'index',
+        },
+        scales: {
+            y: {
+                grid: {
+                    drawBorder: false,
+                    display: true,
+                    drawOnChartArea: true,
+                    drawTicks: false,
+                    borderDash: [5, 5],
+                    color: 'rgba(255, 99, 132, 0.2)'
+                },
+                ticks: {
+                    beginAtZero: true,
+                    padding: 10,
+                    font: {
+                        size: 14,
+                        weight: 300,
+                        family: "Roboto",
+                        style: 'normal',
+                        lineHeight: 2
+                    },
+                    color: "#f8f9fa"
+                },
+            },
+            x: {
+                grid: {
+                    drawBorder: false,
+                    display: true,
+                    drawOnChartArea: true,
+                    drawTicks: false,
+                    borderDash: [5, 5],
+                    color: 'rgba(255, 99, 132, 0.2)'
+                },
+                ticks: {
+                    display: true,
+                    color: '#f8f9fa',
+                    padding: 10,
+                    font: {
+                        size: 14,
+                        weight: 300,
+                        family: "Roboto",
+                        style: 'normal',
+                        lineHeight: 2
+                    },
+                }
+            },
+        },
+    };
+
+
+    var ctxLine = document.getElementById("chart-line").getContext("2d");
+    new Chart(ctxLine, {
+        type: "line",
+        data: lineChartData,
+        options: lineChartOptions,
+    });
+
+    const ctx = document.getElementById('doughnut-chart').getContext('2d');
+    const totalEarnings = {{ totalEarnings }};
+    const limit = {{ limit }};
+    const remaining = limit - totalEarnings;
+
+    const doughnutChartData = {
+        labels: ['Ganancias'],
+        datasets: [{
+            data: [totalEarnings, remaining],
+            backgroundColor: [
+                'rgba(75, 192, 192, 0.6)', // Color para ganancias
+                'rgba(255, 255, 255, 0.0)'  // Color transparente para restante
+            ],
+            borderColor: [
+                'rgba(75, 192, 192, 1)',
+                'rgba(255, 255, 255, 0.0)'  // Color transparente para restante
+            ],
+            borderWidth: 1
+        }]
+    };
+
+    const doughnutChartOptions = {
+        responsive: true,
+        maintainAspectRatio: true, // Mantener la relación de aspecto
+        plugins: {
+            legend: {
+                display: false, // Ocultar la leyenda
+            },
+            tooltip: {
+                callbacks: {
+                    label: function (tooltipItem) {
+                        // Mostrar solo la etiqueta de ganancias
+                        if (tooltipItem.label === 'Ganancias') {
+                            const value = tooltipItem.raw;
+                            return `${value}`;
+                        }
+                        return null;
+                    }
+                }
+            }
+        }
+    };
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: doughnutChartData,
+        options: doughnutChartOptions
+    });
 
 
 
