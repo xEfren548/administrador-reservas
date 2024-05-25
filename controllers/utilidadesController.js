@@ -64,7 +64,9 @@ async function mostrarUtilidadesPorUsuario(req, res) {
         let utilidades = {};
 
         if (user.privilege !== "Administrador") {
+            console.log('is not admin')
             utilidades = await Utilidades.find({ idUsuario: loggedUserId }).lean();
+            // console.log(utilidades)
 
         }
 
@@ -74,33 +76,37 @@ async function mostrarUtilidadesPorUsuario(req, res) {
         const currentYear = moment().year(); // Año actual
         const utilidadesPorMes = Array(12).fill(0); // Inicializa un array con 12 elementos, todos con valor 0
 
-        utilidades.forEach(utilidad => {
-            utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`
-            utilidad.fecha = moment.utc(utilidad.fecha).format('DD/MM/YYYY');
-            const utilidadFecha = moment.utc(utilidad.fecha, 'DD/MM/YYYY');
+        if (Object.keys(utilidades).length > 0) {
+            console.log('pasa validacion')
+            utilidades.forEach(utilidad => {
+                utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`
+                utilidad.fecha = moment.utc(utilidad.fecha).format('DD/MM/YYYY');
+                const utilidadFecha = moment.utc(utilidad.fecha, 'DD/MM/YYYY');
+    
+                if (utilidadFecha.month() === currentMonth && utilidadFecha.year() === currentYear) {
+                    // Asignar nombre del usuario y formatear fecha
+                    utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`;
+                    utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
+                    
+                    // Sumar al total de comisiones
+                    totalEarnings += utilidad.monto;
+    
+                    
+                }
+    
+                const monthIndex = utilidadFecha.month(); // Obtiene el índice del mes (0-11)
+                utilidadesPorMes[monthIndex] += utilidad.monto;
+    
+            })
+            utilidadesPorMes.forEach((total, index) => {
+                const monthName = moment().month(index).format('MMMM');
+                console.log(`${monthName}: ${total}`);
+            });
+            console.log(utilidades)
+            console.log(utilidadesPorMes)
+        } 
 
-            if (utilidadFecha.month() === currentMonth && utilidadFecha.year() === currentYear) {
-                // Asignar nombre del usuario y formatear fecha
-                utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`;
-                utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
-                
-                // Sumar al total de comisiones
-                totalEarnings += utilidad.monto;
 
-                
-            }
-
-            const monthIndex = utilidadFecha.month(); // Obtiene el índice del mes (0-11)
-            utilidadesPorMes[monthIndex] += utilidad.monto;
-
-        })
-
-        utilidadesPorMes.forEach((total, index) => {
-            const monthName = moment().month(index).format('MMMM');
-            console.log(`${monthName}: ${total}`);
-        });
-
-        console.log(utilidadesPorMes)
 
 
         const limit = 1000;
