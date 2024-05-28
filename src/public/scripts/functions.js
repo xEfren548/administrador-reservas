@@ -20,6 +20,9 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+    let preciosTotalesGlobal = 0
+
+
     function calculateNightDifference() {
         console.log('Desde calcular noches')
         const arrivalValue = new Date(arrivalDate.value);
@@ -37,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Creating new reservation.
-    document.getElementById('save-event-btn').addEventListener('click', function () {
+    document.getElementById('save-event-btn').addEventListener('click', async function () {
         // Mostrar el spinner y deshabilitar el botón
         const spinner = document.querySelector('#save-event-btn .spinner-grow');
         const spinnerText = document.querySelector('#save-event-btn .spinner-text');
@@ -45,76 +48,88 @@ document.addEventListener("DOMContentLoaded", function () {
         spinnerText.textContent = 'Loading...';
         this.disabled = true; // Deshabilitar el botón
 
-        // Crear un objeto con los datos del formulario
-        const formData = {
-            clientEmail: document.getElementById("lblClient").value.trim(),
-            arrivalDate: document.getElementById('event_start_date').value.trim(),
-            departureDate: document.getElementById('event_end_date').value.trim(),
-            nNights: document.getElementById("event_nights").value.trim(),
-            chaletName: document.getElementById('tipologia_habitacion').value.trim(),
-            maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
-            units: document.getElementById('habitacion_unidades').value.trim(),
-            total: document.getElementById('habitacion_total').value.trim(),
-            discount: document.getElementById('habitacion_descuento').value.trim()
-        };
+        try {
+            // Esperar a que obtenerComisiones() se resuelva
+            const comisionUsuarios = await obtenerComisiones();
+            
 
-        fetch('/api/eventos', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        })
-            .then(response => {
-                if (!response.ok) {
-                    response.json().then(errorData => {
-                        const errors = errorData.error;
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                            confirmButtonText: 'Aceptar'
-                        });
-                    });
-                    throw new Error('Error en la solicitud');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Respuesta exitosa del servidor:', data);
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Reserva creada',
-                    text: data.message,
-                    showCancelButton: false,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Aceptar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        clearModal(document.getElementById("event_entry_modal"));
-                        $('#event_entry_modal').modal('hide');
-                        window.location.href = `http://localhost:3005/api/eventos/${data.reservationId}`
-                    }
-                });
-            })
-            .catch(error => {
-                console.error('Ha ocurrido un error: ', error);
+            // Crear un objeto con los datos del formulario
+            const formData = {
+                clientEmail: document.getElementById("lblClient").value.trim(),
+                arrivalDate: document.getElementById('event_start_date').value.trim(),
+                departureDate: document.getElementById('event_end_date').value.trim(),
+                nNights: document.getElementById("event_nights").value.trim(),
+                chaletName: document.getElementById('tipologia_habitacion').value.trim(),
+                maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
+                units: document.getElementById('habitacion_unidades').value.trim(),
+                total: document.getElementById('habitacion_total').value.trim(),
+                discount: document.getElementById('habitacion_descuento').value.trim()
+            };
+
+            console.log(preciosTotalesGlobal)
+
+            if (formData.total > preciosTotalesGlobal) {
+                throw new Error(`No puedes dar un precio mayor al establecido ($${preciosTotalesGlobal})`);
+            }
+
+
+            const response = await fetch('/api/eventos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                const errors = errorData.error;
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: `Ha ocurrido un error al crear la reserva: ${error.message}`,
-                    showCancelButton: false,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
+                    text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
                     confirmButtonText: 'Aceptar'
                 });
+                throw new Error('Error en la solicitud');
+            }
 
-                spinner.classList.add('d-none');
-                spinnerText.textContent = 'Crear Reserva'; // Limpiar el texto
-                document.getElementById('save-event-btn').disabled = false; // Habilitar el botón
+            const data = await response.json();
+            console.log('Respuesta exitosa del servidor:', data);
+            Swal.fire({
+                icon: 'success',
+                title: 'Reserva creada',
+                text: data.message,
+                showCancelButton: false,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Aceptar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    clearModal(document.getElementById("event_entry_modal"));
+                    $('#event_entry_modal').modal('hide');
+                    window.location.href = `http://localhost:3005/api/eventos/${data.reservationId}`;
+                }
             });
-    })
+
+        } catch (error) {
+            console.error('Ha ocurrido un error: ', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: `Ha ocurrido un error al crear la reserva: ${error.message}`,
+                showCancelButton: false,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Aceptar'
+            });
+
+        } finally {
+            // Ocultar el spinner y habilitar el botón nuevamente en caso de error
+            spinner.classList.add('d-none');
+            spinnerText.textContent = 'Crear Reserva'; // Limpiar el texto
+            document.getElementById('save-event-btn').disabled = false; // Habilitar el botón
+        }
+    });
 
     const nightsInput = document.querySelector('#event_nights');
     const arrivalDate = document.getElementById('event_start_date')
@@ -172,8 +187,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
-
-
+    
     async function obtenerTotalReserva() {
         const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
         const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
@@ -242,6 +256,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.log("Total precios con comisiones: ", totalPrecios)
                 const totalInput = document.getElementById('habitacion_total')
                 totalInput.value = totalPrecios
+                preciosTotalesGlobal = totalPrecios
+                console.log('Precios totales global: ', preciosTotalesGlobal)
 
             } catch (error) {
                 console.error('Ha ocurrido un error: ', error.message);
@@ -277,7 +293,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return fechas;
     }
 
-    obtenerComisiones();
 
 
 

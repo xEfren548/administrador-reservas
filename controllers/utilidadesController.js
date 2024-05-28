@@ -9,6 +9,13 @@ async function calcularComisiones(req, res) {
         const loggedUserId = req.session.id;
         console.log(loggedUserId)
 
+        const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
+        const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
+        const costosDuenio = await Costos.findOne({ category: "Dueño" }); //
+
+        console.log(costosGerente)
+        console.log(costosVendedor)
+
 
         let counter = 0
 
@@ -19,10 +26,10 @@ async function calcularComisiones(req, res) {
             // console.log(user)
             if (user.privilege === 'Administrador') {
                 counter += 1;
-                let costos = await Costos.find({ category: "Gerente" });
-
-                if (costos.comisison === "Aumento por costo fijo") {
-                    finalComission += costos.maxAmount;
+                // let costos = await Costos.find({ category: "Gerente" });
+                
+                if (costosGerente.commission === "Aumento por costo fijo") {
+                    finalComission += costosGerente.amount;
                 }
 
 
@@ -34,11 +41,21 @@ async function calcularComisiones(req, res) {
                 if (counter >= 2 && user.privilege !== "Administrador") {
                     user.privilege = "Gerente"
                 }
-                let costos = await Costos.findOne({ category: user.privilege })
+                // let costos = await Costos.findOne({ category: user.privilege })
 
-                if (costos.commission == "Aumento por costo fijo") {
-                    finalComission += costos.maxAmount;
+                console.log(user.privilege)
+
+                if (user.privilege === "Vendedor") {
+                    console.log(costosVendedor.commission)
+                    if (costosVendedor.commission === "Aumento por costo fijo") {
+                        finalComission += costosVendedor.maxAmount;
+                        finalComission += costosDuenio.amount;
+                    }
                 }
+
+                // if (costos.commission == "Aumento por costo fijo") {
+                //     finalComission += costos.maxAmount;
+                // }
 
                 user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
                 if (!user) {
