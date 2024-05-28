@@ -171,21 +171,26 @@ document.addEventListener("DOMContentLoaded", function () {
     departureDate.addEventListener('change', obtenerTotalReserva);
 
     const descuentoReservaInput = document.querySelector('#habitacion_descuento')
-    descuentoReservaInput.addEventListener('input', function () {
-        const subtotalInput = document.getElementById('habitacion_total');
-        const totalFinal = document.getElementById('habitacion_totalcondescuento');
+    const subtotalInput = document.getElementById('habitacion_total');
+    const totalFinal = document.getElementById('habitacion_totalcondescuento');
 
-        if (descuentoReservaInput.value >= 0 && descuentoReservaInput.value <= 100) {
-            let pretotal = subtotalInput.value * (descuentoReservaInput.value / 100)
-            totalFinal.value = (parseFloat(subtotalInput.value) - parseFloat(pretotal)).toFixed(2)
+    function actualizarTotalConDescuento() {
+        const descuento = parseFloat(descuentoReservaInput.value);
+        const subtotal = parseFloat(subtotalInput.value);
+
+        if (!isNaN(descuento) && descuento >= 0 && descuento <= 100 && !isNaN(subtotal)) {
+            const descuentoCalculado = subtotal * (descuento / 100);
+            totalFinal.value = (subtotal - descuentoCalculado).toFixed(2);
         } else {
-            totalFinal.value = parseFloat(subtotalInput.value).toFixed(2)
-
+            totalFinal.value = subtotal.toFixed(2);
         }
+    }
+
+    descuentoReservaInput.addEventListener('input', actualizarTotalConDescuento);
+    subtotalInput.addEventListener('input', actualizarTotalConDescuento);
 
 
 
-    });
 
     
     async function obtenerTotalReserva() {
