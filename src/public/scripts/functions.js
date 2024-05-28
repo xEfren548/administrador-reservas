@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     let preciosTotalesGlobal = 0
+    let precioMinimoPermitido = 0
 
 
     function calculateNightDifference() {
@@ -49,9 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
         this.disabled = true; // Deshabilitar el botón
 
         try {
-            // Esperar a que obtenerComisiones() se resuelva
-            const comisionUsuarios = await obtenerComisiones();
-            
+            // Esperar a que obtenerComisiones() se resuelva            
 
             // Crear un objeto con los datos del formulario
             const formData = {
@@ -67,9 +66,14 @@ document.addEventListener("DOMContentLoaded", function () {
             };
 
             console.log(preciosTotalesGlobal)
+            console.log("precioMinimoPermitido: ", precioMinimoPermitido) 
 
             if (formData.total > preciosTotalesGlobal) {
                 throw new Error(`No puedes dar un precio mayor al establecido ($${preciosTotalesGlobal})`);
+            }
+
+            if (formData.total < precioMinimoPermitido) {
+                throw new Error(`No puedes dar un precio menor al establecido ($${precioMinimoPermitido})`); //
             }
 
 
@@ -257,7 +261,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.log("Total precios: ", totalPrecios)
 
                 const comisionUsuarios = await obtenerComisiones()
-                totalPrecios += comisionUsuarios
+                precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios
+                totalPrecios += comisionUsuarios.finalComission
                 console.log("Total precios con comisiones: ", totalPrecios)
                 const totalInput = document.getElementById('habitacion_total')
                 totalInput.value = totalPrecios
@@ -279,8 +284,10 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch('http://localhost:3005/api/utilidades');
             const data = await response.json();
+            const minComission = data.minComission
             const finalComission = data.finalComission
-            return finalComission
+            const comisiones = { minComission: minComission, finalComission: finalComission}
+            return comisiones
 
         } catch (error) {
             console.log(error.message);

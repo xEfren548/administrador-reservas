@@ -20,6 +20,8 @@ async function calcularComisiones(req, res) {
         let counter = 0
 
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
+
+        let minComission = 0
         let finalComission = 0
 
         while (true) {
@@ -30,6 +32,7 @@ async function calcularComisiones(req, res) {
                 
                 if (costosGerente.commission === "Aumento por costo fijo") {
                     finalComission += costosGerente.amount;
+                    minComission += costosGerente.amount
                 }
 
 
@@ -49,6 +52,9 @@ async function calcularComisiones(req, res) {
                     console.log(costosVendedor.commission)
                     if (costosVendedor.commission === "Aumento por costo fijo") {
                         finalComission += costosVendedor.maxAmount;
+                        minComission += costosVendedor.minAmount;
+
+                        minComission += costosDuenio.amount;
                         finalComission += costosDuenio.amount;
                     }
                 }
@@ -65,9 +71,9 @@ async function calcularComisiones(req, res) {
 
             }
         }
-
+        console.log(minComission)
         console.log(finalComission)
-        res.status(200).send({ finalComission });
+        res.status(200).send({ minComission, finalComission });
     } catch (err) {
         res.status(404).send(err.message);
     }
