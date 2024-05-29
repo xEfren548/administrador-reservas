@@ -5,6 +5,7 @@ const utilidadesController = require('../controllers/utilidadesController');
 router.get('/utilidades', utilidadesController.calcularComisiones)
 router.get('/mostrar-utilidades', utilidadesController.mostrarUtilidadesPorUsuario)
 router.post('/utilidades', utilidadesController.altaComision);
+router.post('/utilidades/reserva', utilidadesController.generarComisionReserva)
 router.put('/utilidades', utilidadesController.editarComision);
 router.delete('/utilidades', utilidadesController.eliminarComision);
 

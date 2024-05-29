@@ -142,7 +142,7 @@ async function obtenerEventoPorIdRoute(req, res) {
 async function createReservation(req, res, next) {
     const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount } = req.body;
 
-    console.log(req.body)
+    
 
     try {
         const client = await Cliente.find({ email: clientEmail });
@@ -192,11 +192,6 @@ async function createReservation(req, res, next) {
         const fechaLimpieza = new Date(departureDate)
         fechaLimpieza.setDate(fechaLimpieza.getDate() + 1)
         const statusLimpieza = 'Pendiente'
-
-        console.log(idReserva)
-        console.log(descripcionLimpieza)
-        console.log(fechaLimpieza)
-        console.log(statusLimpieza)
 
         await rackLimpiezaController.createServiceForReservation({
             id_reserva: idReserva,
@@ -403,7 +398,6 @@ async function eliminarNota(req, res) {
             throw new Error('No se encontraron eventos');
         }
 
-        console.log(documento);
         // Buscar el evento por su ID dentro del array de eventos
         const evento = documento.events.find(evento => evento._id.toString() === idReserva);
 
