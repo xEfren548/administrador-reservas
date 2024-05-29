@@ -11,7 +11,7 @@ async function calcularComisiones(req, res) {
 
         const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
-        const costosDuenio = await Costos.findOne({ category: "Dueño" }); //
+        const costosAdministrador = await Costos.findOne({ category: "Administrador" }); //
 
 
         let counter = 0
@@ -49,8 +49,8 @@ async function calcularComisiones(req, res) {
                         finalComission += costosVendedor.maxAmount;
                         minComission += costosVendedor.minAmount;
 
-                        minComission += costosDuenio.amount;
-                        finalComission += costosDuenio.amount;
+                        minComission += costosAdministrador.amount;
+                        finalComission += costosAdministrador.amount;
                     }
                 }
 
@@ -87,11 +87,16 @@ async function generarComisionReserva(req, res) {
             precioMaximo
         }
 
+        let comisionVendedor = precioAsignado - precioMinimo;
+
         console.log(loggedUserId)
 
         const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
-        const costosDuenio = await Costos.findOne({ category: "Dueño" }); //
+        const costosAdministrador = await Costos.findOne({ category: "Administrador" }); //
+
+        const fechaActual = new Date();
+        console.log(fechaActual);
 
 
 
@@ -111,11 +116,12 @@ async function generarComisionReserva(req, res) {
                     // finalComission += costosGerente.amount;
                     // minComission += costosGerente.amount;
                     await altaComisionReturn({
-                        monto: costosGerente.amount,
+                        monto: costosAdministrador.amount,
                         concepto: `Reservación ${chaletName}`,
-                        fecha: new Date('T00:00:00'),
+                        fecha: fechaActual,
                         idUsuario: user._id.toString()
                     })
+                    console.log('Comision para Admin top agregada: ', costosAdministrador.amount);
                 }
 
 
@@ -132,14 +138,32 @@ async function generarComisionReserva(req, res) {
                 console.log(user.privilege)
 
                 if (user.privilege === "Vendedor") {
-                    console.log(costosVendedor.commission)
                     if (costosVendedor.commission === "Aumento por costo fijo") {
-                        finalComission += costosVendedor.maxAmount;
-                        minComission += costosVendedor.minAmount;
 
-                        minComission += costosDuenio.amount;
-                        finalComission += costosDuenio.amount;
+                        await altaComisionReturn({
+                            monto: comisionVendedor,
+                            concepto: `Reservación ${chaletName}`,
+                            fecha: fechaActual,
+                            idUsuario: user._id.toString()
+                        })
+
+                        console.log('Comision para vendedor agregada: ', comisionVendedor);
+
+                        // finalComission += costosVendedor.maxAmount;
+                        // minComission += costosVendedor.minAmount;
+
+                        // minComission += costosDuenio.amount;
+                        // finalComission += costosDuenio.amount;
                     }
+                } else if (user.privilege === "Gerente") {
+                    await altaComisionReturn({
+                        monto: costosGerente.amount,
+                        concepto: `Reservación ${chaletName}`,
+                        fecha: fechaActual,
+                        idUsuario: user._id.toString()
+                    })
+                    console.log('Comision para Gerente agregada: ', costosAdministrador.amount);
+
                 }
 
                 // if (costos.commission == "Aumento por costo fijo") {
