@@ -89,18 +89,11 @@ async function createRackService(req, res, next) {
         const user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
         const servicioEncontrado = await Servicio.findOne({ _id: id_servicio });
 
-        console.log('*****Comisiones******')
-        console.log(user);
-        console.log(servicioEncontrado);
-
         let userTopAdmin = {}
 
         while (userTopAdmin.privilege !== "Administrador") {
             userTopAdmin = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
         }
-
-        console.log('user top admin: ')
-        console.log(userTopAdmin);
 
         const proveedorId = servicioEncontrado.supplier.toString();
         const adminServicioId = servicioEncontrado.serviceManager.toString();

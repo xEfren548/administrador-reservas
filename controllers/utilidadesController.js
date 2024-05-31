@@ -216,39 +216,6 @@ async function generarComisionReserva(req, res) {
     }
 }
 
-// async function generarComisionServiciosAdicionales(req, res) {
-//     try {
-//         const loggedUserId = req.session.id;
-//         const { id_servicio } = req.body;
-
-//         const servicio = await Servicio.findOne({ id_servicio });
-//         console.log(servicio)
-        
-
-//         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
-//         console.log(user)
-//         // const idProveedor = await usersController.obtenerUsuarioPorIdMongo(loggedUser);
-
-
-        
-
-        
-
-//         // await altaComisionReturn({
-//         //     monto: chalet.additionalInfo.extraCleaningCost,
-//         //     concepto: `Comisión limpieza ${chaletName}`,
-//         //     fecha: fechaActual,
-//         //     idUsuario: chaletJanitor
-//         // }) 
-
-
-
-//         res.status(200).json({ success: true, message: "Comision de servicio adicional agregada con éxito" })
-//     } catch (err) {
-//         res.status(404).send(err.message);
-//     }
-// }
-
 async function mostrarUtilidadesPorUsuario(req, res) {
     try {
         const loggedUserId = req.session.id;
