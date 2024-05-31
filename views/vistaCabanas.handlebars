@@ -37,10 +37,6 @@
             <label for="txtChaletMaxPpl">Ocupación máxima</label>
             <input id="txtChaletMaxPpl" name="txtChaletMaxPpl" type="number">
         </div>
-        <div class="input-group third">
-            <label for="txtChaletTourLicense">Licencia turística</label>
-            <input id="txtChaletTourLicense" name="txtChaletTourLicense" type="text">
-        </div>
     </div>
 
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#accomodationFeautres">+ Características del alojamiento</button>
@@ -610,11 +606,7 @@
             <input id="bedroomSize" name="bedroomSize" type="number">
         </div>
         <div class="input-group half">
-            <label for="txtCapacity">Capacidad máxima de personas</label>
-            <input id="txtCapacity" name="txtCapacity" type="number">
-        </div>
-        <div class="input-group half">
-            <label for="txtExtraCost">Coste extra por reserva por limpiar esta unidad</label>
+            <label for="txtExtraCost">Coste por reserva por limpiar esta unidad</label>
             <input id="txtExtraCost" name="txtExtraCost" type="number">
         </div>
     </div>
@@ -633,14 +625,7 @@
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#touristicRate">+ Tasa turística - motor de reservas</button>
-    <div id="touristicRate" class="chalet-details collapse">
-        <div class="input-group">
-            <textarea id="txtTouristicRate" name="txtTouristicRate" rows="10" placeholder="Agrega una tasa turística"></textarea>
-        </div>
-    </div>
-
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#legalNote">+ Nota legal</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#legalNote">+ Terminos y condiciones</button>
     <div id="legalNote" class="chalet-details collapse">
         <div class="input-group">
             <textarea id="txtLegalNote" name="txtLegalNote" rows="10" placeholder="Agrgega una nota legal"></textarea>
@@ -672,10 +657,6 @@
         <div class="input-group third">
             <label for="txtLong">Longitud</label>
             <input id="txtLong" name="txtLong" type="number">
-        </div>
-        <div class="input-group third">
-            <label for="txtWeathedWdgt">Widget de clima</label>
-            <input id="txtWeathedWdgt" name="txtWeathedWdgt" type="text">
         </div>
         <div class="input-group">
             <iframe id="map" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30009.200046370872!2d-103.04062641019756!3d19.91808261265727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x842f08c29d6bb1fb%3A0xb0e0d639aa12c005!2s49500%20Mazamitla%2C%20Jal.!5e0!3m2!1ses-419!2smx!4v1711321362791!5m2!1ses-419!2smx" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
@@ -810,8 +791,7 @@
                         email: document.getElementById("txtChaletEmail").value.trim(),
                         website: document.getElementById("txtChaletWebsite").value.trim(),
                         minOccupancy: document.getElementById("txtChaletMinPpl").value.trim(),
-                        maxOccupancy: document.getElementById("txtChaletMaxPpl").value.trim(),
-                        tourLicense: document.getElementById("txtChaletTourLicense").value.trim()
+                        maxOccupancy: document.getElementById("txtChaletMaxPpl").value.trim()
                     },
                     accommodationFeatures: {
                         generalFeatures: {                            
@@ -959,12 +939,10 @@
                         nBeds: document.getElementById("txtBeds").value.trim(),
                         nRestrooms: document.getElementById("txtRestrooms").value.trim(),
                         bedroomSize: document.getElementById("bedroomSize").value.trim(),
-                        capacity: document.getElementById("txtCapacity").value.trim(),
                         extraCleaningCost: document.getElementById("txtExtraCost").value.trim(),
                     },
                     accomodationDescription: document.getElementById("txtAccomodationDetails").value.trim(),
                     additionalAccomodationDescription: document.getElementById("txtAdditionalDetails").value.trim(),
-                    touristicRate: document.getElementById("txtTouristicRate").value.trim(),
                     legalNotice: document.getElementById("txtLegalNote").value.trim(),
                     location: {
                         state: document.getElementById("txtState").value.trim(),
@@ -973,7 +951,6 @@
                         postalCode: document.getElementById("txtPostalCode").value.trim(),
                         latitude: document.getElementById("txtLat").value.trim(),
                         longitude: document.getElementById("txtLong").value.trim(),
-                        weatherWidget: document.getElementById("txtWeathedWdgt").value.trim(),
                         iFrame: document.getElementById("map").src.trim(),
                     },                    
                     others: {

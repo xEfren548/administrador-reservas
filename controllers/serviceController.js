@@ -70,6 +70,10 @@ const createServiceValidators = [
         .notEmpty().withMessage('Base price is required')
         .isNumeric().withMessage('Base price must be a number')
         .toFloat(),
+    check('costPrice')
+        .optional({ checkFalsy: true })
+        .isNumeric().withMessage('Cost price must be a number')
+        .toFloat(),
     check('firstCommission')
         .notEmpty().withMessage('First commission is required')
         .isNumeric().withMessage('First commission must be a number')
@@ -126,6 +130,10 @@ const editServiceValidators = [
     check('basePrice')
         .optional({ checkFalsy: true })
         .isNumeric().withMessage('Base price must be a number')
+        .toFloat(),
+    check('costPrice')
+        .optional({ checkFalsy: true })
+        .isNumeric().withMessage('Cost price must be a number')
         .toFloat(),
     check('firstCommission')
         .optional({ checkFalsy: true })
@@ -201,6 +209,7 @@ async function mostrarServicios(req, res, next) {
                 description: service.description,
                 supplier: supplier.firstName + ' ' + supplier.lastName,
                 serviceManager: serviceManager.firstName + ' ' + serviceManager.lastName,
+                costPrice: service.costPrice,
                 basePrice: service.basePrice,
                 firstCommission: service.firstCommission,
                 secondCommission: service.secondCommission,
@@ -230,7 +239,7 @@ async function mostrarServicios(req, res, next) {
 }
 
 async function createService(req, res, next) {
-    const { service, description, supplier, serviceManager, basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
+    const { service, description, supplier, serviceManager,costPrice, basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
     
     const supplierToAdd = await Usuario.findOne({email: supplier});
     if(!supplierToAdd){
@@ -247,6 +256,7 @@ async function createService(req, res, next) {
         description,
         supplier: supplierToAdd._id,
         serviceManager: serviceManagerToAdd._id,
+        costPrice,
         basePrice,
         firstCommission,
         secondCommission,
@@ -264,7 +274,7 @@ async function createService(req, res, next) {
 }
 
 async function editService(req, res, next) {
-    const { service, description, supplier, serviceManager, basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
+    const { service, description, supplier, serviceManager, costPrice, basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
     const updateFields = {};
     if (description) { updateFields.description = description; }
     if (supplier) { 
@@ -285,6 +295,7 @@ async function editService(req, res, next) {
     if (firstCommission) { updateFields.firstCommission = firstCommission; }
     if (secondCommission) { updateFields.secondCommission = secondCommission; }
     if (finalPrice) { updateFields.finalPrice = finalPrice; }
+    if (costPrice) { updateFields.costPrice = costPrice; }
 
     try {
         const serviceToUpdate = await Service.findOneAndUpdate({ service }, updateFields, { new: true });
@@ -302,7 +313,7 @@ async function editService(req, res, next) {
 // This function can update service's name (its unique identifier).
 async function editServiceById(req, res, next) {
     const { uuid } = req.params;
-    const { service, description, supplier, serviceManager, basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
+    const { service, description, supplier, serviceManager, costPrice,basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
     const updateFields = {};
     if (service) { updateFields.service = service; }
     if (description) { updateFields.description = description; }
@@ -311,6 +322,7 @@ async function editServiceById(req, res, next) {
     if (basePrice) { updateFields.basePrice = basePrice; }
     if (firstCommission) { updateFields.firstCommission = firstCommission; }
     if (firstUser) { updateFields.firstUser = firstUser; }
+    if (costPrice) { updateFields.costPrice = costPrice; }
     if (secondCommission) { updateFields.secondCommission = secondCommission; }
     if (secondUser) { updateFields.secondUser = secondUser; }
     if (finalPrice) { updateFields.finalPrice = finalPrice; }
