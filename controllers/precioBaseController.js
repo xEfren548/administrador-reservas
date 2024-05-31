@@ -84,9 +84,9 @@ async function consultarPreciosPorFecha(req, res) {
                 throw new Error('Habitacion no encontrada');
             }
 
-            console.log(habitacion)
-
             precio = {
+                costo_base: habitacion.others.baseCost,
+                costo_base_2noches: habitacion.others.baseCost2nights,
                 precio_modificado: habitacion.others.basePrice,
                 precio_base_2noches: habitacion.others.basePrice2nights
             }

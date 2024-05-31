@@ -1,8 +1,10 @@
 const moment = require('moment');
 
 const usersController = require('./../controllers/usersController');
+const Habitacion = require('./../models/Habitacion');
 const Costos = require('./../models/Costos');
 const Utilidades = require('./../models/Utilidades');
+
 
 async function calcularComisiones(req, res) {
     try {
@@ -26,10 +28,11 @@ async function calcularComisiones(req, res) {
             if (user.privilege === 'Administrador') {
                 counter += 1;
                 // let costos = await Costos.find({ category: "Gerente" });
-                
+
                 if (costosGerente.commission === "Aumento por costo fijo") {
-                    finalComission += costosGerente.amount;
-                    minComission += costosGerente.amount
+                    finalComission += costosAdministrador.amount;
+                    minComission += costosAdministrador.amount
+                    console.log('comision admin: ', costosAdministrador.amount, user._id.toString());
                 }
 
 
@@ -48,10 +51,17 @@ async function calcularComisiones(req, res) {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
                         finalComission += costosVendedor.maxAmount;
                         minComission += costosVendedor.minAmount;
+                        console.log('comision vendedor: ', costosVendedor.maxAmount, user._id.toString())
 
-                        minComission += costosAdministrador.amount;
-                        finalComission += costosAdministrador.amount;
+
                     }
+                } else if (user.privilege === "Gerente") {
+                    if (costosGerente.commission === "Aumento por costo fijo") {
+                        finalComission += costosGerente.amount;
+                        minComission += costosGerente.amount;
+                        console.log('comision gerente: ', costosGerente.amount, user._id.toString())
+                    }
+
                 }
 
                 // if (costos.commission == "Aumento por costo fijo") {
@@ -77,35 +87,34 @@ async function calcularComisiones(req, res) {
 async function generarComisionReserva(req, res) {
     try {
         const loggedUserId = req.session.id;
-        const { precioAsignado, precioMinimo, precioMaximo, chaletName} = req.body;
+        const { precioAsignado, precioMinimo, costoBase, totalSinComisiones, precioMaximo, chaletName } = req.body;
         console.log("Desde generar comision reserva")
-        console.log(req.body)
-        
-        const comisiones = {
-            precioAsignado,
-            precioMinimo,
-            precioMaximo
+        console.log("Costo base: " + costoBase)
+
+        const chalets = await Habitacion.findOne();
+        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+        if (!chalet) {
+            throw new NotFoundError('Chalet does not exist 2');
         }
 
-        let comisionVendedor = precioAsignado - precioMinimo;
+        console.log('Chalet de comision: ')
+        console.log(chalet)
 
-        console.log(loggedUserId)
+        let comisionVendedor = precioAsignado - precioMinimo;
+        let utilidadChalet = totalSinComisiones - costoBase;
+
 
         const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
         const costosAdministrador = await Costos.findOne({ category: "Administrador" }); //
 
         const fechaActual = new Date();
-        console.log(fechaActual);
-
-
 
         let counter = 0
 
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
 
-        let minComission = 0
-        let finalComission = 0
+        let conceptoAdmin = ''
 
         while (true) {
             // console.log(user)
@@ -113,29 +122,31 @@ async function generarComisionReserva(req, res) {
                 counter += 1;
                 // let costos = await Costos.find({ category: "Gerente" });
                 if (costosGerente.commission === "Aumento por costo fijo") {
+                    if (counter > 1) {
+                        conceptoAdmin = `Comisión administrador ligado por reservación ${chaletName}`
+
+                    } else {
+                        conceptoAdmin = `Reservación ${chaletName}`
+                    }
                     // finalComission += costosGerente.amount;
                     // minComission += costosGerente.amount;
                     await altaComisionReturn({
                         monto: costosAdministrador.amount,
-                        concepto: `Reservación ${chaletName}`,
+                        concepto: conceptoAdmin,
                         fecha: fechaActual,
                         idUsuario: user._id.toString()
                     })
-                    console.log('Comision para Admin top agregada: ', costosAdministrador.amount);
                 }
-
 
                 break;
             } else {
 
                 counter += 1;
-                console.log(counter)
                 if (counter >= 2 && user.privilege !== "Administrador") {
                     user.privilege = "Gerente"
                 }
                 // let costos = await Costos.findOne({ category: user.privilege })
 
-                console.log(user.privilege)
 
                 if (user.privilege === "Vendedor") {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
@@ -147,7 +158,6 @@ async function generarComisionReserva(req, res) {
                             idUsuario: user._id.toString()
                         })
 
-                        console.log('Comision para vendedor agregada: ', comisionVendedor);
 
                         // finalComission += costosVendedor.maxAmount;
                         // minComission += costosVendedor.minAmount;
@@ -162,7 +172,6 @@ async function generarComisionReserva(req, res) {
                         fecha: fechaActual,
                         idUsuario: user._id.toString()
                     })
-                    console.log('Comision para Gerente agregada: ', costosAdministrador.amount);
 
                 }
 
@@ -178,8 +187,28 @@ async function generarComisionReserva(req, res) {
 
             }
         }
-        console.log(minComission)
-        console.log(finalComission)
+
+        const chaletAdmin = chalet.others.admin.toString();
+        const chaletJanitor = chalet.others.janitor.toString();
+
+
+        await altaComisionReturn({
+            monto: utilidadChalet,
+            concepto: `Utilidad de reservación ${chaletName}`,
+            fecha: fechaActual,
+            idUsuario: chaletAdmin
+        })
+
+
+        await altaComisionReturn({
+            monto: chalet.additionalInfo.extraCleaningCost,
+            concepto: `Comisión limpieza ${chaletName}`,
+            fecha: fechaActual,
+            idUsuario: chaletJanitor
+        })
+
+
+
         res.status(200).json({ success: true, message: "Comision agregada con éxito" })
     } catch (err) {
         res.status(404).send(err.message);
@@ -212,21 +241,21 @@ async function mostrarUtilidadesPorUsuario(req, res) {
                 utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`
                 utilidad.fecha = moment.utc(utilidad.fecha).format('DD/MM/YYYY');
                 const utilidadFecha = moment.utc(utilidad.fecha, 'DD/MM/YYYY');
-    
+
                 if (utilidadFecha.month() === currentMonth && utilidadFecha.year() === currentYear) {
                     // Asignar nombre del usuario y formatear fecha
                     utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`;
                     utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
-                    
+
                     // Sumar al total de comisiones
                     totalEarnings += utilidad.monto;
-    
-                    
+
+
                 }
-    
+
                 const monthIndex = utilidadFecha.month(); // Obtiene el índice del mes (0-11)
                 utilidadesPorMes[monthIndex] += utilidad.monto;
-    
+
             })
             utilidadesPorMes.forEach((total, index) => {
                 const monthName = moment().month(index).format('MMMM');
@@ -234,7 +263,7 @@ async function mostrarUtilidadesPorUsuario(req, res) {
             });
             console.log(utilidades)
             console.log(utilidadesPorMes)
-        } 
+        }
 
 
 
@@ -282,9 +311,9 @@ async function altaComisionReturn(req, res) {
         const { monto, concepto, fecha, idUsuario } = req
         console.log(req)
         console.log(monto),
-        console.log(concepto),
-        console.log(fecha),
-        console.log(idUsuario)
+            console.log(concepto),
+            console.log(fecha),
+            console.log(idUsuario)
         const newUtilidad = new Utilidades({
             monto,
             concepto,
@@ -295,13 +324,13 @@ async function altaComisionReturn(req, res) {
         const savedUtilidad = await newUtilidad.save()
 
         if (savedUtilidad) {
-            console.log("Utility created successfully." )
+            console.log("Utility created successfully.")
         } else {
             console.log("'Failed to create utility.'")
         }
 
-        
-        
+
+
 
     } catch (error) {
         console.log(error.message);

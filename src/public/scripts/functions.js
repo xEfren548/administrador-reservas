@@ -23,6 +23,14 @@ document.addEventListener("DOMContentLoaded", function () {
     let preciosTotalesGlobal = 0
     let precioMinimoPermitido = 0
 
+    const totalCostoBaseInput = document.querySelector("#total-costo-base")
+    let totalSinComisiones = document.querySelector("#total-sin-comisiones")
+
+    if (totalSinComisiones.value === undefined || totalSinComisiones.value === null || !totalSinComisiones.value ) {
+        totalSinComisiones.value = 0
+    }
+
+
 
     function calculateNightDifference() {
         console.log('Desde calcular noches')
@@ -103,6 +111,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const comisionBody = {
                 precioMinimo: precioMinimoPermitido,
                 precioMaximo: preciosTotalesGlobal,
+                costoBase: totalCostoBaseInput.value,
+                totalSinComisiones: totalSinComisiones.value,
                 precioAsignado: formData.total,
                 chaletName: formData.chaletName,
 
@@ -273,6 +283,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
                 console.log(resultados)
                 let totalPrecios = 0
+                let totalCostoBase = 0
 
                 resultados.forEach(resultado => {
 
@@ -281,12 +292,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (nNights > 1) {
                         if (resultado.precio_base_2noches) {
                             totalPrecios += resultado.precio_base_2noches
+                            totalCostoBase += resultado.costo_base_2noches
                         } else {
                             console.log('no hay precios disponibles')
                         }
                     } else {
                         if (resultado.precio_modificado) {
                             totalPrecios += resultado.precio_modificado
+                            totalCostoBase += resultado.costo_base
+
                         } else {
                             console.log('No hay precios disponibles')
                         }
@@ -294,6 +308,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
 
                 console.log("Total precios: ", totalPrecios)
+                console.log("Total costo base: ", totalCostoBase)
+                console.log("Total sin comisiones: ", totalSinComisiones.value)
+                
+                totalSinComisiones.value = totalPrecios;
 
                 const comisionUsuarios = await obtenerComisiones()
                 precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios
@@ -302,6 +320,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 const totalInput = document.getElementById('habitacion_total')
                 totalInput.value = totalPrecios
                 preciosTotalesGlobal = totalPrecios
+
+                totalCostoBaseInput.value = totalCostoBase
+                
                 console.log('Precios totales global: ', preciosTotalesGlobal)
 
             } catch (error) {
