@@ -11,10 +11,7 @@ async function calcularComisiones(req, res) {
 
         const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
-        const costosDuenio = await Costos.findOne({ category: "Dueño" }); //
-
-        console.log(costosGerente)
-        console.log(costosVendedor)
+        const costosAdministrador = await Costos.findOne({ category: "Administrador" }); //
 
 
         let counter = 0
@@ -46,16 +43,14 @@ async function calcularComisiones(req, res) {
                 }
                 // let costos = await Costos.findOne({ category: user.privilege })
 
-                console.log(user.privilege)
 
                 if (user.privilege === "Vendedor") {
-                    console.log(costosVendedor.commission)
                     if (costosVendedor.commission === "Aumento por costo fijo") {
                         finalComission += costosVendedor.maxAmount;
                         minComission += costosVendedor.minAmount;
 
-                        minComission += costosDuenio.amount;
-                        finalComission += costosDuenio.amount;
+                        minComission += costosAdministrador.amount;
+                        finalComission += costosAdministrador.amount;
                     }
                 }
 
@@ -74,6 +69,118 @@ async function calcularComisiones(req, res) {
         console.log(minComission)
         console.log(finalComission)
         res.status(200).send({ minComission, finalComission });
+    } catch (err) {
+        res.status(404).send(err.message);
+    }
+}
+
+async function generarComisionReserva(req, res) {
+    try {
+        const loggedUserId = req.session.id;
+        const { precioAsignado, precioMinimo, precioMaximo, chaletName} = req.body;
+        console.log("Desde generar comision reserva")
+        console.log(req.body)
+        
+        const comisiones = {
+            precioAsignado,
+            precioMinimo,
+            precioMaximo
+        }
+
+        let comisionVendedor = precioAsignado - precioMinimo;
+
+        console.log(loggedUserId)
+
+        const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
+        const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
+        const costosAdministrador = await Costos.findOne({ category: "Administrador" }); //
+
+        const fechaActual = new Date();
+        console.log(fechaActual);
+
+
+
+        let counter = 0
+
+        let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
+
+        let minComission = 0
+        let finalComission = 0
+
+        while (true) {
+            // console.log(user)
+            if (user.privilege === 'Administrador') {
+                counter += 1;
+                // let costos = await Costos.find({ category: "Gerente" });
+                if (costosGerente.commission === "Aumento por costo fijo") {
+                    // finalComission += costosGerente.amount;
+                    // minComission += costosGerente.amount;
+                    await altaComisionReturn({
+                        monto: costosAdministrador.amount,
+                        concepto: `Reservación ${chaletName}`,
+                        fecha: fechaActual,
+                        idUsuario: user._id.toString()
+                    })
+                    console.log('Comision para Admin top agregada: ', costosAdministrador.amount);
+                }
+
+
+                break;
+            } else {
+
+                counter += 1;
+                console.log(counter)
+                if (counter >= 2 && user.privilege !== "Administrador") {
+                    user.privilege = "Gerente"
+                }
+                // let costos = await Costos.findOne({ category: user.privilege })
+
+                console.log(user.privilege)
+
+                if (user.privilege === "Vendedor") {
+                    if (costosVendedor.commission === "Aumento por costo fijo") {
+
+                        await altaComisionReturn({
+                            monto: comisionVendedor,
+                            concepto: `Reservación ${chaletName}`,
+                            fecha: fechaActual,
+                            idUsuario: user._id.toString()
+                        })
+
+                        console.log('Comision para vendedor agregada: ', comisionVendedor);
+
+                        // finalComission += costosVendedor.maxAmount;
+                        // minComission += costosVendedor.minAmount;
+
+                        // minComission += costosDuenio.amount;
+                        // finalComission += costosDuenio.amount;
+                    }
+                } else if (user.privilege === "Gerente") {
+                    await altaComisionReturn({
+                        monto: costosGerente.amount,
+                        concepto: `Reservación ${chaletName}`,
+                        fecha: fechaActual,
+                        idUsuario: user._id.toString()
+                    })
+                    console.log('Comision para Gerente agregada: ', costosAdministrador.amount);
+
+                }
+
+                // if (costos.commission == "Aumento por costo fijo") {
+                //     finalComission += costos.maxAmount;
+                // }
+
+                user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                if (!user) {
+                    res.status(400).send({ message: "user not found" })
+                }
+
+
+            }
+        }
+        console.log(minComission)
+        console.log(finalComission)
+        res.status(200).json({ success: true, message: "Comision agregada con éxito" })
     } catch (err) {
         res.status(404).send(err.message);
     }
@@ -170,6 +277,38 @@ async function altaComision(req, res) {
     }
 }
 
+async function altaComisionReturn(req, res) {
+    try {
+        const { monto, concepto, fecha, idUsuario } = req
+        console.log(req)
+        console.log(monto),
+        console.log(concepto),
+        console.log(fecha),
+        console.log(idUsuario)
+        const newUtilidad = new Utilidades({
+            monto,
+            concepto,
+            fecha,
+            idUsuario
+        })
+
+        const savedUtilidad = await newUtilidad.save()
+
+        if (savedUtilidad) {
+            console.log("Utility created successfully." )
+        } else {
+            console.log("'Failed to create utility.'")
+        }
+
+        
+        
+
+    } catch (error) {
+        console.log(error.message);
+        res.status(200).send('Something went wrong while creating utility.');
+    }
+}
+
 async function editarComision(req, res) {
     try {
         const { monto, concepto, fecha, idUsuario } = req.body
@@ -207,6 +346,7 @@ async function eliminarComision(req, res) {
 module.exports = {
     calcularComisiones,
     mostrarUtilidadesPorUsuario,
+    generarComisionReserva,
     altaComision,
     editarComision,
     eliminarComision

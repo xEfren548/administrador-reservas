@@ -99,6 +99,41 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const data = await response.json();
             console.log('Respuesta exitosa del servidor:', data);
+
+            const comisionBody = {
+                precioMinimo: precioMinimoPermitido,
+                precioMaximo: preciosTotalesGlobal,
+                precioAsignado: formData.total,
+                chaletName: formData.chaletName,
+
+            }
+
+            const agregarComisiones = await fetch('/api/utilidades/reserva', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(comisionBody)
+            })
+
+            if (!agregarComisiones.ok) {
+                const additionalErrorData = await agregarComisiones.json();
+                const additionalErrors = additionalErrorData.error;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Additional Error',
+                    text: "Error en la solicitud adicional: " + additionalErrors[0].message.toLowerCase() + ".",
+                    confirmButtonText: 'Aceptar'
+                });
+                throw new Error('Error en la solicitud adicional');
+            }
+
+            const additionalData = await agregarComisiones.json();
+            console.log('Additional data received:', additionalData);
+
+
+
+
             Swal.fire({
                 icon: 'success',
                 title: 'Reserva creada',
@@ -304,7 +339,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         return fechas;
     }
-
 
 
 
