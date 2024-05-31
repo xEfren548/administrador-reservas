@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (result.isConfirmed) {
                     clearModal(document.getElementById("event_entry_modal"));
                     $('#event_entry_modal').modal('hide');
-                    window.location.href = `http://localhost:3005/api/eventos/${data.reservationId}`;
+                    window.location.href = `/api/eventos/${data.reservationId}`;
                 }
             });
 
@@ -267,7 +267,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const day = fecha.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
                     const formatedDate = `${year}-${month}-${day}`;
 
-                    const response = await fetch(`http://localhost:3005/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}`);
+                    const response = await fetch(`/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}`);
 
                     // Verificar el estado de la respuesta
                     if (!response.ok) {
@@ -338,7 +338,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     async function obtenerComisiones() {
         try {
-            const response = await fetch('http://localhost:3005/api/utilidades');
+            const response = await fetch('/api/utilidades');
             const data = await response.json();
             const minComission = data.minComission
             const finalComission = data.finalComission

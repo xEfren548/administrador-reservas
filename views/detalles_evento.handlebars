@@ -814,7 +814,7 @@
             };
 
 
-            const response = await fetch(`http://localhost:3005/api/pagos`, {
+            const response = await fetch(`/api/pagos`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -873,7 +873,7 @@
                 notas: editarNotasInput.value
             };
 
-            const response = await fetch(`http://localhost:3005/api/pagos/${paymentId}`, {
+            const response = await fetch(`/api/pagos/${paymentId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -944,7 +944,7 @@
                 departureDate: departureDateInput
             }
 
-            const response = await fetch(`http://localhost:3005/api/eventos/${reservacionId}`, {
+            const response = await fetch(`/api/eventos/${reservacionId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -980,7 +980,7 @@
         try {
             const reservacionId = document.querySelector('#reservacion_id').value;
 
-            const response = await fetch(`http://localhost:3005/api/eventos/route/${reservacionId}`, {
+            const response = await fetch(`/api/eventos/route/${reservacionId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -996,7 +996,7 @@
 
     async function obtenerDatosDePago(paymentId) {
         try {
-            const response = await fetch(`http://localhost:3005/api/pagos/${paymentId}`, {
+            const response = await fetch(`/api/pagos/${paymentId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1024,7 +1024,7 @@
             });
 
             if (confirmacion.isConfirmed) {
-                const response = await fetch(`http://localhost:3005/api/pagos/${idPago}`, {
+                const response = await fetch(`/api/pagos/${idPago}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1069,7 +1069,7 @@
             });
 
             if (confirmacion.isConfirmed) {
-                const response = await fetch(`http://localhost:3005/api/eventos/${reservacionId}`, {
+                const response = await fetch(`/api/eventos/${reservacionId}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1116,7 +1116,7 @@
                 texto: noteInput
             };
 
-            const response = await fetch(`http://localhost:3005/api/notas/${reservacionId}`, {
+            const response = await fetch(`/api/notas/${reservacionId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1167,7 +1167,7 @@
             })
             if (confirmacion.isConfirmed) {
 
-                const response = await fetch(`http://localhost:3005/api/notas?idReserva=${reservacionId}&idNota=${idNota}`, {
+                const response = await fetch(`/api/notas?idReserva=${reservacionId}&idNota=${idNota}`, {
                     method: 'DELETE', // O el método HTTP que estés utilizando para eliminar la nota
                     headers: {
                         'Content-Type': 'application/json'
@@ -1285,7 +1285,7 @@
                 costo: priceService.value
             }
 
-            const response = await fetch(`http://localhost:3005/api/rackServicios`, {
+            const response = await fetch(`/api/rackServicios`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1377,7 +1377,7 @@
         // URL que deseas copiar al portapapeles
         const reservacionId = document.querySelector('#reservacion_id').value;
 
-        var url = `http://localhost:3005/instrucciones/${reservacionId}`;
+        var url = `/instrucciones/${reservacionId}`;
 
         // Crear un elemento de entrada para almacenar el URL
         var input = document.createElement('input');
