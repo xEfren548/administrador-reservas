@@ -1,7 +1,11 @@
+const mongoose = require('mongoose');
+
 const RackServicios = require('../models/RackServicios');
 const Documento = require('../models/Evento');
 const habitacionController = require('../controllers/habitacionController');
-const mongoose = require('mongoose');
+const utilidadesController = require('../controllers/utilidadesController');
+const usersController = require('./../controllers/usersController');
+const Servicio = require('../models/Servicio');
 
 async function getAllRackServices(req, res, next) {
     try {
@@ -38,6 +42,7 @@ async function getSpecificRackServicesMongo(req, res, next) {
 
 async function createRackService(req, res, next) {
     try {
+        const loggedUserId = req.session.id;
         const { id_reserva, id_servicio, descripcion, fecha, status, costo } = req.body;
 
         if (!id_servicio || !id_reserva) {
@@ -79,6 +84,70 @@ async function createRackService(req, res, next) {
 
         const service = new RackServicios(servicio);
         await service.save();
+
+        // Comision para servicios adicionales
+        const user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
+        const servicioEncontrado = await Servicio.findOne({ _id: id_servicio });
+
+        console.log('*****Comisiones******')
+        console.log(user);
+        console.log(servicioEncontrado);
+
+        let userTopAdmin = {}
+
+        while (userTopAdmin.privilege !== "Administrador") {
+            userTopAdmin = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+        }
+
+        console.log('user top admin: ')
+        console.log(userTopAdmin);
+
+        const proveedorId = servicioEncontrado.supplier.toString();
+        const adminServicioId = servicioEncontrado.serviceManager.toString();
+
+        let adminCommission = servicioEncontrado.basePrice - servicioEncontrado.costPrice;
+        let firstCommission = servicioEncontrado.firstCommission; // Para admin del vendedor
+        let secondCommission = servicioEncontrado.secondCommission; // Para vendedor
+
+        let costoBaseServicio = servicioEncontrado.costPrice;
+
+        // Utilidad del proveedor ( costo base)
+        await utilidadesController.altaComisionReturn({
+            monto: costoBaseServicio,
+            concepto: `Comisión Proveedor por Servicio: ${servicioEncontrado.service}`,
+            fecha,
+            idUsuario: proveedorId
+        })
+
+        // Comision del administrador (diferencia entre costo y precio base)
+        await utilidadesController.altaComisionReturn({
+            monto: adminCommission,
+            concepto: `Comisión/utilidad servicio ${servicioEncontrado.service}`,
+            fecha,
+            idUsuario: adminServicioId
+        })
+
+        // Comision del administrador del vendedor
+        await utilidadesController.altaComisionReturn({
+            monto: firstCommission,
+            concepto: `Comisión admin ligado servicio: ${servicioEncontrado.service}`,
+            fecha,
+            idUsuario: userTopAdmin._id.toString()
+        })
+
+        // Comision del vendedor
+        await utilidadesController.altaComisionReturn({
+            monto: secondCommission,
+            concepto: `Comisión servicio: ${servicioEncontrado.service}`,
+            fecha,
+            idUsuario: user._id.toString()
+        })
+
+
+
+
+
+
         res.send(service);
     } catch (error) {
         console.log(error.message);

@@ -1285,15 +1285,15 @@
                 costo: priceService.value
             }
 
-            const response = await fetch(`http://localhost:3005/api/rackServicios`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(newService)
+            const response = await fetch(`http://localhost:3005/api/rackServicios`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newService)
 
-                })
+            })
+
 
             if (response.ok) {
                 Swal.fire({
