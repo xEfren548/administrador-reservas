@@ -47,10 +47,6 @@
             <label for="txtChaletMaxPpl">Ocupación máxima</label>
             <input id="txtChaletMaxPpl" name="txtChaletMaxPpl" type="number" value="{{propertyDetails.maxOccupancy}}">
         </div>
-        <div class="input-group third">
-            <label for="txtChaletTourLicense">Licencia turística</label>
-            <input id="txtChaletTourLicense" name="txtChaletTourLicense" type="text" value="{{propertyDetails.tourLicense}}">
-        </div>
     </div>
 
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#accomodationFeautres">+ Características del alojamiento</button>
@@ -616,11 +612,7 @@
             <input id="bedroomSize" name="bedroomSize" type="number" value="{{additionalInfo.bedroomSize}}">
         </div>
         <div class="input-group half">
-            <label for="txtCapacity">Capacidad máxima de personas</label>
-            <input id="txtCapacity" name="txtCapacity" type="number" value="{{additionalInfo.capacity}}">
-        </div>
-        <div class="input-group half">
-            <label for="txtExtraCost">Coste extra por reserva por limpiar esta unidad</label>
+            <label for="txtExtraCost">Coste por reserva por limpiar esta unidad</label>
             <input id="txtExtraCost" name="txtExtraCost" type="number" value="{{additionalInfo.extraCleaningCost}}">
         </div>
     </div>
@@ -639,14 +631,7 @@
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#touristicRate">+ Tasa turística - motor de reservas</button>
-    <div id="touristicRate" class="chalet-details collapse">
-        <div class="input-group">
-            <textarea id="txtTouristicRate" name="txtTouristicRate" rows="10" placeholder="Agrega una tasa turística">{{touristicRate}}</textarea>
-        </div>
-    </div>
-
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#legalNote">+ Nota legal</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#legalNote">+ Terminos y condiciones</button>
     <div id="legalNote" class="chalet-details collapse">
         <div class="input-group">
             <textarea id="txtLegalNote" name="txtLegalNote" rows="10" placeholder="Agrega una nota legal">{{legalNotice}}</textarea>
@@ -678,10 +663,6 @@
         <div class="input-group third">
             <label for="txtLong">Longitud</label>
             <input id="txtLong" name="txtLong" type="number" value="{{location.longitude}}">
-        </div>
-        <div class="input-group third">
-            <label for="txtWeathedWdgt">Widget de clima</label>
-            <input id="txtWeathedWdgt" name="txtWeathedWdgt" type="text" value="{{location.weatherWidget}}">
         </div>
         <div class="input-group">
             <iframe id="map" src="{{location.iFrame}}" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
@@ -885,8 +866,7 @@
                         email: form.querySelector("#txtChaletEmail").value.trim(),
                         website: form.querySelector("#txtChaletWebsite").value.trim(),
                         minOccupancy: form.querySelector("#txtChaletMinPpl").value.trim(),
-                        maxOccupancy: form.querySelector("#txtChaletMaxPpl").value.trim(),
-                        tourLicense: form.querySelector("#txtChaletTourLicense").value.trim()
+                        maxOccupancy: form.querySelector("#txtChaletMaxPpl").value.trim()
                     },
                     accommodationFeatures: {
                         generalFeatures: {                            
@@ -1034,12 +1014,10 @@
                         nBeds: form.querySelector("#txtBeds").value.trim(),
                         nRestrooms: form.querySelector("#txtRestrooms").value.trim(),
                         bedroomSize: form.querySelector("#bedroomSize").value.trim(),
-                        capacity: form.querySelector("#txtCapacity").value.trim(),
                         extraCleaningCost: form.querySelector("#txtExtraCost").value.trim(),
                     },
                     accomodationDescription: form.querySelector("#txtAccomodationDetails").value.trim(),
                     additionalAccomodationDescription: form.querySelector("#txtAdditionalDetails").value.trim(),
-                    touristicRate: form.querySelector("#txtTouristicRate").value.trim(),
                     legalNotice: form.querySelector("#txtLegalNote").value.trim(),
                     location: {
                         state: form.querySelector("#txtState").value.trim(),
@@ -1048,7 +1026,6 @@
                         postalCode: form.querySelector("#txtPostalCode").value.trim(),
                         latitude: form.querySelector("#txtLat").value.trim(),
                         longitude: form.querySelector("#txtLong").value.trim(),
-                        weatherWidget: form.querySelector("#txtWeathedWdgt").value.trim(),
                         iFrame: form.querySelector("#map").src.trim(),
                     },                    
                     others: {

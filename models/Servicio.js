@@ -20,6 +20,10 @@ const serviceSchema = new mongoose.Schema({
         required: true,
         ref: 'Usuario'
     },
+    costPrice: {
+        type: Number,
+        required: true
+    },
     basePrice: {
         type: Number,
         required: true

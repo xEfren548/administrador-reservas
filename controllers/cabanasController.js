@@ -48,29 +48,26 @@ const createChaletValidators = [
         .notEmpty().withMessage('Phone is required')
         .matches(/^\+?[0-9]{10,15}$/).withMessage('Invalid phone number format')
         .isLength({ min: 10, max: 15 }).withMessage('Phone number must be between 10 and 15 digits'),
-    check('propertyDetails.email')
-        .notEmpty().withMessage('Email is required')
-        .isEmail().withMessage('Invalid email format')
-        .custom(async (value, { req }) => {
-            const chalets = await Habitacion.findOne();
-            const chalet = chalets.resources.find(chalet => chalet.propertyDetails.email === value);
-            if(chalet){
-                throw new NotFoundError('Chalet email already taken');
-            }
-            return true;
-        }),
-    check('propertyDetails.website')
-        .notEmpty().withMessage('Website is required')
-        .isLength({ max: 255 }).withMessage("Name must be less than 255 characters"),
+   //check('propertyDetails.email')
+   //    //.notEmpty().withMessage('Email is required')
+   //   // .isEmail().withMessage('Invalid email format'),
+   //   // .custom(async (value, { req }) => {
+   //   //     const chalets = await Habitacion.findOne();
+   //   //     const chalet = chalets.resources.find(chalet => chalet.propertyDetails.email === value);
+   //   //     if(chalet){
+   //   //         throw new NotFoundError('Chalet email already taken');
+   //   //     }
+   //   //     return true;
+   //   // }),
+   //check('propertyDetails.website')
+   //    //.notEmpty().withMessage('Website is required')
+   //    .isLength({ max: 255 }).withMessage("Name must be less than 255 characters"),
     check('propertyDetails.minOccupancy')
         .notEmpty().withMessage('Minimum occupancy is required')
         .isNumeric().withMessage('Minimum occupancy must be a number'),
     check('propertyDetails.maxOccupancy')
         .notEmpty().withMessage('Maximum occupancy is required')
         .isNumeric().withMessage('Maximum occupancy must be a number'),
-    check('propertyDetails.tourLicense')
-        .notEmpty().withMessage('Tour license is required'),
-
     // accommodationFeatures validations.
     check('accommodationFeatures')
         .custom((value, { req }) => {
@@ -96,12 +93,9 @@ const createChaletValidators = [
     check('additionalInfo.bedroomSize')
         .notEmpty().withMessage('Bedroom size is required')
         .isNumeric().withMessage('Bedroom size must be a number'),
-    check('additionalInfo.capacity')
-        .notEmpty().withMessage('Capacity is required')
-        .isNumeric().withMessage('Capacity must be a number'),
     check('additionalInfo.extraCleaningCost')
-        .notEmpty().withMessage('Extra cleaning cost is required')
-        .isNumeric().withMessage('Extra cleaning cost must be a number'),
+        .notEmpty().withMessage('cleaning cost is required')
+        .isNumeric().withMessage('cleaning cost must be a number'),
 
     // location validations.
     check('location.state')
@@ -124,8 +118,8 @@ const createChaletValidators = [
     check('location.longitude')
         .notEmpty().withMessage('Longitude is required')
         .isNumeric().withMessage('Longitude must be a number'),
-    check('location.weatherWidget')
-        .notEmpty().withMessage('Weather widget is required'),
+   // check('location.weatherWidget')
+   //     .notEmpty().withMessage('Weather widget is required'),
     check('location.iFrame')
         .notEmpty().withMessage('iFrame is required'),
 
@@ -137,9 +131,9 @@ const createChaletValidators = [
     check('additionalAccomodationDescription')
         .notEmpty().withMessage('Additional accommodation description is required'),
 
-    // touristicRate validations.
-    check('touristicRate')
-        .notEmpty().withMessage('Touristic rate is required'),
+   // // touristicRate validations.
+   // check('touristicRate')
+   //     .notEmpty().withMessage('Touristic rate is required'),
 
     // legalNotice validations.
     check('legalNotice')
@@ -199,37 +193,37 @@ const editChaletValidators = [
     check('propertyDetails.name')
         .optional({ checkFalsy: true })
         .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s0-9']+$/).withMessage("Invalid property name format")
-        .isLength({ max: 255 }).withMessage("Name must be less than 255 characters")
-        .custom(async (value, { req }) => {
-            if (value) { // Verifica si se proporciona un valor antes de realizar la validación
-                const chalets = await Habitacion.findOne();
-                const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
-                if(!chalet){
-                    throw new NotFoundError('Chalet not found');
-                }
-            }
-            return true;
-        }),
+        .isLength({ max: 255 }).withMessage("Name must be less than 255 characters"),
+        //.custom(async (value, { req }) => {
+        //    if (value) { // Verifica si se proporciona un valor antes de realizar la validación
+        //        const chalets = await Habitacion.findOne();
+        //        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
+        //        if(!chalet){
+        //            throw new NotFoundError('Chalet not found');
+        //        }
+        //    }
+        //    return true;
+        //}),
     check('propertyDetails.phoneNumber')
         .optional({ checkFalsy: true })
         .matches(/^\+?[0-9]{10,15}$/).withMessage('Invalid phone number format')
         .isLength({ min: 10, max: 15 }).withMessage('Phone number must be between 10 and 15 digits'),
-    check('propertyDetails.email')
-        .optional({ checkFalsy: true })
-        .isEmail().withMessage('Invalid email format')
-        .custom(async (value, { req }) => {
-            if (value) { // Verifica si se proporciona un valor antes de realizar la validación
-                const chalets = await Habitacion.findOne();
-                const chalet = chalets.resources.find(chalet => chalet.propertyDetails.email === value);
-                if(!chalet){
-                    throw new NotFoundError('Chalet email not found');
-                }
-            }
-            return true;
-        }),
-    check('propertyDetails.website')
-        .optional({ checkFalsy: true })
-        .isLength({ max: 255 }).withMessage("Name must be less than 255 characters"),
+ // check('propertyDetails.email')
+ //     .optional({ checkFalsy: true })
+ //     .isEmail().withMessage('Invalid email format'),
+ //     //.custom(async (value, { req }) => {
+ //     //    if (value) { // Verifica si se proporciona un valor antes de realizar la validación
+ //     //        const chalets = await Habitacion.findOne();
+ //     //        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.email === value);
+ //     //        if(!chalet){
+ //     //            throw new NotFoundError('Chalet email not found');
+ //     //        }
+ //     //    }
+ //     //    return true;
+ //     //}),
+ // check('propertyDetails.website')
+ //     .optional({ checkFalsy: true })
+ //     .isLength({ max: 255 }).withMessage("Name must be less than 255 characters"),
     check('propertyDetails.minOccupancy')
         .optional({ checkFalsy: true })
         .isNumeric().withMessage('Minimum occupancy must be a number'),
@@ -267,9 +261,6 @@ const editChaletValidators = [
     check('additionalInfo.bedroomSize')
         .optional({ checkFalsy: true })
         .isNumeric().withMessage('Bedroom size must be a number'),
-    check('additionalInfo.capacity')
-        .optional({ checkFalsy: true })
-        .isNumeric().withMessage('Capacity must be a number'),
     check('additionalInfo.extraCleaningCost')
         .optional({ checkFalsy: true })
         .isNumeric().withMessage('Extra cleaning cost must be a number'),
@@ -295,8 +286,8 @@ const editChaletValidators = [
     check('location.longitude')
         .optional({ checkFalsy: true })
         .isNumeric().withMessage('Longitude must be a number'),
-    check('location.weatherWidget')
-        .optional({ checkFalsy: true }),
+   // check('location.weatherWidget')
+   //     .optional({ checkFalsy: true }),
     check('location.iFrame')
         .optional({ checkFalsy: true }),
 
@@ -308,9 +299,9 @@ const editChaletValidators = [
     check('additionalAccomodationDescription')
         .optional({ checkFalsy: true }),
 
-    // touristicRate validations.
-    check('touristicRate')
-        .optional({ checkFalsy: true }),
+   // // touristicRate validations.
+   // check('touristicRate')
+   //     .optional({ checkFalsy: true }),
 
     // legalNotice validations.
     check('legalNotice')
