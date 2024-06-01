@@ -24,8 +24,7 @@ async function generateSideMenu (req, res, next) {
                 {'Clientes': ["/api/clientes/mostrar-clientes", "fa fa-user-circle"]},
                 {'Servicios adicionales': ["/api/servicios", "fas fa-spa"]},
                 {'Limpieza': ["/api/racklimpieza", "fas fa-broom"]},
-                {'Alta cabaña': ["/api/cabanas", "fas fa-plus"]},
-                {'Editar cabaña': ["/api/cabanas/editar-cabana", "fas fa-pencil-alt"]},
+                {'Cabañas': []},
                 {'Reserva cliente cabaña': ["/instrucciones/", "far fa-calendar-alt"]},
             ],        
             'Vendedor': [
@@ -50,43 +49,102 @@ async function generateSideMenu (req, res, next) {
             'Cliente': [
                 {'Home': ["/", "fs-5 fa fa-house"]},
             ],
-        }
+        };
+        
         const routes = privileges[req.session.privilege];
-
         var sideMenuContent = 
-            `<a href="" class="d-flex text-decoration-none mt-1 align-items-center text-white">
-                <span class="fs-4 d-none d-sm-inline" href="/">SideMenu</span>
-            </a>
-            <ul class="nav nav-pills flex-column mt-4 ">`;
+            `<div class="offcanvas-header">
+                <h6 class="offcanvas-title d-none d-sm-block text-white" id="offcanvas"></h6>
+                <button type="button" class="btn-close text-reset bg-light" data-bs-dismiss="offcanvas"
+                    aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body px-0 bg-dark">
+                <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-start" id="menu">`;
         routes.forEach(item => {
             for (const key in item) {
                 const route = item[key][0];
                 const cssClass = item[key][1];
-                sideMenuContent += 
-                `<li class="nav-item py-2 py-sm-0">
-                    <a href="${route}" class="nav-link text-white">
-                        <i class="${cssClass}"></i><span
-                            class="fs-4 ms-3 d-none d-sm-inline">${key}</span>
-                    </a>
-                </li>`;  
+                if(key === "Servicios adicionales"){
+                    sideMenuContent += 
+                        `<li class="nav-item py-2 py-sm-0">
+                            <a href="#submenu1" data-bs-toggle="collapse" class="nav-link text-truncate px-4 align-middle ">
+                                <div>
+                                    <i class="fs-5 fas fa-spa" title="Servicios Adicionales"></i>
+                                    <span class="fs-5 ms-2 d-none d-sm-inline">Servicios adicionales</span>
+                                </div>
+                            </a>
+                            <ul class="collapse nav flex-column ms-1" id="submenu1" data-bs-parent="#menu">
+                                <li class="w-100">
+                                    <a href="/api/servicios" class="nav-link px-5" title="Servicios disponibles"><i
+                                            class="fa fa-list" aria-hidden="true"></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Servicios
+                                            disponibles</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/rackservicios" class="nav-link px-5" title="Ver todos los servicios"><i
+                                            class="fa fa-list-alt" aria-hidden="true"></i> <span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Ver todos los
+                                            servicios</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>`;
+                }
+                else if(key === "Cabañas"){
+                    sideMenuContent += 
+                        `<li class="nav-item py-2 py-sm-0">
+                            <a href="#submenu2" data-bs-toggle="collapse" class="nav-link px-4 align-middle " title="Cabañas">
+                                <i class="fs-5 fa fa-hotel" aria-hidden="true"></i><span
+                                    class="fs-5 ms-3 d-none d-sm-inline">Cabañas
+                                </span></a>
+                            <ul class="collapse nav flex-column ms-1" id="submenu2" data-bs-parent="#menu">
+                                <li class="w-100">
+                                    <a href="/api/cabanas" class="nav-link px-5" title="Alta Cabañas">
+                                        <i class="fas fa-plus"></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Alta cabaña</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/api/cabanas/editar-cabana" class="nav-link px-5" title="Editar Cabaña">
+                                        <i class="fas fa-pencil-alt "></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Editar cabaña</span>
+                                    </a>
+
+                                </li>
+                            </ul>
+                        </li>`;
+                }
+                else{
+                    sideMenuContent += 
+                    `<li class="nav-item">
+                        <a href="${route}" class="nav-link align-middle px-4" title="Home">
+                            <i class="${cssClass}"></i><span class="fs-5 ms-3 d-none d-sm-inline">${key}</span>
+                        </a>
+                    </li>`;
+                }
             }
         });
-        sideMenuContent += 
+        sideMenuContent +=
             `</ul>
             <hr>
-            <div class="dropdown pb-4">
-                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png" alt="hugenerd" width="30" height="30" class="rounded-circle">
-                    <span class="d-none d-sm-inline mx-1">${req.session.firstName}</span>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
-                    <li><a class="dropdown-item" href="/api/perfil-usuario">Settings</a></li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li><a class="dropdown-item" href="/api/auth/logout">Sign out</a></li>
-                </ul>
-            </div>`;  
+            <div class="offcanvas-footer px-4 pt-5 pb-4 d-flex align-items-end justify-content-start">
+                <div class="dropdown mt-auto">
+                    <a href="#" class="d-flex align-items-center justify-content-center text-white text-decoration-none dropdown-toggle"
+                        id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="https://github.com/mdo.png" alt="hugenerd" width="30" height="30" class="rounded-circle">
+                        <span class="d-none d-sm-inline mx-1">${req.session.firstName}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+                        <li><a class="dropdown-item" href="/api/perfil-usuario">Profile</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="/api/auth/logout">Sign out</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>`
 
         // console.log("ESTE ES EL MENU ENTREGADO: ", sideMenuContent);
 
