@@ -100,7 +100,6 @@ async function showCostsView(req, res, next) {
     try {
         const costs = await Costo.find({}).lean();
         res.render('vistaCostos', {
-            layout: 'costos',
             costs: costs
         });
     } catch (err) {

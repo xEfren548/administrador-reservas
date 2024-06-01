@@ -129,7 +129,6 @@ const passwordValidator = [
 
 async function showUserProfile(req, res, next) {
     res.render("vistaPerfilUsuario", {
-        layout: 'userProfile',
         req: req
     });
 }
