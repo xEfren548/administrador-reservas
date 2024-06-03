@@ -313,13 +313,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 
                 totalSinComisiones.value = totalPrecios;
 
+                // Asignar comisiones
                 const comisionUsuarios = await obtenerComisiones()
-                precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios
-                totalPrecios += comisionUsuarios.finalComission
+                precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
+                totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
                 console.log("Total precios con comisiones: ", totalPrecios)
-                const totalInput = document.getElementById('habitacion_total')
-                totalInput.value = totalPrecios
-                preciosTotalesGlobal = totalPrecios
+                
+                const totalInput = document.getElementById('habitacion_total') // Subtotal 
+                totalInput.value = precioMinimoPermitido // Mostrar el minimo permitido
+                
+                preciosTotalesGlobal = totalPrecios // Monto maximo en variable global
 
                 totalCostoBaseInput.value = totalCostoBase
                 

@@ -30,14 +30,21 @@ async function calcularComisiones(req, res) {
                 counter += 1;
                 // let costos = await Costos.find({ category: "Gerente" });
 
-                if (costosGerente.commission === "Aumento por costo fijo") {
-                    finalComission += costosAdministrador.amount;
-                    minComission += costosAdministrador.amount
-                    console.log('comision admin: ', costosAdministrador.amount, user._id.toString());
+                if (user.administrator.toString() === user._id.toString()) {
+                    if (costosGerente.commission === "Aumento por costo fijo") {
+                        finalComission += costosAdministrador.amount;
+                        minComission += costosAdministrador.amount
+                        console.log('comision master admin: ', costosAdministrador.amount, user._id.toString());
+                    }
+                    break;
+                } else {
+                    if (costosVendedor.commission === "Aumento por costo fijo") {
+                        finalComission += costosVendedor.maxAmount;
+                        minComission += costosVendedor.minAmount;
+                        console.log('comision admin vendedor: ', costosAdministrador.amount, user._id.toString());
+                        user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                    }
                 }
-
-
-                break;
             } else {
 
                 counter += 1;
@@ -53,8 +60,6 @@ async function calcularComisiones(req, res) {
                         finalComission += costosVendedor.maxAmount;
                         minComission += costosVendedor.minAmount;
                         console.log('comision vendedor: ', costosVendedor.maxAmount, user._id.toString())
-
-
                     }
                 } else if (user.privilege === "Gerente") {
                     if (costosGerente.commission === "Aumento por costo fijo") {
@@ -98,9 +103,6 @@ async function generarComisionReserva(req, res) {
             throw new NotFoundError('Chalet does not exist 2');
         }
 
-        console.log('Chalet de comision: ')
-        console.log(chalet)
-
         let comisionVendedor = precioAsignado - precioMinimo;
         let utilidadChalet = totalSinComisiones - costoBase;
 
@@ -119,27 +121,68 @@ async function generarComisionReserva(req, res) {
 
         while (true) {
             // console.log(user)
+
             if (user.privilege === 'Administrador') {
                 counter += 1;
-                // let costos = await Costos.find({ category: "Gerente" });
-                if (costosGerente.commission === "Aumento por costo fijo") {
-                    if (counter > 1) {
-                        conceptoAdmin = `Comisión administrador ligado por reservación ${chaletName}`
 
-                    } else {
-                        conceptoAdmin = `Reservación ${chaletName}`
+                if (user.administrator.toString() === user._id.toString()) {
+                    if (costosGerente.commission === "Aumento por costo fijo") {
+                        if (counter > 1) {
+                            conceptoAdmin = `Comisión administrador ligado por reservación ${chaletName}`
+
+                        } else {
+                            conceptoAdmin = `Reservación ${chaletName}`
+                        }
+                        // finalComission += costosGerente.amount;
+                        // minComission += costosGerente.amount;
+                        await altaComisionReturn({
+                            monto: costosAdministrador.amount,
+                            concepto: conceptoAdmin,
+                            fecha: fechaActual,
+                            idUsuario: user._id.toString()
+                        })
                     }
-                    // finalComission += costosGerente.amount;
-                    // minComission += costosGerente.amount;
-                    await altaComisionReturn({
-                        monto: costosAdministrador.amount,
-                        concepto: conceptoAdmin,
-                        fecha: fechaActual,
-                        idUsuario: user._id.toString()
-                    })
+                    break;
+                } else {
+                    if (costosVendedor.commission === "Aumento por costo fijo") {
+                        await altaComisionReturn({
+                            monto: comisionVendedor,
+                            concepto: `Comisión por Reservación admin. ${chaletName}`,
+                            fecha: fechaActual,
+                            idUsuario: user._id.toString()
+                        })
+                        user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                    }
                 }
 
-                break;
+
+
+
+
+
+
+
+
+
+                // let costos = await Costos.find({ category: "Gerente" });
+                // if (costosGerente.commission === "Aumento por costo fijo") {
+                //     if (counter > 1) {
+                //         conceptoAdmin = `Comisión administrador ligado por reservación ${chaletName}`
+
+                //     } else {
+                //         conceptoAdmin = `Reservación ${chaletName}`
+                //     }
+                //     // finalComission += costosGerente.amount;
+                //     // minComission += costosGerente.amount;
+                //     await altaComisionReturn({
+                //         monto: costosAdministrador.amount,
+                //         concepto: conceptoAdmin,
+                //         fecha: fechaActual,
+                //         idUsuario: user._id.toString()
+                //     })
+                // }
+
+                // break;
             } else {
 
                 counter += 1;
