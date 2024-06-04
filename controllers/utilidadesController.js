@@ -353,11 +353,7 @@ async function altaComision(req, res) {
 async function altaComisionReturn(req, res) {
     try {
         const { monto, concepto, fecha, idUsuario } = req
-        console.log(req)
-        console.log(monto),
-            console.log(concepto),
-            console.log(fecha),
-            console.log(idUsuario)
+
         const newUtilidad = new Utilidades({
             monto,
             concepto,
