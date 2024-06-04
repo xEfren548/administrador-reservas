@@ -356,7 +356,7 @@ td {
     height: auto;
     margin: 0 auto;
     position: relative;
-    margin-top: 10%;
+    margin-top: 5%;
     box-shadow: 2px 5px 20px rgba(119, 119, 119, 0.5);
 }
 
@@ -424,3 +424,14 @@ ul.rb li .timestamp {
     font-size: 16px;
 }
 
+.content-logs {
+    display: none;
+    /* margin-top: 10px; */
+    transition: max-height 0.5s ease-out;
+
+}
+
+.toggle-button {
+    cursor: pointer;
+    margin-left: 10px;
+}

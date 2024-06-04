@@ -380,46 +380,77 @@
             </table>
         </div>
     </div>
-</div> {{!-- Cierre row --}}
-  <h3>
-    Logs 
-    <span class="toggle-button" onclick="toggleContent()">+</span>
-  </h3>
-  <div class="content">
-    <div class="container-logs">
-      <div class="rightbox">
-        <div class="rb-container">
-          <ul class="rb">
-            {{#if logs}}
-            {{#each logs}}
-            <li class="rb-item" ng-repeat="itembx">
-              <div class="timestamp">
-                <b>{{this.fecha}}</b> <br> {{this.hora}}
-              </div>
-              <div class="item-title">{{this.acciones}}</div>
-            </li>
-            {{/each}}
-            {{/if}}
-            {{!-- Placeholder for example logs
-            <li class="rb-item" ng-repeat="itembx">
-              <div class="timestamp">
-                19th May 2020<br> 3:00 PM
-              </div>
-              <div class="item-title">Mia Redwood commented on your last post.</div>
-            </li>
-            <li class="rb-item" ng-repeat="itembx">
-              <div class="timestamp">
-                17st June 2020<br> 7:00 PM
-              </div>
-              <div class="item-title">Lucas McAlister just send you a message.</div>
-            </li>
-            --}}
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
+    <h3 class="d-inline-block mr-3 ml-3 mt-3" onclick="toggleContent()">
+        Historial de actividad de reserva
+        <span class="toggle-button">+</span>
+    </h3>
+    <div class="content-logs">
+        <div class="container-logs">
+            <div class="rightbox">
+                <div class="rb-container">
+                    <ul class="rb">
+                        {{#if logs}}
+                        {{#each logs}}
+                        <li class="rb-item" ng-repeat="itembx">
+                            <div class="timestamp">
+                                <b>{{this.fecha}}</b> <br> {{this.hora}}
+                            </div>
+                            <div class="item-title">{{this.acciones}}</div>
+                        </li>
+                        {{/each}}
+                        {{/if}}
+                        {{!-- Placeholder for example logs
+                        <li class="rb-item" ng-repeat="itembx">
+                            <div class="timestamp">
+                                19th May 2020<br> 3:00 PM
+                            </div>
+                            <div class="item-title">Mia Redwood commented on your last post.</div>
+                        </li>
+                        <li class="rb-item" ng-repeat="itembx">
+                            <div class="timestamp">
+                                17st June 2020<br> 7:00 PM
+                            </div>
+                            <div class="item-title">Lucas McAlister just send you a message.</div>
+                        </li>
+                        --}}
+                    </ul>
+                </div>
+            </div>
 
+            <div class="row flex-nowrap justify-content-center mt-3 " style="width: 95%;">
+                <div class="col-10">
+                    <h4>Tabla de eventos</h4>
+                    <table class="table table-dark table-hover text-center" id="tablaLogs">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Usuario</th>
+                                <th scope="col">Acción</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Fecha y Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#if logs.length}}
+                            {{#each logs}}
+                            <tr>
+                                <td>{{this.nombreUsuario}}</td>
+                                <td>{{this.acciones}}</td>
+                                <td>{{this.type}}</td>
+                                <td>{{this.fecha}} {{this.hora}}</td>
+
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {{/if}}
+        </div>
+
+
+    </div> {{!-- Cierre content logs--}}
+
+</div> {{!-- Cierre row --}}
 
 
 
@@ -785,6 +816,36 @@
 
 
 <script>
+
+    function toggleContent() {
+        const content = document.querySelector('.content-logs');
+        const toggleButton = document.querySelector('.toggle-button');
+
+        if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block';
+            toggleButton.textContent = '-';
+        } else {
+            content.style.display = 'none';
+            toggleButton.textContent = '+';
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+
+        var table = document.getElementById("tablaLogs");
+        if (table) {
+
+            var dataTable = new DataTable(table, {
+                "order": [[3, 'asc']], // Puedes especificar aquí el orden inicial de las columnas
+                "paging": true, // Habilita la paginación
+                "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
+                "pageLength": 10 // Establece la longitud de página inicial
+            });
+        }
+
+    });
+
     // Obtener todos los contenedores de nota
     const notaContainers = document.querySelectorAll('.nota-container');
 
