@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const Habitacion = require('../models/Habitacion');
+const logController = require('../controllers/logController')
 const NotFoundError = require("../common/error/not-found-error");
 const BadRequestError = require("../common/error/bad-request-error");
 const {check} = require("express-validator");
@@ -440,7 +441,15 @@ async function createChalet(req, res, next) {
         console.log("Cabaña agregada con éxito");
         req.session.chaletAdded = chalets.resources[chalets.resources.length - 1].propertyDetails.name;
         console.log("Respuesta del servidor:", { chaletAdded: req.session.chaletAdded });
-
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'registration',
+            acciones: `Cabaña creada por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         res.status(200).json({ success: true, message: "Cabaña agregada con éxito "});
     } catch(err){
         console.log(err);
@@ -645,6 +654,15 @@ async function editChalet(req, res, next){
         console.log("Cabaña actualizada con éxito");
         req.session.chaletUpdated = chalets[indexToUpdate].propertyDetails.name;
         console.log("Respuesta del servidor:", { chaletUpdated: req.session.chaletUpdated });
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'modification',
+            acciones: `Cabaña modificada por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
 
         res.status(200).json({ success: true, message: "Cabaña editada con éxito"});
     } catch(err){

@@ -1,6 +1,7 @@
 const BadRequestError = require('../common/error/bad-request-error');
 const NotFoundError = require('../common/error/not-found-error');
 const Cliente = require('../models/Cliente');
+const logController = require('../controllers/logController');
 const {check} = require("express-validator");
 
 const createClientValidators = [
@@ -126,6 +127,15 @@ async function createClient(req, res, next) {
         await clienteToAdd.save();
 
         console.log("Cliente agregado con éxito");
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'registration',
+            acciones: `Cliente agregado por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         res.status(200).json({ success: true, message: "Client successfully created"});
     } catch (err) {
         return next(err);
@@ -147,6 +157,16 @@ async function editClient(req, res, next) {
         if (!clienteToUpdate) {
             throw new NotFoundError("Client not found");
         }
+
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'modification',
+            acciones: `Cliente editado por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
 
         console.log("Cliente editado con éxito");
         res.status(200).json({ success: true, message: "Cliente editado con éxito" });
@@ -176,6 +196,15 @@ async function editClientById(req, res, next) {
         }
 
         console.log("Cliente editado con éxito");
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'modification',
+            acciones: `Cliente editado por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         res.status(200).json({ clienteToUpdate });
     } catch(err) {
         console.log(err)
@@ -193,6 +222,15 @@ async function deleteClient(req, res, next) {
         }
 
         console.log("Cliente eliminado con éxito");
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'elimination',
+            acciones: `Cliente eliminado por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         res.status(200).json({ success: true, message: "Cliente eliminado con éxito" });
     } catch(err) {
         return next(err);
