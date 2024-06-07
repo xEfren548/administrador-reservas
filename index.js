@@ -19,11 +19,14 @@ app.use(express.json())
 // Configuración del motor de plantillas
 app.engine('handlebars', engine({
     helpers: {
-        json: function (context) {
-            return JSON.stringify(context);
-        }
+      eq: function (value1, value2) {
+        return value1 === value2;
+      },
+      json: function (context) {
+        return JSON.stringify(context);
+      }
     }
-}));
+  }));
 app.set('view engine', 'handlebars');
 app.set('views', './views');
 

@@ -1,0 +1,300 @@
+<form id="frmCreateSurvey">
+    <div class="page-info">
+        <h1>Crear encuesta de satisfacción</h1>
+        <button id="btnSaveSurvey" type="submit">Guardar</button>
+    </div>
+
+    <div class="survey-form">
+        <div class="questions">
+            {{#if survey}}
+                {{#each survey}}
+                    <div class="question">
+                        <div class="question-card-options">
+                            <button type="button" class="btn-cancel"><span class="material-symbols-outlined">close</span></button>
+                        </div>
+                        <div class="question-title">
+                            <input type="text" value="{{this.questionName}}" placeholder="{{this.questionName}}">
+                        </div>
+                        <hr>
+                        <div class="question-body">
+                            <select class="question-types">
+                                <option disabled="true">Seleccione el tipo de pregunta</option>
+                                <option value="textField" {{#if (eq this.questionType "textField")}}selected{{/if}}>Campo de texto</option>
+                                <option value="range" {{#if (eq this.questionType "range")}}selected{{/if}}>Rango</option>
+                                <option value="boolean" {{#if (eq this.questionType "boolean")}}selected{{/if}}>Booleana</option>
+                            </select>
+                            <div class="answer-text" style="{{#if (eq this.questionType "textField")}}display: flex;{{else}}display: none;{{/if}}">
+                                <input type="text" placeholder="Ingresa tu respuesta" disabled="true">
+                            </div>
+                            <div class="answer-range" style="{{#if (eq this.questionType "range")}}display: flex;{{else}}display: none;{{/if}}">
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="range" disabled="true"> 1
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="range" disabled="true"> 2
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="range" disabled="true"> 3
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="range" disabled="true"> 4
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="range" disabled="true"> 5
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="answer-boolean" style="{{#if (eq this.questionType "boolean")}}display: flex;{{else}}display: none;{{/if}}">
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="boolean" disabled="true"> Cierto
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="boolean" disabled="true"> Falso
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="question-error-message"><p></p></div>
+                        </div>
+                    </div>
+                {{/each}}
+
+            {{else}}
+                <div class="question">
+                    <div class="question-card-options">
+                        <button type="button" class="btn-cancel"><span class="material-symbols-outlined">close</span></button>
+                    </div>
+                    <div class="question-title">
+                        <input type="text" placeholder="Escriba la pregunta">
+                    </div>
+                    <hr>
+                    <div class="question-body">
+                        <select class="question-types">
+                            <option selected="true" disabled="true">Seleccione el tipo de pregunta</option>
+                            <option value="textField">Campo de texto</option>
+                            <option value="range">Rango</option>
+                            <option value="boolean">Booleana</option>
+                        </select>
+                        <div class="answer-text" style="display: none;">
+                            <input type="text" placeholder="Ingresa tu respuesta" disabled="true">
+                        </div>
+                        <div class="answer-range" style="display: none;">
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="range" disabled="true"> 1
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="range" disabled="true"> 2
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="range" disabled="true"> 3
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="range" disabled="true"> 4
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="range" disabled="true"> 5
+                                </label>
+                            </div>
+                        </div>
+                        <div class="answer-boolean" style="display: none;">
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="boolean" disabled="true"> Cierto
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="boolean" disabled="true"> Falso
+                                </label>
+                            </div>
+                        </div>
+                        <div class="question-error-message"><p></p></div>
+                    </div>
+                </div>
+            {{/if}}          
+        </div>
+        <hr>
+
+        <div class="add-new-question">
+            <button type="button"><i class="material-symbols-outlined">add</i><span>Agregar nueva pregunta</span></button>
+        </div>
+    </div>
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Declaring variables.
+        const questions = document.querySelectorAll(".survey-form .questions .question");
+        const btnAddQuestion = document.querySelector(".survey-form .add-new-question button");
+        const frmCreateSurvey = document.getElementById("frmCreateSurvey");
+        
+        // Declaring functions.
+        function setQuestionInitialValues(question){
+            question.querySelector(".question-title input").value = "";
+            question.querySelector(".question-types").value = "Seleccione el tipo de pregunta";
+            question.querySelector(".answer-text").style.display = "none";
+            question.querySelector(".answer-range").style.display = "none";
+            question.querySelector(".answer-boolean").style.display = "none";
+
+            question.querySelector(".answer-text input").value = "";
+            var answerRangeChecked = question.querySelector('.answer-range input[name="range"]:checked');
+            if(answerRangeChecked){
+                answerRangeChecked.checked = false;
+            }
+            var answerBooleanChecked = question.querySelector('.answer-boolean input[name="boolean"]:checked');
+            if(answerBooleanChecked){
+                answerBooleanChecked.checked = false;
+            }
+            
+            // Setting events in the corresponding question elements.            
+            question.querySelector(".question-body .question-types").addEventListener("change", changeQuestionType);
+            question.addEventListener("mouseenter", () =>{ resetQuestionError(question, question.querySelector(".question-body .question-error-message p")); });
+            question.querySelector(".question-card-options .btn-cancel").addEventListener("click", deleteQuestion);
+        }
+        function setQuestionError(question, errorTag, errorMessage){
+            question.classList.add("question-error");
+            errorTag.innerHTML = errorMessage;
+        }
+        function resetQuestionError(question, errorTag){
+            question.classList.remove("question-error");
+            errorTag.innerHTML = "";
+        }
+        
+        function addNewQuestion(){
+            const questionsContainer = document.querySelector(".questions");
+            var questionToAdd = document.querySelector(".question").cloneNode(true);
+
+            setQuestionInitialValues(questionToAdd);
+            questionsContainer.appendChild(questionToAdd);
+        }
+        function changeQuestionType(event) {
+            const question = event.target.closest(".question");
+            const answerText = question.querySelector(".answer-text");
+            const answerRange = question.querySelector(".answer-range");
+            const answerBoolean = question.querySelector(".answer-boolean");
+
+            switch (event.target.value) {
+                case "textField":
+                    answerText.style.display = "flex";
+                    answerRange.style.display = "none";
+                    answerBoolean.style.display = "none";
+                    break;
+                case "range":
+                    answerText.style.display = "none";
+                    answerRange.style.display = "flex";
+                    answerBoolean.style.display = "none";
+                    break;
+                case "boolean":
+                    answerText.style.display = "none";
+                    answerRange.style.display = "none";
+                    answerBoolean.style.display = "flex";
+                    break;
+                default:
+                    answerText.style.display = "none";
+                    answerRange.style.display = "none";
+                    answerBoolean.style.display = "none";
+            }
+        }    
+        function deleteQuestion(event){
+            const questionToDelete = event.target.closest(".question");
+            questionToDelete.remove()
+        }
+        function saveSurvey(event){
+            event.preventDefault();
+
+            const questions = document.querySelectorAll(".questions .question");
+            var questionsInfo = [];
+            var questionNamesSet = new Set();
+            var error = false;
+
+            // Retrieving every question in form.
+            questions.forEach(question => {
+                const questionName = question.querySelector(".question-title input").value;
+                const questionType = question.querySelector(".question-body .question-types").value;
+                var questionError = question.querySelector(".question-body .question-error-message p");
+
+                // Validate question.
+                
+
+                // Creating question
+                var questionInfo = {
+                    questionName,
+                    questionType
+                }
+                questionsInfo.push(questionInfo);
+            });
+            if(error){ return; }
+
+            // Sending form info.
+            fetch("/encuesta/guardar-encuesta", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({questionsInfo})
+            })
+            .then(response => {
+                if (!response.ok) {
+                    response.json().then(errorData => {
+                        const errors = errorData.error;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Error en la solicitud: " + errors[0].message + ".",
+                            confirmButtonText: 'Aceptar'
+                        });   
+                    });                    
+                    throw new Error('Error en la solicitud');
+                }
+                return response.json();
+            })
+            .then(data => {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Completado!',
+                    text: data.message + '.',
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                }); 
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al enviar la solicitud: ' + error + '.',
+                    confirmButtonText: 'Aceptar'
+                }); 
+            });        
+        }
+
+        // Setting events.
+        questions.forEach(question => {
+            setQuestionInitialValues(question);
+        });
+        btnAddQuestion.addEventListener("click", addNewQuestion);  
+        frmCreateSurvey.addEventListener("submit", saveSurvey);
+    });
+</script>

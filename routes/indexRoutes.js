@@ -25,6 +25,9 @@ const pagosRoutes = require('./pagosRoutes');
 const sideMenuRoutes = require('./sideMenuRoutes');
 const costosRoutes = require('./costosRoutes');
 const utilidadesRoutes = require('./utilidadesRoutes');
+const surveyRoutes = require('./surveyRoutes');
+
+const authMiddleware = require('../common/middlewares/authMiddleware');
 const CustomError = require("../common/error/custom-error");
 const NotFoundError = require("../common/error/not-found-error");
 
@@ -44,10 +47,10 @@ router.use("/api", authRoutes);
 router.use("/getchaletsRoutes", getchaletsRoutes)
 
 //Validating user's token in later requests.
-// router.use(currentuser);
+router.use(currentuser);
 
 //Determining user access based on privileges.
-// router.use(userPrivilege);
+router.use(userPrivilege);
 
 router.use("/download", express.static("download"));
 router.use('/', sideMenuRoutes);
@@ -68,7 +71,7 @@ router.use('/api',
 router.use('/api/usuarios', userRoutes);
 router.use('/api/perfil-usuario/', userProfileRoutes);
 
-router.get('/', reservationRoutes);
+router.get('/', authMiddleware, reservationRoutes);
 
 router.use('/', rackLimpiezaRoutes);
 router.use('/', rackServiciosRoutes);
@@ -79,7 +82,9 @@ router.use('/api', userRoutes);
 router.use('/api', serviciosRoutes);
 router.use('/', calendarioPrecios);
 router.use('/api/pagos/', pagosRoutes);
-router.use('/api/', utilidadesRoutes);
+router.use('/api/', authMiddleware, utilidadesRoutes);
+
+router.use('/encuesta', surveyRoutes);
 
 // Not found resource handling middleware.
 router.all("*", (req, res, next) => {

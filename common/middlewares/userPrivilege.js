@@ -2,7 +2,6 @@ const BadRequestError = require("../error/bad-request-error");
 
 const userPrivilege = (req, res, next) => {
     const privilege = req.session?.privilege;
-    console.log(req.session?.privilege)
     if(!privilege){   
         return next(new BadRequestError("Privilege needed"));
     }
@@ -57,7 +56,12 @@ const userPrivilege = (req, res, next) => {
             "/",
             "/api/racklimpieza",
             "/racklimpieza",
-            "/rackservicios"
+            "/rackservicios",
+            "/api/costos/mostrar-costos",
+            "/api/costos/editar-costos",
+            "/api/costos/eliminar-costos",
+            "/encuesta/crear-encuesta",
+            "/encuesta/guardar-encuesta",
         ],
         'Vendedor': [
             "/sidemenu",
