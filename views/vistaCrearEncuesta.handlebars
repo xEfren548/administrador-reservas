@@ -19,9 +19,9 @@
                         <div class="question-body">
                             <select class="question-types">
                                 <option disabled="true">Seleccione el tipo de pregunta</option>
-                                <option value="textField" {{#if (eq this.questionType "textField")}}selected{{/if}}>Campo de texto</option>
-                                <option value="range" {{#if (eq this.questionType "range")}}selected{{/if}}>Rango</option>
-                                <option value="boolean" {{#if (eq this.questionType "boolean")}}selected{{/if}}>Booleana</option>
+                                <option value="textField" {{#if (eq this.questionType "textField")}}selected="true"{{/if}}>Campo de texto</option>
+                                <option value="range" {{#if (eq this.questionType "range")}}selected="true"{{/if}}>Rango</option>
+                                <option value="boolean" {{#if (eq this.questionType "boolean")}}selected="true"{{/if}}>Booleana</option>
                             </select>
                             <div class="answer-text" style="{{#if (eq this.questionType "textField")}}display: flex;{{else}}display: none;{{/if}}">
                                 <input type="text" placeholder="Ingresa tu respuesta" disabled="true">
@@ -143,14 +143,13 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Declaring variables.
         const questions = document.querySelectorAll(".survey-form .questions .question");
         const btnAddQuestion = document.querySelector(".survey-form .add-new-question button");
         const frmCreateSurvey = document.getElementById("frmCreateSurvey");
         
-        // Declaring functions.
         function setQuestionInitialValues(question){
             question.querySelector(".question-title input").value = "";
+            question.querySelector(".question-title input").placeholder = "Escriba la pregunta";
             question.querySelector(".question-types").value = "Seleccione el tipo de pregunta";
             question.querySelector(".answer-text").style.display = "none";
             question.querySelector(".answer-range").style.display = "none";
@@ -234,7 +233,20 @@
                 var questionError = question.querySelector(".question-body .question-error-message p");
 
                 // Validate question.
-                
+                if(questionType !== "textField" && questionType !== "range" && questionType !== "boolean"){
+                    setQuestionError(question, questionError, "Error: ingresa un tipo de respuesta válido");
+                    error = true;
+                }
+                if(questionName === ""){
+                    setQuestionError(question, questionError, "Error: ingresa una pregunta");
+                    error = true;
+                }
+                else if (questionNamesSet.has(questionName)) {
+                    setQuestionError(question, questionError, `Error: la pregunta \"${questionName}\" ya fue declarada anteriormente`);
+                    error = true;
+                } else {
+                    questionNamesSet.add(questionName);
+                }
 
                 // Creating question
                 var questionInfo = {
@@ -291,9 +303,11 @@
         }
 
         // Setting events.
+        /*
         questions.forEach(question => {
             setQuestionInitialValues(question);
         });
+        */
         btnAddQuestion.addEventListener("click", addNewQuestion);  
         frmCreateSurvey.addEventListener("submit", saveSurvey);
     });
