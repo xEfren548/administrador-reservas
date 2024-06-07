@@ -62,6 +62,7 @@ const userPrivilege = (req, res, next) => {
             "/api/costos/eliminar-costos",
             "/encuesta/crear-encuesta",
             "/encuesta/guardar-encuesta",
+            "/encuesta/modificar-encuesta",
         ],
         'Vendedor': [
             "/sidemenu",

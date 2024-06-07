@@ -1,5 +1,6 @@
 const Encuesta = require('../models/Encuesta');
 const BadRequestError = require("../common/error/bad-request-error");
+const NotFoundError = require("../common/error/not-found-error");
 const { check } = require("express-validator");
 
 const createFormValidators = [
@@ -29,14 +30,61 @@ const createFormValidators = [
         })
 ];
 
+const updateFormValidators = [
+    check('questionsInfo')
+        .custom(async (value, {req}) => {
+            var survey = await Encuesta.findOne();
+            survey = survey.questions;
+            if(!survey){ throw new NotFoundError("No previously existing survey to update") }
+            
+            var questionIdsSet = new Set();
+            var questionNamesSet = new Set();
+
+            value.forEach(questionInfo => {
+                // Validating question type.
+                if(!["textField", "range", "boolean"].includes(questionInfo.questionType)){
+                    throw new BadRequestError('Missing question type');
+                }
+                
+                // Validating question name.
+                if (questionNamesSet.has(questionInfo.questionName)) {
+                    throw new BadRequestError(`Question \"${questionInfo.questionName}\" has been already declared`);
+                } else if(!questionInfo.questionName){
+                    throw new BadRequestError('Missing question name');
+                }
+                else {                    
+                    questionNamesSet.add(questionInfo.questionName);
+                }
+
+                /*
+                // Validating duplicate IDs.
+                if (questionIdsSet.has(questionInfo.questionId)) {
+                    throw new BadRequestError(`Question ID \"${questionInfo.questionId}\" duplicated`);
+                } else {
+                    questionIdsSet.add(questionInfo.questionId);
+                } 
+                
+                // Validating correct IDs.
+                if(questionInfo.questionId != null){
+                    if(!survey.some(question => question.questionName === questionInfo.questionId)){
+                        throw new BadRequestError(`Missing question. Question "${questionInfo.questionId} does not exist"`);
+                    }
+                }
+                */
+            });
+            return true;
+        })
+];
+
 async function showFormView(req, res, next) {
     try {
         var survey = await Encuesta.findOne().lean();
-        survey = survey.questions;
-
-        if(!survey){ res.render('vistaCrearEncuesta'); }
-        else{ res.render('vistaCrearEncuesta', {survey}); }
         
+        if(!survey){ res.render('vistaCrearEncuesta'); }
+        else{ 
+            survey = survey.questions;
+            res.render('vistaCrearEncuesta', {survey}); 
+        }
     } catch (err) {
         return next(err);
     }
@@ -59,8 +107,26 @@ async function createFornm(req, res, next) {
     }
 }
 
+async function updateForm(req, res, next) {
+    const { questionsInfo } = req.body;
+    try {
+        console.log("UPDATE: ", questionsInfo);
+        var survey = await Encuesta.findOne();
+        survey.questions = questionsInfo;
+        await survey.save();
+
+
+        res.status(200).json({ success: true, message: "Encuesta modificada con éxito" });
+    } catch (err) {
+        console.log(err);
+        return next(err);
+    }
+}
+
 module.exports = {
     createFormValidators,
+    updateFormValidators,
     showFormView,
     createFornm,
+    updateForm
 }
