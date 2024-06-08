@@ -54,6 +54,11 @@ const reservaSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
+    },
+    surveySubmited: {
+        type: Boolean,
+        required: true,
+        default: false
     }
 });
 

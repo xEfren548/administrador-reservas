@@ -1,0 +1,510 @@
+<form id="frmCreateSurvey">
+    <div class="page-info">
+        {{#unless survey}}
+            <h1>Crear encuesta de satisfacción</h1>
+            <button id="btnCreateSurvey" type="submit">Crear formulario</button>
+        {{else}}
+            <h1>Editar encuesta de satisfacción</h1>
+            <button id="btnUpdSurvey" type="submit">Guardar cambios</button>
+        {{/unless}}
+    </div>
+
+    <div class="survey-form">
+        <div class="questions">
+            {{#if survey}}
+                {{#each survey}}
+                    <div id="{{this._id}}" class="question">
+                        <div class="question-card-options">
+                            <button type="button" class="btn-cancel"><span class="material-symbols-outlined">close</span></button>
+                        </div>
+                        <div class="question-title">
+                            <input type="text" value="{{this.questionName}}" placeholder="Escriba la pregunta">
+                        </div>
+                        <hr>
+                        <div class="question-body">
+                            <select class="question-types">
+                                <option disabled="true">Seleccione el tipo de pregunta</option>
+                                <option value="textField" {{#if (eq this.questionType "textField")}}selected="true"{{/if}}>Campo de texto</option>
+                                <option value="range" {{#if (eq this.questionType "range")}}selected="true"{{/if}}>Rango</option>
+                                <option value="boolean" {{#if (eq this.questionType "boolean")}}selected="true"{{/if}}>Booleana</option>
+                            </select>
+                            <div class="answer-text" style="{{#if (eq this.questionType "textField")}}display: flex;{{else}}display: none;{{/if}}">
+                                <input type="text" placeholder="Ingresa tu respuesta" disabled="true">
+                            </div>
+                            <div class="answer-range" style="{{#if (eq this.questionType "range")}}display: flex;{{else}}display: none;{{/if}}">
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="range" disabled="true"> 1
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="range" disabled="true"> 2
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="range" disabled="true"> 3
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="range" disabled="true"> 4
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="range" disabled="true"> 5
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="answer-boolean" style="{{#if (eq this.questionType "boolean")}}display: flex;{{else}}display: none;{{/if}}">
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="boolean" disabled="true"> Cierto
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input type="radio" name="boolean" disabled="true"> Falso
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="question-error-message"><p></p></div>
+                        </div>
+                    </div>
+                {{/each}}
+
+            {{else}}
+                <div class="question">
+                    <div class="question-card-options">
+                        <button type="button" class="btn-cancel"><span class="material-symbols-outlined">close</span></button>
+                    </div>
+                    <div class="question-title">
+                        <input type="text" placeholder="Escriba la pregunta">
+                    </div>
+                    <hr>
+                    <div class="question-body">
+                        <select class="question-types">
+                            <option selected="true" disabled="true">Seleccione el tipo de pregunta</option>
+                            <option value="textField">Campo de texto</option>
+                            <option value="range">Rango</option>
+                            <option value="boolean">Booleana</option>
+                        </select>
+                        <div class="answer-text" style="display: none;">
+                            <input type="text" placeholder="Ingresa tu respuesta" disabled="true">
+                        </div>
+                        <div class="answer-range" style="display: none;">
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="range" disabled="true"> 1
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="range" disabled="true"> 2
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="range" disabled="true"> 3
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="range" disabled="true"> 4
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="range" disabled="true"> 5
+                                </label>
+                            </div>
+                        </div>
+                        <div class="answer-boolean" style="display: none;">
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="boolean" disabled="true"> Cierto
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <label>
+                                    <input type="radio" name="boolean" disabled="true"> Falso
+                                </label>
+                            </div>
+                        </div>
+                        <div class="question-error-message"><p></p></div>
+                    </div>
+                </div>
+            {{/if}}          
+        </div>
+        <hr>
+
+        <div class="add-new-question">
+            <button type="button"><i class="material-symbols-outlined">add</i><span>Agregar nueva pregunta</span></button>
+        </div>
+    </div>
+</form>
+
+{{#unless survey}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const questions = document.querySelectorAll(".survey-form .questions .question");
+            const btnAddNewQuestion = document.querySelector(".survey-form .add-new-question button");
+            const btnCreateSurvey = document.getElementById("btnCreateSurvey");            
+            
+            function setQuestionInitialValues(question){
+                question.querySelector(".question-title input").value = "";
+                question.querySelector(".question-title input").placeholder = "Escriba la pregunta";
+                question.querySelector(".question-types").value = "Seleccione el tipo de pregunta";
+                question.querySelector(".answer-text").style.display = "none";
+                question.querySelector(".answer-range").style.display = "none";
+                question.querySelector(".answer-boolean").style.display = "none";
+
+                question.querySelector(".answer-text input").value = "";
+                var answerRangeChecked = question.querySelector('.answer-range input[name="range"]:checked');
+                if(answerRangeChecked){
+                    answerRangeChecked.checked = false;
+                }
+                var answerBooleanChecked = question.querySelector('.answer-boolean input[name="boolean"]:checked');
+                if(answerBooleanChecked){
+                    answerBooleanChecked.checked = false;
+                }
+                
+                // Setting events in the corresponding question elements.            
+                question.querySelector(".question-body .question-types").addEventListener("change", changeQuestionType);
+                question.addEventListener("mouseenter", () =>{ resetQuestionError(question, question.querySelector(".question-body .question-error-message p")); });
+                question.querySelector(".question-card-options .btn-cancel").addEventListener("click", deleteQuestion);
+            }
+            function setQuestionError(question, errorTag, errorMessage){
+                question.classList.add("question-error");
+                errorTag.innerHTML = errorMessage;
+            }
+            function resetQuestionError(question, errorTag){
+                question.classList.remove("question-error");
+                errorTag.innerHTML = "";
+            }
+            
+            function addNewQuestion(){
+                const questionsContainer = document.querySelector(".questions");
+                var questionToAdd = document.querySelector(".question").cloneNode(true);
+
+                setQuestionInitialValues(questionToAdd);
+                questionsContainer.appendChild(questionToAdd);
+            }
+            function changeQuestionType(event) {
+                const question = event.target.closest(".question");
+                const answerText = question.querySelector(".answer-text");
+                const answerRange = question.querySelector(".answer-range");
+                const answerBoolean = question.querySelector(".answer-boolean");
+
+                switch (event.target.value) {
+                    case "textField":
+                        answerText.style.display = "flex";
+                        answerRange.style.display = "none";
+                        answerBoolean.style.display = "none";
+                        break;
+                    case "range":
+                        answerText.style.display = "none";
+                        answerRange.style.display = "flex";
+                        answerBoolean.style.display = "none";
+                        break;
+                    case "boolean":
+                        answerText.style.display = "none";
+                        answerRange.style.display = "none";
+                        answerBoolean.style.display = "flex";
+                        break;
+                    default:
+                        answerText.style.display = "none";
+                        answerRange.style.display = "none";
+                        answerBoolean.style.display = "none";
+                }
+            }    
+            function deleteQuestion(event){
+                const questionToDelete = event.target.closest(".question");
+                questionToDelete.remove()
+            }
+            function createSurvey(event){
+                event.preventDefault();
+
+                const questions = document.querySelectorAll(".questions .question");
+                var questionsInfo = [];
+                var questionNamesSet = new Set();
+                var error = false;
+
+                // Retrieving every question in form.
+                questions.forEach(question => {
+                    const questionName = question.querySelector(".question-title input").value;
+                    const questionType = question.querySelector(".question-body .question-types").value;
+                    var questionError = question.querySelector(".question-body .question-error-message p");
+
+                    // Validate question.
+                    if(questionType !== "textField" && questionType !== "range" && questionType !== "boolean"){
+                        setQuestionError(question, questionError, "Error: ingresa un tipo de respuesta válido");
+                        error = true;
+                    }
+                    if(questionName === ""){
+                        setQuestionError(question, questionError, "Error: ingresa una pregunta");
+                        error = true;
+                    }
+                    else if (questionNamesSet.has(questionName)) {
+                        setQuestionError(question, questionError, `Error: la pregunta \"${questionName}\" ya fue declarada anteriormente`);
+                        error = true;
+                    } else {
+                        questionNamesSet.add(questionName);
+                    }
+
+                    // Creating question
+                    var questionInfo = {
+                        questionName,
+                        questionType
+                    }
+                    questionsInfo.push(questionInfo);
+                });
+                if(error){ return; }
+
+                // Sending form info.
+                fetch("/modelar-encuesta/guardar-encuesta", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({questionsInfo})
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            location.reload();
+                        }
+                    }); 
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
+                });        
+            }
+
+            // Setting events.
+            questions.forEach(question => {
+                setQuestionInitialValues(question);
+            });
+            btnAddNewQuestion.addEventListener("click", addNewQuestion);  
+            btnCreateSurvey.addEventListener("click", createSurvey);
+        });
+    </script>
+{{else}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const questions = document.querySelectorAll(".survey-form .questions .question");
+            const btnAddNewQuestion = document.querySelector(".survey-form .add-new-question button");
+            const btnUpdSurvey= document.getElementById("btnUpdSurvey");            
+            
+            function setOldQuestionInitialValues(question){
+                question.querySelector(".question-title input").placeholder = "Escriba la pregunta";
+
+                question.querySelector(".answer-text input").value = "";
+                var answerRangeChecked = question.querySelector('.answer-range input[name="range"]:checked');
+                if(answerRangeChecked){
+                    answerRangeChecked.checked = false;
+                }
+                var answerBooleanChecked = question.querySelector('.answer-boolean input[name="boolean"]:checked');
+                if(answerBooleanChecked){
+                    answerBooleanChecked.checked = false;
+                }
+                
+                // Setting events in the corresponding question elements.            
+                question.querySelector(".question-body .question-types").addEventListener("change", changeQuestionType);
+                question.addEventListener("mouseenter", () =>{ resetQuestionError(question, question.querySelector(".question-body .question-error-message p")); });
+                question.querySelector(".question-card-options .btn-cancel").addEventListener("click", deleteQuestion);
+            }
+            function setNewQuestionInitialValues(question){
+                question.id = null;
+                question.querySelector(".question-title input").value = "";
+                question.querySelector(".question-title input").placeholder = "Escriba la pregunta";
+                question.querySelector(".question-types").value = "Seleccione el tipo de pregunta";
+                question.querySelector(".answer-text").style.display = "none";
+                question.querySelector(".answer-range").style.display = "none";
+                question.querySelector(".answer-boolean").style.display = "none";
+
+                question.querySelector(".answer-text input").value = "";
+                var answerRangeChecked = question.querySelector('.answer-range input[name="range"]:checked');
+                if(answerRangeChecked){
+                    answerRangeChecked.checked = false;
+                }
+                var answerBooleanChecked = question.querySelector('.answer-boolean input[name="boolean"]:checked');
+                if(answerBooleanChecked){
+                    answerBooleanChecked.checked = false;
+                }
+                
+                // Setting events in the corresponding question elements.            
+                question.querySelector(".question-body .question-types").addEventListener("change", changeQuestionType);
+                question.addEventListener("mouseenter", () =>{ resetQuestionError(question, question.querySelector(".question-body .question-error-message p")); });
+                question.querySelector(".question-card-options .btn-cancel").addEventListener("click", deleteQuestion);
+            }            
+            function setQuestionError(question, errorTag, errorMessage){
+                question.classList.add("question-error");
+                errorTag.innerHTML = errorMessage;
+            }
+            function resetQuestionError(question, errorTag){
+                question.classList.remove("question-error");
+                errorTag.innerHTML = "";
+            }
+            
+            function addNewQuestion(){
+                const questionsContainer = document.querySelector(".questions");
+                var questionToAdd = document.querySelector(".question").cloneNode(true);
+
+                setNewQuestionInitialValues(questionToAdd);
+                questionsContainer.appendChild(questionToAdd);
+            }
+            function changeQuestionType(event) {
+                const question = event.target.closest(".question");
+                const answerText = question.querySelector(".answer-text");
+                const answerRange = question.querySelector(".answer-range");
+                const answerBoolean = question.querySelector(".answer-boolean");
+
+                switch (event.target.value) {
+                    case "textField":
+                        answerText.style.display = "flex";
+                        answerRange.style.display = "none";
+                        answerBoolean.style.display = "none";
+                        break;
+                    case "range":
+                        answerText.style.display = "none";
+                        answerRange.style.display = "flex";
+                        answerBoolean.style.display = "none";
+                        break;
+                    case "boolean":
+                        answerText.style.display = "none";
+                        answerRange.style.display = "none";
+                        answerBoolean.style.display = "flex";
+                        break;
+                    default:
+                        answerText.style.display = "none";
+                        answerRange.style.display = "none";
+                        answerBoolean.style.display = "none";
+                }
+            }    
+            function deleteQuestion(event){
+                const questionToDelete = event.target.closest(".question");
+                questionToDelete.remove()
+            }
+            function updateSurvey(event){
+                event.preventDefault();
+
+                const questions = document.querySelectorAll(".questions .question");
+                var questionsInfo = [];
+                var questionNamesSet = new Set();
+                var error = false;
+
+                // Retrieving every question in form.
+                questions.forEach(question => {
+                    const questionId = question.id;
+                    const questionName = question.querySelector(".question-title input").value;
+                    const questionType = question.querySelector(".question-body .question-types").value;
+                    var questionError = question.querySelector(".question-body .question-error-message p");
+
+                    // Validate question.
+                    if(questionType !== "textField" && questionType !== "range" && questionType !== "boolean"){
+                        setQuestionError(question, questionError, "Error: ingresa un tipo de respuesta válido");
+                        error = true;
+                    }
+                    if(questionName === ""){
+                        setQuestionError(question, questionError, "Error: ingresa una pregunta");
+                        error = true;
+                    }
+                    else if (questionNamesSet.has(questionName)) {
+                        setQuestionError(question, questionError, `Error: la pregunta \"${questionName}\" ya fue declarada`);
+                        error = true;
+                    } else {
+                        questionNamesSet.add(questionName);
+                    }
+
+                    // Creating question
+                    var questionInfo = {
+                        questionId,
+                        questionName,
+                        questionType
+                    }
+                    questionsInfo.push(questionInfo);
+                });
+                if(error){ return; }
+
+                // Sending form info.
+                fetch("/modelar-encuesta/modificar-encuesta", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({questionsInfo})
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            location.reload();
+                        }
+                    }); 
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
+                });        
+            }
+            
+            // Setting events.
+            questions.forEach(question => {
+                setOldQuestionInitialValues(question);
+            });
+            btnAddNewQuestion.addEventListener("click", addNewQuestion);  
+            btnUpdSurvey.addEventListener("click", updateSurvey);
+        });
+    </script>
+{{/unless}}
