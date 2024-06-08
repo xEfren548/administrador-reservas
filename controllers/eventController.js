@@ -2,6 +2,8 @@ const Documento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const Usuario = require('../models/Usuario');
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
+const logController = require('../controllers/logController');
+
 const Cliente = require('../models/Cliente');
 const { check } = require("express-validator");
 const BadRequestError = require("../common/error/bad-request-error");
@@ -181,7 +183,7 @@ async function createReservation(req, res, next) {
         // Guardar la reserva actualizada en la base de datos
         const documento2 = await Documento.findOne()
         
-        const idReserva = documento.events[documento.events.length - 1]._id.toString()
+        const idReserva = documento.events[documento.events.length - 1]._id.toString();
         const url = `http://${process.env.URL}/api/eventos/${idReserva}`;
         const evento = documento2.events.find(habitacion => habitacion.id === idReserva);
         
@@ -202,7 +204,18 @@ async function createReservation(req, res, next) {
         
         console.log("SendMessages.sendReminders");
         SendMessages.sendReservationConfirmation(client[0], chalet, reservationToAdd);
-
+        
+        // Log
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            idReserva: idReserva,
+            acciones: `Reservación creada por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         res.status(200).json({ success: true, reservationId: documento.events[documento.events.length - 1]._id, message: "Reservación agregada con éxito" });
     } catch (err) {
         console.log(err);
@@ -262,6 +275,17 @@ async function editarEvento(req, res) {
         // Save the updated room to the database
         await eventosExistentes.save();
 
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            idReserva: idReserva,
+            acciones: `Reservación modificada por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
+
         console.log('evento editado:', evento);
         res.status(200).json({ mensaje: 'evento editado correctamente', evento });
     } catch (error) {
@@ -294,6 +318,16 @@ async function eliminarEvento(req, res) {
 
         // Save the updated room list to the database
         await eventosExistentes.save();
+
+        // Log
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'elimination',
+            acciones: `Reservación eliminada por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        await logController.createBackendLog(logBody);
 
         console.log('Evento eliminado con éxito');
         res.status(200).json({ mensaje: 'Evento eliminado correctamente' });
@@ -373,7 +407,16 @@ async function crearNota(req, res) {
         evento.notes.push({ texto });
 
         await eventosExistentes.save();
-
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            idReserva: idReserva,
+            acciones: `Nota creada por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         res.status(200).json({ message: 'Nueva nota agregada exitosamente a la reserva.' });
 
 
@@ -418,6 +461,17 @@ async function eliminarNota(req, res) {
 
         // Guardar el documento actualizado en la base de datos
         await documento.save();
+
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            idReserva: idReserva,
+            acciones: `Nota eliminada por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
 
         res.status(200).json({ message: 'Nota eliminada exitosamente de la reserva.' });
     } catch (error) {

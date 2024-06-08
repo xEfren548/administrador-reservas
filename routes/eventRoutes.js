@@ -7,6 +7,7 @@ const pagoController = require('../controllers/pagoController');
 const Service = require('../models/Servicio');
 const Cliente = require('../models/Cliente');
 const RackServicios = require('../models/RackServicios');
+const Log = require('../models/Log');
 
 const validationRequest = require('../common/middlewares/validation-request');
 
@@ -25,7 +26,7 @@ router.delete('/notas', eventController.eliminarNota)
 router.get('/eventos/:idevento', async (req, res) => {
     try {
         const idEvento = req.params.idevento;
-        
+
         // Llama a la función del controlador de eventos para obtener los detalles del evento
         const evento = await eventController.obtenerEventoPorId(idEvento);
         eventoJson = JSON.stringify(evento);
@@ -42,7 +43,7 @@ router.get('/eventos/:idevento', async (req, res) => {
 
         const idCliente = eventoObjeto.client;
 
-        const clientes = await Cliente.find({_id: idCliente }).lean();
+        const clientes = await Cliente.find({ _id: idCliente }).lean();
         const cliente = clientes[0]
 
         const pagos = await pagoController.obtenerPagos(idEvento);
@@ -50,7 +51,7 @@ router.get('/eventos/:idevento', async (req, res) => {
         const servicios = await Service.find().lean();
         // console.log(servicios)
 
-        const rackServicios = await RackServicios.find({id_reserva: idEvento}).lean();
+        const rackServicios = await RackServicios.find({ id_reserva: idEvento }).lean();
 
         let pagoTotal = 0
         pagos.forEach(pago => {
@@ -69,15 +70,40 @@ router.get('/eventos/:idevento', async (req, res) => {
 
         rackServicios.totalServicios = totalServicios
 
-    
+        const logs = await Log.find({ idReserva: idEvento, type: 'reservation' }).lean();
+        console.log(logs);
+
+        logs.sort((a, b) => a.fecha - b.fecha);
+
+        const formatDate = (date) => {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Los meses en JavaScript son 0-indexados
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        };
+
+        const formattedActions = logs.map(action => {
+            const fecha = formatDate(action.fecha);
+            const hora = action.fecha.toTimeString().split(' ')[0];
+            return {
+                ...action,
+                fecha,
+                hora
+            };
+        });
+
+
+
+
         // Renderiza la página HTML con los detalles del evento
-        res.render('detalles_evento', { 
+        res.render('detalles_evento', {
             evento: eventoObjeto,
             habitacion: habitacionObjeto,
             cliente: cliente,
             pagos: pagos,
             servicios: servicios,
-            rackServicios: rackServicios
+            rackServicios: rackServicios,
+            logs: formattedActions
         });
     } catch (error) {
         console.error('Error al obtener los detalles del evento:', error);

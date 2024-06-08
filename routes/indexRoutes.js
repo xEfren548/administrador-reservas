@@ -14,6 +14,7 @@ const habitacionesRoutes = require('./habitacionesRoutes');
 const instruccionesRoutes = require('./instruccionesRoutes');
 const getchaletsRoutes = require('./getchaletsRoutes');
 const loginRoute = require("./loginRoute");
+const logsRoutes = require("./logsRoutes");
 const serviciosRoutes = require('./serviciosRoutes');
 const userRoutes = require('./usersRoutes');
 const userProfileRoutes = require('./userProfileRoutes');
@@ -54,7 +55,9 @@ router.use('/', sideMenuRoutes);
 
 router.use('/', 
     instruccionesRoutes,
-    calendarioPrecios);
+    calendarioPrecios,
+    logsRoutes
+);
 router.use('/api', 
     eventRoutes, 
     habitacionesRoutes, 

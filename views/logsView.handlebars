@@ -1,0 +1,43 @@
+<div class="row flex-nowrap justify-content-center mt-3 " style="width: 95%;">
+    <div class="col-10">
+        <h1>Logs</h1>
+        <table class="table table-dark table-hover text-center" id="tablaLogs">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Usuario</th>
+                    <th scope="col">Acción</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Fecha y Hora</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#if logs.length}}
+                {{#each logs}}
+                <tr>
+                    <td>{{this.nombreUsuario}}</td>
+                    <td>{{this.acciones}}</td>
+                    <td>{{this.type}}</td>
+                    <td>{{this.fecha}} {{this.hora}}</td>
+
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{/if}}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var table = document.getElementById("tablaLogs");
+        if (table) {
+
+            var dataTable = new DataTable(table, {
+                "order": [[3, 'desc']], // Puedes especificar aquí el orden inicial de las columnas
+                "paging": true, // Habilita la paginación
+                "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
+                "pageLength": 10 // Establece la longitud de página inicial
+            });
+        }
+    });
+</script>

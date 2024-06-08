@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Pago = require('../models/Pago');
+const logController = require('../controllers/logController');
 
 async function obtenerPagos(idReservacion) {
     try {
@@ -33,6 +34,17 @@ async function registrarPago(req, res) {
             notas
         });
         await pago.save();
+
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            idReserva: reservacionId,
+            acciones: `Pago registrado por ${req.session.firstName} ${req.session.lastName}.IdReserva: ${reservacionId}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         res.status(201).json({ mensaje: 'Pago registrado correctamente.' });
     } catch (error) {
         console.error(error);
@@ -53,6 +65,16 @@ async function editarPago(req, res) {
             notas
         });
         console.log(pago)
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            idReserva: reservacionId,
+            acciones: `Pago editado por ${req.session.firstName} ${req.session.lastName}.IdReserva: ${reservacionId}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         res.status(200).json({ mensaje: 'Pago editado correctamente.' });
     } catch (e) {
         console.error(e);
@@ -65,6 +87,16 @@ async function eliminarPago(req, res) {
     try {
         const { id } = req.params;
         await Pago.findByIdAndDelete(id);
+
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'elimination',
+            acciones: `Pago eliminado por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         res.status(200).json({ mensaje: 'Pago eliminado correctamente.' });
     } catch (err) {
         console.error(err);

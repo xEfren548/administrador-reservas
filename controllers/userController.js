@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const Usuario = require('../models/Usuario');
+const logController = require('../controllers/logController');
 const sendPassword = require("../utils/email");
 const NotFoundError = require("../common/error/not-found-error");
 const BadRequestError = require("../common/error/bad-request-error");
@@ -113,6 +114,16 @@ async function createUser(req, res, next) {
         await userToAdd.save();
         
         console.log("Usuario agregado con éxito");
+
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'registration',
+            acciones: `Usuario creado por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         res.status(200).json( { userToAdd } );
     } catch(err){
         console.log(err);
@@ -155,6 +166,16 @@ async function editarUsuario(req, res, next) {
         }
 
         console.log("Usuario editado con éxito");
+
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'modification',
+            acciones: `Usuario editado por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         res.status(200).json({ userToUpdate });
     } catch(err) {
         return next(err);
@@ -196,6 +217,16 @@ async function deleteUser(req, res, next) {
         }
 
         console.log("Usuario eliminado con éxito");
+
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'elimination',
+            acciones: `Usuario eliminado por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         res.status(200).json({ success: true });
     } catch(err) {
         return next(err);

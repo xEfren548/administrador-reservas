@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
 
 const RackServicios = require('../models/RackServicios');
+const Servicio = require('../models/Servicio');
 const Documento = require('../models/Evento');
 const habitacionController = require('../controllers/habitacionController');
 const utilidadesController = require('../controllers/utilidadesController');
 const usersController = require('./../controllers/usersController');
-const Servicio = require('../models/Servicio');
+const logController = require('../controllers/logController');
 
 async function getAllRackServices(req, res, next) {
     try {
@@ -135,6 +136,17 @@ async function createRackService(req, res, next) {
             fecha,
             idUsuario: user._id.toString()
         })
+
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            idReserva: id_reserva,
+            acciones: `Servicio ${servicioEncontrado.service} agregado por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
 
 
 

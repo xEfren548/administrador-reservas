@@ -2,6 +2,7 @@ const BadRequestError = require('../common/error/bad-request-error');
 const NotFoundError = require('../common/error/not-found-error');
 const Service = require('../models/Servicio');
 const Usuario = require('../models/Usuario');
+const logController = require('../controllers/logController');
 const { check } = require("express-validator");
 
 // No uuid validator has been implemented for those functions that take parameters form the URL.
@@ -265,7 +266,15 @@ async function createService(req, res, next) {
 
     try {
         await serviceToAdd.save();
-
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'registration',
+            acciones: `Servicio ${service} por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         res.status(200).json({ success: true, message: "Servicio agregado con éxito" });
     } catch (err) {
         console.log(err);
@@ -303,6 +312,16 @@ async function editService(req, res, next) {
             throw new NotFoundError("Service not found");
         }
 
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'modification',
+            acciones: `Servicio modificado por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
+
         res.status(200).json({ success: true, message: "Servicio editado con éxito" });
     } catch(err) {
         return next(err);
@@ -333,6 +352,16 @@ async function editServiceById(req, res, next) {
             throw new NotFoundError("Service not found");
         }
 
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'modification',
+            acciones: `Servicio modificado por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
+
         console.log("Servicio editado con éxito");
         res.status(200).json({ serviceToUpdate });
     } catch(err){
@@ -348,6 +377,16 @@ async function deleteService(req, res, next) {
         if (!serviceToDelete) {
             throw new NotFoundError("Service not found");
         }
+
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'elimination',
+            acciones: `Servicio eliminado por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
 
         res.status(200).json({ success: true, message: "Servicio eliminado con éxito" });
     } catch(err) {
