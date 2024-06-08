@@ -1073,7 +1073,10 @@ iframe{
     display: block;    
 }
 
-.question-title input{
+.enter-data input,
+.enter-data h1,
+.question-title input,
+.question-title h2{
     display: inline-block;
     width: 100%;
     padding: 0.2rem 1rem;
@@ -1084,9 +1087,11 @@ iframe{
     font-family: "Open Sans", sans-serif;
     color: rgb(246, 246, 223);
     border: none;    
+    border-radius: 50px;
     background-color: transparent;
 }
 
+.enter-data input:focus,
 .question-title input:focus{    
     outline: none;
     border-bottom: 1px solid #DD806D;
@@ -1160,16 +1165,20 @@ iframe{
     margin: 0 auto;
 }
 
+.enter-data .input-error{    
+    box-shadow: inset 0px -10px 9px 0px #ff6868;
+}
+
 .questions .question-error{    
     box-shadow: 0px 10px 9px 0px #ff6868;
 }
 
-.question-error-message{
+.error-message{
     width: 100%;
     padding: 10px 0;
 }
 
-.question-error-message p{
+.error-message p{
     margin: 0;
     text-align: center;
     color: #ff6868;

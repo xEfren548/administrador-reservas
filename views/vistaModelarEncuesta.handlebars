@@ -13,7 +13,7 @@
         <div class="questions">
             {{#if survey}}
                 {{#each survey}}
-                    <div id="{{this.questionName}}" class="question">
+                    <div id="{{this._id}}" class="question">
                         <div class="question-card-options">
                             <button type="button" class="btn-cancel"><span class="material-symbols-outlined">close</span></button>
                         </div>
@@ -264,7 +264,7 @@
                 if(error){ return; }
 
                 // Sending form info.
-                fetch("/encuesta/guardar-encuesta", {
+                fetch("/modelar-encuesta/guardar-encuesta", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -364,8 +364,7 @@
                 question.querySelector(".question-body .question-types").addEventListener("change", changeQuestionType);
                 question.addEventListener("mouseenter", () =>{ resetQuestionError(question, question.querySelector(".question-body .question-error-message p")); });
                 question.querySelector(".question-card-options .btn-cancel").addEventListener("click", deleteQuestion);
-            }
-            
+            }            
             function setQuestionError(question, errorTag, errorMessage){
                 question.classList.add("question-error");
                 errorTag.innerHTML = errorMessage;
@@ -456,7 +455,7 @@
                 if(error){ return; }
 
                 // Sending form info.
-                fetch("/encuesta/modificar-encuesta", {
+                fetch("/modelar-encuesta/modificar-encuesta", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"

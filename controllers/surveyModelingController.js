@@ -59,31 +59,34 @@ const updateFormValidators = [
                 /*
                 // Validating duplicate IDs.
                 if (questionIdsSet.has(questionInfo.questionId)) {
-                    throw new BadRequestError(`Question ID \"${questionInfo.questionId}\" duplicated`);
+                    throw new BadRequestError(`Question \"${questionInfo.questionName}\" ID duplicated`);
                 } else {
                     questionIdsSet.add(questionInfo.questionId);
                 } 
                 
                 // Validating correct IDs.
                 if(questionInfo.questionId != null){
-                    if(!survey.some(question => question.questionName === questionInfo.questionId)){
-                        throw new BadRequestError(`Missing question. Question "${questionInfo.questionId} does not exist"`);
+                    if(!survey.some(question => question._id === questionInfo.questionId)){
+                        // It's been deleted. 
+                        throw new BadRequestError(`Missing question. Question "${questionInfo.questionName} does not exist"`);
                     }
                 }
+                else{ //New question }
+                // How to process form edition when showing user's results?
                 */
             });
             return true;
         })
 ];
 
-async function showFormView(req, res, next) {
+async function showFormModellingView(req, res, next) {
     try {
         var survey = await Encuesta.findOne().lean();
         
-        if(!survey){ res.render('vistaCrearEncuesta'); }
+        if(!survey){ res.render('vistaModelarEncuesta'); }
         else{ 
             survey = survey.questions;
-            res.render('vistaCrearEncuesta', {survey}); 
+            res.render('vistaModelarEncuesta', {survey}); 
         }
     } catch (err) {
         return next(err);
@@ -110,11 +113,10 @@ async function createFornm(req, res, next) {
 async function updateForm(req, res, next) {
     const { questionsInfo } = req.body;
     try {
-        console.log("UPDATE: ", questionsInfo);
         var survey = await Encuesta.findOne();
         survey.questions = questionsInfo;
+        
         await survey.save();
-
 
         res.status(200).json({ success: true, message: "Encuesta modificada con éxito" });
     } catch (err) {
@@ -126,7 +128,7 @@ async function updateForm(req, res, next) {
 module.exports = {
     createFormValidators,
     updateFormValidators,
-    showFormView,
+    showFormModellingView,
     createFornm,
     updateForm
 }
