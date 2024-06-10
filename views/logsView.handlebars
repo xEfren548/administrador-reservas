@@ -17,7 +17,7 @@
                     <td>{{this.nombreUsuario}}</td>
                     <td>{{this.acciones}}</td>
                     <td>{{this.type}}</td>
-                    <td>{{this.fecha}}</td>
+                    <td>{{this.fecha}} {{this.hora}}</td>
 
                 </tr>
                 {{/each}}
@@ -25,8 +25,6 @@
         </table>
     </div>
 </div>
-{{else}}
-<p>No se encontraron servicios</p>
 {{/if}}
 
 <script>
@@ -35,7 +33,7 @@
         if (table) {
 
             var dataTable = new DataTable(table, {
-                "order": [[3, 'asc']], // Puedes especificar aquí el orden inicial de las columnas
+                "order": [[3, 'desc']], // Puedes especificar aquí el orden inicial de las columnas
                 "paging": true, // Habilita la paginación
                 "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
                 "pageLength": 10 // Establece la longitud de página inicial

@@ -144,8 +144,6 @@ async function obtenerEventoPorIdRoute(req, res) {
 async function createReservation(req, res, next) {
     const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount } = req.body;
 
-    
-
     try {
         const client = await Cliente.find({ email: clientEmail });
         if (!client) {
@@ -295,7 +293,6 @@ async function editarEvento(req, res) {
 }
 
 async function eliminarEvento(req, res) {
-
     try {
         const id = req.params.id;
         const eventosExistentes = await Documento.findOne();

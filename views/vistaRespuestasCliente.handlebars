@@ -1,0 +1,76 @@
+<div>
+    <div class="page-info">
+        <h1>Resumen de respuestas</h1>
+    </div>
+
+    <div class="survey-form">
+        <div class="enter-data">
+            <input value="{{email}}" type="email" placeholder="Ingresa tu dirección de correo electrónico de cliente" disabled="true">
+        </div>
+        <hr>
+
+        <div class="questions">
+            {{#each surveyResponses}}
+                <div class="question">
+                    <div class="question-title">
+                        <h2>{{this.questionName}}</h2>
+                    </div>
+                    <hr>
+                    <div class="question-body">
+                        {{#if (eq this.answerType "textField")}}
+                            <div class="answer-text" style="display: flex;">
+                                <input value="{{this.answer}}" type="text" placeholder="Ingresa tu respuesta" disabled="true">
+                            </div>
+                        {{/if}}
+                        
+                        {{#if (eq this.answerType "range")}}
+                            <div class="answer-range" style="display: flex;">
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="1" type="radio" name="range" {{#if (eq this.answer "1")}}checked{{/if}} disabled="true"> 1
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="2" type="radio" name="range" {{#if (eq this.answer "2")}}checked{{/if}} disabled="true"> 2
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="3" type="radio" name="range" {{#if (eq this.answer "3")}}checked{{/if}} disabled="true"> 3
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="4" type="radio" name="range" {{#if (eq this.answer "4")}}checked{{/if}} disabled="true"> 4
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="5" type="radio" name="range" {{#if (eq this.answer "5")}}checked{{/if}} disabled="true"> 5
+                                    </label>
+                                </div>
+                            </div>
+                        {{/if}}
+
+                        {{#if (eq this.answerType "boolean")}}
+                            <div class="answer-boolean" style="display: flex;">
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="true" type="radio" name="boolean" {{#if (eq this.answer "true")}}checked{{/if}} disabled="true"> Cierto
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="false" type="radio" name="boolean" {{#if (eq this.answer "true")}}checked{{/if}} disabled="true"> Falso
+                                    </label>
+                                </div>
+                            </div>
+                        {{/if}}
+                        <div class="error-message"><p></p></div>
+                    </div>
+                </div>
+            {{/each}}
+        </div>
+    </div>
+</div>

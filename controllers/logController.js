@@ -13,12 +13,30 @@ async function showLogs() {
 
 async function renderLogs(req, res) {
     try {
-        const idReserva = req.query
         const logs = await showLogs();
         console.log(logs)
 
+        logs.sort((a, b) => a.fecha - b.fecha);
+
+        const formatDate = (date) => {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Los meses en JavaScript son 0-indexados
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        };
+
+        const formattedActions = logs.map(action => {
+            const fecha = formatDate(action.fecha);
+            const hora = action.fecha.toTimeString().split(' ')[0];
+            return {
+                ...action,
+                fecha,
+                hora
+            };
+        });
+
         res.render('logsView', {
-            logs: logs
+            logs: formattedActions
         });
     } catch (error) {
         res.status(404).send(error.message)
