@@ -24,13 +24,15 @@ async function generateSideMenu (req, res, next) {
                 {'Clientes': ["/api/clientes/mostrar-clientes", "fa fa-user-circle"]},
                 {'Servicios adicionales': ["/api/servicios", "fas fa-spa"]},
                 {'Limpieza': ["/api/racklimpieza", "fas fa-broom"]},
-                {'Cabañas': []},
-                {'Reserva cliente cabaña': ["/instrucciones/", "far fa-calendar-alt"]},
+               // {'Cabañas': []},
+                {'Utilidades por reserva': ["/api/costos/mostrar-costos", "fas fa-chart-line"]},
+                {'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"]},
             ],        
             'Vendedor': [
                 {'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"]},
                 {'Home': ["/", "fs-5 fa fa-house"]},
-                {'Reserva cliente cabaña': ["/instrucciones/", "far fa-calendar-alt"]},                
+                {'Reserva cliente cabaña': ["/instrucciones/", "far fa-calendar-alt"]},
+                {'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"]},                
             ],            
             'Limpieza': [
                 {'Dashboard': ["/dashboard", "fs-5 fa fa-chart-bar"]},
