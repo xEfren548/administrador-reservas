@@ -389,9 +389,9 @@ async function checkAvailability(resourceId, arrivalDate, departureDate) {
     const departureDateObj = new Date(`${departureDate}T00:00:00`);
     
 
-    console.log(`Checking overlaps for Resource ID: ${newResourceId}`);
-    console.log(`Arrival Date: ${arrivalDateObj}`);
-    console.log(`Departure Date: ${departureDateObj}`);
+    // console.log(`Checking overlaps for Resource ID: ${newResourceId}`);
+    // console.log(`Arrival Date: ${arrivalDateObj}`);
+    // console.log(`Departure Date: ${departureDateObj}`);
 
     const overlappingReservations = await Documento.aggregate([
         { $unwind: '$events' },
@@ -406,8 +406,8 @@ async function checkAvailability(resourceId, arrivalDate, departureDate) {
         }
     ]);
 
-    console.log('Overlapping Reservations:', overlappingReservations);
-    console.log('Overlapping Reservations Length:', overlappingReservations.length);
+    // console.log('Overlapping Reservations:', overlappingReservations);
+    // console.log('Overlapping Reservations Length:', overlappingReservations.length);
 
     return overlappingReservations.length === 0;
 };
