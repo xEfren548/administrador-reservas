@@ -60,19 +60,16 @@ const userPrivilege = (req, res, next) => {
             "/api/costos/mostrar-costos",
             "/api/costos/editar-costos",
             "/api/costos/eliminar-costos",
-<<<<<<< HEAD
             "/api/consulta-fechas",
             "/api/utilidades",
             "/api/utilidades/reserva",
             "/instrucciones",
-=======
             "/modelar-encuesta/crear-encuesta",
             "/modelar-encuesta/guardar-encuesta",
             "/modelar-encuesta/modificar-encuesta",
             "/procesar-encuesta/responder-encuesta",
             "/procesar-encuesta/enviar-respuestas",
             "/procesar-encuesta/mostrar-respuestas/:id"
->>>>>>> 36741bc24d935d239e56e875b56cd96cf13005aa
         ],
         'Vendedor': [
             "/sidemenu",
