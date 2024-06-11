@@ -1,0 +1,216 @@
+<form id="frmCreateSurvey">
+    <div class="page-info">
+        <h1>Responder encuesta de satisfacción</h1>
+        <button id="btnSubmitSurvey" type="submit">Enviar respuestas</button>
+    </div>
+
+    <div class="survey-form">
+        <div class="enter-data">
+            <input id="txt-client-email" type="email" placeholder="Ingresa tu dirección de correo electrónico de cliente">
+        </div>
+        <div class="error-message"><p></p></div>
+        <hr>
+
+        <div class="questions">
+            {{#each survey}}
+                <div id="{{this.questionName}}" class="question">
+                    <div class="question-title">
+                        <h2>{{this.questionName}}</h2>
+                    </div>
+                    <hr>
+                    <div class="question-body">
+                        {{#if (eq this.questionType "textField")}}
+                            <div class="answer-text" style="display: flex;">
+                                <input type="text" placeholder="Ingresa tu respuesta" name="textField">
+                            </div>
+                        {{/if}}
+                        
+                        {{#if (eq this.questionType "range")}}
+                            <div class="answer-range" style="display: flex;">
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="1" type="radio" name="range"> 1
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="2" type="radio" name="range"> 2
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="3" type="radio" name="range"> 3
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="4" type="radio" name="range"> 4
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="5" type="radio" name="range"> 5
+                                    </label>
+                                </div>
+                            </div>
+                        {{/if}}
+
+                        {{#if (eq this.questionType "boolean")}}
+                            <div class="answer-boolean" style="display: flex;">
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="true" type="radio" name="boolean"> Cierto
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <label>
+                                        <input value="false" type="radio" name="boolean"> Falso
+                                    </label>
+                                </div>
+                            </div>
+                        {{/if}}
+                        <div class="error-message"><p></p></div>
+                    </div>
+                </div>
+            {{/each}}
+        </div>
+    </div>
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const email = document.querySelector(".survey-form #txt-client-email");
+        const inputFieldError = document.querySelector(".survey-form .error-message p");
+        const questions = document.querySelectorAll(".survey-form .questions .question");
+        const btnAddNewQuestion = document.querySelector(".survey-form .add-new-question button");
+        const btnSubmitSurvey= document.getElementById("btnSubmitSurvey");            
+        
+        function setQuestionInitialValues(question){           
+            // Setting events in the corresponding question elements.            
+            question.addEventListener("mouseenter", () =>{ resetQuestionError(question, question.querySelector(".question-body .error-message p")); });
+        }            
+        function setQuestionError(question, errorTag, errorMessage){
+            question.classList.add("question-error");
+            errorTag.innerHTML = errorMessage;
+        }
+        function resetQuestionError(question, errorTag){
+            question.classList.remove("question-error");
+            errorTag.innerHTML = "";
+        }
+        function setInputFieldInitialValues(inputField){           
+            // Setting events in the corresponding question elements.            
+            inputField.addEventListener("mouseenter", () =>{ resetInputFieldError(inputField, inputFieldError); });
+        } 
+        function setInputFieldError(inputField, errorTag, errorMessage){
+            email.classList.add("input-error");
+            errorTag.innerHTML = errorMessage;
+        }
+        function resetInputFieldError(inputField, errorTag){
+            inputField.classList.remove("input-error");
+            errorTag.innerHTML = "";
+        }
+        
+        function answerSurvey(event){
+            event.preventDefault();             
+            const questions = document.querySelectorAll(".questions .question");
+            var answersInfo = [];
+            var error = false;            
+
+            if(!email.value){ 
+                setInputFieldError(email, inputFieldError, "Error: ingresa tu dirección de correo electrónico de cliente");
+                error = true; 
+            }
+
+            // Retrieving every question in form.
+            questions.forEach(question => {
+                const questionName = question.id;
+                var answerType;
+                var answer;
+                const textInput = question.querySelector(".question-body .answer-text input");
+                const rangeInput = question.querySelector(".question-body .answer-range input:checked");
+                const booleanInput = question.querySelector(".question-body .answer-boolean input:checked");
+                var questionError = question.querySelector(".question-body .error-message p");
+
+                if (textInput) {
+                    answer = textInput.value;
+                    answerType = "textField";
+                } else if (rangeInput) {
+                    answer = rangeInput.value;
+                    answerType = "range";
+                } else if (booleanInput) {
+                    answer = booleanInput.value;
+                    answerType = "boolean";
+                }
+
+                // Validate question.
+                if(!answer){
+                    setQuestionError(question, questionError, "Error: ingresa una respuesta.");
+                    error = true;
+                }
+
+                // Creating question
+                var answerInfo = {
+                    questionName,
+                    answer,
+                    answerType
+                }
+                answersInfo.push(answerInfo);
+            });
+            if(error){ return; }
+
+            // Sending form info.
+            fetch("/procesar-encuesta/enviar-respuestas", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    clientEmail: email.value,
+                    answersInfo
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    response.json().then(errorData => {
+                        const errors = errorData.error;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Error en la solicitud: " + errors[0].message + ".",
+                            confirmButtonText: 'Aceptar'
+                        });   
+                    });                    
+                    throw new Error('Error en la solicitud');
+                }
+                return response.json();
+            })
+            .then(data => {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Completado!',
+                    text: data.message + '.',
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                }); 
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al enviar la solicitud: ' + error + '.',
+                    confirmButtonText: 'Aceptar'
+                }); 
+            });        
+        }
+        
+        // Setting events.
+        setInputFieldInitialValues(email);
+        questions.forEach(question => {
+            setQuestionInitialValues(question);
+        });
+        btnSubmitSurvey.addEventListener("click", answerSurvey);
+    });
+</script>

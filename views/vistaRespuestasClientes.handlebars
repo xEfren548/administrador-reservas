@@ -1,0 +1,26 @@
+<div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
+    <div class="col-10">
+        <h1>Lista de usuarios que han respondido la encuesta de satisfacción</h1>
+        <table class="table table-dark table-hover" id="tablaUsuarios">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Nombre del cliente</th>
+                    <th scope="col">Email del cliente</th>
+                    <th scope="col">Respuestas de la encuesta de satisfacción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each clientsSurveyInfo}}
+                <tr>
+                    <td>{{this.fullName}}</td>
+                    <td>{{this.email}}</td>
+                    <td>
+                        <a href="{{this.surveyResponses}}">Ver respuestas</a>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+
+    </div>
+</div>
