@@ -3,6 +3,8 @@ const Habitacion = require('../models/Habitacion');
 const Usuario = require('../models/Usuario');
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const logController = require('../controllers/logController');
+const mongoose = require('mongoose');
+
 
 const Cliente = require('../models/Cliente');
 const { check } = require("express-validator");
@@ -384,6 +386,21 @@ async function modificarEvento(req, res) {
     }
 }
 
+async function checkAvailability(resourceId, arrivalDate, departureDate) {
+    const newResourceId = new mongoose.Types.ObjectId(resourceId);
+
+
+    const overlappingReservations = await Documento.find({
+        'events.resourceId': newResourceId,
+        $and: [
+            { 'events.arrivalDate': { $lte: new Date(departureDate) } },
+            { 'events.departureDate': { $gte: new Date(arrivalDate) } }
+        ]
+    });
+    // console.log(overlappingReservations.length);
+    return overlappingReservations.length === 0;
+};
+
 async function crearNota(req, res) {
     const idReserva = req.params.id;
     const { texto } = req.body;
@@ -490,6 +507,7 @@ module.exports = {
     createReservation,
     editarEvento,
     eliminarEvento,
+    checkAvailability,
     modificarEvento,
     crearNota,
     eliminarNota
