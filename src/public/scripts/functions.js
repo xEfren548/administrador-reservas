@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const totalCostoBaseInput = document.querySelector("#total-costo-base")
     let totalSinComisiones = document.querySelector("#total-sin-comisiones")
 
-    if (totalSinComisiones.value === undefined || totalSinComisiones.value === null || !totalSinComisiones.value ) {
+    if (totalSinComisiones.value === undefined || totalSinComisiones.value === null || !totalSinComisiones.value) {
         totalSinComisiones.value = 0
     }
 
@@ -46,6 +46,82 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
             nightsInput.value = 0
         }
+    }
+
+    async function showAvailableChalets() {
+        
+        const arrivalValue = new Date(`${arrivalDate.value}T00:00:00`);
+        const departureValue = new Date(`${departureDate.value}T00:00:00`);
+        const tipologiaHabitacionInput = document.querySelector('#tipologia_habitacion');
+        const options = tipologiaHabitacionInput.querySelectorAll('option');
+        
+        const verificarDisponibilidadElement = document.getElementById('verificar-disponibilidad');
+        
+        const dataBsIds = [];
+        
+        
+        try {
+        if (!isNaN(arrivalValue) && !isNaN(departureValue) && departureValue >= arrivalValue) {
+
+                console.log(arrivalValue)
+                console.log(departureValue)
+
+                verificarDisponibilidadElement.style.display = 'block';
+
+                const arrivalYear = arrivalValue.getFullYear();
+                const arrivalMonth = (arrivalValue.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+                const arrivalDay = arrivalValue.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+                const arrivalDate = `${arrivalYear}-${arrivalMonth}-${arrivalDay}`;
+
+                const departureYear = departureValue.getFullYear();
+                const departureMonth = (departureValue.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+                const departureDay = departureValue.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+                const departureDate = `${departureYear}-${departureMonth}-${departureDay}`;
+
+                console.log(arrivalDate)
+                console.log(departureDate)
+
+
+                options.forEach(option => {
+                    const dataBsId = option.getAttribute('data-bs-id');
+                    if (dataBsId) {
+                        dataBsIds.push(dataBsId);
+                    }
+                });
+                console.log(dataBsIds);
+
+                const results = [];
+                for (const idHabitacion of dataBsIds) {
+                    const response = await fetch(`/api/check-availability/?resourceId=${idHabitacion}&arrivalDate=${arrivalDate}&departureDate=${departureDate}`);
+                    const result = await response.json();
+                    results.push({ idHabitacion, available: result.available });
+                }
+    
+                console.log(results);
+
+                results.forEach(result => {
+                    const option = document.querySelector(`option[data-bs-id="${result.idHabitacion}"]`);
+                    if (result.available) {
+                        option.style.backgroundColor = 'lightgreen'; // Marca las cabañas disponibles
+                        option.disabled  = false;
+                    } else {
+                        option.style.backgroundColor = 'lightcoral'; // Marca las cabañas no disponibles
+                        option.disabled = true;
+                    }
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: "Error en la solicitud: " + error.message,
+                confirmButtonText: 'Aceptar'
+            });
+        } finally {
+            verificarDisponibilidadElement.style.display = 'none';
+        }
+
+
     }
 
     // Creating new reservation.
@@ -74,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function () {
             };
 
             console.log(preciosTotalesGlobal)
-            console.log("precioMinimoPermitido: ", precioMinimoPermitido) 
+            console.log("precioMinimoPermitido: ", precioMinimoPermitido)
 
             if (formData.total > preciosTotalesGlobal) {
                 throw new Error(`No puedes dar un precio mayor al establecido ($${preciosTotalesGlobal})`);
@@ -186,6 +262,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     arrivalDate.addEventListener('input', calculateNightDifference);
     departureDate.addEventListener('input', calculateNightDifference);
+    arrivalDate.addEventListener('input', showAvailableChalets);
+    departureDate.addEventListener('input', showAvailableChalets);
 
     const tipologiaSelect = document.getElementById('tipologia_habitacion');
     const ocupacionInput = document.getElementById('ocupacion_habitacion');
@@ -241,7 +319,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-    
+
     async function obtenerTotalReserva() {
         const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
         const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
@@ -310,7 +388,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.log("Total precios: ", totalPrecios)
                 console.log("Total costo base: ", totalCostoBase)
                 console.log("Total sin comisiones: ", totalSinComisiones.value)
-                
+
                 totalSinComisiones.value = totalPrecios;
 
                 // Asignar comisiones
@@ -318,14 +396,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
                 totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
                 console.log("Total precios con comisiones: ", totalPrecios)
-                
+
                 const totalInput = document.getElementById('habitacion_total') // Subtotal 
                 totalInput.value = precioMinimoPermitido // Mostrar el minimo permitido
-                
+
                 preciosTotalesGlobal = totalPrecios // Monto maximo en variable global
 
                 totalCostoBaseInput.value = totalCostoBase
-                
+
                 console.log('Precios totales global: ', preciosTotalesGlobal)
 
             } catch (error) {
@@ -345,7 +423,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json();
             const minComission = data.minComission
             const finalComission = data.finalComission
-            const comisiones = { minComission: minComission, finalComission: finalComission}
+            const comisiones = { minComission: minComission, finalComission: finalComission }
             return comisiones
 
         } catch (error) {
