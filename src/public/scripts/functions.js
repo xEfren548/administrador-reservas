@@ -68,9 +68,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 verificarDisponibilidadElement.style.display = 'block';
 
-                
-
-
                 const arrivalYear = arrivalValue.getFullYear();
                 const arrivalMonth = (arrivalValue.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
                 const arrivalDay = arrivalValue.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos

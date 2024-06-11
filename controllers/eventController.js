@@ -388,16 +388,30 @@ async function modificarEvento(req, res) {
 
 async function checkAvailability(resourceId, arrivalDate, departureDate) {
     const newResourceId = new mongoose.Types.ObjectId(resourceId);
+    const arrivalDateObj = new Date(`${arrivalDate}T00:00:00`);
+    const departureDateObj = new Date(`${departureDate}T00:00:00`);
+    
 
+    console.log(`Checking overlaps for Resource ID: ${newResourceId}`);
+    console.log(`Arrival Date: ${arrivalDateObj}`);
+    console.log(`Departure Date: ${departureDateObj}`);
 
-    const overlappingReservations = await Documento.find({
-        'events.resourceId': newResourceId,
-        $and: [
-            { 'events.arrivalDate': { $lte: new Date(departureDate) } },
-            { 'events.departureDate': { $gte: new Date(arrivalDate) } }
-        ]
-    });
-    // console.log(overlappingReservations.length);
+    const overlappingReservations = await Documento.aggregate([
+        { $unwind: '$events' },
+        { $match: { 'events.resourceId': newResourceId } },
+        {
+            $match: {
+                $and: [
+                    { 'events.arrivalDate': { $lte: departureDateObj } },
+                    { 'events.departureDate': { $gte: arrivalDateObj } }
+                ]
+            }
+        }
+    ]);
+
+    console.log('Overlapping Reservations:', overlappingReservations);
+    console.log('Overlapping Reservations Length:', overlappingReservations.length);
+
     return overlappingReservations.length === 0;
 };
 
