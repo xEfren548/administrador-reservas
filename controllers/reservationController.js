@@ -57,6 +57,8 @@ async function showReservationsView(req, res, next) {
     }
 }
 
+
+
 module.exports = {
     showReservationsViewValidators,
     showReservationsView,
