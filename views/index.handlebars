@@ -6,6 +6,13 @@
 </div>
 
 <div id="calendar" class=""></div>
+<div id="context-menu">
+    <ul>
+        <li id="edit"><i class="fa fa-pencil" aria-hidden="true"></i>&nbsp Editar Evento</li>
+        <li id="delete"><i class="fa fa-trash" aria-hidden="true"></i>&nbsp Eliminar Evento</li>
+        <li id="move-to-playground"><i class="fa fa-gamepad" aria-hidden="true"></i>&nbsp Mover al Playground</li>
+    </ul>
+</div>
 
 <!-- Modals -->
 <div class="modal fade" id="event_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
@@ -64,7 +71,8 @@
                     <div class="row">
                         <div class="col-sm-4">
                             <div class="form-group">
-                                <p id="verificar-disponibilidad" style="display: none;"   >Verificando disponibilidad...</p>
+                                <p id="verificar-disponibilidad" style="display: none;">Verificando disponibilidad...
+                                </p>
 
                                 <label for="tipologia_habitacion">Tipología</label>
                                 <select name="tipologia_habitacion" id="tipologia_habitacion"
@@ -111,7 +119,7 @@
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="ocupacion_habitacion">Total</label>
-                                <p id="calculando-precios" style="display: none;"   >Calculando precios...</p>
+                                <p id="calculando-precios" style="display: none;">Calculando precios...</p>
                                 <div class="input-group ig-shopping-price mb-3">
                                     <input type="number" class="form-control bg-light text-black fw-bold"
                                         id="habitacion_total" aria-label="Amount (to the nearest dollar)" min="0.00"
@@ -164,8 +172,8 @@
                 <button type="button" class="btn btn-primary" id="save-event-btn">
                     <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
                     <span class="spinner-text">Crear Reserva</span>
-                    
-                    </button>
+
+                </button>
             </div>
         </div>
     </div>

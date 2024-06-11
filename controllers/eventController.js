@@ -412,6 +412,32 @@ async function checkAvailability(resourceId, arrivalDate, departureDate) {
     return overlappingReservations.length === 0;
 };
 
+async function moveToPlayground(req, res) {
+    const { idReserva, status } = req.body;
+    console.log(req.body)
+    console.log(idReserva)
+    
+    try {
+        const eventosExistentes = await Documento.findOne();
+        const evento = eventosExistentes.events.find(evento => evento._id.toString() === idReserva);
+        
+        if (!['active', 'playground', 'cancelled'].includes(status)) {
+            return res.status(400).send({ error: 'Invalid status' });
+        }
+        if (!evento) {
+            throw new Error('El evento no fue encontrado');
+        }
+
+        console.log(evento);
+        evento.status = status;
+        await eventosExistentes.save();
+        res.status(200).json({ mensaje: 'Evento movido al playground correctamente', reserva: evento });
+
+    } catch(error) {
+        res.status(500).send({ error: 'Error al mover al playground: ' +  error.message });
+    }
+}
+
 async function crearNota(req, res) {
     const idReserva = req.params.id;
     const { texto } = req.body;
@@ -519,6 +545,7 @@ module.exports = {
     editarEvento,
     eliminarEvento,
     checkAvailability,
+    moveToPlayground,
     modificarEvento,
     crearNota,
     eliminarNota
