@@ -19,18 +19,31 @@ const showSurveyValidators = [
 
 const answerSurveyValidators = [
     check("clientEmail")
-        .custom(async (value, {req}) => {
+        .custom(async (value, { req }) => {
             var client = await Cliente.findOne({ email: value });
-            if(!client){ throw new NotFoundError("Current client does not exist. Calling FBI") }
-            console.log("Cliente: ", client);
+            if (!client) {
+                throw new NotFoundError("Current client does not exist. Calling FBI");
+            }
 
-            var reservation = await Evento.findOne();
-            reservation = reservation.events.find(reservation => reservation.client.toString() === client._id.toString());
-            if(!reservation){ throw new NotFoundError("Current client has no reservation. Calling FBI") }
-            if(reservation.surveySubmited){ throw new NotFoundError("You have already submited this survey") }
+            var evento = await Evento.findOne();
+            if (!evento || !evento.events || evento.events.length === 0) {
+                throw new NotFoundError("No reservations found for this event.");
+            }
+
+            var reservations = evento.events.filter(reservation => reservation.client.toString() === client._id.toString());
+            if (reservations.length === 0) {
+                throw new NotFoundError("Current client has no reservation. Calling FBI");
+            }
+
+            var latestReservation = reservations[reservations.length - 1];
+            if (latestReservation.surveySubmited) {
+                throw new NotFoundError("You have already submitted this survey");
+            }
 
             return true;
         }),
+
+        
     check('questionsInfo')
         .custom(async (value, {req}) => {
             var survey = await Encuesta.findOne();
