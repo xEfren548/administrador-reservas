@@ -24,11 +24,10 @@ function getDateFromDayOfYear(dayOfYear) {
 // CURRENT CHANGE
 function pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData){
     var matrixhabitaciones = [];
-
     const dayOfYear = date => Math.floor((date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
     habitaciones.forEach((habitacion,index) => {
         var habitacionesyprecio = {
-            name: habitacion.title,
+            name: habitacion.propertyDetails.name,
             precios: []
         }
         var matrix = [];
@@ -58,7 +57,7 @@ function pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData){
 router.get('/calendario-precios', async (req, res) => {
     try {
         
-        const url = '/api/habitaciones'; 
+        const url = 'http://localhost:3005/api/habitaciones'; 
 
         // Obtener las habitaciones
         const response = await fetch(url);
@@ -76,11 +75,10 @@ router.get('/calendario-precios', async (req, res) => {
        
         const pricexday = pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData);
 
-        //console.log(habitaciones);
+        console.log(habitaciones);
 
 
         res.render('calendarioPrecios', {
-            layout: 'layoutCalendarioPrecios',
             habitaciones: habitaciones, // Pasa las habitaciones a la plantilla
             daysWithDates: daysWithDates, // Pasa el arreglo de fechas a la plantilla
             preciosHabitaciones: preciosHabitacionesData, // Pasa los precios de las habitaciones a la plantilla

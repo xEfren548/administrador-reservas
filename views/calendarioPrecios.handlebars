@@ -1,4 +1,12 @@
 <h1>Calendario de precios con aumento</h1>
+<div class="calendar-header">
+    <div class="bg-dark mb-3">
+        <a name="" id="actualizar-precios-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
+            data-bs-toggle="modal" data-bs-target="#update_prices_modal">Actualizar precios</a>
+    </div>
+
+
+</div>
 <div class="table-prices">
   {{#if pricexday}}
   {{#each pricexday}}
@@ -56,9 +64,9 @@
             </option>
             {{#if habitaciones}}
             {{#each habitaciones}}
-            <option value="{{this._id}}" data-precio-base="{{this.precio_base}}"
-              data-precio-base2+noches="{{this.precio_base_2noches}}" data-costo-base="{{this.costo_base}}"
-              data-costo-base2+noches="{{this.costo_base_2noches}}">{{this.title}}</option>
+            <option value="{{this._id}}" data-precio-base="{{this.others.basePrice}}"
+              data-precio-base2+noches="{{this.others.basePrice2nights}}" data-costo-base="{{this.others.baseCost}}"
+              data-costo-base2+noches="{{this.others.baseCost2nights}}">{{this.propertyDetails.name}}</option>
 
             {{/each}}
             {{else}}
@@ -95,7 +103,7 @@
               <label for="precio-base-input">Precio Base Estándar</label>
               <div class="input-group">
                 <input type="number" name="precio-base-input" id="precio-base-input-id"
-                  class="text-center form-control form-control-sm" value="0" disabled>
+                  class="text-center form-control form-control-sm text-black fw-bold" value="0" disabled>
                 <div class="input-group-append">
                   <div class="input-group-append">
                     <span class="input-group-text" style="font-size: 15px;">
@@ -109,7 +117,7 @@
               <label for="precio-base-input">Precio Base 2+ noches</label>
               <div class="input-group">
                 <input type="number" name="precio-base2+-input" id="precio-base2+input-id"
-                  class="text-center form-control form-control-sm" value="0" disabled>
+                  class="text-center form-control form-control-sm text-black fw-bold" value="0" disabled>
                 <div class="input-group-append">
                   <div class="input-group-append">
                     <span class="input-group-text" style="font-size: 15px;">
@@ -123,7 +131,7 @@
               <label for="precio-base-input">Costo Base</label>
               <div class="input-group">
                 <input type="number" name="costo-base-input" id="costo-base-input-id"
-                  class="text-center form-control form-control-sm" value="0" disabled>
+                  class="text-center form-control form-control-sm text-black fw-bold" value="0" disabled>
                 <div class="input-group-append">
                   <div class="input-group-append">
                     <span class="input-group-text" style="font-size: 15px;">
@@ -137,7 +145,7 @@
               <label for="precio-base-input">Costo Base 2+ noches</label>
               <div class="input-group">
                 <input type="number" name="costo-base2+-input" id="costo-base2+input-id"
-                  class="text-center form-control form-control-sm" value="0" disabled>
+                  class="text-center form-control form-control-sm text-black fw-bold" value="0" disabled>
                 <div class="input-group-append">
                   <div class="input-group-append">
                     <span class="input-group-text" style="font-size: 15px;">
