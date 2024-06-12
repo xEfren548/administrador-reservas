@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 background = 'bg-warning';
                 textColor = 'text-black-50';
             } else {
-                background = 'bg-success';
+                background = 'bg-danger';
                 textColor = 'text-white';
             }
 
@@ -171,11 +171,20 @@ document.addEventListener('DOMContentLoaded', async function () {
     calendar.render();
 
     var contextMenu = document.getElementById('context-menu');
+    const moveToActiveEl = document.getElementById('move-to-active');
+    const moveToPlaygroundEl = document.getElementById('move-to-playground');
     var currentEvent;
 
     function showContextMenu(event, calendarEvent) {
         currentEvent = calendarEvent;
         contextMenu.style.display = 'block';
+        if (currentEvent.extendedProps.status === 'active') {
+            moveToActiveEl.style.display = 'none';
+            moveToPlaygroundEl.style.display = 'block';
+        } else if (currentEvent.extendedProps.status === 'playground') {
+            moveToPlaygroundEl.style.display = 'none';
+            moveToActiveEl.style.display = 'block';
+        }
         contextMenu.style.left = event.pageX + 'px';
         contextMenu.style.top = event.pageY + 'px';
     }
@@ -189,9 +198,56 @@ document.addEventListener('DOMContentLoaded', async function () {
         window.location.replace(currentEvent.url)
     });
 
-    document.getElementById('delete').addEventListener('click', function () {
-        if (confirm('Are you sure you want to delete this event?')) {
-            currentEvent.remove();
+    document.getElementById('delete').addEventListener('click', async function () {
+        const confirmacion = await Swal.fire({
+            icon: 'warning',
+            title: '¿Estás seguro?',
+            text: 'Esta acción moverá la reserva a cancelada.',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, mover',
+            cancelButtonText: 'Cancelar'
+        });
+
+        try {
+
+            if (confirmacion.isConfirmed) {
+                const response = await fetch(`api/eventos/move-to-playground`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        idReserva: currentEvent.id,
+                        status: 'cancelled'
+                    })
+                });
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Reserva movida a cancelada',
+                        text: 'La reserva ha sido movida a cancelada.',
+                        showConfirmButton: false,
+                        timer: 3000
+                    }).then((result) => {
+
+                        window.location.reload();
+
+                    })
+                } else {
+                    throw new Error('Error al mover reserva a cancelada');
+                }
+
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un error al mover la reserva al Playground.' + error.message,
+                showConfirmButton: false,
+                timer: 3000
+            });
         }
     });
 
@@ -242,6 +298,60 @@ document.addEventListener('DOMContentLoaded', async function () {
                 icon: 'error',
                 title: 'Error',
                 text: 'Hubo un error al mover la reserva al Playground.' + error.message,
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+
+    });
+
+    document.getElementById('move-to-active').addEventListener('click', async function () {
+        const confirmacion = await Swal.fire({
+            icon: 'warning',
+            title: '¿Estás seguro?',
+            text: 'Esta acción moverá la reserva a activa.',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, mover',
+            cancelButtonText: 'Cancelar'
+        });
+
+        try {
+
+            if (confirmacion.isConfirmed) {
+                const response = await fetch(`api/eventos/move-to-playground`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        idReserva: currentEvent.id,
+                        status: 'active'
+                    })
+                });
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Reserva activa',
+                        text: 'La reserva ha sido movida a activa.',
+                        showConfirmButton: false,
+                        timer: 3000
+                    }).then((result) => {
+
+                        window.location.reload();
+
+                    })
+                } else {
+                    throw new Error('Error al mover reserva a activa');
+                }
+
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message,
                 showConfirmButton: false,
                 timer: 3000
             });
