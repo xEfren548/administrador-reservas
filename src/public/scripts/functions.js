@@ -184,6 +184,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json();
             console.log('Respuesta exitosa del servidor:', data);
 
+            const reservationId = data.reservationId;
+
             const comisionBody = {
                 precioMinimo: precioMinimoPermitido,
                 precioMaximo: preciosTotalesGlobal,
@@ -191,6 +193,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 totalSinComisiones: totalSinComisiones.value,
                 precioAsignado: formData.total,
                 chaletName: formData.chaletName,
+                idReserva: reservationId
 
             }
 

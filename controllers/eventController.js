@@ -3,6 +3,7 @@ const Habitacion = require('../models/Habitacion');
 const Usuario = require('../models/Usuario');
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const logController = require('../controllers/logController');
+const utilidadesController = require('../controllers/utilidadesController');
 const mongoose = require('mongoose');
 
 
@@ -432,6 +433,46 @@ async function moveToPlayground(req, res) {
             throw new Error('El evento ya estaba en ese estatus');
         }
 
+        if (evento.status === 'active' && status === 'playground') {
+            const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
+            console.log('comisiones Reserva: ');
+            console.log(comisionesReserva);
+
+            const newComisiones = comisionesReserva.map(comisiones => {
+                return {
+                    id: comisiones._id,
+                    // monto: comisiones.monto / 2,
+                    status: 'pendiente'
+                }
+            })
+
+            for (const comision of newComisiones) {
+                await utilidadesController.editarComisionReturn(comision);
+            }
+
+            console.log(newComisiones);
+        }
+
+        if (evento.status === 'playground' && status === 'active') {
+            const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
+            console.log('comisiones Reserva: ');
+            console.log(comisionesReserva);
+
+            const newComisiones = comisionesReserva.map(comisiones => {
+                return {
+                    id: comisiones._id,
+                    // monto: comisiones.monto / 2,
+                    status: 'aplicado'
+                }
+            })
+
+            console.log(newComisiones);
+
+            for (const comision of newComisiones) {
+                await utilidadesController.editarComisionReturn(comision);
+            }
+        }
+
         evento.status = status;
         const confirmation = await eventosExistentes.save();
         if (!confirmation) {
@@ -449,6 +490,9 @@ async function moveToPlayground(req, res) {
         }
         
         await logController.createBackendLog(logBody);
+
+        
+
         
         res.status(200).json({ mensaje: 'Evento movido al playground correctamente', reserva: evento });
 
