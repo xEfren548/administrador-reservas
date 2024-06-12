@@ -438,6 +438,17 @@ async function moveToPlayground(req, res) {
             throw new Error('No se pudo actualizar el evento');
         }
         console.log(confirmation);
+
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            idReserva: idReserva,
+            acciones: `Estatus editado a ${status} por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
         
         res.status(200).json({ mensaje: 'Evento movido al playground correctamente', reserva: evento });
 
