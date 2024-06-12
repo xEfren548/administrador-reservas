@@ -428,9 +428,17 @@ async function moveToPlayground(req, res) {
             throw new Error('El evento no fue encontrado');
         }
 
-        console.log(evento);
+        if (evento.status === status) {
+            throw new Error('El evento ya estaba en ese estatus');
+        }
+
         evento.status = status;
-        await eventosExistentes.save();
+        const confirmation = await eventosExistentes.save();
+        if (!confirmation) {
+            throw new Error('No se pudo actualizar el evento');
+        }
+        console.log(confirmation);
+        
         res.status(200).json({ mensaje: 'Evento movido al playground correctamente', reserva: evento });
 
     } catch(error) {

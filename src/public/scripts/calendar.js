@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             // console.log(data);
             let background;
             let textColor;
-            
+
             if (info.event.extendedProps.status === 'active') {
                 background = 'bg-success';
                 textColor = 'text-white';
@@ -94,9 +94,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 background = 'bg-success';
                 textColor = 'text-white';
             }
-            
 
-            
+
+
 
             // console.log(info);
             return {
@@ -185,8 +185,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
 
     document.getElementById('edit').addEventListener('click', function () {
-        alert('Edit event: ' + currentEvent.title);
-        // Add your edit event logic here
+        console.log(currentEvent.url);
+        window.location.replace(currentEvent.url)
     });
 
     document.getElementById('delete').addEventListener('click', function () {
@@ -207,36 +207,46 @@ document.addEventListener('DOMContentLoaded', async function () {
             cancelButtonText: 'Cancelar'
         });
 
-        if (confirmacion.isConfirmed) {
-            const response = await fetch(`api/eventos/move-to-playground`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    idReserva: currentEvent.id,
-                    status: 'playground'
-                })
-            });
-            if (response.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Reserva movida al playground',
-                    text: 'La reserva ha sido movida al Playground.',
-                    showConfirmButton: false,
-                    timer: 3000
+        try {
+
+            if (confirmacion.isConfirmed) {
+                const response = await fetch(`api/eventos/move-to-playground`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        idReserva: currentEvent.id,
+                        status: 'playground'
+                    })
                 });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Hubo un error al mover la reserva al Playground.',
-                    showConfirmButton: false,
-                });
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Reserva movida al playground',
+                        text: 'La reserva ha sido movida al Playground.',
+                        showConfirmButton: false,
+                        timer: 3000
+                    }).then((result) => {
+
+                        window.location.reload();
+
+                    })
+                } else {
+                    throw new Error('Error al mover reserva a playground')
+                }
+
             }
-            console.log(currentEvent)
-            console.log(currentEvent.id)
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un error al mover la reserva al Playground.' + error.message,
+                showConfirmButton: false,
+                timer: 3000
+            });
         }
+
     });
 
 
