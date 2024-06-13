@@ -478,26 +478,26 @@ async function moveToPlayground(req, res) {
             console.log('comisiones Reserva: ');
             console.log(comisionesReserva);
 
-            const newComisiones = await Promise.all(comisionesReserva.map(async (comisiones) => {
+            const newComisiones = [];
+            for (const comisiones of comisionesReserva) {
                 if (comisiones.concepto.includes('limpieza')) {
                     const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
                     if (utilidadEliminada) {
                         console.log('Utilidad eliminada correctamente');
-                        
                     } else {
                         throw new Error('Error al eliminar comision.');
                     }
-                    
+                } else {
+                    newComisiones.push({
+                        id: comisiones._id,
+                        monto: comisiones.monto / 2,
+                        concepto: `${comisiones.concepto} (Reserva cancelada, 50%)`,
+                        status: 'aplicado'
+                    });
                 }
-                return {
-                    id: comisiones._id,
-                    monto: comisiones.monto / 2,
-                    concepto: comisiones.concepto + '(Reserva cancelada, 50%)',
-                    status: 'aplicado'
-                }
-            }))
+            }
 
-            console.log(newComisiones);
+            console.log('new Comisiones: ', newComisiones);
 
             for (const comision of newComisiones) {
                 await utilidadesController.editarComisionReturn(comision);

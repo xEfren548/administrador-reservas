@@ -373,7 +373,7 @@ async function altaComisionReturn(req, res) {
     try {
         const { monto, concepto, fecha, idUsuario, idReserva, idServicio } = req
 
-        if (concepto !== 0) {
+        if (monto !== 0) {
 
             const newUtilidad = new Utilidades({
                 monto,
@@ -465,8 +465,8 @@ async function eliminarComision(req, res) {
 async function eliminarComisionReturn(idComision) {
     try {
 
-        await Utilidades.findByIdAndDelete(id);
-        
+        const utilidadEliminada = await Utilidades.findByIdAndDelete(idComision);
+        return utilidadEliminada;
 
     } catch (error) {
         console.log(error.message);
