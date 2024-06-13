@@ -141,26 +141,58 @@ document.addEventListener('DOMContentLoaded', async function () {
         eventMouseLeave: function () {
             document.querySelector(".fc-hoverable-event").remove();
         },
-        eventDrop: function (info) {
+        eventDrop: async function (info) {
             const event = info.event;
             console.log(info);
             console.log(event.id)
 
-            fetch(`/api/eventos/${event.id}/modificar`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(info)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Respuesta del servidor: ', data);
+            document.querySelector(".fc-hoverable-event").remove();
+
+
+            const confirmacion = await Swal.fire({
+                icon: 'warning',
+                title: '¿Estás seguro?',
+                text: 'Esta acción cambiará las fechas de la reserva.',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, mover',
+                cancelButtonText: 'Cancelar'
+            });
+
+
+            console.log(confirmacion);
+
+            if (confirmacion.isConfirmed) {
+                await fetch(`/api/eventos/${event.id}/modificar`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(info)
                 })
-                .catch(err => {
-                    console.log('Error: ', err);
-                });
-                document.querySelector(".fc-hoverable-event").remove();
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Respuesta del servidor: ', data);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Fechas actualizadas',
+                            showConfirmButton: false,
+                            timer: 2500
+                        })
+                    })
+                    .catch(err => {
+                        console.log('Error: ', err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error al actualizar fechas: ' + err.message,
+                            showConfirmButton: false,
+                            timer: 2500
+                        })
+                    });
+
+
+            }
         },
         eventDidMount: function (info) {
             info.el.addEventListener('contextmenu', function (event) {
