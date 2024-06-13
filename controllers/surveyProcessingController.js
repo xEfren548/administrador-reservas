@@ -164,8 +164,12 @@ async function showClientsResponses(req, res, next) {
         var reservations = await Evento.findOne();
         reservations = reservations.events;
 
+        console.log(reservations)
+
         for (const clientSurveyResponses of clientsSurveyResponses) {
             const reservation = reservations.find(reservation => reservation._id.toString() === clientSurveyResponses.reservation.toString());
+
+            console.log(reservation)
 
             const client = await Cliente.findById(reservation.client);
             if (!client) { throw new NotFoundError("Client does not exist."); }
@@ -173,7 +177,7 @@ async function showClientsResponses(req, res, next) {
             const clientSurveyInfo = {
                 fullName: `${client.firstName} ${client.lastName}`,
                 email: client.email,
-                surveyResponses: `http://localhost:3005/procesar-encuesta/mostrar-respuestas-usuario/${clientSurveyResponses._id}`
+                surveyResponses: `./mostrar-respuestas-usuario/${clientSurveyResponses._id}`
             };
             console.log("clientSurveyInfo: ", clientSurveyInfo);
 
