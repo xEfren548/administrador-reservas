@@ -364,8 +364,8 @@ async function modificarEvento(req, res) {
 
 
         // Actualizar la fecha de inicio y fin del evento existente
-        evento.start = newStartDate;
-        evento.end = newEndDate;
+        evento.arrivalDate = newStartDate;
+        evento.departureDate = newEndDate;
 
         if (newResource) {
             const newResourceId = newResource.id;

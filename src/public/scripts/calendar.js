@@ -160,6 +160,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 .catch(err => {
                     console.log('Error: ', err);
                 });
+                document.querySelector(".fc-hoverable-event").remove();
         },
         eventDidMount: function (info) {
             info.el.addEventListener('contextmenu', function (event) {
