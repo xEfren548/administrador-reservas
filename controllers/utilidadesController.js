@@ -106,7 +106,7 @@ async function calcularComisiones(req, res) {
 async function generarComisionReserva(req, res) {
     try {
         const loggedUserId = req.session.id;
-        const { precioAsignado, precioMinimo, costoBase, totalSinComisiones, idReserva, chaletName } = req.body;
+        const { precioAsignado, precioMinimo, costoBase, totalSinComisiones, idReserva, chaletName, arrivalDate, departureDate } = req.body;
         console.log("Desde generar comision reserva")
         console.log("Costo base: " + costoBase)
 
@@ -151,7 +151,7 @@ async function generarComisionReserva(req, res) {
                         await altaComisionReturn({
                             monto: costosAdministrador.amount,
                             concepto: conceptoAdmin,
-                            fecha: fechaActual,
+                            fecha: new Date(departureDate),
                             idUsuario: user._id.toString(),
                             idReserva: idReserva
                         })
@@ -162,7 +162,7 @@ async function generarComisionReserva(req, res) {
                         await altaComisionReturn({
                             monto: comisionVendedor,
                             concepto: `Comisión por Reservación admin. ${chaletName}`,
-                            fecha: fechaActual,
+                            fecha: new Date(departureDate),
                             idUsuario: user._id.toString(),
                             idReserva: idReserva
                         })
@@ -213,7 +213,7 @@ async function generarComisionReserva(req, res) {
                         await altaComisionReturn({
                             monto: comisionVendedor,
                             concepto: `Reservación ${chaletName}`,
-                            fecha: fechaActual,
+                            fecha: new Date(departureDate),
                             idUsuario: user._id.toString(),
                             idReserva: idReserva
                         })
@@ -229,7 +229,7 @@ async function generarComisionReserva(req, res) {
                     await altaComisionReturn({
                         monto: costosGerente.amount,
                         concepto: `Reservación ${chaletName}`,
-                        fecha: fechaActual,
+                        fecha: new Date(departureDate),
                         idUsuario: user._id.toString(),
                         idReserva: idReserva
                     })
@@ -256,7 +256,7 @@ async function generarComisionReserva(req, res) {
         await altaComisionReturn({
             monto: utilidadChalet,
             concepto: `Utilidad de reservación ${chaletName}`,
-            fecha: fechaActual,
+            fecha: new Date(departureDate),
             idUsuario: chaletAdmin,
             idReserva: idReserva
         })
@@ -265,7 +265,7 @@ async function generarComisionReserva(req, res) {
         await altaComisionReturn({
             monto: chalet.additionalInfo.extraCleaningCost,
             concepto: `Comisión limpieza ${chaletName}`,
-            fecha: fechaActual,
+            fecha: new Date(departureDate),
             idUsuario: chaletJanitor,
             idReserva: idReserva
         })
