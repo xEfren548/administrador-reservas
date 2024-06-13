@@ -473,6 +473,37 @@ async function moveToPlayground(req, res) {
             }
         }
 
+        if (evento.status === 'active' && status === 'cancelled') {
+            const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
+            console.log('comisiones Reserva: ');
+            console.log(comisionesReserva);
+
+            const newComisiones = await Promise.all(comisionesReserva.map(async (comisiones) => {
+                if (comisiones.concepto.includes('limpieza')) {
+                    const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
+                    if (utilidadEliminada) {
+                        console.log('Utilidad eliminada correctamente');
+                        
+                    } else {
+                        throw new Error('Error al eliminar comision.');
+                    }
+                    
+                }
+                return {
+                    id: comisiones._id,
+                    monto: comisiones.monto / 2,
+                    concepto: comisiones.concepto + '(Reserva cancelada, 50%)',
+                    status: 'aplicado'
+                }
+            }))
+
+            console.log(newComisiones);
+
+            for (const comision of newComisiones) {
+                await utilidadesController.editarComisionReturn(comision);
+            }
+        }
+
         evento.status = status;
         const confirmation = await eventosExistentes.save();
         if (!confirmation) {

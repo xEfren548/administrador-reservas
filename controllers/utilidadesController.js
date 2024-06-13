@@ -462,6 +462,17 @@ async function eliminarComision(req, res) {
     }
 }
 
+async function eliminarComisionReturn(idComision) {
+    try {
+
+        await Utilidades.findByIdAndDelete(id);
+        
+
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
 
 module.exports = {
     obtenerComisionesPorReserva,
@@ -472,5 +483,6 @@ module.exports = {
     altaComisionReturn,
     editarComision,
     editarComisionReturn,
-    eliminarComision
+    eliminarComision,
+    eliminarComisionReturn
 }
