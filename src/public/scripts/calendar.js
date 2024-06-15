@@ -10,15 +10,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'resourceTimelineYear',
-        height: 'auto',
 
+        height: 'auto',
         expandRows: true,
         navLinks: true, // can click day/week names to navigate views
         editable: true,
         selectable: true,
         nowIndicator: true,
         dayMaxEvents: true, // allow "more" link when too many events
-
 
         headerToolbar: {
             left: 'today prev,next',
@@ -58,6 +57,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     .then(function (data) {
                         // console.log(data);
                         let events = data[0].events.map(function (event) {
+                            
                             return {
                                 id: event._id,
                                 resourceId: event.resourceId,
@@ -160,9 +160,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 cancelButtonText: 'Cancelar'
             });
 
-
-            console.log(confirmacion);
-
             if (confirmacion.isConfirmed) {
                 await fetch(`/api/eventos/${event.id}/modificar`, {
                     method: 'PUT',
@@ -202,6 +199,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     });
     calendar.render();
+    
+
 
     var contextMenu = document.getElementById('context-menu');
     const moveToActiveEl = document.getElementById('move-to-active');

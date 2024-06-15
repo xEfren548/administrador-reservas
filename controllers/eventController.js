@@ -345,8 +345,8 @@ async function modificarEvento(req, res) {
 
         // Obtener el ID del evento y la nueva fecha
         const eventId = req.params.id;
-        const newStartDate = event.start;
-        const newEndDate = event.end;
+        let newStartDate = event.start;
+        let newEndDate = event.end;
 
         // Buscar el evento existente por su ID
         const eventosExistentes = await Documento.findOne();
@@ -377,6 +377,45 @@ async function modificarEvento(req, res) {
         await eventosExistentes.save();
 
         console.log('Evento modificado:', evento);
+        
+        newStartDate = new Date(newStartDate)
+        newEndDate = new Date(newEndDate)
+
+        const newStartDateFormatted = newStartDate.getDate() + "-" + newStartDate.getMonth() + "-" + newStartDate.getFullYear();
+        const newEndDateFormatted = newEndDate.getDate() + "-" + newEndDate.getMonth() + "-" + newEndDate.getFullYear();
+
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            idReserva: eventId,
+            acciones: `Modificación de fechas por ${req.session.firstName} ${req.session.lastName} (A ${newStartDateFormatted} - ${newEndDateFormatted})`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        await logController.createBackendLog(logBody);
+
+        const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(eventId);
+            console.log('comisiones Reserva: ');
+            console.log(comisionesReserva);
+
+            const newComisiones = comisionesReserva.map(comisiones => {
+                return {
+                    id: comisiones._id,
+                    fecha: newEndDate,
+                }
+            })
+
+            console.log(newComisiones);
+
+            const comisionsResults = [];
+            for (const comision of newComisiones) {
+                const cRes = await utilidadesController.editarComisionReturn(comision);
+                if (cRes) { comisionsResults.push(cRes); }
+            }
+
+            console.log(comisionsResults);
+
+
         res.status(200).json({ mensaje: 'Evento modificado correctamente', evento: evento });
     } catch (error) {
         console.error('Error al modificar el evento:', error);
