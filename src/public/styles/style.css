@@ -435,3 +435,27 @@ ul.rb li .timestamp {
     cursor: pointer;
     margin-left: 10px;
 }
+
+/* Right click menu for events */
+
+#context-menu {
+    display: none;
+    position: absolute;
+    z-index: 10000;
+    background-color: black;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    padding: 10px;
+    border-radius: 5px;
+}
+#context-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+#context-menu ul li {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+#context-menu ul li:hover {
+    background-color: #6649b8;
+}

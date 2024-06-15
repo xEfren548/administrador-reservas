@@ -1,4 +1,5 @@
 const moment = require('moment');
+const mongoose = require('mongoose');
 
 const usersController = require('./../controllers/usersController');
 const Habitacion = require('./../models/Habitacion');
@@ -6,6 +7,18 @@ const Costos = require('./../models/Costos');
 const Utilidades = require('./../models/Utilidades');
 const Servicio = require('./../models/Servicio');
 
+async function obtenerComisionesPorReserva(idReserva) {
+    try {
+        console.log(idReserva)
+        const newIdReserva = new mongoose.Types.ObjectId(idReserva)
+        const comisiones = await Utilidades.find({ idReserva: newIdReserva  });
+        return comisiones;
+
+    } catch (error) {
+        console.error(error);
+        return error;
+    }
+}
 
 async function calcularComisiones(req, res) {
     try {
@@ -93,7 +106,7 @@ async function calcularComisiones(req, res) {
 async function generarComisionReserva(req, res) {
     try {
         const loggedUserId = req.session.id;
-        const { precioAsignado, precioMinimo, costoBase, totalSinComisiones, precioMaximo, chaletName } = req.body;
+        const { precioAsignado, precioMinimo, costoBase, totalSinComisiones, idReserva, chaletName, arrivalDate, departureDate } = req.body;
         console.log("Desde generar comision reserva")
         console.log("Costo base: " + costoBase)
 
@@ -138,8 +151,9 @@ async function generarComisionReserva(req, res) {
                         await altaComisionReturn({
                             monto: costosAdministrador.amount,
                             concepto: conceptoAdmin,
-                            fecha: fechaActual,
-                            idUsuario: user._id.toString()
+                            fecha: new Date(departureDate),
+                            idUsuario: user._id.toString(),
+                            idReserva: idReserva
                         })
                     }
                     break;
@@ -148,8 +162,9 @@ async function generarComisionReserva(req, res) {
                         await altaComisionReturn({
                             monto: comisionVendedor,
                             concepto: `Comisión por Reservación admin. ${chaletName}`,
-                            fecha: fechaActual,
-                            idUsuario: user._id.toString()
+                            fecha: new Date(departureDate),
+                            idUsuario: user._id.toString(),
+                            idReserva: idReserva
                         })
                         user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
                     }
@@ -198,8 +213,9 @@ async function generarComisionReserva(req, res) {
                         await altaComisionReturn({
                             monto: comisionVendedor,
                             concepto: `Reservación ${chaletName}`,
-                            fecha: fechaActual,
-                            idUsuario: user._id.toString()
+                            fecha: new Date(departureDate),
+                            idUsuario: user._id.toString(),
+                            idReserva: idReserva
                         })
 
 
@@ -213,8 +229,9 @@ async function generarComisionReserva(req, res) {
                     await altaComisionReturn({
                         monto: costosGerente.amount,
                         concepto: `Reservación ${chaletName}`,
-                        fecha: fechaActual,
-                        idUsuario: user._id.toString()
+                        fecha: new Date(departureDate),
+                        idUsuario: user._id.toString(),
+                        idReserva: idReserva
                     })
 
                 }
@@ -239,16 +256,18 @@ async function generarComisionReserva(req, res) {
         await altaComisionReturn({
             monto: utilidadChalet,
             concepto: `Utilidad de reservación ${chaletName}`,
-            fecha: fechaActual,
-            idUsuario: chaletAdmin
+            fecha: new Date(departureDate),
+            idUsuario: chaletAdmin,
+            idReserva: idReserva
         })
 
 
         await altaComisionReturn({
             monto: chalet.additionalInfo.extraCleaningCost,
             concepto: `Comisión limpieza ${chaletName}`,
-            fecha: fechaActual,
-            idUsuario: chaletJanitor
+            fecha: new Date(departureDate),
+            idUsuario: chaletJanitor,
+            idReserva: idReserva
         })
 
 
@@ -352,22 +371,28 @@ async function altaComision(req, res) {
 
 async function altaComisionReturn(req, res) {
     try {
-        const { monto, concepto, fecha, idUsuario } = req
+        const { monto, concepto, fecha, idUsuario, idReserva, idServicio } = req
 
-        const newUtilidad = new Utilidades({
-            monto,
-            concepto,
-            fecha,
-            idUsuario
-        })
+        if (monto !== 0) {
 
-        const savedUtilidad = await newUtilidad.save()
-
-        if (savedUtilidad) {
-            console.log("Utility created successfully.")
-        } else {
-            console.log("'Failed to create utility.'")
+            const newUtilidad = new Utilidades({
+                monto,
+                concepto,
+                fecha,
+                idUsuario,
+                idReserva,
+                idServicio
+            })
+            const savedUtilidad = await newUtilidad.save()
+            if (savedUtilidad) {
+                console.log("Utility created successfully.")
+            } else {
+                console.log("'Failed to create utility.'")
+            }
         }
+
+
+
 
 
 
@@ -398,6 +423,32 @@ async function editarComision(req, res) {
     }
 }
 
+async function editarComisionReturn(comision) {
+    try {
+        const { monto, concepto, fecha, idUsuario, idReserva, idServicio, status } = comision;
+        const { id } = comision;
+        const updateFields = {};
+
+        if (monto) { updateFields.monto = monto; }
+        if (concepto) { updateFields.concepto = concepto; }
+        if (fecha) { updateFields.fecha = fecha; }
+        if (idUsuario) { updateFields.idUsuario = idUsuario; }
+        if (idReserva) { updateFields.idReserva = idReserva; }
+        if (idServicio) { updateFields.idServicio = idServicio; }
+        if (status) { updateFields.status = status; }
+
+        const confirmation = await Utilidades.findByIdAndUpdate(id, updateFields);
+        if (confirmation) {
+            console.log("Comision updated successfully.")
+        } else {
+            console.log("'Failed to update comision.'")
+        }
+
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
 async function eliminarComision(req, res) {
     try {
         const { id } = req.params;
@@ -411,13 +462,27 @@ async function eliminarComision(req, res) {
     }
 }
 
+async function eliminarComisionReturn(idComision) {
+    try {
+
+        const utilidadEliminada = await Utilidades.findByIdAndDelete(idComision);
+        return utilidadEliminada;
+
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
 
 module.exports = {
+    obtenerComisionesPorReserva,
     calcularComisiones,
     mostrarUtilidadesPorUsuario,
     generarComisionReserva,
     altaComision,
     altaComisionReturn,
     editarComision,
-    eliminarComision
+    editarComisionReturn,
+    eliminarComision,
+    eliminarComisionReturn
 }

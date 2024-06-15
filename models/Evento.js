@@ -59,6 +59,11 @@ const reservaSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
+    },
+    status: {
+        type: String,
+        enum: ['active', 'playground', 'cancelled'],
+        default: 'active'
     }
 });
 

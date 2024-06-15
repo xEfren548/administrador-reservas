@@ -128,5 +128,7 @@ router.get('/check-availability', async (req, res) => {
     }
 })
 
+router.post('/eventos/move-to-playground', eventController.moveToPlayground)
+
 
 module.exports = router;

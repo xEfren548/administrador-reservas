@@ -3,6 +3,7 @@ const Habitacion = require('../models/Habitacion');
 const Usuario = require('../models/Usuario');
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const logController = require('../controllers/logController');
+const utilidadesController = require('../controllers/utilidadesController');
 const mongoose = require('mongoose');
 
 
@@ -344,8 +345,8 @@ async function modificarEvento(req, res) {
 
         // Obtener el ID del evento y la nueva fecha
         const eventId = req.params.id;
-        const newStartDate = event.start;
-        const newEndDate = event.end;
+        let newStartDate = event.start;
+        let newEndDate = event.end;
 
         // Buscar el evento existente por su ID
         const eventosExistentes = await Documento.findOne();
@@ -363,8 +364,8 @@ async function modificarEvento(req, res) {
 
 
         // Actualizar la fecha de inicio y fin del evento existente
-        evento.start = newStartDate;
-        evento.end = newEndDate;
+        evento.arrivalDate = newStartDate;
+        evento.departureDate = newEndDate;
 
         if (newResource) {
             const newResourceId = newResource.id;
@@ -376,6 +377,45 @@ async function modificarEvento(req, res) {
         await eventosExistentes.save();
 
         console.log('Evento modificado:', evento);
+        
+        newStartDate = new Date(newStartDate)
+        newEndDate = new Date(newEndDate)
+
+        const newStartDateFormatted = newStartDate.getDate() + "-" + newStartDate.getMonth() + "-" + newStartDate.getFullYear();
+        const newEndDateFormatted = newEndDate.getDate() + "-" + newEndDate.getMonth() + "-" + newEndDate.getFullYear();
+
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            idReserva: eventId,
+            acciones: `Modificación de fechas por ${req.session.firstName} ${req.session.lastName} (A ${newStartDateFormatted} - ${newEndDateFormatted})`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        await logController.createBackendLog(logBody);
+
+        const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(eventId);
+            console.log('comisiones Reserva: ');
+            console.log(comisionesReserva);
+
+            const newComisiones = comisionesReserva.map(comisiones => {
+                return {
+                    id: comisiones._id,
+                    fecha: newEndDate,
+                }
+            })
+
+            console.log(newComisiones);
+
+            const comisionsResults = [];
+            for (const comision of newComisiones) {
+                const cRes = await utilidadesController.editarComisionReturn(comision);
+                if (cRes) { comisionsResults.push(cRes); }
+            }
+
+            console.log(comisionsResults);
+
+
         res.status(200).json({ mensaje: 'Evento modificado correctamente', evento: evento });
     } catch (error) {
         console.error('Error al modificar el evento:', error);
@@ -411,6 +451,125 @@ async function checkAvailability(resourceId, arrivalDate, departureDate) {
 
     return overlappingReservations.length === 0;
 };
+
+async function moveToPlayground(req, res) {
+    const { idReserva, status } = req.body;
+    console.log(req.body)
+    console.log(idReserva)
+    
+    try {
+        const eventosExistentes = await Documento.findOne();
+        const evento = eventosExistentes.events.find(evento => evento._id.toString() === idReserva);
+        
+        if (!['active', 'playground', 'cancelled'].includes(status)) {
+            return res.status(400).send({ error: 'Invalid status' });
+        }
+        if (!evento) {
+            throw new Error('El evento no fue encontrado');
+        }
+
+        if (evento.status === status) {
+            throw new Error('El evento ya estaba en ese estatus');
+        }
+
+        if (evento.status === 'active' && status === 'playground') {
+            const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
+            console.log('comisiones Reserva: ');
+            console.log(comisionesReserva);
+
+            const newComisiones = comisionesReserva.map(comisiones => {
+                return {
+                    id: comisiones._id,
+                    // monto: comisiones.monto / 2,
+                    status: 'pendiente'
+                }
+            })
+
+            for (const comision of newComisiones) {
+                await utilidadesController.editarComisionReturn(comision);
+            }
+
+            console.log(newComisiones);
+        }
+
+        if (evento.status === 'playground' && status === 'active') {
+            const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
+            console.log('comisiones Reserva: ');
+            console.log(comisionesReserva);
+
+            const newComisiones = comisionesReserva.map(comisiones => {
+                return {
+                    id: comisiones._id,
+                    // monto: comisiones.monto / 2,
+                    status: 'aplicado'
+                }
+            })
+
+            console.log(newComisiones);
+
+            for (const comision of newComisiones) {
+                await utilidadesController.editarComisionReturn(comision);
+            }
+        }
+
+        if (evento.status === 'active' && status === 'cancelled') {
+            const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
+            console.log('comisiones Reserva: ');
+            console.log(comisionesReserva);
+
+            const newComisiones = [];
+            for (const comisiones of comisionesReserva) {
+                if (comisiones.concepto.includes('limpieza')) {
+                    const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
+                    if (utilidadEliminada) {
+                        console.log('Utilidad eliminada correctamente');
+                    } else {
+                        throw new Error('Error al eliminar comision.');
+                    }
+                } else {
+                    newComisiones.push({
+                        id: comisiones._id,
+                        monto: comisiones.monto / 2,
+                        concepto: `${comisiones.concepto} (Reserva cancelada, 50%)`,
+                        status: 'aplicado'
+                    });
+                }
+            }
+
+            console.log('new Comisiones: ', newComisiones);
+
+            for (const comision of newComisiones) {
+                await utilidadesController.editarComisionReturn(comision);
+            }
+        }
+
+        evento.status = status;
+        const confirmation = await eventosExistentes.save();
+        if (!confirmation) {
+            throw new Error('No se pudo actualizar el evento');
+        }
+        console.log(confirmation);
+
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            idReserva: idReserva,
+            acciones: `Estatus editado a ${status} por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
+
+        
+
+        
+        res.status(200).json({ mensaje: 'Evento movido al playground correctamente', reserva: evento });
+
+    } catch(error) {
+        res.status(500).send({ error: 'Error al mover al playground: ' +  error.message });
+    }
+}
 
 async function crearNota(req, res) {
     const idReserva = req.params.id;
@@ -519,6 +678,7 @@ module.exports = {
     editarEvento,
     eliminarEvento,
     checkAvailability,
+    moveToPlayground,
     modificarEvento,
     crearNota,
     eliminarNota
