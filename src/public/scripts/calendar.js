@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 textColor = 'text-white';
             } else if (info.event.extendedProps.status === 'pending') {
                 background = 'bg-info';
-                textColor = 'text-black-50';
+                textColor = 'text-black';
             }
 
 
