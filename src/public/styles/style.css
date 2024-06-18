@@ -344,7 +344,23 @@ td {
     cursor: pointer;
 }
 
+.btn-eliminar-servicio {
+    position: relative;
+    top: 0;
+    right: 0;
+    padding: 5px 10px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
 .btn-eliminar:hover {
+    background-color: darkred;
+}
+
+.btn-eliminar-servicio:hover {
     background-color: darkred;
 }
 

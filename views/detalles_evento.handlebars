@@ -245,7 +245,7 @@
         {{#if rackServicios}}
         {{#each rackServicios}}
         <div class="bg-dark h-auto pt-1 pr-1 pl-1 pb-1 rounded-3">
-            <div class="article-row row rounded">
+            <div class="rack-article article-row row rounded">
                 <div class="col-8">
                     <p>{{this.descripcion}}</p>
                     <p>Insertado el {{this.fecha}}</p>
@@ -255,7 +255,15 @@
                         <span class="badge bg-info">$ {{this.costo}}</span>
                     </p>
 
+                    <p class="fs-5 mt-5 text-center">
+                        <button class="btn btn-eliminar-servicio btn-sm" style="display: none;" onclick="eliminarServicio('{{this._id}}')">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                    </p>
+
+
                 </div>
+
             </div>
         </div>
         {{/each}}
@@ -917,6 +925,24 @@
         });
     });
 
+    const rackContainers = document.querySelectorAll('.rack-article');
+
+    // Agregar evento de mouseenter a cada contenedor de nota
+    rackContainers.forEach(container => {
+        container.addEventListener('mouseenter', () => {
+            // Mostrar el botón de eliminar al hacer hover
+            const btnEliminar = container.querySelector('.btn-eliminar-servicio');
+            btnEliminar.style.display = 'block';
+        });
+
+        // Agregar evento de mouseleave a cada contenedor de nota
+        container.addEventListener('mouseleave', () => {
+            // Ocultar el botón de eliminar al dejar de hacer hover
+            const btnEliminar = container.querySelector('.btn-eliminar-servicio');
+            btnEliminar.style.display = 'none';
+        });
+    });
+
     const editPaymentModal = document.getElementById('edit_payment_modal');
     const editPaymentBtn = document.querySelector('#edit-payment-btn');
     const addPaymentBtn = document.querySelector('#add-payment-btn');
@@ -1381,6 +1407,55 @@
                         icon: 'success',
                         title: '¡Completado!',
                         text: 'Nota eliminada correctamente.',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            location.reload();
+                        }
+                    });
+
+                } else {
+                    throw new Error('Error al eliminar la nota. Por favor, inténtalo de nuevo más tarde.');
+                }
+            }
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: e.message,
+                confirmButtonText: 'Aceptar'
+            })
+        }
+    }
+    async function eliminarServicio(idServicio) {
+
+        try {
+            const reservacionId = document.querySelector('#reservacion_id').value;
+
+            const confirmacion = await Swal.fire({
+                icon: 'warning',
+                title: '¿Estás seguro?',
+                text: 'Esta acción eliminará el servicio y sus comisiones de forma permanente.',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            })
+            if (confirmacion.isConfirmed) {
+
+                const response = await fetch(`/api/rackservicios/${idServicio}`, {
+                    method: 'DELETE', // O el método HTTP que estés utilizando para eliminar la nota
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: 'Servicio eliminado correctamente.',
                         confirmButtonText: 'Aceptar'
                     }).then((result) => {
                         if (result.isConfirmed) {

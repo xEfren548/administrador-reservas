@@ -110,7 +110,9 @@ async function createRackService(req, res, next) {
             monto: costoBaseServicio,
             concepto: `Comisión Proveedor por Servicio: ${servicioEncontrado.service}`,
             fecha,
-            idUsuario: proveedorId
+            idUsuario: proveedorId,
+            idReserva: new mongoose.Types.ObjectId(id_reserva),
+            idServicio: new mongoose.Types.ObjectId(id_servicio)
         })
 
         // Comision del administrador (diferencia entre costo y precio base)
@@ -118,7 +120,10 @@ async function createRackService(req, res, next) {
             monto: adminCommission,
             concepto: `Comisión/utilidad servicio ${servicioEncontrado.service}`,
             fecha,
-            idUsuario: adminServicioId
+            idUsuario: adminServicioId,
+            idReserva: new mongoose.Types.ObjectId(id_reserva),
+            idServicio: new mongoose.Types.ObjectId(id_servicio)
+
         })
 
         // Comision del administrador del vendedor
@@ -126,7 +131,10 @@ async function createRackService(req, res, next) {
             monto: firstCommission,
             concepto: `Comisión admin ligado servicio: ${servicioEncontrado.service}`,
             fecha,
-            idUsuario: userTopAdmin._id.toString()
+            idUsuario: userTopAdmin._id.toString(),
+            idReserva: new mongoose.Types.ObjectId(id_reserva),
+            idServicio: new mongoose.Types.ObjectId(id_servicio)
+
         })
 
         // Comision del vendedor
@@ -134,7 +142,10 @@ async function createRackService(req, res, next) {
             monto: secondCommission,
             concepto: `Comisión servicio: ${servicioEncontrado.service}`,
             fecha,
-            idUsuario: user._id.toString()
+            idUsuario: user._id.toString(),
+            idReserva: new mongoose.Types.ObjectId(id_reserva),
+            idServicio: new mongoose.Types.ObjectId(id_servicio)
+
         })
 
         const logBody = {
@@ -194,7 +205,19 @@ async function modifyRackService(req, res, next) {
 async function deleteRackService(req, res, next) {
     try {
         const { id } = req.params;
+        const service = await RackServicios.findById(id);
         await RackServicios.findByIdAndDelete(id);
+
+        const idServicio = service.id_servicio;
+        const idReserva = service.id_reserva;
+        const utilidadEliminada = await utilidadesController.eliminarComisionServicio(idReserva, idServicio);
+        if (utilidadEliminada) {
+            console.log("Utilidad de servicio eliminada con éxito");
+        } else {
+            console.log("No se pudo eliminar la utilidad de servicio");
+            res.status(200).json({ success: false });
+            return;
+        }
         console.log("Servicio eliminado con éxito");
         res.status(200).json({ success: true });
     } catch (e) {

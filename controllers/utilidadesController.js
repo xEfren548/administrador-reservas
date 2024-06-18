@@ -473,6 +473,20 @@ async function eliminarComisionReturn(idComision) {
     }
 }
 
+async function eliminarComisionServicio(idReserva, idServicio) {
+    try {
+        const deletionCriteria = {
+            idReserva: idReserva,
+            idServicio: idServicio
+        };
+        const utilidadEliminada = await Utilidades.deleteMany(deletionCriteria);
+        return utilidadEliminada;
+
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
 
 module.exports = {
     obtenerComisionesPorReserva,
@@ -484,5 +498,6 @@ module.exports = {
     editarComision,
     editarComisionReturn,
     eliminarComision,
-    eliminarComisionReturn
+    eliminarComisionReturn,
+    eliminarComisionServicio
 }
