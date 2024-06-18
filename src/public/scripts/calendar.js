@@ -90,11 +90,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             } else if (info.event.extendedProps.status === 'playground') {
                 background = 'bg-warning';
                 textColor = 'text-black-50';
-            } else {
+            } else if (info.event.extendedProps.status === 'cancelled') {
                 background = 'bg-danger';
                 textColor = 'text-white';
+            } else if (info.event.extendedProps.status === 'pending') {
+                background = 'bg-info';
+                textColor = 'text-black-50';
             }
-
 
 
 

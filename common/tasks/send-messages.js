@@ -70,8 +70,8 @@ function sendReservationConfirmation(clientInfo, chaletInfo, reservationInfo){
 }
 
 async function sendReminders(){
-    console.log("--------------------------------------------------------------------------------");
-    console.log("SENDIND REMINDERS");
+    // console.log("--------------------------------------------------------------------------------");
+    // console.log("SENDIND REMINDERS");
     var reservations = await Evento.findOne();
     reservations = reservations.events;
 
@@ -80,13 +80,13 @@ async function sendReminders(){
             
             const client = await Cliente.findById(reservation.client);
             if (!client) {
-                console.log(reservation.client, ': Client does not exist');
+                // console.log(reservation.client, ': Client does not exist');
                 continue;
             }
 
             const chalet = await Habitacion.findById(reservation.chalet);
             if (!chalet) {
-                console.log(reservation.resourceId, ': Chalet does not exist');
+                // console.log(reservation.resourceId, ': Chalet does not exist');
                 continue;
             }
 
@@ -101,8 +101,8 @@ async function sendReminders(){
 }
 
 async function sendThanks(){
-    console.log("--------------------------------------------------------------------------------");
-    console.log("SENDIND THANKS");
+    // console.log("--------------------------------------------------------------------------------");
+    // console.log("SENDIND THANKS");
     var reservations = await Evento.findOne();
     reservations = reservations.events;
 
@@ -111,13 +111,13 @@ async function sendThanks(){
             
             const client = await Cliente.findById(reservation.client);
             if (!client) {
-                console.log(reservation.client, ': Client does not exist');
+                // console.log(reservation.client, ': Client does not exist');
                 continue;
             }
 
             const chalet = await Habitacion.findById(reservation.chalet);
             if (!chalet) {
-                console.log(reservation.resourceId, ': Chalet does not exist');
+                // console.log(reservation.resourceId, ': Chalet does not exist');
                 continue;
             }
 
@@ -132,8 +132,8 @@ async function sendThanks(){
 }
 
 async function cancelReservation() {
-    console.log("--------------------------------------------------------------------------------");
-    console.log("SENDIND CANELATION");
+    // console.log("--------------------------------------------------------------------------------");
+    // console.log("SENDIND CANELATION");
     var evento = await Evento.findOne();
     var reservations = evento.events;
 
@@ -141,13 +141,13 @@ async function cancelReservation() {
         for (const reservation of reservations) {
             const client = await Cliente.findById(reservation.client);
             if (!client) {
-                console.log(reservation.client, ': Client does not exist');
+                // console.log(reservation.client, ': Client does not exist');
                 continue;
             }
 
             const chalet = await Habitacion.findById(reservation.chalet);
             if (!chalet) {
-                console.log(reservation.resourceId, ': Chalet does not exist');
+                // console.log(reservation.resourceId, ': Chalet does not exist');
                 continue;
             }
 
