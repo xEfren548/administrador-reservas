@@ -59,6 +59,20 @@ const reservaSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
+    },
+    isDeposit: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
+    paymentCancelation: {
+        type: Date
+    },
+    status: {
+        type: String,
+        enum: ["active", "playground", "cancelled", "pending"],
+        required: true,
+        default: "pending"
     }
 });
 

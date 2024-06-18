@@ -30,8 +30,6 @@ document.addEventListener("DOMContentLoaded", function () {
         totalSinComisiones.value = 0
     }
 
-
-
     function calculateNightDifference() {
         console.log('Desde calcular noches')
         const arrivalValue = new Date(arrivalDate.value);
@@ -146,7 +144,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
                 units: document.getElementById('habitacion_unidades').value.trim(),
                 total: document.getElementById('habitacion_total').value.trim(),
-                discount: document.getElementById('habitacion_descuento').value.trim()
+                discount: document.getElementById('habitacion_descuento').value.trim(),
+                isDeposit: document.getElementById('chckDeposit').checked
             };
 
             console.log(preciosTotalesGlobal)

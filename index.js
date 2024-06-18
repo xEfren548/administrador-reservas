@@ -45,12 +45,13 @@ mongoose.connect(db_url).then(async () => {
         console.log(`App is running on port ${port}`);
     })
 
-    /*
-    const job = schedule.scheduleJob('* * * * * *', async () => {         
+    
+    const job = schedule.scheduleJob('* * * * *', async () => {         
         await SendMessages.sendReminders();
         await SendMessages.sendThanks();
+        await SendMessages.cancelReservation();
     });
-    */
+    
 
     // Para mantener la aplicación escuchando
     process.on('SIGINT', () => {

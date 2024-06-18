@@ -1,6 +1,9 @@
 const Cliente = require("../../models/Cliente");
 const Evento = require("../../models/Evento");
 const Habitacion = require("../../models/Habitacion");
+const Pago = require("../../models/Pago");
+const { format } = require('date-fns');
+const { es } = require('date-fns/locale');
 
 function createParamsArray(params){
     return params.map(param => {
@@ -128,8 +131,51 @@ async function sendThanks(){
     }
 }
 
+async function cancelReservation() {
+    console.log("--------------------------------------------------------------------------------");
+    console.log("SENDIND CANELATION");
+    var evento = await Evento.findOne();
+    var reservations = evento.events;
+
+    if (reservations) {
+        for (const reservation of reservations) {
+            const client = await Cliente.findById(reservation.client);
+            if (!client) {
+                console.log(reservation.client, ': Client does not exist');
+                continue;
+            }
+
+            const chalet = await Habitacion.findById(reservation.chalet);
+            if (!chalet) {
+                console.log(reservation.resourceId, ': Chalet does not exist');
+                continue;
+            }
+
+            const isDeposit = reservation.isDeposit;
+            if (isDeposit) {
+                const payment = await Pago.findOne({ reservationId: reservation._id });
+                if (!payment) {
+                    console.log(reservation.resourceId, ': Reservation has no payment recorded');
+
+                    console.log("Current date: ", new Date());
+                    console.log("Cancelation date: ", reservation.paymentCancelation);
+                    if (new Date().getTime() === reservation.paymentCancelation.getTime()) {
+                        console.log(`Canceling reservation as it is: ${reservation.departureDate} and no payment has been recorded`);
+                        reservation.status = "cancelled"
+                    }
+                }
+            } 
+        }
+
+        await evento.save();
+    }
+}
+
+
+
 module.exports = {
     sendReservationConfirmation,
     sendReminders, 
-    sendThanks
+    sendThanks,
+    cancelReservation
 };

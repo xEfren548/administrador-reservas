@@ -4,6 +4,8 @@ const Usuario = require('../models/Usuario');
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const logController = require('../controllers/logController');
 const mongoose = require('mongoose');
+const { format } = require('date-fns');
+const { es } = require('date-fns/locale');
 
 
 const Cliente = require('../models/Cliente');
@@ -144,7 +146,7 @@ async function obtenerEventoPorIdRoute(req, res) {
 }
 
 async function createReservation(req, res, next) {
-    const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount } = req.body;
+    const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount, isDeposit } = req.body;
 
     try {
         const client = await Cliente.find({ email: clientEmail });
@@ -158,23 +160,65 @@ async function createReservation(req, res, next) {
             throw new NotFoundError('Chalet does not exist 2');
         }
         
-        //console.log(chalet)
-
         arrivalDate.setHours(arrivalDate.getHours() + chalet.others.arrivalTime.getHours());
         departureDate.setHours(departureDate.getHours() + chalet.others.departureTime.getHours());
 
-        const reservationToAdd = {
-            client: client[0]._id,
-            resourceId: chalet._id,
-            arrivalDate: arrivalDate,
-            departureDate: departureDate,
-            maxOccupation: maxOccupation,
-            nNights: nNights,
-            url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
-            units: units,
-            total: total,
-            discount: discount
-        };
+        var reservationToAdd;
+        var message;
+
+        if(!isDeposit){
+            reservationToAdd = {
+                client: client[0]._id,
+                resourceId: chalet._id,
+                arrivalDate: arrivalDate,
+                departureDate: departureDate,
+                maxOccupation: maxOccupation,
+                nNights: nNights,
+                url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
+                units: units,
+                total: total,
+                discount: discount
+            };
+            message = "Reservación agregada con éxito";
+        }
+        else{
+            console.log("Current date: ", format(Date.now(), "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es }));
+            console.log("Arrival date: ", format(arrivalDate, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es }));
+
+            const timeToArrive = (arrivalDate - new Date()) / (1000 * 60 * 60 * 24);
+            var paymentCancelation;
+            if(timeToArrive >= 7){
+                paymentCancelation = new Date(Date.now() + 24 * 60 * 60 * 1000);
+            }
+            else if(timeToArrive >= 3 && timeToArrive < 7){
+                paymentCancelation = new Date(Date.now() + 12 * 60 * 60 * 1000);
+            }
+            else if(timeToArrive >= 1 && timeToArrive < 3){
+                paymentCancelation = new Date(Date.now() + 8 * 60 * 60 * 1000);
+            }
+            else if(timeToArrive < 1){
+                paymentCancelation = new Date(Date.now() + 1 * 60 * 60 * 1000);
+            }
+
+            console.log("Cancelation date: ", format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es }));
+
+            reservationToAdd = {
+                client: client[0]._id,
+                resourceId: chalet._id,
+                arrivalDate: arrivalDate,
+                departureDate: departureDate,
+                maxOccupation: maxOccupation,
+                nNights: nNights,
+                url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
+                units: units,
+                total: total,
+                discount: discount,
+                isDeposit: true,
+                paymentCancelation: paymentCancelation
+            };
+
+            message = `Reservación agregada con éxito. Realice su pago antes de ${format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es })} o su reserva será cancelada`;
+        }
 
         const documento = await Documento.findOne();
         documento.events.push(reservationToAdd);
@@ -216,7 +260,10 @@ async function createReservation(req, res, next) {
         }
         
         await logController.createBackendLog(logBody);
-        res.status(200).json({ success: true, reservationId: documento.events[documento.events.length - 1]._id, message: "Reservación agregada con éxito" });
+
+
+
+        res.status(200).json({ success: true, reservationId: documento.events[documento.events.length - 1]._id, message });
     } catch (err) {
         console.log(err);
         return next(err);
