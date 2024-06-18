@@ -25,12 +25,17 @@ async function generateSideMenu (req, res, next) {
                 {'Servicios adicionales': ["/api/servicios", "fas fa-spa"]},
                 {'Limpieza': ["/api/racklimpieza", "fas fa-broom"]},
                 {'Cabañas': []},
-                {'Reserva cliente cabaña': ["/instrucciones/", "far fa-calendar-alt"]},
+                {'Utilidades por reserva': ["/api/costos/mostrar-costos", "fas fa-chart-line"]},
+                {'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"]},
+                {'Encuestas': []},
+                {'Logs': ["/logs", "fas fa-cogs"]},
+                {'Precios': ["/calendario-precios", "far fa-calendar-alt"]},
             ],        
             'Vendedor': [
                 {'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"]},
                 {'Home': ["/", "fs-5 fa fa-house"]},
-                {'Reserva cliente cabaña': ["/instrucciones/", "far fa-calendar-alt"]},                
+                {'Reserva cliente cabaña': ["/instrucciones/", "far fa-calendar-alt"]},
+                {'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"]},                
             ],            
             'Limpieza': [
                 {'Dashboard': ["/dashboard", "fs-5 fa fa-chart-bar"]},
@@ -109,6 +114,30 @@ async function generateSideMenu (req, res, next) {
                                     <a href="/api/cabanas/editar-cabana" class="nav-link px-5" title="Editar Cabaña">
                                         <i class="fas fa-pencil-alt "></i><span class="d-none d-sm-inline"
                                             style="margin-left: 8px;">Editar cabaña</span>
+                                    </a>
+
+                                </li>
+                            </ul>
+                        </li>`;
+                }
+                else if(key === "Encuestas"){
+                    sideMenuContent += 
+                        `<li class="nav-item py-2 py-sm-0">
+                            <a href="#submenu3" data-bs-toggle="collapse" class="nav-link px-4 align-middle " title="Encuestas">
+                                <i class="fab fa-wpforms"></i><span
+                                    class="fs-5 ms-3 d-none d-sm-inline">Encuestas
+                                </span></a>
+                            <ul class="collapse nav flex-column ms-1" id="submenu3" data-bs-parent="#menu">
+                                <li class="w-100">
+                                    <a href="/modelar-encuesta/crear-encuesta" class="nav-link px-5" title="Modificar Encuesta">
+                                        <i class="fas fa-pencil-alt "></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Modificar Encuesta</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/procesar-encuesta/mostrar-respuestas-usuarios" class="nav-link px-5" title="Ver respuestas">
+                                        <i class="fas fa-tasks"></i></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Ver respuestas</span>
                                     </a>
 
                                 </li>

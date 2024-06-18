@@ -18,6 +18,19 @@ const utilidadesSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'Usuario'
+    },
+    idReserva: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Evento'
+    },
+    idServicio: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Servicio'
+    },
+    status: {
+        type: String,
+        enum: ['aplicado', 'pendiente'],
+        default: 'pendiente'
     }
 });
 
