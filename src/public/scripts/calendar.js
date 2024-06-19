@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         let resources = data[0].resources.map(function (event) {
                             return {
                                 id: event._id,
-                                habitaciones: 'Cabañas',
+                                habitaciones: event.propertyDetails.accomodationType,
                                 title: event.propertyDetails.name
                             }
                         })
