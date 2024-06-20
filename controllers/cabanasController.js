@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const Habitacion = require('../models/Habitacion');
 const logController = require('../controllers/logController')
+const TipologiasCabana = require('../models/TipologiasCabana');
 const NotFoundError = require("../common/error/not-found-error");
 const BadRequestError = require("../common/error/bad-request-error");
 const {check} = require("express-validator");
@@ -375,9 +376,15 @@ async function showChaletsView(req, res, next){
             throw new NotFoundError("No janitor found");
         }
 
+        const tipologias = await TipologiasCabana.find().lean();
+        if (!tipologias) {
+            throw new NotFoundError("No tipologies found");
+        }
+
         res.render('vistaCabanas', {
             admins: admins,
-            janitors: janitors
+            janitors: janitors,
+            tipologias: tipologias
         });
     } catch (error) {
         console.log(error);

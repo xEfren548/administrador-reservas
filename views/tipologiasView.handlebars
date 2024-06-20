@@ -1,0 +1,159 @@
+<div class="calendar-header">
+    <div class="bg-dark mb-3">
+        <a name="" id="open_addTipologia" class="btn btn-secondary btn-sm m-3" href="#" role="button"
+            data-bs-toggle="modal" data-bs-target="#add_tipologia">Nueva tipología</a>
+    </div>
+</div>
+
+<div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
+    <div class="col-10">
+        <h2>Tipologias de Habitaciones</h2>
+        <table class="table table-dark table-hover text-center" id="tablaTipologias">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Tipología</th>
+                    <th scope="col" class="w-25">Acciones</th>
+
+
+                </tr>
+            </thead>
+            <tbody>
+                {{#each tipologias}}
+                <tr>
+                    <td>{{tipologia}}</td>
+
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger" onclick="eliminarTipologia('{{_id}}')">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{{!-- Modal Crear Tipologia --}}
+
+<div class="modal fade" id="add_tipologia" tabindex="-1" role="dialog" aria-labelledby="addTipologiaModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTipologiaModalLabel">Crear Nueva Tipología</h5>
+                <button type="button" class="close" onclick="$('#add_tipologia').modal('hide');" aria-label="Close">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addTipologiaForm">
+                    <div class="form-group">
+                        <label for="tipologiaName" class="form-label">Tipología</label>
+                        <input type="text" class="form-control" id="tipologiaName"
+                            placeholder="Escribe el nombre de la nueva tipología" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="crear-tipologia-submit">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var table = document.getElementById("tablaTipologias");
+        if (table) {
+            var dataTable = new DataTable(table, {
+                "order": [], // Puedes especificar aquí el orden inicial de las columnas
+                "paging": true, // Habilita la paginación
+                "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
+                "pageLength": 10 // Establece la longitud de página inicial
+            });
+        }
+
+
+        const crearTipologiaSubmitBtn = document.querySelector('#crear-tipologia-submit')
+
+        crearTipologiaSubmitBtn.addEventListener('click', async function (e) {
+            e.preventDefault();
+            const tipologiaName = document.querySelector('#tipologiaName').value.trim();
+
+            try {
+
+                const response = await fetch('/api/tipologias', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        tipologia: tipologiaName
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(response.statusText);
+                }
+
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: 'Tipología creada correctamente'
+                }).then((result) => {
+                    window.location.reload();
+                })
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Algo salió mal, intenta nuevamente más tarde'
+                })
+            }
+        });
+
+
+
+
+        window.eliminarTipologia = async function (idTipologia) {
+            try {
+                const confirmacion = await Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "No podrás revertir esta acción!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Eliminar'
+                });
+
+                if (confirmacion.isConfirmed) {
+                    const response = await fetch('/api/tipologias/' + idTipologia, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(response.statusText);
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: 'Tipología eliminada correctamente'
+                    }).then((result) => {
+                        window.location.reload();
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Algo salió mal, intenta nuevamente más tarde'
+                });
+            }
+        };
+    });
+</script>

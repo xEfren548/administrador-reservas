@@ -4,14 +4,19 @@
         <button id="btnCreateChalet" type="submit">Guardar</button>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#propertyDetails">+ Detalles de la propiedad</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#propertyDetails">+
+        Detalles de la propiedad</button>
     <div id="propertyDetails" class="chalet-details collapse">
         <div class="input-group half">
             <label for="slctchaletAccomodationType">Tipo de alojamiento</label>
-            <select id="slctchaletAccomodationType" name="slctchaletAccomodationType" >
-                <option value="Cabaña">Cabaña</option>
-                <option value="Habitación">Habitación</option>     
-                <option value="Hotel">Hotel</option>
+            <select id="slctchaletAccomodationType" name="slctchaletAccomodationType">
+                {{#if tipologias}}
+                {{#each tipologias}}
+                <option value="{{tipologia}}">{{tipologia}}</option>
+                {{/each}}
+                {{else}}
+                <option value="">No hay tipos de alojamiento disponibles, necesitas agregar uno.</option>
+                {{/if}}
             </select>
         </div>
         <div class="input-group half">
@@ -40,18 +45,21 @@
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#accomodationFeautres">+ Características del alojamiento</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse"
+        data-target="#accomodationFeautres">+ Características del alojamiento</button>
     <div id="accomodationFeautres" class="chalet-details collapse">
         <fieldset class="inline-input-group">
             <legend>Generales</legend>
             <hr>
             <div class="option-group">
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSatelliteChannels" name="chkboxSatelliteChannels" value="Canales vía satélite">
+                    <input type="checkbox" id="chkboxSatelliteChannels" name="chkboxSatelliteChannels"
+                        value="Canales vía satélite">
                     <label for="chkboxSatelliteChannels">Canales vía satélite</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxDisabledAdapted" name="chkboxDisabledAdapted" value="Adaptado para discapacitados">
+                    <input type="checkbox" id="chkboxDisabledAdapted" name="chkboxDisabledAdapted"
+                        value="Adaptado para discapacitados">
                     <label for="chkboxDisabledAdapted">Adaptado para discapacitados</label>
                 </div>
                 <div class="checkbox-option">
@@ -63,7 +71,8 @@
                     <label for="chkboxPetsAllowed">Admite animales</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxAllergicFriendlyRooms" name="chkboxAllergicFriendlyRooms" value="Habitaciones aptas para alérgicos">
+                    <input type="checkbox" id="chkboxAllergicFriendlyRooms" name="chkboxAllergicFriendlyRooms"
+                        value="Habitaciones aptas para alérgicos">
                     <label for="chkboxAllergicFriendlyRooms">Habitaciones aptas para alérgicos</label>
                 </div>
                 <div class="checkbox-option">
@@ -75,19 +84,23 @@
                     <label for="chkboxMosquitoNet">Mosquitera</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxMainBedroomAirConditioning" name="chkboxMainBedroomAirConditioning" value="Aire acondicionado en habitaciones principales">
+                    <input type="checkbox" id="chkboxMainBedroomAirConditioning" name="chkboxMainBedroomAirConditioning"
+                        value="Aire acondicionado en habitaciones principales">
                     <label for="chkboxMainBedroomAirConditioning">Aire acondicionado en habitaciones principales</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxConnectedRooms" name="chkboxConnectedRooms" value="Habitaciones comunicadas">
+                    <input type="checkbox" id="chkboxConnectedRooms" name="chkboxConnectedRooms"
+                        value="Habitaciones comunicadas">
                     <label for="chkboxConnectedRooms">Habitaciones comunicadas</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxAirConditioningAllAccommodation" name="chkboxAirConditioningAllAccommodation" value="Aire acondicionado en todo el alojamiento">
+                    <input type="checkbox" id="chkboxAirConditioningAllAccommodation"
+                        name="chkboxAirConditioningAllAccommodation" value="Aire acondicionado en todo el alojamiento">
                     <label for="chkboxAirConditioningAllAccommodation">Aire acondicionado en todo el alojamiento</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxTileMarbleFloor" name="chkboxTileMarbleFloor" value="Suelo de baldosa/mármol">
+                    <input type="checkbox" id="chkboxTileMarbleFloor" name="chkboxTileMarbleFloor"
+                        value="Suelo de baldosa/mármol">
                     <label for="chkboxTileMarbleFloor">Suelo de baldosa/mármol</label>
                 </div>
                 <div class="checkbox-option">
@@ -99,11 +112,13 @@
                     <label for="chkboxClothesIron">Plancha para ropa</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxWoodParquetFloor" name="chkboxWoodParquetFloor" value="Suelo de madera/parqué">
+                    <input type="checkbox" id="chkboxWoodParquetFloor" name="chkboxWoodParquetFloor"
+                        value="Suelo de madera/parqué">
                     <label for="chkboxWoodParquetFloor">Suelo de madera/parqué</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxNoSmokingEntireProperty" name="chkboxNoSmokingEntireProperty" value="Prohibido fumar en todo el recinto">
+                    <input type="checkbox" id="chkboxNoSmokingEntireProperty" name="chkboxNoSmokingEntireProperty"
+                        value="Prohibido fumar en todo el recinto">
                     <label for="chkboxNoSmokingEntireProperty">Prohibido fumar en todo el recinto</label>
                 </div>
                 <div class="checkbox-option">
@@ -115,7 +130,8 @@
                     <label for="chkboxCarpetFloor">Suelo de moqueta</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxExpressCheckInOut" name="chkboxExpressCheckInOut" value="Registro de entrada y salida exprés">
+                    <input type="checkbox" id="chkboxExpressCheckInOut" name="chkboxExpressCheckInOut"
+                        value="Registro de entrada y salida exprés">
                     <label for="chkboxExpressCheckInOut">Registro de entrada y salida exprés</label>
                 </div>
                 <div class="checkbox-option">
@@ -135,7 +151,8 @@
                     <label for="chkboxBalcony">Balcón</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBuffetBreakfast" name="chkboxBuffetBreakfast" value="Desayuno bufé">
+                    <input type="checkbox" id="chkboxBuffetBreakfast" name="chkboxBuffetBreakfast"
+                        value="Desayuno bufé">
                     <label for="chkboxBuffetBreakfast">Desayuno bufé</label>
                 </div>
                 <div class="checkbox-option">
@@ -147,7 +164,8 @@
                     <label for="chkboxWifi">Wifi</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxRoomServiceBreakfast" name="chkboxRoomServiceBreakfast" value="Desayuno en la habitación">
+                    <input type="checkbox" id="chkboxRoomServiceBreakfast" name="chkboxRoomServiceBreakfast"
+                        value="Desayuno en la habitación">
                     <label for="chkboxRoomServiceBreakfast">Desayuno en la habitación</label>
                 </div>
                 <div class="checkbox-option">
@@ -155,11 +173,13 @@
                     <label for="chkboxHeating">Calefacción</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxExtraLongBeds" name="chkboxExtraLongBeds" value="Camas extra largas (más de 2 metros)">
+                    <input type="checkbox" id="chkboxExtraLongBeds" name="chkboxExtraLongBeds"
+                        value="Camas extra largas (más de 2 metros)">
                     <label for="chkboxExtraLongBeds">Camas extra largas (más de 2 metros)</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxRoomService" name="chkboxRoomService" value="Servicio de habitaciones">
+                    <input type="checkbox" id="chkboxRoomService" name="chkboxRoomService"
+                        value="Servicio de habitaciones">
                     <label for="chkboxRoomService">Servicio de habitaciones</label>
                 </div>
                 <div class="checkbox-option">
@@ -185,7 +205,8 @@
                     <label for="chkboxCityViews">Vistas a la ciudad</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxMountainViews" name="chkboxMountainViews" value="Vistas a la montaña">
+                    <input type="checkbox" id="chkboxMountainViews" name="chkboxMountainViews"
+                        value="Vistas a la montaña">
                     <label for="chkboxMountainViews">Vistas a la montaña</label>
                 </div>
                 <div class="checkbox-option">
@@ -193,7 +214,8 @@
                     <label for="chkboxPoolViews">Vistas a la piscina</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxLandmarkViews" name="chkboxLandmarkViews" value="Vistas a un lugar de interés">
+                    <input type="checkbox" id="chkboxLandmarkViews" name="chkboxLandmarkViews"
+                        value="Vistas a un lugar de interés">
                     <label for="chkboxLandmarkViews">Vistas a un lugar de interés</label>
                 </div>
                 <div class="checkbox-option">
@@ -209,7 +231,8 @@
                     <label for="chkboxSeaViews">Vistas al mar</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxCourtyardViews" name="chkboxCourtyardViews" value="Vistas al Patio">
+                    <input type="checkbox" id="chkboxCourtyardViews" name="chkboxCourtyardViews"
+                        value="Vistas al Patio">
                     <label for="chkboxCourtyardViews">Vistas al Patio</label>
                 </div>
                 <div class="checkbox-option">
@@ -275,7 +298,8 @@
                     <label for="chkboxGameRoom">Sala de juegos</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBBQFacilities" name="chkboxBBQFacilities" value="Instalaciones para barbacoa">
+                    <input type="checkbox" id="chkboxBBQFacilities" name="chkboxBBQFacilities"
+                        value="Instalaciones para barbacoa">
                     <label for="chkboxBBQFacilities">Instalaciones para barbacoa</label>
                 </div>
                 <div class="checkbox-option">
@@ -323,7 +347,8 @@
                     <label for="chkboxPrivatePool">Piscina privada</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxChildrensPlayground" name="chkboxChildrensPlayground" value="Zona de juegos infantil">
+                    <input type="checkbox" id="chkboxChildrensPlayground" name="chkboxChildrensPlayground"
+                        value="Zona de juegos infantil">
                     <label for="chkboxChildrensPlayground">Zona de juegos infantil</label>
                 </div>
                 <div class="checkbox-option">
@@ -333,11 +358,12 @@
                 <div class="checkbox-option">
                     <input type="checkbox" id="chkboxMasseuse" name="chkboxMasseuse" value="Masajista">
                     <label for="chkboxMasseuse">Masajista</label>
-                </div>                
+                </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxGolfCourseNearby" name="chkboxGolfCourseNearby" value="Campo de golf (a menos de 3 km)">
+                    <input type="checkbox" id="chkboxGolfCourseNearby" name="chkboxGolfCourseNearby"
+                        value="Campo de golf (a menos de 3 km)">
                     <label for="chkboxGolfCourseNearby">Campo de golf (a menos de 3 km)</label>
-                </div>                                
+                </div>
             </div>
         </fieldset>
         <fieldset class="inline-input-group">
@@ -357,9 +383,10 @@
                     <label for="chkboxFreeParking">Parking gratis</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxPrivateParking" name="chkboxPrivateParking" value="Parking privado">
+                    <input type="checkbox" id="chkboxPrivateParking" name="chkboxPrivateParking"
+                        value="Parking privado">
                     <label for="chkboxPrivateParking">Parking privado</label>
-                </div>         
+                </div>
             </div>
         </fieldset>
         <fieldset class="inline-input-group">
@@ -375,11 +402,13 @@
                     <label for="chkboxBidet">Bidé</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxFreeToiletries" name="chkboxFreeToiletries" value="Artículos de aseo gratuitos">
+                    <input type="checkbox" id="chkboxFreeToiletries" name="chkboxFreeToiletries"
+                        value="Artículos de aseo gratuitos">
                     <label for="chkboxFreeToiletries">Artículos de aseo gratuitos</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxAdditionalToilet" name="chkboxAdditionalToilet" value="Aseo adicional">
+                    <input type="checkbox" id="chkboxAdditionalToilet" name="chkboxAdditionalToilet"
+                        value="Aseo adicional">
                     <label for="chkboxAdditionalToilet">Aseo adicional</label>
                 </div>
                 <div class="checkbox-option">
@@ -407,7 +436,8 @@
                     <label for="chkboxShower">Ducha</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxAdditionalBathroom" name="chkboxAdditionalBathroom" value="Baño adicional">
+                    <input type="checkbox" id="chkboxAdditionalBathroom" name="chkboxAdditionalBathroom"
+                        value="Baño adicional">
                     <label for="chkboxAdditionalBathroom">Baño adicional</label>
                 </div>
                 <div class="checkbox-option">
@@ -415,11 +445,13 @@
                     <label for="chkboxSlippers">Zapatillas</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSharedBathroom" name="chkboxSharedBathroom" value="Baño compartido">
+                    <input type="checkbox" id="chkboxSharedBathroom" name="chkboxSharedBathroom"
+                        value="Baño compartido">
                     <label for="chkboxSharedBathroom">Baño compartido</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxDesignerBathroom" name="chkboxDesignerBathroom" value="Baño de diseño">
+                    <input type="checkbox" id="chkboxDesignerBathroom" name="chkboxDesignerBathroom"
+                        value="Baño de diseño">
                     <label for="chkboxDesignerBathroom">Baño de diseño</label>
                 </div>
                 <div class="checkbox-option">
@@ -449,7 +481,8 @@
                     <label for="chkboxRefrigerator">Nevera</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxElectricKettle" name="chkboxElectricKettle" value="Hervidor eléctrico">
+                    <input type="checkbox" id="chkboxElectricKettle" name="chkboxElectricKettle"
+                        value="Hervidor eléctrico">
                     <label for="chkboxElectricKettle">Hervidor eléctrico</label>
                 </div>
                 <div class="checkbox-option">
@@ -461,7 +494,8 @@
                     <label for="chkboxStove">Cocina con Fogones</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxCeramicCooktop" name="chkboxCeramicCooktop" value="Cocina con Vitrocerámica">
+                    <input type="checkbox" id="chkboxCeramicCooktop" name="chkboxCeramicCooktop"
+                        value="Cocina con Vitrocerámica">
                     <label for="chkboxCeramicCooktop">Cocina con Vitrocerámica</label>
                 </div>
                 <div class="checkbox-option">
@@ -489,7 +523,8 @@
                     <label for="chkboxDishwasher">Lavavajillas</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxCookingUtensils" name="chkboxCookingUtensils" value="Utensilios de cocina">
+                    <input type="checkbox" id="chkboxCookingUtensils" name="chkboxCookingUtensils"
+                        value="Utensilios de cocina">
                     <label for="chkboxCookingUtensils">Utensilios de cocina</label>
                 </div>
                 <div class="checkbox-option">
@@ -523,7 +558,8 @@
                     <label for="chkboxGym">Gimnasio</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBasketballCourt" name="chkboxBasketballCourt" value="Cancha de baloncesto">
+                    <input type="checkbox" id="chkboxBasketballCourt" name="chkboxBasketballCourt"
+                        value="Cancha de baloncesto">
                     <label for="chkboxBasketballCourt">Cancha de baloncesto</label>
                 </div>
                 <div class="checkbox-option">
@@ -547,7 +583,8 @@
                     <label for="chkboxSkiing">Esquí</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxPingPongTable" name="chkboxPingPongTable" value="Mesa de ping pong">
+                    <input type="checkbox" id="chkboxPingPongTable" name="chkboxPingPongTable"
+                        value="Mesa de ping pong">
                     <label for="chkboxPingPongTable">Mesa de ping pong</label>
                 </div>
                 <div class="checkbox-option">
@@ -573,7 +610,8 @@
                     <label for="chkboxDoubleSofaBed">Sofá cama doble</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSingleSofaBed" name="chkboxSingleSofaBed" value="Sofá cama individual">
+                    <input type="checkbox" id="chkboxSingleSofaBed" name="chkboxSingleSofaBed"
+                        value="Sofá cama individual">
                     <label for="chkboxSingleSofaBed">Sofá cama individual</label>
                 </div>
                 <div class="checkbox-option">
@@ -591,8 +629,9 @@
             </div>
         </fieldset>
     </div>
-    
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#additionalInfo">+ Información adicional</button>
+
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#additionalInfo">+
+        Información adicional</button>
     <div id="additionalInfo" class="chalet-details collapse">
         <div class="input-group half">
             <label for="txtBeds">Camas</label>
@@ -612,28 +651,34 @@
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#accomodationDetails">+ Descripción del alojamiento</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse"
+        data-target="#accomodationDetails">+ Descripción del alojamiento</button>
     <div id="accomodationDetails" class="chalet-details collapse">
         <div class="input-group">
-            <textarea id="txtAccomodationDetails" name="txtAccomodationDetails" rows="10" placeholder="Porporciona una descripción para el alojamiento."></textarea>
+            <textarea id="txtAccomodationDetails" name="txtAccomodationDetails" rows="10"
+                placeholder="Porporciona una descripción para el alojamiento."></textarea>
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#additionalDetails">+ Descripción adicional del alojamiento</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse"
+        data-target="#additionalDetails">+ Descripción adicional del alojamiento</button>
     <div id="additionalDetails" class="chalet-details collapse">
         <div class="input-group">
-            <textarea id="txtAdditionalDetails" name="txtAdditionalDetails" rows="10" placeholder="Porporciona una descripción adicional para el alojamiento."></textarea>
+            <textarea id="txtAdditionalDetails" name="txtAdditionalDetails" rows="10"
+                placeholder="Porporciona una descripción adicional para el alojamiento."></textarea>
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#legalNote">+ Terminos y condiciones</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#legalNote">+
+        Terminos y condiciones</button>
     <div id="legalNote" class="chalet-details collapse">
         <div class="input-group">
             <textarea id="txtLegalNote" name="txtLegalNote" rows="10" placeholder="Agrgega una nota legal"></textarea>
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#location">+ Ubicación</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#location">+
+        Ubicación</button>
     <div id="location" class="chalet-details collapse">
         <div class="input-group third">
             <label for="txtState">Provincia / estado</label>
@@ -660,11 +705,15 @@
             <input id="txtLong" name="txtLong" type="number">
         </div>
         <div class="input-group">
-            <iframe id="map" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30009.200046370872!2d-103.04062641019756!3d19.91808261265727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x842f08c29d6bb1fb%3A0xb0e0d639aa12c005!2s49500%20Mazamitla%2C%20Jal.!5e0!3m2!1ses-419!2smx!4v1711321362791!5m2!1ses-419!2smx" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <iframe id="map"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30009.200046370872!2d-103.04062641019756!3d19.91808261265727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x842f08c29d6bb1fb%3A0xb0e0d639aa12c005!2s49500%20Mazamitla%2C%20Jal.!5e0!3m2!1ses-419!2smx!4v1711321362791!5m2!1ses-419!2smx"
+                width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#other-data">+ Otros</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#other-data">+
+        Otros</button>
     <div id="other-data" class="chalet-details collapse">
         <div class="input-group third">
             <label for="txtBasePrice">Precio base</label>
@@ -695,11 +744,11 @@
             <select id="slctAdmin" name="slctAdmin" class="form-select form-select-md">
                 <option selected="true" disabled="true"> Selecciona un administrador para la cabaña --</option>
                 {{#if admins}}
-                    {{#each admins}}
-                        <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
-                    {{/each}}
+                {{#each admins}}
+                <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                {{/each}}
                 {{else}}
-                    <option value="0">No se encontraron administradores</option>
+                <option value="0">No se encontraron administradores</option>
                 {{/if}}
             </select>
         </div>
@@ -708,17 +757,18 @@
             <select id="slctJanitor" name="slctJanitor" class="form-select form-select-md">
                 <option selected="true" disabled="true"> Selecciona el personal de limpieza para la cabaña --</option>
                 {{#if janitors}}
-                    {{#each janitors}}
-                        <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
-                    {{/each}}
+                {{#each janitors}}
+                <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                {{/each}}
                 {{else}}
-                    <option value="0">No se encontraró el personal de limpieza</option>
+                <option value="0">No se encontraró el personal de limpieza</option>
                 {{/if}}
             </select>
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#photos">+ Fotografías</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#photos">+
+        Fotografías</button>
     <div id="photos" class="chalet-details collapse">
         <div class="input-group">
             <div id="photoCarousel" class="photo-carousel"></div>
@@ -728,7 +778,7 @@
                     Subir archivo
                 </label>
                 <span>Ninguna fotografía seleccionada</span>
-            </div>        
+            </div>
         </div>
     </div>
 
@@ -744,7 +794,7 @@
         const photoCarousel = document.getElementById('photoCarousel');
         const formData = new FormData();
 
-        fileUpload.addEventListener('change', function(event) {
+        fileUpload.addEventListener('change', function (event) {
             const files = event.target.files;
 
             for (let i = 0; i < files.length; i++) {
@@ -758,7 +808,7 @@
                 const deleteButton = document.createElement('button');
                 deleteButton.classList.add('delete-photo');
                 deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
-                deleteButton.addEventListener('click', function() {
+                deleteButton.addEventListener('click', function () {
                     formData.delete('images', file);
                     photoDiv.remove();
                 });
@@ -773,13 +823,13 @@
 
         // Saving new chalet.
         var btnCreateChalet = document.getElementById("btnCreateChalet")
-        if (btnCreateChalet){
+        if (btnCreateChalet) {
             btnCreateChalet.addEventListener("click", async (event) => {
                 event.preventDefault();
 
                 // Creating JSON for text data.
                 const arrivalTime1 = document.getElementById("txtArrivalTime").value.trim();
-                const departureTime1 =  document.getElementById("txtDepartureTime").value.trim();
+                const departureTime1 = document.getElementById("txtDepartureTime").value.trim();
                 const arrivalTimeMinutes = parseInt(arrivalTime1.split(':')[1]);
                 const arrivalTimeHours = parseInt(arrivalTime1.split(':')[0]);
                 const departureTimeMinutes = parseInt(arrivalTime1.split(':')[1]);
@@ -795,7 +845,7 @@
                         maxOccupancy: document.getElementById("txtChaletMaxPpl").value.trim()
                     },
                     accommodationFeatures: {
-                        generalFeatures: {                            
+                        generalFeatures: {
                             satelliteTV: document.getElementById("chkboxSatelliteChannels").checked,
                             disabledAccessible: document.getElementById("chkboxDisabledAdapted").checked,
                             iron: document.getElementById("chkboxIron").checked,
@@ -916,10 +966,10 @@
                         },
                         sport: {
                             paddleTennis: document.getElementById("chkboxPaddleCourt").checked,
-                            gym: document.getElementById("chkboxGym").checked,                                   
+                            gym: document.getElementById("chkboxGym").checked,
                             basketballCourt: document.getElementById("chkboxBasketballCourt").checked,
                             darts: document.getElementById("chkboxDarts").checked,
-                            windsurfing: document.getElementById("chkboxWindsurf").checked,                            
+                            windsurfing: document.getElementById("chkboxWindsurf").checked,
                             skiSchool: document.getElementById("chkboxSkiSchool").checked,
                             footballField: document.getElementById("chkboxFootballField").checked,
                             skiing: document.getElementById("chkboxSkiing").checked,
@@ -935,7 +985,7 @@
                             satelliteTV: document.getElementById("chkboxSatelliteTV").checked,
                             snackBar: document.getElementById("chkboxSnackBar").checked
                         }
-                    },                
+                    },
                     additionalInfo: {
                         nBeds: document.getElementById("txtBeds").value.trim(),
                         nRestrooms: document.getElementById("txtRestrooms").value.trim(),
@@ -953,20 +1003,20 @@
                         latitude: document.getElementById("txtLat").value.trim(),
                         longitude: document.getElementById("txtLong").value.trim(),
                         iFrame: document.getElementById("map").src.trim(),
-                    },                    
+                    },
                     others: {
                         basePrice: document.getElementById("txtBasePrice").value.trim(),
                         basePrice2nights: document.getElementById("txtBasePrice2Nights").value.trim(),
                         baseCost: document.getElementById("txtBaseCost").value.trim(),
-                        baseCost2nights: document.getElementById("txtBaseCost2Nights").value.trim(),                                                
+                        baseCost2nights: document.getElementById("txtBaseCost2Nights").value.trim(),
                         arrivalTimeMinutes: arrivalTimeMinutes,
                         arrivalTimeHours: arrivalTimeHours,
                         departureTimeMinutes: departureTimeMinutes,
                         departureTimeHours: departureTimeHours,
                         admin: document.getElementById("slctAdmin").value.trim(),
                         janitor: document.getElementById("slctJanitor").value.trim(),
-                    }                    
-                };                                    
+                    }
+                };
                 fetch('/api/cabanas/crear-cabana', {
                     method: 'POST',
                     headers: {
@@ -975,41 +1025,8 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        response.json().then(errorData => {
-                            const errors = errorData.error;
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                                confirmButtonText: 'Aceptar'
-                            });   
-                        });                    
-                        throw new Error('Error en la solicitud');
-                    }
-                    return response.json();
-                })
-                .then(async data => {
-                    console.log('Respuesta del servidor:', data);
-
-                    try {
-                        const response = await fetch('/api/cabanas/subir-imagenes-cabana', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        if (response.ok) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Completado!',
-                                text: data.message + '.',
-                                confirmButtonText: 'Aceptar'
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    window.location.href = "/";
-                                }
-                            });                             
-                        } else {
+                    .then(response => {
+                        if (!response.ok) {
                             response.json().then(errorData => {
                                 const errors = errorData.error;
                                 Swal.fire({
@@ -1017,28 +1034,61 @@
                                     title: 'Error',
                                     text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
                                     confirmButtonText: 'Aceptar'
-                                });   
-                            });                    
+                                });
+                            });
                             throw new Error('Error en la solicitud');
-                            window.location.href = "/";
                         }
-                    } catch (error) {
+                        return response.json();
+                    })
+                    .then(async data => {
+                        console.log('Respuesta del servidor:', data);
+
+                        try {
+                            const response = await fetch('/api/cabanas/subir-imagenes-cabana', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            if (response.ok) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '¡Completado!',
+                                    text: data.message + '.',
+                                    confirmButtonText: 'Aceptar'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = "/";
+                                    }
+                                });
+                            } else {
+                                response.json().then(errorData => {
+                                    const errors = errorData.error;
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                        confirmButtonText: 'Aceptar'
+                                    });
+                                });
+                                throw new Error('Error en la solicitud');
+                                window.location.href = "/";
+                            }
+                        } catch (error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                                confirmButtonText: 'Aceptar'
+                            });
+                        }
+                    })
+                    .catch(error => {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                            text: 'Error al enviar la solicitud: ' + error + '.',
                             confirmButtonText: 'Aceptar'
-                        }); 
-                    }                    
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error al enviar la solicitud: ' + error + '.',
-                        confirmButtonText: 'Aceptar'
-                    }); 
-                });
+                        });
+                    });
 
             });
         }

@@ -117,6 +117,13 @@ async function generateSideMenu (req, res, next) {
                                     </a>
 
                                 </li>
+                                <li>
+                                    <a href="/tipologias" class="nav-link px-5" title="Editar Tipologias">
+                                                <i class="fa fa-edit" aria-hidden="true"></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Editar Tipologias</span>
+                                    </a>
+
+                                </li>
                             </ul>
                         </li>`;
                 }
