@@ -105,6 +105,25 @@ async function obtenerEventos(req, res) {
     }
 }
 
+async function obtenerEventosDeCabana(req, res) {
+    const { id } = req.params;
+    const newId = new mongoose.Types.ObjectId(id);
+    try {
+        const documentos = await Documento.find({ 'events.resourceId': newId });
+
+        // Extract and flatten the events that match the resourceId
+        const eventos = documentos.reduce((acc, doc) => {
+            const matchingEvents = doc.events.filter(evento => evento.resourceId.equals(newId));
+            return acc.concat(matchingEvents);
+        }, []);
+
+        res.send(eventos);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener eventos' });
+    }
+}
+
 async function obtenerEventoPorId(id) {
     try {
         const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
@@ -719,6 +738,7 @@ module.exports = {
     createReservationValidators,
     submitReservationValidators,
     obtenerEventos,
+    obtenerEventosDeCabana,
     obtenerEventoPorId,
     obtenerEventoPorIdRoute,
     createReservation,

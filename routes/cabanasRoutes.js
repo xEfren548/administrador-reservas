@@ -10,5 +10,5 @@ router.post('/cabanas/subir-imagenes-cabana', uploadImg, cabanasController.uploa
 
 router.get('/cabanas/editar-cabana', cabanasController.showEditChaletsView);
 router.post('/cabanas/editar-cabana', /*cabanasController.createChaletValidators, validationRequest,*/ cabanasController.editChalet);
-
+router.get('/cabanas/calendar', cabanasController.renderCalendarPerChalet)
 module.exports = router;

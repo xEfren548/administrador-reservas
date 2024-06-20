@@ -196,6 +196,14 @@ td {
     overflow-x: scroll !important;
 }
 
+.fc-scrollgrid-sync-inner {
+    background-color: #141418 !important;
+}
+
+.fc-theme-standard .fc-list-day-cushion {
+    background-color: #141418 !important;
+}
+
 .modal-content {
     background-color: #141418 !important;
 }

@@ -4,7 +4,7 @@ const logController = require('../controllers/logController')
 const TipologiasCabana = require('../models/TipologiasCabana');
 const NotFoundError = require("../common/error/not-found-error");
 const BadRequestError = require("../common/error/bad-request-error");
-const {check} = require("express-validator");
+const { check } = require("express-validator");
 const ftp = require('basic-ftp');
 const Usuario = require("../models/Usuario");
 const fs = require('fs');
@@ -12,16 +12,16 @@ const fs = require('fs');
 const showCreateChaletViewValidators = [
     check()
         .custom(async (value, { req }) => {
-            const admin = await Usuario.findOne({privilege: "Administrador"});
-            if(!admin){
+            const admin = await Usuario.findOne({ privilege: "Administrador" });
+            if (!admin) {
                 throw new NotFoundError('No administrator found');
             }
             return true;
         }),
     check()
         .custom(async (value, { req }) => {
-            const admin = await Usuario.findOne({privilege: "Limpieza"});
-            if(!admin){
+            const admin = await Usuario.findOne({ privilege: "Limpieza" });
+            if (!admin) {
                 throw new NotFoundError('No janitor found');
             }
             return true;
@@ -41,7 +41,7 @@ const createChaletValidators = [
         .custom(async (value, { req }) => {
             const chalets = await Habitacion.findOne();
             const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
-            if(chalet){
+            if (chalet) {
                 throw new NotFoundError('Chalet name already taken');
             }
             return true;
@@ -50,20 +50,20 @@ const createChaletValidators = [
         .notEmpty().withMessage('Phone is required')
         .matches(/^\+?[0-9]{10,15}$/).withMessage('Invalid phone number format')
         .isLength({ min: 10, max: 15 }).withMessage('Phone number must be between 10 and 15 digits'),
-   //check('propertyDetails.email')
-   //    //.notEmpty().withMessage('Email is required')
-   //   // .isEmail().withMessage('Invalid email format'),
-   //   // .custom(async (value, { req }) => {
-   //   //     const chalets = await Habitacion.findOne();
-   //   //     const chalet = chalets.resources.find(chalet => chalet.propertyDetails.email === value);
-   //   //     if(chalet){
-   //   //         throw new NotFoundError('Chalet email already taken');
-   //   //     }
-   //   //     return true;
-   //   // }),
-   //check('propertyDetails.website')
-   //    //.notEmpty().withMessage('Website is required')
-   //    .isLength({ max: 255 }).withMessage("Name must be less than 255 characters"),
+    //check('propertyDetails.email')
+    //    //.notEmpty().withMessage('Email is required')
+    //   // .isEmail().withMessage('Invalid email format'),
+    //   // .custom(async (value, { req }) => {
+    //   //     const chalets = await Habitacion.findOne();
+    //   //     const chalet = chalets.resources.find(chalet => chalet.propertyDetails.email === value);
+    //   //     if(chalet){
+    //   //         throw new NotFoundError('Chalet email already taken');
+    //   //     }
+    //   //     return true;
+    //   // }),
+    //check('propertyDetails.website')
+    //    //.notEmpty().withMessage('Website is required')
+    //    .isLength({ max: 255 }).withMessage("Name must be less than 255 characters"),
     check('propertyDetails.minOccupancy')
         .notEmpty().withMessage('Minimum occupancy is required')
         .isNumeric().withMessage('Minimum occupancy must be a number'),
@@ -84,7 +84,7 @@ const createChaletValidators = [
             }
             return true;
         }),
-    
+
     // additionalInfo validations.
     check('additionalInfo.nBeds')
         .notEmpty().withMessage('Number of beds is required')
@@ -120,8 +120,8 @@ const createChaletValidators = [
     check('location.longitude')
         .notEmpty().withMessage('Longitude is required')
         .isNumeric().withMessage('Longitude must be a number'),
-   // check('location.weatherWidget')
-   //     .notEmpty().withMessage('Weather widget is required'),
+    // check('location.weatherWidget')
+    //     .notEmpty().withMessage('Weather widget is required'),
     check('location.iFrame')
         .notEmpty().withMessage('iFrame is required'),
 
@@ -133,14 +133,14 @@ const createChaletValidators = [
     check('additionalAccomodationDescription')
         .notEmpty().withMessage('Additional accommodation description is required'),
 
-   // // touristicRate validations.
-   // check('touristicRate')
-   //     .notEmpty().withMessage('Touristic rate is required'),
+    // // touristicRate validations.
+    // check('touristicRate')
+    //     .notEmpty().withMessage('Touristic rate is required'),
 
     // legalNotice validations.
     check('legalNotice')
         .notEmpty().withMessage('Legal notice is required'),
-    
+
     // Other data validations.
     check('others.basePrice')
         .notEmpty().withMessage('Base price is required')
@@ -158,8 +158,8 @@ const createChaletValidators = [
         .notEmpty().withMessage("Administrator's name is required")
         .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
         .custom(async (value, { req }) => {
-            const admin = await Usuario.findOne({email: value, privilege: "Administrador"});
-            if(!admin){
+            const admin = await Usuario.findOne({ email: value, privilege: "Administrador" });
+            if (!admin) {
                 throw new NotFoundError('Administrator does not exist');
             }
             return true;
@@ -168,8 +168,8 @@ const createChaletValidators = [
         .notEmpty().withMessage("Janitor's name is required")
         .isLength({ max: 255 }).withMessage("Janitor's name must be less than 255 characters")
         .custom(async (value, { req }) => {
-            const admin = await Usuario.findOne({email: value, privilege: "Limpieza"});
-            if(!admin){
+            const admin = await Usuario.findOne({ email: value, privilege: "Limpieza" });
+            if (!admin) {
                 throw new NotFoundError('Janitor does not exist');
             }
             return true;
@@ -178,12 +178,12 @@ const createChaletValidators = [
 
 const uploadChaletFilesValidators = [
     check()
-    .custom(async (value, { req }) => {
-        if(!req.files){
-            throw new BadRequestError('Upload pictures of the chalet');
-        }
-        return true;
-    })
+        .custom(async (value, { req }) => {
+            if (!req.files) {
+                throw new BadRequestError('Upload pictures of the chalet');
+            }
+            return true;
+        })
 ];
 
 const editChaletValidators = [
@@ -196,36 +196,36 @@ const editChaletValidators = [
         .optional({ checkFalsy: true })
         .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s0-9']+$/).withMessage("Invalid property name format")
         .isLength({ max: 255 }).withMessage("Name must be less than 255 characters"),
-        //.custom(async (value, { req }) => {
-        //    if (value) { // Verifica si se proporciona un valor antes de realizar la validación
-        //        const chalets = await Habitacion.findOne();
-        //        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
-        //        if(!chalet){
-        //            throw new NotFoundError('Chalet not found');
-        //        }
-        //    }
-        //    return true;
-        //}),
+    //.custom(async (value, { req }) => {
+    //    if (value) { // Verifica si se proporciona un valor antes de realizar la validación
+    //        const chalets = await Habitacion.findOne();
+    //        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
+    //        if(!chalet){
+    //            throw new NotFoundError('Chalet not found');
+    //        }
+    //    }
+    //    return true;
+    //}),
     check('propertyDetails.phoneNumber')
         .optional({ checkFalsy: true })
         .matches(/^\+?[0-9]{10,15}$/).withMessage('Invalid phone number format')
         .isLength({ min: 10, max: 15 }).withMessage('Phone number must be between 10 and 15 digits'),
- // check('propertyDetails.email')
- //     .optional({ checkFalsy: true })
- //     .isEmail().withMessage('Invalid email format'),
- //     //.custom(async (value, { req }) => {
- //     //    if (value) { // Verifica si se proporciona un valor antes de realizar la validación
- //     //        const chalets = await Habitacion.findOne();
- //     //        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.email === value);
- //     //        if(!chalet){
- //     //            throw new NotFoundError('Chalet email not found');
- //     //        }
- //     //    }
- //     //    return true;
- //     //}),
- // check('propertyDetails.website')
- //     .optional({ checkFalsy: true })
- //     .isLength({ max: 255 }).withMessage("Name must be less than 255 characters"),
+    // check('propertyDetails.email')
+    //     .optional({ checkFalsy: true })
+    //     .isEmail().withMessage('Invalid email format'),
+    //     //.custom(async (value, { req }) => {
+    //     //    if (value) { // Verifica si se proporciona un valor antes de realizar la validación
+    //     //        const chalets = await Habitacion.findOne();
+    //     //        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.email === value);
+    //     //        if(!chalet){
+    //     //            throw new NotFoundError('Chalet email not found');
+    //     //        }
+    //     //    }
+    //     //    return true;
+    //     //}),
+    // check('propertyDetails.website')
+    //     .optional({ checkFalsy: true })
+    //     .isLength({ max: 255 }).withMessage("Name must be less than 255 characters"),
     check('propertyDetails.minOccupancy')
         .optional({ checkFalsy: true })
         .isNumeric().withMessage('Minimum occupancy must be a number'),
@@ -252,7 +252,7 @@ const editChaletValidators = [
             }
             return true;
         }),
-    
+
     // additionalInfo validations.
     check('additionalInfo.nBeds')
         .optional({ checkFalsy: true })
@@ -288,8 +288,8 @@ const editChaletValidators = [
     check('location.longitude')
         .optional({ checkFalsy: true })
         .isNumeric().withMessage('Longitude must be a number'),
-   // check('location.weatherWidget')
-   //     .optional({ checkFalsy: true }),
+    // check('location.weatherWidget')
+    //     .optional({ checkFalsy: true }),
     check('location.iFrame')
         .optional({ checkFalsy: true }),
 
@@ -301,14 +301,14 @@ const editChaletValidators = [
     check('additionalAccomodationDescription')
         .optional({ checkFalsy: true }),
 
-   // // touristicRate validations.
-   // check('touristicRate')
-   //     .optional({ checkFalsy: true }),
+    // // touristicRate validations.
+    // check('touristicRate')
+    //     .optional({ checkFalsy: true }),
 
     // legalNotice validations.
     check('legalNotice')
         .optional({ checkFalsy: true }),
-    
+
     // Other data validations.
     check('others.basePrice')
         .optional({ checkFalsy: true })
@@ -333,8 +333,8 @@ const editChaletValidators = [
         .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
         .custom(async (value, { req }) => {
             if (value) { // Verifica si se proporciona un valor antes de realizar la validación
-                const admin = await Usuario.findOne({email: value, privilege: "Administrador"});
-                if(!admin){
+                const admin = await Usuario.findOne({ email: value, privilege: "Administrador" });
+                if (!admin) {
                     throw new NotFoundError('Administrator does not exist');
                 }
             }
@@ -345,8 +345,8 @@ const editChaletValidators = [
         .isLength({ max: 255 }).withMessage("Janitor's name must be less than 255 characters")
         .custom(async (value, { req }) => {
             if (value) { // Verifica si se proporciona un valor antes de realizar la validación
-                const admin = await Usuario.findOne({email: value, privilege: "Limpieza"});
-                if(!admin){
+                const admin = await Usuario.findOne({ email: value, privilege: "Limpieza" });
+                if (!admin) {
                     throw new NotFoundError('Janitor does not exist');
                 }
             }
@@ -354,7 +354,7 @@ const editChaletValidators = [
         }),
 ];
 
-async function showChaletsData(req, res, next){
+async function showChaletsData(req, res, next) {
     try {
         const chalets = await Habitacion.find();
         res.send(chalets);
@@ -364,14 +364,14 @@ async function showChaletsData(req, res, next){
     }
 }
 
-async function showChaletsView(req, res, next){
-    try {  
-        const admins = await Usuario.find({privilege: "Administrador"}).lean();
+async function showChaletsView(req, res, next) {
+    try {
+        const admins = await Usuario.find({ privilege: "Administrador" }).lean();
         if (!admins) {
             throw new NotFoundError("No admin found");
         }
 
-        const janitors = await Usuario.find({privilege: "Limpieza"}).lean();
+        const janitors = await Usuario.find({ privilege: "Limpieza" }).lean();
         if (!janitors) {
             throw new NotFoundError("No janitor found");
         }
@@ -395,14 +395,14 @@ async function showChaletsView(req, res, next){
 async function createChalet(req, res, next) {
     //console.log(req.body);
 
-    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others} = req.body;
-    
-    const admin = await Usuario.findOne({email: others.admin, privilege: "Administrador"});
+    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others } = req.body;
+
+    const admin = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
     if (!admin) {
         throw new NotFoundError("Admin not found");
     }
 
-    const janitor = await Usuario.findOne({email: others.janitor, privilege: "Limpieza"});
+    const janitor = await Usuario.findOne({ email: others.janitor, privilege: "Limpieza" });
     if (!janitor) {
         throw new NotFoundError("Janitor not found");
     }
@@ -411,7 +411,7 @@ async function createChalet(req, res, next) {
     const arrivalTimeMinutes = parseInt(others.arrivalTimeMinutes);
     const departureTimeHours = parseInt(others.departureTimeHours);
     const departureTimeMinutes = parseInt(others.departureTimeMinutes);
-    
+
     const newArrivalTime = new Date();
     newArrivalTime.setHours(arrivalTimeHours);
     newArrivalTime.setMinutes(arrivalTimeMinutes);
@@ -420,13 +420,13 @@ async function createChalet(req, res, next) {
     newDepartureTime.setMinutes(departureTimeHours);
 
     const chaletToAdd = {
-        propertyDetails, 
-        accommodationFeatures, 
-        additionalInfo, 
-        accomodationDescription, 
-        additionalAccomodationDescription, 
-        touristicRate, 
-        legalNotice, 
+        propertyDetails,
+        accommodationFeatures,
+        additionalInfo,
+        accomodationDescription,
+        additionalAccomodationDescription,
+        touristicRate,
+        legalNotice,
         location,
         others: {
             basePrice: others.basePrice,
@@ -440,11 +440,11 @@ async function createChalet(req, res, next) {
         }
     };
 
-    try{ 
+    try {
         const chalets = await Habitacion.findOne();
         chalets.resources.push(chaletToAdd);
         await chalets.save();
-        
+
         console.log("Cabaña agregada con éxito");
         req.session.chaletAdded = chalets.resources[chalets.resources.length - 1].propertyDetails.name;
         console.log("Respuesta del servidor:", { chaletAdded: req.session.chaletAdded });
@@ -455,10 +455,10 @@ async function createChalet(req, res, next) {
             acciones: `Cabaña creada por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
         }
-        
+
         await logController.createBackendLog(logBody);
-        res.status(200).json({ success: true, message: "Cabaña agregada con éxito "});
-    } catch(err){
+        res.status(200).json({ success: true, message: "Cabaña agregada con éxito " });
+    } catch (err) {
         console.log(err);
         return next(err);
     }
@@ -473,16 +473,16 @@ async function uploadChaletFiles(req, res, next) {
     try {
         const chalets = await Habitacion.findOne();
         var chalet = "";
-        if (req.session.chaletAdded){
+        if (req.session.chaletAdded) {
             //console.log("entra")
             //console.log(req.session.chaletAdded)
             chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
             //console.log(chalets)
-        }else if (req.session.chaletUpdated){
+        } else if (req.session.chaletUpdated) {
             chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
         }
         //console.log(chalet)
-        if(!chalet){
+        if (!chalet) {
             throw new NotFoundError('Chalet does not exists');
         }
         //console.log(req.session)
@@ -513,7 +513,7 @@ async function uploadChaletFiles(req, res, next) {
         }
 
         console.log("Archivos subidos con éxito");
-        res.status(200).json( { success: true, message: "Archivos subidos con éxito" } );
+        res.status(200).json({ success: true, message: "Archivos subidos con éxito" });
     } catch (error) {
         console.error("Error:", error);
     } finally {
@@ -532,15 +532,15 @@ async function getChaletFiles(chalets) {
             secure: false
         });
 
-        for(const chalet of chalets){
-            if(chalet.hasOwnProperty("images")){
+        for (const chalet of chalets) {
+            if (chalet.hasOwnProperty("images")) {
                 for (let i = 0; i < chalet.images.length; i++) {
                     const imagePath = chalet.images[i];
                     const localFilePath = `./download/${getImageFileName(imagePath)}`;
-                    await client.downloadTo(localFilePath, imagePath);            
+                    await client.downloadTo(localFilePath, imagePath);
                 }
             }
-        }        
+        }
     } catch (error) {
         console.error('Error downloading images from FTP:', error);
     } finally {
@@ -552,20 +552,20 @@ function getImageFileName(imagePath) {
     return imagePath.split('/').pop();
 }
 
-async function showEditChaletsView(req, res, next){
+async function showEditChaletsView(req, res, next) {
     try {
         var chalets = await Habitacion.findOne().lean();
         chalets = chalets.resources;
-        for(const chalet of chalets){
-            const admin = await Usuario.findById(chalet.others.admin); 
+        for (const chalet of chalets) {
+            const admin = await Usuario.findById(chalet.others.admin);
             //console.log("ADMIIIN : ", admin);
             chalet.others.admin = [admin.email, admin.firstName + " " + admin.lastName];
         }
-        for(const chalet of chalets){
-            const janitor = await Usuario.findById(chalet.others.janitor); 
+        for (const chalet of chalets) {
+            const janitor = await Usuario.findById(chalet.others.janitor);
             chalet.others.janitor = [janitor.email, janitor.firstName + " " + janitor.lastName];
         }
-        for(const chalet of chalets){
+        for (const chalet of chalets) {
             console.log(chalet.others.arrivalTime)
             let arrivalstr = chalet.others.arrivalTime.toString();
             let departurestr = chalet.others.departureTime.toString();
@@ -575,17 +575,17 @@ async function showEditChaletsView(req, res, next){
             chalet.others.departureTime = departure;
             console.log(chalet.others.arrivalTime)
         }
-        const admins = await Usuario.find({privilege: "Administrador"}).lean();
-        const janitors = await Usuario.find({privilege: "Limpieza"}).lean();
+        const admins = await Usuario.find({ privilege: "Administrador" }).lean();
+        const janitors = await Usuario.find({ privilege: "Limpieza" }).lean();
         //console.log("CHALETS: ", chalets);
         //console.log("CHALETS2222: ", chalets[0].others.admin[0]);
         //console.log("ADMINS: ", admins);
         //console.log("JANITORS: ", janitors);
-        
+
         // This could go on login.
-        if(req.session.filesRetrieved !== undefined){
+        if (req.session.filesRetrieved !== undefined) {
             getChaletFiles(chalets);
-            req.session.filesRetrieved = true; 
+            req.session.filesRetrieved = true;
         }
         console.log("Images downloaded successfully ");
 
@@ -600,16 +600,16 @@ async function showEditChaletsView(req, res, next){
     }
 }
 
-async function editChalet(req, res, next){
-    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others,images} = req.body;
+async function editChalet(req, res, next) {
+    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images } = req.body;
 
     //console.log("imagenes" + images.imagesarray);
     //console.log(propertyDetails.name);
-    const admin = await Usuario.findOne({email: others.admin, privilege: "Administrador"});
+    const admin = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
     if (!admin) {
         throw new NotFoundError("Admin not found");
     }
-    const janitor = await Usuario.findOne({email: others.janitor, privilege: "Limpieza"});
+    const janitor = await Usuario.findOne({ email: others.janitor, privilege: "Limpieza" });
     if (!janitor) {
         throw new NotFoundError("Janitor not found");
     }
@@ -623,13 +623,13 @@ async function editChalet(req, res, next){
     newDepartureTime.setMinutes(parseInt(others.departureTime.split(':')[1], 10));
     console.log(newDepartureTime)
     const chalet = {
-        propertyDetails, 
-        accommodationFeatures, 
-        additionalInfo, 
-        accomodationDescription, 
-        additionalAccomodationDescription, 
-        touristicRate, 
-        legalNotice, 
+        propertyDetails,
+        accommodationFeatures,
+        additionalInfo,
+        accomodationDescription,
+        additionalAccomodationDescription,
+        touristicRate,
+        legalNotice,
         location,
         others: {
             basePrice: others.basePrice,
@@ -646,15 +646,15 @@ async function editChalet(req, res, next){
 
     console.log(chalet)
 
-    try{ 
+    try {
         const habitacion = await Habitacion.findOne();
         let chalets = habitacion.resources;
-    
+
         const indexToUpdate = chalets.findIndex(chalet => chalet.propertyDetails.name === propertyDetails.name);
         if (indexToUpdate === -1) {
             throw new NotFoundError("Chalet not found");
         }
-        chalets[indexToUpdate] = chalet;    
+        chalets[indexToUpdate] = chalet;
 
         await Habitacion.findOneAndUpdate({}, { resources: chalets });
 
@@ -668,13 +668,38 @@ async function editChalet(req, res, next){
             acciones: `Cabaña modificada por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
         }
-        
+
         await logController.createBackendLog(logBody);
 
-        res.status(200).json({ success: true, message: "Cabaña editada con éxito"});
-    } catch(err){
+        res.status(200).json({ success: true, message: "Cabaña editada con éxito" });
+    } catch (err) {
         console.log(err);
         return next(err);
+    }
+}
+
+async function renderCalendarPerChalet(req, res, next) {
+    try {
+        const habitaciones = await Habitacion.find();
+        if (!habitaciones) {
+            throw new NotFoundError("No room found");
+        }
+        const data = habitaciones;
+        // console.log(data);
+
+        const chalets = data[0].resources.map(chalet => ({
+            name: chalet.propertyDetails.name,
+            basePrice: chalet.others.basePrice,
+            pax: chalet.propertyDetails.maxOccupancy,
+            id: chalet._id.toString()
+        }));
+        res.render('calendarPerChalet', {
+            chalets: chalets
+
+        })
+
+    } catch (error) {
+        res.status(500).send(error);
     }
 }
 
@@ -688,5 +713,6 @@ module.exports = {
     uploadChaletFiles,
     showEditChaletsView,
     editChalet,
-    showChaletsData
+    showChaletsData,
+    renderCalendarPerChalet
 }
