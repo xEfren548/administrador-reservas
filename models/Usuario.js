@@ -37,6 +37,11 @@ const userSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Documento.events'
     },
+    color: {
+        type: String,
+        required: true,
+        unique: true
+    }
 });
 
 userSchema.pre("save", async function(done){

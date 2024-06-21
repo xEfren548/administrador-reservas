@@ -29,7 +29,8 @@
                     <td>{{adminname}}</td>
                     <td class="text-center">
                         <button type="button" class="btn btn-primary" data-client-email="{{email}}"
-                            data-bs-toggle="modal" data-bs-target="#modify-user_entry_modal">
+                            data-bs-toggle="modal" data-bs-target="#modify-user_entry_modal"
+                            onclick="showClientEmail('{{email}}')">
                             <i class="fa fa-pencil" aria-hidden="true"></i>
                         </button>
                         <button type="button" class="btn btn-danger" data-client-email="{{email}}">
@@ -85,8 +86,8 @@
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtUserPassword">Contraseña: </label>
-                                <input type="password" name="txtUserPassword" id="txtUserPassword"
-                                    class="form-control" placeholder="Contraseña">
+                                <input type="password" name="txtUserPassword" id="txtUserPassword" class="form-control"
+                                    placeholder="Contraseña">
                             </div>
                         </div>
                         <div class="row">
@@ -94,7 +95,8 @@
                         </div>
                         <div class="row">
                             <div class="col-8">
-                                <select name="slctUserPrivileges" id="slctUserPrivileges" class="form-select form-select-md"required>
+                                <select name="slctUserPrivileges" id="slctUserPrivileges"
+                                    class="form-select form-select-md" required>
                                     <option value="" selected disabled> Selecciona un privilegio para el usuario--
                                     </option>
                                     <option value="Administrador">Administrador</option>
@@ -102,26 +104,34 @@
                                     <option value="Limpieza">Limpieza</option>
                                     <option value="Servicios adicionales">Servicios adicionales</option>
                                     <option value="Dueño de cabañas">Dueño de cabañas</option>
-                                    <option value="Inversionistas">Inversionistas</option> 
+                                    <option value="Inversionistas">Inversionistas</option>
                                 </select>
 
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row mt-2">
                             <label for="slctUserAdmin">Administrador ligado: </label>
                         </div>
                         <div class="row">
                             <div class="col-8">
                                 <select id="slctUserAdmin" name="slctUserAdmin" class="form-select form-select-md">
-                                    <option value="" selected="true" disabled="true"> Selecciona un administrador para el usuario --</option>
+                                    <option value="" selected="true" disabled="true"> Selecciona un administrador para
+                                        el usuario --</option>
                                     {{#if admins}}
-                                        {{#each admins}}
-                                            <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
-                                        {{/each}}
+                                    {{#each admins}}
+                                    <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
+                                    {{/each}}
                                     {{else}}
-                                        <option value="0">No se encontraron administradores</option>
+                                    <option value="0">No se encontraron administradores</option>
                                     {{/if}}
                                 </select>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <label for="exampleColorInput" class="form-label">Color de colaborador: </label>
+                            <div class="col-3">
+                                <input type="color" class="form-control form-control-color" id="exampleColorInput"
+                                    value="#563d7c" title="Choose your color">
                             </div>
                         </div>
                         <div class="form-item">
@@ -188,7 +198,8 @@
                         </div>
                         <div class="row">
                             <div class="col-8">
-                                <select name="slctUserPrivilegesUpd" id="slctUserPrivilegesUpd" class="form-select form-select-md"required>
+                                <select name="slctUserPrivilegesUpd" id="slctUserPrivilegesUpd"
+                                    class="form-select form-select-md" required>
                                     <option value="" selected disabled> Selecciona un privilegio para el usuario--
                                     </option>
                                     <option value="">Selecciona una opción</option>
@@ -197,7 +208,7 @@
                                     <option value="Limpieza">Limpieza</option>
                                     <option value="Servicios adicionales">Servicios adicionales</option>
                                     <option value="Dueño de cabañas">Dueño de cabañas</option>
-                                    <option value="Inversionistas">Inversionistas</option>                                   
+                                    <option value="Inversionistas">Inversionistas</option>
                                 </select>
                             </div>
                         </div>
@@ -206,16 +217,25 @@
                         </div>
                         <div class="row">
                             <div class="col-8">
-                                <select id="slctUserAdminUpd" name="slctUserAdminUpd" class="form-select form-select-md">
-                                    <option value="" selected="true" disabled="true"> Selecciona un administrador para el usuario --</option>
+                                <select id="slctUserAdminUpd" name="slctUserAdminUpd"
+                                    class="form-select form-select-md">
+                                    <option value="" selected="true" disabled="true"> Selecciona un administrador para
+                                        el usuario --</option>
                                     {{#if admins}}
-                                        {{#each admins}}
-                                            <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
-                                        {{/each}}
+                                    {{#each admins}}
+                                    <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
+                                    {{/each}}
                                     {{else}}
-                                        <option value="0">No se encontraron administradores</option>
+                                    <option value="0">No se encontraron administradores</option>
                                     {{/if}}
-                                </select>                            
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <label for="exampleColorInput" class="form-label">Color de colaborador: </label>
+                            <div class="col-3">
+                                <input type="color" class="form-control form-control-color" id="colaboratorColorUpd"
+                                    value="#563d7c" title="Choose your color">
                             </div>
                         </div>
                         <div class="form-item">
@@ -245,6 +265,26 @@
                 "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
                 "pageLength": 10 // Establece la longitud de página inicial
             });
+
+            function addButtonEvents() {
+                const editButtons = document.querySelectorAll('#tablaUsuarios .btn-primary');
+                console.log(editButtons);
+                editButtons.forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        console.log(this.dataset.clientEmail);
+                        console.log(this.dataset);
+                        document.getElementById('txtUserEmailUpd').value = this.dataset.clientEmail;
+                    });
+                });
+            }
+
+            // Escucha el evento 'draw' de DataTables
+            table.addEventListener('draw.dt', function () {
+                addButtonEvents();
+            });
+
+            // Inicializa los botones en la primera carga de la tabla
+            addButtonEvents();
         }
 
         // Functions.
@@ -276,7 +316,8 @@
                     password: document.getElementById("txtUserPassword").value.trim(),
                     privilege: document.getElementById("slctUserPrivileges").value.trim(),
                     administrator: document.getElementById("slctUserAdmin").value.trim(),
-                    adminname: $("#slctUserAdmin option:selected").text()
+                    adminname: $("#slctUserAdmin option:selected").text(),
+                    color: document.getElementById("colaboratorColor").value.trim()
                 };
                 fetch('/api/usuarios/crear-usuario', {
                     method: 'POST',
@@ -286,53 +327,45 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        response.json().then(errorData => {
-                            const errors = errorData.error;
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                                confirmButtonText: 'Aceptar'
-                            });   
-                        });                    
-                        throw new Error('Error en la solicitud');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Completado!',
-                        text: data.message + '.',
-                        confirmButtonText: 'Aceptar'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            clearModal(document.getElementById("user_entry_modal"));
-                            $('#user_entry_modal').modal('hide');
-                            location.reload();
+                    .then(response => {
+                        if (!response.ok) {
+                            response.json().then(errorData => {
+                                const errors = errorData.error;
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                    confirmButtonText: 'Aceptar'
+                                });
+                            });
+                            throw new Error('Error en la solicitud');
                         }
-                    }); 
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
-                        confirmButtonText: 'Aceptar'
-                    }); 
-                });
+                        return response.json();
+                    })
+                    .then(data => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Completado!',
+                            text: data.message + '.',
+                            confirmButtonText: 'Aceptar'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                clearModal(document.getElementById("user_entry_modal"));
+                                $('#user_entry_modal').modal('hide');
+                                location.reload();
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    });
             });
         }
-
-        // Updating user info.
-        const editButtons = document.querySelectorAll('#tablaUsuarios .btn-primary');
-        editButtons.forEach(function (button) {
-            button.addEventListener('click', function () {
-                document.getElementById('txtUserEmailUpd').value = this.dataset.clientEmail;
-            });
-        });
 
         var btnUpdateUser = document.getElementById("btnUpdateUser")
         if (btnUpdateUser) {
@@ -345,7 +378,8 @@
                     password: document.getElementById("txtUserPasswordUpd").value.trim(),
                     privilege: document.getElementById("slctUserPrivilegesUpd").value.trim(),
                     administrator: document.getElementById("slctUserAdminUpd").value.trim(),
-                    adminname: $("#slctUserAdminUpd option:selected").text()
+                    adminname: $("#slctUserAdminUpd option:selected").text(),
+                    color: document.getElementById("colaboratorColorUpd").value.trim()
                 };
 
                 fetch('/api/usuarios/editar-usuario', {
@@ -356,43 +390,43 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        response.json().then(errorData => {
-                            const errors = errorData.error;
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                                confirmButtonText: 'Aceptar'
-                            });   
-                        });                    
-                        throw new Error('Error en la solicitud');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Completado!',
-                        text: data.message + '.',
-                        confirmButtonText: 'Aceptar'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            clearModal(document.getElementById("modify-user_entry_modal"));
-                            $('#modify-user_entry_modal').modal('hide');
-                            location.reload();
+                    .then(response => {
+                        if (!response.ok) {
+                            response.json().then(errorData => {
+                                const errors = errorData.error;
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                    confirmButtonText: 'Aceptar'
+                                });
+                            });
+                            throw new Error('Error en la solicitud');
                         }
-                    }); 
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
-                        confirmButtonText: 'Aceptar'
-                    }); 
-                });
+                        return response.json();
+                    })
+                    .then(data => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Completado!',
+                            text: data.message + '.',
+                            confirmButtonText: 'Aceptar'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                clearModal(document.getElementById("modify-user_entry_modal"));
+                                $('#modify-user_entry_modal').modal('hide');
+                                location.reload();
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    });
             });
         }
 
@@ -411,43 +445,49 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        response.json().then(errorData => {
-                            const errors = errorData.error;
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                                confirmButtonText: 'Aceptar'
-                            });   
-                        });                    
-                        throw new Error('Error en la solicitud');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Completado!',
-                        text: data.message + '.',
-                        confirmButtonText: 'Aceptar'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            location.reload();
+                    .then(response => {
+                        if (!response.ok) {
+                            response.json().then(errorData => {
+                                const errors = errorData.error;
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                    confirmButtonText: 'Aceptar'
+                                });
+                            });
+                            throw new Error('Error en la solicitud');
                         }
-                    }); 
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
-                        confirmButtonText: 'Aceptar'
-                    }); 
-                });
+                        return response.json();
+                    })
+                    .then(data => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Completado!',
+                            text: data.message + '.',
+                            confirmButtonText: 'Aceptar'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                location.reload();
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    });
             });
         });
 
     });
+
+    function showClientEmail(email) {
+        console.log('client email: ' + email);
+        const txtUserEmailUpdInput = document.querySelector('#txtUserEmailUpd');
+        txtUserEmailUpdInput.value = email;
+    }
 </script>

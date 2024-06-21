@@ -204,6 +204,10 @@ td {
     background-color: #141418 !important;
 }
 
+.fc-daygrid-day-number {
+    color: white !important;
+}
+
 .modal-content {
     background-color: #141418 !important;
 }

@@ -82,8 +82,8 @@ const editUserValidators = [
         }),
     check()
         .custom((value, { req }) => {
-            const { firstName, lastName, password, privilege, administrator } = req.body;
-            if(!firstName && !lastName && !password && !privilege && !administrator){
+            const { firstName, lastName, password, privilege, administrator, color } = req.body;
+            if(!firstName && !lastName && !password && !privilege && !administrator && !color){
                 throw new BadRequestError("There should be at least one field to update.")
             }
             return true;
@@ -125,9 +125,9 @@ async function showUsersView(req, res, next){
 }
 
 async function createUser(req, res, next) {
-    const { firstName, lastName, email, password, privilege, administrator, adminname } = req.body;
+    const { firstName, lastName, email, password, privilege, administrator, adminname, color } = req.body;
     const userToAdd = new Usuario ({
-        firstName, lastName, email, password, privilege, administrator,adminname
+        firstName, lastName, email, password, privilege, administrator,adminname, color
     });
 
     try{    
@@ -138,7 +138,7 @@ async function createUser(req, res, next) {
             idUsuario: req.session.id,
             type: 'registration',
             acciones: `Usuario creado por ${req.session.firstName} ${req.session.lastName}`,
-            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`,
         }
         
         await logController.createBackendLog(logBody);
@@ -187,7 +187,7 @@ async function obtenerUsuarioPorIdMongo(uuid){
 }
 
 async function editarUsuario(req, res, next) {
-    const { firstName, lastName, email, password, privilege, administrator,adminname } = req.body;
+    const { firstName, lastName, email, password, privilege, administrator,adminname, color } = req.body;
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
@@ -195,6 +195,7 @@ async function editarUsuario(req, res, next) {
     if (privilege) { updateFields.privilege = privilege; }
     if (administrator) { updateFields.administrator = administrator; }
     if (adminname) { updateFields.adminname = adminname; }
+    if (color) { updateFields.color = color; }
 
     try {
         const userToUpdate = await Usuario.findOneAndUpdate({ email }, updateFields, { new: true });
