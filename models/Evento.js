@@ -73,6 +73,10 @@ const reservaSchema = new Schema({
         enum: ["active", "playground", "cancelled", "pending"],
         required: true,
         default: "pending"
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Usuario'
     }
 });
 

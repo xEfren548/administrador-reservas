@@ -186,6 +186,8 @@ async function createReservation(req, res, next) {
         var reservationToAdd;
         var message;
 
+        const createdBy = new mongoose.Types.ObjectId(req.session.id);
+
         if(!isDeposit){
             reservationToAdd = {
                 client: client[0]._id,
@@ -197,7 +199,8 @@ async function createReservation(req, res, next) {
                 url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
                 units: units,
                 total: total,
-                discount: discount
+                discount: discount,
+                createdBy: createdBy
             };
             message = "Reservación agregada con éxito";
         }
@@ -234,7 +237,8 @@ async function createReservation(req, res, next) {
                 total: total,
                 discount: discount,
                 isDeposit: true,
-                paymentCancelation: paymentCancelation
+                paymentCancelation: paymentCancelation,
+                createdBy: createdBy
             };
 
             message = `Reservación agregada con éxito. Realice su pago antes de ${format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es })} o su reserva será cancelada`;
