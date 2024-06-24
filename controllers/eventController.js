@@ -55,7 +55,7 @@ const createReservationValidators = [
         .custom(async (value, { req }) => {
             const chalets = await Habitacion.findOne();
             const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
-            if(!chalet){
+            if (!chalet) {
                 throw new NotFoundError('Chalet does not exist');
             }
             return true;
@@ -111,15 +111,32 @@ async function obtenerEventosDeCabana(req, res) {
     try {
         const documentos = await Documento.find({ 'events.resourceId': newId });
 
-        // Extract and flatten the events that match the resourceId
-        const eventos = documentos.reduce((acc, doc) => {
+        let eventos = [];
+        documentos.forEach(doc => {
             const matchingEvents = doc.events.filter(evento => evento.resourceId.equals(newId));
-            return acc.concat(matchingEvents);
-        }, []);
+            eventos = eventos.concat(matchingEvents);
+        });
 
-        const colorUsuario = await Usuario.findById()
+        // Fetch colorUsuario for each evento's createdBy
+        const eventosWithColorUsuario = await Promise.all(eventos.map(async evento => {
+            const createdBy = evento.createdBy;
+            let colorUsuario = null; // Default to null if usuario is not found
+            if (createdBy) {
+                const usuario = await Usuario.findById(createdBy).select('color').exec();
+                if (usuario) {
+                    colorUsuario = usuario.color;
+                }
+            }
 
-        res.send(eventos);
+            return {
+                ...evento.toObject(),
+                colorUsuario: colorUsuario
+            };
+
+        }));
+        console.log(eventosWithColorUsuario);
+
+        res.send(eventosWithColorUsuario);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener eventos' });
@@ -178,10 +195,10 @@ async function createReservation(req, res, next) {
 
         const chalets = await Habitacion.findOne();
         const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
-        if(!chalet){
+        if (!chalet) {
             throw new NotFoundError('Chalet does not exist 2');
         }
-        
+
         arrivalDate.setHours(arrivalDate.getHours() + chalet.others.arrivalTime.getHours());
         departureDate.setHours(departureDate.getHours() + chalet.others.departureTime.getHours());
 
@@ -190,7 +207,7 @@ async function createReservation(req, res, next) {
 
         const createdBy = new mongoose.Types.ObjectId(req.session.id);
 
-        if(!isDeposit){
+        if (!isDeposit) {
             reservationToAdd = {
                 client: client[0]._id,
                 resourceId: chalet._id,
@@ -206,22 +223,22 @@ async function createReservation(req, res, next) {
             };
             message = "Reservación agregada con éxito";
         }
-        else{
+        else {
             console.log("Current date: ", format(Date.now(), "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es }));
             console.log("Arrival date: ", format(arrivalDate, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es }));
 
             const timeToArrive = (arrivalDate - new Date()) / (1000 * 60 * 60 * 24);
             var paymentCancelation;
-            if(timeToArrive >= 7){
+            if (timeToArrive >= 7) {
                 paymentCancelation = new Date(Date.now() + 24 * 60 * 60 * 1000);
             }
-            else if(timeToArrive >= 3 && timeToArrive < 7){
+            else if (timeToArrive >= 3 && timeToArrive < 7) {
                 paymentCancelation = new Date(Date.now() + 12 * 60 * 60 * 1000);
             }
-            else if(timeToArrive >= 1 && timeToArrive < 3){
+            else if (timeToArrive >= 1 && timeToArrive < 3) {
                 paymentCancelation = new Date(Date.now() + 8 * 60 * 60 * 1000);
             }
-            else if(timeToArrive < 1){
+            else if (timeToArrive < 1) {
                 paymentCancelation = new Date(Date.now() + 1 * 60 * 60 * 1000);
             }
 
@@ -252,11 +269,11 @@ async function createReservation(req, res, next) {
 
         // Guardar la reserva actualizada en la base de datos
         const documento2 = await Documento.findOne()
-        
+
         const idReserva = documento.events[documento.events.length - 1]._id.toString();
         const url = `http://${process.env.URL}/api/eventos/${idReserva}`;
         const evento = documento2.events.find(habitacion => habitacion.id === idReserva);
-        
+
         evento.url = url;
         await documento2.save();
 
@@ -271,10 +288,10 @@ async function createReservation(req, res, next) {
             fecha: fechaLimpieza,
             status: statusLimpieza
         })
-        
+
         console.log("SendMessages.sendReminders");
         SendMessages.sendReservationConfirmation(client[0], chalet, reservationToAdd);
-        
+
         // Log
         const logBody = {
             fecha: Date.now(),
@@ -284,7 +301,7 @@ async function createReservation(req, res, next) {
             acciones: `Reservación creada por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
         }
-        
+
         await logController.createBackendLog(logBody);
 
 
@@ -356,7 +373,7 @@ async function editarEvento(req, res) {
             acciones: `Reservación modificada por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
         }
-        
+
         await logController.createBackendLog(logBody);
 
         console.log('evento editado:', evento);
@@ -449,7 +466,7 @@ async function modificarEvento(req, res) {
         await eventosExistentes.save();
 
         console.log('Evento modificado:', evento);
-        
+
         newStartDate = new Date(newStartDate)
         newEndDate = new Date(newEndDate)
 
@@ -467,25 +484,25 @@ async function modificarEvento(req, res) {
         await logController.createBackendLog(logBody);
 
         const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(eventId);
-            console.log('comisiones Reserva: ');
-            console.log(comisionesReserva);
+        console.log('comisiones Reserva: ');
+        console.log(comisionesReserva);
 
-            const newComisiones = comisionesReserva.map(comisiones => {
-                return {
-                    id: comisiones._id,
-                    fecha: newEndDate,
-                }
-            })
-
-            console.log(newComisiones);
-
-            const comisionsResults = [];
-            for (const comision of newComisiones) {
-                const cRes = await utilidadesController.editarComisionReturn(comision);
-                if (cRes) { comisionsResults.push(cRes); }
+        const newComisiones = comisionesReserva.map(comisiones => {
+            return {
+                id: comisiones._id,
+                fecha: newEndDate,
             }
+        })
 
-            console.log(comisionsResults);
+        console.log(newComisiones);
+
+        const comisionsResults = [];
+        for (const comision of newComisiones) {
+            const cRes = await utilidadesController.editarComisionReturn(comision);
+            if (cRes) { comisionsResults.push(cRes); }
+        }
+
+        console.log(comisionsResults);
 
 
         res.status(200).json({ mensaje: 'Evento modificado correctamente', evento: evento });
@@ -499,7 +516,7 @@ async function checkAvailability(resourceId, arrivalDate, departureDate) {
     const newResourceId = new mongoose.Types.ObjectId(resourceId);
     const arrivalDateObj = new Date(`${arrivalDate}T00:00:00`);
     const departureDateObj = new Date(`${departureDate}T00:00:00`);
-    
+
 
     // console.log(`Checking overlaps for Resource ID: ${newResourceId}`);
     // console.log(`Arrival Date: ${arrivalDateObj}`);
@@ -528,11 +545,11 @@ async function moveToPlayground(req, res) {
     const { idReserva, status } = req.body;
     console.log(req.body)
     console.log(idReserva)
-    
+
     try {
         const eventosExistentes = await Documento.findOne();
         const evento = eventosExistentes.events.find(evento => evento._id.toString() === idReserva);
-        
+
         if (!['active', 'playground', 'cancelled'].includes(status)) {
             return res.status(400).send({ error: 'Invalid status' });
         }
@@ -630,16 +647,16 @@ async function moveToPlayground(req, res) {
             acciones: `Estatus editado a ${status} por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
         }
-        
+
         await logController.createBackendLog(logBody);
 
-        
 
-        
+
+
         res.status(200).json({ mensaje: 'Evento movido al playground correctamente', reserva: evento });
 
-    } catch(error) {
-        res.status(500).send({ error: 'Error al mover al playground: ' +  error.message });
+    } catch (error) {
+        res.status(500).send({ error: 'Error al mover al playground: ' + error.message });
     }
 }
 
@@ -674,7 +691,7 @@ async function crearNota(req, res) {
             acciones: `Nota creada por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
         }
-        
+
         await logController.createBackendLog(logBody);
         res.status(200).json({ message: 'Nueva nota agregada exitosamente a la reserva.' });
 
@@ -729,7 +746,7 @@ async function eliminarNota(req, res) {
             acciones: `Nota eliminada por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
         }
-        
+
         await logController.createBackendLog(logBody);
 
         res.status(200).json({ message: 'Nota eliminada exitosamente de la reserva.' });
