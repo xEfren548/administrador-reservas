@@ -117,6 +117,8 @@ async function obtenerEventosDeCabana(req, res) {
             return acc.concat(matchingEvents);
         }, []);
 
+        const colorUsuario = await Usuario.findById()
+
         res.send(eventos);
     } catch (error) {
         console.error(error);

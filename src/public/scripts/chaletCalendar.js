@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         throw new Error('Error al obtener los eventos');
                     }
                     const data = await response.json();
+                    console.log(data);
                     const events = data.map(event => ({
                         id: event._id,
                         resourceId: event.resourceId,
