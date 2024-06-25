@@ -4,8 +4,10 @@ const Usuario = require('../models/Usuario');
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const logController = require('../controllers/logController');
 const utilidadesController = require('../controllers/utilidadesController');
+const pagoController = require('../controllers/pagoController');
 const mongoose = require('mongoose');
 const { format } = require('date-fns');
+const moment = require('moment');
 const { es } = require('date-fns/locale');
 
 
@@ -186,49 +188,60 @@ async function obtenerEventoPorIdRoute(req, res) {
 
 async function reservasDeDuenos(req, res, next) {
     try {
+        // Get the owner's ID from the session
         const duenoId = req.session.id;
-        console.log(duenoId);
 
-        const idDueno = new mongoose.Types.ObjectId(duenoId);
-
+        // Find the existing rooms
         const habitacionesExistentes = await Habitacion.findOne();
-        // const habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner === duenoId);
+        if (!habitacionesExistentes) {
+            return res.status(404).send('No rooms found');
+        }
 
-
-        // console.log(habitaciones)
-
-        // const habitacionesDueno = habitaciones.filter(habitacion => habitacion.others.owner.toString() === duenoId)
+        // Filter the rooms that belong to the owner
         const habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
-        const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());  // Asegúrate de obtener los IDs correctos
-        const nombreCabañas = habitacionesDueno.map(habitacion => habitacion.propertyDetails.name);
 
-        // console.log(habitacionesDueno)
+        // Extract the IDs and names of the rooms
+        const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
+        const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
 
-        // Obtener las habitaciones donde el dueño es dueño de la cabaña
+        // Create a map of room IDs to names
+        const cabañaIdToNameMap = {};
+        nombreCabañas.forEach(cabaña => {
+            cabañaIdToNameMap[cabaña.id] = cabaña.name;
+        });
 
-        // Una vez con las cabañas, obtener los eventos donde el ID de la cabaña coincida con alguna reserva
-
-        // const eventosExist = await Documento.find();
+        // Find documents containing events
         const documentos = await Documento.findOne().lean();
-        const eventos = documentos.events;
-        
-        const eventosFiltrados = eventos.filter(evento => cabañaIds.includes(evento.resourceId.toString()));
-        
+        if (!documentos) {
+            return res.status(404).send('No documents found');
+        }
 
-        console.log(eventosFiltrados);
+        // Filter events that correspond to the owner's rooms and add the room name to each event
+        const eventosFiltrados = documentos.events
+            .filter(evento => cabañaIds.includes(evento.resourceId.toString()))
+            .map(async evento => ({
+                
+                ...evento,
+                roomName: cabañaIdToNameMap[evento.resourceId.toString()],
+                // arrivalDate: moment(evento.arrivalDate).format('MMMM Do YYYY, h:mm:ss a'),
+                // departureDate: moment(evento.departureDate).format('MMMM Do YYYY, h:mm:ss a'),
+                arrivalDate: moment.utc(evento.arrivalDate).format('DD-MM-YYYY, h:mm:ss a '),
+                departureDate: moment.utc(evento.departureDate).format('DD-MM-YYYY, h:mm:ss a ')
+            }))
+            .sort((a, b) => moment(b.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf() - moment(a.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf());
 
-
-
-
-
+        // Render the view with the filtered events
         res.render('vistaParaDuenos', {
             eventos: eventosFiltrados
-        })
+        });
 
     } catch (error) {
+        // Handle errors
+        console.error(error);
         res.status(500).send(error.message);
     }
 }
+
 
 async function createReservation(req, res, next) {
     const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount, isDeposit } = req.body;

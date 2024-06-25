@@ -32,7 +32,6 @@ router.get('/eventos/:idevento', async (req, res) => {
         const evento = await eventController.obtenerEventoPorId(idEvento);
         eventoJson = JSON.stringify(evento);
         const eventoObjeto = JSON.parse(eventoJson);
-        console.log(eventoObjeto);
         eventoObjeto.arrivalDate = moment.utc(eventoObjeto.arrivalDate).format('DD/MM/YYYY');
         eventoObjeto.departureDate = moment.utc(eventoObjeto.departureDate).format('DD/MM/YYYY');
         eventoObjeto.reservationDate = moment.utc(eventoObjeto.reservationDate).format('DD/MM/YYYY');
@@ -72,7 +71,6 @@ router.get('/eventos/:idevento', async (req, res) => {
         rackServicios.totalServicios = totalServicios
 
         const logs = await Log.find({ idReserva: idEvento, type: 'reservation' }).lean();
-        console.log(logs);
 
         logs.sort((a, b) => a.fecha - b.fecha);
 
