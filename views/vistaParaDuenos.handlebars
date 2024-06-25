@@ -14,6 +14,7 @@
                     <th scope="col">Cabaña</th>
                     <th scope="col">Fecha de llegada</th>
                     <th scope="col">Fecha de salida</th>
+                    <th scope="col">Pagos Realizados</th>
                     <th scope="col">Monto pendiente</th>
                     <th scope="col">Acciones</th>
                 </tr>
@@ -25,10 +26,11 @@
                     <td>{{this.roomName}}</td>
                     <td>{{this.arrivalDate}}</td>
                     <td>{{this.departureDate}}</td>
-                    <td>{{this.total}}</td>
+                    <td>${{this.pagoTotal}}</td>
+                    <td>${{this.montoPendiente}}</td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#editarRackLimpiezaModal" data-service-id="{{this._id}}"
+                        <button type="button" class="btn btn-info btn-sm" data-event-id="{{this._id}}"
+                            data-pagoTotal="{{this.pagoTotal}}" data-montoPendiente="{{this.montoPendiente}}"
                             onclick="mostrarInfoServicio('{{this._id}}')">Liquidar Reserva
                     </td>
 
@@ -56,8 +58,64 @@
         }
     });
 
-    function mostrarInfoServicio(id) {
+    async function mostrarInfoServicio(id) {
         console.log(id)
+        const button = document.querySelector(`button[data-event-id="${id}"]`);
+
+        var pagoTotal = button.getAttribute('data-pagoTotal');
+        var montoPendiente = button.getAttribute('data-montoPendiente');
+
+        // Aquí puedes usar los valores como necesites
+        console.log('Pago Total:', pagoTotal);
+        console.log('Monto Pendiente:', montoPendiente);
+
+        const confirmacion = await Swal.fire({
+            title: 'Advertencia',
+            text: `¿Confirmas haber recibido la cantidad de $${montoPendiente}? Esta acción agregará un pago a la reserva. `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'Liquidar'
+        })
+
+        if (confirmacion.isConfirmed) {
+            // Aquí puedes usar los valores como necesites
+            console.log('Confirmacion:', confirmacion);
+            try {
+                const response = await fetch(`/api/pagos/liquidar/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fechaPago: Date.now(),
+                        importe: montoPendiente,
+                        metodoPago: 'Efectivo',
+                        reservacionId: id,
+                        notas: 'Pago recibido en efectivo por el dueño de la cabaña'
+                    })
+                })
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon:'success',
+                        title: 'Pagado',
+                        text: 'El pago se realizó correctamente',
+                    }).then(result => {
+                        window.location.reload()
+                    })
+                } else {
+                    throw new Error('Error al hacer el pago')
+                }
+
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error.message,
+                })
+            }
+        }
     }
 
 

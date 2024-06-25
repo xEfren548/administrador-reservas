@@ -217,26 +217,48 @@ async function reservasDeDuenos(req, res, next) {
         }
 
         // Filter events that correspond to the owner's rooms and add the room name to each event
-        const eventosFiltrados = documentos.events
+        const eventosFiltradosOrdenadosConPagos = await Promise.all(documentos.events
             .filter(evento => cabañaIds.includes(evento.resourceId.toString()))
-            .map(async evento => ({
-                
-                ...evento,
-                roomName: cabañaIdToNameMap[evento.resourceId.toString()],
-                // arrivalDate: moment(evento.arrivalDate).format('MMMM Do YYYY, h:mm:ss a'),
-                // departureDate: moment(evento.departureDate).format('MMMM Do YYYY, h:mm:ss a'),
-                arrivalDate: moment.utc(evento.arrivalDate).format('DD-MM-YYYY, h:mm:ss a '),
-                departureDate: moment.utc(evento.departureDate).format('DD-MM-YYYY, h:mm:ss a ')
-            }))
-            .sort((a, b) => moment(b.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf() - moment(a.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf());
+            .map(async evento => {
+                // Obtener los pagos para este evento
+                const pagos = await pagoController.obtenerPagos(evento._id);
+                let pagoTotal = 0
+                pagos.forEach(pago => {
+                    pagoTotal += pago.importe;
+                })
 
-        // Render the view with the filtered events
+                let subtotal = evento.total;
+                let discount = evento.discount;
+                if (isNaN(discount) || discount === undefined || discount === null) {
+                    discount = 0;
+                }
+
+                let preTotal = subtotal * (discount / 100);
+                let total = subtotal - preTotal;
+
+                let montoPendiente = total - pagoTotal;
+                
+                
+        
+        
+                // Retornar el evento con los pagos y las fechas formateadas
+                return {
+                    ...evento,
+                    roomName: cabañaIdToNameMap[evento.resourceId.toString()],
+                    arrivalDate: moment.utc(evento.arrivalDate).format('DD-MM-YYYY, h:mm:ss a'),
+                    departureDate: moment.utc(evento.departureDate).format('DD-MM-YYYY, h:mm:ss a'),
+                    pagoTotal: pagoTotal,  // Asignar los pagos al evento
+                    montoPendiente: montoPendiente
+                };
+            }));
+
+        eventosFiltradosOrdenadosConPagos.sort((a, b) => moment(b.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf() - moment(a.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf());
+        
         res.render('vistaParaDuenos', {
-            eventos: eventosFiltrados
+            eventos: eventosFiltradosOrdenadosConPagos
         });
 
     } catch (error) {
-        // Handle errors
         console.error(error);
         res.status(500).send(error.message);
     }

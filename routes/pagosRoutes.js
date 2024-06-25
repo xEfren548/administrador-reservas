@@ -6,5 +6,6 @@ router.get('/:id', pagoController.obtenerPagoPorId);
 router.post('/', pagoController.registrarPago)
 router.put('/:id', pagoController.editarPago)
 router.delete('/:id', pagoController.eliminarPago)
+router.put('/liquidar/:id', pagoController.liquidarReservaDueno)
 
 module.exports = router;

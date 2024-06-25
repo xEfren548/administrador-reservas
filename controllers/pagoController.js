@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Pago = require('../models/Pago');
 const logController = require('../controllers/logController');
+const utilidadesController = require('../controllers/utilidadesController');
 
 async function obtenerPagos(idReservacion) {
     try {
@@ -104,6 +105,41 @@ async function eliminarPago(req, res) {
     }
 }
 
+async function liquidarReservaDueno(req, res, next){
+    try {
+        const { fechaPago, importe, metodoPago, codigoOperacion, reservacionId, notas } = req.body;
+
+        const pago = new Pago({
+            fechaPago: new Date(fechaPago),
+            importe,
+            metodoPago,
+            codigoOperacion,
+            reservacionId: reservacionId.toString(),
+            notas
+        });
+        const pagoConfirmation = await pago.save();
+
+        if (!pagoConfirmation){
+            res.status(500).json({ mensaje: 'Hubo un error al registrar el pago.' });
+        }
+
+        const utilidad = {
+            monto: -importe,
+            concepto: "Comisión negativa por liquidación de cabaña en efectivo",
+            fecha: fechaPago,
+            idUsuario: req.session.id,
+            idReserva: reservacionId
+        }
+        
+        await utilidadesController.altaComisionReturn(utilidad)
+
+        res.status(200).send({success: true})
+
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json({ mensaje: 'Hubo un error al registrar el pago.' });
+    }
+}
 
 
 module.exports = {
@@ -112,5 +148,6 @@ module.exports = {
     registrarPago,
     editarPago,
     eliminarPago,
+    liquidarReservaDueno
 
 }
