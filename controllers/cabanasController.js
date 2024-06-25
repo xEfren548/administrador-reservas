@@ -416,7 +416,7 @@ async function createChalet(req, res, next) {
 
     const owner = await Usuario.findOne({ _id: others.owner, privilege: "Dueño de cabañas" });
     if (!owner) {
-        throw new NotFoundError("Janitor not found");
+        throw new NotFoundError("Owner not found");
     }
 
     const arrivalTimeHours = parseInt(others.arrivalTimeHours);
