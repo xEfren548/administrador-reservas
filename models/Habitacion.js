@@ -286,6 +286,11 @@ const othersSchema = new mongoose.Schema({
         //required: true,
         ref: 'Usuario'
     },
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        //required: true,
+        ref: 'Usuario'
+    }
 });
 
 //--------------------------------------------------

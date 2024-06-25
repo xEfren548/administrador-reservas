@@ -184,6 +184,52 @@ async function obtenerEventoPorIdRoute(req, res) {
     }
 }
 
+async function reservasDeDuenos(req, res, next) {
+    try {
+        const duenoId = req.session.id;
+        console.log(duenoId);
+
+        const idDueno = new mongoose.Types.ObjectId(duenoId);
+
+        const habitacionesExistentes = await Habitacion.findOne();
+        // const habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner === duenoId);
+
+
+        // console.log(habitaciones)
+
+        // const habitacionesDueno = habitaciones.filter(habitacion => habitacion.others.owner.toString() === duenoId)
+        const habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
+        const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());  // Asegúrate de obtener los IDs correctos
+        const nombreCabañas = habitacionesDueno.map(habitacion => habitacion.propertyDetails.name);
+
+        // console.log(habitacionesDueno)
+
+        // Obtener las habitaciones donde el dueño es dueño de la cabaña
+
+        // Una vez con las cabañas, obtener los eventos donde el ID de la cabaña coincida con alguna reserva
+
+        // const eventosExist = await Documento.find();
+        const documentos = await Documento.findOne().lean();
+        const eventos = documentos.events;
+        
+        const eventosFiltrados = eventos.filter(evento => cabañaIds.includes(evento.resourceId.toString()));
+        
+
+        console.log(eventosFiltrados);
+
+
+
+
+
+        res.render('vistaParaDuenos', {
+            eventos: eventosFiltrados
+        })
+
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+}
+
 async function createReservation(req, res, next) {
     const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount, isDeposit } = req.body;
 
@@ -771,6 +817,7 @@ module.exports = {
     moveToPlayground,
     modificarEvento,
     crearNota,
-    eliminarNota
+    eliminarNota,
+    reservasDeDuenos
 };
 

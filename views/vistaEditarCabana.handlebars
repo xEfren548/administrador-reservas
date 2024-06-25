@@ -2,7 +2,7 @@
     <select id="slctFormSelector">
         <option value="" selected disabled> Selecciona una cabaña</option>
         {{#each chalets}}
-            <option value="frm{{this.propertyDetails.name}}">{{this.propertyDetails.name}}</option>
+        <option value="frm{{this.propertyDetails.name}}">{{this.propertyDetails.name}}</option>
         {{/each}}
     </select>
 </div>
@@ -14,13 +14,15 @@
         <button type="submit">Guardar</button>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#propertyDetails">+ Detalles de la propiedad</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#propertyDetails">+
+        Detalles de la propiedad</button>
     <div id="propertyDetails" class="chalet-details collapse">
         <div class="input-group half">
             <label for="slctchaletAccomodationType">Tipo de alojamiento</label>
-            <select id="slctchaletAccomodationType" name="slctchaletAccomodationType" value="{{propertyDetails.accomodationType}}">
+            <select id="slctchaletAccomodationType" name="slctchaletAccomodationType"
+                value="{{propertyDetails.accomodationType}}">
                 <option value="Cabaña">Cabaña</option>
-                <option value="Habitación">Habitación</option>               
+                <option value="Habitación">Habitación</option>
             </select>
         </div>
         <div class="input-group half">
@@ -29,7 +31,8 @@
         </div>
         <div class="input-group half inline-input-group">
             <label for="txtChaletPhoneNumber">Teléfono establecimiento</label>
-            <input id="txtChaletPhoneNumber" name="txtChaletPhoneNumber" type="tel" value="{{propertyDetails.phoneNumber}}">
+            <input id="txtChaletPhoneNumber" name="txtChaletPhoneNumber" type="tel"
+                value="{{propertyDetails.phoneNumber}}">
         </div>
         <div class="input-group half">
             <label for="txtChaletEmail">Email</label>
@@ -49,138 +52,184 @@
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#accomodationFeautres">+ Características del alojamiento</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse"
+        data-target="#accomodationFeautres">+ Características del alojamiento</button>
     <div id="accomodationFeautres" class="chalet-details collapse">
         <fieldset class="inline-input-group">
             <legend>Generales</legend>
             <hr>
             <div class="option-group">
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSatelliteChannels" name="chkboxSatelliteChannels" value="Canales vía satélite" {{#if accommodationFeatures.generalFeatures.satelliteTV}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSatelliteChannels" name="chkboxSatelliteChannels"
+                        value="Canales vía satélite" {{#if
+                        accommodationFeatures.generalFeatures.satelliteTV}}checked{{/if}}>
                     <label for="chkboxSatelliteChannels">Canales vía satélite</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxDisabledAdapted" name="chkboxDisabledAdapted" value="Adaptado para discapacitados" {{#if accommodationFeatures.generalFeatures.disabledAccessible}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxDisabledAdapted" name="chkboxDisabledAdapted"
+                        value="Adaptado para discapacitados" {{#if
+                        accommodationFeatures.generalFeatures.disabledAccessible}}checked{{/if}}>
                     <label for="chkboxDisabledAdapted">Adaptado para discapacitados</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxIron" name="chkboxIron" value="Plancha" {{#if accommodationFeatures.generalFeatures.iron}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxIron" name="chkboxIron" value="Plancha" {{#if
+                        accommodationFeatures.generalFeatures.iron}}checked{{/if}}>
                     <label for="chkboxIron">Plancha</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxPetsAllowed" name="chkboxPetsAllowed" value="Admite animales" {{#if accommodationFeatures.generalFeatures.petsAllowed}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxPetsAllowed" name="chkboxPetsAllowed" value="Admite animales" {{#if
+                        accommodationFeatures.generalFeatures.petsAllowed}}checked{{/if}}>
                     <label for="chkboxPetsAllowed">Admite animales</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxAllergicFriendlyRooms" name="chkboxAllergicFriendlyRooms" value="Habitaciones aptas para alérgicos" {{#if accommodationFeatures.generalFeatures.allergyFriendlyRooms}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxAllergicFriendlyRooms" name="chkboxAllergicFriendlyRooms"
+                        value="Habitaciones aptas para alérgicos" {{#if
+                        accommodationFeatures.generalFeatures.allergyFriendlyRooms}}checked{{/if}}>
                     <label for="chkboxAllergicFriendlyRooms">Habitaciones aptas para alérgicos</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSolarium" name="chkboxSolarium" value="Solárium" {{#if accommodationFeatures.generalFeatures.solarium}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSolarium" name="chkboxSolarium" value="Solárium" {{#if
+                        accommodationFeatures.generalFeatures.solarium}}checked{{/if}}>
                     <label for="chkboxSolarium">Solárium</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxMosquitoNet" name="chkboxMosquitoNet" value="Mosquitera" {{#if accommodationFeatures.generalFeatures.mosquitoNet}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxMosquitoNet" name="chkboxMosquitoNet" value="Mosquitera" {{#if
+                        accommodationFeatures.generalFeatures.mosquitoNet}}checked{{/if}}>
                     <label for="chkboxMosquitoNet">Mosquitera</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxMainBedroomAirConditioning" name="chkboxMainBedroomAirConditioning" value="Aire acondicionado en habitaciones principales" {{#if accommodationFeatures.generalFeatures.airConditioningInMainRooms}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxMainBedroomAirConditioning" name="chkboxMainBedroomAirConditioning"
+                        value="Aire acondicionado en habitaciones principales" {{#if
+                        accommodationFeatures.generalFeatures.airConditioningInMainRooms}}checked{{/if}}>
                     <label for="chkboxMainBedroomAirConditioning">Aire acondicionado en habitaciones principales</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxConnectedRooms" name="chkboxConnectedRooms" value="Habitaciones comunicadas" {{#if accommodationFeatures.generalFeatures.connectingRooms}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxConnectedRooms" name="chkboxConnectedRooms"
+                        value="Habitaciones comunicadas" {{#if
+                        accommodationFeatures.generalFeatures.connectingRooms}}checked{{/if}}>
                     <label for="chkboxConnectedRooms">Habitaciones comunicadas</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxAirConditioningAllAccommodation" name="chkboxAirConditioningAllAccommodation" value="Aire acondicionado en todo el alojamiento" {{#if accommodationFeatures.generalFeatures.airConditioningThroughoutProperty}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxAirConditioningAllAccommodation"
+                        name="chkboxAirConditioningAllAccommodation" value="Aire acondicionado en todo el alojamiento"
+                        {{#if accommodationFeatures.generalFeatures.airConditioningThroughoutProperty}}checked{{/if}}>
                     <label for="chkboxAirConditioningAllAccommodation">Aire acondicionado en todo el alojamiento</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxTileMarbleFloor" name="chkboxTileMarbleFloor" value="Suelo de baldosa/mármol" {{#if accommodationFeatures.generalFeatures.tiledFloorOrMarble}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxTileMarbleFloor" name="chkboxTileMarbleFloor"
+                        value="Suelo de baldosa/mármol" {{#if
+                        accommodationFeatures.generalFeatures.tiledFloorOrMarble}}checked{{/if}}>
                     <label for="chkboxTileMarbleFloor">Suelo de baldosa/mármol</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxFireplace" name="chkboxFireplace" value="Chimenea" {{#if accommodationFeatures.generalFeatures.fireplace}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxFireplace" name="chkboxFireplace" value="Chimenea" {{#if
+                        accommodationFeatures.generalFeatures.fireplace}}checked{{/if}}>
                     <label for="chkboxFireplace">Chimenea</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxClothesIron" name="chkboxClothesIron" value="Plancha para ropa" {{#if accommodationFeatures.generalFeatures.ironingFacilities}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxClothesIron" name="chkboxClothesIron" value="Plancha para ropa"
+                        {{#if accommodationFeatures.generalFeatures.ironingFacilities}}checked{{/if}}>
                     <label for="chkboxClothesIron">Plancha para ropa</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxWoodParquetFloor" name="chkboxWoodParquetFloor" value="Suelo de madera/parqué" {{#if accommodationFeatures.generalFeatures.hardwoodOrParquetFloors}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxWoodParquetFloor" name="chkboxWoodParquetFloor"
+                        value="Suelo de madera/parqué" {{#if
+                        accommodationFeatures.generalFeatures.hardwoodOrParquetFloors}}checked{{/if}}>
                     <label for="chkboxWoodParquetFloor">Suelo de madera/parqué</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxNoSmokingEntireProperty" name="chkboxNoSmokingEntireProperty" value="Prohibido fumar en todo el recinto" {{#if accommodationFeatures.generalFeatures.noSmokingAllowed}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxNoSmokingEntireProperty" name="chkboxNoSmokingEntireProperty"
+                        value="Prohibido fumar en todo el recinto" {{#if
+                        accommodationFeatures.generalFeatures.noSmokingAllowed}}checked{{/if}}>
                     <label for="chkboxNoSmokingEntireProperty">Prohibido fumar en todo el recinto</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxWardrobe" name="chkboxWardrobe" value="Armario" {{#if accommodationFeatures.generalFeatures.wardrobe}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxWardrobe" name="chkboxWardrobe" value="Armario" {{#if
+                        accommodationFeatures.generalFeatures.wardrobe}}checked{{/if}}>
                     <label for="chkboxWardrobe">Armario</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxCarpetFloor" name="chkboxCarpetFloor" value="Suelo de moqueta" {{#if accommodationFeatures.generalFeatures.carpetedFloor}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxCarpetFloor" name="chkboxCarpetFloor" value="Suelo de moqueta"
+                        {{#if accommodationFeatures.generalFeatures.carpetedFloor}}checked{{/if}}>
                     <label for="chkboxCarpetFloor">Suelo de moqueta</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxExpressCheckInOut" name="chkboxExpressCheckInOut" value="Registro de entrada y salida exprés" {{#if accommodationFeatures.generalFeatures.expressCheckInCheckOut}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxExpressCheckInOut" name="chkboxExpressCheckInOut"
+                        value="Registro de entrada y salida exprés" {{#if
+                        accommodationFeatures.generalFeatures.expressCheckInCheckOut}}checked{{/if}}>
                     <label for="chkboxExpressCheckInOut">Registro de entrada y salida exprés</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSoundproofing" name="chkboxSoundproofing" value="Insonorización" {{#if accommodationFeatures.generalFeatures.soundproofing}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSoundproofing" name="chkboxSoundproofing" value="Insonorización"
+                        {{#if accommodationFeatures.generalFeatures.soundproofing}}checked{{/if}}>
                     <label for="chkboxSoundproofing">Insonorización</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxTelephone" name="chkboxTelephone" value="Teléfono" {{#if accommodationFeatures.generalFeatures.telephone}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxTelephone" name="chkboxTelephone" value="Teléfono" {{#if
+                        accommodationFeatures.generalFeatures.telephone}}checked{{/if}}>
                     <label for="chkboxTelephone">Teléfono</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxTerrace" name="chkboxTerrace" value="Terraza" {{#if accommodationFeatures.generalFeatures.terrace}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxTerrace" name="chkboxTerrace" value="Terraza" {{#if
+                        accommodationFeatures.generalFeatures.terrace}}checked{{/if}}>
                     <label for="chkboxTerrace">Terraza</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBalcony" name="chkboxBalcony" value="Balcón" {{#if accommodationFeatures.generalFeatures.balcony}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxBalcony" name="chkboxBalcony" value="Balcón" {{#if
+                        accommodationFeatures.generalFeatures.balcony}}checked{{/if}}>
                     <label for="chkboxBalcony">Balcón</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBuffetBreakfast" name="chkboxBuffetBreakfast" value="Desayuno bufé" {{#if accommodationFeatures.generalFeatures.buffetBreakfast}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxBuffetBreakfast" name="chkboxBuffetBreakfast" value="Desayuno bufé"
+                        {{#if accommodationFeatures.generalFeatures.buffetBreakfast}}checked{{/if}}>
                     <label for="chkboxBuffetBreakfast">Desayuno bufé</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSafe" name="chkboxSafe" value="Caja fuerte" {{#if accommodationFeatures.generalFeatures.safeDepositBox}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSafe" name="chkboxSafe" value="Caja fuerte" {{#if
+                        accommodationFeatures.generalFeatures.safeDepositBox}}checked{{/if}}>
                     <label for="chkboxSafe">Caja fuerte</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxWifi" name="chkboxWifi" value="Wifi" {{#if accommodationFeatures.generalFeatures.wifi}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxWifi" name="chkboxWifi" value="Wifi" {{#if
+                        accommodationFeatures.generalFeatures.wifi}}checked{{/if}}>
                     <label for="chkboxWifi">Wifi</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxRoomServiceBreakfast" name="chkboxRoomServiceBreakfast" value="Desayuno en la habitación" {{#if accommodationFeatures.generalFeatures.breakfastInRoom}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxRoomServiceBreakfast" name="chkboxRoomServiceBreakfast"
+                        value="Desayuno en la habitación" {{#if
+                        accommodationFeatures.generalFeatures.breakfastInRoom}}checked{{/if}}>
                     <label for="chkboxRoomServiceBreakfast">Desayuno en la habitación</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxHeating" name="chkboxHeating" value="Calefacción" {{#if accommodationFeatures.generalFeatures.heating}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxHeating" name="chkboxHeating" value="Calefacción" {{#if
+                        accommodationFeatures.generalFeatures.heating}}checked{{/if}}>
                     <label for="chkboxHeating">Calefacción</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxExtraLongBeds" name="chkboxExtraLongBeds" value="Camas extra largas (más de 2 metros)" {{#if accommodationFeatures.generalFeatures.extraLongBeds}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxExtraLongBeds" name="chkboxExtraLongBeds"
+                        value="Camas extra largas (más de 2 metros)" {{#if
+                        accommodationFeatures.generalFeatures.extraLongBeds}}checked{{/if}}>
                     <label for="chkboxExtraLongBeds">Camas extra largas (más de 2 metros)</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxRoomService" name="chkboxRoomService" value="Servicio de habitaciones" {{#if accommodationFeatures.generalFeatures.roomService}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxRoomService" name="chkboxRoomService"
+                        value="Servicio de habitaciones" {{#if
+                        accommodationFeatures.generalFeatures.roomService}}checked{{/if}}>
                     <label for="chkboxRoomService">Servicio de habitaciones</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxFan" name="chkboxFan" value="Ventilador" {{#if accommodationFeatures.generalFeatures.fan}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxFan" name="chkboxFan" value="Ventilador" {{#if
+                        accommodationFeatures.generalFeatures.fan}}checked{{/if}}>
                     <label for="chkboxFan">Ventilador</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxDressingRoom" name="chkboxDressingRoom" value="Vestidor" {{#if accommodationFeatures.generalFeatures.dressingRoom}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxDressingRoom" name="chkboxDressingRoom" value="Vestidor" {{#if
+                        accommodationFeatures.generalFeatures.dressingRoom}}checked{{/if}}>
                     <label for="chkboxDressingRoom">Vestidor</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSmokingAllowed" name="chkboxSmokingAllowed" value="Fumadores" {{#if accommodationFeatures.generalFeatures.smokers}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSmokingAllowed" name="chkboxSmokingAllowed" value="Fumadores" {{#if
+                        accommodationFeatures.generalFeatures.smokers}}checked{{/if}}>
                     <label for="chkboxSmokingAllowed">Fumadores</label>
                 </div>
             </div>
@@ -190,39 +239,49 @@
             <hr>
             <div class="option-group">
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxCityViews" name="chkboxCityViews" value="Vistas a la ciudad" {{#if accommodationFeatures.views.cityView}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxCityViews" name="chkboxCityViews" value="Vistas a la ciudad" {{#if
+                        accommodationFeatures.views.cityView}}checked{{/if}}>
                     <label for="chkboxCityViews">Vistas a la ciudad</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxMountainViews" name="chkboxMountainViews" value="Vistas a la montaña" {{#if accommodationFeatures.views.mountainView}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxMountainViews" name="chkboxMountainViews"
+                        value="Vistas a la montaña" {{#if accommodationFeatures.views.mountainView}}checked{{/if}}>
                     <label for="chkboxMountainViews">Vistas a la montaña</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxPoolViews" name="chkboxPoolViews" value="Vistas a la piscina" {{#if accommodationFeatures.views.poolView}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxPoolViews" name="chkboxPoolViews" value="Vistas a la piscina" {{#if
+                        accommodationFeatures.views.poolView}}checked{{/if}}>
                     <label for="chkboxPoolViews">Vistas a la piscina</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxLandmarkViews" name="chkboxLandmarkViews" value="Vistas a un lugar de interés" {{#if accommodationFeatures.views.landmarkView}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxLandmarkViews" name="chkboxLandmarkViews"
+                        value="Vistas a un lugar de interés" {{#if
+                        accommodationFeatures.views.landmarkView}}checked{{/if}}>
                     <label for="chkboxLandmarkViews">Vistas a un lugar de interés</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxGardenViews" name="chkboxGardenViews" value="Vistas al jardín" {{#if accommodationFeatures.views.gardenView}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxGardenViews" name="chkboxGardenViews" value="Vistas al jardín"
+                        {{#if accommodationFeatures.views.gardenView}}checked{{/if}}>
                     <label for="chkboxGardenViews">Vistas al jardín</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxLakeViews" name="chkboxLakeViews" value="Vistas al lago" {{#if accommodationFeatures.views.lakeView}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxLakeViews" name="chkboxLakeViews" value="Vistas al lago" {{#if
+                        accommodationFeatures.views.lakeView}}checked{{/if}}>
                     <label for="chkboxLakeViews">Vistas al lago</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSeaViews" name="chkboxSeaViews" value="Vistas al mar" {{#if accommodationFeatures.views.seaView}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSeaViews" name="chkboxSeaViews" value="Vistas al mar" {{#if
+                        accommodationFeatures.views.seaView}}checked{{/if}}>
                     <label for="chkboxSeaViews">Vistas al mar</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxCourtyardViews" name="chkboxCourtyardViews" value="Vistas al Patio" {{#if accommodationFeatures.views.patioView}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxCourtyardViews" name="chkboxCourtyardViews" value="Vistas al Patio"
+                        {{#if accommodationFeatures.views.patioView}}checked{{/if}}>
                     <label for="chkboxCourtyardViews">Vistas al Patio</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxRiverViews" name="chkboxRiverViews" value="Vistas al río" {{#if accommodationFeatures.views.riverView}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxRiverViews" name="chkboxRiverViews" value="Vistas al río" {{#if
+                        accommodationFeatures.views.riverView}}checked{{/if}}>
                     <label for="chkboxRiverViews">Vistas al río</label>
                 </div>
             </div>
@@ -232,115 +291,146 @@
             <hr>
             <div class="option-group">
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxTurkishBath" name="chkboxTurkishBath" value="Baño turco" {{#if accommodationFeatures.activities.turkishBath}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxTurkishBath" name="chkboxTurkishBath" value="Baño turco" {{#if
+                        accommodationFeatures.activities.turkishBath}}checked{{/if}}>
                     <label for="chkboxTurkishBath">Baño turco</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxGym" name="chkboxGym" value="Gimnasio" {{#if accommodationFeatures.activities.gym}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxGym" name="chkboxGym" value="Gimnasio" {{#if
+                        accommodationFeatures.activities.gym}}checked{{/if}}>
                     <label for="chkboxGym">Gimnasio</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxThermalBaths" name="chkboxThermalBaths" value="Baños termales" {{#if accommodationFeatures.activities.thermalBaths}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxThermalBaths" name="chkboxThermalBaths" value="Baños termales"
+                        {{#if accommodationFeatures.activities.thermalBaths}}checked{{/if}}>
                     <label for="chkboxThermalBaths">Baños termales</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxMiniGolf" name="chkboxMiniGolf" value="Minigolf" {{#if accommodationFeatures.activities.minigolf}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxMiniGolf" name="chkboxMiniGolf" value="Minigolf" {{#if
+                        accommodationFeatures.activities.minigolf}}checked{{/if}}>
                     <label for="chkboxMiniGolf">Minigolf</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxCanoeing" name="chkboxCanoeing" value="Canoa" {{#if accommodationFeatures.activities.canoeing}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxCanoeing" name="chkboxCanoeing" value="Canoa" {{#if
+                        accommodationFeatures.activities.canoeing}}checked{{/if}}>
                     <label for="chkboxCanoeing">Canoa</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSpa" name="chkboxSpa" value="Spa-Balneario" {{#if accommodationFeatures.activities.spa}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSpa" name="chkboxSpa" value="Spa-Balneario" {{#if
+                        accommodationFeatures.activities.spa}}checked{{/if}}>
                     <label for="chkboxSpa">Spa-Balneario</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxCasino" name="chkboxCasino" value="Casino" {{#if accommodationFeatures.activities.casino}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxCasino" name="chkboxCasino" value="Casino" {{#if
+                        accommodationFeatures.activities.casino}}checked{{/if}}>
                     <label for="chkboxCasino">Casino</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxLibrary" name="chkboxLibrary" value="Biblioteca" {{#if accommodationFeatures.activities.library}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxLibrary" name="chkboxLibrary" value="Biblioteca" {{#if
+                        accommodationFeatures.activities.library}}checked{{/if}}>
                     <label for="chkboxLibrary">Biblioteca</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxEquestrianCenter" name="chkboxEquestrianCenter" value="Hípica" {{#if accommodationFeatures.activities.horseRiding}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxEquestrianCenter" name="chkboxEquestrianCenter" value="Hípica"
+                        {{#if accommodationFeatures.activities.horseRiding}}checked{{/if}}>
                     <label for="chkboxEquestrianCenter">Hípica</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxCycling" name="chkboxCycling" value="Ciclismo" {{#if accommodationFeatures.activities.cycling}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxCycling" name="chkboxCycling" value="Ciclismo" {{#if
+                        accommodationFeatures.activities.cycling}}checked{{/if}}>
                     <label for="chkboxCycling">Ciclismo</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBilliards" name="chkboxBilliards" value="Billar" {{#if accommodationFeatures.activities.billiards}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxBilliards" name="chkboxBilliards" value="Billar" {{#if
+                        accommodationFeatures.activities.billiards}}checked{{/if}}>
                     <label for="chkboxBilliards">Billar</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBowling" name="chkboxBowling" value="Bolera" {{#if accommodationFeatures.activities.bowling}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxBowling" name="chkboxBowling" value="Bolera" {{#if
+                        accommodationFeatures.activities.bowling}}checked{{/if}}>
                     <label for="chkboxBowling">Bolera</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxGameRoom" name="chkboxGameRoom" value="Sala de juegos" {{#if accommodationFeatures.activities.gameRoom}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxGameRoom" name="chkboxGameRoom" value="Sala de juegos" {{#if
+                        accommodationFeatures.activities.gameRoom}}checked{{/if}}>
                     <label for="chkboxGameRoom">Sala de juegos</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBBQFacilities" name="chkboxBBQFacilities" value="Instalaciones para barbacoa" {{#if accommodationFeatures.activities.barbecueFacilities}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxBBQFacilities" name="chkboxBBQFacilities"
+                        value="Instalaciones para barbacoa" {{#if
+                        accommodationFeatures.activities.barbecueFacilities}}checked{{/if}}>
                     <label for="chkboxBBQFacilities">Instalaciones para barbacoa</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxDiving" name="chkboxDiving" value="Buceo" {{#if accommodationFeatures.activities.diving}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxDiving" name="chkboxDiving" value="Buceo" {{#if
+                        accommodationFeatures.activities.diving}}checked{{/if}}>
                     <label for="chkboxDiving">Buceo</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxFishing" name="chkboxFishing" value="Pesca" {{#if accommodationFeatures.activities.fishing}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxFishing" name="chkboxFishing" value="Pesca" {{#if
+                        accommodationFeatures.activities.fishing}}checked{{/if}}>
                     <label for="chkboxFishing">Pesca</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxJacuzzi" name="chkboxJacuzzi" value="Jacuzzi" {{#if accommodationFeatures.activities.jacuzzi}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxJacuzzi" name="chkboxJacuzzi" value="Jacuzzi" {{#if
+                        accommodationFeatures.activities.jacuzzi}}checked{{/if}}>
                     <label for="chkboxJacuzzi">Jacuzzi</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxHeatedPool" name="chkboxHeatedPool" value="Piscina climatizada" {{#if accommodationFeatures.activities.heatedPool}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxHeatedPool" name="chkboxHeatedPool" value="Piscina climatizada"
+                        {{#if accommodationFeatures.activities.heatedPool}}checked{{/if}}>
                     <label for="chkboxHeatedPool">Piscina climatizada</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSauna" name="chkboxSauna" value="Sauna" {{#if accommodationFeatures.activities.sauna}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSauna" name="chkboxSauna" value="Sauna" {{#if
+                        accommodationFeatures.activities.sauna}}checked{{/if}}>
                     <label for="chkboxSauna">Sauna</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxKaraoke" name="chkboxKaraoke" value="Karaoke" {{#if accommodationFeatures.activities.karaoke}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxKaraoke" name="chkboxKaraoke" value="Karaoke" {{#if
+                        accommodationFeatures.activities.karaoke}}checked{{/if}}>
                     <label for="chkboxKaraoke">Karaoke</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxIndoorPool" name="chkboxIndoorPool" value="Piscina cubierta" {{#if accommodationFeatures.activities.indoorPool}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxIndoorPool" name="chkboxIndoorPool" value="Piscina cubierta" {{#if
+                        accommodationFeatures.activities.indoorPool}}checked{{/if}}>
                     <label for="chkboxIndoorPool">Piscina interior</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxOutdoorPool" name="chkboxOutdoorPool" value="Piscina exterior" {{#if accommodationFeatures.activities.outdoorPool}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxOutdoorPool" name="chkboxOutdoorPool" value="Piscina exterior"
+                        {{#if accommodationFeatures.activities.outdoorPool}}checked{{/if}}>
                     <label for="chkboxOutdoorPool">Piscina exterior</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSnorkeling" name="chkboxSnorkeling" value="Snorkel" {{#if accommodationFeatures.activities.snorkeling}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSnorkeling" name="chkboxSnorkeling" value="Snorkel" {{#if
+                        accommodationFeatures.activities.snorkeling}}checked{{/if}}>
                     <label for="chkboxSnorkeling">Snorkel</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxPrivatePool" name="chkboxPrivatePool" value="Piscina privada" {{#if accommodationFeatures.activities.privatePool}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxPrivatePool" name="chkboxPrivatePool" value="Piscina privada" {{#if
+                        accommodationFeatures.activities.privatePool}}checked{{/if}}>
                     <label for="chkboxPrivatePool">Piscina privada</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxChildrensPlayground" name="chkboxChildrensPlayground" value="Zona de juegos infantil" {{#if accommodationFeatures.activities.childrensPlayground}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxChildrensPlayground" name="chkboxChildrensPlayground"
+                        value="Zona de juegos infantil" {{#if
+                        accommodationFeatures.activities.childrensPlayground}}checked{{/if}}>
                     <label for="chkboxChildrensPlayground">Zona de juegos infantil</label>
-                </div>                
+                </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxHiking" name="chkboxHiking" value="Senderismo" {{#if accommodationFeatures.activities.hiking}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxHiking" name="chkboxHiking" value="Senderismo" {{#if
+                        accommodationFeatures.activities.hiking}}checked{{/if}}>
                     <label for="chkboxHiking">Senderismo</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxMasseuse" name="chkboxMasseuse" value="Masajista" {{#if accommodationFeatures.activities.masseuse}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxMasseuse" name="chkboxMasseuse" value="Masajista" {{#if
+                        accommodationFeatures.activities.masseuse}}checked{{/if}}>
                     <label for="chkboxMasseuse">Masajista</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxGolfCourseNearby" name="chkboxGolfCourseNearby" value="Campo de golf (a menos de 3 km)" {{#if accommodationFeatures.activities.golfCourse}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxGolfCourseNearby" name="chkboxGolfCourseNearby"
+                        value="Campo de golf (a menos de 3 km)" {{#if
+                        accommodationFeatures.activities.golfCourse}}checked{{/if}}>
                     <label for="chkboxGolfCourseNearby">Campo de golf (a menos de 3 km)</label>
                 </div>
             </div>
@@ -350,19 +440,23 @@
             <hr>
             <div class="option-group">
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxPaidParking" name="chkboxPaidParking" value="Parking de pago" {{#if accommodationFeatures.parking.paidParking}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxPaidParking" name="chkboxPaidParking" value="Parking de pago" {{#if
+                        accommodationFeatures.parking.paidParking}}checked{{/if}}>
                     <label for="chkboxPaidParking">Parking de pago</label>
-                </div>                
+                </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxPublicParking" name="chkboxPublicParking" value="Parking público" {{#if accommodationFeatures.parking.publicParking}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxPublicParking" name="chkboxPublicParking" value="Parking público"
+                        {{#if accommodationFeatures.parking.publicParking}}checked{{/if}}>
                     <label for="chkboxPublicParking">Parking público</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxFreeParking" name="chkboxFreeParking" value="Parking gratis" {{#if accommodationFeatures.parking.freeParking}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxFreeParking" name="chkboxFreeParking" value="Parking gratis" {{#if
+                        accommodationFeatures.parking.freeParking}}checked{{/if}}>
                     <label for="chkboxFreeParking">Parking gratis</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxPrivateParking" name="chkboxPrivateParking" value="Parking privado" {{#if accommodationFeatures.parking.privateParking}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxPrivateParking" name="chkboxPrivateParking" value="Parking privado"
+                        {{#if accommodationFeatures.parking.privateParking}}checked{{/if}}>
                     <label for="chkboxPrivateParking">Parking privado</label>
                 </div>
             </div>
@@ -372,63 +466,82 @@
             <hr>
             <div class="option-group">
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBathrobe" name="chkboxBathrobe" value="Albornoz" {{#if accommodationFeatures.restroomFeatures.bathrobe}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxBathrobe" name="chkboxBathrobe" value="Albornoz" {{#if
+                        accommodationFeatures.restroomFeatures.bathrobe}}checked{{/if}}>
                     <label for="chkboxBathrobe">Albornoz</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBidet" name="chkboxBidet" value="Bidé" {{#if accommodationFeatures.restroomFeatures.bidet}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxBidet" name="chkboxBidet" value="Bidé" {{#if
+                        accommodationFeatures.restroomFeatures.bidet}}checked{{/if}}>
                     <label for="chkboxBidet">Bidé</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxFreeToiletries" name="chkboxFreeToiletries" value="Artículos de aseo gratuitos" {{#if accommodationFeatures.restroomFeatures.freeToiletries}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxFreeToiletries" name="chkboxFreeToiletries"
+                        value="Artículos de aseo gratuitos" {{#if
+                        accommodationFeatures.restroomFeatures.freeToiletries}}checked{{/if}}>
                     <label for="chkboxFreeToiletries">Artículos de aseo gratuitos</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxAdditionalToilet" name="chkboxAdditionalToilet" value="Aseo adicional" {{#if accommodationFeatures.restroomFeatures.additionalToilet}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxAdditionalToilet" name="chkboxAdditionalToilet"
+                        value="Aseo adicional" {{#if
+                        accommodationFeatures.restroomFeatures.additionalToilet}}checked{{/if}}>
                     <label for="chkboxAdditionalToilet">Aseo adicional</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSharedToilet" name="chkboxSharedToilet" value="Aseo compartido" {{#if accommodationFeatures.restroomFeatures.sharedToilet}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSharedToilet" name="chkboxSharedToilet" value="Aseo compartido"
+                        {{#if accommodationFeatures.restroomFeatures.sharedToilet}}checked{{/if}}>
                     <label for="chkboxSharedToilet">Aseo compartido</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSauna" name="chkboxSauna" value="Sauna" {{#if accommodationFeatures.restroomFeatures.sauna}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSauna" name="chkboxSauna" value="Sauna" {{#if
+                        accommodationFeatures.restroomFeatures.sauna}}checked{{/if}}>
                     <label for="chkboxSauna">Sauna</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBathtub" name="chkboxBathtub" value="Bañera" {{#if accommodationFeatures.restroomFeatures.bathtub}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxBathtub" name="chkboxBathtub" value="Bañera" {{#if
+                        accommodationFeatures.restroomFeatures.bathtub}}checked{{/if}}>
                     <label for="chkboxBathtub">Bañera</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxHairdryer" name="chkboxHairdryer" value="Secador de pelo" {{#if accommodationFeatures.restroomFeatures.hairdryer}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxHairdryer" name="chkboxHairdryer" value="Secador de pelo" {{#if
+                        accommodationFeatures.restroomFeatures.hairdryer}}checked{{/if}}>
                     <label for="chkboxHairdryer">Secador de pelo</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxJacuzzi" name="chkboxJacuzzi" value="Bañera de hidromasaje" {{#if accommodationFeatures.restroomFeatures.jacuzzi}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxJacuzzi" name="chkboxJacuzzi" value="Bañera de hidromasaje" {{#if
+                        accommodationFeatures.restroomFeatures.jacuzzi}}checked{{/if}}>
                     <label for="chkboxJacuzzi">Jacuzzi</label>
                 </div>
                 <div class="checkbox-option">
                     <input type="checkbox" id="chkboxShower" name="chkboxShower" value="Ducha">
-                    <label for="chkboxShower" {{#if accommodationFeatures.restroomFeatures.shower}}checked{{/if}}>Ducha</label>
+                    <label for="chkboxShower" {{#if
+                        accommodationFeatures.restroomFeatures.shower}}checked{{/if}}>Ducha</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxAdditionalBathroom" name="chkboxAdditionalBathroom" value="Baño adicional" {{#if accommodationFeatures.restroomFeatures.additionalBathroom}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxAdditionalBathroom" name="chkboxAdditionalBathroom"
+                        value="Baño adicional" {{#if
+                        accommodationFeatures.restroomFeatures.additionalBathroom}}checked{{/if}}>
                     <label for="chkboxAdditionalBathroom">Baño adicional</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSlippers" name="chkboxSlippers" value="Zapatillas" {{#if accommodationFeatures.restroomFeatures.slippers}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSlippers" name="chkboxSlippers" value="Zapatillas" {{#if
+                        accommodationFeatures.restroomFeatures.slippers}}checked{{/if}}>
                     <label for="chkboxSlippers">Zapatillas</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSharedBathroom" name="chkboxSharedBathroom" value="Baño compartido" {{#if accommodationFeatures.restroomFeatures.sharedBathroom}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSharedBathroom" name="chkboxSharedBathroom" value="Baño compartido"
+                        {{#if accommodationFeatures.restroomFeatures.sharedBathroom}}checked{{/if}}>
                     <label for="chkboxSharedBathroom">Baño compartido</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxDesignerBathroom" name="chkboxDesignerBathroom" value="Baño de diseño" {{#if accommodationFeatures.restroomFeatures.designerBathroom}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxDesignerBathroom" name="chkboxDesignerBathroom"
+                        value="Baño de diseño" {{#if
+                        accommodationFeatures.restroomFeatures.designerBathroom}}checked{{/if}}>
                     <label for="chkboxDesignerBathroom">Baño de diseño</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxPrivateBathroom" name="chkboxPrivateBathroom" value="Baño privado" {{#if accommodationFeatures.restroomFeatures.privateBathroom}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxPrivateBathroom" name="chkboxPrivateBathroom" value="Baño privado"
+                        {{#if accommodationFeatures.restroomFeatures.privateBathroom}}checked{{/if}}>
                     <label for="chkboxPrivateBathroom">Baño privado</label>
                 </div>
             </div>
@@ -438,79 +551,100 @@
             <hr>
             <div class="option-group">
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxMinibar" name="chkboxMinibar" value="Minibar" {{#if accommodationFeatures.kitchen.minibar}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxMinibar" name="chkboxMinibar" value="Minibar" {{#if
+                        accommodationFeatures.kitchen.minibar}}checked{{/if}}>
                     <label for="chkboxMinibar">Minibar</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBarbecue" name="chkboxBarbecue" value="Barbacoa" {{#if accommodationFeatures.kitchen.barbecue}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxBarbecue" name="chkboxBarbecue" value="Barbacoa" {{#if
+                        accommodationFeatures.kitchen.barbecue}}checked{{/if}}>
                     <label for="chkboxBarbecue">Barbacoa</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBlender" name="chkboxBlender" value="Batidora" {{#if accommodationFeatures.kitchen.blender}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxBlender" name="chkboxBlender" value="Batidora" {{#if
+                        accommodationFeatures.kitchen.blender}}checked{{/if}}>
                     <label for="chkboxBlender">Batidora</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxRefrigerator" name="chkboxRefrigerator" value="Nevera" {{#if accommodationFeatures.kitchen.refrigerator}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxRefrigerator" name="chkboxRefrigerator" value="Nevera" {{#if
+                        accommodationFeatures.kitchen.refrigerator}}checked{{/if}}>
                     <label for="chkboxRefrigerator">Nevera</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxElectricKettle" name="chkboxElectricKettle" value="Hervidor eléctrico" {{#if accommodationFeatures.kitchen.electricKettle}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxElectricKettle" name="chkboxElectricKettle"
+                        value="Hervidor eléctrico" {{#if accommodationFeatures.kitchen.electricKettle}}checked{{/if}}>
                     <label for="chkboxElectricKettle">Hervidor eléctrico</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxOven" name="chkboxOven" value="Horno" {{#if accommodationFeatures.kitchen.oven}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxOven" name="chkboxOven" value="Horno" {{#if
+                        accommodationFeatures.kitchen.oven}}checked{{/if}}>
                     <label for="chkboxOven">Horno</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxStove" name="chkboxStove" value="Cocina con Fogones" {{#if accommodationFeatures.kitchen.stove}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxStove" name="chkboxStove" value="Cocina con Fogones" {{#if
+                        accommodationFeatures.kitchen.stove}}checked{{/if}}>
                     <label for="chkboxStove">Cocina con Fogones</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxCeramicCooktop" name="chkboxCeramicCooktop" value="Cocina con Vitrocerámica" {{#if accommodationFeatures.kitchen.ceramicCooktop}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxCeramicCooktop" name="chkboxCeramicCooktop"
+                        value="Cocina con Vitrocerámica" {{#if
+                        accommodationFeatures.kitchen.ceramicCooktop}}checked{{/if}}>
                     <label for="chkboxCeramicCooktop">Cocina con Vitrocerámica</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxTeapot" name="chkboxTeapot" value="Tetera" {{#if accommodationFeatures.kitchen.teapot}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxTeapot" name="chkboxTeapot" value="Tetera" {{#if
+                        accommodationFeatures.kitchen.teapot}}checked{{/if}}>
                     <label for="chkboxTeapot">Tetera</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxCoffeeMaker" name="chkboxCoffeeMaker" value="Cafetera" {{#if accommodationFeatures.kitchen.coffeeMaker}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxCoffeeMaker" name="chkboxCoffeeMaker" value="Cafetera" {{#if
+                        accommodationFeatures.kitchen.coffeeMaker}}checked{{/if}}>
                     <label for="chkboxCoffeeMaker">Cafetera</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxToaster" name="chkboxToaster" value="Tostadora" {{#if accommodationFeatures.kitchen.toaster}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxToaster" name="chkboxToaster" value="Tostadora" {{#if
+                        accommodationFeatures.kitchen.toaster}}checked{{/if}}>
                     <label for="chkboxToaster">Tostadora</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxWashingMachine" name="chkboxWashingMachine" value="Lavadora" {{#if accommodationFeatures.kitchen.washingMachine}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxWashingMachine" name="chkboxWashingMachine" value="Lavadora" {{#if
+                        accommodationFeatures.kitchen.washingMachine}}checked{{/if}}>
                     <label for="chkboxWashingMachine">Lavadora</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxDryer" name="chkboxDryer" value="Secadora" {{#if accommodationFeatures.kitchen.dryer}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxDryer" name="chkboxDryer" value="Secadora" {{#if
+                        accommodationFeatures.kitchen.dryer}}checked{{/if}}>
                     <label for="chkboxDryer">Secadora</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxDishwasher" name="chkboxDishwasher" value="Lavavajillas" {{#if accommodationFeatures.kitchen.dishwasher}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxDishwasher" name="chkboxDishwasher" value="Lavavajillas" {{#if
+                        accommodationFeatures.kitchen.dishwasher}}checked{{/if}}>
                     <label for="chkboxDishwasher">Lavavajillas</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxCookingUtensils" name="chkboxCookingUtensils" value="Utensilios de cocina" {{#if accommodationFeatures.kitchen.cookingUtensils}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxCookingUtensils" name="chkboxCookingUtensils"
+                        value="Utensilios de cocina" {{#if
+                        accommodationFeatures.kitchen.cookingUtensils}}checked{{/if}}>
                     <label for="chkboxCookingUtensils">Utensilios de cocina</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxKitchenArea" name="chkboxKitchenArea" value="Zona de cocina" {{#if accommodationFeatures.kitchen.kitchenArea}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxKitchenArea" name="chkboxKitchenArea" value="Zona de cocina" {{#if
+                        accommodationFeatures.kitchen.kitchenArea}}checked{{/if}}>
                     <label for="chkboxKitchenArea">Zona de cocina</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxDiningArea" name="chkboxDiningArea" value="Zona de comedor" {{#if accommodationFeatures.kitchen.diningArea}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxDiningArea" name="chkboxDiningArea" value="Zona de comedor" {{#if
+                        accommodationFeatures.kitchen.diningArea}}checked{{/if}}>
                     <label for="chkboxDiningArea">Zona de comedor</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxFridge" name="chkboxFridge" value="Frigorífico" {{#if accommodationFeatures.kitchen.fridge}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxFridge" name="chkboxFridge" value="Frigorífico" {{#if
+                        accommodationFeatures.kitchen.fridge}}checked{{/if}}>
                     <label for="chkboxFridge">Frigorífico</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxMicrowave" name="chkboxMicrowave" value="Microondas" {{#if accommodationFeatures.kitchen.microwave}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxMicrowave" name="chkboxMicrowave" value="Microondas" {{#if
+                        accommodationFeatures.kitchen.microwave}}checked{{/if}}>
                     <label for="chkboxMicrowave">Microondas</label>
                 </div>
             </div>
@@ -520,51 +654,63 @@
             <hr>
             <div class="option-group">
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxPaddleCourt" name="chkboxPaddleCourt" value="Pista de pádel" {{#if accommodationFeatures.sport.paddleTennis}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxPaddleCourt" name="chkboxPaddleCourt" value="Pista de pádel" {{#if
+                        accommodationFeatures.sport.paddleTennis}}checked{{/if}}>
                     <label for="chkboxPaddleCourt">Pista de pádel</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxGym" name="chkboxGym" value="Gimnasio" {{#if accommodationFeatures.sport.gym}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxGym" name="chkboxGym" value="Gimnasio" {{#if
+                        accommodationFeatures.sport.gym}}checked{{/if}}>
                     <label for="chkboxGym">Gimnasio</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxBasketballCourt" name="chkboxBasketballCourt" value="Cancha de baloncesto" {{#if accommodationFeatures.sport.basketballCourt}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxBasketballCourt" name="chkboxBasketballCourt"
+                        value="Cancha de baloncesto" {{#if accommodationFeatures.sport.basketballCourt}}checked{{/if}}>
                     <label for="chkboxBasketballCourt">Cancha de baloncesto</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxDarts" name="chkboxDarts" value="Dardos" {{#if accommodationFeatures.sport.darts}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxDarts" name="chkboxDarts" value="Dardos" {{#if
+                        accommodationFeatures.sport.darts}}checked{{/if}}>
                     <label for="chkboxDarts">Dardos</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxWindsurf" name="chkboxWindsurf" value="Windsurf" {{#if accommodationFeatures.sport.windsurfing}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxWindsurf" name="chkboxWindsurf" value="Windsurf" {{#if
+                        accommodationFeatures.sport.windsurfing}}checked{{/if}}>
                     <label for="chkboxWindsurf">Windsurf</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSkiSchool" name="chkboxSkiSchool" value="Escuela de esquí" {{#if accommodationFeatures.sport.skiSchool}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSkiSchool" name="chkboxSkiSchool" value="Escuela de esquí" {{#if
+                        accommodationFeatures.sport.skiSchool}}checked{{/if}}>
                     <label for="chkboxSkiSchool">Escuela de esquí</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxFootballField" name="chkboxFootballField" value="Campo de fútbol" {{#if accommodationFeatures.sport.footballField}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxFootballField" name="chkboxFootballField" value="Campo de fútbol"
+                        {{#if accommodationFeatures.sport.footballField}}checked{{/if}}>
                     <label for="chkboxFootballField">Campo de fútbol</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSkiing" name="chkboxSkiing" value="Esquí" {{#if accommodationFeatures.sport.skiing}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSkiing" name="chkboxSkiing" value="Esquí" {{#if
+                        accommodationFeatures.sport.skiing}}checked{{/if}}>
                     <label for="chkboxSkiing">Esquí</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxPingPongTable" name="chkboxPingPongTable" value="Mesa de ping pong" {{#if accommodationFeatures.sport.pingPong}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxPingPongTable" name="chkboxPingPongTable" value="Mesa de ping pong"
+                        {{#if accommodationFeatures.sport.pingPong}}checked{{/if}}>
                     <label for="chkboxPingPongTable">Mesa de ping pong</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSquashCourt" name="chkboxSquashCourt" value="Pista de squash" {{#if accommodationFeatures.sport.squash}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSquashCourt" name="chkboxSquashCourt" value="Pista de squash" {{#if
+                        accommodationFeatures.sport.squash}}checked{{/if}}>
                     <label for="chkboxSquashCourt">Pista de squash</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxFutsalField" name="chkboxFutsalField" value="Campo fútbol sala" {{#if accommodationFeatures.sport.indoorFootballCourt}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxFutsalField" name="chkboxFutsalField" value="Campo fútbol sala"
+                        {{#if accommodationFeatures.sport.indoorFootballCourt}}checked{{/if}}>
                     <label for="chkboxFutsalField">Campo fútbol sala</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxTennisCourt" name="chkboxTennisCourt" value="Pista de tenis" {{#if accommodationFeatures.sport.tennisCourt}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxTennisCourt" name="chkboxTennisCourt" value="Pista de tenis" {{#if
+                        accommodationFeatures.sport.tennisCourt}}checked{{/if}}>
                     <label for="chkboxTennisCourt">Pista de tenis</label>
                 </div>
             </div>
@@ -574,30 +720,37 @@
             <hr>
             <div class="option-group">
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxDoubleSofaBed" name="chkboxDoubleSofaBed" value="Sofá cama doble" {{#if accommodationFeatures.livingRoom.doubleSofaBed}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxDoubleSofaBed" name="chkboxDoubleSofaBed" value="Sofá cama doble"
+                        {{#if accommodationFeatures.livingRoom.doubleSofaBed}}checked{{/if}}>
                     <label for="chkboxDoubleSofaBed">Sofá cama doble</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSingleSofaBed" name="chkboxSingleSofaBed" value="Sofá cama individual" {{#if accommodationFeatures.livingRoom.individualSofaBed}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSingleSofaBed" name="chkboxSingleSofaBed"
+                        value="Sofá cama individual" {{#if
+                        accommodationFeatures.livingRoom.individualSofaBed}}checked{{/if}}>
                     <label for="chkboxSingleSofaBed">Sofá cama individual</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxTV" name="chkboxTV" value="TV" {{#if accommodationFeatures.livingRoom.tv}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxTV" name="chkboxTV" value="TV" {{#if
+                        accommodationFeatures.livingRoom.tv}}checked{{/if}}>
                     <label for="chkboxTV">TV</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSatelliteTV" name="chkboxSatelliteTV" value="TV satélite" {{#if accommodationFeatures.livingRoom.satelliteTV}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSatelliteTV" name="chkboxSatelliteTV" value="TV satélite" {{#if
+                        accommodationFeatures.livingRoom.satelliteTV}}checked{{/if}}>
                     <label for="chkboxSatelliteTV">TV satélite</label>
                 </div>
                 <div class="checkbox-option">
-                    <input type="checkbox" id="chkboxSnackBar" name="chkboxSnackBar" value="Snack-bar" {{#if accommodationFeatures.livingRoom.snackBar}}checked{{/if}}>
+                    <input type="checkbox" id="chkboxSnackBar" name="chkboxSnackBar" value="Snack-bar" {{#if
+                        accommodationFeatures.livingRoom.snackBar}}checked{{/if}}>
                     <label for="chkboxSnackBar">Snack-bar</label>
                 </div>
             </div>
         </fieldset>
     </div>
-    
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#additionalInfo">+ Información adicional</button>
+
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#additionalInfo">+
+        Información adicional</button>
     <div id="additionalInfo" class="chalet-details collapse">
         <div class="input-group half">
             <label for="txtBeds">Camas</label>
@@ -617,28 +770,35 @@
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#accomodationDetails">+ Descripción del alojamiento</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse"
+        data-target="#accomodationDetails">+ Descripción del alojamiento</button>
     <div id="accomodationDetails" class="chalet-details collapse">
         <div class="input-group">
-            <textarea id="txtAccomodationDetails" name="txtAccomodationDetails" rows="10" placeholder="Porporciona una descripción para el alojamiento.">{{accomodationDescription}}</textarea>
+            <textarea id="txtAccomodationDetails" name="txtAccomodationDetails" rows="10"
+                placeholder="Porporciona una descripción para el alojamiento.">{{accomodationDescription}}</textarea>
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#additionalDetails">+ Descripción adicional del alojamiento</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse"
+        data-target="#additionalDetails">+ Descripción adicional del alojamiento</button>
     <div id="additionalDetails" class="chalet-details collapse">
         <div class="input-group">
-            <textarea id="txtAdditionalDetails" name="txtAdditionalDetails" rows="10" placeholder="Porporciona una descripción adicional para el alojamiento.">{{additionalAccomodationDescription}}</textarea>
+            <textarea id="txtAdditionalDetails" name="txtAdditionalDetails" rows="10"
+                placeholder="Porporciona una descripción adicional para el alojamiento.">{{additionalAccomodationDescription}}</textarea>
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#legalNote">+ Terminos y condiciones</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#legalNote">+
+        Terminos y condiciones</button>
     <div id="legalNote" class="chalet-details collapse">
         <div class="input-group">
-            <textarea id="txtLegalNote" name="txtLegalNote" rows="10" placeholder="Agrega una nota legal">{{legalNotice}}</textarea>
+            <textarea id="txtLegalNote" name="txtLegalNote" rows="10"
+                placeholder="Agrega una nota legal">{{legalNotice}}</textarea>
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#location">+ Ubicación</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#location">+
+        Ubicación</button>
     <div id="location" class="chalet-details collapse">
         <div class="input-group third">
             <label for="txtState">Provincia / estado</label>
@@ -665,11 +825,13 @@
             <input id="txtLong" name="txtLong" type="number" value="{{location.longitude}}">
         </div>
         <div class="input-group">
-            <iframe id="map" src="{{location.iFrame}}" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <iframe id="map" src="{{location.iFrame}}" width="100%" height="450" style="border:0;" allowfullscreen=""
+                loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#other-data">+ Otros</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#other-data">+
+        Otros</button>
     <div id="other-data" class="chalet-details collapse">
         <div class="input-group third">
             <label for="txtBasePrice">Precio base</label>
@@ -677,7 +839,8 @@
         </div>
         <div class="input-group third">
             <label for="txtBasePrice2Nights">Precio base por 2 noches</label>
-            <input id="txtBasePrice2Nights" name="txtBasePrice2Nights" type="number" value="{{others.basePrice2nights}}">
+            <input id="txtBasePrice2Nights" name="txtBasePrice2Nights" type="number"
+                value="{{others.basePrice2nights}}">
         </div>
         <div class="input-group third">
             <label for="txtBaseCost">Costo base</label>
@@ -697,33 +860,51 @@
         </div>
         <div class="input-group third">
             <label for="txtState">Administrador asociado</label>
-            <select id="slctAdmin" name="slctAdmin" class="form-select form-select-md">                
+            <select id="slctAdmin" name="slctAdmin" class="form-select form-select-md">
                 {{#if ../admins}}
-                    <option value="{{others.admin.[0]}}" selected disabled style="background-color: darkgrey;">{{others.admin.[1]}}</option>
-                    {{#each ../admins}}
-                        <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
-                    {{/each}}
+                <option value="{{others.admin.[0]}}" selected disabled style="background-color: darkgrey;">
+                    {{others.admin.[1]}}</option>
+                {{#each ../admins}}
+                <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                {{/each}}
                 {{else}}
-                    <option value="0">No se encontraron administradores</option>
+                <option value="0">No se encontraron administradores</option>
                 {{/if}}
             </select>
         </div>
         <div class="input-group third">
             <label for="slctJanitor">Personal de limpieza asociado</label>
-            <select id="slctJanitor" name="slctJanitor" class="form-select form-select-md">                
+            <select id="slctJanitor" name="slctJanitor" class="form-select form-select-md">
                 {{#if ../janitors}}
-                <option value="{{others.janitor.[0]}}" selected disabled style="background-color: darkgrey;">{{others.janitor.[1]}}</option>
-                    {{#each ../janitors}}
-                        <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
-                    {{/each}}
+                <option value="{{others.janitor.[0]}}" selected disabled style="background-color: darkgrey;">
+                    {{others.janitor.[1]}}</option>
+                {{#each ../janitors}}
+                <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                {{/each}}
                 {{else}}
-                    <option value="0">No se encontraró el personal de limpieza</option>
+                <option value="0">No se encontraró el personal de limpieza</option>
                 {{/if}}
             </select>
         </div>
+        <div class="input-group third">
+            <div class="mb-3">
+                <label for="chalet-owner" class="form-label">Dueño de cabaña: </label>
+                <select class="form-select form-select-md w-100" name="chalet-owner" id="chalet-owner-select">
+                    <option selected>Selecciona el dueño de la cabaña --</option>
+                    {{#if ../owners}}
+                    {{#each ../owners}}
+                    <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
+                    {{/each}}
+                    
+                    {{/if}}
+                </select>
+            </div>
+
+        </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#photos">+ Fotografías</button>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#photos">+
+        Fotografías</button>
     <div id="photos" class="chalet-details collapse">
         <div class="input-group">
             <div id="photoCarousel {{propertyDetails.name}}" class="photo-carousel"></div>
@@ -733,7 +914,7 @@
                     Subir archivo
                 </label>
                 <span>Ninguna fotografía seleccionada</span>
-            </div>          
+            </div>
         </div>
     </div>
 </form>
@@ -743,7 +924,7 @@
 
 <script>
     // Change forms.
-    document.addEventListener("DOMContentLoaded", function(){     
+    document.addEventListener("DOMContentLoaded", function () {
         const slctFormSelector = document.getElementById('slctFormSelector');
         slctFormSelector.value = "";
         let filename = ""
@@ -755,10 +936,10 @@
         let datajson = {}
         let imagesarray = []
         let indexadvance = 0
-        $.get("/getchaletsRoutes", function(data, status){
+        $.get("/getchaletsRoutes", function (data, status) {
             datajson = data
         });
-        slctFormSelector.addEventListener('change', function(event) {
+        slctFormSelector.addEventListener('change', function (event) {
             imagesarray = [];
             const selectedFormId = event.target.value;
             const forms = document.getElementsByName('form');
@@ -776,41 +957,41 @@
 
                     pothocname = "photoCarousel " + name.value
 
-                   // console.log(filename);
+                    // console.log(filename);
                     console.log(pothocname);
-                    
+
                     fileUpload = document.getElementsByName(filename);
                     photoCarousel = document.getElementById(pothocname);
-                   // console.log(fileUpload)
-                   // console.log(photoCarousel)
+                    // console.log(fileUpload)
+                    // console.log(photoCarousel)
 
                     //console.log(datajson[0].resources);
-                    datajson[0].resources.forEach(function (element){
+                    datajson[0].resources.forEach(function (element) {
                         //console.log(element.images);
-                        if(element.propertyDetails.name == name.value){
+                        if (element.propertyDetails.name == name.value) {
                             console.log(element.propertyDetails.name)
-                            element.images.forEach(function (image,index){
-                            const photoDiv = document.createElement('div');
-                            photoDiv.classList.add('photo');
-                            const img = document.createElement('img');
-                            img.src = "https://navarro.integradev.site/navarro/" + image;
-                            const deleteButton = document.createElement('button');
-                            deleteButton.classList.add('delete-photo');
-                            deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
-                            deleteButton.addEventListener('click', function() {
-                                imagesarray.splice(index - indexadvance,1)
-                                photoDiv.remove();
-                                indexadvance = indexadvance + 1
-                                console.log(imagesarray)
+                            element.images.forEach(function (image, index) {
+                                const photoDiv = document.createElement('div');
+                                photoDiv.classList.add('photo');
+                                const img = document.createElement('img');
+                                img.src = "https://navarro.integradev.site/navarro/" + image;
+                                const deleteButton = document.createElement('button');
+                                deleteButton.classList.add('delete-photo');
+                                deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
+                                deleteButton.addEventListener('click', function () {
+                                    imagesarray.splice(index - indexadvance, 1)
+                                    photoDiv.remove();
+                                    indexadvance = indexadvance + 1
+                                    console.log(imagesarray)
+                                });
+                                photoDiv.appendChild(deleteButton);
+                                photoDiv.appendChild(img);
+                                photoCarousel.appendChild(photoDiv);
+                                // console.log("Saludos desde ");
+                                imagesarray.push(image.toString())
+                                // console.log(imagesarray)
                             });
-                            photoDiv.appendChild(deleteButton);
-                            photoDiv.appendChild(img);
-                            photoCarousel.appendChild(photoDiv);
-                           // console.log("Saludos desde ");
-                            imagesarray.push(image.toString())
-                           // console.log(imagesarray)
-                            });
-                            
+
                         };
                     });
 
@@ -821,11 +1002,11 @@
         });
 
         let archivos = document.getElementById('file-upload')
-        archivos.addEventListener('change', function(event) {
+        archivos.addEventListener('change', function (event) {
             const files = event.target.files;
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-               // console.log(file);
+                // console.log(file);
                 const imageURL = URL.createObjectURL(file);
                 const photoDiv = document.createElement('div');
                 photoDiv.classList.add('photo');
@@ -834,29 +1015,29 @@
                 const deleteButton = document.createElement('button');
                 deleteButton.classList.add('delete-photo');
                 deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
-                deleteButton.addEventListener('click', function() {
+                deleteButton.addEventListener('click', function () {
                     formData.delete('images', file);
                     photoDiv.remove();
                 });
                 photoDiv.appendChild(deleteButton);
                 photoDiv.appendChild(img);
                 photoCarousel.appendChild(photoDiv);
-             //   console.log("Saludos desde ");
+                //   console.log("Saludos desde ");
                 formData.append('images', file);
-              //  console.log(formData);
-             //   console.log(imagesarray)
-            }            
+                //  console.log(formData);
+                //   console.log(imagesarray)
+            }
         });
 
-    
+
         // Submit form info.
         const forms = document.getElementsByName("form");
-        forms.forEach(function(form) {
+        forms.forEach(function (form) {
 
             // Updating chalet.
             form.addEventListener("submit", async (event) => {
                 event.preventDefault();
-                
+
                 // Creating JSON for text data.
                 const data = {
                     propertyDetails: {
@@ -869,7 +1050,7 @@
                         maxOccupancy: form.querySelector("#txtChaletMaxPpl").value.trim()
                     },
                     accommodationFeatures: {
-                        generalFeatures: {                            
+                        generalFeatures: {
                             satelliteTV: form.querySelector("#chkboxSatelliteChannels").checked,
                             disabledAccessible: form.querySelector("#chkboxDisabledAdapted").checked,
                             iron: form.querySelector("#chkboxIron").checked,
@@ -990,10 +1171,10 @@
                         },
                         sport: {
                             paddleTennis: form.querySelector("#chkboxPaddleCourt").checked,
-                            gym: form.querySelector("#chkboxGym").checked,                                   
+                            gym: form.querySelector("#chkboxGym").checked,
                             basketballCourt: form.querySelector("#chkboxBasketballCourt").checked,
                             darts: form.querySelector("#chkboxDarts").checked,
-                            windsurfing: form.querySelector("#chkboxWindsurf").checked,                            
+                            windsurfing: form.querySelector("#chkboxWindsurf").checked,
                             skiSchool: form.querySelector("#chkboxSkiSchool").checked,
                             footballField: form.querySelector("#chkboxFootballField").checked,
                             skiing: form.querySelector("#chkboxSkiing").checked,
@@ -1009,7 +1190,7 @@
                             satelliteTV: form.querySelector("#chkboxSatelliteTV").checked,
                             snackBar: form.querySelector("#chkboxSnackBar").checked
                         }
-                    },                
+                    },
                     additionalInfo: {
                         nBeds: form.querySelector("#txtBeds").value.trim(),
                         nRestrooms: form.querySelector("#txtRestrooms").value.trim(),
@@ -1027,18 +1208,19 @@
                         latitude: form.querySelector("#txtLat").value.trim(),
                         longitude: form.querySelector("#txtLong").value.trim(),
                         iFrame: form.querySelector("#map").src.trim(),
-                    },                    
+                    },
                     others: {
                         basePrice: form.querySelector("#txtBasePrice").value.trim(),
                         basePrice2nights: form.querySelector("#txtBasePrice2Nights").value.trim(),
                         baseCost: form.querySelector("#txtBaseCost").value.trim(),
-                        baseCost2nights: form.querySelector("#txtBaseCost2Nights").value.trim(),                                                
+                        baseCost2nights: form.querySelector("#txtBaseCost2Nights").value.trim(),
                         arrivalTime: form.querySelector("#txtArrivalTime").value.trim(),
                         departureTime: form.querySelector("#txtDepartureTime").value.trim(),
                         admin: form.querySelector("#slctAdmin").value.trim(),
                         janitor: form.querySelector("#slctJanitor").value.trim(),
+                        owner: form.querySelector("#chalet-owner-select").value.trim()
                     },
-                    images: imagesarray                    
+                    images: imagesarray
                 };
                 //console.log(imagesarray)  
                 fetch('/api/cabanas/editar-cabana', {
@@ -1049,41 +1231,8 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        response.json().then(errorData => {
-                            const errors = errorData.error;
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                                confirmButtonText: 'Aceptar'
-                            });   
-                        });                    
-                        throw new Error('Error en la solicitud');
-                    }
-                    return response.json();
-                })
-                .then(async data => {
-                    console.log('Respuesta del servidor:', data);
-
-                    try {
-                        const response = await fetch('/api/cabanas/subir-imagenes-cabana', {
-                            method: 'POST',
-                            body: formData,
-                        });
-                        if (response.ok) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Completado!',
-                                text: data.message + '.',
-                                confirmButtonText: 'Aceptar'
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    window.location.href = "/";
-                                }
-                            });                             
-                        } else {
+                    .then(response => {
+                        if (!response.ok) {
                             response.json().then(errorData => {
                                 const errors = errorData.error;
                                 Swal.fire({
@@ -1091,29 +1240,62 @@
                                     title: 'Error',
                                     text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
                                     confirmButtonText: 'Aceptar'
-                                });   
-                            });                    
+                                });
+                            });
                             throw new Error('Error en la solicitud');
-                            window.location.href = "/";
                         }
-                    } catch (error) {
+                        return response.json();
+                    })
+                    .then(async data => {
+                        console.log('Respuesta del servidor:', data);
+
+                        try {
+                            const response = await fetch('/api/cabanas/subir-imagenes-cabana', {
+                                method: 'POST',
+                                body: formData,
+                            });
+                            if (response.ok) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '¡Completado!',
+                                    text: data.message + '.',
+                                    confirmButtonText: 'Aceptar'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = "/";
+                                    }
+                                });
+                            } else {
+                                response.json().then(errorData => {
+                                    const errors = errorData.error;
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                        confirmButtonText: 'Aceptar'
+                                    });
+                                });
+                                throw new Error('Error en la solicitud');
+                                window.location.href = "/";
+                            }
+                        } catch (error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                                confirmButtonText: 'Aceptar'
+                            });
+                        }
+                    })
+                    .catch(error => {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                            text: 'Error al enviar la solicitud: ' + error + '.',
                             confirmButtonText: 'Aceptar'
-                        }); 
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error al enviar la solicitud: ' + error + '.',
-                        confirmButtonText: 'Aceptar'
-                    }); 
-                });            
+                        });
+                    });
             });
-        });            
+        });
     });
 </script>

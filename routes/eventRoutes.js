@@ -130,6 +130,6 @@ router.get('/check-availability', async (req, res) => {
 })
 
 router.post('/eventos/move-to-playground', eventController.moveToPlayground)
-
+router.get('/calendar/duenos', eventController.reservasDeDuenos)
 
 module.exports = router;

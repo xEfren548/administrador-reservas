@@ -1,0 +1,44 @@
+<div class="calendar-header">
+    <div class="bg-dark mb-3">
+        <a name="" id="crear-reserva-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
+            data-bs-toggle="modal" data-bs-target="#event_entry_modal">Crear reserva de dueño</a>
+    </div>
+</div>
+
+<div class="row flex-nowrap justify-content-center mt-3 " style="width: 100%;">
+    <div class="col-10">
+        <h1>Reservas</h1>
+        <table class="table table-dark table-hover text-center" id="tablaRacklimpieza">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Cabaña</th>
+                    <th scope="col">Fecha de llegada</th>
+                    <th scope="col">Fecha de salida</th>
+                    <th scope="col">Monto pendiente</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#if eventos.length}}
+                {{#each eventos}}
+                <tr>
+                    <td>{{this.propertyDetails.name}}</td>
+                    <td>{{this.arrivalDate}}</td>
+                    <td>{{this.departureDate}}</td>
+                    <td>{{this.total}}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#editarRackLimpiezaModal" data-service-id="{{this._id}}"
+                            onclick="mostrarInfoServicio('{{this._id}}')"><i class="fa fa-pencil"
+                                aria-hidden="true"></i>
+                    </td>
+
+                </tr>
+                {{/each}}
+                {{else}}
+                <td colspan="5">No se encontraron servicios</td>
+                {{/if}}
+            </tbody>
+        </table>
+    </div>
+</div>

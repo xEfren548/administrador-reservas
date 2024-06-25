@@ -381,10 +381,17 @@ async function showChaletsView(req, res, next) {
             throw new NotFoundError("No tipologies found");
         }
 
+        const owners = await Usuario.find({ privilege: "Dueño de cabañas" }).lean();
+        if (!owners) {
+            throw new NotFoundError("No owners found");
+        }
+
+
         res.render('vistaCabanas', {
             admins: admins,
             janitors: janitors,
-            tipologias: tipologias
+            tipologias: tipologias,
+            owners: owners
         });
     } catch (error) {
         console.log(error);
@@ -404,6 +411,11 @@ async function createChalet(req, res, next) {
 
     const janitor = await Usuario.findOne({ email: others.janitor, privilege: "Limpieza" });
     if (!janitor) {
+        throw new NotFoundError("Janitor not found");
+    }
+
+    const owner = await Usuario.findOne({ _id: others.owner, privilege: "Dueño de cabañas" });
+    if (!owner) {
         throw new NotFoundError("Janitor not found");
     }
 
@@ -437,6 +449,7 @@ async function createChalet(req, res, next) {
             departureTime: newDepartureTime,
             admin: admin._id,
             janitor: janitor._id,
+            owner: owner_id,
         }
     };
 
@@ -577,6 +590,12 @@ async function showEditChaletsView(req, res, next) {
         }
         const admins = await Usuario.find({ privilege: "Administrador" }).lean();
         const janitors = await Usuario.find({ privilege: "Limpieza" }).lean();
+        const owners = await Usuario.find({ privilege: "Dueño de cabañas" }).lean();
+        if (!owners) {
+            throw new NotFoundError("No owners found");
+        }
+        console.log("owners: ")
+        console.log(owners)
         //console.log("CHALETS: ", chalets);
         //console.log("CHALETS2222: ", chalets[0].others.admin[0]);
         //console.log("ADMINS: ", admins);
@@ -592,7 +611,8 @@ async function showEditChaletsView(req, res, next) {
         res.render('vistaEditarCabana', {
             chalets: chalets,
             admins: admins,
-            janitors: janitors
+            janitors: janitors,
+            owners: owners
         });
     } catch (error) {
         console.error('Error:', error);
@@ -613,6 +633,12 @@ async function editChalet(req, res, next) {
     if (!janitor) {
         throw new NotFoundError("Janitor not found");
     }
+
+    const owner = await Usuario.findOne({ _id: others.owner, privilege: "Dueño de cabañas" });
+    if (!owner) {
+        throw new NotFoundError("Janitor not found");
+    }
+
     console.log(others.departureTime)
     console.log(others.arrivalTime)
     const newArrivalTime = new Date();
@@ -640,6 +666,7 @@ async function editChalet(req, res, next) {
             departureTime: newDepartureTime,
             admin: admin._id,
             janitor: janitor._id,
+            owner: owner._id
         },
         images
     };

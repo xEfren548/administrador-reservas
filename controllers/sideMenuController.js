@@ -1,63 +1,65 @@
 const Usuario = require('../models/Usuario');
-const {check} = require("express-validator");
+const { check } = require("express-validator");
 const NotFoundError = require("../common/error/not-found-error");
 const { variationPlacements } = require('@popperjs/core');
 
 const validators = [
     check()
         .custom(async (value, { req }) => {
-            if (req.session.privilege != 'Administrador' && req.session.privilege != 'Vendedor' 
-                && req.session.privilege != 'Limpieza') {
+            if (req.session.privilege != 'Administrador' && req.session.privilege != 'Vendedor'
+                && req.session.privilege != 'Limpieza' && req.session.privilege != 'Dueño de cabañas' &&
+                req.session.privilege != 'Servicios adicionales' && req.session.privilege != 'Inversionistas') {
                 throw new NotFoundError('Privilege does not exists.');
             }
             return true;
         }),
 ];
 
-async function generateSideMenu (req, res, next) {
-    try{
-        const privileges = {     
+async function generateSideMenu(req, res, next) {
+    try {
+        const privileges = {
             "Administrador": [
-                {'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"]},
-                {'Home': ["/", "fs-5 fa fa-house"]},
-                {'Usuarios': ["/api/usuarios", "fas fa-users"]},
-                {'Clientes': ["/api/clientes/mostrar-clientes", "fa fa-user-circle"]},
-                {'Servicios adicionales': ["/api/servicios", "fas fa-spa"]},
-                {'Limpieza': ["/api/racklimpieza", "fas fa-broom"]},
-                {'Cabañas': []},
-                {'Utilidades por reserva': ["/api/costos/mostrar-costos", "fas fa-chart-line"]},
-                {'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"]},
-                {'Encuestas': []},
-                {'Logs': ["/logs", "fas fa-cogs"]},
-                {'Precios': ["/calendario-precios", "far fa-calendar-alt"]},
-            ],        
+                { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                { 'Home': ["/", "fs-5 fa fa-house"] },
+                { 'Usuarios': ["/api/usuarios", "fas fa-users"] },
+                { 'Clientes': ["/api/clientes/mostrar-clientes", "fa fa-user-circle"] },
+                { 'Servicios adicionales': ["/api/servicios", "fas fa-spa"] },
+                { 'Limpieza': ["/api/racklimpieza", "fas fa-broom"] },
+                { 'Cabañas': [] },
+                { 'Utilidades por reserva': ["/api/costos/mostrar-costos", "fas fa-chart-line"] },
+                { 'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
+                { 'Encuestas': [] },
+                { 'Logs': ["/logs", "fas fa-cogs"] },
+                { 'Precios': ["/calendario-precios", "far fa-calendar-alt"] },
+            ],
             'Vendedor': [
-                {'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"]},
-                {'Home': ["/", "fs-5 fa fa-house"]},
-                {'Reserva cliente cabaña': ["/instrucciones/", "far fa-calendar-alt"]},
-                {'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"]},                
-            ],            
+                { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                { 'Home': ["/", "fs-5 fa fa-house"] },
+                { 'Reserva cliente cabaña': ["/instrucciones/", "far fa-calendar-alt"] },
+                { 'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
+            ],
             'Limpieza': [
-                {'Dashboard': ["/dashboard", "fs-5 fa fa-chart-bar"]},
-                {'Limpieza': ["/racklimpieza", "fas fa-broom"]},
+                { 'Dashboard': ["/dashboard", "fs-5 fa fa-chart-bar"] },
+                { 'Limpieza': ["/racklimpieza", "fas fa-broom"] },
             ],
             'Servicios adicionales': [
-                {'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"]},
-                {'Servicios adicionales': ["/api/servicios", "fas fa-spa"]},                
+                { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                { 'Servicios adicionales': ["/api/servicios", "fas fa-spa"] },
             ],
             'Dueño de cabañas': [
-                {'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"]},
+                { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                { 'Calendario': ["/api/calendar/duenos", "fs-5 fa fa-calendar"] },
             ],
             'Inversionistas': [
-                {'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"]},
-            ],            
+                { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+            ],
             'Cliente': [
-                {'Home': ["/", "fs-5 fa fa-house"]},
+                { 'Home': ["/", "fs-5 fa fa-house"] },
             ],
         };
-        
+
         const routes = privileges[req.session.privilege];
-        var sideMenuContent = 
+        var sideMenuContent =
             `<div class="offcanvas-header">
                 <h6 class="offcanvas-title d-none d-sm-block text-white" id="offcanvas"></h6>
                 <button type="button" class="btn-close text-reset bg-light" data-bs-dismiss="offcanvas"
@@ -69,8 +71,8 @@ async function generateSideMenu (req, res, next) {
             for (const key in item) {
                 const route = item[key][0];
                 const cssClass = item[key][1];
-                if(key === "Servicios adicionales"){
-                    sideMenuContent += 
+                if (key === "Servicios adicionales") {
+                    sideMenuContent +=
                         `<li class="nav-item py-2 py-sm-0">
                             <a href="#submenu1" data-bs-toggle="collapse" class="nav-link text-truncate px-4 align-middle ">
                                 <div>
@@ -96,8 +98,8 @@ async function generateSideMenu (req, res, next) {
                             </ul>
                         </li>`;
                 }
-                else if(key === "Cabañas"){
-                    sideMenuContent += 
+                else if (key === "Cabañas") {
+                    sideMenuContent +=
                         `<li class="nav-item py-2 py-sm-0">
                             <a href="#submenu2" data-bs-toggle="collapse" class="nav-link px-4 align-middle " title="Cabañas">
                                 <i class="fs-5 fa fa-hotel" aria-hidden="true"></i><span
@@ -127,8 +129,8 @@ async function generateSideMenu (req, res, next) {
                             </ul>
                         </li>`;
                 }
-                else if(key === "Encuestas"){
-                    sideMenuContent += 
+                else if (key === "Encuestas") {
+                    sideMenuContent +=
                         `<li class="nav-item py-2 py-sm-0">
                             <a href="#submenu3" data-bs-toggle="collapse" class="nav-link px-4 align-middle " title="Encuestas">
                                 <i class="fab fa-wpforms"></i><span
@@ -151,9 +153,9 @@ async function generateSideMenu (req, res, next) {
                             </ul>
                         </li>`;
                 }
-                else{
-                    sideMenuContent += 
-                    `<li class="nav-item">
+                else {
+                    sideMenuContent +=
+                        `<li class="nav-item">
                         <a href="${route}" class="nav-link align-middle px-4" title="Home">
                             <i class="${cssClass}"></i><span class="fs-5 ms-3 d-none d-sm-inline">${key}</span>
                         </a>
@@ -184,8 +186,8 @@ async function generateSideMenu (req, res, next) {
 
         // console.log("ESTE ES EL MENU ENTREGADO: ", sideMenuContent);
 
-        res.status(200).json({sideMenuContent});
-    } catch(err){
+        res.status(200).json({ sideMenuContent });
+    } catch (err) {
         return next(err);
     }
 }

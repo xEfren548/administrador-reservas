@@ -31,7 +31,7 @@ const createUserValidators = [
         //.matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),        
     check('privilege')
         .notEmpty().withMessage('Privilege is required')
-        .isIn(['Administrador', 'Vendedor', 'Limpieza']).withMessage('Invalid privilege'),
+        .isIn(['Administrador', 'Vendedor', 'Limpieza', 'Dueño de cabañas', 'Servicios adicionales', 'Inversionistas']).withMessage('Invalid privilege'),
     check('administrator')
         .notEmpty().withMessage("Administrator's name is required")
         .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
