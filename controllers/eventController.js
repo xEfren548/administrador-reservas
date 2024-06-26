@@ -665,7 +665,13 @@ async function checkAvailability(resourceId, arrivalDate, departureDate) {
 
     const overlappingReservations = await Documento.aggregate([
         { $unwind: '$events' },
-        { $match: { 'events.resourceId': newResourceId } },
+        {
+            $match: {
+                'events.resourceId': newResourceId,
+                'events.status': { $ne: 'cancelled' } // Excluir eventos cancelados
+
+            }
+        },
         {
             $match: {
                 $and: [
