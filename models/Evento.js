@@ -4,7 +4,6 @@ const Schema = mongoose.Schema;
 const reservaSchema = new Schema({
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
         ref: 'Cliente'
     },
     resourceId: {
@@ -43,7 +42,6 @@ const reservaSchema = new Schema({
     },
     total: {
         type: Number,
-        required: true
     },
     discount: {
         type: Number,
@@ -52,17 +50,14 @@ const reservaSchema = new Schema({
     notes: [{texto: String}],        
     termsAccepted: {
         type: Boolean,
-        required: true,
         default: false
     },
     surveySubmited: {
         type: Boolean,
-        required: true,
         default: false
     },
     isDeposit: {
         type: Boolean,
-        required: true,
         default: false
     },
     paymentCancelation: {

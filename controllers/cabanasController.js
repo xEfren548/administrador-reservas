@@ -460,7 +460,6 @@ async function createChalet(req, res, next) {
 
         console.log("Cabaña agregada con éxito");
         req.session.chaletAdded = chalets.resources[chalets.resources.length - 1].propertyDetails.name;
-        console.log("Respuesta del servidor:", { chaletAdded: req.session.chaletAdded });
         const logBody = {
             fecha: Date.now(),
             idUsuario: req.session.id,
@@ -579,14 +578,12 @@ async function showEditChaletsView(req, res, next) {
             chalet.others.janitor = [janitor.email, janitor.firstName + " " + janitor.lastName];
         }
         for (const chalet of chalets) {
-            console.log(chalet.others.arrivalTime)
             let arrivalstr = chalet.others.arrivalTime.toString();
             let departurestr = chalet.others.departureTime.toString();
             let arrival = arrivalstr.split(':')[0].slice(-2) + ":" + arrivalstr.split(':')[1]
             let departure = departurestr.split(':')[0].slice(-2) + ":" + departurestr.split(':')[1]
             chalet.others.arrivalTime = arrival;
             chalet.others.departureTime = departure;
-            console.log(chalet.others.arrivalTime)
         }
         const admins = await Usuario.find({ privilege: "Administrador" }).lean();
         const janitors = await Usuario.find({ privilege: "Limpieza" }).lean();
@@ -594,8 +591,6 @@ async function showEditChaletsView(req, res, next) {
         if (!owners) {
             throw new NotFoundError("No owners found");
         }
-        console.log("owners: ")
-        console.log(owners)
         //console.log("CHALETS: ", chalets);
         //console.log("CHALETS2222: ", chalets[0].others.admin[0]);
         //console.log("ADMINS: ", admins);
@@ -671,7 +666,6 @@ async function editChalet(req, res, next) {
         images
     };
 
-    console.log(chalet)
 
     try {
         const habitacion = await Habitacion.findOne();

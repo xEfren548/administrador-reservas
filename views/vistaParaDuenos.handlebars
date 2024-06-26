@@ -29,12 +29,23 @@
                     <td>{{this.departureDate}}</td>
                     <td>{{this.status}}</td>
                     <td>${{this.pagoTotal}}</td>
+                    {{#if this.montoPendiente}}
                     <td>${{this.montoPendiente}}</td>
+                    {{else}}
+                    <td>-</td>
+                    {{/if}}
+                    {{#if this.mostrarCancelarReserva}}
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm" data-event-id="{{this._id}}"
+                            onclick="cancelarReserva('{{this._id}}')">Cancelar Reserva
+                    </td>
+                    {{else}}
                     <td class="text-center">
                         <button type="button" class="btn btn-info btn-sm" data-event-id="{{this._id}}"
                             data-pagoTotal="{{this.pagoTotal}}" data-montoPendiente="{{this.montoPendiente}}"
                             onclick="mostrarInfoServicio('{{this._id}}')">Liquidar Reserva
                     </td>
+                    {{/if}}
 
                 </tr>
                 {{/each}}
@@ -76,7 +87,7 @@
                         </div>
                         <div class="col-sm-2">
                             <div class="form-group">
-                                <label for="event_end_date">Noches: </label>
+                                <label for="event_nights">Noches: </label>
                                 <input type="number" name="event_nights" id="event_nights" class="form-control"
                                     placeholder="" min="1" disabled>
                             </div>
@@ -96,7 +107,8 @@
                                         modificar --</option>
                                     {{#if chalets}}
                                     {{#each chalets}}
-                                    <option value="{{this.propertyDetails.name}}" data-bs-pax="{{this.propertyDetails.maxOccupancy}}" data-bs-id="{{this._id}}">
+                                    <option value="{{this.propertyDetails.name}}"
+                                        data-bs-pax="{{this.propertyDetails.maxOccupancy}}" data-bs-id="{{this._id}}">
                                         {{this.propertyDetails.name}}</option>
                                     {{/each}}
                                     {{else}}
@@ -116,7 +128,7 @@
                         </div>
                     </div> <!-- Cierre row -->
 
-                    
+
 
                     <div class="form-item">
                         <p id="txtReservationError" name="errMsg" class="error"></p>
@@ -167,7 +179,6 @@
                 nNights: document.getElementById("event_nights").value.trim(),
                 chaletName: document.getElementById('tipologia_habitacion').value.trim(),
                 maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
-                units: document.getElementById('habitacion_unidades').value.trim(),
             };
 
 
@@ -231,6 +242,100 @@
         }
     });
 
+    async function showAvailableChalets() {
+
+        const arrivalValue = new Date(`${arrivalDate.value}T00:00:00`);
+        const departureValue = new Date(`${departureDate.value}T00:00:00`);
+        const tipologiaHabitacionInput = document.querySelector('#tipologia_habitacion');
+        const options = tipologiaHabitacionInput.querySelectorAll('option');
+
+        const verificarDisponibilidadElement = document.getElementById('verificar-disponibilidad');
+
+        const dataBsIds = [];
+
+
+        try {
+            if (!isNaN(arrivalValue) && !isNaN(departureValue) && departureValue >= arrivalValue) {
+
+                console.log(arrivalValue)
+                console.log(departureValue)
+
+                verificarDisponibilidadElement.style.display = 'block';
+
+                const arrivalYear = arrivalValue.getFullYear();
+                const arrivalMonth = (arrivalValue.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+                const arrivalDay = arrivalValue.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+                const arrivalDate = `${arrivalYear}-${arrivalMonth}-${arrivalDay}`;
+
+                const departureYear = departureValue.getFullYear();
+                const departureMonth = (departureValue.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+                const departureDay = departureValue.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+                const departureDate = `${departureYear}-${departureMonth}-${departureDay}`;
+
+                console.log(arrivalDate)
+                console.log(departureDate)
+
+
+                options.forEach(option => {
+                    const dataBsId = option.getAttribute('data-bs-id');
+                    if (dataBsId) {
+                        dataBsIds.push(dataBsId);
+                    }
+                });
+                console.log(dataBsIds);
+
+                const results = [];
+                for (const idHabitacion of dataBsIds) {
+                    const response = await fetch(`/api/check-availability/?resourceId=${idHabitacion}&arrivalDate=${arrivalDate}&departureDate=${departureDate}`);
+                    const result = await response.json();
+                    results.push({ idHabitacion, available: result.available });
+                }
+
+                console.log(results);
+
+                results.forEach(result => {
+                    const option = document.querySelector(`option[data-bs-id="${result.idHabitacion}"]`);
+                    if (result.available) {
+                        option.style.backgroundColor = 'lightgreen'; // Marca las cabañas disponibles
+                        option.disabled = false;
+                    } else {
+                        option.style.backgroundColor = 'lightcoral'; // Marca las cabañas no disponibles
+                        option.disabled = true;
+                    }
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: "Error en la solicitud: " + error.message,
+                confirmButtonText: 'Aceptar'
+            });
+        } finally {
+            verificarDisponibilidadElement.style.display = 'none';
+        }
+
+
+    }
+
+    const tipologiaSelect = document.getElementById('tipologia_habitacion');
+    const ocupacionInput = document.getElementById('ocupacion_habitacion');
+    const idHabitacionInput = document.getElementById('id_cabana');
+
+
+    tipologiaSelect.addEventListener('change', function () {
+        const selectedOption = tipologiaSelect.options[tipologiaSelect.selectedIndex];
+        const pax = selectedOption.getAttribute('data-bs-pax');
+        const idHabitacion = selectedOption.getAttribute('data-bs-id');
+
+        if (pax != undefined && pax != null && pax.trim() !== '') {
+            ocupacionInput.value = pax;
+        } else {
+            ocupacionInput.value = 0
+        }
+
+    });
+
     async function mostrarInfoServicio(id) {
         console.log(id)
         const button = document.querySelector(`button[data-event-id="${id}"]`);
@@ -271,7 +376,7 @@
 
                 if (response.ok) {
                     Swal.fire({
-                        icon:'success',
+                        icon: 'success',
                         title: 'Pagado',
                         text: 'El pago se realizó correctamente',
                     }).then(result => {
@@ -291,12 +396,45 @@
         }
     }
 
+    async function cancelarReserva(id) {
+        const confirmacion = await Swal.fire({
+            title: 'Advertencia',
+            text: 'Esta acción liberará las fechas de la reserva.',
+            icon: 'warning',
+            showCancelButton: true
+        })
+
+        if (confirmacion.isConfirmed) {
+            const response = await fetch(`/api/eventos/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Completado!',
+                    text: 'Reserva eliminada correctamente.',
+                    confirmButtonText: 'Aceptar',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.reload();
+
+                    }
+                })
+            }
+        }
+    }
+
     const nightsInput = document.querySelector('#event_nights');
     const arrivalDate = document.getElementById('event_start_date')
     const departureDate = document.getElementById('event_end_date')
 
     arrivalDate.addEventListener('input', calculateNightDifference);
     departureDate.addEventListener('input', calculateNightDifference);
+    arrivalDate.addEventListener('input', showAvailableChalets);
+    departureDate.addEventListener('input', showAvailableChalets);
 
     function calculateNightDifference() {
         console.log('Desde calcular noches')

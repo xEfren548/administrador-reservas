@@ -136,7 +136,6 @@ async function obtenerEventosDeCabana(req, res) {
             };
 
         }));
-        console.log(eventosWithColorUsuario);
 
         res.send(eventosWithColorUsuario);
     } catch (error) {
@@ -248,7 +247,9 @@ async function reservasDeDuenos(req, res, next) {
                     arrivalDate: moment.utc(evento.arrivalDate).format('DD-MM-YYYY, h:mm:ss a'),
                     departureDate: moment.utc(evento.departureDate).format('DD-MM-YYYY, h:mm:ss a'),
                     pagoTotal: pagoTotal,  // Asignar los pagos al evento
-                    montoPendiente: montoPendiente
+                    montoPendiente: montoPendiente,
+                    mostrarCancelarReserva: evento.status === 'reserva de dueño'  // Nueva propiedad
+
                 };
             }));
 
@@ -396,7 +397,7 @@ async function createReservation(req, res, next) {
 }
 
 async function createOwnerReservation(req, res, next) {
-    const { chaletName, arrivalDate, departureDate, maxOccupation, nNights, units } = req.body;
+    const { chaletName, arrivalDate, departureDate, maxOccupation, nNights } = req.body;
 
     try {
         const chalets = await Habitacion.findOne();
@@ -417,7 +418,7 @@ async function createOwnerReservation(req, res, next) {
             nNights: nNights,
             status: 'reserva de dueño',
             url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
-            units: units,
+            units: 1,
             createdBy: createdBy
         };
 
@@ -450,8 +451,7 @@ async function createOwnerReservation(req, res, next) {
         await logController.createBackendLog(logBody);
 
 
-
-        res.status(200).json({ success: true, reservationId: documento.events[documento.events.length - 1]._id, message });
+        res.status(200).json({ success: true, reservationId: documento.events[documento.events.length - 1]._id });
     } catch (err) {
         console.log(err);
         return next(err);
@@ -629,8 +629,6 @@ async function modificarEvento(req, res) {
         await logController.createBackendLog(logBody);
 
         const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(eventId);
-        console.log('comisiones Reserva: ');
-        console.log(comisionesReserva);
 
         const newComisiones = comisionesReserva.map(comisiones => {
             return {
@@ -639,7 +637,6 @@ async function modificarEvento(req, res) {
             }
         })
 
-        console.log(newComisiones);
 
         const comisionsResults = [];
         for (const comision of newComisiones) {
@@ -647,7 +644,6 @@ async function modificarEvento(req, res) {
             if (cRes) { comisionsResults.push(cRes); }
         }
 
-        console.log(comisionsResults);
 
 
         res.status(200).json({ mensaje: 'Evento modificado correctamente', evento: evento });
@@ -708,8 +704,6 @@ async function moveToPlayground(req, res) {
 
         if (evento.status === 'active' && status === 'playground') {
             const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
-            console.log('comisiones Reserva: ');
-            console.log(comisionesReserva);
 
             const newComisiones = comisionesReserva.map(comisiones => {
                 return {
@@ -723,13 +717,11 @@ async function moveToPlayground(req, res) {
                 await utilidadesController.editarComisionReturn(comision);
             }
 
-            console.log(newComisiones);
         }
 
         if (evento.status === 'playground' && status === 'active') {
             const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
-            console.log('comisiones Reserva: ');
-            console.log(comisionesReserva);
+
 
             const newComisiones = comisionesReserva.map(comisiones => {
                 return {
@@ -739,7 +731,6 @@ async function moveToPlayground(req, res) {
                 }
             })
 
-            console.log(newComisiones);
 
             for (const comision of newComisiones) {
                 await utilidadesController.editarComisionReturn(comision);
@@ -748,8 +739,7 @@ async function moveToPlayground(req, res) {
 
         if (evento.status === 'active' && status === 'cancelled') {
             const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
-            console.log('comisiones Reserva: ');
-            console.log(comisionesReserva);
+
 
             const newComisiones = [];
             for (const comisiones of comisionesReserva) {
@@ -770,7 +760,6 @@ async function moveToPlayground(req, res) {
                 }
             }
 
-            console.log('new Comisiones: ', newComisiones);
 
             for (const comision of newComisiones) {
                 await utilidadesController.editarComisionReturn(comision);
@@ -782,7 +771,6 @@ async function moveToPlayground(req, res) {
         if (!confirmation) {
             throw new Error('No se pudo actualizar el evento');
         }
-        console.log(confirmation);
 
         const logBody = {
             fecha: Date.now(),
@@ -808,8 +796,6 @@ async function moveToPlayground(req, res) {
 async function crearNota(req, res) {
     const idReserva = req.params.id;
     const { texto } = req.body;
-    console.log(texto);
-    console.log(req.body);
 
     try {
         const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
@@ -848,11 +834,9 @@ async function crearNota(req, res) {
 }
 
 async function eliminarNota(req, res) {
-    console.log('Desde eliminar nota')
     const idReserva = req.query.idReserva; // Obtener el ID de la reserva desde los parámetros de la consulta
     const idNota = req.query.idNota; // Obtener el ID de la nota a eliminar desde los parámetros de la consulta
 
-    console.log(idReserva, idNota)
 
     try {
         // Buscar el documento que contiene los eventos
@@ -910,6 +894,7 @@ module.exports = {
     obtenerEventoPorId,
     obtenerEventoPorIdRoute,
     createReservation,
+    createOwnerReservation,
     editarEvento,
     eliminarEvento,
     checkAvailability,
