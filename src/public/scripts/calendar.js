@@ -79,7 +79,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             },
         eventContent: function (info) {
 
-
             // console.log(data);
             let background;
             let textColor;
@@ -97,6 +96,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 background = 'bg-info';
                 textColor = 'text-black';
             }
+
+            
 
 
 
