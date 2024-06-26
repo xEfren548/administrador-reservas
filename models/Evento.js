@@ -70,7 +70,7 @@ const reservaSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["active", "playground", "cancelled", "pending"],
+        enum: ["active", "playground", "cancelled", "pending", "reserva de dueño"],
         required: true,
         default: "pending"
     },

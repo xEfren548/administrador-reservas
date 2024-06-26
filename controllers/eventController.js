@@ -192,14 +192,14 @@ async function reservasDeDuenos(req, res, next) {
         const duenoId = req.session.id;
 
         // Find the existing rooms
-        const habitacionesExistentes = await Habitacion.findOne();
+        const habitacionesExistentes = await Habitacion.findOne().lean();
         if (!habitacionesExistentes) {
             return res.status(404).send('No rooms found');
         }
 
         // Filter the rooms that belong to the owner
         const habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
-
+        console.log(habitacionesDueno)
         // Extract the IDs and names of the rooms
         const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
         const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
@@ -237,10 +237,10 @@ async function reservasDeDuenos(req, res, next) {
                 let total = subtotal - preTotal;
 
                 let montoPendiente = total - pagoTotal;
-                
-                
-        
-        
+
+
+
+
                 // Retornar el evento con los pagos y las fechas formateadas
                 return {
                     ...evento,
@@ -253,9 +253,10 @@ async function reservasDeDuenos(req, res, next) {
             }));
 
         eventosFiltradosOrdenadosConPagos.sort((a, b) => moment(b.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf() - moment(a.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf());
-        
+
         res.render('vistaParaDuenos', {
-            eventos: eventosFiltradosOrdenadosConPagos
+            eventos: eventosFiltradosOrdenadosConPagos,
+            chalets: habitacionesDueno
         });
 
     } catch (error) {
@@ -372,6 +373,69 @@ async function createReservation(req, res, next) {
 
         console.log("SendMessages.sendReminders");
         SendMessages.sendReservationConfirmation(client[0], chalet, reservationToAdd);
+
+        // Log
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            idReserva: idReserva,
+            acciones: `Reservación creada por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+
+        await logController.createBackendLog(logBody);
+
+
+
+        res.status(200).json({ success: true, reservationId: documento.events[documento.events.length - 1]._id, message });
+    } catch (err) {
+        console.log(err);
+        return next(err);
+    }
+}
+
+async function createOwnerReservation(req, res, next) {
+    const { chaletName, arrivalDate, departureDate, maxOccupation, nNights, units } = req.body;
+
+    try {
+        const chalets = await Habitacion.findOne();
+        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+        if (!chalet) {
+            throw new NotFoundError('Chalet does not exist 2');
+        }
+
+        var reservationToAdd;
+
+        const createdBy = new mongoose.Types.ObjectId(req.session.id);
+
+        reservationToAdd = {
+            resourceId: chalet._id,
+            arrivalDate: arrivalDate,
+            departureDate: departureDate,
+            maxOccupation: maxOccupation,
+            nNights: nNights,
+            status: 'reserva de dueño',
+            url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
+            units: units,
+            createdBy: createdBy
+        };
+
+
+
+        const documento = await Documento.findOne();
+        documento.events.push(reservationToAdd);
+        await documento.save();
+
+        // Guardar la reserva actualizada en la base de datos
+        const documento2 = await Documento.findOne()
+
+        const idReserva = documento.events[documento.events.length - 1]._id.toString();
+        const url = `http://${process.env.URL}/api/eventos/${idReserva}`;
+        const evento = documento2.events.find(habitacion => habitacion.id === idReserva);
+
+        evento.url = url;
+        await documento2.save();
 
         // Log
         const logBody = {
