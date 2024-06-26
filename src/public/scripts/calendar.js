@@ -56,7 +56,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                     })
                     .then(function (data) {
                         // console.log(data);
-                        let events = data[0].events.map(function (event) {
+                        let events = data[0].events
+                        .filter(event => event.status !== 'cancelled')
+                        .map(function (event) {
                             
                             return {
                                 id: event._id,
