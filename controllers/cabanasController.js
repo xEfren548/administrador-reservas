@@ -32,8 +32,7 @@ const createChaletValidators = [
     // propertyDetails validations.
     check('propertyDetails.accomodationType')
         .notEmpty().withMessage('Accommodation type is required')
-        .isLength({ max: 255 }).withMessage("Accomodation type must be less than 255 characters")
-        .isIn(['Habitación', 'Cabaña']).withMessage('Invalid accomodation type'),
+        .isLength({ max: 255 }).withMessage("Accomodation type must be less than 255 characters"),
     check('propertyDetails.name')
         .notEmpty().withMessage('Name is required')
         .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s0-9']+$/).withMessage("Invalid property name format")
@@ -449,7 +448,7 @@ async function createChalet(req, res, next) {
             departureTime: newDepartureTime,
             admin: admin._id,
             janitor: janitor._id,
-            owner: owner_id,
+            owner: owner._id,
         }
     };
 
@@ -578,6 +577,14 @@ async function showEditChaletsView(req, res, next) {
             chalet.others.janitor = [janitor.email, janitor.firstName + " " + janitor.lastName];
         }
         for (const chalet of chalets) {
+            const owner = await Usuario.findById(chalet.others.owner);
+            if (!owner) {
+                throw new NotFoundError("Owner not found");
+            }
+            console.log(owner);
+            chalet.others.owner = [owner._id, owner.firstName + " " + owner.lastName];
+        }
+        for (const chalet of chalets) {
             let arrivalstr = chalet.others.arrivalTime.toString();
             let departurestr = chalet.others.departureTime.toString();
             let arrival = arrivalstr.split(':')[0].slice(-2) + ":" + arrivalstr.split(':')[1]
@@ -595,7 +602,7 @@ async function showEditChaletsView(req, res, next) {
         if (!tipologias) {
             throw new NotFoundError("No tipologies found");
         }
-        console.log(tipologias)
+        console.log(owners)
         //console.log("CHALETS: ", chalets);
         //console.log("CHALETS2222: ", chalets[0].others.admin[0]);
         //console.log("ADMINS: ", admins);
@@ -623,57 +630,56 @@ async function showEditChaletsView(req, res, next) {
 
 async function editChalet(req, res, next) {
     const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images } = req.body;
-    console.log('Entrando a edit chalet')
-    //console.log("imagenes" + images.imagesarray);
-    //console.log(propertyDetails.name);
-    const admin = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
-    if (!admin) {
-        throw new NotFoundError("Admin not found");
-    }
-    const janitor = await Usuario.findOne({ email: others.janitor, privilege: "Limpieza" });
-    if (!janitor) {
-        throw new NotFoundError("Janitor not found");
-    }
-
-    const owner = await Usuario.findOne({ _id: others.owner, privilege: "Dueño de cabañas" });
-    if (!owner) {
-        throw new NotFoundError("Owner not found");
-    }
-
-    console.log(others.departureTime)
-    console.log(others.arrivalTime)
-    const newArrivalTime = new Date();
-    newArrivalTime.setHours(parseInt(others.arrivalTime.split(':')[0], 10));
-    newArrivalTime.setMinutes(parseInt(others.arrivalTime.split(':')[1], 10));
-    const newDepartureTime = new Date();
-    newDepartureTime.setHours(parseInt(others.departureTime.split(':')[0], 10));
-    newDepartureTime.setMinutes(parseInt(others.departureTime.split(':')[1], 10));
-    console.log(newDepartureTime)
-    const chalet = {
-        propertyDetails,
-        accommodationFeatures,
-        additionalInfo,
-        accomodationDescription,
-        additionalAccomodationDescription,
-        touristicRate,
-        legalNotice,
-        location,
-        others: {
-            basePrice: others.basePrice,
-            basePrice2nights: others.basePrice2nights,
-            baseCost: others.baseCost,
-            baseCost2nights: others.baseCost2nights,
-            arrivalTime: newArrivalTime,
-            departureTime: newDepartureTime,
-            admin: admin._id,
-            janitor: janitor._id,
-            owner: owner._id
-        },
-        images
-    };
-
+    console.log('Entrando a edit chalet');
 
     try {
+        const admin = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
+        if (!admin) {
+            throw new NotFoundError("Admin not found");
+        }
+        const janitor = await Usuario.findOne({ email: others.janitor, privilege: "Limpieza" });
+        if (!janitor) {
+            throw new NotFoundError("Janitor not found");
+        }
+
+        const owner = await Usuario.findOne({ _id: others.owner, privilege: "Dueño de cabañas" });
+        if (!owner) {
+            throw new NotFoundError("Owner not found");
+        }
+
+        console.log(others.departureTime);
+        console.log(others.arrivalTime);
+        const newArrivalTime = new Date();
+        newArrivalTime.setHours(parseInt(others.arrivalTime.split(':')[0], 10));
+        newArrivalTime.setMinutes(parseInt(others.arrivalTime.split(':')[1], 10));
+        const newDepartureTime = new Date();
+        newDepartureTime.setHours(parseInt(others.departureTime.split(':')[0], 10));
+        newDepartureTime.setMinutes(parseInt(others.departureTime.split(':')[1], 10));
+        console.log(newDepartureTime);
+
+        const chalet = {
+            propertyDetails,
+            accommodationFeatures,
+            additionalInfo,
+            accomodationDescription,
+            additionalAccomodationDescription,
+            touristicRate,
+            legalNotice,
+            location,
+            others: {
+                basePrice: others.basePrice,
+                basePrice2nights: others.basePrice2nights,
+                baseCost: others.baseCost,
+                baseCost2nights: others.baseCost2nights,
+                arrivalTime: newArrivalTime,
+                departureTime: newDepartureTime,
+                admin: admin._id,
+                janitor: janitor._id,
+                owner: owner._id
+            },
+            images
+        };
+
         const habitacion = await Habitacion.findOne();
         let chalets = habitacion.resources;
 
@@ -688,23 +694,24 @@ async function editChalet(req, res, next) {
         console.log("Cabaña actualizada con éxito");
         req.session.chaletUpdated = chalets[indexToUpdate].propertyDetails.name;
         console.log("Respuesta del servidor:", { chaletUpdated: req.session.chaletUpdated });
+
         const logBody = {
             fecha: Date.now(),
             idUsuario: req.session.id,
             type: 'modification',
             acciones: `Cabaña modificada por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
-        }
+        };
 
         await logController.createBackendLog(logBody);
 
         res.status(200).json({ success: true, message: "Cabaña editada con éxito" });
     } catch (err) {
-        console.log(err);
-        // return next(err);
-        res.status(500).json({ error: err.message });
+        console.error('Error en editChalet:', err); // Imprimir el error completo en la consola
+        res.status(500).json({ error: 'Ocurrió un error al procesar tu solicitud.' }); // Enviar un mensaje de error conciso al cliente
     }
 }
+
 
 async function renderCalendarPerChalet(req, res, next) {
     try {
