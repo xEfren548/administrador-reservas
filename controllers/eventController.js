@@ -85,6 +85,46 @@ const createReservationValidators = [
         }),
 ];
 
+const createOwnersReservationValidators = [
+    check('clienteProvisional')
+        .notEmpty().withMessage('Name is required'),
+    check('arrivalDate')
+        .notEmpty().withMessage('Start date is required')
+        .toDate(),
+    check('departureDate')
+        .notEmpty().withMessage('End date is required')
+        .toDate(),
+    check()
+        .custom((value, { req }) => {
+            const arrivalDate = new Date(req.body.arrivalDate);
+            const departureDate = new Date(req.body.departureDate);
+            const currentDate = new Date();
+
+            if (arrivalDate <= currentDate) {
+                throw new BadRequestError('Arrival date must be after the current date');
+            }
+            if (arrivalDate >= departureDate) {
+                throw new BadRequestError('Departure date must be after arrival date');
+            }
+            return true;
+        }),
+    check("nNights")
+        .notEmpty().withMessage('Number of nights is required'),    check("chaletName")
+        .notEmpty().withMessage('Chalet name is required')
+        .isLength({ max: 255 }).withMessage("Chalet name must be less than 255 characters")
+        .custom(async (value, { req }) => {
+            const chalets = await Habitacion.findOne();
+            const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
+            if (!chalet) {
+                throw new NotFoundError('Chalet does not exist');
+            }
+            return true;
+        }),
+    check("maxOccupation")
+        .notEmpty().withMessage('Max occupation is required')
+        .isNumeric().withMessage('Max occupation must be a number')
+];
+
 const submitReservationValidators = [
     check()
         .custom((value, { req }) => {
@@ -894,6 +934,7 @@ async function eliminarNota(req, res) {
 
 module.exports = {
     createReservationValidators,
+    createOwnersReservationValidators,
     submitReservationValidators,
     obtenerEventos,
     obtenerEventosDeCabana,

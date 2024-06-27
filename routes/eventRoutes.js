@@ -18,7 +18,7 @@ router.get('/eventos/route/:id', eventController.obtenerEventoPorIdRoute);
 
 router.post('/eventos', eventController.createReservationValidators, validationRequest, eventController.createReservation);
 router.post('/notas/:id', eventController.crearNota);
-router.post('/eventos/reservadueno', eventController.createOwnerReservation)
+router.post('/eventos/reservadueno', eventController.createOwnersReservationValidators, validationRequest, eventController.createOwnerReservation)
 
 router.put('/eventos/:id', eventController.editarEvento);
 router.put('/eventos/:id/modificar', eventController.modificarEvento);
