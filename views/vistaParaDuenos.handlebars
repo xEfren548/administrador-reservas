@@ -15,7 +15,6 @@
                     <th scope="col">Fecha de llegada</th>
                     <th scope="col">Fecha de salida</th>
                     <th scope="col">Estatus</th>
-                    <th scope="col">Pagos Realizados</th>
                     <th scope="col">Monto pendiente</th>
                     <th scope="col">Acciones</th>
                 </tr>
@@ -28,7 +27,6 @@
                     <td>{{this.arrivalDate}}</td>
                     <td>{{this.departureDate}}</td>
                     <td>{{this.status}}</td>
-                    <td>${{this.pagoTotal}}</td>
                     {{#if this.montoPendiente}}
                     <td>${{this.montoPendiente}}</td>
                     {{else}}
@@ -70,6 +68,15 @@
             </div>
             <div class="modal-body">
                 <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label for="cliente_name">Nombre de cliente: </label>
+                                <input type="text" name="cliente_name" id="cliente_name" class="form-control"
+                                    placeholder="Nombre">
+                            </div>
+                        </div>
+                    </div>
                     <div class="row mt-2">
                         <div class="col-sm-5">
                             <div class="form-group">
@@ -179,6 +186,7 @@
                 nNights: document.getElementById("event_nights").value.trim(),
                 chaletName: document.getElementById('tipologia_habitacion').value.trim(),
                 maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
+                clienteProvisional: document.getElementById('cliente_name').value.trim(),
             };
 
 

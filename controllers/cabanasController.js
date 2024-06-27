@@ -588,9 +588,14 @@ async function showEditChaletsView(req, res, next) {
         const admins = await Usuario.find({ privilege: "Administrador" }).lean();
         const janitors = await Usuario.find({ privilege: "Limpieza" }).lean();
         const owners = await Usuario.find({ privilege: "Dueño de cabañas" }).lean();
+        const tipologias = await TipologiasCabana.find().lean();
         if (!owners) {
             throw new NotFoundError("No owners found");
         }
+        if (!tipologias) {
+            throw new NotFoundError("No tipologies found");
+        }
+        console.log(tipologias)
         //console.log("CHALETS: ", chalets);
         //console.log("CHALETS2222: ", chalets[0].others.admin[0]);
         //console.log("ADMINS: ", admins);
@@ -607,7 +612,8 @@ async function showEditChaletsView(req, res, next) {
             chalets: chalets,
             admins: admins,
             janitors: janitors,
-            owners: owners
+            owners: owners,
+            tipologias: tipologias
         });
     } catch (error) {
         console.error('Error:', error);
@@ -617,7 +623,7 @@ async function showEditChaletsView(req, res, next) {
 
 async function editChalet(req, res, next) {
     const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images } = req.body;
-
+    console.log('Entrando a edit chalet')
     //console.log("imagenes" + images.imagesarray);
     //console.log(propertyDetails.name);
     const admin = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
@@ -631,7 +637,7 @@ async function editChalet(req, res, next) {
 
     const owner = await Usuario.findOne({ _id: others.owner, privilege: "Dueño de cabañas" });
     if (!owner) {
-        throw new NotFoundError("Janitor not found");
+        throw new NotFoundError("Owner not found");
     }
 
     console.log(others.departureTime)
@@ -695,7 +701,8 @@ async function editChalet(req, res, next) {
         res.status(200).json({ success: true, message: "Cabaña editada con éxito" });
     } catch (err) {
         console.log(err);
-        return next(err);
+        // return next(err);
+        res.status(500).json({ error: err.message });
     }
 }
 

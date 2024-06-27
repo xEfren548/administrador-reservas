@@ -21,8 +21,13 @@
             <label for="slctchaletAccomodationType">Tipo de alojamiento</label>
             <select id="slctchaletAccomodationType" name="slctchaletAccomodationType"
                 value="{{propertyDetails.accomodationType}}">
-                <option value="Cabaña">Cabaña</option>
-                <option value="Habitación">Habitación</option>
+                {{#if ../tipologias}}
+                {{#each ../tipologias}}
+                <option value="{{this.tipologia}}">{{this.tipologia}}</option>
+                {{/each}}
+                {{else}}
+                <option value="">No hay tipos de alojamiento disponibles, necesitas agregar uno.</option>
+                {{/if}}
             </select>
         </div>
         <div class="input-group half">
@@ -895,7 +900,7 @@
                     {{#each ../owners}}
                     <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
                     {{/each}}
-                    
+
                     {{/if}}
                 </select>
             </div>
@@ -1037,7 +1042,6 @@
             // Updating chalet.
             form.addEventListener("submit", async (event) => {
                 event.preventDefault();
-
                 // Creating JSON for text data.
                 const data = {
                     propertyDetails: {
@@ -1232,9 +1236,12 @@
                     body: JSON.stringify(data)
                 })
                     .then(response => {
+                        console.log(response);
                         if (!response.ok) {
                             response.json().then(errorData => {
                                 const errors = errorData.error;
+                                console.log(errors);
+
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Error',

@@ -49,6 +49,8 @@ async function generateSideMenu(req, res, next) {
             'Dueño de cabañas': [
                 { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
                 { 'Calendario': ["/api/calendar/duenos", "fs-5 fa fa-calendar"] },
+                { 'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
+
             ],
             'Inversionistas': [
                 { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },

@@ -251,8 +251,9 @@ async function generarComisionReserva(req, res) {
 
         const chaletAdmin = chalet.others.admin.toString();
         const chaletJanitor = chalet.others.janitor.toString();
+        const chaletOwner = chalet.others.owner.toString();
 
-
+        // Comisión de administrador top
         await altaComisionReturn({
             monto: utilidadChalet,
             concepto: `Utilidad de reservación ${chaletName}`,
@@ -261,12 +262,21 @@ async function generarComisionReserva(req, res) {
             idReserva: idReserva
         })
 
-
+        // Comisión de limpieza
         await altaComisionReturn({
             monto: chalet.additionalInfo.extraCleaningCost,
             concepto: `Comisión limpieza ${chaletName}`,
             fecha: new Date(departureDate),
             idUsuario: chaletJanitor,
+            idReserva: idReserva
+        })
+
+        // Comisión de dueño de cabañas
+        await altaComisionReturn({
+            monto: costoBase - chalet.additionalInfo.extraCleaningCost,
+            concepto: `Comisión Dueño de cabaña: ${chaletName}`,
+            fecha: new Date(departureDate),
+            idUsuario: chaletOwner,
             idReserva: idReserva
         })
 

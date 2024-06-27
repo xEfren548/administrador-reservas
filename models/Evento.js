@@ -72,6 +72,9 @@ const reservaSchema = new Schema({
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Usuario'
+    },
+    clienteProvisional: {
+        type: "String"
     }
 });
 

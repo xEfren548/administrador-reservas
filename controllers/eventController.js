@@ -198,7 +198,6 @@ async function reservasDeDuenos(req, res, next) {
 
         // Filter the rooms that belong to the owner
         const habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
-        console.log(habitacionesDueno)
         // Extract the IDs and names of the rooms
         const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
         const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
@@ -397,7 +396,7 @@ async function createReservation(req, res, next) {
 }
 
 async function createOwnerReservation(req, res, next) {
-    const { chaletName, arrivalDate, departureDate, maxOccupation, nNights } = req.body;
+    const { chaletName, arrivalDate, departureDate, maxOccupation, nNights, clienteProvisional } = req.body;
 
     try {
         const chalets = await Habitacion.findOne();
@@ -419,7 +418,8 @@ async function createOwnerReservation(req, res, next) {
             status: 'reserva de dueño',
             url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
             units: 1,
-            createdBy: createdBy
+            createdBy: createdBy,
+            clienteProvisional: clienteProvisional
         };
 
 
