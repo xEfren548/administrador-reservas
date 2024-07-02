@@ -46,6 +46,7 @@ mongoose.connect(db_url).then(async () => {
     })
 
     
+    // const job = schedule.scheduleJob('* * * * *', async () => {         
     const job = schedule.scheduleJob('* * * * *', async () => {         
         await SendMessages.sendReminders();
         await SendMessages.sendThanks();

@@ -2,10 +2,12 @@ const Cliente = require("../../models/Cliente");
 const Evento = require("../../models/Evento");
 const Habitacion = require("../../models/Habitacion");
 const Pago = require("../../models/Pago");
+const pagoController = require('../../controllers/pagoController');
+
 const { format } = require('date-fns');
 const { es } = require('date-fns/locale');
 
-function createParamsArray(params){
+function createParamsArray(params) {
     return params.map(param => {
         return {
             "type": "text",
@@ -14,7 +16,7 @@ function createParamsArray(params){
     })
 }
 
-function sendTemplateMsg(clientInfo, template, params){
+function sendTemplateMsg(clientInfo, template, params) {
     console.log("sendTemplateMsg");
 
     const botId = '142727708934806';
@@ -25,11 +27,11 @@ function sendTemplateMsg(clientInfo, template, params){
     const url = 'https://graph.facebook.com/v15.0/' + botId + '/messages';
     const data = {
         messaging_product: 'whatsapp',
-        to: clientInfo.phone, 
+        to: clientInfo.phone,
         type: 'template',
         template: {
             name: template,
-            language:{ code: 'es_MX' },
+            language: { code: 'es_MX' },
             components: [
                 {
                     type: "body",
@@ -40,28 +42,28 @@ function sendTemplateMsg(clientInfo, template, params){
     };
 
     var postReq = {
-    method: 'POST',
-    headers: {
-        'Authorization': 'Bearer ' + bearerToken,
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data),
-    json: true
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + bearerToken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data),
+        json: true
     };
 
     fetch(url, postReq)
-    .then(data => {
-        return data.json()
-    })
-    .then(res => {
-        console.log(res)
-    })
-    .catch(error => console.log(error));
+        .then(data => {
+            return data.json()
+        })
+        .then(res => {
+            console.log(res)
+        })
+        .catch(error => console.log(error));
 }
 
-function sendReservationConfirmation(clientInfo, chaletInfo, reservationInfo){
+function sendReservationConfirmation(clientInfo, chaletInfo, reservationInfo) {
     console.log("sendReservationConfirmation");
-    
+
     sendTemplateMsg(clientInfo, "confirmacion_de_reserva", [
         chaletInfo.propertyDetails.name,
         reservationInfo.arrivalDate,
@@ -69,15 +71,15 @@ function sendReservationConfirmation(clientInfo, chaletInfo, reservationInfo){
     ])
 }
 
-async function sendReminders(){
+async function sendReminders() {
     // console.log("--------------------------------------------------------------------------------");
     // console.log("SENDIND REMINDERS");
     var reservations = await Evento.findOne();
     reservations = reservations.events;
 
-    if(reservations){
-        for(const reservation of reservations) {            
-            
+    if (reservations) {
+        for (const reservation of reservations) {
+
             const client = await Cliente.findById(reservation.client);
             if (!client) {
                 // console.log(reservation.client, ': Client does not exist');
@@ -95,20 +97,20 @@ async function sendReminders(){
             if (new Date() === new Date(reservation.arrivalDate.getTime() - (12 * 60 * 60 * 1000))) {
                 console.log(`Sending reminder for reservation with arrival date: ${reservation.arrivalDate}`);
                 sendTemplateMsg(client, "purchase_receipt_1", [client.firstName, chalet.propertyDetails.name]);
-            }   
+            }
         };
     }
 }
 
-async function sendThanks(){
+async function sendThanks() {
     // console.log("--------------------------------------------------------------------------------");
     // console.log("SENDIND THANKS");
     var reservations = await Evento.findOne();
     reservations = reservations.events;
 
-    if(reservations){
-        for(const reservation of reservations) {
-            
+    if (reservations) {
+        for (const reservation of reservations) {
+
             const client = await Cliente.findById(reservation.client);
             if (!client) {
                 // console.log(reservation.client, ': Client does not exist');
@@ -126,7 +128,7 @@ async function sendThanks(){
             if (new Date() === reservation.departureDate.getTime()) {
                 console.log(`Sending thanks for reservation with departure date: ${reservation.departureDate}`);
                 sendTemplateMsg(client, "encuesta_de_satisfaccion", [chalet.propertyDetails.name]);
-            }   
+            }
         };
     }
 }
@@ -139,32 +141,51 @@ async function cancelReservation() {
 
     if (reservations) {
         for (const reservation of reservations) {
-            const client = await Cliente.findById(reservation.client);
-            if (!client) {
-                // console.log(reservation.client, ': Client does not exist');
-                continue;
-            }
+            if (reservation.status !== "active") {
+                const client = await Cliente.findById(reservation.client);
+                if (!client) {
+                    console.log(reservation.client, ': Client does not exist');
+                    continue;
+                }
 
-            const chalet = await Habitacion.findById(reservation.chalet);
-            if (!chalet) {
-                // console.log(reservation.resourceId, ': Chalet does not exist');
-                continue;
-            }
+                // const chalet = await Habitacion.findById(reservation.resourceId);
+                // if (!chalet) {
+                //     console.log(reservation.resourceId, ': Chalet does not exist');
+                //     continue;
+                // }
 
-            const isDeposit = reservation.isDeposit;
-            if (isDeposit) {
-                const payment = await Pago.findOne({ reservationId: reservation._id });
-                if (!payment) {
-                    console.log(reservation.resourceId, ': Reservation has no payment recorded');
+                const isDeposit = reservation.isDeposit;
 
-                    console.log("Current date: ", new Date());
-                    console.log("Cancelation date: ", reservation.paymentCancelation);
+                const pagos = await pagoController.obtenerPagos(reservation._id);
+                let pagoTotal = 0
+                pagos.forEach(pago => {
+                    pagoTotal += pago.importe;
+                })
+                console.log("Pago total reserva: ", pagoTotal);
+                const totalReserva = reservation.total;
+                const montoPendiente = totalReserva - pagoTotal;
+
+                const pagoDel50 = (montoPendiente <= totalReserva / 2) ? true : false;
+                console.log(pagoDel50);
+
+
+
+                if (isDeposit && pagoDel50) {
+                    // const payment = await Pago.findOne({ reservationId: reservation._id });
+                    // console.log(reservation.resourceId, ': Reservation has no payment recorded');
+                    // console.log("Current date: ", new Date());
+                    // console.log("Cancelation date: ", reservation.paymentCancelation);
+                    reservation.status = 'active';
+                }
+                else {
+                    console.log(reservation.paymentCancelation)
                     if (new Date().getTime() === reservation.paymentCancelation.getTime()) {
                         console.log(`Canceling reservation as it is: ${reservation.departureDate} and no payment has been recorded`);
                         reservation.status = "cancelled"
                     }
                 }
-            } 
+
+            }
         }
 
         await evento.save();
@@ -175,7 +196,7 @@ async function cancelReservation() {
 
 module.exports = {
     sendReservationConfirmation,
-    sendReminders, 
+    sendReminders,
     sendThanks,
     cancelReservation
 };
