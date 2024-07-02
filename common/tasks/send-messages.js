@@ -132,8 +132,8 @@ async function sendThanks(){
 }
 
 async function cancelReservation() {
-    // console.log("--------------------------------------------------------------------------------");
-    // console.log("SENDIND CANELATION");
+    console.log("--------------------------------------------------------------------------------");
+    console.log("SENDIND CANELATION");
     var evento = await Evento.findOne();
     var reservations = evento.events;
 
