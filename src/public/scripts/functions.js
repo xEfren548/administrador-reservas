@@ -148,6 +148,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 isDeposit: document.getElementById('chckDeposit').checked
             };
 
+            if (!formData.units) {
+                throw new Error('Asegúrate de poner las unidades.')
+            }
+
             console.log(preciosTotalesGlobal)
             console.log("precioMinimoPermitido: ", precioMinimoPermitido)
 

@@ -210,6 +210,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     var contextMenu = document.getElementById('context-menu');
     const moveToActiveEl = document.getElementById('move-to-active');
     const moveToPlaygroundEl = document.getElementById('move-to-playground');
+    const cancelReservationEl = document.getElementById('delete');
     var currentEvent;
 
     function showContextMenu(event, calendarEvent) {
@@ -221,6 +222,16 @@ document.addEventListener('DOMContentLoaded', async function () {
         } else if (currentEvent.extendedProps.status === 'playground') {
             moveToPlaygroundEl.style.display = 'none';
             moveToActiveEl.style.display = 'block';
+        } else if (currentEvent.extendedProps.status === 'pending'){
+            moveToPlaygroundEl.style.display = 'block';
+            moveToActiveEl.style.display = 'none';
+            cancelReservationEl.style.display = 'block';
+        }
+        else {
+            moveToPlaygroundEl.style.display = 'none';
+            moveToActiveEl.style.display = 'none';
+            cancelReservationEl.style.display = 'none';
+
         }
         contextMenu.style.left = event.pageX + 'px';
         contextMenu.style.top = event.pageY + 'px';
