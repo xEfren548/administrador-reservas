@@ -135,24 +135,18 @@ async function sendThanks() {
 
 async function cancelReservation() {
     console.log("--------------------------------------------------------------------------------");
-    console.log("SENDIND CANELATION");
+    console.log("SENDING CANCELATION");
     var evento = await Evento.findOne();
     var reservations = evento.events;
 
     if (reservations) {
         for (const reservation of reservations) {
-            if (reservation.status !== "active") {
+            if (reservation.status === "pending") {
                 const client = await Cliente.findById(reservation.client);
                 if (!client) {
                     console.log(reservation.client, ': Client does not exist');
                     continue;
                 }
-
-                // const chalet = await Habitacion.findById(reservation.resourceId);
-                // if (!chalet) {
-                //     console.log(reservation.resourceId, ': Chalet does not exist');
-                //     continue;
-                // }
 
                 const isDeposit = reservation.isDeposit;
 
@@ -161,7 +155,6 @@ async function cancelReservation() {
                 pagos.forEach(pago => {
                     pagoTotal += pago.importe;
                 })
-                console.log("Pago total reserva: ", pagoTotal);
                 const totalReserva = reservation.total;
                 const montoPendiente = totalReserva - pagoTotal;
 
@@ -169,20 +162,23 @@ async function cancelReservation() {
                 console.log(pagoDel50);
 
 
-
-                if (isDeposit && pagoDel50) {
-                    // const payment = await Pago.findOne({ reservationId: reservation._id });
-                    // console.log(reservation.resourceId, ': Reservation has no payment recorded');
-                    // console.log("Current date: ", new Date());
-                    // console.log("Cancelation date: ", reservation.paymentCancelation);
-                    reservation.status = 'active';
-                }
-                else {
-                    console.log(reservation.paymentCancelation)
-                    if (new Date().getTime() === reservation.paymentCancelation.getTime()) {
-                        console.log(`Canceling reservation as it is: ${reservation.departureDate} and no payment has been recorded`);
-                        reservation.status = "cancelled"
+                if (isDeposit) {
+                    if (pagoDel50) {
+                        // const payment = await Pago.findOne({ reservationId: reservation._id });
+                        // console.log(reservation.resourceId, ': Reservation has no payment recorded');
+                        // console.log("Current date: ", new Date());
+                        // console.log("Cancelation date: ", reservation.paymentCancelation);
+                        
+                        reservation.status = 'active';
+                        console.log('reserva movida a activa')
                     }
+                    else {
+                        if (new Date().getTime() >= reservation.paymentCancelation.getTime()) {
+                            console.log(`Canceling reservation as it is: ${reservation.departureDate} and no payment has been recorded`);
+                            reservation.status = "cancelled"
+                        }
+                    }
+
                 }
 
             }
