@@ -57,21 +57,21 @@ document.addEventListener('DOMContentLoaded', async function () {
                     .then(function (data) {
                         // console.log(data);
                         let events = data[0].events
-                        .filter(event => event.status !== 'cancelled')
-                        .map(function (event) {
-                            
-                            return {
-                                id: event._id,
-                                resourceId: event.resourceId,
-                                title: event.title,
-                                start: new Date(event.arrivalDate),
-                                end: new Date(event.departureDate),
-                                url: event.url,
-                                total: event.total,
-                                clientId: event.client,
-                                status: event.status
-                            }
-                        })
+                            .filter(event => event.status !== 'cancelled')
+                            .map(function (event) {
+
+                                return {
+                                    id: event._id,
+                                    resourceId: event.resourceId,
+                                    title: event.title,
+                                    start: new Date(event.arrivalDate),
+                                    end: new Date(event.departureDate),
+                                    url: event.url,
+                                    total: event.total,
+                                    clientId: event.client,
+                                    status: event.status
+                                }
+                            })
                         successCallback(events);
                         // console.log(events);
                     })
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 textColor = 'text-black';
             }
 
-            
+
 
 
 
@@ -150,9 +150,18 @@ document.addEventListener('DOMContentLoaded', async function () {
             const event = info.event;
             console.log(info);
             console.log(event.id)
+            const newEventStart = info.event.start;
+            const eventDateStart = new Date(newEventStart);
+
+            const newEventEnd = info.event.end;
+            const eventDateEnd = new Date(newEventEnd);
+            
+            const resourceId = info.el.fcSeg.eventRange.def.resourceIds[0]
+
+            console.log(eventDateStart, eventDateEnd)
 
             document.querySelector(".fc-hoverable-event").remove();
-
+            await showAvailableChalets(resourceId, eventDateStart, eventDateEnd);
 
             const confirmacion = await Swal.fire({
                 icon: 'warning',
@@ -204,7 +213,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     });
     calendar.render();
-    
+
+
+
 
 
     var contextMenu = document.getElementById('context-menu');
@@ -222,7 +233,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         } else if (currentEvent.extendedProps.status === 'playground') {
             moveToPlaygroundEl.style.display = 'none';
             moveToActiveEl.style.display = 'block';
-        } else if (currentEvent.extendedProps.status === 'pending'){
+        } else if (currentEvent.extendedProps.status === 'pending') {
             moveToPlaygroundEl.style.display = 'block';
             moveToActiveEl.style.display = 'none';
             cancelReservationEl.style.display = 'block';
@@ -433,3 +444,165 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 });
 
+async function showAvailableChalets(resourceId, arrivalDate, departureDate) {
+    console.log('desde show available')
+    console.log(arrivalDate);
+    console.log(departureDate);
+    const arrivalValue = new Date(`${arrivalDate}T00:00:00`);
+    const departureValue = new Date(`${departureDate}T00:00:00`);
+    // const tipologiaHabitacionInput = document.querySelector('#tipologia_habitacion');
+    // const options = tipologiaHabitacionInput.querySelectorAll('option');
+
+    // const verificarDisponibilidadElement = document.getElementById('verificar-disponibilidad');
+
+    // console.log(arrivalValue)
+    // console.log(departureValue)
+
+    try {
+        if (!isNaN(arrivalDate) && !isNaN(departureDate) && departureDate >= arrivalDate) {
+
+            console.log(arrivalDate)
+            console.log(departureDate)
+
+            // verificarDisponibilidadElement.style.display = 'block';
+
+            const arrivalYear = arrivalDate.getFullYear();
+            const arrivalMonth = (arrivalDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+            const arrivalDay = arrivalDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+            const arrivalDateSend = `${arrivalYear}-${arrivalMonth}-${arrivalDay}`;
+
+            const departureYear = departureDate.getFullYear();
+            const departureMonth = (departureDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+            const departureDay = departureDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+            const departureDateSend = `${departureYear}-${departureMonth}-${departureDay}`;
+
+            console.log(arrivalDateSend)
+            console.log(departureDateSend)
+
+
+            // const results = [];
+            const response = await fetch(`/api/check-availability/?resourceId=${resourceId}&arrivalDate=${arrivalDateSend}&departureDate=${departureDateSend}`);
+            const result = await response.json();
+            console.log(result)
+            console.log(result.available)
+            if (!result.available){
+                console.log('Cabaña no disponible');
+                throw new Error('La cabaña no está disponible en las nuevas fechas. Intenta de nuevo con otras fechas.')
+
+            } 
+
+            await obtenerTotalReserva();
+        }
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: "Error en la solicitud: " + error.message,
+            confirmButtonText: 'Aceptar'
+        });
+    } finally {
+        // verificarDisponibilidadElement.style.display = 'none';
+        console.log('finalizado');
+    }
+
+
+}
+
+async function obtenerTotalReserva(){
+    console.log('obtener total ');
+    const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
+    const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
+
+
+    if (arrivalDate.value && departureDate.value && tipologiaSelect.value) {
+
+        const calculandoPreciosElement = document.getElementById('calculando-precios');
+        calculandoPreciosElement.style.display = 'block';
+        // Aquí puedes ejecutar la acción deseada
+        console.log("Los tres elementos tienen un valor. Ejecutar acción...");
+        const fechas = obtenerRangoFechas(fechaInicio, fechaFin)
+        const nNights = document.getElementById("event_nights").value.trim();
+        const habitacionId = idHabitacionInput.value
+
+        const resultados = []
+
+        try {
+
+            for (const fecha of fechas) {
+                const year = fecha.getFullYear();
+                const month = (fecha.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+                const day = fecha.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+                const formatedDate = `${year}-${month}-${day}`;
+
+                const response = await fetch(`/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}`);
+
+                // Verificar el estado de la respuesta
+                if (!response.ok) {
+                    throw new Error('Error en la solicitud fetch: ' + response.statusText);
+                }
+
+                // Convertir la respuesta a JSON
+                const data = await response.json();
+
+                // Agregar el resultado al array de resultados
+                resultados.push(data);
+
+            }
+            console.log(resultados)
+            let totalPrecios = 0
+            let totalCostoBase = 0
+
+            resultados.forEach(resultado => {
+
+
+
+                if (nNights > 1) {
+                    if (resultado.precio_base_2noches) {
+                        totalPrecios += resultado.precio_base_2noches
+                        totalCostoBase += resultado.costo_base_2noches
+                    } else {
+                        console.log('no hay precios disponibles')
+                    }
+                } else {
+                    if (resultado.precio_modificado) {
+                        totalPrecios += resultado.precio_modificado
+                        totalCostoBase += resultado.costo_base
+
+                    } else {
+                        console.log('No hay precios disponibles')
+                    }
+                }
+            })
+
+            console.log("Total precios: ", totalPrecios)
+            console.log("Total costo base: ", totalCostoBase)
+            console.log("Total sin comisiones: ", totalSinComisiones.value)
+
+            totalSinComisiones.value = totalPrecios;
+
+            // Asignar comisiones
+            const comisionUsuarios = await obtenerComisiones()
+            precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
+            totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
+            console.log("Total precios con comisiones: ", totalPrecios)
+
+            const totalInput = document.getElementById('habitacion_total') // Subtotal 
+            totalInput.value = precioMinimoPermitido // Mostrar el minimo permitido
+
+            preciosTotalesGlobal = totalPrecios // Monto maximo en variable global
+
+            totalCostoBaseInput.value = totalCostoBase
+
+            console.log('Precios totales global: ', preciosTotalesGlobal)
+
+        } catch (error) {
+            console.error('Ha ocurrido un error: ', error.message);
+
+        } finally {
+            // Ocultar la leyenda de "Calculando precios..."
+            calculandoPreciosElement.style.display = 'none';
+        }
+
+    }
+
+}
