@@ -623,6 +623,7 @@ async function modificarEvento(req, res) {
         const eventId = req.params.id;
         let newStartDate = event.start;
         let newEndDate = event.end;
+        let newTotal = event.extendedProps.nuevoTotal
 
         // Buscar el evento existente por su ID
         const eventosExistentes = await Documento.findOne();
@@ -642,6 +643,7 @@ async function modificarEvento(req, res) {
         // Actualizar la fecha de inicio y fin del evento existente
         evento.arrivalDate = newStartDate;
         evento.departureDate = newEndDate;
+        evento.total = newTotal;
 
         if (newResource) {
             const newResourceId = newResource.id;

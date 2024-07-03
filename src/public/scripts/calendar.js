@@ -158,18 +158,23 @@ document.addEventListener('DOMContentLoaded', async function () {
             const newEventEnd = info.event.end;
             const eventDateEnd = new Date(newEventEnd);
             const comisionVendedor = info.event.extendedProps.comisionVendedor;
-            
+            const totalViejo = info.event.extendedProps.total;
+
             const resourceId = info.el.fcSeg.eventRange.def.resourceIds[0]
 
             console.log(eventDateStart, eventDateEnd)
 
             document.querySelector(".fc-hoverable-event").remove();
-            await showAvailableChalets(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
 
+            const nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
+            let diferencia = nuevoTotal - totalViejo; // 2650 - 3250 
+            console.log(diferencia)
+
+            const mensaje = `Esta acción cambiará las fechas de la reserva y el nuevo total sería de $${nuevoTotal} (Diferencia de $${diferencia})`
             const confirmacion = await Swal.fire({
                 icon: 'warning',
                 title: '¿Estás seguro?',
-                text: 'Esta acción cambiará las fechas de la reserva.',
+                text: mensaje,
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
@@ -178,34 +183,50 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
 
             if (confirmacion.isConfirmed) {
-                await fetch(`/api/eventos/${event.id}/modificar`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(info)
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Respuesta del servidor: ', data);
+                const disponible = await availableDate(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
+        
+                if (!disponible) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Fechas no disponibles. Intenta con otras fechas.'
+                    });
+                    return;
+                }
+
+
+
+                try {
+                    const response = await fetch(`/api/eventos/${event.id}/modificar`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(info)
+                    });
+                    const data = await response.json();
+        
+                    if (response.ok) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Fechas actualizadas',
                             showConfirmButton: false,
                             timer: 2500
-                        })
-                    })
-                    .catch(err => {
-                        console.log('Error: ', err);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error al actualizar fechas: ' + err.message,
-                            showConfirmButton: false,
-                            timer: 2500
-                        })
+                        });
+                    } else {
+                        throw new Error(data.message || 'Error al actualizar fechas');
+                    }
+        
+                    console.log('Respuesta del servidor: ', data);
+                } catch (err) {
+                    console.log('Error: ', err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: `Error al actualizar fechas: ${err.message}`,
+                        showConfirmButton: false,
+                        timer: 2500
                     });
-
-
+                }
             }
         },
         eventDidMount: function (info) {
@@ -447,7 +468,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 });
 
-async function showAvailableChalets(resourceId, arrivalDate, departureDate, comisionVendedor) {
+async function availableDate(resourceId, arrivalDate, departureDate, comisionVendedor) {
     console.log('desde show available')
     console.log(arrivalDate);
     console.log(departureDate);
@@ -488,13 +509,13 @@ async function showAvailableChalets(resourceId, arrivalDate, departureDate, comi
             const result = await response.json();
             console.log(result)
             console.log(result.available)
-            if (!result.available){
+            if (!result.available) {
                 console.log('Cabaña no disponible');
-                throw new Error('La cabaña no está disponible en las nuevas fechas. Intenta de nuevo con otras fechas.')
+                return false;
+                // throw new Error('La cabaña no está disponible en las nuevas fechas. Intenta de nuevo con otras fechas.')
+            }
 
-            } 
-
-            await obtenerTotalReserva(resourceId, arrivalDateSend, departureDateSend, comisionVendedor);
+            return true;
         }
     } catch (error) {
         Swal.fire({
@@ -511,17 +532,28 @@ async function showAvailableChalets(resourceId, arrivalDate, departureDate, comi
 
 }
 
-async function obtenerTotalReserva(resourceId, arrivalDateSend, departureDateSend, comisionVendedor){
+async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisionVendedor) {
     console.log('obtener total ');
     // const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
     // const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
+    const arrivalYear = arrivalDate.getFullYear();
+    const arrivalMonth = (arrivalDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+    const arrivalDay = arrivalDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+    const arrivalDateSend = `${arrivalYear}-${arrivalMonth}-${arrivalDay}`;
 
+    const departureYear = departureDate.getFullYear();
+    const departureMonth = (departureDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+    const departureDay = departureDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+    const departureDateSend = `${departureYear}-${departureMonth}-${departureDay}`;
+
+    console.log(arrivalDateSend)
+    console.log(departureDateSend)
 
     if (arrivalDateSend && departureDateSend && resourceId) {
         // Aquí puedes ejecutar la acción deseada
         console.log("Los tres elementos tienen un valor. Ejecutar acción...");
         const fechas = obtenerRangoFechas(arrivalDateSend, departureDateSend)
-        const nNights = calculateNightDifference(arrivalDateSend, departureDateSend )
+        const nNights = calculateNightDifference(arrivalDateSend, departureDateSend)
         const habitacionId = resourceId
 
         console.log("fechas: " + fechas)
@@ -555,7 +587,7 @@ async function obtenerTotalReserva(resourceId, arrivalDateSend, departureDateSen
             let totalPrecios = 0
             let totalCostoBase = 0
 
-            
+
 
             resultados.forEach(resultado => {
 
@@ -582,23 +614,30 @@ async function obtenerTotalReserva(resourceId, arrivalDateSend, departureDateSen
             console.log("Total precios: ", totalPrecios)
 
             // Asignar comisiones
-            
+            if (isNaN(comisionVendedor) || comisionVendedor == null) {
+                comisionVendedor = 0
+            }
             totalPrecios += comisionVendedor // Precio maximo permitido
+
             console.log("Total precios con comisiones: ", totalPrecios)
+            return totalPrecios
 
             // preciosTotalesGlobal = totalPrecios // Monto maximo en variable global
 
             // totalCostoBaseInput.value = totalCostoBase
 
             // console.log('Precios totales global: ', preciosTotalesGlobal)
-            
-        
+
+
         } catch (error) {
             console.error('Ha ocurrido un error: ', error.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: "Error en la solicitud: " + error.message,
+                confirmButtonText: 'Aceptar'
+            })
 
-        } finally {
-            // Ocultar la leyenda de "Calculando precios..."
-            calculandoPreciosElement.style.display = 'none';
         }
 
     }
