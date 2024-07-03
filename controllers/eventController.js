@@ -307,7 +307,7 @@ async function reservasDeDuenos(req, res, next) {
 
 
 async function createReservation(req, res, next) {
-    const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount, isDeposit } = req.body;
+    const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount, isDeposit, comisionVendedor } = req.body;
 
     try {
         const client = await Cliente.find({ email: clientEmail });
@@ -341,7 +341,8 @@ async function createReservation(req, res, next) {
                 units: units,
                 total: total,
                 discount: discount,
-                createdBy: createdBy
+                createdBy: createdBy,
+                comisionVendedor: comisionVendedor
             };
             message = "Reservación agregada con éxito";
         }
@@ -379,7 +380,8 @@ async function createReservation(req, res, next) {
                 discount: discount,
                 isDeposit: true,
                 paymentCancelation: paymentCancelation,
-                createdBy: createdBy
+                createdBy: createdBy,
+                comisionVendedor: comisionVendedor
             };
 
             message = `Reservación agregada con éxito. Realice su pago antes de ${format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es })} o su reserva será cancelada`;

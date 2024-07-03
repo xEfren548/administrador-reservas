@@ -75,6 +75,9 @@ const reservaSchema = new Schema({
     },
     clienteProvisional: {
         type: "String"
+    },
+    comisionVendedor: {
+        type: Number
     }
 });
 

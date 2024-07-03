@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let preciosTotalesGlobal = 0
     let precioMinimoPermitido = 0
+    let comisionesReserva = 0
 
     const totalCostoBaseInput = document.querySelector("#total-costo-base")
     let totalSinComisiones = document.querySelector("#total-sin-comisiones")
@@ -133,7 +134,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
             // Esperar a que obtenerComisiones() se resuelva            
-
+            comisionesReserva = document.getElementById('habitacion_total').value.trim() - comisionesReserva; // 3250 - 3000
+            console.log(comisionesReserva)
             // Crear un objeto con los datos del formulario
             const formData = {
                 clientEmail: document.getElementById("lblClient").value.trim(),
@@ -145,7 +147,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 units: document.getElementById('habitacion_unidades').value.trim(),
                 total: document.getElementById('habitacion_total').value.trim(),
                 discount: document.getElementById('habitacion_descuento').value.trim(),
-                isDeposit: document.getElementById('chckDeposit').checked
+                isDeposit: document.getElementById('chckDeposit').checked,
+                comisionVendedor: comisionesReserva
             };
 
             if (!formData.units) {
@@ -394,6 +397,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
 
                 console.log("Total precios: ", totalPrecios)
+                comisionesReserva = totalPrecios; // comisionesReserva = 3000
                 console.log("Total costo base: ", totalCostoBase)
                 console.log("Total sin comisiones: ", totalSinComisiones.value)
 
@@ -413,6 +417,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 totalCostoBaseInput.value = totalCostoBase
 
                 console.log('Precios totales global: ', preciosTotalesGlobal)
+
+
 
             } catch (error) {
                 console.error('Ha ocurrido un error: ', error.message);

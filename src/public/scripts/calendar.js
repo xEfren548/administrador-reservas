@@ -69,7 +69,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     url: event.url,
                                     total: event.total,
                                     clientId: event.client,
-                                    status: event.status
+                                    status: event.status,
+                                    createdBy: event.createdBy,
+                                    comisionVendedor: event.comisionVendedor
                                 }
                             })
                         successCallback(events);
@@ -149,19 +151,20 @@ document.addEventListener('DOMContentLoaded', async function () {
         eventDrop: async function (info) {
             const event = info.event;
             console.log(info);
-            console.log(event.id)
+            idReserva = event.id;
             const newEventStart = info.event.start;
             const eventDateStart = new Date(newEventStart);
 
             const newEventEnd = info.event.end;
             const eventDateEnd = new Date(newEventEnd);
+            const comisionVendedor = info.event.extendedProps.comisionVendedor;
             
             const resourceId = info.el.fcSeg.eventRange.def.resourceIds[0]
 
             console.log(eventDateStart, eventDateEnd)
 
             document.querySelector(".fc-hoverable-event").remove();
-            await showAvailableChalets(resourceId, eventDateStart, eventDateEnd);
+            await showAvailableChalets(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
 
             const confirmacion = await Swal.fire({
                 icon: 'warning',
@@ -444,7 +447,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 });
 
-async function showAvailableChalets(resourceId, arrivalDate, departureDate) {
+async function showAvailableChalets(resourceId, arrivalDate, departureDate, comisionVendedor) {
     console.log('desde show available')
     console.log(arrivalDate);
     console.log(departureDate);
@@ -491,7 +494,7 @@ async function showAvailableChalets(resourceId, arrivalDate, departureDate) {
 
             } 
 
-            await obtenerTotalReserva();
+            await obtenerTotalReserva(resourceId, arrivalDateSend, departureDateSend, comisionVendedor);
         }
     } catch (error) {
         Swal.fire({
@@ -508,21 +511,21 @@ async function showAvailableChalets(resourceId, arrivalDate, departureDate) {
 
 }
 
-async function obtenerTotalReserva(){
+async function obtenerTotalReserva(resourceId, arrivalDateSend, departureDateSend, comisionVendedor){
     console.log('obtener total ');
-    const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
-    const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
+    // const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
+    // const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
 
 
-    if (arrivalDate.value && departureDate.value && tipologiaSelect.value) {
-
-        const calculandoPreciosElement = document.getElementById('calculando-precios');
-        calculandoPreciosElement.style.display = 'block';
+    if (arrivalDateSend && departureDateSend && resourceId) {
         // Aquí puedes ejecutar la acción deseada
         console.log("Los tres elementos tienen un valor. Ejecutar acción...");
-        const fechas = obtenerRangoFechas(fechaInicio, fechaFin)
-        const nNights = document.getElementById("event_nights").value.trim();
-        const habitacionId = idHabitacionInput.value
+        const fechas = obtenerRangoFechas(arrivalDateSend, departureDateSend)
+        const nNights = calculateNightDifference(arrivalDateSend, departureDateSend )
+        const habitacionId = resourceId
+
+        console.log("fechas: " + fechas)
+        console.log("Nights: " + nNights)
 
         const resultados = []
 
@@ -552,6 +555,8 @@ async function obtenerTotalReserva(){
             let totalPrecios = 0
             let totalCostoBase = 0
 
+            
+
             resultados.forEach(resultado => {
 
 
@@ -575,26 +580,19 @@ async function obtenerTotalReserva(){
             })
 
             console.log("Total precios: ", totalPrecios)
-            console.log("Total costo base: ", totalCostoBase)
-            console.log("Total sin comisiones: ", totalSinComisiones.value)
-
-            totalSinComisiones.value = totalPrecios;
 
             // Asignar comisiones
-            const comisionUsuarios = await obtenerComisiones()
-            precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
-            totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
+            
+            totalPrecios += comisionVendedor // Precio maximo permitido
             console.log("Total precios con comisiones: ", totalPrecios)
 
-            const totalInput = document.getElementById('habitacion_total') // Subtotal 
-            totalInput.value = precioMinimoPermitido // Mostrar el minimo permitido
+            // preciosTotalesGlobal = totalPrecios // Monto maximo en variable global
 
-            preciosTotalesGlobal = totalPrecios // Monto maximo en variable global
+            // totalCostoBaseInput.value = totalCostoBase
 
-            totalCostoBaseInput.value = totalCostoBase
-
-            console.log('Precios totales global: ', preciosTotalesGlobal)
-
+            // console.log('Precios totales global: ', preciosTotalesGlobal)
+            
+        
         } catch (error) {
             console.error('Ha ocurrido un error: ', error.message);
 
@@ -606,3 +604,37 @@ async function obtenerTotalReserva(){
     }
 
 }
+
+function obtenerRangoFechas(arrivalDate, departureDate) {
+    const fechaInicio = new Date(`${arrivalDate}T00:00:00`); // Agregar la hora en formato UTC
+    const fechaFin = new Date(`${departureDate}T00:00:00`); // Agregar la hora en formato UTC
+
+    const fechas = [];
+    let fechaActual = new Date(fechaInicio);
+
+    while (fechaActual < fechaFin) {
+        fechas.push(new Date(fechaActual));
+        fechaActual.setDate(fechaActual.getDate() + 1);
+    }
+    return fechas;
+}
+
+function calculateNightDifference(arrivalDate, departureDate) {
+    console.log('Desde calcular noches')
+    const arrivalValue = new Date(arrivalDate);
+    const departureValue = new Date(departureDate);
+    let nightsInput;
+
+    // Verifica si las fechas son válidas
+    if (!isNaN(arrivalValue) && !isNaN(departureValue) && departureValue >= arrivalValue) {
+        const timeDifference = departureValue.getTime() - arrivalValue.getTime();
+        const nightDifference = Math.ceil(timeDifference / (1000 * 3600 * 24)); // Calcula la diferencia en días
+
+        nightsInput = nightDifference
+    } else {
+        nightsInput = 0
+    }
+
+    return nightsInput;
+}
+
