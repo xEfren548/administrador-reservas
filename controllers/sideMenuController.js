@@ -8,7 +8,9 @@ const validators = [
         .custom(async (value, { req }) => {
             if (req.session.privilege != 'Administrador' && req.session.privilege != 'Vendedor'
                 && req.session.privilege != 'Limpieza' && req.session.privilege != 'Dueño de cabañas' &&
-                req.session.privilege != 'Servicios adicionales' && req.session.privilege != 'Inversionistas') {
+                req.session.privilege != 'Servicios adicionales' && req.session.privilege != 'Inversionistas'
+                && req.session.privilege != 'Colaborador dueño'
+            ) {
                 throw new NotFoundError('Privilege does not exists.');
             }
             return true;
@@ -50,7 +52,10 @@ async function generateSideMenu(req, res, next) {
                 { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
                 { 'Calendario': ["/api/calendar/duenos", "fs-5 fa fa-calendar"] },
                 { 'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
-
+            ],
+            'Colaborador dueño': [
+                { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                { 'Calendario': ["/api/calendar/duenos", "fs-5 fa fa-calendar"] },
             ],
             'Inversionistas': [
                 { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },

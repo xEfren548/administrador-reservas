@@ -31,7 +31,7 @@ const createUserValidators = [
         //.matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),        
     check('privilege')
         .notEmpty().withMessage('Privilege is required')
-        .isIn(['Administrador', 'Vendedor', 'Limpieza', 'Dueño de cabañas', 'Servicios adicionales', 'Inversionistas']).withMessage('Invalid privilege'),
+        .isIn(['Administrador', 'Vendedor', 'Limpieza', 'Dueño de cabañas', 'Servicios adicionales', 'Inversionistas', 'Colaborador dueño']).withMessage('Invalid privilege'),
     check('administrator')
         .notEmpty().withMessage("Administrator's name is required")
         .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
@@ -115,9 +115,15 @@ async function showUsersView(req, res, next){
             throw new NotFoundError("No admin found");
         }
 
+        const owners = await Usuario.find({"$or": {"privilege": "Dueño de cabañas"}}).lean()
+        if (!owners) {
+            throw new NotFoundError("No owner found");
+        }
+
         res.render('vistaUsuarios', {
             users: users,
-            admins: admins
+            admins: admins,
+            owners: owners
         });
     } catch (err) {
         return next(err);
