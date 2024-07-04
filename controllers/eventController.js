@@ -646,6 +646,7 @@ async function modificarEvento(req, res) {
         evento.total = newTotal;
 
         if (newResource) {
+            console.log(newResource)
             const newResourceId = newResource.id;
             evento.resourceId = newResourceId;
 

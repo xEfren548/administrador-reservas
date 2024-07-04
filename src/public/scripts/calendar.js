@@ -160,12 +160,14 @@ document.addEventListener('DOMContentLoaded', async function () {
             const comisionVendedor = info.event.extendedProps.comisionVendedor;
             const totalViejo = info.event.extendedProps.total;
 
-            const resourceId = info.el.fcSeg.eventRange.def.resourceIds[0]
+            const resourceId = info.newResource.id || info.el.fcSeg.eventRange.def.resourceIds[0]
 
             console.log(eventDateStart, eventDateEnd)
 
-            document.querySelector(".fc-hoverable-event").remove();
-
+            const hoverableEventElement = document.querySelector(".fc-hoverable-event");
+            if (hoverableEventElement) {
+                hoverableEventElement.remove();
+            }
             const nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
             let diferencia = nuevoTotal - totalViejo; // 2650 - 3250 
             console.log(diferencia)
@@ -184,7 +186,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (confirmacion.isConfirmed) {
                 const disponible = await availableDate(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
-        
+
                 if (!disponible) {
                     Swal.fire({
                         icon: 'error',
@@ -194,7 +196,22 @@ document.addEventListener('DOMContentLoaded', async function () {
                     return;
                 }
 
+                const eventData = {
+                    id: info.event.id,
+                    allDay: info.event.allDay,
+                    title: info.event.title,
+                    start: eventDateStart,
+                    end: eventDateEnd,
+                    extendedProps: {
+                        ...info.event.extendedProps,
+                        nuevoTotal: nuevoTotal
+                    }
+                };
 
+                console.log(info)
+
+                const newResource = info.newResource ? { id: info.newResource.id } : null;
+                console.log(newResource);
 
                 try {
                     const response = await fetch(`/api/eventos/${event.id}/modificar`, {
@@ -202,21 +219,23 @@ document.addEventListener('DOMContentLoaded', async function () {
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(info)
+                        body: JSON.stringify({ event: eventData, newResource: newResource })
                     });
                     const data = await response.json();
-        
+
                     if (response.ok) {
                         Swal.fire({
                             icon: 'success',
-                            title: 'Fechas actualizadas',
-                            showConfirmButton: false,
-                            timer: 2500
-                        });
+                            title: 'Fechas  y precios actualizados',
+                            showConfirmButton: true,
+                            // timer: 2500
+                        }).then((result) => {
+                            window.location.reload();
+                        })
                     } else {
                         throw new Error(data.message || 'Error al actualizar fechas');
                     }
-        
+
                     console.log('Respuesta del servidor: ', data);
                 } catch (err) {
                     console.log('Error: ', err);
