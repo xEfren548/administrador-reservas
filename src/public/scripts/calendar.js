@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const comisionVendedor = info.event.extendedProps.comisionVendedor;
             const totalViejo = info.event.extendedProps.total;
 
-            const resourceId = info.newResource.id || info.el.fcSeg.eventRange.def.resourceIds[0]
+            const resourceId = (info.newResource && info.newResource.id) || info.el.fcSeg.eventRange.def.resourceIds[0];
 
             console.log(eventDateStart, eventDateEnd)
 
@@ -193,6 +193,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         title: 'Error',
                         text: 'Fechas no disponibles. Intenta con otras fechas.'
                     });
+                    info.revert();
                     return;
                 }
 
@@ -245,7 +246,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                         showConfirmButton: false,
                         timer: 2500
                     });
+                    info.revert();
                 }
+            } else {
+                info.revert();
+                return;
             }
         },
         eventDidMount: function (info) {
