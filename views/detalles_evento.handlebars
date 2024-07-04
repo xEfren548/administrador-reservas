@@ -1292,22 +1292,26 @@
             const confirmacion = await Swal.fire({
                 icon: 'warning',
                 title: '¿Estás seguro?',
-                text: 'Esta acción eliminará la reserva de forma permanente.',
+                text: 'Esta acción cancelará la reserva de forma permanente.',
                 showCancelButton: true,
             });
 
             if (confirmacion.isConfirmed) {
-                const response = await fetch(`/api/eventos/${reservacionId}`, {
-                    method: 'DELETE',
+                const response = await fetch(`/api/eventos/move-to-playground`, {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    body: JSON.stringify({
+                        idReserva: reservacionId,
+                        status: 'cancelled'
+                    })
                 });
                 if (response.ok) {
                     Swal.fire({
                         icon: 'success',
                         title: '¡Completado!',
-                        text: 'Reserva eliminada correctamente.',
+                        text: 'Reserva cancelada correctamente.',
                         confirmButtonText: 'Aceptar',
                     }).then((result) => {
                         if (result.isConfirmed) {

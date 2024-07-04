@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         try {
 
             if (confirmacion.isConfirmed) {
-                const response = await fetch(`api/eventos/move-to-playground`, {
+                const response = await fetch(`/api/eventos/move-to-playground`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
