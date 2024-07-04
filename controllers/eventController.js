@@ -109,17 +109,17 @@ const createOwnersReservationValidators = [
             return true;
         }),
     check("nNights")
-        .notEmpty().withMessage('Number of nights is required'),    check("chaletName")
-        .notEmpty().withMessage('Chalet name is required')
-        .isLength({ max: 255 }).withMessage("Chalet name must be less than 255 characters")
-        .custom(async (value, { req }) => {
-            const chalets = await Habitacion.findOne();
-            const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
-            if (!chalet) {
-                throw new NotFoundError('Chalet does not exist');
-            }
-            return true;
-        }),
+        .notEmpty().withMessage('Number of nights is required'), check("chaletName")
+            .notEmpty().withMessage('Chalet name is required')
+            .isLength({ max: 255 }).withMessage("Chalet name must be less than 255 characters")
+            .custom(async (value, { req }) => {
+                const chalets = await Habitacion.findOne();
+                const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
+                if (!chalet) {
+                    throw new NotFoundError('Chalet does not exist');
+                }
+                return true;
+            }),
     check("maxOccupation")
         .notEmpty().withMessage('Max occupation is required')
         .isNumeric().withMessage('Max occupation must be a number')
@@ -846,29 +846,49 @@ async function moveToPlayground(req, res) {
         if (evento.status === 'active' && status === 'cancelled') {
             const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
 
+            const pagos = await pagoController.obtenerPagos(idReserva);
+            let pagoTotal = 0
+            pagos.forEach(pago => {
+                pagoTotal += pago.importe;
+            })
+            const totalReserva = evento.total;
+            const montoPendiente = totalReserva - pagoTotal;
 
-            const newComisiones = [];
-            for (const comisiones of comisionesReserva) {
-                if (comisiones.concepto.includes('limpieza')) {
+            const pagoDel50 = (montoPendiente <= totalReserva / 2) ? true : false;
+
+            if (pagoDel50) {
+
+                const newComisiones = [];
+                for (const comisiones of comisionesReserva) {
+                    if (comisiones.concepto.includes('limpieza')) {
+                        const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
+                        if (utilidadEliminada) {
+                            console.log('Utilidad eliminada correctamente');
+                        } else {
+                            throw new Error('Error al eliminar comision.');
+                        }
+                    } else {
+                        newComisiones.push({
+                            id: comisiones._id,
+                            monto: comisiones.monto / 2,
+                            concepto: `${comisiones.concepto} (Reserva cancelada, 50%)`,
+                            status: 'aplicado'
+                        });
+                    }
+                }
+
+                for (const comision of newComisiones) {
+                    await utilidadesController.editarComisionReturn(comision);
+                }
+            } else {
+                for (const comisiones of comisionesReserva) {
                     const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
                     if (utilidadEliminada) {
                         console.log('Utilidad eliminada correctamente');
                     } else {
                         throw new Error('Error al eliminar comision.');
                     }
-                } else {
-                    newComisiones.push({
-                        id: comisiones._id,
-                        monto: comisiones.monto / 2,
-                        concepto: `${comisiones.concepto} (Reserva cancelada, 50%)`,
-                        status: 'aplicado'
-                    });
                 }
-            }
-
-
-            for (const comision of newComisiones) {
-                await utilidadesController.editarComisionReturn(comision);
             }
         }
 
