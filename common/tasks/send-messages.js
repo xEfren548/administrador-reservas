@@ -179,6 +179,11 @@ async function cancelReservation() {
                         }
                     }
 
+                } else {
+                    if (pagoDel50) {
+                        reservation.status = 'active';
+                        console.log('reserva movida a activa')
+                    }
                 }
 
             }
