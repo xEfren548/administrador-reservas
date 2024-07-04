@@ -738,6 +738,62 @@ async function renderCalendarPerChalet(req, res, next) {
     }
 }
 
+
+async function renderCalendarPerChaletOwner(req, res, next) {
+    try {
+        const duenoId = req.session.id;
+
+        // Find the existing rooms   
+        const habitacionesExistentes = await Habitacion.findOne().lean();
+        if (!habitacionesExistentes) {
+            return res.status(404).send('No rooms found');
+        }
+
+        // // Filter the rooms that belong to the owner
+        const habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
+        // // Extract the IDs and names of the rooms
+        const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
+        const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
+        
+        // const cabañaIdToNameMap = {};
+        // nombreCabañas.forEach(cabaña => {
+        //     cabañaIdToNameMap[cabaña.id] = cabaña.name;
+        // });
+
+        // const documentos = await Documento.findOne().lean();
+        // if (!documentos) {
+        //     return res.status(404).send('No documents found');
+        // }
+
+        // const eventosFiltrados = await Promise.all(documentos.events.filter(evento => cabañaIds.includes(evento.resourceId.toString())))
+        // console.log(eventosFiltrados)
+
+        // const habitaciones = await Habitacion.find();
+        // if (!habitaciones) {
+        //     throw new NotFoundError("No room found");
+        // }
+        // const data = habitaciones;
+        // // console.log(data);
+
+        const chalets = habitacionesDueno.map(chalet => ({
+            name: chalet.propertyDetails.name,
+            basePrice: chalet.others.basePrice,
+            pax: chalet.propertyDetails.maxOccupancy,
+            id: chalet._id.toString()
+        }));
+
+        console.log(chalets);
+        res.render('calendarPerOwnerChalet', {
+            chalets: chalets,
+            // events: eventosFiltrados
+
+        })
+
+    } catch (error) {
+        res.status(500).send(error);
+    }
+}
+
 module.exports = {
     showCreateChaletViewValidators,
     createChaletValidators,
@@ -749,5 +805,6 @@ module.exports = {
     showEditChaletsView,
     editChalet,
     showChaletsData,
-    renderCalendarPerChalet
+    renderCalendarPerChalet,
+    renderCalendarPerChaletOwner
 }

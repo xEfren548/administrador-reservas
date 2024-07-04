@@ -1,0 +1,35 @@
+<div class="row flex-nowrap justify-content-center mt-3" style="width: 100%;">
+    <div class="col-12">
+        <h1>Calendario de Habitaciones de Dueños</h1>
+
+        <label for="tipologia_habitacion" class="form-label">Tipologia</label>
+        <select name="tipologia_habitacion" id="tipologia_habitacion" class="form-select form-select-md" required>
+            <option value="" selected="true" disabled="true"> Selecciona una cabaña para visualizar su calendario...
+            </option>
+            {{#if chalets}}
+            {{#each chalets}}
+            <option value="{{this.name}}" data-bs-id="{{this.id}}"> {{this.name}} </option>
+            {{/each}}
+            {{else}}
+            <option value="0">No se encontraron cabañas</option>
+            {{/if}}
+        </select>
+
+        <div id="calendar" class="" style="display: none;"></div>
+        <div id="context-menu">
+            <ul>
+                <li id="edit"><i class="fa fa-pencil" aria-hidden="true"></i>&nbsp Editar Reserva</li>
+                <li id="delete"><i class="fa fa-trash" aria-hidden="true"></i>&nbsp Cancelar Reserva</li>
+                <li id="move-to-playground"><i class="fa fa-gamepad" aria-hidden="true"></i>&nbsp Mover al Playground
+                </li>
+                <li id="move-to-active"><i class="fa fa-check-circle" aria-hidden="true"></i> &nbsp Cambiar a Activa
+                </li>
+            </ul>
+        </div>
+    <a name="" id="" class="btn btn-primary mt-5" href="/api/calendar/duenos" role="button">Cambiar a vista de tabla</a>
+    </div>
+</div>
+
+
+
+<script src="/scripts/ownerChaletCalendar.js"></script>
