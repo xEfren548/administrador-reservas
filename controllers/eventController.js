@@ -304,6 +304,61 @@ async function reservasDeDuenos(req, res, next) {
         res.status(500).send(error.message);
     }
 }
+async function reservasDeDuenosParaColaborador(req, res, next) {
+    try {
+        // Get the owner's ID from the session
+        const user = await Usuario.findById(req.session.id);
+        const duenoId = user.administrator;
+
+        // Find the existing rooms
+        const habitacionesExistentes = await Habitacion.findOne().lean();
+        if (!habitacionesExistentes) {
+            return res.status(404).send('No rooms found');
+        }
+
+        // Filter the rooms that belong to the owner
+        const habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
+        // Extract the IDs and names of the rooms
+        const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
+        const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
+
+        // Create a map of room IDs to names
+        const cabañaIdToNameMap = {};
+        nombreCabañas.forEach(cabaña => {
+            cabañaIdToNameMap[cabaña.id] = cabaña.name;
+        });
+
+        // Find documents containing events
+        const documentos = await Documento.findOne().lean();
+        if (!documentos) {
+            return res.status(404).send('No documents found');
+        }
+
+        // Filter events that correspond to the owner's rooms and add the room name to each event
+        const eventosFiltradosOrdenadosConPagos = await Promise.all(documentos.events
+            .filter(evento => cabañaIds.includes(evento.resourceId.toString()))
+            .map(async evento => {
+                // Retornar el evento con los pagos y las fechas formateadas
+                return {
+                    ...evento,
+                    roomName: cabañaIdToNameMap[evento.resourceId.toString()],
+                    arrivalDate: moment.utc(evento.arrivalDate).format('DD-MM-YYYY, h:mm:ss a'),
+                    departureDate: moment.utc(evento.departureDate).format('DD-MM-YYYY, h:mm:ss a'),
+                };
+            }));
+
+        eventosFiltradosOrdenadosConPagos.sort((a, b) => moment(b.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf() - moment(a.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf());
+
+        res.render('vistaColaboradorDuenos', {
+            eventos: eventosFiltradosOrdenadosConPagos,
+            chalets: habitacionesDueno
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send(error.message);
+    }
+}
 
 
 async function createReservation(req, res, next) {
@@ -954,6 +1009,7 @@ module.exports = {
     modificarEvento,
     crearNota,
     eliminarNota,
-    reservasDeDuenos
+    reservasDeDuenos,
+    reservasDeDuenosParaColaborador
 };
 

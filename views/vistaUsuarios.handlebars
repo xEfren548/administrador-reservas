@@ -112,10 +112,10 @@
                             </div>
                         </div>
                         <div class="row mt-2">
-                            <label for="slctUserAdmin">Administrador ligado: </label>
+                            <label for="slctUserAdmin" id="relatedLabel">Administrador ligado: </label>
                         </div>
                         <div class="row">
-                            <div class="col-8">
+                            <div class="col-8" id="relatedSelectContainer">
                                 <select id="slctUserAdmin" name="slctUserAdmin" class="form-select form-select-md">
                                     <option value="" selected="true" disabled="true"> Selecciona un administrador para
                                         el usuario --</option>
@@ -196,11 +196,11 @@
                             </div>
                         </div>
                         <div class="row">
-                            <label for="slctUserPrivilegesUpd">Privilegio: </label>
+                            <label for="slctUserPrivilegesUpdlbl">Privilegio: </label>
                         </div>
                         <div class="row">
                             <div class="col-8">
-                                <select name="slctUserPrivilegesUpd" id="slctUserPrivilegesUpd"
+                                <select name="slctUserPrivilegesUpdlbl" id="slctUserPrivilegesUpd"
                                     class="form-select form-select-md" required>
                                     <option value="" selected disabled> Selecciona un privilegio para el usuario--
                                     </option>
@@ -216,10 +216,10 @@
                             </div>
                         </div>
                         <div class="row">
-                            <label for="slctUserAdminUpd">Administrador ligado: </label>
+                            <label id="relatedLabelUpd" for="slctUserAdminUpd">Administrador ligado: </label>
                         </div>
                         <div class="row">
-                            <div class="col-8">
+                            <div class="col-8" id="relatedSelectContainerUpd">
                                 <select id="slctUserAdminUpd" name="slctUserAdminUpd"
                                     class="form-select form-select-md">
                                     <option value="" selected="true" disabled="true"> Selecciona un administrador para
@@ -268,6 +268,7 @@
                 "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
                 "pageLength": 10 // Establece la longitud de página inicial
             });
+            
 
             function addButtonEvents() {
                 const editButtons = document.querySelectorAll('#tablaUsuarios .btn-primary');
@@ -312,12 +313,14 @@
         if (btnSaveUser) {
             btnSaveUser.addEventListener("click", async (event) => {
                 event.preventDefault();
+                const privilege = document.getElementById("slctUserPrivileges").value.trim();
+
                 const data = {
                     firstName: document.getElementById("txtUserName").value.trim(),
                     lastName: document.getElementById("txtUserLastname").value.trim(),
                     email: document.getElementById("txtUserEmail").value.trim(),
                     password: document.getElementById("txtUserPassword").value.trim(),
-                    privilege: document.getElementById("slctUserPrivileges").value.trim(),
+                    privilege: privilege,
                     administrator: document.getElementById("slctUserAdmin").value.trim(),
                     adminname: $("#slctUserAdmin option:selected").text(),
                     color: document.getElementById("colaboratorColor").value.trim()
@@ -485,6 +488,71 @@
                     });
             });
         });
+
+    const selectPrivileges = document.getElementById('slctUserPrivileges');
+    const relatedLabel = document.getElementById('relatedLabel');
+    const relatedSelectContainer = document.getElementById('relatedSelectContainer');
+
+    
+    const selectPrivilegesUpd = document.getElementById('slctUserPrivilegesUpd');
+    const relatedLabelUpd = document.getElementById('relatedLabelUpd');
+    const relatedSelectContainerUpd = document.getElementById('relatedSelectContainerUpd');
+
+    // Pasar los datos de admins y owners como cadenas JSON
+    const owners = {{{json owners}}};
+    const admins = {{{json admins}}};
+
+    selectPrivileges.addEventListener('change', function () {
+        console.log('change');
+        if (this.value === 'Colaborador dueño') {
+            relatedLabel.textContent = 'Dueño ligado:';
+            updateSelectOptions(owners, 'Seleccione un dueño para el usuario --');
+        } else {
+            relatedLabel.textContent = 'Administrador ligado:';
+            updateSelectOptions(admins, 'Seleccione un administrador para el usuario --');
+        }
+    });
+    selectPrivilegesUpd.addEventListener('change', function () {
+        console.log('change');
+        if (this.value === 'Colaborador dueño') {
+            relatedLabelUpd.textContent = 'Dueño ligado:';
+            updateSelectOptionsUpd(owners, 'Seleccione un dueño para el usuario --');
+        } else {
+            relatedLabelUpd.textContent = 'Administrador ligado:';
+            updateSelectOptionsUpd(admins, 'Seleccione un administrador para el usuario --');
+        }
+    });
+
+    function updateSelectOptions(options, placeholder) {
+        let selectHTML = `<select id="slctUserAdmin" name="slctUserAdmin" class="form-select form-select-md">`;
+        selectHTML += `<option value="" selected="true" disabled="true">${placeholder}</option>`;
+        if (options.length > 0) {
+            options.forEach(option => {
+                selectHTML += `<option value="${option._id}">${option.firstName} ${option.lastName}</option>`;
+            });
+        } else {
+            selectHTML += `<option value="0">No se encontraron opciones</option>`;
+        }
+        selectHTML += `</select>`;
+        relatedSelectContainer.innerHTML = selectHTML;
+    }
+
+    function updateSelectOptionsUpd(options, placeholder) {
+        let selectHTML = `<select id="slctUserAdminUpd" name="slctUserAdminUpd" class="form-select form-select-md">`;
+        selectHTML += `<option value="" selected="true" disabled="true">${placeholder}</option>`;
+        if (options.length > 0) {
+            options.forEach(option => {
+                selectHTML += `<option value="${option._id}">${option.firstName} ${option.lastName}</option>`;
+            });
+        } else {
+            selectHTML += `<option value="0">No se encontraron opciones</option>`;
+        }
+        selectHTML += `</select>`;
+        relatedSelectContainerUpd.innerHTML = selectHTML;
+    }
+
+
+
 
     });
 

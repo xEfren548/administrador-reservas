@@ -38,7 +38,10 @@ const createUserValidators = [
         .custom(async (value, { req }) => {
             const admin = await Usuario.findOne({_id: value, privilege: {"$in": ["Administrador", "Vendedor"]}});
             if(!admin){
-                throw new NotFoundError('Administrator does not exist');
+                const owner = await Usuario.findOne({_id: value, privilege: 'Dueño de cabañas'});
+                if (!admin && !owner){
+                    throw new NotFoundError('Administrator or owner does not exist');
+                }
             }
             return true;
         }),
@@ -76,7 +79,10 @@ const editUserValidators = [
             //console.log("¿ADMIN? ", value);
             const admin = await Usuario.findOne({_id: value, privilege: {"$in": ["Administrador", "Vendedor"]}});
             if(!admin){
-                throw new NotFoundError('Administrator does not existsssssss');
+                const owner = await Usuario.findOne({_id: value, privilege: 'Dueño de cabañas'});
+                if (!admin && !owner){
+                    throw new NotFoundError('Administrator or owner does not exist');
+                }
             }
             return true;
         }),
@@ -115,10 +121,12 @@ async function showUsersView(req, res, next){
             throw new NotFoundError("No admin found");
         }
 
-        const owners = await Usuario.find({"$or": {"privilege": "Dueño de cabañas"}}).lean()
+        const owners = await Usuario.find({"privilege": "Dueño de cabañas"}).lean()
         if (!owners) {
             throw new NotFoundError("No owner found");
         }
+
+        console.log(owners)
 
         res.render('vistaUsuarios', {
             users: users,
