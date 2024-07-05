@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             moveToPlaygroundEl.style.display = 'none';
             moveToActiveEl.style.display = 'block';
         } else if (currentEvent.extendedProps.status === 'pending') {
-            moveToPlaygroundEl.style.display = 'block';
+            moveToPlaygroundEl.style.display = 'none';
             moveToActiveEl.style.display = 'none';
             cancelReservationEl.style.display = 'block';
         }

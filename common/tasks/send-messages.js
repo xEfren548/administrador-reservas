@@ -3,6 +3,8 @@ const Evento = require("../../models/Evento");
 const Habitacion = require("../../models/Habitacion");
 const Pago = require("../../models/Pago");
 const pagoController = require('../../controllers/pagoController');
+const utilidadesController = require('../../controllers/utilidadesController');
+
 
 const { format } = require('date-fns');
 const { es } = require('date-fns/locale');
@@ -171,6 +173,20 @@ async function cancelReservation() {
                         
                         reservation.status = 'active';
                         console.log('reserva movida a activa')
+                        const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(reservation._id);
+
+
+                        const newComisiones = comisionesReserva.map(comisiones => {
+                            return {
+                                id: comisiones._id,
+                                // monto: comisiones.monto / 2,
+                                status: 'aplicado'
+                            }
+                        })
+
+                        for (const comision of newComisiones) {
+                            await utilidadesController.editarComisionReturn(comision);
+                        }
                     }
                     else {
                         if (new Date().getTime() >= reservation.paymentCancelation.getTime()) {
@@ -183,6 +199,20 @@ async function cancelReservation() {
                     if (pagoDel50) {
                         reservation.status = 'active';
                         console.log('reserva movida a activa')
+                        const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(reservation._id);
+
+
+                        const newComisiones = comisionesReserva.map(comisiones => {
+                            return {
+                                id: comisiones._id,
+                                // monto: comisiones.monto / 2,
+                                status: 'aplicado'
+                            }
+                        })
+
+                        for (const comision of newComisiones) {
+                            await utilidadesController.editarComisionReturn(comision);
+                        }
                     }
                 }
 
