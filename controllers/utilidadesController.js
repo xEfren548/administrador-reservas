@@ -54,6 +54,7 @@ async function calcularComisiones(req, res) {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
                         finalComission += costosVendedor.maxAmount;
                         minComission += costosVendedor.minAmount;
+
                         console.log('comision admin vendedor: ', costosAdministrador.amount, user._id.toString());
                         user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
                     }
@@ -71,13 +72,16 @@ async function calcularComisiones(req, res) {
                 if (user.privilege === "Vendedor") {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
                         finalComission += costosVendedor.maxAmount;
+
                         minComission += costosVendedor.minAmount;
+
                         console.log('comision vendedor: ', costosVendedor.maxAmount, user._id.toString())
                     }
                 } else if (user.privilege === "Gerente") {
                     if (costosGerente.commission === "Aumento por costo fijo") {
                         finalComission += costosGerente.amount;
                         minComission += costosGerente.amount;
+
                         console.log('comision gerente: ', costosGerente.amount, user._id.toString())
                     }
 
@@ -95,8 +99,8 @@ async function calcularComisiones(req, res) {
 
             }
         }
-        console.log(minComission)
-        console.log(finalComission)
+        console.log("min comission", minComission)
+        console.log("max comission", finalComission)
         res.status(200).send({ minComission, finalComission });
     } catch (err) {
         res.status(404).send(err.message);

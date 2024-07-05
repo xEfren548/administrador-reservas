@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
             // Esperar a que obtenerComisiones() se resuelva            
-            comisionesReserva = document.getElementById('habitacion_total').value.trim() - comisionesReserva; // 3250 - 3000
+            comisionesReserva = document.getElementById('habitacion_total').value.trim() - precioMinimoPermitido; // 3250 - 3000
             console.log(comisionesReserva)
             // Crear un objeto con los datos del formulario
             const formData = {
@@ -396,10 +396,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 })
 
-                console.log("Total precios: ", totalPrecios)
+                console.log("Total precio sin comisiones: ", totalPrecios)
                 comisionesReserva = totalPrecios; // comisionesReserva = 3000
                 console.log("Total costo base: ", totalCostoBase)
-                console.log("Total sin comisiones: ", totalSinComisiones.value)
 
                 totalSinComisiones.value = totalPrecios;
 
@@ -407,7 +406,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const comisionUsuarios = await obtenerComisiones()
                 precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
                 totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
-                console.log("Total precios con comisiones: ", totalPrecios)
+                console.log("Total máximo permitido con comisiones: ", totalPrecios)
 
                 const totalInput = document.getElementById('habitacion_total') // Subtotal 
                 totalInput.value = precioMinimoPermitido // Mostrar el minimo permitido
@@ -416,7 +415,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 totalCostoBaseInput.value = totalCostoBase
 
-                console.log('Precios totales global: ', preciosTotalesGlobal)
+                console.log('Total maximo permitido: ', preciosTotalesGlobal)
 
 
 

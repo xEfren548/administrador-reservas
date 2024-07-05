@@ -641,10 +641,17 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
             if (isNaN(comisionVendedor) || comisionVendedor == null) {
                 comisionVendedor = 0
             }
-            totalPrecios += comisionVendedor // Precio maximo permitido
+            // totalPrecios += comisionVendedor // Precio maximo permitido
 
-            console.log("Total precios con comisiones: ", totalPrecios)
-            return totalPrecios
+            // console.log("Total precios con comisiones: ", totalPrecios)
+            const comisionUsuarios = await obtenerComisiones() 
+            let precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
+            console.log("Precio minimo permitido: ", precioMinimoPermitido)
+            precioMinimoPermitido += comisionVendedor;
+            console.log("Precio total de la reserva", precioMinimoPermitido);
+            // totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
+            // console.log("Total precios con comisiones: ", totalPrecios)
+            return precioMinimoPermitido
 
             // preciosTotalesGlobal = totalPrecios // Monto maximo en variable global
 
@@ -699,5 +706,19 @@ function calculateNightDifference(arrivalDate, departureDate) {
     }
 
     return nightsInput;
+}
+
+async function obtenerComisiones() {
+    try {
+        const response = await fetch('/api/utilidades');
+        const data = await response.json();
+        const minComission = data.minComission
+        const finalComission = data.finalComission
+        const comisiones = { minComission: minComission, finalComission: finalComission }
+        return comisiones
+
+    } catch (error) {
+        console.log(error.message);
+    }
 }
 
