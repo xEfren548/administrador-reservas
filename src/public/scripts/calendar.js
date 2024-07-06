@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         selectable: true,
         nowIndicator: true,
         dayMaxEvents: true, // allow "more" link when too many events
+        dragScroll: true,
+        eventResizableFromStart: false, // No permitir redimensionar desde el inicio
+        eventDurationEditable: false, // No permitir redimensionar desde el final,
+        // eventResize (funcion)
 
         headerToolbar: {
             left: 'today prev,next',
@@ -110,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 html: `
                 <div class="p-1 rounded ${background} bg-gradient ${textColor}" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: "Overpass", sans-serif;">
                     <div>Reserva</div>
-                    <div><b>Total: $ ${info.event.extendedProps.total}</b></div>
+                    <div><b>Total: $ ${info.event.extendedProps.total || 'N/A'}</b></div>
                 </div>
                 `
             }
@@ -129,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 style="position: absolute; top: 100%; left: 0; width: 300px; height: auto; background-color: black; z-index: 100000000 !important; border: 1px solid #e2e8f0; border-radius: 0.375rem; padding: 0.75rem; font-size: 14px; font-family: 'Inter', sans-serif; cursor: pointer;"
             >
                 <strong>${newElTitle}</strong>
-                <div>Total: $${newElTotal}</div>
+                <div>Total: $${newElTotal || 'N/A'}</div>
                 <div>Status: <b>${newElStatus.toUpperCase()}<b></div>
 
             </div>
