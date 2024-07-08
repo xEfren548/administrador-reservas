@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
 
             if (confirmacion.isConfirmed) {
-                const disponible = await availableDate(resourceId, eventDateStart, eventDateEnd);
+                const disponible = await availableDate(resourceId, eventDateStart, eventDateEnd, idReserva);
 
                 if (!disponible) {
                     Swal.fire({
@@ -493,7 +493,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 });
 
-async function availableDate(resourceId, arrivalDate, departureDate) {
+async function availableDate(resourceId, arrivalDate, departureDate, idReserva) {
     console.log('desde show available')
     console.log(arrivalDate);
     console.log(departureDate);
@@ -530,7 +530,7 @@ async function availableDate(resourceId, arrivalDate, departureDate) {
 
 
             // const results = [];
-            const response = await fetch(`/api/check-availability/?resourceId=${resourceId}&arrivalDate=${arrivalDateSend}&departureDate=${departureDateSend}`);
+            const response = await fetch(`/api/check-availability/?resourceId=${resourceId}&arrivalDate=${arrivalDateSend}&departureDate=${departureDateSend}&eventId=${idReserva}`);
             const result = await response.json();
             console.log(result)
             console.log(result.available)
