@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
 
             if (confirmacion.isConfirmed) {
-                const disponible = await availableDate(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
+                const disponible = await availableDate(resourceId, eventDateStart, eventDateEnd);
 
                 if (!disponible) {
                     Swal.fire({
@@ -492,7 +492,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 });
 
-async function availableDate(resourceId, arrivalDate, departureDate, comisionVendedor) {
+async function availableDate(resourceId, arrivalDate, departureDate) {
     console.log('desde show available')
     console.log(arrivalDate);
     console.log(departureDate);

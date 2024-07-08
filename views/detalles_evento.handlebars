@@ -1,5 +1,5 @@
 <button class="btn btn-light float-start ml-1" role="button" title="Volver a inicio" onclick="window.location='/'">
-    <i class="fa fa-arrow-left" aria-hidden="true" ></i>
+    <i class="fa fa-arrow-left" aria-hidden="true"></i>
 </button>
 <div class="left hidden-xs" id="reservationtools">
 
@@ -1116,13 +1116,36 @@
         const arrivalDateInput = document.getElementById('edit_start_date').value
         const departureDateInput = document.getElementById('edit_end_date').value
 
+        const eventDateStart = new Date(arrivalDateInput)
+        const eventDateEnd = new Date(departureDateInput)
+
         const reservacionId = document.querySelector('#reservacion_id').value;
+        const comisionVendedor = {{ evento.comisionVendedor }}
+        const resourceId = '{{ evento.resourceId }}'
 
-        const nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
+        const nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor, nightsInput);
 
 
 
-        try {
+
+
+    try {
+
+        const mensaje = `El nuevo total será de $${nuevoTotal}`
+        const confirmacion = await Swal.fire({
+            title: '¿Está seguro que desea actualizar la reserva?',
+            text: mensaje,
+            icon: 'warning',
+            showCancelButton: true,
+        })
+
+        if (confirmacion.isConfirmed) {
+
+            const disponible = await availableDate(resourceId, eventDateStart, eventDateEnd);
+            if (!disponible){
+                throw new Error('Fechas no disponibles. Intenta con otras fechas.')
+            }
+
             const nuevasFechas = {
                 nNights: nightsInput,
                 arrivalDate: arrivalDateInput,
@@ -1151,15 +1174,83 @@
             } else {
                 throw new Error('Error al actualizar la reserva. Por favor, inténtalo de nuevo más tarde.');
             }
-
-
-
-        } catch (error) {
-            console.error('Error al enviar los datos de la reserva :', error);
-            throw new Error('Error al enviar los datos de la reserva : ', error);
         }
 
+    } catch (error) {
+        console.error('Error al enviar los datos de la reserva :', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message,
+            confirmButtonText: 'Aceptar'
+        })
+    }
+
     });
+
+    async function availableDate(resourceId, arrivalDate, departureDate) {
+        console.log('desde show available')
+        console.log(arrivalDate);
+        console.log(departureDate);
+        const arrivalValue = new Date(`${arrivalDate}T00:00:00`);
+        const departureValue = new Date(`${departureDate}T00:00:00`);
+        // const tipologiaHabitacionInput = document.querySelector('#tipologia_habitacion');
+        // const options = tipologiaHabitacionInput.querySelectorAll('option');
+
+        // const verificarDisponibilidadElement = document.getElementById('verificar-disponibilidad');
+
+        // console.log(arrivalValue)
+        // console.log(departureValue)
+
+        try {
+            if (!isNaN(arrivalDate) && !isNaN(departureDate) && departureDate >= arrivalDate) {
+
+                console.log(arrivalDate)
+                console.log(departureDate)
+
+                // verificarDisponibilidadElement.style.display = 'block';
+
+                const arrivalYear = arrivalDate.getFullYear();
+                const arrivalMonth = (arrivalDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+                const arrivalDay = arrivalDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+                const arrivalDateSend = `${arrivalYear}-${arrivalMonth}-${arrivalDay}`;
+
+                const departureYear = departureDate.getFullYear();
+                const departureMonth = (departureDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+                const departureDay = departureDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+                const departureDateSend = `${departureYear}-${departureMonth}-${departureDay}`;
+
+                console.log(arrivalDateSend)
+                console.log(departureDateSend)
+
+
+                // const results = [];
+                const response = await fetch(`/api/check-availability/?resourceId=${resourceId}&arrivalDate=${arrivalDateSend}&departureDate=${departureDateSend}`);
+                const result = await response.json();
+                console.log(result)
+                console.log(result.available)
+                if (!result.available) {
+                    console.log('Cabaña no disponible');
+                    return false;
+                    // throw new Error('La cabaña no está disponible en las nuevas fechas. Intenta de nuevo con otras fechas.')
+                }
+
+                return true;
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: "Error en la solicitud: " + error.message,
+                confirmButtonText: 'Aceptar'
+            });
+        } finally {
+            // verificarDisponibilidadElement.style.display = 'none';
+            console.log('finalizado');
+        }
+
+
+    }
 
     const updateStatusBtn = document.querySelector('#update-status-btn');
     updateStatusBtn.addEventListener('click', async function (event) {
@@ -1291,6 +1382,138 @@
         }
     }
 
+    async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisionVendedor, nNights) {
+        console.log('obtener total ');
+        // const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
+        // const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
+        const arrivalYear = arrivalDate.getFullYear();
+        const arrivalMonth = (arrivalDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+        const arrivalDay = arrivalDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+        const arrivalDateSend = `${arrivalYear}-${arrivalMonth}-${arrivalDay}`;
+
+        const departureYear = departureDate.getFullYear();
+        const departureMonth = (departureDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+        const departureDay = departureDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+        const departureDateSend = `${departureYear}-${departureMonth}-${departureDay}`;
+
+        console.log(arrivalDateSend)
+        console.log(departureDateSend)
+
+        if (arrivalDateSend && departureDateSend && resourceId) {
+            // Aquí puedes ejecutar la acción deseada
+            console.log("Los tres elementos tienen un valor. Ejecutar acción...");
+            const fechas = obtenerRangoFechas(arrivalDateSend, departureDateSend)
+            const habitacionId = resourceId
+
+            console.log("fechas: " + fechas)
+            console.log("Nights: " + nNights)
+
+            const resultados = []
+
+            try {
+
+                for (const fecha of fechas) {
+                    const year = fecha.getFullYear();
+                    const month = (fecha.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+                    const day = fecha.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+                    const formatedDate = `${year}-${month}-${day}`;
+
+                    const response = await fetch(`/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}`);
+
+                    // Verificar el estado de la respuesta
+                    if (!response.ok) {
+                        throw new Error('Error en la solicitud fetch: ' + response.statusText);
+                    }
+
+                    // Convertir la respuesta a JSON
+                    const data = await response.json();
+
+                    // Agregar el resultado al array de resultados
+                    resultados.push(data);
+
+                }
+                console.log(resultados)
+                let totalPrecios = 0
+                let totalCostoBase = 0
+
+
+
+                resultados.forEach(resultado => {
+
+
+
+                    if (nNights > 1) {
+                        if (resultado.precio_base_2noches) {
+                            totalPrecios += resultado.precio_base_2noches
+                            totalCostoBase += resultado.costo_base_2noches
+                        } else {
+                            console.log('no hay precios disponibles')
+                        }
+                    } else {
+                        if (resultado.precio_modificado) {
+                            totalPrecios += resultado.precio_modificado
+                            totalCostoBase += resultado.costo_base
+
+                        } else {
+                            console.log('No hay precios disponibles')
+                        }
+                    }
+                })
+
+                console.log("Total precios: ", totalPrecios)
+
+                // Asignar comisiones
+                if (isNaN(comisionVendedor) || comisionVendedor == null) {
+                    comisionVendedor = 0
+                }
+                // totalPrecios += comisionVendedor // Precio maximo permitido
+
+                // console.log("Total precios con comisiones: ", totalPrecios)
+                const comisionUsuarios = await obtenerComisiones()
+                let precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
+                console.log("Precio minimo permitido: ", precioMinimoPermitido)
+                precioMinimoPermitido += comisionVendedor;
+                console.log("Precio total de la reserva", precioMinimoPermitido);
+                // totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
+                // console.log("Total precios con comisiones: ", totalPrecios)
+                return precioMinimoPermitido
+
+                // preciosTotalesGlobal = totalPrecios // Monto maximo en variable global
+
+                // totalCostoBaseInput.value = totalCostoBase
+
+                // console.log('Precios totales global: ', preciosTotalesGlobal)
+
+
+            } catch (error) {
+                console.error('Ha ocurrido un error: ', error.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "Error en la solicitud: " + error.message,
+                    confirmButtonText: 'Aceptar'
+                })
+
+            }
+
+        }
+
+    }
+
+    async function obtenerComisiones() {
+        try {
+            const response = await fetch('/api/utilidades');
+            const data = await response.json();
+            const minComission = data.minComission
+            const finalComission = data.finalComission
+            const comisiones = { minComission: minComission, finalComission: finalComission }
+            return comisiones
+
+        } catch (error) {
+            console.log(error.message);
+        }
+    }
+
     const eliminarReservaBtn = document.querySelector('#eliminar-reserva-btn')
     eliminarReservaBtn.addEventListener('click', async function (event) {
         try {
@@ -1388,6 +1611,20 @@
             });
         }
     });
+
+    function obtenerRangoFechas(arrivalDate, departureDate) {
+        const fechaInicio = new Date(`${arrivalDate}T00:00:00`); // Agregar la hora en formato UTC
+        const fechaFin = new Date(`${departureDate}T00:00:00`); // Agregar la hora en formato UTC
+
+        const fechas = [];
+        let fechaActual = new Date(fechaInicio);
+
+        while (fechaActual < fechaFin) {
+            fechas.push(new Date(fechaActual));
+            fechaActual.setDate(fechaActual.getDate() + 1);
+        }
+        return fechas;
+    }
 
     async function eliminarNota(idNota) {
 
