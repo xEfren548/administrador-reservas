@@ -172,8 +172,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (hoverableEventElement) {
                 hoverableEventElement.remove();
             }
-            const nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
-            let diferencia = nuevoTotal - totalViejo; // 2650 - 3250 
+c            let diferencia = nuevoTotal - totalViejo; // 2650 - 3250 
             console.log(diferencia)
 
             const mensaje = `Esta acción cambiará las fechas de la reserva y el nuevo total sería de $${nuevoTotal} (Diferencia de $${diferencia})`
