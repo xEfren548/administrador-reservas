@@ -136,7 +136,7 @@ async function createClient(req, res, next) {
         }
         
         await logController.createBackendLog(logBody);
-        res.status(200).json({ success: true, message: "Client successfully created"});
+        res.status(200).json({ success: true, message: "Client successfully created", client: clienteToAdd});
     } catch (err) {
         return next(err);
     }
