@@ -1118,7 +1118,8 @@
 
         const reservacionId = document.querySelector('#reservacion_id').value;
 
-        
+        const nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
+
 
 
         try {
