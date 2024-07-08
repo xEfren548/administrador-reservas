@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         selectable: true,
         nowIndicator: true,
         dayMaxEvents: true, // allow "more" link when too many events
+        timeZone: 'UTC',
 
         headerToolbar: {
             left: 'today prev,next',

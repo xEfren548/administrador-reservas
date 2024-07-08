@@ -1149,7 +1149,8 @@
             const nuevasFechas = {
                 nNights: nightsInput,
                 arrivalDate: arrivalDateInput,
-                departureDate: departureDateInput
+                departureDate: departureDateInput,
+                total: nuevoTotal
             }
 
             const response = await fetch(`/api/eventos/${reservacionId}`, {
@@ -1223,9 +1224,11 @@
                 console.log(arrivalDateSend)
                 console.log(departureDateSend)
 
+                const reservacionId = document.querySelector('#reservacion_id').value;
+
 
                 // const results = [];
-                const response = await fetch(`/api/check-availability/?resourceId=${resourceId}&arrivalDate=${arrivalDateSend}&departureDate=${departureDateSend}`);
+                const response = await fetch(`/api/check-availability/?resourceId=${resourceId}&arrivalDate=${arrivalDateSend}&departureDate=${departureDateSend}&eventId=${reservacionId}`);
                 const result = await response.json();
                 console.log(result)
                 console.log(result.available)
@@ -1439,9 +1442,6 @@
 
 
                 resultados.forEach(resultado => {
-
-
-
                     if (nNights > 1) {
                         if (resultado.precio_base_2noches) {
                             totalPrecios += resultado.precio_base_2noches

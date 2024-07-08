@@ -115,13 +115,13 @@ router.get('/eventos/:idevento', async (req, res) => {
 });
 
 router.get('/check-availability', async (req, res) => {
-    const { resourceId, arrivalDate, departureDate } = req.query;
+    const { resourceId, arrivalDate, departureDate, eventId } = req.query;
 
     // const arrival = new Date(arrivalDate);
     // const departure = new Date(departureDate);
 
     try {
-        const isAvailable = await eventController.checkAvailability(resourceId, arrivalDate, departureDate);
+        const isAvailable = await eventController.checkAvailability(resourceId, arrivalDate, departureDate, eventId);
 
         res.json({ available: isAvailable });
 

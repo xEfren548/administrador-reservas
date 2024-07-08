@@ -611,7 +611,7 @@ async function editarEvento(req, res) {
             fecha: Date.now(),
             idUsuario: req.session.id,
             type: 'reservation',
-            idReserva: idReserva,
+            idReserva: id,
             acciones: `Reservación modificada por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
         }
@@ -753,7 +753,7 @@ async function modificarEvento(req, res) {
     }
 }
 
-async function checkAvailability(resourceId, arrivalDate, departureDate) {
+async function checkAvailability(resourceId, arrivalDate, departureDate, eventId = null) {
     const newResourceId = new mongoose.Types.ObjectId(resourceId);
     const arrivalDateObj = new Date(`${arrivalDate}T00:00:00`);
     const departureDateObj = new Date(`${departureDate}T00:00:00`);
@@ -762,25 +762,48 @@ async function checkAvailability(resourceId, arrivalDate, departureDate) {
     // console.log(`Checking overlaps for Resource ID: ${newResourceId}`);
     // console.log(`Arrival Date: ${arrivalDateObj}`);
     // console.log(`Departure Date: ${departureDateObj}`);
+    if (eventId) {
+        console.log(`Ignoring event id: ${eventId}`);
+    } else {
+        console.log('event id: ' + eventId);
+    }
+
+    const matchConditions = {
+        'events.resourceId': newResourceId,
+        'events.status': { $ne: 'cancelled' }, // Excluir eventos cancelados
+        $and: [
+            { 'events.arrivalDate': { $lte: departureDateObj } },
+            { 'events.departureDate': { $gte: arrivalDateObj } }
+        ]
+    };
+
+    if (eventId) {
+        matchConditions['events._id'] = { $ne: new mongoose.Types.ObjectId(eventId) };
+    }
 
     const overlappingReservations = await Documento.aggregate([
         { $unwind: '$events' },
-        {
-            $match: {
-                'events.resourceId': newResourceId,
-                'events.status': { $ne: 'cancelled' } // Excluir eventos cancelados
-
-            }
-        },
-        {
-            $match: {
-                $and: [
-                    { 'events.arrivalDate': { $lte: departureDateObj } },
-                    { 'events.departureDate': { $gte: arrivalDateObj } }
-                ]
-            }
-        }
+        { $match: matchConditions }
     ]);
+
+    // const overlappingReservations = await Documento.aggregate([
+    //     { $unwind: '$events' },
+    //     {
+    //         $match: {
+    //             'events.resourceId': newResourceId,
+    //             'events.status': { $ne: 'cancelled' } // Excluir eventos cancelados
+
+    //         }
+    //     },
+    //     {
+    //         $match: {
+    //             $and: [
+    //                 { 'events.arrivalDate': { $lte: departureDateObj } },
+    //                 { 'events.departureDate': { $gte: arrivalDateObj } }
+    //             ]
+    //         }
+    //     }
+    // ]);
 
     // console.log('Overlapping Reservations:', overlappingReservations);
     // console.log('Overlapping Reservations Length:', overlappingReservations.length);
