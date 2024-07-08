@@ -455,6 +455,69 @@ document.addEventListener("DOMContentLoaded", function () {
         return fechas;
     }
 
+    // Alta de usuarios
+    var btnSaveClient = document.getElementById("btnSaveClient");
+        if (btnSaveClient) {
+            btnSaveClient.addEventListener("click", async (event) => {
+                event.preventDefault();
+
+                const data = {
+                    firstName: document.getElementById("txtClientName").value,
+                    lastName: document.getElementById("txtClientLastname").value,
+                    phone: document.getElementById("txtClientPhone").value,
+                    address: document.getElementById("txtClientAddress").value,
+                    email: document.getElementById("txtClientEmail").value,
+                    identificationType: document.getElementById("slctClientIdType").value,
+                    identificationNumber: document.getElementById("txtClientIdNumber").value
+                };
+
+                fetch('/api/clientes/crear-cliente', {
+                    method: 'POST',
+                    headers: {
+                        // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        response.json().then(errorData => {
+                            const errors = errorData.error;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                confirmButtonText: 'Aceptar'
+                            });   
+                        });                    
+                        throw new Error('Error en la solicitud');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: data.message + '.',
+                        confirmButtonText: 'Regresar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $('#clientEntryModal').modal('hide');
+                            $('#event_entry_modal').modal('show');
+                            
+                        }
+                    });                    
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
+                    }); 
+                });
+            });
+        }
 
 
 

@@ -37,7 +37,7 @@
             <div class="modal-body">
                 <div class="img-container">
                     <div class="row">
-                        <div class="col-sm-10">
+                        <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="lblClient">Cliente</label>
                                 <select id="lblClient" name="lblClient" class="form-select form-select-md" required>
@@ -52,6 +52,13 @@
                                     {{/if}}
                                 </select>
                             </div>
+                        </div>
+                        <div class="col-sm-3 d-flex align-items-center justify-content-center">
+                            <a name="" id="crear-reserva-btn" class="btn btn-info btn-sm m-3" href="#" role="button"
+                            data-bs-toggle="modal" data-bs-target="#clientEntryModal">Alta de Cliente</a>
+                        </div>
+                        <div class="col-sm-3 d-flex align-items-center justify-content-center">
+                            <a href="#">Buscar cliente</a>
                         </div>
                     </div>
                     <div class="row mt-2">
@@ -197,6 +204,88 @@
     </div>
 </div>
 <!-- End popup dialog box -->
+
+<!-- Modal alta cliente -->
+<div class="modal fade" id="clientEntryModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <form id="frmCreateClient" action="/api/clientes/crear-cliente" method="post" class="modal-dialog modal-lg"
+        role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Alta de cliente</h5>
+                <button type="button" class="close" onclick="$('#clientEntryModal').modal('hide');" aria-label="Close" data-bs-target="#event_entry_modal" data-bs-toggle="modal">
+                    &times;
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtClientName">Nombre</label>
+                                <input type="text" name="txtClientName" id="txtClientName"
+                                    class="form-control onlydatepicker" placeholder="Nombre">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtClientLastname">Apellido</label>
+                                <input type="text" name="txtClientLastname" id="txtClientLastname" class="form-control"
+                                    placeholder="Apellido">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtClientPhone">Teléfono</label>
+                                <input type="tel" name="txtClientPhone" id="txtClientPhone" class="form-control"
+                                    placeholder="Teléfono">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtClientAddress">Dirección</label>
+                                <input type="text" name="txtClientAddress" id="txtClientAddress" class="form-control"
+                                    placeholder="Dirección">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtClientEmail">Email</label>
+                                <input type="text" name="txtClientEmail" id="txtClientEmail" class="form-control"
+                                    placeholder="Email">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-8 mb-2">
+                                <label for="slctClientIdType" class="form-label">Tipo de identificación</label>
+                                <select name="slctClientIdType" id="slctClientIdType" class="form-select form-select-md mb-2" required>
+                                    <option value="" selected disabled> Selecciona el tipo de identificación del cliente
+                                    </option>
+                                    <option value="INE">INE</option>
+                                    <option value="Pasaporte">Pasaporte</option>
+                                    <option value="Licencia de conducir">Licencia de conducir</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtClientIdNumber">Número de identificación</label>
+                                <input type="text" name="txtClientIdNumber" id="txtClientIdNumber" class="form-control"
+                                    placeholder="Tipo de identificación">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-item">
+                <p id="txtInsertClientError" name="errMsg" class="error"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnSaveClient">Agregar Cliente</button>
+            </div>
+        </div>
+    </form>
+</div>
+<!-- End Modal Alta cliente -->
+
 
 
 <!-- Bootstrap JavaScript Libraries -->
