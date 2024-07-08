@@ -11,7 +11,7 @@ async function obtenerComisionesPorReserva(idReserva) {
     try {
         console.log(idReserva)
         const newIdReserva = new mongoose.Types.ObjectId(idReserva)
-        const comisiones = await Utilidades.find({ idReserva: newIdReserva  });
+        const comisiones = await Utilidades.find({ idReserva: newIdReserva });
         return comisiones;
 
     } catch (error) {
@@ -113,6 +113,25 @@ async function generarComisionReserva(req, res) {
         const { precioAsignado, precioMinimo, costoBase, totalSinComisiones, idReserva, chaletName, arrivalDate, departureDate } = req.body;
         console.log("Desde generar comision reserva")
         console.log("Costo base: " + costoBase)
+
+        // Eliminar comisiones previas si es que existian
+        const comisionesReserva = await obtenerComisionesPorReserva(idReserva);
+
+        if (comisionesReserva) {
+            for (const comisiones of comisionesReserva) {
+                if (!comisiones.concepto.includes('servicio') && !comisiones.concepto.includes('Servicio')) {
+                    const utilidadEliminada = await eliminarComisionReturn(comisiones._id);
+                    if (utilidadEliminada) {
+                        console.log('Utilidad eliminada correctamente');
+                    } else {
+                        throw new Error('Error al eliminar comision.');
+                    }
+                }
+            }
+        }
+
+
+
 
         const chalets = await Habitacion.findOne();
         const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);

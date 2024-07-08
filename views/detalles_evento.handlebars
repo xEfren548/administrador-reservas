@@ -1124,10 +1124,18 @@
         const resourceId = '{{ evento.resourceId }}'
 
         const nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor, nightsInput);
+        console.log(nuevoTotal)
+        nuevoTotal.chaletName = '{{habitacion.propertyDetails.name}}'
+        nuevoTotal.idReserva = reservacionId;
+        nuevoTotal.arrivalDate = eventDateStart
+        nuevoTotal.departureDate = eventDateEnd
+
+        const totalServicios = parseFloat(document.querySelector('#total-servicios').value);
+
 
     try {
 
-        const mensaje = `El nuevo total será de $${nuevoTotal}`
+        const mensaje = `El nuevo total será de $${nuevoTotal.precioAsignado + totalServicios}`
         const confirmacion = await Swal.fire({
             title: '¿Está seguro que desea actualizar la reserva?',
             text: mensaje,
@@ -1146,7 +1154,7 @@
                 nNights: nightsInput,
                 arrivalDate: arrivalDateInput,
                 departureDate: departureDateInput,
-                total: nuevoTotal
+                total: nuevoTotal.precioAsignado
             }
 
             const response = await fetch(`/api/eventos/${reservacionId}`, {
@@ -1168,6 +1176,30 @@
                         location.reload();
                     }
                 });
+            
+            const agregarComisiones = await fetch('/api/utilidades/reserva', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(nuevoTotal)
+            })
+
+            if (!agregarComisiones.ok) {
+                const additionalErrorData = await agregarComisiones.json();
+                const additionalErrors = additionalErrorData.error;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Additional Error',
+                    text: "Error en la solicitud adicional: " + additionalErrors[0].message.toLowerCase() + ".",
+                    confirmButtonText: 'Aceptar'
+                });
+                throw new Error('Error en la solicitud adicional');
+            }
+
+            const additionalData = await agregarComisiones.json();
+            console.log('Additional data received:', additionalData);
+
             } else {
                 throw new Error('Error al actualizar la reserva. Por favor, inténtalo de nuevo más tarde.');
             }
@@ -1466,13 +1498,24 @@
 
                 // console.log("Total precios con comisiones: ", totalPrecios)
                 const comisionUsuarios = await obtenerComisiones()
-                let precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
-                console.log("Precio minimo permitido: ", precioMinimoPermitido)
-                precioMinimoPermitido += comisionVendedor;
+                let precioMinimoPermitidoSinComision = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
+                console.log("Precio minimo permitido: ", precioMinimoPermitidoSinComision)
+                const precioMinimoPermitido = precioMinimoPermitidoSinComision + comisionVendedor;
                 console.log("Precio total de la reserva", precioMinimoPermitido);
-                // totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
+                const precioMaximoPermitido = totalPrecios + comisionUsuarios.finalComission // Precio maximo permitido
                 // console.log("Total precios con comisiones: ", totalPrecios)
-                return precioMinimoPermitido
+                const preciosComisiones = {
+                    precioMinimo: precioMinimoPermitidoSinComision,
+                    precioMaximo: precioMaximoPermitido,
+                    costoBase: totalCostoBase,
+                    totalSinComisiones: totalPrecios,
+                    precioAsignado: precioMinimoPermitido
+                }
+
+                console.log(preciosComisiones)
+
+                
+                return preciosComisiones
 
                 // preciosTotalesGlobal = totalPrecios // Monto maximo en variable global
 
@@ -1493,7 +1536,6 @@
             }
 
         }
-
     }
 
     async function obtenerComisiones() {
