@@ -1,3 +1,10 @@
+<div class="calendar-header">
+    <div class="bg-dark mb-3">
+        <a name="" id="crear-reserva-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
+            data-bs-toggle="modal" data-bs-target="#clientEntryModal">Alta de Cliente</a>
+    </div>
+</div>
+
 <div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
     <div class="col-10">
         <h1>Lista de clientes</h1>
@@ -94,9 +101,9 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-8">
-                                <label for="slctClientIdType">Tipo de identificación</label>
-                                <select name="slctClientIdType" id="slctClientIdType" required>
+                            <div class="col-8 mb-2">
+                                <label for="slctClientIdType" class="form-label">Tipo de identificación</label>
+                                <select name="slctClientIdType" id="slctClientIdType" class="form-select form-select-md mb-2" required>
                                     <option value="" selected disabled> Selecciona el tipo de identificación del cliente
                                     </option>
                                     <option value="INE">INE</option>
@@ -178,9 +185,9 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-8">
-                                <label for="slctClientIdTypeUpd">Tipo de identificación</label>
-                                <select name="slctClientIdTypeUpd" id="slctClientIdTypeUpd" required>
+                            <div class="col-8 mb-2">
+                                <label for="slctClientIdTypeUpd" class="form-label">Tipo de identificación</label>
+                                <select name="slctClientIdTypeUpd" id="slctClientIdTypeUpd" class="form-select form-select-md" required>
                                     <option value="" selected disabled> Selecciona el tipo de identificación del cliente
                                     </option>
                                     <option value="INE">INE</option>
