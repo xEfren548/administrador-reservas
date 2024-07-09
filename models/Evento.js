@@ -47,7 +47,8 @@ const reservaSchema = new Schema({
         type: Number,
         //required: true
     },
-    notes: [{texto: String}],        
+    notes: [{texto: String}],
+    privateNotes: [{texto: String}],
     termsAccepted: {
         type: Boolean,
         default: false
