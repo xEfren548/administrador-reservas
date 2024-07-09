@@ -55,7 +55,8 @@
                                         su reserva --</option>
                                     {{#if clientes}}
                                     {{#each clientes}}
-                                    <option value="{{this.email}}">{{this.firstName}} {{this.lastName}} ({{this.email}})</option>
+                                    <option value="{{this.email}}">{{this.firstName}} {{this.lastName}} ({{this.email}})
+                                    </option>
                                     {{/each}}
                                     {{else}}
                                     <option value="0">No se encontraron clientes</option>
@@ -289,6 +290,8 @@
                 <p id="txtInsertClientError" name="errMsg" class="error"></p>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-target="#event_entry_modal" data-bs-toggle="modal"
+                    data-bs-dismiss="modal">Regresar</button>
                 <button type="button" class="btn btn-primary" id="btnSaveClient">Agregar Cliente</button>
             </div>
         </div>
@@ -302,18 +305,24 @@
 <script src="/scripts/calendar.js"></script>
 <script src="/scripts/functions.js"></script>
 <script>
-        const searchInput = document.getElementById('searchClient');
-        const clientSelect = document.getElementById('lblClient');
+    const searchInput = document.getElementById('searchClient');
+    const clientSelect = document.getElementById('lblClient');
 
-        searchInput.addEventListener('keyup', function(event) {
-            const searchTerm = event.target.value.toLowerCase();
-            Array.from(clientSelect.options).forEach(function(option) {
-                const text = `${option.text} ${option.value}`.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    option.style.display = 'block';
-                } else {
-                    option.style.display = 'none';
-                }
-            });
+    searchInput.addEventListener('keyup', function (event) {
+        const searchTerm = event.target.value.toLowerCase();
+        Array.from(clientSelect.options).forEach(function (option) {
+            const text = `${option.text} ${option.value}`.toLowerCase();
+            if (text.includes(searchTerm)) {
+                option.style.display = 'block';
+            } else {
+                option.style.display = 'none';
+            }
         });
+    });
+
+    $(document).on('hidden.bs.modal', function (event) {
+        if ($('.modal:visible').length) {
+            $('body').addClass('modal-open');
+        }
+    });
 </script>
