@@ -45,11 +45,17 @@ async function showReservationsView(req, res, next) {
             throw new NotFoundError("No client not found");
         }
 
+        const tipologias = await TipologiasCabana.find().lean();
+        if (!tipologias) {
+            throw new NotFoundError("No tipologies found");
+        }
+
         console.log(req.session)
 
         res.render('index', {
             chalets: chalets,
-            clientes: clientes
+            clientes: clientes,
+            tipologias: tipologias
         });
     } catch (error) {
         console.log(error);
