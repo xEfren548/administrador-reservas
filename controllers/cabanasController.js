@@ -379,6 +379,7 @@ async function showChaletsView(req, res, next) {
         if (!tipologias) {
             throw new NotFoundError("No tipologies found");
         }
+        
 
         const owners = await Usuario.find({ privilege: "Dueño de cabañas" }).lean();
         if (!owners) {
@@ -602,7 +603,6 @@ async function showEditChaletsView(req, res, next) {
         if (!tipologias) {
             throw new NotFoundError("No tipologies found");
         }
-        console.log(owners)
         //console.log("CHALETS: ", chalets);
         //console.log("CHALETS2222: ", chalets[0].others.admin[0]);
         //console.log("ADMINS: ", admins);
@@ -633,19 +633,15 @@ async function editChalet(req, res, next) {
     console.log('Entrando a edit chalet');
 
     try {
-        const admin = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
-        if (!admin) {
-            throw new NotFoundError("Admin not found");
-        }
-        const janitor = await Usuario.findOne({ email: others.janitor, privilege: "Limpieza" });
-        if (!janitor) {
-            throw new NotFoundError("Janitor not found");
-        }
+        const [admin, janitor, owner] = await Promise.all([
+            Usuario.findOne({ email: others.admin, privilege: "Administrador" }),
+            Usuario.findOne({ email: others.janitor, privilege: "Limpieza" }),
+            Usuario.findOne({ _id: others.owner, privilege: "Dueño de cabañas" })
+        ]);
 
-        const owner = await Usuario.findOne({ _id: others.owner, privilege: "Dueño de cabañas" });
-        if (!owner) {
-            throw new NotFoundError("Owner not found");
-        }
+        if (!admin) throw new NotFoundError("Admin not found");
+        if (!janitor) throw new NotFoundError("Janitor not found");
+        if (!owner) throw new NotFoundError("Owner not found");
 
         console.log(others.departureTime);
         console.log(others.arrivalTime);
@@ -657,7 +653,17 @@ async function editChalet(req, res, next) {
         newDepartureTime.setMinutes(parseInt(others.departureTime.split(':')[1], 10));
         console.log(newDepartureTime);
 
-        const chalet = {
+        
+        const habitacion = await Habitacion.findOne();
+        let chalets = habitacion.resources;
+
+        const indexToUpdate = chalets.findIndex(c => c.propertyDetails.name === propertyDetails.name);
+        if (indexToUpdate === -1) throw new NotFoundError("Chalet not found");
+
+        const chaletId = chalets[indexToUpdate]._id; // Keep the original _id
+
+        const updatedChalet = {
+            ...chalets[indexToUpdate], // Keep the original document structure
             propertyDetails,
             accommodationFeatures,
             additionalInfo,
@@ -680,19 +686,15 @@ async function editChalet(req, res, next) {
             images
         };
 
-        const habitacion = await Habitacion.findOne();
-        let chalets = habitacion.resources;
-
-        const indexToUpdate = chalets.findIndex(chalet => chalet.propertyDetails.name === propertyDetails.name);
-        if (indexToUpdate === -1) {
-            throw new NotFoundError("Chalet not found");
-        }
-        chalets[indexToUpdate] = chalet;
-
-        await Habitacion.findOneAndUpdate({}, { resources: chalets });
+        chalets[indexToUpdate] = updatedChalet;
+        
+        await Habitacion.findOneAndUpdate(
+            { "resources._id": chaletId },
+            { $set: { "resources.$": updatedChalet } }
+        );
 
         console.log("Cabaña actualizada con éxito");
-        req.session.chaletUpdated = chalets[indexToUpdate].propertyDetails.name;
+        req.session.chaletUpdated = updatedChalet.propertyDetails.name;
         console.log("Respuesta del servidor:", { chaletUpdated: req.session.chaletUpdated });
 
         const logBody = {

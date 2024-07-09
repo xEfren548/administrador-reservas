@@ -19,16 +19,25 @@
     <div id="propertyDetails" class="chalet-details collapse">
         <div class="input-group half">
             <label for="slctchaletAccomodationType">Tipo de alojamiento</label>
-            <select id="slctchaletAccomodationType" name="slctchaletAccomodationType"
-                value="{{propertyDetails.accomodationType}}">
+            <select id="slctchaletAccomodationType" name="slctchaletAccomodationType">
                 {{#if ../tipologias}}
+                <!-- Default selected option -->
+                <option value="" disabled style="background-color: darkgrey;">Seleccione un tipo de alojamiento</option>
+
+                <!-- Iterate over tipologias to create options -->
                 {{#each ../tipologias}}
+                {{#if (eq this.tipologia ../propertyDetails.accomodationType)}}
+                <option value="{{this.tipologia}}" selected>{{this.tipologia}}</option>
+                {{else}}
                 <option value="{{this.tipologia}}">{{this.tipologia}}</option>
+                {{/if}}
                 {{/each}}
                 {{else}}
+                <!-- No tipologias available -->
                 <option value="">No hay tipos de alojamiento disponibles, necesitas agregar uno.</option>
                 {{/if}}
             </select>
+
         </div>
         <div class="input-group half">
             <label for="txtChaletName">Nombre</label>
