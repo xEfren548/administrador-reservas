@@ -500,7 +500,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         // Update the clients dropdown
                         const newOption = document.createElement("option");
                         newOption.value = dataR.client.email;
-                        newOption.text = dataR.client.firstName + " " + dataR.client.lastName;
+                        newOption.text = dataR.client.firstName + " " + dataR.client.lastName + "(" + dataR.client.email + ")";
                         newOption.selected = true;
 
                         document.getElementById("lblClient").appendChild(newOption);
