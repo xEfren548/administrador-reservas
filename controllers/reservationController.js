@@ -1,7 +1,10 @@
 express = require("express");
+router = express.Router();
+
 const Cliente = require('../models/Cliente');
 const Habitacion = require("../models/Habitacion");
-router = express.Router();
+const TipologiasCabana = require('../models/TipologiasCabana');
+
 const {check} = require("express-validator");
 
 const showReservationsViewValidators = [
@@ -36,6 +39,7 @@ async function showReservationsView(req, res, next) {
             name: chalet.propertyDetails.name,
             basePrice: chalet.others.basePrice,
             pax: chalet.propertyDetails.maxOccupancy,
+            tipologia: chalet.propertyDetails.accomodationType,
             id: chalet._id.toString()
         }));
         // console.log("Estos son los chalets: ", chalets);

@@ -270,6 +270,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const nightsInput = document.querySelector('#event_nights');
     const arrivalDate = document.getElementById('event_start_date')
     const departureDate = document.getElementById('event_end_date')
+ 
 
     arrivalDate.addEventListener('input', calculateNightDifference);
     departureDate.addEventListener('input', calculateNightDifference);
@@ -300,6 +301,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         obtenerTotalReserva()
+        showAvailableChalets()
 
     });
 

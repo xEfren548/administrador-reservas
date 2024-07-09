@@ -96,7 +96,28 @@
                     <div class="row">
                         <div class="col-sm-4">
                             <div class="form-group">
-                                <p id="verificar-disponibilidad" style="display: none;">Verificando disponibilidad...
+                                <div class="mb-3">
+                                    <label for="" class="form-label">Filtrar por Tipología</label>
+                                    <select class="form-select form-select-md" name="" id="tipologia_select">
+                                        <option value="" selected>Mostrar todas</option>
+                                        {{#if tipologias}}
+                                        {{#each tipologias}}
+                                        <option value="{{this.tipologia}}">{{this.tipologia}}</option>
+                                        {{/each}}
+                                        {{else}}
+                                        <option value="0">No se encontraron tipologias</option>
+                                        {{/if}}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <p id="verificar-disponibilidad" style="display: none;">Verificando
+                                    disponibilidad...
                                 </p>
 
                                 <label for="tipologia_habitacion">Tipología</label>
@@ -106,7 +127,8 @@
                                         modificar --</option>
                                     {{#if chalets}}
                                     {{#each chalets}}
-                                    <option value="{{this.name}}" data-bs-pax="{{this.pax}}" data-bs-id="{{this.id}}">
+                                    <option value="{{this.name}}" data-bs-pax="{{this.pax}}" data-bs-id="{{this.id}}"
+                                        data-bs-tipologia="{{this.tipologia}}">
                                         {{this.name}}</option>
                                     {{/each}}
                                     {{else}}
@@ -268,7 +290,8 @@
                                 <label for="slctClientIdType" class="form-label">Tipo de identificación</label>
                                 <select name="slctClientIdType" id="slctClientIdType"
                                     class="form-select form-select-md mb-2" required>
-                                    <option value="" selected disabled> Selecciona el tipo de identificación del cliente
+                                    <option value="" selected disabled> Selecciona el tipo de identificación del
+                                        cliente
                                     </option>
                                     <option value="INE">INE</option>
                                     <option value="Pasaporte">Pasaporte</option>
@@ -316,6 +339,26 @@
                 option.style.display = 'block';
             } else {
                 option.style.display = 'none';
+            }
+        });
+    });
+
+    const tipologiaSelect = document.getElementById('tipologia_select');
+    const tipologiaHabitacionSelect = document.getElementById('tipologia_habitacion');
+    const originalOptions = Array.from(tipologiaHabitacionSelect.options);
+
+    tipologiaSelect.addEventListener('change', function() {
+        const selectedTipologia = this.value;
+
+        // Remove all existing options in tipologiaHabitacionSelect
+        while (tipologiaHabitacionSelect.options.length > 1) {
+            tipologiaHabitacionSelect.remove(1);
+        }
+
+        // Filter and add matching options
+        originalOptions.forEach(option => {
+            if (selectedTipologia === '' || option.getAttribute('data-bs-tipologia') === selectedTipologia) {
+                tipologiaHabitacionSelect.appendChild(option.cloneNode(true));
             }
         });
     });
