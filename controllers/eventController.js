@@ -966,9 +966,11 @@ async function crearNota(req, res) {
                 throw new Error('No tienes permisos para crear notas privadas');
             }
             evento.privateNotes.push({ texto });
+        } else {
+            evento.notes.push({ texto });
+
         }
 
-        evento.notes.push({ texto });
 
         await eventosExistentes.save();
         const logBody = {
@@ -986,13 +988,14 @@ async function crearNota(req, res) {
 
     } catch (e) {
         console.error(e);
-        res.status(500).json({ message: 'Error al obtener eventos' });
+        res.status(500).json({ message: e.message });
     }
 }
 
 async function eliminarNota(req, res) {
     const idReserva = req.query.idReserva; // Obtener el ID de la reserva desde los parámetros de la consulta
     const idNota = req.query.idNota; // Obtener el ID de la nota a eliminar desde los parámetros de la consulta
+    const userPrivilege = req.session.privilege;
 
 
     try {
@@ -1015,11 +1018,24 @@ async function eliminarNota(req, res) {
         const indexNota = evento.notes.findIndex(nota => nota._id.toString() === idNota);
 
         if (indexNota === -1) {
-            throw new Error('La nota no fue encontrada en el evento');
+
+
+            const indexNotaPrivada = evento.privateNotes.findIndex(nota => nota._id.toString() === idNota);
+            if (indexNotaPrivada === -1) {
+                throw new Error('La nota no fue encontrada en el evento');
+            }
+            if (!userPrivilege.includes('Administrador') && !userPrivilege.includes('Vendedor')) {
+                throw new Error('No tienes permisos para borrar notas privadas');
+            }
+            evento.privateNotes.splice(indexNota, 1);
+
+
+        } else {
+            evento.notes.splice(indexNota, 1);
+
         }
 
         // Eliminar la nota del array de notas del evento
-        evento.notes.splice(indexNota, 1);
 
         // Guardar el documento actualizado en la base de datos
         await documento.save();
@@ -1039,7 +1055,8 @@ async function eliminarNota(req, res) {
     } catch (error) {
         // Manejar cualquier error y enviar una respuesta de error al cliente
         console.error('Error al eliminar la nota:', error.message);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: error.message });
+
     }
 }
 

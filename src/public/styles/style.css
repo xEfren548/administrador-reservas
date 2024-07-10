@@ -344,6 +344,14 @@ td {
     background-color: #e6e6e6;
 }
 
+.nota-privada-container {
+    position: relative;
+}
+
+.nota-privada-container:hover {
+    background-color: #e6e6e6;
+}
+
 .btn-eliminar {
     position: absolute;
     top: 0;

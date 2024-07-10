@@ -941,9 +941,25 @@
 
     // Obtener todos los contenedores de nota
     const notaContainers = document.querySelectorAll('.nota-container');
+    const notaPrivadaContainers = document.querySelectorAll('.nota-privada-container');
 
     // Agregar evento de mouseenter a cada contenedor de nota
     notaContainers.forEach(container => {
+        container.addEventListener('mouseenter', () => {
+            // Mostrar el botón de eliminar al hacer hover
+            const btnEliminar = container.querySelector('.btn-eliminar');
+            btnEliminar.style.display = 'block';
+        });
+
+        // Agregar evento de mouseleave a cada contenedor de nota
+        container.addEventListener('mouseleave', () => {
+            // Ocultar el botón de eliminar al dejar de hacer hover
+            const btnEliminar = container.querySelector('.btn-eliminar');
+            btnEliminar.style.display = 'none';
+        });
+    });
+
+    notaPrivadaContainers.forEach(container => {
         container.addEventListener('mouseenter', () => {
             // Mostrar el botón de eliminar al hacer hover
             const btnEliminar = container.querySelector('.btn-eliminar');
@@ -1668,7 +1684,8 @@
                 });
 
             } else {
-                throw new Error('Error al agregar la nota. Por favor, inténtalo de nuevo más tarde.');
+                const errorData = await response.json(); // Obtener el mensaje de error del backend
+                throw new Error(errorData.message || 'Error al agregar la nota. Por favor, inténtalo de nuevo más tarde.');
             }
 
         } catch (e) {
@@ -1732,7 +1749,8 @@
                     });
 
                 } else {
-                    throw new Error('Error al eliminar la nota. Por favor, inténtalo de nuevo más tarde.');
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Error al eliminar la nota. Por favor, inténtalo de nuevo más tarde.');
                 }
             }
         } catch (e) {
@@ -1989,48 +2007,33 @@
         alert('URL copiado al portapapeles: ' + url);
     }
 
-    const notaContainer = document.querySelectorAll('.nota-container')
+    const notaContainer = document.querySelectorAll('.nota-container');
     const notaPrivadaContainer = document.querySelectorAll('.nota-privada-container');
     const comentariosBtn = document.querySelector('#comentarios-btn');
     const notasPrivadasBtn = document.querySelector('#notasprivadas-btn');
-
+    
     comentariosBtn.addEventListener('click', function (e) {
         e.preventDefault();
-        if (notaPrivadaContainer){
-            notaPrivadaContainer.forEach(function(element) {
-                if (!element.classList.contains('d-none')) {
-                    comentariosBtn.classList.add('fw-bold');
-                    notasPrivadasBtn.classList.remove('fw-bold');
-                    element.classList.add('d-none');
-                    notaContainer.forEach(function(element) {
-                        element.classList.remove('d-none');
-                    })
-                }
-            });
-
-        }
-
-        // Si yo clickeo comentariosBtn, se debe agregar d-none para borrar notaPrivadaContainer
-        // y mostrar notaContainer
-
+        notaPrivadaContainer.forEach(function(element) {
+            element.classList.add('d-none');
+        });
+        notaContainer.forEach(function(element) {
+            element.classList.remove('d-none');
+        });
+        comentariosBtn.classList.add('fw-bold');
+        notasPrivadasBtn.classList.remove('fw-bold');
     });
 
     notasPrivadasBtn.addEventListener('click', function (e) {
         e.preventDefault();
-        if(notaContainer) {
-            notaContainer.forEach(function(element) {
-                if (!element.classList.contains('d-none')) {
-                    comentariosBtn.classList.remove('fw-bold');
-                    notasPrivadasBtn.classList.add('fw-bold');
-                    element.classList.add('d-none');
-                    notaPrivadaContainer.forEach(function(element) {
-                        element.classList.remove('d-none');
-                    })
-                }
-            });
-
-        }
-
+        notaContainer.forEach(function(element) {
+            element.classList.add('d-none');
+        });
+        notaPrivadaContainer.forEach(function(element) {
+            element.classList.remove('d-none');
+        });
+        notasPrivadasBtn.classList.add('fw-bold');
+        comentariosBtn.classList.remove('fw-bold');
     });
 
 </script>
