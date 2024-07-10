@@ -22,7 +22,7 @@
                         </div>
                         <hr>
                         <div class="question-body">
-                            <select class="question-types">
+                            <select class="question-types form-select form-select-md">
                                 <option disabled="true">Seleccione el tipo de pregunta</option>
                                 <option value="textField" {{#if (eq this.questionType "textField")}}selected="true"{{/if}}>Campo de texto</option>
                                 <option value="range" {{#if (eq this.questionType "range")}}selected="true"{{/if}}>Rango</option>
@@ -85,7 +85,7 @@
                     </div>
                     <hr>
                     <div class="question-body">
-                        <select class="question-types">
+                        <select class="question-types form-select form-select-md">
                             <option selected="true" disabled="true">Seleccione el tipo de pregunta</option>
                             <option value="textField">Campo de texto</option>
                             <option value="range">Rango</option>

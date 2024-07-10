@@ -1,5 +1,12 @@
-<h1>Costos de cabañas</h1>
+<div class="calendar-header">
+    <div class="bg-dark mb-3">
+        <a name="" id="crear-servicio-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
+            data-bs-toggle="modal" data-bs-target="#user_entry_modal">Alta de costo</a>
+    </div>
+</div>
+
 <div class="row" style="width: 95%; margin: 0 auto;">
+<h1>Costos de cabañas</h1>
     <div class="col-10">
         <table class="table table-dark table-hover" id="tablaUsuarios">
             <thead class="table-light">
@@ -83,12 +90,12 @@
                                         placeholder="Nombre">
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row mt-2">
                                 <label for="slctUserCategory">Categoría: </label>
                             </div>
                             <div class="row">
                                 <div class="col-8">
-                                    <select name="slctUserCategory" id="slctUserCategory" required>
+                                    <select name="slctUserCategory" id="slctUserCategory" class="form-select form-select-md" required>
                                         <option value="" selected disabled> Selecciona una categoría para el costo--
                                         </option>
                                         <option value="Dueño">Dueño</option>
@@ -97,12 +104,12 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row mt-2">
                                 <label for="slctUserCommission">Comisión: </label>
                             </div>
                             <div class="row">
                                 <div class="col-8">
-                                    <select name="slctUserCommission" id="slctUserCommission" required>
+                                    <select name="slctUserCommission" id="slctUserCommission" class="form-select form-select-md" required>
                                         <option value="" selected disabled> Selecciona una comisión para el costo--
                                         </option>
                                         <option value="Aumento porcentual">Aumento porcentual</option>
@@ -144,7 +151,7 @@
                                 </div>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="btnSaveUser">Agregar costo</button>
+                        <button type="submit" class="btn btn-primary mt-3" id="btnSaveUser">Agregar costo</button>
                     </div>
                 </div>
             </div>
@@ -180,12 +187,12 @@
                                         placeholder="Nombre" disabled>
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row mt-2">
                                 <label for="slctUserCategoryUpd">Categoría: </label>
                             </div>
                             <div class="row">
                                 <div class="col-8">
-                                    <select name="slctUserCategoryUpd" id="slctUserCategoryUpd" required>
+                                    <select name="slctUserCategoryUpd" id="slctUserCategoryUpd" class="form-select form-select-md" required>
                                         <option value="" selected disabled> Selecciona una categoría para el costo--
                                         </option>
                                         <option value="Dueño">Dueño</option>
@@ -194,12 +201,12 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row mt-2">
                                 <label for="slctUserCommissionUpd">Comisión: </label>
                             </div>
                             <div class="row">
                                 <div class="col-8">
-                                    <select name="slctUserCommissionUpd" id="slctUserCommissionUpd" required>
+                                    <select name="slctUserCommissionUpd" id="slctUserCommissionUpd" class="form-select form-select-md" required>
                                         <option value="" selected disabled> Selecciona una comisión para el costo--
                                         </option>
                                         <option value="Aumento porcentual">Aumento porcentual</option>
