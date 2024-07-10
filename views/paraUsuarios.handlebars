@@ -113,9 +113,33 @@
 
                     <div id="weather" class="text-center mb-3"></div>
 
+                    <div class="card-details m-3" style="background-color: #faf1d2; height: auto; width: 80%;">
+                        <div class="row">
+                            <div class="col-6">
+                                <a href="#" id="comentarios-btn" class="fw-bold" style="text-decoration: none !important;"><p style="color: black; text-decoration: none !important;">COMENTARIOS</p></a>
+                            </div>
+
+                        </div>
+                        {{#if reservation.notes}}
+                        {{#each reservation.notes}}
+                        <div class="nota-container" style="display: block;">
+                            <p class="text-black fs-6">{{this.texto}}</p>
+                            <button class="btn btn-eliminar btn-sm" style="display: none;" onclick="eliminarNota('{{this._id}}')"><i
+                                    class="fa fa-trash" aria-hidden="true"></i></button>
+                        </div>
+                        {{/each}}
+                        {{else}}
+                        <div class="nota-container" style="display: block;">
+                            <p class="text-black fs-6">No se han agregado notas para esta reserva</p>
+                        </div>
+                        {{/if}}
+        </div>
+
                 </div>
             </div>
         </div>
+
+        
 
         <div class="form-item">
             <p id="txtSubmitReservationError" name="errMsg" class="error"></p>
