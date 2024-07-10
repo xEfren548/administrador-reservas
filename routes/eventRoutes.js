@@ -31,6 +31,7 @@ router.delete('/notas', eventController.eliminarNota)
 router.get('/eventos/:idevento', async (req, res) => {
     try {
         const idEvento = req.params.idevento;
+        const privilege = req.session.privilege;
 
         // Llama a la función del controlador de eventos para obtener los detalles del evento
         const evento = await eventController.obtenerEventoPorId(idEvento);
@@ -95,7 +96,20 @@ router.get('/eventos/:idevento', async (req, res) => {
             };
         });
 
+        const desplazamiento = 3
 
+
+        const notasPrivadas = eventoObjeto.privateNotes;
+        if (notasPrivadas) {
+            notasPrivadas.forEach(nota => {
+                nota.texto = eventController.cifrarMensaje(nota.texto, desplazamiento);
+            });
+        }
+
+        console.log(notasPrivadas);
+
+        
+        eventoObjeto.privilege = privilege;
 
 
         // Renderiza la página HTML con los detalles del evento

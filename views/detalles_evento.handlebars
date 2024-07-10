@@ -212,9 +212,11 @@
             {{#if evento.privateNotes}}
             {{#each evento.privateNotes}}
             <div class="nota-privada-container d-none" >
-                <p class="text-black fs-5">{{this.texto}}</p>
-                <button class="btn btn-eliminar btn-sm" style="display: none;" onclick="eliminarNota('{{this._id}}')"><i
+                <p class="text-black fs-5 blur-text " data-bs-texto="{{this.texto}}">{{this.texto}}</p>
+                <button class="btn btn-eliminar btn-sm ml-2 mr-1 mb-2" style="display: none; position: inherit !important;" onclick="eliminarNota('{{this._id}}')"><i
                         class="fa fa-trash" aria-hidden="true"></i></button>
+                <button class="btn btn-ver btn-sm mb-2" style="display: none;" onclick="verNotaPrivada('{{this.texto}}')">
+                    <i class="fa fa-eye" aria-hidden="true" ></i></button>
             </div>
             {{/each}}
             {{/if}}
@@ -963,14 +965,19 @@
         container.addEventListener('mouseenter', () => {
             // Mostrar el botón de eliminar al hacer hover
             const btnEliminar = container.querySelector('.btn-eliminar');
+            const btnVer = container.querySelector('.btn-ver');
             btnEliminar.style.display = 'block';
+            btnVer.style.display = 'block';
         });
 
         // Agregar evento de mouseleave a cada contenedor de nota
         container.addEventListener('mouseleave', () => {
             // Ocultar el botón de eliminar al dejar de hacer hover
             const btnEliminar = container.querySelector('.btn-eliminar');
+            const btnVer = container.querySelector('.btn-ver');
+
             btnEliminar.style.display = 'none';
+            btnVer.style.display = 'none';
         });
     });
 
@@ -2006,6 +2013,40 @@
         // Mostrar una notificación de que el URL se copió al portapapeles
         alert('URL copiado al portapapeles: ' + url);
     }
+
+    function verNotaPrivada(texto) {
+        const el = document.querySelector(`[data-bs-texto="${texto}"]`);
+        const privilegio = '{{evento.privilege}}'
+        console.log(privilegio)
+        if (!(privilegio === "Administrador") && !(privilegio === "Vendedor")) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No tienes privilegios para ver esta información',
+                confirmButtonText: 'Aceptar'
+            })
+            return false;
+        }
+
+        const textoOriginal = descifrarMensaje(texto, 3);
+        el.textContent = textoOriginal;
+        el.classList.toggle('blur-text')
+        console.log(textoOriginal);
+    }
+
+    function descifrarMensaje(mensajeCifrado, desplazamiento) {
+        return cifrarMensaje(mensajeCifrado, -desplazamiento);
+    }
+
+    function cifrarMensaje(mensaje, desplazamiento) {
+        desplazamiento = (desplazamiento % 26 + 26) % 26; // Asegurar que el desplazamiento esté en el rango adecuado
+
+        return mensaje.replace(/[a-zA-Z]/g, function(letra) {
+            var codigo = letra.charCodeAt(0);
+            var inicio = letra >= 'a' ? 'a'.charCodeAt(0) : 'A'.charCodeAt(0);
+            return String.fromCharCode(inicio + (codigo - inicio + desplazamiento) % 26);
+    });
+}
 
     const notaContainer = document.querySelectorAll('.nota-container');
     const notaPrivadaContainer = document.querySelectorAll('.nota-privada-container');

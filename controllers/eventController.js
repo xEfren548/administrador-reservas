@@ -1060,6 +1060,16 @@ async function eliminarNota(req, res) {
     }
 }
 
+function cifrarMensaje(mensaje, desplazamiento) {
+    desplazamiento = (desplazamiento % 26 + 26) % 26; // Asegurar que el desplazamiento esté en el rango adecuado
+
+    return mensaje.replace(/[a-zA-Z]/g, function(letra) {
+        var codigo = letra.charCodeAt(0);
+        var inicio = letra >= 'a' ? 'a'.charCodeAt(0) : 'A'.charCodeAt(0);
+        return String.fromCharCode(inicio + (codigo - inicio + desplazamiento) % 26);
+    });
+}
+
 module.exports = {
     createReservationValidators,
     createOwnersReservationValidators,
@@ -1078,6 +1088,7 @@ module.exports = {
     crearNota,
     eliminarNota,
     reservasDeDuenos,
-    reservasDeDuenosParaColaborador
+    reservasDeDuenosParaColaborador,
+    cifrarMensaje
 };
 

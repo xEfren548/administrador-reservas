@@ -346,6 +346,8 @@ td {
 
 .nota-privada-container {
     position: relative;
+    display: flex;
+    justify-content: center;
 }
 
 .nota-privada-container:hover {
@@ -358,6 +360,15 @@ td {
     right: 0;
     padding: 5px 10px;
     background-color: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-ver {
+    padding: 5px 10px;
+    background-color: #0056b3;
     color: white;
     border: none;
     border-radius: 5px;
@@ -378,6 +389,9 @@ td {
 
 .btn-eliminar:hover {
     background-color: darkred;
+}
+.btn-ver:hover {
+    background-color: lightblue;
 }
 
 .btn-eliminar-servicio:hover {
@@ -494,4 +508,8 @@ ul.rb li .timestamp {
 }
 #context-menu ul li:hover {
     background-color: #6649b8;
+}
+
+.blur-text {
+    filter: blur(5px); /* Ajusta el valor para más o menos desenfoque */
 }
