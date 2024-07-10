@@ -944,7 +944,8 @@ async function moveToPlayground(req, res) {
 
 async function crearNota(req, res) {
     const idReserva = req.params.id;
-    const { texto } = req.body;
+    const userPrivilege = req.session.privilege;
+    const { texto, tipoNota } = req.body;
 
     try {
         const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
@@ -958,6 +959,13 @@ async function crearNota(req, res) {
 
         if (!evento) {
             throw new Error('El evento no fue encontrado');
+        }
+
+        if (tipoNota === "Nota privada") {
+            if (!userPrivilege.includes('Administrador') && !userPrivilege.includes('Vendedor')) {
+                throw new Error('No tienes permisos para crear notas privadas');
+            }
+            evento.privateNotes.push({ texto });
         }
 
         evento.notes.push({ texto });

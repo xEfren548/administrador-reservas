@@ -190,14 +190,31 @@
         <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_notes_modal" role="button"><i
                 class="fa fa-plus-circle" aria-hidden="true"></i></a>
         <div class="card-details m-3" style="background-color: #faf1d2; height: auto; width: 80%;">
-            <p style="color: black">COMENTARIOS</p>
+            <div class="row">
+                <div class="col-6">
+                    <a href="#" id="comentarios-btn" class="fw-bold" style="text-decoration: none !important;"><p style="color: black; text-decoration: none !important;">COMENTARIOS</p></a>
+                </div>
+                <div class="col-6">
+                    <a href="#" id="notasprivadas-btn" style="text-decoration: none !important;"><p style="color: black">NOTAS PRIVADAS</p></a>
+                </div>
+
+            </div>
             {{#if evento.notes}}
             {{#each evento.notes}}
-            <div class="nota-container">
+            <div class="nota-container" style="display: block;">
                 <p class="text-black fs-5">{{this.texto}}</p>
                 <button class="btn btn-eliminar btn-sm" style="display: none;" onclick="eliminarNota('{{this._id}}')"><i
                         class="fa fa-trash" aria-hidden="true"></i></button>
+            </div>
+            {{/each}}
+            {{/if}}
 
+            {{#if evento.privateNotes}}
+            {{#each evento.privateNotes}}
+            <div class="nota-privada-container d-none" >
+                <p class="text-black fs-5">{{this.texto}}</p>
+                <button class="btn btn-eliminar btn-sm" style="display: none;" onclick="eliminarNota('{{this._id}}')"><i
+                        class="fa fa-trash" aria-hidden="true"></i></button>
             </div>
             {{/each}}
             {{/if}}
@@ -783,6 +800,18 @@
             </div>
             <div class="modal-body">
                 <div class="img-container">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="tipo-nota" class="form-label">Tipo de nota: </label>
+                                <select class="form-select form-select-md" name="tipo-nota" id="tipo-nota-select">
+                                    <option selected value="Nota para cliente">Nota para cliente</option>
+                                    <option value="Nota privada">Nota privada</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                    </div>
                     <div class="row">
                         <div class="ml-2">
                             <label for="add-note-input" class="form-label">Notas</label>
@@ -1607,13 +1636,15 @@
         try {
             const reservacionId = document.querySelector('#reservacion_id').value;
             const noteInput = document.querySelector('#add-note-input').value;
+            const tipoNotaSelect = document.querySelector('#tipo-nota-select').value;
 
             if (!noteInput || noteInput === undefined) {
                 throw new Error('Ingresa una nota para la reserva.');
             }
 
             const bodyNota = {
-                texto: noteInput
+                texto: noteInput,
+                tipoNota: tipoNotaSelect
             };
 
             const response = await fetch(`/api/notas/${reservacionId}`, {
@@ -1957,5 +1988,49 @@
         // Mostrar una notificación de que el URL se copió al portapapeles
         alert('URL copiado al portapapeles: ' + url);
     }
+
+    const notaContainer = document.querySelectorAll('.nota-container')
+    const notaPrivadaContainer = document.querySelectorAll('.nota-privada-container');
+    const comentariosBtn = document.querySelector('#comentarios-btn');
+    const notasPrivadasBtn = document.querySelector('#notasprivadas-btn');
+
+    comentariosBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (notaPrivadaContainer){
+            notaPrivadaContainer.forEach(function(element) {
+                if (!element.classList.contains('d-none')) {
+                    comentariosBtn.classList.add('fw-bold');
+                    notasPrivadasBtn.classList.remove('fw-bold');
+                    element.classList.add('d-none');
+                    notaContainer.forEach(function(element) {
+                        element.classList.remove('d-none');
+                    })
+                }
+            });
+
+        }
+
+        // Si yo clickeo comentariosBtn, se debe agregar d-none para borrar notaPrivadaContainer
+        // y mostrar notaContainer
+
+    });
+
+    notasPrivadasBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        if(notaContainer) {
+            notaContainer.forEach(function(element) {
+                if (!element.classList.contains('d-none')) {
+                    comentariosBtn.classList.remove('fw-bold');
+                    notasPrivadasBtn.classList.add('fw-bold');
+                    element.classList.add('d-none');
+                    notaPrivadaContainer.forEach(function(element) {
+                        element.classList.remove('d-none');
+                    })
+                }
+            });
+
+        }
+
+    });
 
 </script>
