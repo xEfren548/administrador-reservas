@@ -22,6 +22,7 @@ const answerSurveyValidators = [
         .custom(async (value, { req }) => {
             var client = await Cliente.findOne({ email: value });
             if (!client) {
+                console.log('El cliente no existe');
                 throw new NotFoundError("Current client does not exist. Calling FBI");
             }
 
@@ -29,6 +30,10 @@ const answerSurveyValidators = [
             if (!evento || !evento.events || evento.events.length === 0) {
                 throw new NotFoundError("No reservations found for this event.");
             }
+
+            console.log(client)
+
+            console.log(evento.events)
 
             var reservations = evento.events.filter(reservation => reservation.client.toString() === client._id.toString());
             if (reservations.length === 0) {
@@ -90,7 +95,6 @@ async function showSurvey(req, res, next) {
 async function answerSurvey(req, res, next) {
     const { clientEmail, answersInfo } = req.body;
     console.log(answersInfo); 
-       
 
     try {
         var client = await Cliente.findOne({ email: clientEmail });
@@ -142,7 +146,7 @@ async function showClientResponses(req, res, next){
 
         const client = await Cliente.findById(reservation.client);
         if(!client){ throw new NotFoundError("Client does not exist") }
-        
+        console.log(clientSurveyResponses.answers)
         res.render('vistaRespuestasCliente', {
             email: client.email,
             surveyResponses: clientSurveyResponses.answers,

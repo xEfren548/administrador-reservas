@@ -27,27 +27,27 @@
                             <div class="answer-range" style="display: flex;">
                                 <div class="radio-option">
                                     <label>
-                                        <input value="1" type="radio" name="range" {{#if (eq this.answer "1")}}checked{{/if}} disabled="true"> 1
+                                        <input value="1" type="radio" name="range-1" {{#if (eq this.answer "1")}}checked{{/if}} disabled="true"> 1
                                     </label>
                                 </div>
                                 <div class="radio-option">
                                     <label>
-                                        <input value="2" type="radio" name="range" {{#if (eq this.answer "2")}}checked{{/if}} disabled="true"> 2
+                                        <input value="2" type="radio" name="range-2" {{#if (eq this.answer "2")}}checked{{/if}} disabled="true"> 2
                                     </label>
                                 </div>
                                 <div class="radio-option">
                                     <label>
-                                        <input value="3" type="radio" name="range" {{#if (eq this.answer "3")}}checked{{/if}} disabled="true"> 3
+                                        <input value="3" type="radio" name="range-3" {{#if (eq this.answer "3")}}checked{{/if}} disabled="true"> 3
                                     </label>
                                 </div>
                                 <div class="radio-option">
                                     <label>
-                                        <input value="4" type="radio" name="range" {{#if (eq this.answer "4")}}checked{{/if}} disabled="true"> 4
+                                        <input value="4" type="radio" name="range-4" {{#if (eq this.answer "4")}}checked{{/if}} disabled="true"> 4
                                     </label>
                                 </div>
                                 <div class="radio-option">
                                     <label>
-                                        <input value="5" type="radio" name="range" {{#if (eq this.answer "5")}}checked{{/if}} disabled="true"> 5
+                                        <input value="5" type="radio" name="range-5" {{#if (eq this.answer "5")}}checked{{/if}} disabled="true"> 5
                                     </label>
                                 </div>
                             </div>
@@ -74,3 +74,12 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+        function funcion() {
+            console.log("funcion");
+        }
+    
+    })
+</script>
