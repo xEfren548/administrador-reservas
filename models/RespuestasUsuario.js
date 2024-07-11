@@ -22,7 +22,14 @@ const userSurveyAnswersSchema = new mongoose.Schema({
         required: true,
         ref: 'Evento'
     },
-    answers: [answerSchema],
+    answers: {
+        type: Array,
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
 });
 
 module.exports = mongoose.model('respuestaUsuario', userSurveyAnswersSchema);

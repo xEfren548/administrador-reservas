@@ -126,6 +126,7 @@
                 const questionName = question.id;
                 var answerType;
                 var answer;
+                const answerArray = []
                 const textInput = question.querySelector(".question-body .answer-text input");
                 const rangeInput = question.querySelector(".question-body .answer-range input:checked");
                 const booleanInput = question.querySelector(".question-body .answer-boolean input:checked");
@@ -133,12 +134,15 @@
 
                 if (textInput) {
                     answer = textInput.value;
+                    answerArray.push(answer);
                     answerType = "textField";
                 } else if (rangeInput) {
                     answer = rangeInput.value;
+                    answerArray.push(answer);
                     answerType = "range";
                 } else if (booleanInput) {
                     answer = booleanInput.value;
+                    answerArray.push(answer);
                     answerType = "boolean";
                 }
 
@@ -149,12 +153,7 @@
                 }
 
                 // Creating question
-                var answerInfo = {
-                    questionName,
-                    answer,
-                    answerType
-                }
-                answersInfo.push(answerInfo);
+                answersInfo.push(answer);
             });
             if(error){ return; }
 

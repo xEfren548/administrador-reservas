@@ -31,19 +31,15 @@ const answerSurveyValidators = [
                 throw new NotFoundError("No reservations found for this event.");
             }
 
-            console.log(client)
-
-            console.log(evento.events)
-
             var reservations = evento.events.filter(reservation => reservation.client.toString() === client._id.toString());
             if (reservations.length === 0) {
                 throw new NotFoundError("Current client has no reservation. Calling FBI");
             }
 
-            var latestReservation = reservations[reservations.length - 1];
-            if (latestReservation.surveySubmited) {
-                throw new NotFoundError("You have already submitted this survey");
-            }
+            // var latestReservation = reservations[reservations.length - 1];
+            // if (latestReservation.surveySubmited) {
+            //     throw new NotFoundError("You have already submitted this survey");
+            // }
 
             return true;
         }),
