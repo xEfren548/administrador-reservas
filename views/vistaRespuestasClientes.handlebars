@@ -1,4 +1,4 @@
-<div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
+{{!-- <div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
     <div class="col-10">
         <h1>Lista de usuarios que han respondido la encuesta de satisfacción</h1>
         <table class="table table-dark table-hover" id="tablaUsuarios">
@@ -23,4 +23,456 @@
         </table>
 
     </div>
+</div> --}}
+
+<div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
+    <div class="col-10">
+        <h1>Resultados de encuestas de satisfacción</h1>
+
+        <table class="table table-dark table-hover" id="tablaUsuarios">
+            <thead class="table-light text-center">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Cabaña</th>
+                    <th scope="col">Pregunta 1</th>
+                    <th scope="col">Pregunta 2</th>
+                    <th scope="col">Pregunta 3</th>
+                    <th scope="col">Pregunta 4</th>
+                    <th scope="col">Pregunta 5</th>
+                    <th scope="col">Pregunta 6</th>
+                    <th scope="col">Pregunta 7</th>
+                    <th scope="col">Pregunta 8</th>
+                    <th scope="col">Pregunta 9</th>
+                    <th scope="col">Pregunta 10</th>
+                    <th scope="col">Comentarios</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each clientsSurveyInfo}}
+                <tr>
+                    <td>{{this.id}}</td>
+                    <td>{{this.nombreHabitacion}}</td>
+                    {{#each this.answers}}
+                    <td>
+                        {{this}}
+                    </td>
+                    {{/each}}
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+        <h3>Gráficas</h3>
+        <div class="row mb-3">
+            <div class="col-4">
+                <canvas id="grafica-p1" width="400" height="200"></canvas>   
+            </div>         
+            <div class="col-4">
+                <canvas id="grafica-p2" width="400" height="200"></canvas> 
+            </div>
+            <div class="col-4">
+                <canvas id="grafica-p3" width="400" height="200"></canvas> 
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-4">
+                <canvas id="grafica-p4" width="400" height="200"></canvas>   
+            </div>         
+            <div class="col-4">
+                <canvas id="grafica-p5" width="400" height="200"></canvas>
+            </div>
+            <div class="col-4">
+                <canvas id="grafica-p6" width="400" height="200"></canvas>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-4">
+                <canvas id="grafica-p7" width="400" height="200"></canvas>   
+            </div>         
+            <div class="col-4">
+                <canvas id="grafica-p8" width="400" height="200"></canvas>
+            </div>
+            <div class="col-4">
+                <canvas id="grafica-p9" width="400" height="200"></canvas>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-4">
+                <canvas id="grafica-p10" width="400" height="200"></canvas>
+            </div>
+        </div>
+            
+    </div>
 </div>
+
+<script>
+    var dataFromHandlebars = {{json totalP1}};
+    var dataFromHandlebars2 = {{json totalP2}};
+    var dataFromHandlebars3 = {{json totalP3}};
+    var dataFromHandlebars4 = {{json totalP4}};
+    var dataFromHandlebars5 = {{json totalP5}};
+    var dataFromHandlebars6 = {{json totalP6}};
+    var dataFromHandlebars7 = {{json totalP7}};
+    var dataFromHandlebars8 = {{json totalP8}};
+    var dataFromHandlebars9 = {{json totalP9}};
+    var dataFromHandlebars10 = {{json totalP10}};
+
+        // Prepare the data for the chart
+        var labels = ['1', '2', '3', '4', '5'];
+        var dataValues = dataFromHandlebars;
+
+        // Get the context of the canvas element
+        var ctx = document.getElementById('grafica-p1').getContext('2d');
+        var ctx2 = document.getElementById('grafica-p2').getContext('2d');
+        var ctx3 = document.getElementById('grafica-p3').getContext('2d');
+        var ctx4 = document.getElementById('grafica-p4').getContext('2d');
+        var ctx5 = document.getElementById('grafica-p5').getContext('2d');
+        var ctx6 = document.getElementById('grafica-p6').getContext('2d');
+        var ctx7 = document.getElementById('grafica-p7').getContext('2d');
+        var ctx8 = document.getElementById('grafica-p8').getContext('2d');
+        var ctx9 = document.getElementById('grafica-p9').getContext('2d');
+        var ctx10 = document.getElementById('grafica-p10').getContext('2d');
+
+        // Create the chart
+        var myChart = new Chart(ctx, {
+            type: 'bar', // You can change the chart type to 'line', 'pie', etc.
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Pregunta 1',
+                    data: dataValues,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Pregunta 1',
+                        font: {
+                            size: 20,
+                            weight: 'bold'
+                        },
+                        color: '#ececec'
+                    }
+                },
+                legend: {
+                    display: false
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        var myChart2 = new Chart(ctx2, {
+            type: 'bar', // You can change the chart type to 'line', 'pie', etc.
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Pregunta 2',
+                    data: dataFromHandlebars2,
+                    backgroundColor: 'rgba(75, 101, 192, 0.2)',
+                    borderColor: 'rgba(75, 101, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Pregunta 2',
+                        font: {
+                            size: 20,
+                            weight: 'bold'
+                        },
+                        color: '#ececec'
+                    }
+                },
+                legend: {
+                    display: true
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        var myChart3 = new Chart(ctx3, {
+            type: 'bar', // You can change the chart type to 'line', 'pie', etc.
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Pregunta 3',
+                    data: dataFromHandlebars3,
+                    backgroundColor: 'rgba(234, 54, 192, 0.2)',
+                    borderColor: 'rgba(234, 54, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Pregunta 3',
+                        font: {
+                            size: 20,
+                            weight: 'bold'
+                        },
+                        color: '#ececec'
+                    }
+                },
+                legend: {
+                    display: true
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        var myChart4 = new Chart(ctx4, {
+            type: 'bar', // You can change the chart type to 'line', 'pie', etc.
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Pregunta 4',
+                    data: dataFromHandlebars4,
+                    backgroundColor: 'rgba(143, 100, 240, 0.2)',
+                    borderColor: 'rgba(143, 100, 240, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Pregunta 4',
+                        font: {
+                            size: 20,
+                            weight: 'bold'
+                        },
+                        color: '#ececec'
+                    }
+                },
+                legend: {
+                    display: true
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        var myChart5 = new Chart(ctx5, {
+            type: 'bar', // You can change the chart type to 'line', 'pie', etc.
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Pregunta 5',
+                    data: dataFromHandlebars5,
+                    backgroundColor: 'rgba(99, 200, 255, 0.2)',
+                    borderColor: 'rgba(99, 200, 255, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Pregunta 5',
+                        font: {
+                            size: 20,
+                            weight: 'bold'
+                        },
+                        color: '#ececec'
+                    }
+                },
+                legend: {
+                    display: true
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        var myChart6 = new Chart(ctx6, {
+            type: 'bar', // You can change the chart type to 'line', 'pie', etc.
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Pregunta 6',
+                    data: dataFromHandlebars6,
+                    backgroundColor: 'rgba(189, 45, 99, 0.2)',
+                    borderColor: 'rgba(189, 45, 99, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Pregunta 6',
+                        font: {
+                            size: 20,
+                            weight: 'bold'
+                        },
+                        color: '#ececec'
+                    }
+                },
+                legend: {
+                    display: true
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        var myChart7 = new Chart(ctx7, {
+            type: 'bar', // You can change the chart type to 'line', 'pie', etc.
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Pregunta 7',
+                    data: dataFromHandlebars7,
+                    backgroundColor: 'rgba(56, 178, 255, 0.2)',
+                    borderColor: 'rgba(56, 178, 255, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Pregunta 7',
+                        font: {
+                            size: 20,
+                            weight: 'bold'
+                        },
+                        color: '#ececec'
+                    }
+                },
+                legend: {
+                    display: true
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        var myChart8 = new Chart(ctx8, {
+            type: 'bar', // You can change the chart type to 'line', 'pie', etc.
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Pregunta 8',
+                    data: dataFromHandlebars8,
+                    backgroundColor: 'rgba(200, 87, 33, 0.2)',
+                    borderColor: 'rgba(200, 87, 33, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Pregunta 8',
+                        font: {
+                            size: 20,
+                            weight: 'bold'
+                        },
+                        color: '#ececec'
+                    }
+                },
+                legend: {
+                    display: true
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        var myChart9 = new Chart(ctx9, {
+            type: 'bar', // You can change the chart type to 'line', 'pie', etc.
+            data: {
+                labels: ["Si", "No"],
+                datasets: [{
+                    label: 'Pregunta 9',
+                    data: dataFromHandlebars9,
+                    backgroundColor: 'rgba(123, 221, 99, 0.2)',
+                    borderColor: 'rgba(123, 221, 99, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Pregunta 9',
+                        font: {
+                            size: 20,
+                            weight: 'bold'
+                        },
+                        color: '#ececec'
+                    }
+                },
+                legend: {
+                    display: true
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        var myChart10 = new Chart(ctx10, {
+            type: 'bar', // You can change the chart type to 'line', 'pie', etc.
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Pregunta 10',
+                    data: dataFromHandlebars10,
+                    backgroundColor: 'rgba(123, 221, 99, 0.2)',
+                    borderColor: 'rgba(123, 221, 99, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Pregunta 10',
+                        font: {
+                            size: 20,
+                            weight: 'bold'
+                        },
+                        color: '#ececec'
+                    }
+                },
+                legend: {
+                    display: true
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+</script>

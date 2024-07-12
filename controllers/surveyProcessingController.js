@@ -5,6 +5,7 @@ const { check } = require("express-validator");
 const Evento = require('../models/Evento');
 const Cliente = require('../models/Cliente');
 const Encuesta = require('../models/Encuesta');
+const habitacionController = require('../controllers/habitacionController')
 
 const showSurveyValidators = [
     check('questionsInfo')
@@ -157,39 +158,254 @@ async function showClientsResponses(req, res, next) {
     try {
         var clientsSurveyInfo = [];
 
-        const clientsSurveyResponses = await RespuestasUsuario.find();
+        const clientsSurveyResponses = await RespuestasUsuario.find().lean();
         if (!clientsSurveyResponses) { throw new NotFoundError("Survey does not exist"); }
         console.log("clientsSurveyResponses:", clientsSurveyResponses);
 
-        var reservations = await Evento.findOne();
+        var reservations = await Evento.findOne().lean();
         reservations = reservations.events;
+        
+        const totalP1 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
+        const totalP2 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
+        const totalP3 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
+        const totalP4 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
+        const totalP5 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
+        const totalP6 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
+        const totalP7 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
+        const totalP8 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
+        const totalP9 = Array(2).fill(0); // Inicializa un array con 2 elementos, todos con valor 0
+        const totalP10 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
 
-        console.log(reservations)
 
         for (const clientSurveyResponses of clientsSurveyResponses) {
             const reservation = reservations.find(reservation => reservation._id.toString() === clientSurveyResponses.reservation.toString());
 
             console.log(reservation)
+            const habitacion = await habitacionController.obtenerHabitacionPorId(reservation.resourceId.toString());
+
+            const nombreHabitacion = habitacion.propertyDetails.name;
 
             const client = await Cliente.findById(reservation.client);
             if (!client) { throw new NotFoundError("Client does not exist."); }
 
             const clientSurveyInfo = {
+                id: clientSurveyResponses._id,
                 fullName: `${client.firstName} ${client.lastName}`,
                 email: client.email,
-                surveyResponses: `./mostrar-respuestas-usuario/${clientSurveyResponses._id}`
+                surveyResponses: `./mostrar-respuestas-usuario/${clientSurveyResponses._id}`,
+                answers: clientSurveyResponses.answers,
+                nombreHabitacion: nombreHabitacion
             };
-            console.log("clientSurveyInfo: ", clientSurveyInfo);
+
+            const newAnswers = convertToNumbers(clientSurveyResponses.answers);
+            console.log("newAnswers: ", newAnswers);
+
+            
+            switch(newAnswers[0]){
+                case 1: 
+                    totalP1[0] += 1;
+                    break;
+                case 2:
+                    totalP1[1] += 1;
+                    break;
+                case 3:
+                    totalP1[2] += 1;
+                    break;
+                case 4:
+                    totalP1[3] += 1;
+                    break;
+                case 5:
+                    totalP1[4] += 1;
+                    break;
+            }
+
+            switch(newAnswers[1]){
+                case 1: 
+                    totalP2[0] += 1;
+                    break;
+                case 2:
+                    totalP2[1] += 1;
+                    break;
+                case 3:
+                    totalP2[2] += 1;
+                    break;
+                case 4:
+                    totalP2[3] += 1;
+                    break;
+                case 5:
+                    totalP2[4] += 1;
+                    break;
+            }
+
+            switch(newAnswers[2]){
+                case 1: 
+                    totalP3[0] += 1;
+                    break;
+                case 2:
+                    totalP3[1] += 1;
+                    break;
+                case 3:
+                    totalP3[2] += 1;
+                    break;
+                case 4:
+                    totalP3[3] += 1;
+                    break;
+                case 5:
+                    totalP3[4] += 1;
+                    break;
+            }
+
+            switch(newAnswers[3]){
+                case 1: 
+                    totalP4[0] += 1;
+                    break;
+                case 2:
+                    totalP4[1] += 1;
+                    break;
+                case 3:
+                    totalP4[2] += 1;
+                    break;
+                case 4:
+                    totalP4[3] += 1;
+                    break;
+                case 5:
+                    totalP4[4] += 1;
+                    break;
+            }
+
+            switch(newAnswers[4]){
+                case 1: 
+                    totalP5[0] += 1;
+                    break;
+                case 2:
+                    totalP5[1] += 1;
+                    break;
+                case 3:
+                    totalP5[2] += 1;
+                    break;
+                case 4:
+                    totalP5[3] += 1;
+                    break;
+                case 5:
+                    totalP5[4] += 1;
+                    break;
+            }
+
+            switch(newAnswers[5]){
+                case 1: 
+                    totalP6[0] += 1;
+                    break;
+                case 2:
+                    totalP6[1] += 1;
+                    break;
+                case 3:
+                    totalP6[2] += 1;
+                    break;
+                case 4:
+                    totalP6[3] += 1;
+                    break;
+                case 5:
+                    totalP6[4] += 1;
+                    break;
+            }
+
+            switch(newAnswers[6]){
+                case 1: 
+                    totalP7[0] += 1;
+                    break;
+                case 2:
+                    totalP7[1] += 1;
+                    break;
+                case 3:
+                    totalP7[2] += 1;
+                    break;
+                case 4:
+                    totalP7[3] += 1;
+                    break;
+                case 5:
+                    totalP7[4] += 1;
+                    break;
+            }
+
+            switch(newAnswers[7]){
+                case 1: 
+                    totalP8[0] += 1;
+                    break;
+                case 2:
+                    totalP8[1] += 1;
+                    break;
+                case 3:
+                    totalP8[2] += 1;
+                    break;
+                case 4:
+                    totalP8[3] += 1;
+                    break;
+                case 5:
+                    totalP8[4] += 1;
+                    break;
+            }
+
+            switch(newAnswers[8]){
+                case "true": 
+                    totalP9[0] += 1;
+                    break;
+                case "false":
+                    totalP9[1] += 1;
+                    break;
+            }
+
+            switch(newAnswers[9]){
+                case 1: 
+                    totalP10[0] += 1;
+                    break;
+                case 2:
+                    totalP10[1] += 1;
+                    break;
+                case 3:
+                    totalP10[2] += 1;
+                    break;
+                case 4:
+                    totalP10[3] += 1;
+                    break;
+                case 5:
+                    totalP10[4] += 1;
+                    break;
+            }
+            console.log("totalP1: ")
+            console.log(totalP7)    
+            console.log(totalP8)    
+            console.log(totalP9)    
+            console.log(totalP10)    
 
             clientsSurveyInfo.push(clientSurveyInfo);
         }
 
         console.log("clientsSurveyInfo: ", clientsSurveyInfo);
-        res.render('vistaRespuestasClientes', { clientsSurveyInfo });
+        console.log(totalP8)
+        res.render('vistaRespuestasClientes', {
+            clientsSurveyInfo,
+            totalP1: totalP1,
+            totalP2: totalP2,
+            totalP3: totalP3,
+            totalP4: totalP4,
+            totalP5: totalP5,
+            totalP6: totalP6,
+            totalP7: totalP7,
+            totalP8: totalP8,
+            totalP9: totalP9,
+            totalP10: totalP10
+        });
     } catch (error) {
         return next(error);
     }
 }
+
+function convertToNumbers(answers) {
+    return answers.map(value => {
+      let num = parseFloat(value);
+      return isNaN(num) ? value : num;
+    });
+  }
 
 
 module.exports = {
