@@ -200,6 +200,11 @@ async function showClientsResponses(req, res, next) {
             const newAnswers = convertToNumbers(clientSurveyResponses.answers);
             console.log("newAnswers: ", newAnswers);
 
+            let sumatoria = newAnswers[0] + newAnswers[1] + newAnswers[2] + newAnswers[3] + newAnswers[4] + newAnswers[5] + newAnswers[6] + newAnswers[7] + newAnswers[9];
+            let promedio = (sumatoria / 9).toFixed(2);
+
+            clientSurveyInfo.promedio = promedio;
+
             
             switch(newAnswers[0]){
                 case 1: 
@@ -375,13 +380,13 @@ async function showClientsResponses(req, res, next) {
             console.log(totalP7)    
             console.log(totalP8)    
             console.log(totalP9)    
-            console.log(totalP10)    
+            console.log(totalP10)
 
             clientsSurveyInfo.push(clientSurveyInfo);
         }
 
-        console.log("clientsSurveyInfo: ", clientsSurveyInfo);
-        console.log(totalP8)
+        console.log(clientsSurveyInfo)
+
         res.render('vistaRespuestasClientes', {
             clientsSurveyInfo,
             totalP1: totalP1,
