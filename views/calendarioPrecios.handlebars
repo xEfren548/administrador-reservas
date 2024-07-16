@@ -1,4 +1,4 @@
-<h1>Calendario de precios con aumento</h1>
+<h1> Calendario de precios con aumento</h1>
 <div class="calendar-header">
     <div class="bg-dark mb-3">
         <a name="" id="actualizar-precios-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
@@ -7,31 +7,36 @@
 
 
 </div>
-<div class="table-prices">
+<div class="table-pricescol min-vh-100 p-4">
   {{#if pricexday}}
   {{#each pricexday}}
-  <p>{{this.name}}</p> <!-- Título de la habitación -->
+  <h1>{{this.name}}</h1> <!-- Título de la habitación -->
   <div class="table-responsive">
-    <table class="table table-primary">
-      <thead>
+    <table class="table table-primary table-dark table-hover">
+      <thead class="table-light">
         <tr>
-          <th scope="col">Cabaña</th>
+          <th scope="col">Función</th>
           {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
           <th scope="col">{{this}}</th> <!-- Mostrar cada fecha como encabezado de columna -->
           {{/each}}
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>{{this.name}}</td> <!-- Título de la cabaña -->
           {{#each precios}}
+            <tr>
             {{#each this}}
-              <td>${{this}}</td> <!-- Mostrar la tarifa base de la habitación -->
+               {{#if @first}}
+                <td style="text-aling:center vertical-align:middle">{{this}}</td> <!-- Mostrar la tarifa base de la habitación -->
+              {{else}}
+                <td style="text-aling:center vertical-align:middle">${{this}}</td> <!-- Mostrar la tarifa base de la habitación -->
+              {{/if}}
             {{/each}}
+            </tr>
           {{/each}}
       </tbody>
     </table>
 </div>
+<br>
 {{/each}}
 {{else}}
 <p>No hay habitaciones</p>
@@ -443,8 +448,10 @@
 
     switch (seleccion) {
       case 'precio-fijo':
-        precioFinal = valorAccion;
-        break;
+        if (!(valorAccion == 0)){
+          precioFinal = valorAccion;
+          break;
+        }
       case 'incrementar-natural':
         precioFinal = precioCabana + valorAccion;
         break;
@@ -462,27 +469,31 @@
 
     switch (seleccionPrecioBase2noches) {
       case 'precio-fijo':
-        precioBaseFinal2noches = valorCostoBase;
-        break;
+        if (!(valorPrecioBase2noches == 0)){
+          precioBaseFinal2noches = valorPrecioBase2noches;
+          break;
+        }
       case 'incrementar-natural':
-        precioBaseFinal2noches = precioCabana + valorCostoBase;
+        precioBaseFinal2noches = precioCabana + valorPrecioBase2noches;
         break;
       case 'disminuir-natural':
-        precioBaseFinal2noches = precioCabana - valorCostoBase;
+        precioBaseFinal2noches = precioCabana - valorPrecioBase2noches;
         break;
       case 'incrementar-porcentual':
-        precioBaseFinal2noches = precioCabana * (valorCostoBase / 100) + precioCabana;
+        precioBaseFinal2noches = precioCabana * (valorPrecioBase2noches / 100) + precioCabana;
         break;
       case 'disminuir-porcentual':
-        let pre = precioCabana * (valorCostoBase / 100)
+        let pre = precioCabana * (valorPrecioBase2noches / 100)
         precioBaseFinal2noches = precioCabana - pre;
         break;
     }
 
     switch (seleccionCostoBase) {
       case 'precio-fijo':
-        costoBaseFinal = valorPrecioBase2noches;
-        break;
+        if (!(valorPrecioBase2noches == 0)){
+          costoBaseFinal = valorPrecioBase2noches;
+          break;
+        }
       case 'incrementar-natural':
         costoBaseFinal = precioCabana + valorPrecioBase2noches;
         break;
@@ -500,8 +511,10 @@
 
     switch (seleccionCostoBase2noches) {
       case 'precio-fijo':
-        costoBaseFinal2noches = valorCostoBase2noches;
-        break;
+        if (!(valorCostoBase2noches == 0)){
+          costoBaseFinal2noches = valorCostoBase2noches;
+          break;
+        }
       case 'incrementar-natural':
         costoBaseFinal2noches = precioCabana + valorCostoBase2noches;
         break;

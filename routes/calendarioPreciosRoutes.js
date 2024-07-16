@@ -31,8 +31,24 @@ function pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData){
             precios: []
         }
         var matrix = [];
+        matrix.push(["Precio Base"]);
         for(var a = 1; a <= daysWithDates.length; a++) {
-            matrix.push([]);
+            matrix.push([habitacion.others.basePrice]);
+        }
+        var matrix2n = [];
+        matrix2n.push(["Precio Base 2 Noches"]);
+        for(var a = 1; a <= daysWithDates.length; a++) {
+            matrix2n.push([habitacion.others.basePrice2nights]);
+        }
+        var matrixc1 = [];
+        matrixc1.push(["Costo Base"]);
+        for(var a = 1; a <= daysWithDates.length; a++) {
+            matrixc1.push([habitacion.others.baseCost]);
+        }
+        var matrixc2 = [];
+        matrixc2.push(["Costo Base 2 Noches"]);
+        for(var a = 1; a <= daysWithDates.length; a++) {
+            matrixc2.push([habitacion.others.baseCost2nights]);
         }
         preciosHabitacionesData.forEach((element) => {
             let currentTime = new Date(element.fecha).getTime();
@@ -43,9 +59,15 @@ function pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData){
             if(habitacion._id == element.habitacionId){
                 //console.log(index);
                 matrix[dayOfYear(updatedTIme) - 1] = element.precio_modificado;
+                matrix2n[dayOfYear(updatedTIme) - 1] = element.precio_base_2noches;
+                matrixc1[dayOfYear(updatedTIme) - 1] = element.costo_base;
+                matrixc2[dayOfYear(updatedTIme) - 1] = element.costo_base_2noches;
             };
         });
         habitacionesyprecio.precios.push(matrix);
+        habitacionesyprecio.precios.push(matrix2n);
+        habitacionesyprecio.precios.push(matrixc1);
+        habitacionesyprecio.precios.push(matrixc2);
         //console.log(matrix);
         matrixhabitaciones.push(habitacionesyprecio)
     });
@@ -58,6 +80,8 @@ router.get('/calendario-precios', async (req, res) => {
     try {
         
         const url = 'http://localhost:3005/api/habitaciones'; 
+
+        console.log(window.location.href)
 
         // Obtener las habitaciones
         const response = await fetch(url);
@@ -75,7 +99,7 @@ router.get('/calendario-precios', async (req, res) => {
        
         const pricexday = pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData);
 
-        console.log(habitaciones);
+        console.log(pricexday[0].precios);
 
 
         res.render('calendarioPrecios', {
