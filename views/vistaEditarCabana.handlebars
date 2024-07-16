@@ -938,10 +938,10 @@
         Subir instrucciones de llegada</button>
     <div id="files" class="chalet-details collapse">
         <div class="input-group">
-            <div id="fileCarousel" class="file-carousel"></div>
+            <div id="fileCarousel {{propertyDetails.name}}" class="file-carousel"></div>
             <div class="custom-pdf-upload">
                 <label for="pdf-upload">
-                    <input id="pdf-upload" type="file" name="file" accept="application/pdf">
+                    <input id="pdf-upload" type="file" name="file{{this.propertyDetails.name}}" accept="application/pdf">
                     Subir archivo PDF
                 </label>
                 <span id="file-name-display">Ningun archivo seleccionado</span>
@@ -972,6 +972,7 @@
         });
         slctFormSelector.addEventListener('change', function (event) {
             imagesarray = [];
+            pdfarray = [];
             const selectedFormId = event.target.value;
             const forms = document.getElementsByName('form');
             for (let i = 0; i < forms.length; i++) {
@@ -985,8 +986,10 @@
                     //console.log(name.value);
 
                     filename = "file" + name.value
-
+                    
                     pothocname = "photoCarousel " + name.value
+
+                    const pdfUpload = document.getElementById('pdf-upload');
 
                     // console.log(filename);
                     console.log(pothocname);
@@ -1020,6 +1023,14 @@
                                 photoCarousel.appendChild(photoDiv);
                                 // console.log("Saludos desde ");
                                 imagesarray.push(image.toString())
+                                // console.log(imagesarray)
+                            });
+                            element.files.forEach(function (image, index) {
+                                const pdfSrc = "https://navarro.integradev.site/navarro/" + image;
+                                console.log(pdfSrc);
+                                const fileNameDisplay = form.querySelector('#file-name-display');
+                                fileNameDisplay.innerText = `Ya se subió un archivo pdf para las instrucciones de llegada: ${pdfSrc}.\nSubir otro archivo sobrescribirá el anterior. ` ;
+                                // console.log("Saludos desde ");
                                 // console.log(imagesarray)
                             });
 
