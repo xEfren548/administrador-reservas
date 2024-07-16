@@ -626,6 +626,35 @@ async function getChaletFiles(chalets) {
     }
 }
 
+async function getChaletPdf(chalets) {
+    const client = new ftp.Client();
+
+    try {
+        await client.access({
+            host: 'integradev.site',
+            user: 'navarro@navarro.integradev.site',
+            password: 'Nav@rro2024',
+            secure: false
+        });
+
+        for (const chalet of chalets) {
+            if (chalet.hasOwnProperty("files")) {
+                for (let i = 0; i < chalet.files.length; i++) {
+                    const imagePath = chalet.files[i];
+                    const localFilePath = `./download/${getImageFileName(imagePath)}`;
+                    const confirmacion = await client.downloadTo(localFilePath, imagePath);
+                    console.log(confirmacion)
+                    
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error downloading PDF from FTP:', error);
+    } finally {
+        await client.close();
+    }
+}
+
 function getImageFileName(imagePath) {
     return imagePath.split('/').pop();
 }
@@ -677,6 +706,7 @@ async function showEditChaletsView(req, res, next) {
         // This could go on login.
         if (req.session.filesRetrieved !== undefined) {
             getChaletFiles(chalets);
+            getChaletPdf(chalets)
             req.session.filesRetrieved = true;
         }
         console.log("Images downloaded successfully ");

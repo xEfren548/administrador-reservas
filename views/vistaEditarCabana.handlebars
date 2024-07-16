@@ -933,6 +933,21 @@
             </div>
         </div>
     </div>
+
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#files">+
+        Subir instrucciones de llegada</button>
+    <div id="files" class="chalet-details collapse">
+        <div class="input-group">
+            <div id="fileCarousel" class="file-carousel"></div>
+            <div class="custom-pdf-upload">
+                <label for="pdf-upload">
+                    <input id="pdf-upload" type="file" name="file" accept="application/pdf">
+                    Subir archivo PDF
+                </label>
+                <span id="file-name-display">Ningun archivo seleccionado</span>
+            </div>
+        </div>
+    </div>
 </form>
 {{/each}}
 
@@ -1031,7 +1046,7 @@
                 const deleteButton = document.createElement('button');
                 deleteButton.classList.add('delete-photo');
                 deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
-                deleteButton.addEventListener('clic k', function () {
+                deleteButton.addEventListener('click', function () {
                     formData.delete('images', file);
                     photoDiv.remove();
                 });
