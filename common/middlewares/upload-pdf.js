@@ -14,13 +14,11 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
     const type = file.mimetype;
-    if(type === 'image/png' || type === 'image/jpg' || type === 'image/jpeg' || type === 'image/svg' || type === 'image/bmp' || type === 'image/bmp' || type === 'application/pdf'){
+    if( type === 'application/pdf'){
         return cb(null, true)
     } else{
         cb(null, false)
     }
 };
 
-//module.exports = multer({ storage }).single("image");
-module.exports = multer({ storage, fileFilter }).array("images", 10);
-// module.exports = multer({ storage, fileFilter }).single('file');
+module.exports = multer({ storage, fileFilter }).single('file');
