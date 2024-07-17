@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const urlHabitaciones = './api/habitaciones';
     const urlClientes = './api/clientes/show-clients';
     var today = new Date();
-    var milliseconds = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) - Date.UTC(today.getFullYear(), 0, 0);
+    var milliseconds = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) - Date.UTC(today.getFullYear(), 0, 7);
 
 
     var calendarEl = document.getElementById('calendar');

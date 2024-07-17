@@ -26,7 +26,7 @@ async function generateSideMenu(req, res, next) {
                 { 'Usuarios': ["/api/usuarios", "fas fa-users"] },
                 { 'Clientes': ["/api/clientes/mostrar-clientes", "fa fa-user-circle"] },
                 { 'Servicios adicionales': ["/api/servicios", "fas fa-spa"] },
-                { 'Limpieza': ["/api/racklimpieza", "fas fa-broom"] },
+                { 'Limpieza': ["/racklimpieza", "fas fa-broom"] },
                 { 'Cabañas': [] },
                 { 'Utilidades por reserva': ["/api/costos/mostrar-costos", "fas fa-chart-line"] },
                 { 'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
