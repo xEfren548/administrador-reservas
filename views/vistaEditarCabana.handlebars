@@ -941,7 +941,8 @@
             <div id="fileCarousel {{propertyDetails.name}}" class="file-carousel"></div>
             <div class="custom-pdf-upload">
                 <label for="pdf-upload">
-                    <input id="pdf-upload" type="file" name="file{{this.propertyDetails.name}}" accept="application/pdf">
+                    <input id="pdf-upload" type="file" name="file{{this.propertyDetails.name}}"
+                        accept="application/pdf">
                     Subir archivo PDF
                 </label>
                 <span id="file-name-display">Ningun archivo seleccionado</span>
@@ -967,6 +968,9 @@
         let datajson = {}
         let imagesarray = []
         let indexadvance = 0
+
+        let pdfAborrar = ""
+
         $.get("/getchaletsRoutes", function (data, status) {
             datajson = data
         });
@@ -986,7 +990,7 @@
                     //console.log(name.value);
 
                     filename = "file" + name.value
-                    
+
                     pothocname = "photoCarousel " + name.value
 
                     const pdfUpload = document.getElementById('pdf-upload');
@@ -1029,7 +1033,8 @@
                                 const pdfSrc = "https://navarro.integradev.site/navarro/" + image;
                                 console.log(pdfSrc);
                                 const fileNameDisplay = form.querySelector('#file-name-display');
-                                fileNameDisplay.innerText = `Ya se subió un archivo pdf para las instrucciones de llegada: ${pdfSrc}.\nSubir otro archivo sobrescribirá el anterior. ` ;
+                                pdfAborrar = pdfSrc;
+                                fileNameDisplay.innerText = `Ya se subió un archivo pdf para las instrucciones de llegada: ${pdfSrc}.\nSubir otro archivo sobrescribirá el anterior. `;
                                 // console.log("Saludos desde ");
                                 // console.log(imagesarray)
                             });
@@ -1040,6 +1045,17 @@
                 } else {
                     form.style.display = 'none';
                 }
+            }
+        });
+
+        document.getElementById('pdf-upload').addEventListener('change', function (event) {
+            const fileList = event.target.files;
+            console.log(fileList);
+            if (fileList.length > 0) {
+                const fileName = fileList[0].name;
+                document.querySelector('#file-name-display').innerText = fileName;
+            } else {
+                document.querySelector('#file-name-display').innerText = 'Ningún archivo seleccionado';
             }
         });
 
@@ -1330,6 +1346,8 @@
                                 confirmButtonText: 'Aceptar'
                             });
                         }
+                    }).then(() => {
+                        
                     })
                     .catch(error => {
                         Swal.fire({
