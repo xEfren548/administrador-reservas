@@ -28,9 +28,14 @@
                     <td>{{privilege}}</td>
                     <td>{{adminname}}</td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-primary" data-client-email="{{email}}"
+                        <button type="button" class="btn btn-primary" 
+                            data-client-firstName="{{firstName}}"
+                            data-client-lastName="{{lastName}}"
+                            data-client-email="{{email}}"
+                            data-client-privilege="{{privilege}}"
+                            data-client-adminname="{{administrator}}"
                             data-bs-toggle="modal" data-bs-target="#modify-user_entry_modal"
-                            onclick="showClientEmail('{{email}}')">
+                            onclick="showClientEmail(this)">
                             <i class="fa fa-pencil" aria-hidden="true"></i>
                         </button>
                         <button type="button" class="btn btn-danger" data-client-email="{{email}}">
@@ -169,29 +174,29 @@
                     <div class="row mt-2">
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="txtUserNameUpd">Nombre</label>
-                                <input type="text" name="txtUserNameUpd" id="txtUserNameUpd"
+                                <label for="txtUserNameUpdlbl">Nombre</label>
+                                <input type="text" name="txtUserNameUpdlbl" id="txtUserNameUpd"
                                     class="form-control onlydatepicker" placeholder="Nombre">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="txtUserLastnameUpd">Apellido</label>
-                                <input type="text" name="txtUserLastnameUpd" id="txtUserLastnameUpd"
+                                <label for="txtUserLastnameUpdlbl">Apellido</label>
+                                <input type="text" name="txtUserLastnameUpdlbl" id="txtUserLastnameUpd"
                                     class="form-control" placeholder="Apellido">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="txtUserEmailUpd">Email: </label>
-                                <input type="email" name="txtUserEmailUpd" id="txtUserEmailUpd" class="form-control"
+                                <label for="txtUserEmailUpdlbl">Email: </label>
+                                <input type="email" name="txtUserEmailUpdlbl" id="txtUserEmailUpd" class="form-control"
                                     placeholder="Email" disabled="true">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="txtUserPasswordUpd">Contraseña: </label>
-                                <input type="password" name="txtUserPasswordUpd" id="txtUserPasswordUpd"
+                                <label for="txtUserPasswordUpdlbl">Contraseña: </label>
+                                <input type="password" name="txtUserPasswordUpdlbl" id="txtUserPasswordUpd"
                                     class="form-control" placeholder="Contraseña">
                             </div>
                         </div>
@@ -270,17 +275,7 @@
             });
             
 
-            function addButtonEvents() {
-                const editButtons = document.querySelectorAll('#tablaUsuarios .btn-primary');
-                console.log(editButtons);
-                editButtons.forEach(function (button) {
-                    button.addEventListener('click', function () {
-                        console.log(this.dataset.clientEmail);
-                        console.log(this.dataset);
-                        document.getElementById('txtUserEmailUpd').value = this.dataset.clientEmail;
-                    });
-                });
-            }
+
 
             // Escucha el evento 'draw' de DataTables
             table.addEventListener('draw.dt', function () {
@@ -556,9 +551,23 @@
 
     });
 
-    function showClientEmail(email) {
-        console.log('client email: ' + email);
-        const txtUserEmailUpdInput = document.querySelector('#txtUserEmailUpd');
-        txtUserEmailUpdInput.value = email;
+    function showClientEmail(button) {
+            const firstName = button.getAttribute('data-client-firstname');
+            const lastName = button.getAttribute('data-client-lastname');
+            const email = button.getAttribute('data-client-email');
+            const privilege = button.getAttribute('data-client-privilege');
+            const adminName = button.getAttribute('data-client-adminname');
+
+            console.log(adminName);
+
+            document.querySelector('#txtUserNameUpd').value = firstName
+            document.querySelector('#txtUserLastnameUpd').value = lastName
+            document.querySelector('#txtUserEmailUpd').value = email
+            document.querySelector('#slctUserPrivilegesUpd').value = privilege
+            document.querySelector('#slctUserAdminUpd').value = adminName;
+
+
+        {{!-- const txtUserEmailUpdInput = document.querySelector('#txtUserEmailUpd');
+        txtUserEmailUpdInput.value = email; --}}
     }
 </script>
