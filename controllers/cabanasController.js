@@ -733,6 +733,7 @@ async function showEditChaletsView(req, res, next) {
 async function editChalet(req, res, next) {
     const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images } = req.body;
     console.log('Entrando a edit chalet');
+    console.log(propertyDetails)
 
     try {
         const [admin, janitor, owner] = await Promise.all([
@@ -788,6 +789,7 @@ async function editChalet(req, res, next) {
             images
         };
 
+        console.log(propertyDetails);
         chalets[indexToUpdate] = updatedChalet;
         
         await Habitacion.findOneAndUpdate(
