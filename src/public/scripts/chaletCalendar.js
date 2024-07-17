@@ -47,7 +47,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     const data = await response.json();
                     console.log(data);
-                    const events = data.map(event => ({
+                    const events = data
+                    .filter(event => event.status !== 'cancelled') // Filter out cancelled events
+                    .map(event => ({
                         id: event._id,
                         resourceId: event.resourceId,
                         title: event.title,

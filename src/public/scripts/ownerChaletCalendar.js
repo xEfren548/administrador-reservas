@@ -47,7 +47,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     const data = await response.json();
                     console.log(data);
-                    const events = data.map(event => ({
+                    const events = data
+                    .filter(event => event.status !== 'cancelled') // Filter out cancelled events
+
+                    .map(event => ({
                         id: event._id,
                         resourceId: event.resourceId,
                         title: event.title,
@@ -65,30 +68,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             },
             eventContent: function (info) {
-                // let background, textColor;
-                // if (info.event.extendedProps.status === 'active') {
-                //     background = 'bg-success';
-                //     textColor = 'text-white';
-                // } else if (info.event.extendedProps.status === 'playground') {
-                //     background = 'bg-warning';
-                //     textColor = 'text-black-50';
-                // } else if (info.event.extendedProps.status === 'cancelled') {
-                //     background = 'bg-danger';
-                //     textColor = 'text-white';
-                // } else if (info.event.extendedProps.status === 'pending') {
-                //     background = 'bg-info';
-                //     textColor = 'text-black';
-                // }
-                const color = info.event.extendedProps.color || '#0dcaf0';
+                let background, textColor;
+                if (info.event.extendedProps.status === 'active') {
+                    background = 'bg-success';
+                    textColor = 'text-white';
+                } else if (info.event.extendedProps.status === 'playground') {
+                    background = 'bg-warning';
+                    textColor = 'text-black-50';
+                } else if (info.event.extendedProps.status === 'cancelled') {
+                    background = 'bg-danger';
+                    textColor = 'text-white';
+                } else if (info.event.extendedProps.status === 'pending') {
+                    background = 'bg-info';
+                    textColor = 'text-black';
+                }
 
-                    return {
-                        html: `
-                    <div class="p-1 rounded bg-gradient text-black" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: 'Overpass', sans-serif; color: ${color};">
+                return {
+                    html: `
+                    <div class="p-1 rounded ${background} bg-gradient ${textColor}" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: "Overpass", sans-serif;">
                         <div>Reserva</div>
                         <div><b>Total: $ ${info.event.extendedProps.total}</b></div>
                     </div>
                     `
-                    };
+                }
                 },
                 eventMouseEnter: function (mouseEnterInfo) {
                     let el = mouseEnterInfo.el;
