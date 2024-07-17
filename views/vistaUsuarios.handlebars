@@ -34,6 +34,7 @@
                             data-client-email="{{email}}"
                             data-client-privilege="{{privilege}}"
                             data-client-adminname="{{administrator}}"
+                            data-client-color="{{color}}"
                             data-bs-toggle="modal" data-bs-target="#modify-user_entry_modal"
                             onclick="showClientEmail(this)">
                             <i class="fa fa-pencil" aria-hidden="true"></i>
@@ -195,7 +196,7 @@
                         </div>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
-                                <label for="txtUserPasswordUpdlbl">Contraseña: </label>
+                                <label for="txtUserPasswordUpdlbl">Cambiar Contraseña: </label>
                                 <input type="password" name="txtUserPasswordUpdlbl" id="txtUserPasswordUpd"
                                     class="form-control" placeholder="Contraseña">
                             </div>
@@ -278,12 +279,9 @@
 
 
             // Escucha el evento 'draw' de DataTables
-            table.addEventListener('draw.dt', function () {
-                addButtonEvents();
-            });
+
 
             // Inicializa los botones en la primera carga de la tabla
-            addButtonEvents();
         }
 
         // Functions.
@@ -557,17 +555,15 @@
             const email = button.getAttribute('data-client-email');
             const privilege = button.getAttribute('data-client-privilege');
             const adminName = button.getAttribute('data-client-adminname');
+            const color = button.getAttribute('data-client-color');
 
-            console.log(adminName);
 
             document.querySelector('#txtUserNameUpd').value = firstName
             document.querySelector('#txtUserLastnameUpd').value = lastName
             document.querySelector('#txtUserEmailUpd').value = email
             document.querySelector('#slctUserPrivilegesUpd').value = privilege
             document.querySelector('#slctUserAdminUpd').value = adminName;
+            document.querySelector('#colaboratorColorUpd').value = color;
 
-
-        {{!-- const txtUserEmailUpdInput = document.querySelector('#txtUserEmailUpd');
-        txtUserEmailUpdInput.value = email; --}}
     }
 </script>

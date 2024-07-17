@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const Usuario = require('../models/Usuario');
 const logController = require('../controllers/logController');
 const sendPassword = require("../utils/email");
@@ -205,7 +206,10 @@ async function editarUsuario(req, res, next) {
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
-    if (password) { updateFields.password = password; }
+    if (password) {
+        const salt = await bcrypt.genSalt(10);
+        updateFields.password = await bcrypt.hash(password, salt);
+    }
     if (privilege) { updateFields.privilege = privilege; }
     if (administrator) { updateFields.administrator = administrator; }
     if (adminname) { updateFields.adminname = adminname; }
