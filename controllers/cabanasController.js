@@ -485,6 +485,7 @@ async function uploadChaletFiles(req, res, next) {
     try {
         const chalets = await Habitacion.findOne();
         var chalet = "";
+        console.log(req.session)
         if (req.session.chaletAdded) {
             console.log("entra")
             //console.log(req.session.chaletAdded)
@@ -545,8 +546,8 @@ async function uploadChaletPdf(req, res, next) {
     try {
         const chalets = await Habitacion.findOne();
         var chalet = "";
+        console.log(req.session)
         if (req.session.chaletAdded) {
-            //console.log(req.session.chaletAdded)
             chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
             //console.log(chalets)
         } else if (req.session.chaletUpdated) {
@@ -790,6 +791,7 @@ async function editChalet(req, res, next) {
         );
 
         console.log("Cabaña actualizada con éxito");
+        console.log(req.session)
         req.session.chaletUpdated = updatedChalet.propertyDetails.name;
         console.log("Respuesta del servidor:", { chaletUpdated: req.session.chaletUpdated });
 
