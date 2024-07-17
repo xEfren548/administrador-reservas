@@ -5,12 +5,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     const urlEventos = './api/eventos';
     const urlHabitaciones = './api/habitaciones';
     const urlClientes = './api/clientes/show-clients';
+    var today = new Date();
+    var milliseconds = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) - Date.UTC(today.getFullYear(), 0, 0);
 
 
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'resourceTimelineYear',
-
+        scrollTime: milliseconds,
         height: 'auto',
         expandRows: true,
         navLinks: true, // can click day/week names to navigate views
@@ -83,8 +85,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     })
             },
         eventContent: function (info) {
-
-            // console.log(data);
+            
             let background;
             let textColor;
 
@@ -106,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 
 
-            // console.log(info);
+            console.log(info);
             return {
                 html: `
                 <div class="p-1 rounded ${background} bg-gradient ${textColor}" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: "Overpass", sans-serif;">

@@ -1996,7 +1996,7 @@
         // URL que deseas copiar al portapapeles
         const reservacionId = document.querySelector('#reservacion_id').value;
 
-        var url = `/instrucciones/${reservacionId}`;
+        var url = `${window.location.origin}/instrucciones/${reservacionId}`;
 
         // Crear un elemento de entrada para almacenar el URL
         var input = document.createElement('input');
