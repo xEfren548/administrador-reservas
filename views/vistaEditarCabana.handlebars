@@ -1280,81 +1280,40 @@
                     },
                     images: imagesarray
                 };
-                //console.log(imagesarray)  
-                fetch('/api/cabanas/editar-cabana', {
-                    method: 'POST',
-                    headers: {
-                        // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
-                    .then(response => {
-                        console.log(response);
-                        if (!response.ok) {
-                            response.json().then(errorData => {
-                                const errors = errorData.error;
-                                console.log(errors);
-
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                                    confirmButtonText: 'Aceptar'
-                                });
-                            });
-                            throw new Error('Error en la solicitud');
-                        }
-                        return response.json();
+                try {
+                    fetch('/api/cabanas/editar-cabana', {
+                        method: 'POST',
+                        headers: {
+                            // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
                     })
-                    .then(async data => {
-                        console.log('Respuesta del servidor:', data);
-
-                        try {
+                        .then(response => {
+                            console.log(response);
+                            if (!response.ok) {
+                                throw new Error('Error al editar atributos de la cabaña');
+                            }
+                            return response.json();
+                        })
+                        .then(async data => {
+                            console.log('Respuesta del servidor:', data);
                             const response = await fetch('/api/cabanas/subir-imagenes-cabana', {
                                 method: 'POST',
                                 body: formData,
                             });
                             if (response.ok) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: '¡Completado!',
-                                    text: data.message + '.',
-                                    confirmButtonText: 'Aceptar'
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        window.location.href = "/";
-                                    }
-                                });
+                                console.log('ok subir imagenes')
                             } else {
-                                response.json().then(errorData => {
-                                    const errors = errorData.error;
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Error',
-                                        text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                                        confirmButtonText: 'Aceptar'
-                                    });
-                                });
-                                throw new Error('Error en la solicitud');
-                                window.location.href = "/";
+                                throw new Error('Error al subir imagenes');
                             }
-                        } catch (error) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
-                                confirmButtonText: 'Aceptar'
-                            });
-                        }
-                    }).then(async data2 => {
-                        const fileInput = form.querySelector('#pdf-upload');
-                        var pdfFile = fileInput.files[0];
-                        console.log(pdfAborrar)
 
-                        try {
+                        }).then(async data2 => {
+                            const fileInput = form.querySelector('#pdf-upload');
+                            var pdfFile = fileInput.files[0];
+                            console.log(pdfAborrar)
+
                             if (pdfFile) {
-                                console.log('Entra  a subir pdf')
                                 pdfData.append('file', pdfFile);
 
                                 const response = await fetch('/api/cabanas/subir-pdf-cabana', {
@@ -1362,49 +1321,32 @@
                                     body: pdfData
                                 });
                                 if (response.ok) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: '¡Completado!',
-                                        text: data2.message + '.',
-                                        confirmButtonText: 'Aceptar'
-                                    }).then((result) => {
-                                        if (result.isConfirmed) {
-                                            window.location.href = "/";
-                                        }
-                                    });
+                                    console.log('Ok subir pdf ');
                                 } else {
-                                    response.json().then(errorData => {
-                                        const errors = errorData.error;
-                                        Swal.fire({
-                                            icon: 'error',
-                                            title: 'Error',
-                                            text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                                            confirmButtonText: 'Aceptar'
-                                        });
-                                    });
                                     throw new Error('Error en la solicitud');
-                                    window.location.href = "/api/cabanas/editar-cabana";
                                 }
                             }
-
-                        } catch (error) {
+                        }).then((result) => {
                             Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                                icon:'success',
+                                title: 'Cabaña editada correctamente',
                                 confirmButtonText: 'Aceptar'
-                            });
-                        }
+                            }).then((result) => {
+                                window.location.href = '/'
+                            })
+                        })
+
+
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al editar la cabana: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
                     })
-                    .catch(error => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Error al enviar la solicitud: ' + error + '.',
-                            confirmButtonText: 'Aceptar'
-                        });
-                    });
-            });
-        });
-    });
+                }
+                //console.log(imagesarray)  
+            })
+        })
+    })
 </script>

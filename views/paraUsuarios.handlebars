@@ -57,7 +57,11 @@
                         <div class="text-center">
                             <p style="max-width: 500px; word-wrap: break-word;">{{chalet.accomodationDescription}}</p>
                             <button type="button" class="btn btn-lg btn-outline-light mb-2">
-                                Ver instrucciones de llegada
+                                {{#if chalet.files}}
+                                <a href="https://navarro.integradev.site/navarro/{{chalet.files}}" style="text-decoration: none;">Ver instrucciones de llegada</a>
+                                {{else}}
+                                <a href="#">Ver instrucciones de llegada</a>
+                                {{/if}}
                             </button>
                             <div class="some-div-1">
                                 <div class="some-div-2">
