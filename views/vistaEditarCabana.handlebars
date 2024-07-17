@@ -933,6 +933,22 @@
             </div>
         </div>
     </div>
+
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#files">+
+        Subir instrucciones de llegada</button>
+    <div id="files" class="chalet-details collapse">
+        <div class="input-group">
+            <div id="fileCarousel {{propertyDetails.name}}" class="file-carousel"></div>
+            <div class="custom-pdf-upload">
+                <label for="pdf-upload">
+                    <input id="pdf-upload" type="file" name="file{{this.propertyDetails.name}}"
+                        accept="application/pdf">
+                    Subir archivo PDF
+                </label>
+                <span id="file-name-display">Ningun archivo seleccionado</span>
+            </div>
+        </div>
+    </div>
 </form>
 {{/each}}
 
@@ -948,15 +964,20 @@
         let fileUpload = ""
         let photoCarousel = ""
         let formData = new FormData();
+        let pdfData = new FormData();
         let chaletsget = ""
         let datajson = {}
         let imagesarray = []
         let indexadvance = 0
+
+        let pdfAborrar = ""
+
         $.get("/getchaletsRoutes", function (data, status) {
             datajson = data
         });
         slctFormSelector.addEventListener('change', function (event) {
             imagesarray = [];
+            pdfarray = [];
             const selectedFormId = event.target.value;
             const forms = document.getElementsByName('form');
             for (let i = 0; i < forms.length; i++) {
@@ -972,6 +993,8 @@
                     filename = "file" + name.value
 
                     pothocname = "photoCarousel " + name.value
+
+                    const pdfUpload = document.getElementById('pdf-upload');
 
                     // console.log(filename);
                     console.log(pothocname);
@@ -1007,6 +1030,15 @@
                                 imagesarray.push(image.toString())
                                 // console.log(imagesarray)
                             });
+                            element.files.forEach(function (image, index) {
+                                const pdfSrc = "https://navarro.integradev.site/navarro/" + image;
+                                console.log(pdfSrc);
+                                const fileNameDisplay = form.querySelector('#file-name-display');
+                                pdfAborrar = pdfSrc;
+                                fileNameDisplay.innerText = `Ya se subió un archivo pdf para las instrucciones de llegada: ${pdfSrc}.\nSubir otro archivo sobrescribirá el anterior. `;
+                                // console.log("Saludos desde ");
+                                // console.log(imagesarray)
+                            });
 
                         };
                     });
@@ -1014,6 +1046,17 @@
                 } else {
                     form.style.display = 'none';
                 }
+            }
+        });
+
+        document.getElementById('pdf-upload').addEventListener('change', function (event) {
+            const fileList = event.target.files;
+            console.log(fileList);
+            if (fileList.length > 0) {
+                const fileName = fileList[0].name;
+                document.querySelector('#file-name-display').innerText = fileName;
+            } else {
+                document.querySelector('#file-name-display').innerText = 'Ningún archivo seleccionado';
             }
         });
 
@@ -1237,83 +1280,73 @@
                     },
                     images: imagesarray
                 };
-                //console.log(imagesarray)  
-                fetch('/api/cabanas/editar-cabana', {
-                    method: 'POST',
-                    headers: {
-                        // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
-                    .then(response => {
-                        console.log(response);
-                        if (!response.ok) {
-                            response.json().then(errorData => {
-                                const errors = errorData.error;
-                                console.log(errors);
-
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                                    confirmButtonText: 'Aceptar'
-                                });
-                            });
-                            throw new Error('Error en la solicitud');
-                        }
-                        return response.json();
+                try {
+                    fetch('/api/cabanas/editar-cabana', {
+                        method: 'POST',
+                        headers: {
+                            // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
                     })
-                    .then(async data => {
-                        console.log('Respuesta del servidor:', data);
-
-                        try {
+                        .then(response => {
+                            console.log(response);
+                            if (!response.ok) {
+                                throw new Error('Error al editar atributos de la cabaña');
+                            }
+                            return response.json();
+                        })
+                        .then(async data => {
+                            console.log('Respuesta del servidor:', data);
                             const response = await fetch('/api/cabanas/subir-imagenes-cabana', {
                                 method: 'POST',
                                 body: formData,
                             });
                             if (response.ok) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: '¡Completado!',
-                                    text: data.message + '.',
-                                    confirmButtonText: 'Aceptar'
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        window.location.href = "/";
-                                    }
-                                });
+                                console.log('ok subir imagenes')
                             } else {
-                                response.json().then(errorData => {
-                                    const errors = errorData.error;
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Error',
-                                        text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                                        confirmButtonText: 'Aceptar'
-                                    });
-                                });
-                                throw new Error('Error en la solicitud');
-                                window.location.href = "/";
+                                throw new Error('Error al subir imagenes');
                             }
-                        } catch (error) {
+
+                        }).then(async data2 => {
+                            const fileInput = form.querySelector('#pdf-upload');
+                            var pdfFile = fileInput.files[0];
+                            console.log(pdfAborrar)
+
+                            if (pdfFile) {
+                                pdfData.append('file', pdfFile);
+
+                                const response = await fetch('/api/cabanas/subir-pdf-cabana', {
+                                    method: 'POST',
+                                    body: pdfData
+                                });
+                                if (response.ok) {
+                                    console.log('Ok subir pdf ');
+                                } else {
+                                    throw new Error('Error en la solicitud');
+                                }
+                            }
+                        }).then((result) => {
                             Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                                icon:'success',
+                                title: 'Cabaña editada correctamente',
                                 confirmButtonText: 'Aceptar'
-                            });
-                        }
+                            }).then((result) => {
+                                window.location.href = '/'
+                            })
+                        })
+
+
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al editar la cabana: ' + error.toLowerCase() + '.',
+                        confirmButtonText: 'Aceptar'
                     })
-                    .catch(error => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Error al enviar la solicitud: ' + error + '.',
-                            confirmButtonText: 'Aceptar'
-                        });
-                    });
-            });
-        });
-    });
+                }
+                //console.log(imagesarray)  
+            })
+        })
+    })
 </script>

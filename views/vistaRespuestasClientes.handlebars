@@ -25,11 +25,11 @@
     </div>
 </div> --}}
 
-<div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
-    <div class="col-10">
+<div class="row flex-nowrap justify-content-center mt-3" style="width: 100%;">
+    <div class="col-12">
         <h1>Resultados de encuestas de satisfacción</h1>
 
-        <table class="table table-dark table-hover" id="tablaUsuarios">
+        <table class="table table-dark table-hover" id="tablaResultados">
             <thead class="table-light text-center">
                 <tr>
                     <th scope="col">ID</th>
@@ -45,18 +45,23 @@
                     <th scope="col">Pregunta 9</th>
                     <th scope="col">Pregunta 10</th>
                     <th scope="col">Comentarios</th>
+                    <th scope="col">Promedio</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="text-center">
                 {{#each clientsSurveyInfo}}
                 <tr>
-                    <td>{{this.id}}</td>
+                    <td>
+                        <span class="id-display" data-id="{{this.id}}">Ver ID</span>
+                        <span class="hidden-id" style="display: none;">{{this.id}}</span>
+                    </td>
                     <td>{{this.nombreHabitacion}}</td>
                     {{#each this.answers}}
                     <td>
                         {{this}}
                     </td>
                     {{/each}}
+                    <td>{{this.promedio}}</td>
                 </tr>
                 {{/each}}
             </tbody>
@@ -106,6 +111,18 @@
 </div>
 
 <script>
+
+    document.addEventListener("DOMContentLoaded", function(){
+        var table = document.getElementById("tablaResultados");
+        if (table) {
+            var dataTable = new DataTable(table, {
+                "order": [], // Puedes especificar aquí el orden inicial de las columnas
+                "paging": true, // Habilita la paginación
+                "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
+                "pageLength": 10 // Establece la longitud de página inicial
+            });
+        }
+    });
     var dataFromHandlebars = {{json totalP1}};
     var dataFromHandlebars2 = {{json totalP2}};
     var dataFromHandlebars3 = {{json totalP3}};

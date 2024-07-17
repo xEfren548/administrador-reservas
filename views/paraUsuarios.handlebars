@@ -57,7 +57,11 @@
                         <div class="text-center">
                             <p style="max-width: 500px; word-wrap: break-word;">{{chalet.accomodationDescription}}</p>
                             <button type="button" class="btn btn-lg btn-outline-light mb-2">
-                                Ver instrucciones de llegada
+                                {{#if chalet.files}}
+                                <a href="https://navarro.integradev.site/navarro/{{chalet.files}}" style="text-decoration: none;">Ver instrucciones de llegada</a>
+                                {{else}}
+                                <a href="#">Ver instrucciones de llegada</a>
+                                {{/if}}
                             </button>
                             <div class="some-div-1">
                                 <div class="some-div-2">
@@ -159,7 +163,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="form-item">
-                        <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Natus officiis cumque error nostrum nihil totam eius fugit sunt veritatis ducimus, non, ab beatae corporis illo aut? Quibusdam, nihil. Adipisci, quisquam?</p>
+                        <p>{{chalet.legalNotice}}</p>
                     </div>
                     <div class="form-item">
                         <div class="signature">

@@ -477,7 +477,7 @@ async function createChalet(req, res, next) {
 }
 
 async function uploadChaletFiles(req, res, next) {
-    //console.log("entraupload")
+    console.log("entraupload")
     //console.log(req.files);
 
     const client = new ftp.Client();
@@ -485,13 +485,15 @@ async function uploadChaletFiles(req, res, next) {
     try {
         const chalets = await Habitacion.findOne();
         var chalet = "";
+        console.log(req.session)
         if (req.session.chaletAdded) {
-            //console.log("entra")
+            console.log("entra")
             //console.log(req.session.chaletAdded)
             chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
             //console.log(chalets)
         } else if (req.session.chaletUpdated) {
             chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
+            console.log("Entra")
         }
         //console.log(chalet)
         if (!chalet) {
@@ -500,10 +502,11 @@ async function uploadChaletFiles(req, res, next) {
         //console.log(req.session)
         await client.access({
             host: 'integradev.site',
-            user: 'navarro@navarro.integradev.site',
-            password: 'Nav@rro2024',
+            user: process.env.FTP_USER,
+            password: process.env.FTP_PASSWORD,
             secure: false
         });
+
 
         for (let i = 0; i < req.files.length; i++) {
             //console.log(req.files[i].path);
@@ -524,15 +527,84 @@ async function uploadChaletFiles(req, res, next) {
             });
         }
 
+
         console.log("Archivos subidos con éxito");
         res.status(200).json({ success: true, message: "Archivos subidos con éxito" });
     } catch (error) {
-        console.error("Error:", error);
+        console.log("Error:", error);
     } finally {
         await client.close();
     }
 }
 
+async function uploadChaletPdf(req, res, next) {
+    console.log("entra pdf")
+    //console.log(req.files);
+    
+    const client = new ftp.Client();
+
+    try {
+        const chalets = await Habitacion.findOne();
+        var chalet = "";
+        console.log(req.session)
+        if (req.session.chaletAdded) {
+            chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
+            //console.log(chalets)
+        } else if (req.session.chaletUpdated) {
+            chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
+        }
+        //console.log(chalet)
+        if (!chalet) {
+            throw new NotFoundError('Chalet does not exists');
+        }
+        //console.log(req.session)
+        await client.access({
+            host: 'integradev.site',
+            user: process.env.FTP_USER,
+            password: process.env.FTP_PASSWORD,
+            secure: false
+        });
+
+        console.log(req.file)
+        if (req.file){
+            console.log("Entra a req.file")
+            const file = req.file;
+            const localFilePath = file.path;
+            const remoteFileName = req.session.chaletAdded + '-' + file.filename;
+            await client.uploadFrom(localFilePath, remoteFileName);
+            console.log(`Archivo '${remoteFileName}' subido con éxito`);
+            //console.log(chalet.images)
+            chalet.files = [];
+            chalet.files.push(remoteFileName);
+            await chalets.save();
+
+            fs.unlink(localFilePath, (err) => {
+                if (err) {
+                    console.error('Error al eliminar el archivo local:', err);
+                } else {
+                    console.log('Archivo local eliminado con éxito');
+                }
+            });
+
+        }
+
+
+        
+
+
+        console.log("Archivos subidos con éxito");
+        res.status(200).json({ success: true, message: "Archivos subidos con éxito" });
+    } catch (error) {
+        console.log("Error:", error);
+    } finally {
+        await client.close();
+    }
+}
+
+function getFilePathFromUrl(url) {
+    const urlObj = new URL(url);
+    return urlObj.pathname.substring(1); // Eliminar el primer '/' del pathname
+}
 async function getChaletFiles(chalets) {
     const client = new ftp.Client();
 
@@ -555,6 +627,35 @@ async function getChaletFiles(chalets) {
         }
     } catch (error) {
         console.error('Error downloading images from FTP:', error);
+    } finally {
+        await client.close();
+    }
+}
+
+async function getChaletPdf(chalets) {
+    const client = new ftp.Client();
+
+    try {
+        await client.access({
+            host: 'integradev.site',
+            user: 'navarro@navarro.integradev.site',
+            password: 'Nav@rro2024',
+            secure: false
+        });
+
+        for (const chalet of chalets) {
+            if (chalet.hasOwnProperty("files")) {
+                for (let i = 0; i < chalet.files.length; i++) {
+                    const imagePath = chalet.files[i];
+                    const localFilePath = `./download/${getImageFileName(imagePath)}`;
+                    const confirmacion = await client.downloadTo(localFilePath, imagePath);
+                    console.log(confirmacion)
+                    
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error downloading PDF from FTP:', error);
     } finally {
         await client.close();
     }
@@ -611,6 +712,7 @@ async function showEditChaletsView(req, res, next) {
         // This could go on login.
         if (req.session.filesRetrieved !== undefined) {
             getChaletFiles(chalets);
+            getChaletPdf(chalets)
             req.session.filesRetrieved = true;
         }
         console.log("Images downloaded successfully ");
@@ -694,6 +796,7 @@ async function editChalet(req, res, next) {
         );
 
         console.log("Cabaña actualizada con éxito");
+        console.log(req.session)
         req.session.chaletUpdated = updatedChalet.propertyDetails.name;
         console.log("Respuesta del servidor:", { chaletUpdated: req.session.chaletUpdated });
 
@@ -804,6 +907,7 @@ module.exports = {
     showChaletsView,
     createChalet,
     uploadChaletFiles,
+    uploadChaletPdf,
     showEditChaletsView,
     editChalet,
     showChaletsData,
