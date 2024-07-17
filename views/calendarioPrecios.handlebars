@@ -448,10 +448,8 @@
 
     switch (seleccion) {
       case 'precio-fijo':
-        if (!(valorAccion == 0)){
           precioFinal = valorAccion;
           break;
-        }
       case 'incrementar-natural':
         precioFinal = precioCabana + valorAccion;
         break;
@@ -469,10 +467,8 @@
 
     switch (seleccionPrecioBase2noches) {
       case 'precio-fijo':
-        if (!(valorPrecioBase2noches == 0)){
           precioBaseFinal2noches = valorPrecioBase2noches;
           break;
-        }
       case 'incrementar-natural':
         precioBaseFinal2noches = precioCabana + valorPrecioBase2noches;
         break;
@@ -490,31 +486,27 @@
 
     switch (seleccionCostoBase) {
       case 'precio-fijo':
-        if (!(valorPrecioBase2noches == 0)){
-          costoBaseFinal = valorPrecioBase2noches;
+          costoBaseFinal = valorCostoBase;
           break;
-        }
       case 'incrementar-natural':
-        costoBaseFinal = precioCabana + valorPrecioBase2noches;
+        costoBaseFinal = precioCabana + valorCostoBase;
         break;
       case 'disminuir-natural':
-        costoBaseFinal = precioCabana - valorPrecioBase2noches;
+        costoBaseFinal = precioCabana - valorCostoBase;
         break;
       case 'incrementar-porcentual':
-        costoBaseFinal = precioCabana * (valorPrecioBase2noches / 100) + precioCabana;
+        costoBaseFinal = precioCabana * (valorCostoBase / 100) + precioCabana;
         break;
       case 'disminuir-porcentual':
-        let pre = precioCabana * (valorPrecioBase2noches / 100)
+        let pre = precioCabana * (valorCostoBase / 100)
         costoBaseFinal = precioCabana - pre;
         break;
     }
 
     switch (seleccionCostoBase2noches) {
       case 'precio-fijo':
-        if (!(valorCostoBase2noches == 0)){
           costoBaseFinal2noches = valorCostoBase2noches;
           break;
-        }
       case 'incrementar-natural':
         costoBaseFinal2noches = precioCabana + valorCostoBase2noches;
         break;
@@ -540,13 +532,26 @@
         // Iterar sobre cada fecha en el rango
         for (const fecha of fechas) {
           const existeRegistro = await verificarExistenciaRegistro(url, fecha, habitacionAmodificar);
-
+          var existeprecio;
           if (existeRegistro) {
+            existeprecio = await consultarprecio(urlfechas, fecha, habitacionAmodificar);
             await eliminarRegistroExistente(url, fecha, habitacionAmodificar);
           }
-
+          console.log('existe precio : ', existeprecio);
           // Solucionar el if para que cuando exista el usuario, se borre el registro y añada el nuevo registro-
           // Obtener el objeto de datos para enviar en la solicitud fetch
+            if ((valorAccion == 0)){
+              precioFinal = existeprecio.precio_modificado;
+            }
+            if ((valorPrecioBase2noches == 0)){
+              precioBaseFinal2noches = existeprecio.precio_base_2noches;
+            }
+            if ((valorCostoBase == 0)){
+              costoBaseFinal = existeprecio.costo_base;
+            }
+            if ((valorCostoBase2noches == 0)){
+              costoBaseFinal2noches = existeprecio.costo_base_2noches;
+            }
           const datosFetch = {
             precio_modificado: precioFinal,
             precio_base_2noches: precioBaseFinal2noches,
@@ -600,6 +605,30 @@
         fechaActual.setDate(fechaActual.getDate() + 1);
       }
       return fechas;
+    }
+
+    // Función para obtener un precio en una fecha determinada
+    async function consultarprecio(url, fecha, habitacionId) {
+      try {
+        const formattedDate = formatDate(fecha); // Formatear la fecha para la URL
+        const formattedUrl = `${urlfechas}?fecha=${formattedDate}&habitacionid=${habitacionId}`
+         const response = await fetch(formattedUrl, {
+          method: 'GET'
+        });
+
+         if (!response.ok) {
+          throw new Error('Error al verificar el precio del registro:', response.statusText);
+        }
+
+        const data = await response.json(); // Obtener el JSON de la respuesta
+
+        console.log(data)
+
+        return data; // Devuelve true si el registro existe, false de lo contrario
+      } catch (error) {
+        console.error('Error al verificar la existencia del registro:', error);
+        throw error;
+      }
     }
 
     // Función para obtener el nombre del día de la semana
@@ -662,6 +691,7 @@
 
     // URL para la solicitud fetch (debes reemplazarla con tu propia URL)
     const url = '/api/calendario-precios';
+    const urlfechas = '/api/consulta-fechas';
 
     // Obtener el rango de fechas entre fechaInicio y fechaFin
     const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
