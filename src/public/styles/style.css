@@ -513,3 +513,29 @@ ul.rb li .timestamp {
 .blur-text {
     filter: blur(5px); /* Ajusta el valor para más o menos desenfoque */
 }
+
+/* Display resultados encuestas */
+
+/* Estilos para mostrar el ID al pasar el mouse */
+.id-display {
+    position: relative;
+    cursor: pointer;
+}
+
+.id-display::after {
+    content: attr(data-id);
+    position: absolute;
+    left: 0;
+    bottom: -1.5em;
+    background: #333;
+    color: #fff;
+    padding: 5px;
+    border-radius: 5px;
+    white-space: nowrap;
+    display: none;
+    z-index: 10;
+}
+
+.id-display:hover::after {
+    display: block;
+}
