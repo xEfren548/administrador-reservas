@@ -1356,6 +1356,7 @@
                             if (pdfFile) {
                                 console.log('Entra  a subir pdf')
                                 pdfData.append('file', pdfFile);
+
                                 const response = await fetch('/api/cabanas/subir-pdf-cabana', {
                                     method: 'POST',
                                     body: pdfData

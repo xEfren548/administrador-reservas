@@ -540,7 +540,7 @@ async function uploadChaletFiles(req, res, next) {
 async function uploadChaletPdf(req, res, next) {
     console.log("entra pdf")
     //console.log(req.files);
-
+    
     const client = new ftp.Client();
 
     try {
@@ -574,6 +574,7 @@ async function uploadChaletPdf(req, res, next) {
             await client.uploadFrom(localFilePath, remoteFileName);
             console.log(`Archivo '${remoteFileName}' subido con éxito`);
             //console.log(chalet.images)
+            chalet.files = [];
             chalet.files.push(remoteFileName);
             await chalets.save();
 
@@ -600,6 +601,10 @@ async function uploadChaletPdf(req, res, next) {
     }
 }
 
+function getFilePathFromUrl(url) {
+    const urlObj = new URL(url);
+    return urlObj.pathname.substring(1); // Eliminar el primer '/' del pathname
+}
 async function getChaletFiles(chalets) {
     const client = new ftp.Client();
 
