@@ -365,6 +365,17 @@ async function showChaletsData(req, res, next) {
 
 async function showChaletsView(req, res, next) {
     try {
+        var chalets = await Habitacion.findOne().lean();
+        chalets = chalets.resources;
+
+        const mapChalets = chalets.map(chalet => {
+            return {
+                id: chalet._id.toString(),
+                name: chalet.propertyDetails.name,
+            }
+        })
+
+
         const admins = await Usuario.find({ privilege: "Administrador" }).lean();
         if (!admins) {
             throw new NotFoundError("No admin found");
@@ -388,6 +399,7 @@ async function showChaletsView(req, res, next) {
 
 
         res.render('vistaCabanas', {
+            chalets: mapChalets,
             admins: admins,
             janitors: janitors,
             tipologias: tipologias,

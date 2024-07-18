@@ -1,7 +1,11 @@
+<div class="loader loader--hidden"></div>
 <form id="frmEditAccomodation" action="">
     <div class="page-info">
         <h1>Agregar cabaña</h1>
         {{!-- <button id="btnCreateChalet" type="submit">Guardar</button> --}}
+        <button type="button" class="btn btn-info mr-1" data-bs-toggle="modal" data-bs-target="#replicate-chalet-modal">
+        Replicar info de cabaña
+        </button>
         <button type="submit" class="btn btn-primary" id="btnCreateChalet">
             <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
             <span class="spinner-text">Guardar</span>
@@ -752,7 +756,7 @@
                     <option selected="true" disabled="true"> Selecciona un administrador para la cabaña --</option>
                     {{#if admins}}
                     {{#each admins}}
-                    <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                    <option data-admin-id="{{this._id}}" value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
                     {{/each}}
                     {{else}}
                     <option value="0">No se encontraron administradores</option>
@@ -769,7 +773,7 @@
                     </option>
                     {{#if janitors}}
                     {{#each janitors}}
-                    <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                    <option data-janitor-id="{{this._id}}" value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
                     {{/each}}
                     {{else}}
                     <option value="0">No se encontraró el personal de limpieza</option>
@@ -831,6 +835,56 @@
         <p id="txtCreateChaletError" name="errMsg" class="error"></p>
     </div>
 </form>
+
+
+<div class="modal fade" id="replicate-chalet-modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Replicar información de cabaña existente</h5>
+                <button type="button" class="close" onclick="$('#replicate-chalet-modal').modal('hide');" aria-label="Close">
+                    &times;
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="slctFormSelector" class="form-label">Habitación: </label>
+                                <select class="form-select form-select-md" id="select-replicate-chalet" name="slctFormSelector">
+                                    <option value="0" selected disabled> Selecciona una cabaña para replicar su información --</option>
+                                    {{#if chalets}}
+                                    {{#each chalets}}
+                                    <option value="{{id}}">{{name}}</option>
+                                    {{/each}}
+                                    {{else}}
+                                    <option value="-1">No se encontraron cabañas</option>
+                                    {{/if}}
+                                </select>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="replicate-info-btn">Replicar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Optional: Place to the bottom of scripts -->
+<script>
+    const myModal = new bootstrap.Modal(
+        document.getElementById("modalId"),
+        options,
+    );
+</script>
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -1169,6 +1223,259 @@
                 }
             })
         }
+
+        const replicateChaletBtn = document.querySelector('#replicate-info-btn')
+        const selectChaletToReplicate = document.querySelector('#select-replicate-chalet')
+
+        replicateChaletBtn.addEventListener('click', async function (e) {
+            e.preventDefault();
+            const spinner = document.querySelector('.loader');
+            const chaletId = selectChaletToReplicate.value
+            try {
+                spinner.classList.remove('loader--hidden');
+                const response = await fetch(`/api/habitaciones/${chaletId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Error al obtener la cabaña.');
+                }
+                const data = await response.json();
+                console.log(data);
+
+
+                let dataArrivalTime = data.others.arrivalTime;
+                let arrivalDate = new Date(dataArrivalTime)
+                let ahours = arrivalDate.getHours();
+                let aminutes = arrivalDate.getMinutes();
+
+                let dataDepartureTime = data.others.departureTime;
+                let departureDate = new Date(dataDepartureTime)
+                let dhours = departureDate.getHours();
+                let dminutes = departureDate.getMinutes();
+
+                let arrivalTimePart = `${ahours.toString().padStart(2, '0')}:${aminutes.toString().padStart(2, '0')}`; 
+                let departureTimePart = `${dhours.toString().padStart(2, '0')}:${dminutes.toString().padStart(2, '0')}`; 
+                
+
+                // Property Details 
+                document.getElementById("slctchaletAccomodationType").value  = data.propertyDetails.accomodationType
+                document.getElementById("txtChaletName").value = data.propertyDetails.name
+                document.getElementById("txtChaletPhoneNumber").value = data.propertyDetails.phoneNumber
+                document.getElementById("txtChaletEmail").value = data.propertyDetails.email
+                document.getElementById("txtChaletWebsite").value = data.propertyDetails.website
+                document.getElementById("txtChaletMinPpl").value = data.propertyDetails.minOccupancy
+                document.getElementById("txtChaletMaxPpl").value = data.propertyDetails.maxOccupancy
+
+                // accommodationFeatures: {
+                        // generalFeatures: {
+                const accomodationFeatures = data.accommodationFeatures
+                
+                document.getElementById("chkboxDisabledAdapted").checked = accomodationFeatures.generalFeatures.disabledAccessible
+                document.getElementById("chkboxSatelliteChannels").checked = accomodationFeatures.generalFeatures.satelliteTV
+                document.getElementById("chkboxIron").checked = accomodationFeatures.generalFeatures.iron
+                document.getElementById("chkboxPetsAllowed").checked = accomodationFeatures.generalFeatures.petsAllowed
+                document.getElementById("chkboxAllergicFriendlyRooms").checked = accomodationFeatures.generalFeatures.allergyFriendlyRooms
+                document.getElementById("chkboxSolarium").checked = accomodationFeatures.generalFeatures.solarium
+                document.getElementById("chkboxMosquitoNet").checked = accomodationFeatures.generalFeatures.mosquitoNet
+                document.getElementById("chkboxMainBedroomAirConditioning").checked = accomodationFeatures.generalFeatures.airConditioningInMainRooms
+                document.getElementById("chkboxConnectedRooms").checked = accomodationFeatures.generalFeatures.connectingRooms
+                document.getElementById("chkboxAirConditioningAllAccommodation").checked = accomodationFeatures.generalFeatures.airConditioningThroughoutProperty
+                document.getElementById("chkboxTileMarbleFloor").checked = accomodationFeatures.generalFeatures.tiledFloorOrMarble
+                document.getElementById("chkboxFireplace").checked = accomodationFeatures.generalFeatures.fireplace
+                document.getElementById("chkboxClothesIron").checked = accomodationFeatures.generalFeatures.ironingFacilities
+                document.getElementById("chkboxWoodParquetFloor").checked = accomodationFeatures.generalFeatures.hardwoodOrParquetFloors
+                document.getElementById("chkboxNoSmokingEntireProperty").checked = accomodationFeatures.generalFeatures.noSmokingAllowed
+                document.getElementById("chkboxWardrobe").checked = accomodationFeatures.generalFeatures.wardrobe
+                document.getElementById("chkboxCarpetFloor").checked = accomodationFeatures.generalFeatures.carpetedFloor
+                document.getElementById("chkboxExpressCheckInOut").checked = accomodationFeatures.generalFeatures.expressCheckInCheckOut
+                document.getElementById("chkboxSoundproofing").checked = accomodationFeatures.generalFeatures.soundproofing
+                document.getElementById("chkboxTelephone").checked = accomodationFeatures.generalFeatures.telephone
+                document.getElementById("chkboxTerrace").checked = accomodationFeatures.generalFeatures.terrace
+                document.getElementById("chkboxBalcony").checked = accomodationFeatures.generalFeatures.balcony
+                document.getElementById("chkboxBuffetBreakfast").checked = accomodationFeatures.generalFeatures.buffetBreakfast
+                document.getElementById("chkboxSafe").checked = accomodationFeatures.generalFeatures.safeDepositBox
+                document.getElementById("chkboxWifi").checked = accomodationFeatures.generalFeatures.wifi
+                document.getElementById("chkboxRoomServiceBreakfast").checked = accomodationFeatures.generalFeatures.breakfastInRoom
+                document.getElementById("chkboxHeating").checked = accomodationFeatures.generalFeatures.heating
+                document.getElementById("chkboxExtraLongBeds").checked = accomodationFeatures.generalFeatures.extraLongBeds
+                document.getElementById("chkboxRoomService").checked = accomodationFeatures.generalFeatures.roomService
+                document.getElementById("chkboxFan").checked = accomodationFeatures.generalFeatures.fan
+                document.getElementById("chkboxDressingRoom").checked = accomodationFeatures.generalFeatures.dressingRoom
+                document.getElementById("chkboxSmokingAllowed").checked = accomodationFeatures.generalFeatures.smokers
+                
+                    // views
+                document.getElementById("chkboxCityViews").checked = accomodationFeatures.views.cityView,
+                document.getElementById("chkboxMountainViews").checked = accomodationFeatures.views.mountainView
+                document.getElementById("chkboxPoolViews").checked = accomodationFeatures.views.poolView
+                document.getElementById("chkboxLandmarkViews").checked = accomodationFeatures.views.landmarkView
+                document.getElementById("chkboxGardenViews").checked = accomodationFeatures.views.gardenView
+                document.getElementById("chkboxLakeViews").checked = accomodationFeatures.views.lakeView
+                document.getElementById("chkboxSeaViews").checked = accomodationFeatures.views.seaView
+                document.getElementById("chkboxCourtyardViews").checked = accomodationFeatures.views.patioView
+                document.getElementById("chkboxRiverViews").checked = accomodationFeatures.views.riverView
+
+                    // activities
+                document.getElementById("chkboxTurkishBath").checked = accomodationFeatures.activities.turkishBath
+                document.getElementById("chkboxGym").checked = accomodationFeatures.activities. gym
+                document.getElementById("chkboxThermalBaths").checked = accomodationFeatures.activities.thermalBaths
+                document.getElementById("chkboxMiniGolf").checked = accomodationFeatures.activities.minigolf
+                document.getElementById("chkboxCanoeing").checked = accomodationFeatures.activities.canoeing
+                document.getElementById("chkboxSpa").checked = accomodationFeatures.activities.spa
+                document.getElementById("chkboxCasino").checked = accomodationFeatures.activities.casino
+                document.getElementById("chkboxLibrary").checked = accomodationFeatures.activities.library
+                document.getElementById("chkboxEquestrianCenter").checked = accomodationFeatures.activities.horseRiding
+                document.getElementById("chkboxCycling").checked = accomodationFeatures.activities.cycling
+                document.getElementById("chkboxBilliards").checked = accomodationFeatures.activities.billiards
+                document.getElementById("chkboxBowling").checked = accomodationFeatures.activities.bowling
+                document.getElementById("chkboxGameRoom").checked = accomodationFeatures.activities.gameRoom
+                document.getElementById("chkboxBBQFacilities").checked = accomodationFeatures.activities.barbecueFacilities
+                document.getElementById("chkboxDiving").checked = accomodationFeatures.activities.diving
+                document.getElementById("chkboxFishing").checked = accomodationFeatures.activities.fishing
+                document.getElementById("chkboxJacuzzi").checked = accomodationFeatures.activities.jacuzzi
+                document.getElementById("chkboxHeatedPool").checked = accomodationFeatures.activities.heatedPool
+                document.getElementById("chkboxSauna").checked = accomodationFeatures.activities.sauna
+                document.getElementById("chkboxKaraoke").checked = accomodationFeatures.activities.karaoke
+                document.getElementById("chkboxIndoorPool").checked = accomodationFeatures.activities.indoorPool
+                document.getElementById("chkboxOutdoorPool").checked = accomodationFeatures.activities.outdoorPool
+                document.getElementById("chkboxSnorkeling").checked = accomodationFeatures.activities.snorkeling
+                document.getElementById("chkboxPrivatePool").checked = accomodationFeatures.activities.privatePool
+                document.getElementById("chkboxChildrensPlayground").checked = accomodationFeatures.activities.childrensPlayground
+                document.getElementById("chkboxHiking").checked = accomodationFeatures.activities.hiking
+                document.getElementById("chkboxMasseuse").checked = accomodationFeatures.activities.masseuse
+                document.getElementById("chkboxGolfCourseNearby").checked = accomodationFeatures.activities.golfCourse
+                
+                    //parking: {
+                document.getElementById("chkboxPaidParking").checked = accomodationFeatures.parking.paidParking
+                document.getElementById("chkboxPublicParking").checked = accomodationFeatures.parking.publicParking
+                document.getElementById("chkboxFreeParking").checked = accomodationFeatures.freeParking
+                document.getElementById("chkboxPrivateParking").checked = accomodationFeatures.parking.privateParking
+                        
+                    //restroomFeatures: {
+                document.getElementById("chkboxBathrobe").checked = accomodationFeatures.restroomFeatures.bathrobe
+                document.getElementById("chkboxBidet").checked = accomodationFeatures.restroomFeatures.bidet
+                document.getElementById("chkboxFreeToiletries").checked = accomodationFeatures.restroomFeatures.freeToiletries
+                document.getElementById("chkboxAdditionalToilet").checked = accomodationFeatures.restroomFeatures.additionalToilet
+                document.getElementById("chkboxSharedToilet").checked = accomodationFeatures.restroomFeatures.sharedToilet
+                document.getElementById("chkboxSauna").checked = accomodationFeatures.restroomFeatures.sauna
+                document.getElementById("chkboxBathtub").checked = accomodationFeatures.restroomFeatures.bathtub
+                document.getElementById("chkboxHairdryer").checked = accomodationFeatures.restroomFeatures.hairdryer
+                document.getElementById("chkboxJacuzzi").checked = accomodationFeatures.restroomFeatures.jacuzzi
+                document.getElementById("chkboxShower").checked = accomodationFeatures.restroomFeatures.shower
+                document.getElementById("chkboxAdditionalBathroom").checked = accomodationFeatures.restroomFeatures.additionalBathroom
+                document.getElementById("chkboxSlippers").checked = accomodationFeatures.restroomFeatures.slippers
+                document.getElementById("chkboxSharedBathroom").checked = accomodationFeatures.restroomFeatures.sharedBathroom
+                document.getElementById("chkboxDesignerBathroom").checked = accomodationFeatures.restroomFeatures.designerBathroom
+                document.getElementById("chkboxPrivateBathroom").checked = accomodationFeatures.restroomFeatures.privateBathroom
+                        
+                    // kitchen: {
+                document.getElementById("chkboxMinibar").checked = accomodationFeatures.kitchen.minibar
+                document.getElementById("chkboxBarbecue").checked = accomodationFeatures.kitchen.barbecue
+                document.getElementById("chkboxBlender").checked = accomodationFeatures.kitchen.blender
+                document.getElementById("chkboxRefrigerator").checked = accomodationFeatures.kitchen.refrigerator
+                document.getElementById("chkboxElectricKettle").checked = accomodationFeatures.kitchen.electricKettle
+                document.getElementById("chkboxOven").checked = accomodationFeatures.kitchen.oven
+                document.getElementById("chkboxStove").checked = accomodationFeatures.kitchen.stove
+                document.getElementById("chkboxCeramicCooktop").checked = accomodationFeatures.kitchen.ceramicCooktop
+                document.getElementById("chkboxTeapot").checked = accomodationFeatures.kitchen.teapot
+                document.getElementById("chkboxCoffeeMaker").checked = accomodationFeatures.kitchen.coffeeMaker
+                document.getElementById("chkboxToaster").checked = accomodationFeatures.kitchen.toaster
+                document.getElementById("chkboxWashingMachine").checked = accomodationFeatures.kitchen.washingMachine
+                document.getElementById("chkboxDryer").checked = accomodationFeatures.kitchen.dryer
+                document.getElementById("chkboxDishwasher").checked = accomodationFeatures.kitchen.dishwasher
+                document.getElementById("chkboxCookingUtensils").checked = accomodationFeatures.kitchen.cookingUtensils
+                document.getElementById("chkboxKitchenArea").checked = accomodationFeatures.kitchen.kitchenArea
+                document.getElementById("chkboxDiningArea").checked = accomodationFeatures.kitchen.diningArea
+                document.getElementById("chkboxFridge").checked = accomodationFeatures.kitchen.fridge
+                document.getElementById("chkboxMicrowave").checked = accomodationFeatures.kitchen.microwave
+                    
+                    //sport: {
+                document.getElementById("chkboxPaddleCourt").checked = accomodationFeatures.sport.paddleTennis
+                document.getElementById("chkboxGym").checked = accomodationFeatures.sport.gym
+                document.getElementById("chkboxBasketballCourt").checked = accomodationFeatures.sport.basketballCourt
+                document.getElementById("chkboxDarts").checked = accomodationFeatures.sport.darts
+                document.getElementById("chkboxWindsurf").checked = accomodationFeatures.sport.windsurfing
+                document.getElementById("chkboxSkiSchool").checked = accomodationFeatures.sport.skiSchool
+                document.getElementById("chkboxFootballField").checked = accomodationFeatures.sport.footballField
+                document.getElementById("chkboxSkiing").checked = accomodationFeatures.sport.skiing
+                document.getElementById("chkboxPingPongTable").checked = accomodationFeatures.sport.pingPong
+                document.getElementById("chkboxSquashCourt").checked = accomodationFeatures.sport.squash
+                document.getElementById("chkboxFutsalField").checked = accomodationFeatures.sport.indoorFootballCourt
+                document.getElementById("chkboxTennisCourt").checked = accomodationFeatures.sport.tennisCourt
+                        
+                    // livingRoom: {
+                document.getElementById("chkboxDoubleSofaBed").checked = accomodationFeatures.livingRoom.doubleSofaBed
+                document.getElementById("chkboxSingleSofaBed").checked = accomodationFeatures.livingRoom.individualSofaBed
+                document.getElementById("chkboxTV").checked = accomodationFeatures.livingRoom.tv
+                document.getElementById("chkboxSatelliteTV").checked = accomodationFeatures.livingRoom.satelliteTV
+                document.getElementById("chkboxSnackBar").checked = accomodationFeatures.livingRoom.snackBar
+                
+                //additionalInfo: {
+                document.getElementById("txtBeds").value = data.additionalInfo.nBeds
+                document.getElementById("txtRestrooms").value = data.additionalInfo.nRestrooms
+                document.getElementById("bedroomSize").value = data.additionalInfo.bedroomSize
+                document.getElementById("txtExtraCost").value = data.additionalInfo.extraCleaningCost
+                
+                document.getElementById("txtAccomodationDetails").value = data.accomodationDescription
+                if (data.additionalAccomodationDescription){
+                    document.getElementById("txtAdditionalDetails").value = data.additionalAccomodationDescription
+                }
+                document.getElementById("txtLegalNote").value = data.legalNotice
+
+                //location: {
+                document.getElementById("txtState").value = data.location.state
+                document.getElementById("txtPopulation").value = data.location.population
+                document.getElementById("txtAddressNumber").value = data.location.addressNumber
+                document.getElementById("txtPostalCode").value = data.location.postalCode
+                document.getElementById("txtLat").value = data.location.latitude
+                document.getElementById("txtLong").value = data.location.longitude
+
+                const adminId = data.others.admin
+                const janitorId = data.others.janitor
+                
+                //others: {
+                document.getElementById("txtBasePrice").value = data.others.basePrice
+                document.getElementById("txtBasePrice2Nights").value = data.others.basePrice2nights
+                document.getElementById("txtBaseCost").value = data.others.baseCost
+                document.getElementById("txtBaseCost2Nights").value = data.others.baseCost2nights
+                document.getElementById("txtArrivalTime").value = arrivalTimePart
+                document.getElementById("txtDepartureTime").value = departureTimePart
+                const adminSelectElement = document.getElementById('slctAdmin');
+                const adminOptionToSelect = adminSelectElement.querySelector(`option[data-admin-id="${adminId}"]`);
+                if (adminOptionToSelect) {
+                    adminOptionToSelect.selected = true;
+                }
+
+                const janitorSelectElement = document.getElementById('slctJanitor');
+                const janitorOptionToSelect = janitorSelectElement.querySelector(`option[data-janitor-id="${janitorId}"]`);
+                if (janitorSelectElement) {
+                    janitorOptionToSelect.selected = true;
+                }
+                
+                document.getElementById("chalet-owner-select").value = data.others.owner
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Cabaña replicada correctamente!',
+                    text: 'Se ha replicado con éxito.',
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    $('#replicate-chalet-modal').modal('hide')
+                });
+            } catch(error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al replicar la cabaña: '+ error.message,
+                    confirmButtonText: 'Aceptar'
+                })
+            } finally {
+                spinner.classList.add('loader--hidden');
+            }
+        })
 
         function isFormDataEmpty(formData) {
             for (const pair of formData.entries()) {
