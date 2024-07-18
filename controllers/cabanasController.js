@@ -789,13 +789,39 @@ async function editChalet(req, res, next) {
             images
         };
 
-        console.log(propertyDetails);
         chalets[indexToUpdate] = updatedChalet;
         
-        await Habitacion.findOneAndUpdate(
+        const updateResult = await Habitacion.updateOne(
             { "resources._id": chaletId },
-            { $set: { "resources.$": updatedChalet } }
+            {
+                $set: {
+                    "resources.$.propertyDetails": propertyDetails,
+                    "resources.$.accommodationFeatures": accommodationFeatures,
+                    "resources.$.additionalInfo": additionalInfo,
+                    "resources.$.accomodationDescription": accomodationDescription,
+                    "resources.$.additionalAccomodationDescription": additionalAccomodationDescription,
+                    "resources.$.touristicRate": touristicRate,
+                    "resources.$.legalNotice": legalNotice,
+                    "resources.$.location": location,
+                    "resources.$.others": {
+                        basePrice: others.basePrice,
+                        basePrice2nights: others.basePrice2nights,
+                        baseCost: others.baseCost,
+                        baseCost2nights: others.baseCost2nights,
+                        arrivalTime: newArrivalTime,
+                        departureTime: newDepartureTime,
+                        admin: admin._id,
+                        janitor: janitor._id,
+                        owner: owner._id
+                    },
+                    "resources.$.images": images
+                }
+            }
         );
+        console.log('Update Result:', JSON.stringify(updateResult, null, 2));
+        if (!updateResult.modifiedCount) throw new Error("Failed to update chalet");
+
+        // Log the entire update result for debugging
 
         console.log("Cabaña actualizada con éxito");
         console.log(req.session)
