@@ -4,7 +4,7 @@
         <h1>Agregar cabaña</h1>
         {{!-- <button id="btnCreateChalet" type="submit">Guardar</button> --}}
         <button type="button" class="btn btn-info mr-1" data-bs-toggle="modal" data-bs-target="#replicate-chalet-modal">
-        Replicar info de cabaña
+            Replicar info de cabaña
         </button>
         <button type="submit" class="btn btn-primary" id="btnCreateChalet">
             <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
@@ -756,7 +756,8 @@
                     <option selected="true" disabled="true"> Selecciona un administrador para la cabaña --</option>
                     {{#if admins}}
                     {{#each admins}}
-                    <option data-admin-id="{{this._id}}" value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                    <option data-admin-id="{{this._id}}" value="{{this.email}}">{{this.firstName}} {{this.lastName}}
+                    </option>
                     {{/each}}
                     {{else}}
                     <option value="0">No se encontraron administradores</option>
@@ -773,7 +774,8 @@
                     </option>
                     {{#if janitors}}
                     {{#each janitors}}
-                    <option data-janitor-id="{{this._id}}" value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                    <option data-janitor-id="{{this._id}}" value="{{this.email}}">{{this.firstName}} {{this.lastName}}
+                    </option>
                     {{/each}}
                     {{else}}
                     <option value="0">No se encontraró el personal de limpieza</option>
@@ -843,7 +845,8 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Replicar información de cabaña existente</h5>
-                <button type="button" class="close" onclick="$('#replicate-chalet-modal').modal('hide');" aria-label="Close">
+                <button type="button" class="close" onclick="$('#replicate-chalet-modal').modal('hide');"
+                    aria-label="Close">
                     &times;
             </div>
             <div class="modal-body">
@@ -852,8 +855,10 @@
                         <div class="col-12">
                             <div class="mb-3">
                                 <label for="slctFormSelector" class="form-label">Habitación: </label>
-                                <select class="form-select form-select-md" id="select-replicate-chalet" name="slctFormSelector">
-                                    <option value="0" selected disabled> Selecciona una cabaña para replicar su información --</option>
+                                <select class="form-select form-select-md" id="select-replicate-chalet"
+                                    name="slctFormSelector">
+                                    <option value="0" selected disabled> Selecciona una cabaña para replicar su
+                                        información --</option>
                                     {{#if chalets}}
                                     {{#each chalets}}
                                     <option value="{{id}}">{{name}}</option>
@@ -864,7 +869,7 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                     </div>
 
                 </div>
@@ -1196,7 +1201,7 @@
                             }
                         }).then((result) => {
                             Swal.fire({
-                                icon:'success',
+                                icon: 'success',
                                 title: 'Cabaña creada correctamente!',
                                 text: 'Fue añadida con éxito.',
                                 confirmButtonText: 'Aceptar'
@@ -1256,12 +1261,12 @@
                 let dhours = departureDate.getHours();
                 let dminutes = departureDate.getMinutes();
 
-                let arrivalTimePart = `${ahours.toString().padStart(2, '0')}:${aminutes.toString().padStart(2, '0')}`; 
-                let departureTimePart = `${dhours.toString().padStart(2, '0')}:${dminutes.toString().padStart(2, '0')}`; 
-                
+                let arrivalTimePart = `${ahours.toString().padStart(2, '0')}:${aminutes.toString().padStart(2, '0')}`;
+                let departureTimePart = `${dhours.toString().padStart(2, '0')}:${dminutes.toString().padStart(2, '0')}`;
+
 
                 // Property Details 
-                document.getElementById("slctchaletAccomodationType").value  = data.propertyDetails.accomodationType
+                document.getElementById("slctchaletAccomodationType").value = data.propertyDetails.accomodationType
                 document.getElementById("txtChaletName").value = data.propertyDetails.name
                 document.getElementById("txtChaletPhoneNumber").value = data.propertyDetails.phoneNumber
                 document.getElementById("txtChaletEmail").value = data.propertyDetails.email
@@ -1270,9 +1275,9 @@
                 document.getElementById("txtChaletMaxPpl").value = data.propertyDetails.maxOccupancy
 
                 // accommodationFeatures: {
-                        // generalFeatures: {
+                // generalFeatures: {
                 const accomodationFeatures = data.accommodationFeatures
-                
+
                 document.getElementById("chkboxDisabledAdapted").checked = accomodationFeatures.generalFeatures.disabledAccessible
                 document.getElementById("chkboxSatelliteChannels").checked = accomodationFeatures.generalFeatures.satelliteTV
                 document.getElementById("chkboxIron").checked = accomodationFeatures.generalFeatures.iron
@@ -1305,10 +1310,10 @@
                 document.getElementById("chkboxFan").checked = accomodationFeatures.generalFeatures.fan
                 document.getElementById("chkboxDressingRoom").checked = accomodationFeatures.generalFeatures.dressingRoom
                 document.getElementById("chkboxSmokingAllowed").checked = accomodationFeatures.generalFeatures.smokers
-                
-                    // views
+
+                // views
                 document.getElementById("chkboxCityViews").checked = accomodationFeatures.views.cityView,
-                document.getElementById("chkboxMountainViews").checked = accomodationFeatures.views.mountainView
+                    document.getElementById("chkboxMountainViews").checked = accomodationFeatures.views.mountainView
                 document.getElementById("chkboxPoolViews").checked = accomodationFeatures.views.poolView
                 document.getElementById("chkboxLandmarkViews").checked = accomodationFeatures.views.landmarkView
                 document.getElementById("chkboxGardenViews").checked = accomodationFeatures.views.gardenView
@@ -1317,9 +1322,9 @@
                 document.getElementById("chkboxCourtyardViews").checked = accomodationFeatures.views.patioView
                 document.getElementById("chkboxRiverViews").checked = accomodationFeatures.views.riverView
 
-                    // activities
+                // activities
                 document.getElementById("chkboxTurkishBath").checked = accomodationFeatures.activities.turkishBath
-                document.getElementById("chkboxGym").checked = accomodationFeatures.activities. gym
+                document.getElementById("chkboxGym").checked = accomodationFeatures.activities.gym
                 document.getElementById("chkboxThermalBaths").checked = accomodationFeatures.activities.thermalBaths
                 document.getElementById("chkboxMiniGolf").checked = accomodationFeatures.activities.minigolf
                 document.getElementById("chkboxCanoeing").checked = accomodationFeatures.activities.canoeing
@@ -1346,14 +1351,14 @@
                 document.getElementById("chkboxHiking").checked = accomodationFeatures.activities.hiking
                 document.getElementById("chkboxMasseuse").checked = accomodationFeatures.activities.masseuse
                 document.getElementById("chkboxGolfCourseNearby").checked = accomodationFeatures.activities.golfCourse
-                
-                    //parking: {
+
+                //parking: {
                 document.getElementById("chkboxPaidParking").checked = accomodationFeatures.parking.paidParking
                 document.getElementById("chkboxPublicParking").checked = accomodationFeatures.parking.publicParking
                 document.getElementById("chkboxFreeParking").checked = accomodationFeatures.freeParking
                 document.getElementById("chkboxPrivateParking").checked = accomodationFeatures.parking.privateParking
-                        
-                    //restroomFeatures: {
+
+                //restroomFeatures: {
                 document.getElementById("chkboxBathrobe").checked = accomodationFeatures.restroomFeatures.bathrobe
                 document.getElementById("chkboxBidet").checked = accomodationFeatures.restroomFeatures.bidet
                 document.getElementById("chkboxFreeToiletries").checked = accomodationFeatures.restroomFeatures.freeToiletries
@@ -1369,8 +1374,8 @@
                 document.getElementById("chkboxSharedBathroom").checked = accomodationFeatures.restroomFeatures.sharedBathroom
                 document.getElementById("chkboxDesignerBathroom").checked = accomodationFeatures.restroomFeatures.designerBathroom
                 document.getElementById("chkboxPrivateBathroom").checked = accomodationFeatures.restroomFeatures.privateBathroom
-                        
-                    // kitchen: {
+
+                // kitchen: {
                 document.getElementById("chkboxMinibar").checked = accomodationFeatures.kitchen.minibar
                 document.getElementById("chkboxBarbecue").checked = accomodationFeatures.kitchen.barbecue
                 document.getElementById("chkboxBlender").checked = accomodationFeatures.kitchen.blender
@@ -1390,8 +1395,8 @@
                 document.getElementById("chkboxDiningArea").checked = accomodationFeatures.kitchen.diningArea
                 document.getElementById("chkboxFridge").checked = accomodationFeatures.kitchen.fridge
                 document.getElementById("chkboxMicrowave").checked = accomodationFeatures.kitchen.microwave
-                    
-                    //sport: {
+
+                //sport: {
                 document.getElementById("chkboxPaddleCourt").checked = accomodationFeatures.sport.paddleTennis
                 document.getElementById("chkboxGym").checked = accomodationFeatures.sport.gym
                 document.getElementById("chkboxBasketballCourt").checked = accomodationFeatures.sport.basketballCourt
@@ -1404,22 +1409,22 @@
                 document.getElementById("chkboxSquashCourt").checked = accomodationFeatures.sport.squash
                 document.getElementById("chkboxFutsalField").checked = accomodationFeatures.sport.indoorFootballCourt
                 document.getElementById("chkboxTennisCourt").checked = accomodationFeatures.sport.tennisCourt
-                        
-                    // livingRoom: {
+
+                // livingRoom: {
                 document.getElementById("chkboxDoubleSofaBed").checked = accomodationFeatures.livingRoom.doubleSofaBed
                 document.getElementById("chkboxSingleSofaBed").checked = accomodationFeatures.livingRoom.individualSofaBed
                 document.getElementById("chkboxTV").checked = accomodationFeatures.livingRoom.tv
                 document.getElementById("chkboxSatelliteTV").checked = accomodationFeatures.livingRoom.satelliteTV
                 document.getElementById("chkboxSnackBar").checked = accomodationFeatures.livingRoom.snackBar
-                
+
                 //additionalInfo: {
                 document.getElementById("txtBeds").value = data.additionalInfo.nBeds
                 document.getElementById("txtRestrooms").value = data.additionalInfo.nRestrooms
                 document.getElementById("bedroomSize").value = data.additionalInfo.bedroomSize
                 document.getElementById("txtExtraCost").value = data.additionalInfo.extraCleaningCost
-                
+
                 document.getElementById("txtAccomodationDetails").value = data.accomodationDescription
-                if (data.additionalAccomodationDescription){
+                if (data.additionalAccomodationDescription) {
                     document.getElementById("txtAdditionalDetails").value = data.additionalAccomodationDescription
                 }
                 document.getElementById("txtLegalNote").value = data.legalNotice
@@ -1434,7 +1439,7 @@
 
                 const adminId = data.others.admin
                 const janitorId = data.others.janitor
-                
+
                 //others: {
                 document.getElementById("txtBasePrice").value = data.others.basePrice
                 document.getElementById("txtBasePrice2Nights").value = data.others.basePrice2nights
@@ -1453,8 +1458,61 @@
                 if (janitorSelectElement) {
                     janitorOptionToSelect.selected = true;
                 }
-                
+
                 document.getElementById("chalet-owner-select").value = data.others.owner
+
+                imagesarray = [];
+                pdfarray = [];
+
+                let name = form.querySelector("#txtChaletName");
+                //console.log(name.value)
+                filename = "file" + name.value
+                pothocname = "photoCarousel " + name.value
+                const pdfUpload = document.getElementById('pdf-upload');
+                // console.log(filename);
+                console.log(pothocname)
+
+                fileUpload = document.getElementsByName(filename);
+                photoCarousel = document.getElementById(pothocname);
+                // console.log(fileUpload)
+                // console.log(photoCarousel
+                //console.log(datajson[0].resources);
+                //console.log(element.images);
+                console.log(data.propertyDetails.name)
+                data.images.forEach(function (image, index) {
+                    const photoDiv = document.createElement('div');
+                    photoDiv.classList.add('photo');
+                    const img = document.createElement('img');
+                    img.src = "https://navarro.integradev.site/navarro/" + image;
+                    const deleteButton = document.createElement('button');
+                    deleteButton.classList.add('delete-photo');
+                    deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
+                    deleteButton.addEventListener('click', function () {
+                        imagesarray.splice(index - indexadvance, 1)
+                        photoDiv.remove();
+                        indexadvance = indexadvance + 1
+                        console.log(imagesarray)
+                    });
+                    photoDiv.appendChild(deleteButton);
+                    photoDiv.appendChild(img);
+                    photoCarousel.appendChild(photoDiv);
+                    // console.log("Saludos desde ");
+                    imagesarray.push(image.toString())
+                    // console.log(imagesarray)
+                });
+                element.files.forEach(function (image, index) {
+                    const pdfSrc = "https://navarro.integradev.site/navarro/" + image;
+                    console.log(pdfSrc);
+                    const fileNameDisplay = form.querySelector('#file-name-display');
+                    pdfAborrar = pdfSrc;
+                    fileNameDisplay.innerText = `Ya se subió un archivo pdf para las instrucciones de llegada: ${pdfSrc}.\nSubir otro archivo sobrescribirá el anterior. `;
+                    // console.log("Saludos desde ");
+                    // console.log(imagesarray)
+                })
+
+
+
+
 
                 Swal.fire({
                     icon: 'success',
@@ -1464,12 +1522,12 @@
                 }).then(() => {
                     $('#replicate-chalet-modal').modal('hide')
                 });
-            } catch(error) {
+            } catch (error) {
                 console.error('Error:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Error al replicar la cabaña: '+ error.message,
+                    text: 'Error al replicar la cabaña: ' + error.message,
                     confirmButtonText: 'Aceptar'
                 })
             } finally {
