@@ -176,11 +176,21 @@ async function showClientsResponses(req, res, next) {
         const totalP9 = Array(2).fill(0); // Inicializa un array con 2 elementos, todos con valor 0
         const totalP10 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
 
+        let totalR1 = 0
+        let totalR2 = 0
+        let totalR3 = 0
+        let totalR4 = 0
+        let totalR5 = 0
+        let totalR6 = 0
+        let totalR7 = 0
+        let totalR8 = 0
+        let totalR9 = 0
+        let totalR10 = 0
+        let totalPromedios = 0
 
         for (const clientSurveyResponses of clientsSurveyResponses) {
             const reservation = reservations.find(reservation => reservation._id.toString() === clientSurveyResponses.reservation.toString());
 
-            console.log(reservation)
             const habitacion = await habitacionController.obtenerHabitacionPorId(reservation.resourceId.toString());
 
             const nombreHabitacion = habitacion.propertyDetails.name;
@@ -198,10 +208,22 @@ async function showClientsResponses(req, res, next) {
             };
 
             const newAnswers = convertToNumbers(clientSurveyResponses.answers);
-            console.log("newAnswers: ", newAnswers);
+
+            totalR1 += newAnswers[0];
+            totalR2 += newAnswers[1];
+            totalR3 += newAnswers[2];
+            totalR4 += newAnswers[3];
+            totalR5 += newAnswers[4];
+            totalR6 += newAnswers[5];
+            totalR7 += newAnswers[6];
+            totalR8 += newAnswers[7];
+            totalR10 += newAnswers[9];
 
             let sumatoria = newAnswers[0] + newAnswers[1] + newAnswers[2] + newAnswers[3] + newAnswers[4] + newAnswers[5] + newAnswers[6] + newAnswers[7] + newAnswers[9];
             let promedio = (sumatoria / 9).toFixed(2);
+            console.log("promedio: ", promedio)
+            totalPromedios += parseFloat(promedio);
+            console.log("total promedios: " + totalPromedios);
 
             clientSurveyInfo.promedio = promedio;
 
@@ -376,16 +398,38 @@ async function showClientsResponses(req, res, next) {
                     totalP10[4] += 1;
                     break;
             }
-            console.log("totalP1: ")
-            console.log(totalP7)    
-            console.log(totalP8)    
-            console.log(totalP9)    
-            console.log(totalP10)
 
             clientsSurveyInfo.push(clientSurveyInfo);
         }
 
-        console.log(clientsSurveyInfo)
+        const lengthAnswers = clientsSurveyInfo.length
+
+        let promediosPregunta = []
+
+        promedioP1 = (totalR1 / lengthAnswers).toFixed(2);
+        promediosPregunta.push(promedioP1);
+        promedioP2 = (totalR2 / lengthAnswers).toFixed(2);
+        promediosPregunta.push(promedioP2);
+        promedioP3 = (totalR3 / lengthAnswers).toFixed(2);
+        promediosPregunta.push(promedioP3);
+        promedioP4 = (totalR4 / lengthAnswers).toFixed(2);
+        promediosPregunta.push(promedioP4);
+        promedioP5 = (totalR5 / lengthAnswers).toFixed(2);
+        promediosPregunta.push(promedioP5);
+        promedioP6 = (totalR6 / lengthAnswers).toFixed(2);
+        promediosPregunta.push(promedioP6);
+        promedioP7 = (totalR7 / lengthAnswers).toFixed(2);
+        promediosPregunta.push(promedioP7);
+        promedioP8 = (totalR8 / lengthAnswers).toFixed(2);
+        promediosPregunta.push(promedioP8);
+        promediosPregunta.push(0)
+        promedioP10 = (totalR10 / lengthAnswers).toFixed(2);
+        promediosPregunta.push(promedioP10);
+        promediosPregunta.push('N/A');
+        promedioFinal = (totalPromedios / lengthAnswers).toFixed(2);
+        promediosPregunta.push(promedioFinal);
+
+
 
         res.render('vistaRespuestasClientes', {
             clientsSurveyInfo,
@@ -398,7 +442,8 @@ async function showClientsResponses(req, res, next) {
             totalP7: totalP7,
             totalP8: totalP8,
             totalP9: totalP9,
-            totalP10: totalP10
+            totalP10: totalP10,
+            promediosPregunta: promediosPregunta
         });
     } catch (error) {
         return next(error);
