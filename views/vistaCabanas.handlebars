@@ -900,6 +900,8 @@
         const fileCarousel = document.getElementById('fileCarousel');
         const formData = new FormData();
         const pdfData = new FormData();
+        let indexadvance = 0
+
 
         fileUpload.addEventListener('change', function (event) {
             const files = event.target.files;
@@ -1167,7 +1169,9 @@
                     })
                         .then(response => {
                             if (!response.ok) {
-                                throw new Error('Error al crear cabaña.');
+                                return response.json().then(errorData => {
+                                    const errorMessages = errorData.error.map(err => err.message).join(', ');
+                                    throw new Error(errorMessages || 'Error occurred while creating the chalet');                            });
                             }
                             return response.json();
                         })
@@ -1212,7 +1216,12 @@
                             })
                         })
                         .catch(error => {
-                            throw new Error(error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error al enviar la solicitud: ' + error + '.',
+                                confirmButtonText: 'Aceptar'
+                            })
                         });
                 } catch (error) {
                     Swal.fire({
@@ -1315,7 +1324,7 @@
 
                 // views
                 document.getElementById("chkboxCityViews").checked = accomodationFeatures.views.cityView,
-                document.getElementById("chkboxMountainViews").checked = accomodationFeatures.views.mountainView
+                    document.getElementById("chkboxMountainViews").checked = accomodationFeatures.views.mountainView
                 document.getElementById("chkboxPoolViews").checked = accomodationFeatures.views.poolView
                 document.getElementById("chkboxLandmarkViews").checked = accomodationFeatures.views.landmarkView
                 document.getElementById("chkboxGardenViews").checked = accomodationFeatures.views.gardenView
@@ -1495,7 +1504,7 @@
 
                     // console.log(imagesarray)
                 });
-                if (data.files[0]){
+                if (data.files[0]) {
                     const pdfSrc = "https://navarro.integradev.site/navarro/" + data.files[0];
                     console.log(pdfSrc);
                     pdfarrayDB.push(data.files[0]);
