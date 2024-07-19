@@ -1144,10 +1144,9 @@
                     files: pdfarrayDB
                 };
                 try {
-                    const spinner = document.querySelector('#btnCreateChalet .spinner-grow');
-                    const spinnerText = document.querySelector('#btnCreateChalet .spinner-text');
-                    spinner.classList.remove('d-none');
-                    spinnerText.textContent = 'Loading...';
+                    const spinner = document.querySelector('.loader');
+                    spinner.classList.remove('loader--hidden');
+
                     document.getElementById('btnCreateChalet').disabled = true; // Habilitar el botón
                     console.log(pdfarrayDB)
                     var fileInput = document.getElementById('pdf-upload');
@@ -1231,11 +1230,8 @@
                         confirmButtonText: 'Aceptar'
                     })
                 } finally {
-                    const spinner = document.querySelector('#btnCreateChalet .spinner-grow');
-                    const spinnerText = document.querySelector('#btnCreateChalet .spinner-text');
-                    spinner.classList.add('d-none');
-                    spinnerText.textContent = 'Guardar'; // Limpiar el texto
-                    document.getElementById('btnCreateChalet').disabled = false; // Habilitar el botón
+                    spinner.classList.add('loader--hidden');
+
                 }
             })
         }
