@@ -414,7 +414,7 @@ async function showChaletsView(req, res, next) {
 async function createChalet(req, res, next) {
     //console.log(req.body);
 
-    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others } = req.body;
+    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images, files } = req.body;
 
     const admin = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
     if (!admin) {
@@ -462,7 +462,9 @@ async function createChalet(req, res, next) {
             admin: admin._id,
             janitor: janitor._id,
             owner: owner._id,
-        }
+        },
+        images,
+        files
     };
 
     try {

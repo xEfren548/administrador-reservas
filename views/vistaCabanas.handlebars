@@ -933,6 +933,7 @@
             if (!file) {
                 return;
             }
+            pdfarrayDB = []
             document.getElementById('file-name-display').innerText = file.name;
 
             console.log(formData)
@@ -1136,7 +1137,9 @@
                         admin: document.getElementById("slctAdmin").value.trim(),
                         janitor: document.getElementById("slctJanitor").value.trim(),
                         owner: document.getElementById("chalet-owner-select").value.trim()
-                    }
+                    },
+                    images: imagesarrayDB,
+                    files: pdfarrayDB
                 };
                 try {
                     const spinner = document.querySelector('#btnCreateChalet .spinner-grow');
@@ -1144,15 +1147,14 @@
                     spinner.classList.remove('d-none');
                     spinnerText.textContent = 'Loading...';
                     document.getElementById('btnCreateChalet').disabled = true; // Habilitar el botón
-
+                    console.log(pdfarrayDB)
                     var fileInput = document.getElementById('pdf-upload');
                     var pdfFile = fileInput.files[0];
-                    console.log(formData)
                     console.log(Object.keys(formData).length)
-                    if (isFormDataEmpty(formData)) {
+                    if (isFormDataEmpty(formData) && imagesarrayDB.length == 0) {
                         throw new Error('Sube imágenes para la cabaña.');
                     }
-                    if (!pdfFile) {
+                    if (!pdfFile && pdfarrayDB.length == 0) {
                         throw new Error('No se ha seleccionado un archivo PDF.');
                     }
                     fetch('/api/cabanas/crear-cabana', {
@@ -1313,7 +1315,7 @@
 
                 // views
                 document.getElementById("chkboxCityViews").checked = accomodationFeatures.views.cityView,
-                    document.getElementById("chkboxMountainViews").checked = accomodationFeatures.views.mountainView
+                document.getElementById("chkboxMountainViews").checked = accomodationFeatures.views.mountainView
                 document.getElementById("chkboxPoolViews").checked = accomodationFeatures.views.poolView
                 document.getElementById("chkboxLandmarkViews").checked = accomodationFeatures.views.landmarkView
                 document.getElementById("chkboxGardenViews").checked = accomodationFeatures.views.gardenView
@@ -1461,54 +1463,47 @@
 
                 document.getElementById("chalet-owner-select").value = data.others.owner
 
+                // Obtener imagenes
                 imagesarray = [];
+                imagesarrayDB = [];
                 pdfarray = [];
+                pdfarrayDB = [];
 
-                let name = form.querySelector("#txtChaletName");
-                //console.log(name.value)
-                filename = "file" + name.value
-                pothocname = "photoCarousel " + name.value
-                const pdfUpload = document.getElementById('pdf-upload');
-                // console.log(filename);
-                console.log(pothocname)
-
-                fileUpload = document.getElementsByName(filename);
-                photoCarousel = document.getElementById(pothocname);
-                // console.log(fileUpload)
-                // console.log(photoCarousel
-                //console.log(datajson[0].resources);
-                //console.log(element.images);
                 console.log(data.propertyDetails.name)
                 data.images.forEach(function (image, index) {
                     const photoDiv = document.createElement('div');
                     photoDiv.classList.add('photo');
                     const img = document.createElement('img');
+                    imagesarrayDB.push(image);
                     img.src = "https://navarro.integradev.site/navarro/" + image;
                     const deleteButton = document.createElement('button');
                     deleteButton.classList.add('delete-photo');
                     deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
                     deleteButton.addEventListener('click', function () {
                         imagesarray.splice(index - indexadvance, 1)
+                        imagesarrayDB.splice(index - indexadvance, 1)
                         photoDiv.remove();
                         indexadvance = indexadvance + 1
                         console.log(imagesarray)
+
                     });
                     photoDiv.appendChild(deleteButton);
                     photoDiv.appendChild(img);
                     photoCarousel.appendChild(photoDiv);
                     // console.log("Saludos desde ");
                     imagesarray.push(image.toString())
+
                     // console.log(imagesarray)
                 });
-                element.files.forEach(function (image, index) {
-                    const pdfSrc = "https://navarro.integradev.site/navarro/" + image;
+                if (data.files[0]){
+                    const pdfSrc = "https://navarro.integradev.site/navarro/" + data.files[0];
                     console.log(pdfSrc);
-                    const fileNameDisplay = form.querySelector('#file-name-display');
-                    pdfAborrar = pdfSrc;
+                    pdfarrayDB.push(data.files[0]);
+                    const fileNameDisplay = document.querySelector('#file-name-display');
                     fileNameDisplay.innerText = `Ya se subió un archivo pdf para las instrucciones de llegada: ${pdfSrc}.\nSubir otro archivo sobrescribirá el anterior. `;
-                    // console.log("Saludos desde ");
-                    // console.log(imagesarray)
-                })
+                }
+                // console.log("Saludos desde ");
+                // console.log(imagesarray)
 
 
 
