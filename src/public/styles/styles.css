@@ -414,7 +414,7 @@ body:not(h1, h2, h3, h4, h5, h6){
     background-color: transparent;
 }
 
-.page-info button:nth-of-type(2){
+.page-info .btn-save-info{
     display: inline-block;
     width: 10rem;
     padding: 6px 12px;
@@ -424,7 +424,7 @@ body:not(h1, h2, h3, h4, h5, h6){
     border-radius: 4px;
 }
 
-.page-info button:nth-of-type(2):hover{
+.page-info .btn-save-info:hover{
     display: inline-block;
     width: 10rem;
     padding: 6px 12px;
