@@ -1,4 +1,5 @@
 <div class="loader loader--hidden"></div>
+<div class="pre-loader"></div>
 <form id="frmEditAccomodation" action="">
     <div class="page-info">
         <h1>Agregar cabaña</h1>
@@ -1542,4 +1543,15 @@
             return true; // No entries found, formData is empty
         }
     });
+
+    window.addEventListener("load", () => {
+        const preloader = document.querySelector(".pre-loader");
+
+        preloader.classList.add("loader--hidden");
+
+        preloader.addEventListener("transitionend", () => {
+            document.body.removeChild(preloader);
+        });
+    });
+
 </script>

@@ -1,3 +1,5 @@
+<div class="pre-loader"></div>
+
 <div class="input-group">
     <select id="slctFormSelector">
         <option value="" selected disabled> Selecciona una cabaña</option>
@@ -1350,4 +1352,14 @@
             })
         })
     })
+
+    window.addEventListener("load", () => {
+        const preloader = document.querySelector(".pre-loader");
+
+        preloader.classList.add("loader--hidden");
+
+        preloader.addEventListener("transitionend", () => {
+            document.body.removeChild(preloader);
+        });
+    });
 </script>

@@ -573,6 +573,28 @@ ul.rb li .timestamp {
     border-radius: 50%;
     animation: loading 0.75s ease infinite;
 }
+.pre-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #333333;
+    transition: opacity 0.75s, visibility 0.75s;
+}
+
+.pre-loader::after {
+    content: "";
+    width: 75px;
+    height: 75px;
+    border: 15px solid #dddddd;
+    border-top-color: #6649b8;
+    border-radius: 50%;
+    animation: loading 0.75s ease infinite;
+}
 
 @keyframes loading {
     from {
