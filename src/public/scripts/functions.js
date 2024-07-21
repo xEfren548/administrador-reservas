@@ -358,6 +358,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     const day = fecha.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
                     const formatedDate = `${year}-${month}-${day}`;
 
+                    console.log("estoy consultando precios")
+
                     const response = await fetch(`/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}`);
 
                     // Verificar el estado de la respuesta
