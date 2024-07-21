@@ -126,13 +126,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // Creating new reservation.
     document.getElementById('save-event-btn').addEventListener('click', async function () {
         // Mostrar el spinner y deshabilitar el botón
-        const spinner = document.querySelector('#save-event-btn .spinner-grow');
-        const spinnerText = document.querySelector('#save-event-btn .spinner-text');
-        spinner.classList.remove('d-none');
-        spinnerText.textContent = 'Loading...';
-        this.disabled = true; // Deshabilitar el botón
-
+        const spinner = document.querySelector('.loader');
+        spinner.classList.remove('loader--hidden');
+        
+        
         try {
+
             // Esperar a que obtenerComisiones() se resuelva            
             comisionesReserva = document.getElementById('habitacion_total').value.trim() - precioMinimoPermitido; // 3250 - 3000
             console.log(comisionesReserva)
@@ -260,17 +259,16 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
         } finally {
-            // Ocultar el spinner y habilitar el botón nuevamente en caso de error
-            spinner.classList.add('d-none');
-            spinnerText.textContent = 'Crear Reserva'; // Limpiar el texto
-            document.getElementById('save-event-btn').disabled = false; // Habilitar el botón
+            // Ocultar el spinner 
+            spinner.classList.add('loader--hidden');
+
         }
     });
 
     const nightsInput = document.querySelector('#event_nights');
     const arrivalDate = document.getElementById('event_start_date')
     const departureDate = document.getElementById('event_end_date')
- 
+
 
     arrivalDate.addEventListener('input', calculateNightDifference);
     departureDate.addEventListener('input', calculateNightDifference);

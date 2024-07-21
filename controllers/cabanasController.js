@@ -365,6 +365,17 @@ async function showChaletsData(req, res, next) {
 
 async function showChaletsView(req, res, next) {
     try {
+        var chalets = await Habitacion.findOne().lean();
+        chalets = chalets.resources;
+
+        const mapChalets = chalets.map(chalet => {
+            return {
+                id: chalet._id.toString(),
+                name: chalet.propertyDetails.name,
+            }
+        })
+
+
         const admins = await Usuario.find({ privilege: "Administrador" }).lean();
         if (!admins) {
             throw new NotFoundError("No admin found");
@@ -388,6 +399,7 @@ async function showChaletsView(req, res, next) {
 
 
         res.render('vistaCabanas', {
+            chalets: mapChalets,
             admins: admins,
             janitors: janitors,
             tipologias: tipologias,
@@ -402,7 +414,7 @@ async function showChaletsView(req, res, next) {
 async function createChalet(req, res, next) {
     //console.log(req.body);
 
-    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others } = req.body;
+    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images, files } = req.body;
 
     const admin = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
     if (!admin) {
@@ -450,7 +462,9 @@ async function createChalet(req, res, next) {
             admin: admin._id,
             janitor: janitor._id,
             owner: owner._id,
-        }
+        },
+        images,
+        files
     };
 
     try {

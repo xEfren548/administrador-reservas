@@ -1,3 +1,7 @@
+<div class="loader loader--hidden"></div>
+<div class="pre-loader"></div>
+
+
 <div class="calendar-header">
     <div class="bg-dark mb-3">
         <a name="" id="crear-reserva-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
@@ -368,4 +372,13 @@
             $('body').addClass('modal-open');
         }
     });
+
+    window.addEventListener("load", () => {
+        const preloader = document.querySelector(".pre-loader");
+        preloader.classList.add("loader--hidden");
+        preloader.addEventListener("transitionend", () => {
+            document.body.removeChild(preloader);
+        });
+    });
+
 </script>

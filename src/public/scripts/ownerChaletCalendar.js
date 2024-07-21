@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function () {
             selectable: true,
             nowIndicator: true,
             dayMaxEvents: true,
+            timeZone: 'UTC',
+
             headerToolbar: {
                 start: 'dayGridMonth', // listMonth
                 center: 'title',
