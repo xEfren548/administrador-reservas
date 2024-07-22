@@ -378,6 +378,86 @@ async function mostrarUtilidadesPorUsuario(req, res) {
     }
 }
 
+async function mostrarUtilidadesGlobales(req, res) {
+    try {
+        const loggedUserId = req.session.id;
+        let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
+
+        let utilidades = {};
+        let utilidadesPorReserva = []
+
+
+        utilidades = await Utilidades.find().lean();
+
+        let totalEarnings = 0
+
+        const currentMonth = moment().month(); // Mes actual (0-11)
+        const currentYear = moment().year(); // Año actual
+        const utilidadesPorMes = Array(12).fill(0); // Inicializa un array con 12 elementos, todos con valor 0
+
+        if (Object.keys(utilidades).length > 0) {
+            utilidadesPorReserva = utilidades.filter(utilidad => utilidad.concepto.includes("Utilidad"))
+
+            utilidades.forEach(utilidad => {
+                utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`
+                utilidad.fecha = moment.utc(utilidad.fecha).format('DD/MM/YYYY');
+                const utilidadFecha = moment.utc(utilidad.fecha, 'DD/MM/YYYY');
+
+                if (utilidadFecha.month() === currentMonth && utilidadFecha.year() === currentYear) {
+                    // Asignar nombre del usuario y formatear fecha
+                    utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`;
+                    utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
+
+
+                }
+
+
+
+            })
+            utilidadesPorMes.forEach((total, index) => {
+                const monthName = moment().month(index).format('MMMM');
+                console.log(`${monthName}: ${total}`);
+            });
+        }
+
+        let utilidadCantidad = 0
+
+        utilidadesPorReserva.forEach(utilidad => {
+            // utilidadCantidad += utilidad.monto
+            const utilidadFecha = moment.utc(utilidad.fecha, 'DD/MM/YYYY');
+            if (utilidadFecha.month() === currentMonth && utilidadFecha.year() === currentYear) {
+                // Asignar nombre del usuario y formatear fecha
+                utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
+
+                // Sumar al total de comisiones
+                totalEarnings += utilidad.monto;
+
+
+            }
+
+            const monthIndex = utilidadFecha.month(); // Obtiene el índice del mes (0-11)
+            utilidadesPorMes[monthIndex] += utilidad.monto;
+
+        })
+
+        console.log("Utilidad totales: ", utilidadCantidad)
+        console.log(utilidadesPorMes)
+
+        const limit = 10000;
+
+        res.render('vistaUtilidadesGlobales', {
+            utilidades: utilidades,
+            totalEarnings,
+            limit,
+            utilidadesPorMes
+        })
+
+    } catch (error) {
+        console.log(error.message);
+        res.status(200).send('Something went wrong while retrieving services.');
+    }
+}
+
 async function altaComision(req, res) {
     try {
         const { monto, concepto, fecha, idUsuario } = req.body
@@ -521,6 +601,7 @@ module.exports = {
     obtenerComisionesPorReserva,
     calcularComisiones,
     mostrarUtilidadesPorUsuario,
+    mostrarUtilidadesGlobales,
     generarComisionReserva,
     altaComision,
     altaComisionReturn,
