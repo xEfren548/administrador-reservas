@@ -28,8 +28,7 @@ async function generateSideMenu(req, res, next) {
                 { 'Servicios adicionales': ["/api/servicios", "fas fa-spa"] },
                 { 'Limpieza': ["/racklimpieza", "fas fa-broom"] },
                 { 'Cabañas': [] },
-                { 'Utilidades por reserva': ["/api/costos/mostrar-costos", "fas fa-chart-line"] },
-                { 'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
+                { 'Utilidades': [] },
                 { 'Encuestas': [] },
                 { 'Logs': ["/logs", "fas fa-cogs"] },
                 { 'Precios': ["/calendario-precios", "far fa-calendar-alt"] },
@@ -38,7 +37,7 @@ async function generateSideMenu(req, res, next) {
                 { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
                 { 'Home': ["/", "fs-5 fa fa-house"] },
                 { 'Reserva cliente cabaña': ["/instrucciones/", "far fa-calendar-alt"] },
-                { 'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
+                { 'Mis Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
             ],
             'Limpieza': [
                 { 'Dashboard': ["/dashboard", "fs-5 fa fa-chart-bar"] },
@@ -51,7 +50,7 @@ async function generateSideMenu(req, res, next) {
             'Dueño de cabañas': [
                 { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
                 { 'Calendario': ["/api/calendar/duenos", "fs-5 fa fa-calendar"] },
-                { 'Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
+                { 'Mis Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
             ],
             'Colaborador dueño': [
                 { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
@@ -154,6 +153,36 @@ async function generateSideMenu(req, res, next) {
                                     <a href="/procesar-encuesta/mostrar-respuestas-usuarios" class="nav-link px-5" title="Ver respuestas">
                                         <i class="fas fa-tasks"></i></i><span class="d-none d-sm-inline"
                                             style="margin-left: 8px;">Ver respuestas</span>
+                                    </a>
+
+                                </li>
+                            </ul>
+                        </li>`;
+                } else if (key === "Utilidades") {
+                    sideMenuContent +=
+                        `<li class="nav-item py-2 py-sm-0">
+                            <a href="#submenu4" data-bs-toggle="collapse" class="nav-link px-4 align-middle " title="Encuestas">
+                                <i class="fas fa-chart-line"></i><span
+                                    class="fs-5 ms-3 d-none d-sm-inline">Utilidades
+                                </span></a>
+                            <ul class="collapse nav flex-column ms-1" id="submenu4" data-bs-parent="#menu">
+                                <li class="w-100">
+                                    <a href="/api/costos/mostrar-costos" class="nav-link px-5" title="Modificar Encuesta">
+                                        <i class="fas fa-chart-line "></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Utilidades por Reserva</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/api/mostrar-utilidades" class="nav-link px-5" title="Ver respuestas">
+                                        <i class="fas fa-hand-holding-usd"></i></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Mis Utilidades</span>
+                                    </a>
+
+                                </li>
+                                <li>
+                                    <a href="/api/mostrar-utilidades-globales" class="nav-link px-5" title="Utilidades globales">
+                                        <i class="fas fa-globe"></i></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Utilidades globales</span>
                                     </a>
 
                                 </li>
