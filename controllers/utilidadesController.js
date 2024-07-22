@@ -318,12 +318,8 @@ async function mostrarUtilidadesPorUsuario(req, res) {
 
         let utilidades = {};
 
-        if (user.privilege !== "Administrador") {
-            console.log('is not admin')
-            utilidades = await Utilidades.find({ idUsuario: loggedUserId }).lean();
-            // console.log(utilidades)
 
-        }
+        utilidades = await Utilidades.find({ idUsuario: loggedUserId }).lean();
 
         let totalEarnings = 0
 
