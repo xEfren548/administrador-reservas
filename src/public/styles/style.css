@@ -622,3 +622,17 @@ ul.rb li .timestamp {
     border-left-color: rgb(23, 162, 184) !important;
 
 }
+
+/* Clases select2 */
+
+.select2-selection__choice__display,
+.select2-results__option  {
+    color: black !important;
+}
+
+.selection, .select2-selection, .select2-selection--multiple, .select2-search__field {
+    background-color: #000 !important;
+    border-color: white !important;
+    color: white !important;
+}
+

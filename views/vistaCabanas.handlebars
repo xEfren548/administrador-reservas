@@ -832,6 +832,27 @@
         </div>
     </div>
 
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#inversionistas">+
+        Inversionistas</button>
+    <div id="inversionistas">
+    <form>
+        <label for="options" class="form-label">Selecciona hasta 10 inversionistas:</label>
+
+        <select class="form-select form-select-md bg-dark" id="options" name="options[]" multiple>
+            <option value="1">Opción 1</option>
+            <option value="2">Opción 2</option>
+            <option value="3">Opción 3</option>
+            <option value="4">Opción 4</option>
+            <option value="5">Opción 5</option>
+            <option value="6">Opción 6</option>
+            <option value="7">Opción ultra mega larga para ver que pasa si se extienden las opciones jaja no se que mas poner</option>
+            <!-- Añade más opciones según sea necesario -->
+        </select>
+
+        </div>
+    </form>
+    </div>
+
 
 
     <div class="form-item">
@@ -883,17 +904,14 @@
 </div>
 
 
-<!-- Optional: Place to the bottom of scripts -->
-<script>
-    const myModal = new bootstrap.Modal(
-        document.getElementById("modalId"),
-        options,
-    );
-</script>
-
-
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        $('#options').select2({
+            maximumSelectionLength: 10,
+            placeholder: "Buscar",
+            allowClear: true,
+
+        });
         // Upload chalet images.
         const fileUpload = document.getElementById('file-upload');
         const pdfUpload = document.getElementById('pdf-upload');
