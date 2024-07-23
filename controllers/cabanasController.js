@@ -397,13 +397,19 @@ async function showChaletsView(req, res, next) {
             throw new NotFoundError("No owners found");
         }
 
+        const investors = await Usuario.find({ privilege: "Inversionistas" }).lean();
+        if (!investors) {
+            throw new NotFoundError("No investors found");
+        }
+
 
         res.render('vistaCabanas', {
             chalets: mapChalets,
             admins: admins,
             janitors: janitors,
             tipologias: tipologias,
-            owners: owners
+            owners: owners,
+            investors: investors
         });
     } catch (error) {
         console.log(error);
@@ -462,6 +468,7 @@ async function createChalet(req, res, next) {
             admin: admin._id,
             janitor: janitor._id,
             owner: owner._id,
+            investors: others.investors
         },
         images,
         files

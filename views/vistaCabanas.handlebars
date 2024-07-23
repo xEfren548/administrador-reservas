@@ -838,20 +838,18 @@
     <form>
         <label for="options" class="form-label">Selecciona hasta 10 inversionistas:</label>
 
-        <select class="form-select form-select-md bg-dark" id="options" name="options[]" multiple>
-            <option value="1">Opción 1</option>
-            <option value="2">Opción 2</option>
-            <option value="3">Opción 3</option>
-            <option value="4">Opción 4</option>
-            <option value="5">Opción 5</option>
-            <option value="6">Opción 6</option>
-            <option value="7">Opción ultra mega larga para ver que pasa si se extienden las opciones jaja no se que mas poner</option>
-            <!-- Añade más opciones según sea necesario -->
+        <select class="form-select form-select-md bg-dark" id="select-investors" name="options[]" multiple>
+            {{#if investors}}
+            {{#each investors}}
+            <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
+            {{/each}}
+            {{else}}
+            <option value="0">No se encontraron inversionistas</option>
+            {{/if}}
         </select>
 
         </div>
     </form>
-    </div>
 
 
 
@@ -906,12 +904,24 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        $('#options').select2({
+        $('#select-investors').select2({
             maximumSelectionLength: 10,
             placeholder: "Buscar",
             allowClear: true,
 
         });
+
+        function getSelectedInvestors() {
+            const selectElement = document.getElementById('select-investors');
+            const selectedOptions = Array.from(selectElement.selectedOptions).map(option => option.value);
+
+            console.log('Selected Investors:', selectedOptions);
+            // Do something with the selectedOptions array, like sending it to a server or processing it further
+        }
+
+
+        
+
         // Upload chalet images.
         const fileUpload = document.getElementById('file-upload');
         const pdfUpload = document.getElementById('pdf-upload');
@@ -976,6 +986,10 @@
                 const arrivalTimeHours = parseInt(arrivalTime1.split(':')[0]);
                 const departureTimeMinutes = parseInt(arrivalTime1.split(':')[1]);
                 const departureTimeHours = parseInt(departureTime1.split(':')[0]);
+
+                const selectElement = document.getElementById('select-investors');
+                const selectedInvestors = Array.from(selectElement.selectedOptions).map(option => option.value);
+
                 const data = {
                     propertyDetails: {
                         accomodationType: document.getElementById("slctchaletAccomodationType").value.trim(),
@@ -1157,7 +1171,8 @@
                         departureTimeHours: departureTimeHours,
                         admin: document.getElementById("slctAdmin").value.trim(),
                         janitor: document.getElementById("slctJanitor").value.trim(),
-                        owner: document.getElementById("chalet-owner-select").value.trim()
+                        owner: document.getElementById("chalet-owner-select").value.trim(),
+                        investors: selectedInvestors
                     },
                     images: imagesarrayDB,
                     files: pdfarrayDB
@@ -1166,7 +1181,6 @@
                     const spinner = document.querySelector('.loader');
                     spinner.classList.remove('loader--hidden');
 
-                    document.getElementById('btnCreateChalet').disabled = true; // Habilitar el botón
                     console.log(pdfarrayDB)
                     var fileInput = document.getElementById('pdf-upload');
                     var pdfFile = fileInput.files[0];
@@ -1249,6 +1263,7 @@
                         confirmButtonText: 'Aceptar'
                     })
                 } finally {
+                    const spinner = document.querySelector('.loader');
                     spinner.classList.add('loader--hidden');
 
                 }

@@ -290,6 +290,9 @@ const othersSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'Usuario'
+    },
+    investors: {
+        type: [{type: mongoose.Schema.Types.ObjectId, ref: 'usuarios'}]
     }
 });
 
