@@ -6,6 +6,7 @@ const Evento = require('../models/Evento');
 const Cliente = require('../models/Cliente');
 const Encuesta = require('../models/Encuesta');
 const habitacionController = require('../controllers/habitacionController')
+const moment = require('moment');
 
 const showSurveyValidators = [
     check('questionsInfo')
@@ -198,13 +199,17 @@ async function showClientsResponses(req, res, next) {
             const client = await Cliente.findById(reservation.client);
             if (!client) { throw new NotFoundError("Client does not exist."); }
 
+            let fechaFormat = moment.utc(clientSurveyResponses.createdAt).format('DD/MM/YYYY');
+
             const clientSurveyInfo = {
                 id: clientSurveyResponses._id,
                 fullName: `${client.firstName} ${client.lastName}`,
                 email: client.email,
                 surveyResponses: `./mostrar-respuestas-usuario/${clientSurveyResponses._id}`,
                 answers: clientSurveyResponses.answers,
-                nombreHabitacion: nombreHabitacion
+                nombreHabitacion: nombreHabitacion,
+                createdAt: fechaFormat
+                
             };
 
             const newAnswers = convertToNumbers(clientSurveyResponses.answers);
@@ -406,6 +411,7 @@ async function showClientsResponses(req, res, next) {
 
         let promediosPregunta = []
 
+        promediosPregunta.push('') // Asignar un espacio vacio
         promedioP1 = (totalR1 / lengthAnswers).toFixed(2);
         promediosPregunta.push(promedioP1);
         promedioP2 = (totalR2 / lengthAnswers).toFixed(2);

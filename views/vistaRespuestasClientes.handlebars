@@ -25,15 +25,28 @@
     </div>
 </div> --}}
 
-<div class="row flex-nowrap justify-content-center mt-3 mb-3" style="width: 100%;">
+<div class="row justify-content-center mt-3 mb-3" style="width: 100%;">
     <div class="col-12 mb-3">
         <h1>Resultados de encuestas de satisfacción</h1>
-
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <label for="startDate" class="form-label">Fecha Inicio:</label>
+                <input type="date" class="form-control" id="startDate">
+            </div>
+            <div class="col-md-2">
+                <label for="endDate" class="form-label">Fecha Fin:</label>
+                <input type="date" class="form-control" id="endDate">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button id="clearDates" class="btn btn-secondary"><span><i class="fa fa-eraser" aria-hidden="true"></i></span></button>
+            </div>
+        </div>
         <table class="table table-dark table-hover" id="tablaResultados">
             <thead class="table-light text-center">
                 <tr>
                     <th scope="col">ID</th>
                     <th scope="col">Cabaña</th>
+                    <th scope="col">Fecha</th>
                     <th scope="col">Pregunta 1</th>
                     <th scope="col">Pregunta 2</th>
                     <th scope="col">Pregunta 3</th>
@@ -57,6 +70,7 @@
                         <span class="hidden-id" style="display: none;">{{this.id}}</span>
                     </td>
                     <td>{{this.nombreHabitacion}}</td>
+                    <td>{{this.createdAt}}</td>
                     {{#each this.answers}}
                     <td>
                         {{this}}
@@ -66,7 +80,8 @@
                 </tr>
                 {{/each}}
                 <tr class="table-info">
-                    <td colspan="2"><b>Promedio por pregunta</b></td>
+                    <td></td>
+                    <td><b>Promedio por pregunta</b></td>
                     {{#each promediosPregunta}}
                     <td>{{this}}</td>
                     {{/each}}
@@ -131,7 +146,68 @@
                 "order": [], // Puedes especificar aquí el orden inicial de las columnas
                 "paging": true, // Habilita la paginación
                 "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
-                "pageLength": 10 // Establece la longitud de página inicial
+                "pageLength": 10, // Establece la longitud de página inicial
+                "dom": 'Bfrtip', // Añade los botones a la interfaz
+                "buttons": [
+                    {
+                        extend: 'csvHtml5',
+                        text: 'Exportar a CSV',
+                    },
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Exportar a Excel',
+                        title: function () {
+                            var minDate = document.getElementById('startDate').value;
+                            var maxDate = document.getElementById('endDate').value;
+                            let mensaje = ""
+                            if (minDate && maxDate) {
+                                mensaje = `Reporte de encuestas de satistacción del ${moment(minDate).format('DD-MM-YYYY')} al ${moment(maxDate).format('DD-MM-YYYY')}`;
+                            } else if (minDate) {
+                                mensaje = `Reporte de encuestas de satistacción desde ${moment(minDate).format('DD-MM-YYYY')}`;
+                            } else if (maxDate) {
+                                mensaje = `Reporte de encuestas de satistacción hasta el ${moment(maxDate).format('DD-MM-YYYY')}`;
+                            } else {
+                                mensaje = 'Reporte de encuestas de satistacción globales';
+                            }
+                            return mensaje;
+                        },
+                    }
+                ],
+                "initComplete": function () {
+                // Aplica las clases a los botones después de la inicialización
+                    var buttons = document.querySelectorAll('.dt-button');
+                    buttons.forEach(function (button) {
+                        button.classList.add('btn', 'btn-info');
+                    });
+                }
+            });
+
+            DataTable.ext.search.push(function(settings, data, dataIndex) {
+                var minDate = moment(document.getElementById('startDate').value, "YYYY-MM-DD").startOf('day');
+                var maxDate = moment(document.getElementById('endDate').value, "YYYY-MM-DD").endOf('day');
+                var targetDate = moment(data[2], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
+
+                if ((isNaN(minDate) && isNaN(maxDate)) ||
+                    (isNaN(minDate) && targetDate <= maxDate) ||
+                    (minDate <= targetDate && isNaN(maxDate)) ||
+                    (minDate <= targetDate && targetDate <= maxDate)) {
+                    return true;
+                }
+                return false;
+            });
+
+            document.getElementById('startDate').addEventListener('change', function() {
+                dataTable.draw();
+            });
+
+            document.getElementById('endDate').addEventListener('change', function() {
+                dataTable.draw();
+            });
+
+            document.getElementById('clearDates').addEventListener('click', function() {
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
+                dataTable.draw();
             });
         }
     });
