@@ -1502,6 +1502,11 @@
 
                 document.getElementById("chalet-owner-select").value = data.others.owner
 
+                const selectedValues = data.others.investors;
+
+                // Set the values to the select element
+                $('#select-investors').val(selectedValues).trigger('change');
+
                 // Obtener imagenes
                 imagesarray = [];
                 imagesarrayDB = [];
