@@ -608,3 +608,17 @@ ul.rb li .timestamp {
         transform: rotate(1turn);
     }
 }
+
+/* Buttons export data */
+
+.dt-button.btn {
+    margin-right: 5px; /* Añade espacio entre los botones */
+    background-color: #17a2b8 !important;
+    color: #fff !important;
+    border-color: rgb(23, 162, 184) !important;
+    border-top-color: rgb(23, 162, 184) !important;
+    border-right-color: rgb(23, 162, 184) !important;
+    border-bottom-color: rgb(23, 162, 184) !important;
+    border-left-color: rgb(23, 162, 184) !important;
+
+}

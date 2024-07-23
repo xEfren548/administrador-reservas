@@ -26,7 +26,7 @@
                 <input type="date" class="form-control" id="endDate">
             </div>
             <div class="col-md-3 d-flex align-items-end">
-                <button id="clearDates" class="btn btn-secondary">Borrar fechas</button>
+                <button id="clearDates" class="btn btn-secondary"><span><i class="fa fa-eraser" aria-hidden="true"></i></span></button>
             </div>
         </div>
         <table class="table table-dark table-hover text-center nowrap" id="tablaUtilidades">
@@ -76,7 +76,41 @@
                 "order": [[2, 'des']], // Puedes especificar aquí el orden inicial de las columnas
                 "paging": true, // Habilita la paginación
                 "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
-                "pageLength": 10 // Establece la longitud de página inicial
+                "pageLength": 10, // Establece la longitud de página inicial
+                "dom": 'Bfrtip', // Añade los botones a la interfaz
+                "buttons": [
+                    {
+                        extend: 'csvHtml5',
+                        text: 'Exportar a CSV',
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        text: 'Exportar a PDF',
+                        title: function () {
+                            var minDate = document.getElementById('startDate').value;
+                            var maxDate = document.getElementById('endDate').value;
+                            let mensaje = ""
+                            if (minDate && maxDate) {
+                                mensaje = `Reporte de utilidades del ${moment(minDate).format('DD-MM-YYYY')} al ${moment(maxDate).format('DD-MM-YYYY')}`;
+                            } else if (minDate) {
+                                mensaje = `Reporte de utilidades desde ${moment(minDate).format('DD-MM-YYYY')}`;
+                            } else if (maxDate) {
+                                mensaje = `Reporte de utilidades hasta el ${moment(maxDate).format('DD-MM-YYYY')}`;
+                            } else {
+                                mensaje = 'Reporte de utilidades globales';
+                            }
+                            return mensaje;
+                        },
+
+                    }
+                ],
+                "initComplete": function () {
+                // Aplica las clases a los botones después de la inicialización
+                    var buttons = document.querySelectorAll('.dt-button');
+                    buttons.forEach(function (button) {
+                        button.classList.add('btn', 'btn-info');
+                    });
+                }
             });
 
             DataTable.ext.search.push(function(settings, data, dataIndex) {
