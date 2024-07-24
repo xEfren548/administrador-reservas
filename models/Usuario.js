@@ -27,11 +27,13 @@ const userSchema = new Schema({
     },
     administrator: {
         type: String,
-        required: true
     },
     adminname: {
         type: String,
-        required: true
+    },
+    investorType: {
+        type: String,
+        enum: ['A', 'F']    
     },
     reservation: {
         type: mongoose.Schema.Types.ObjectId,
