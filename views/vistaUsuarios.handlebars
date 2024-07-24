@@ -136,6 +136,19 @@
                             </div>
                         </div>
                         <div class="row mt-2">
+                            <label for="select-investorType" id="labelSelectInvestorType" class="d-none">Tipo de Inversionista: </label>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-8 d-none" id="containerSelectInvestorType">
+                                <select id="select-investorType" name="select-investorType" class="form-select form-select-md">
+                                    <option value="A">Tipo A</option>
+                                    <option value="F">Tipo F</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-2">
                             <label for="exampleColorInput" class="form-label">Color de colaborador: </label>
                             <div class="col-3">
                                 <input type="color" class="form-control form-control-color" id="colaboratorColor"
@@ -314,10 +327,17 @@
                     email: document.getElementById("txtUserEmail").value.trim(),
                     password: document.getElementById("txtUserPassword").value.trim(),
                     privilege: privilege,
-                    administrator: document.getElementById("slctUserAdmin").value.trim(),
-                    adminname: $("#slctUserAdmin option:selected").text(),
                     color: document.getElementById("colaboratorColor").value.trim()
                 };
+
+                if (privilege !== "Inversionistas"){
+                    data.administrator = document.getElementById("slctUserAdmin").value.trim();
+                    data.adminname = $("#slctUserAdmin option:selected").text()
+                }else {
+                    data.investorType = document.getElementById('select-investorType').value
+
+                }
+                
                 fetch('/api/usuarios/crear-usuario', {
                     method: 'POST',
                     headers: {
@@ -486,6 +506,10 @@
     const relatedLabel = document.getElementById('relatedLabel');
     const relatedSelectContainer = document.getElementById('relatedSelectContainer');
 
+    const labelInvestorType = document.getElementById('labelSelectInvestorType');
+    const containerSelectInvestorType = document.getElementById('containerSelectInvestorType');
+    const selectInvestorType = document.getElementById('select-investorType');
+
     
     const selectPrivilegesUpd = document.getElementById('slctUserPrivilegesUpd');
     const relatedLabelUpd = document.getElementById('relatedLabelUpd');
@@ -498,9 +522,26 @@
     selectPrivileges.addEventListener('change', function () {
         console.log('change');
         if (this.value === 'Colaborador dueño') {
+            labelInvestorType.classList.add('d-none');
+            containerSelectInvestorType.classList.add('d-none');
+            relatedLabel.classList.remove('d-none');
+            relatedSelectContainer.classList.remove('d-none');
+
             relatedLabel.textContent = 'Dueño ligado:';
             updateSelectOptions(owners, 'Seleccione un dueño para el usuario --');
+        } else if (this.value === "Inversionistas"){
+            labelInvestorType.classList.remove('d-none');
+            containerSelectInvestorType.classList.remove('d-none');
+            relatedLabel.classList.add('d-none');
+            relatedSelectContainer.classList.add('d-none');
+            // Falta añadir d-none al relatedContainer
+
         } else {
+            labelInvestorType.classList.add('d-none');
+            containerSelectInvestorType.classList.add('d-none');
+            relatedLabel.classList.remove('d-none');
+            relatedSelectContainer.classList.remove('d-none');
+
             relatedLabel.textContent = 'Administrador ligado:';
             updateSelectOptions(admins, 'Seleccione un administrador para el usuario --');
         }

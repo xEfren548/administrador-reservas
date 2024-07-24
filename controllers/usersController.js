@@ -34,17 +34,21 @@ const createUserValidators = [
         .notEmpty().withMessage('Privilege is required')
         .isIn(['Administrador', 'Vendedor', 'Limpieza', 'Dueño de cabañas', 'Servicios adicionales', 'Inversionistas', 'Colaborador dueño']).withMessage('Invalid privilege'),
     check('administrator')
-        .notEmpty().withMessage("Administrator's name is required")
+        // .notEmpty().withMessage("Administrator's name is required")
         .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
         .custom(async (value, { req }) => {
-            const admin = await Usuario.findOne({_id: value, privilege: {"$in": ["Administrador", "Vendedor"]}});
-            if(!admin){
-                const owner = await Usuario.findOne({_id: value, privilege: 'Dueño de cabañas'});
-                if (!admin && !owner){
-                    throw new NotFoundError('Administrator or owner does not exist');
+            console.log(value)
+            if (value){
+                const admin = await Usuario.findOne({_id: value, privilege: {"$in": ["Administrador", "Vendedor"]}});
+                if(!admin){
+                    const owner = await Usuario.findOne({_id: value, privilege: 'Dueño de cabañas'});
+                    if (!admin && !owner){
+                        throw new NotFoundError('Administrator or owner does not exist');
+                    }
                 }
+                return true;
+
             }
-            return true;
         }),
 ];
 
@@ -140,9 +144,9 @@ async function showUsersView(req, res, next){
 }
 
 async function createUser(req, res, next) {
-    const { firstName, lastName, email, password, privilege, administrator, adminname, color } = req.body;
+    const { firstName, lastName, email, password, privilege, administrator, adminname, color, investorType } = req.body;
     const userToAdd = new Usuario ({
-        firstName, lastName, email, password, privilege, administrator,adminname, color
+        firstName, lastName, email, password, privilege, administrator,adminname, color, investorType
     });
 
     try{    
