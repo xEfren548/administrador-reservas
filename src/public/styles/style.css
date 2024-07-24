@@ -636,3 +636,6 @@ ul.rb li .timestamp {
     color: white !important;
 }
 
+.select2-selection__clear {
+    color: white !important;
+}

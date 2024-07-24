@@ -725,6 +725,11 @@ async function showEditChaletsView(req, res, next) {
         if (!tipologias) {
             throw new NotFoundError("No tipologies found");
         }
+
+        const investors = await Usuario.find({ privilege: "Inversionistas" }).lean();
+        if (!investors) {
+            throw new NotFoundError("No investors found");
+        }
         //console.log("CHALETS: ", chalets);
         //console.log("CHALETS2222: ", chalets[0].others.admin[0]);
         //console.log("ADMINS: ", admins);
@@ -743,7 +748,8 @@ async function showEditChaletsView(req, res, next) {
             admins: admins,
             janitors: janitors,
             owners: owners,
-            tipologias: tipologias
+            tipologias: tipologias,
+            investors: investors
         });
     } catch (error) {
         console.error('Error:', error);
@@ -777,6 +783,9 @@ async function editChalet(req, res, next) {
         newDepartureTime.setMinutes(parseInt(others.departureTime.split(':')[1], 10));
         console.log(newDepartureTime);
 
+        console.log('investors: ')
+        console.log(others.investors);
+
         
         const habitacion = await Habitacion.findOne();
         let chalets = habitacion.resources;
@@ -805,7 +814,8 @@ async function editChalet(req, res, next) {
                 departureTime: newDepartureTime,
                 admin: admin._id,
                 janitor: janitor._id,
-                owner: owner._id
+                owner: owner._id,
+                investors: others.investors
             },
             images
         };
@@ -833,7 +843,8 @@ async function editChalet(req, res, next) {
                         departureTime: newDepartureTime,
                         admin: admin._id,
                         janitor: janitor._id,
-                        owner: owner._id
+                        owner: owner._id,
+                        investors: others.investors
                     },
                     "resources.$.images": images
                 }

@@ -951,14 +951,47 @@
             </div>
         </div>
     </div>
+
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#inversionistas">+
+        Inversionistas</button>
+    <div id="inversionistas-{{this.propertyDetail.name}}">
+    <form>
+        <label for="options-{{this.propertyDetails.name}}" class="form-label">Selecciona hasta 10 inversionistas:</label>
+
+        <div class="row">
+            <div class="col-12">
+                <select class="form-select form-select-md bg-dark select-edit-investors" id="select-edit-investors-{{this.propertyDetails.name}}" name="options-{{this.propertyDetails.name}}" multiple style="width: 100%;"
+                data-investors='{{json this.others.investors}}'>
+                    {{#each ../investors}}
+                    <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
+                    {{/each}}
+                </select>
+
+            </div>
+        </div>
+
+    </div>
+    </form>
 </form>
 {{/each}}
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 <script>
     // Change forms.
     document.addEventListener("DOMContentLoaded", function () {
+        $('.select-edit-investors').each(function() {
+            $(this).select2({
+                placeholder: "Select investors",
+                maximumSelectionLength: 10
+            });
+
+                    // Retrieve and parse the investors data from the data attribute
+            const investorsData = $(this).data('investors');
+            if (investorsData) {
+                // Set the pre-selected values
+                $(this).val(investorsData).trigger('change');
+            }
+        });
         const slctFormSelector = document.getElementById('slctFormSelector');
         slctFormSelector.value = "";
         let filename = ""
@@ -978,6 +1011,7 @@
             datajson = data
         });
         slctFormSelector.addEventListener('change', function (event) {
+
             imagesarray = [];
             pdfarray = [];
             const selectedFormId = event.target.value;
@@ -1000,8 +1034,6 @@
                     const pdfUpload = document.getElementById('pdf-upload');
 
                     // console.log(filename);
-                    console.log(pothocname);
-
                     fileUpload = document.getElementsByName(filename);
                     photoCarousel = document.getElementById(pothocname);
                     // console.log(fileUpload)
@@ -1054,7 +1086,6 @@
 
         document.getElementById('pdf-upload').addEventListener('change', function (event) {
             const fileList = event.target.files;
-            console.log(fileList);
             if (fileList.length > 0) {
                 const fileName = fileList[0].name;
                 document.querySelector('#file-name-display').innerText = fileName;
@@ -1100,6 +1131,9 @@
             form.addEventListener("submit", async (event) => {
                 event.preventDefault();
                 // Creating JSON for text data.
+                const selectElement = form.querySelector('.select-edit-investors');
+                const selectedInvestors = Array.from(selectElement.selectedOptions).map(option => option.value);
+                console.log(selectedInvestors);
                 const data = {
                     propertyDetails: {
                         accomodationType: form.querySelector("#slctchaletAccomodationType").value.trim(),
@@ -1279,7 +1313,8 @@
                         departureTime: form.querySelector("#txtDepartureTime").value.trim(),
                         admin: form.querySelector("#slctAdmin").value.trim(),
                         janitor: form.querySelector("#slctJanitor").value.trim(),
-                        owner: form.querySelector("#chalet-owner-select").value.trim()
+                        owner: form.querySelector("#chalet-owner-select").value.trim(),
+                        investors: selectedInvestors
                     },
                     images: imagesarray
                 };
