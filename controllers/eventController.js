@@ -323,13 +323,9 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
                 (Array.isArray(habitacion.others.investors) && 
                     habitacion.others.investors.some(investorId => investorId.toString() === investor._id.toString()))
             );
-            console.log(habitacionesDueno)
 
             const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
             const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
-
-            console.log(cabañaIds)
-            console.log(nombreCabañas)
 
             // Create a map of room IDs to names
             const cabañaIdToNameMap = {};
@@ -562,19 +558,22 @@ async function createOwnerReservation(req, res, next) {
             const reservasDeInversionista = documento.events.filter(reserva => reserva.createdBy.toString() === investorId.toString());
             reservasDeInversionista.sort((a, b) => new Date(a.departureDate) - new Date(b.departureDate));
 
-            for (let i = 0; i < reservasDeInversionista.length; i++) {
-                const reserva = reservasDeInversionista[i];
-                reserva.status = "pendiente";
-                const departureDate = new Date(reserva.departureDate).getTime();
-                if (departureDate <= Date.now()) {
-                    reserva.status = "finalizada";
-                }
+            const reservaActiva = reservasDeInversionista.find(reserva => new Date(reserva.departureDate) > new Date());
+            
+            if (reservaActiva) {
+                throw new Error('Ya tienes una reserva activa.')
             }
 
-            console.log(reservasDeInversionista);
+            // Verificar la regla de al menos 9 días entre reservas
+            const nuevaLlegada = new Date(arrivalDate);
 
-            if (reservasDeInversionista.length > 0) {
-                throw new Error('Ya tienes una reserva activa')
+            for (let i = 0; i < reservasDeInversionista.length; i++) {
+                const reserva = reservasDeInversionista[i];
+                const salidaAnterior = new Date(reserva.departureDate);
+            
+                if ((nuevaLlegada - salidaAnterior) / (1000 * 60 * 60 * 24) < 9) {
+                    throw new Error("Entre reserva y reserva tienen que pasar al menos 9 días.");
+                }
             }
 
             if (nNights > 4) {
