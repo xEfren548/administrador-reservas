@@ -58,6 +58,8 @@ async function generateSideMenu(req, res, next) {
             ],
             'Inversionistas': [
                 { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                { 'Calendario': ["/api/calendar/colaboradorduenos", "fs-5 fa fa-calendar"] },
+
             ],
             'Cliente': [
                 { 'Home': ["/", "fs-5 fa fa-house"] },

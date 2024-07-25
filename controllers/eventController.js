@@ -306,48 +306,105 @@ async function reservasDeDuenos(req, res, next) {
 }
 async function reservasDeDuenosParaColaborador(req, res, next) {
     try {
-        // Get the owner's ID from the session
-        const user = await Usuario.findById(req.session.id);
-        const duenoId = user.administrator;
+        const privilege = req.session.privilege;
+        let eventosFiltradosOrdenadosConPagos = [];
+        let habitacionesDueno = [];
 
-        // Find the existing rooms
-        const habitacionesExistentes = await Habitacion.findOne().lean();
-        if (!habitacionesExistentes) {
-            return res.status(404).send('No rooms found');
+        console.log(req.session)
+
+        if (privilege === "Inversionistas") {
+            const investor = await Usuario.findById(req.session.id);
+            const habitacionesExistentes = await Habitacion.findOne().lean();
+            if (!habitacionesExistentes) {
+                return res.status(404).send('No rooms found');
+            }
+
+            habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => 
+                (Array.isArray(habitacion.others.investors) && 
+                    habitacion.others.investors.some(investorId => investorId.toString() === investor._id.toString()))
+            );
+            console.log(habitacionesDueno)
+
+            const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
+            const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
+
+            console.log(cabañaIds)
+            console.log(nombreCabañas)
+
+            // Create a map of room IDs to names
+            const cabañaIdToNameMap = {};
+            nombreCabañas.forEach(cabaña => {
+                cabañaIdToNameMap[cabaña.id] = cabaña.name;
+            });
+
+            // Find documents containing events
+            const documentos = await Documento.findOne().lean();
+            if (!documentos) {
+                return res.status(404).send('No documents found');
+            }
+    
+            eventosFiltradosOrdenadosConPagos = await Promise.all(documentos.events
+                .filter(evento => cabañaIds.includes(evento.resourceId.toString()))
+                .map(async evento => {
+                    // Retornar el evento con los pagos y las fechas formateadas
+                    return {
+                        ...evento,
+                        roomName: cabañaIdToNameMap[evento.resourceId.toString()],
+                        arrivalDate: moment.utc(evento.arrivalDate).format('DD-MM-YYYY, h:mm:ss a'),
+                        departureDate: moment.utc(evento.departureDate).format('DD-MM-YYYY, h:mm:ss a'),
+                    };
+                }));
+    
+            eventosFiltradosOrdenadosConPagos.sort((a, b) => moment(b.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf() - moment(a.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf());
+
+
+        } else {
+            // Get the owner's ID from the session
+            const user = await Usuario.findById(req.session.id);
+            const duenoId = user.administrator;
+    
+            // Find the existing rooms
+            const habitacionesExistentes = await Habitacion.findOne().lean();
+            if (!habitacionesExistentes) {
+                return res.status(404).send('No rooms found');
+            }
+    
+            // Filter the rooms that belong to the owner
+            habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
+            // Extract the IDs and names of the rooms
+            const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
+            const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
+    
+            // Create a map of room IDs to names
+            const cabañaIdToNameMap = {};
+            nombreCabañas.forEach(cabaña => {
+                cabañaIdToNameMap[cabaña.id] = cabaña.name;
+            });
+    
+            // Find documents containing events
+            const documentos = await Documento.findOne().lean();
+            if (!documentos) {
+                return res.status(404).send('No documents found');
+            }
+
+            
+    
+            // Filter events that correspond to the owner's rooms and add the room name to each event
+            eventosFiltradosOrdenadosConPagos = await Promise.all(documentos.events
+                .filter(evento => cabañaIds.includes(evento.resourceId.toString()))
+                .map(async evento => {
+                    // Retornar el evento con los pagos y las fechas formateadas
+                    return {
+                        ...evento,
+                        roomName: cabañaIdToNameMap[evento.resourceId.toString()],
+                        arrivalDate: moment.utc(evento.arrivalDate).format('DD-MM-YYYY, h:mm:ss a'),
+                        departureDate: moment.utc(evento.departureDate).format('DD-MM-YYYY, h:mm:ss a'),
+                    };
+                }));
+    
+            eventosFiltradosOrdenadosConPagos.sort((a, b) => moment(b.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf() - moment(a.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf());
+
         }
-
-        // Filter the rooms that belong to the owner
-        const habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
-        // Extract the IDs and names of the rooms
-        const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
-        const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
-
-        // Create a map of room IDs to names
-        const cabañaIdToNameMap = {};
-        nombreCabañas.forEach(cabaña => {
-            cabañaIdToNameMap[cabaña.id] = cabaña.name;
-        });
-
-        // Find documents containing events
-        const documentos = await Documento.findOne().lean();
-        if (!documentos) {
-            return res.status(404).send('No documents found');
-        }
-
-        // Filter events that correspond to the owner's rooms and add the room name to each event
-        const eventosFiltradosOrdenadosConPagos = await Promise.all(documentos.events
-            .filter(evento => cabañaIds.includes(evento.resourceId.toString()))
-            .map(async evento => {
-                // Retornar el evento con los pagos y las fechas formateadas
-                return {
-                    ...evento,
-                    roomName: cabañaIdToNameMap[evento.resourceId.toString()],
-                    arrivalDate: moment.utc(evento.arrivalDate).format('DD-MM-YYYY, h:mm:ss a'),
-                    departureDate: moment.utc(evento.departureDate).format('DD-MM-YYYY, h:mm:ss a'),
-                };
-            }));
-
-        eventosFiltradosOrdenadosConPagos.sort((a, b) => moment(b.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf() - moment(a.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf());
 
         res.render('vistaColaboradorDuenos', {
             eventos: eventosFiltradosOrdenadosConPagos,
@@ -496,6 +553,34 @@ async function createOwnerReservation(req, res, next) {
     const { chaletName, arrivalDate, departureDate, maxOccupation, nNights, clienteProvisional } = req.body;
 
     try {
+        const privilege = req.session.privilege;
+        const investorId = req.session.id
+        console.log(req.session)
+        if (privilege === "Inversionistas"){
+            // Definicion de reglas de inversionistas
+            const documento = await Documento.findOne();
+            const reservasDeInversionista = documento.events.filter(reserva => reserva.createdBy.toString() === investorId.toString());
+            reservasDeInversionista.sort((a, b) => new Date(a.departureDate) - new Date(b.departureDate));
+
+            for (let i = 0; i < reservasDeInversionista.length; i++) {
+                const reserva = reservasDeInversionista[i];
+                reserva.status = "pendiente";
+                const departureDate = new Date(reserva.departureDate).getTime();
+                if (departureDate <= Date.now()) {
+                    reserva.status = "finalizada";
+                }
+            }
+
+            console.log(reservasDeInversionista);
+
+            if (reservasDeInversionista.length > 0) {
+                throw new Error('Ya tienes una reserva activa')
+            }
+
+            if (nNights > 4) {
+                throw new Error('No puedes reservar más de 4 noches, intenta de nuevo.')
+            }
+        }
         const chalets = await Habitacion.findOne();
         const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
         if (!chalet) {

@@ -178,14 +178,9 @@
 
             if (!response.ok) {
                 const errorData = await response.json();
-                const errors = errorData.error;
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                    confirmButtonText: 'Aceptar'
-                });
-                throw new Error('Error en la solicitud');
+                console.log(errorData)
+                const errors = errorData.message;
+                throw new Error(errors);
             }
 
             const data = await response.json();
