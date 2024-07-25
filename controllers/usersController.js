@@ -37,7 +37,6 @@ const createUserValidators = [
         // .notEmpty().withMessage("Administrator's name is required")
         .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
         .custom(async (value, { req }) => {
-            console.log(value)
             if (value){
                 const admin = await Usuario.findOne({_id: value, privilege: {"$in": ["Administrador", "Vendedor"]}});
                 if(!admin){
@@ -75,21 +74,24 @@ const editUserValidators = [
         .matches(/[0-9]/).withMessage('Password must contain at least one number'),
         //.matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),
     check('privilege')
-        .optional({ checkFalsy: true })
-        .isIn(['Administrador', 'Vendedor', 'Limpieza']).withMessage('Invalid identification type'),
+        .optional({ checkFalsy: true }),
+        // .isIn(['Administrador', 'Vendedor', 'Limpieza']).withMessage('Invalid identification type'),
     check('administrator')
         .optional({ checkFalsy: true })
         .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
         .custom(async (value, { req }) => {
             //console.log("¿ADMIN? ", value);
-            const admin = await Usuario.findOne({_id: value, privilege: {"$in": ["Administrador", "Vendedor"]}});
-            if(!admin){
-                const owner = await Usuario.findOne({_id: value, privilege: 'Dueño de cabañas'});
-                if (!admin && !owner){
-                    throw new NotFoundError('Administrator or owner does not exist');
+            if (value) {
+                const admin = await Usuario.findOne({_id: value, privilege: {"$in": ["Administrador", "Vendedor"]}});
+                if(!admin){
+                    const owner = await Usuario.findOne({_id: value, privilege: 'Dueño de cabañas'});
+                    if (!admin && !owner){
+                        throw new NotFoundError('Administrator or owner does not exist');
+                    }
                 }
+                return true;
+
             }
-            return true;
         }),
     check()
         .custom((value, { req }) => {
@@ -206,7 +208,7 @@ async function obtenerUsuarioPorIdMongo(uuid){
 }
 
 async function editarUsuario(req, res, next) {
-    const { firstName, lastName, email, password, privilege, administrator,adminname, color } = req.body;
+    const { firstName, lastName, email, password, privilege, administrator,adminname, color, investorType } = req.body;
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
@@ -218,6 +220,7 @@ async function editarUsuario(req, res, next) {
     if (administrator) { updateFields.administrator = administrator; }
     if (adminname) { updateFields.adminname = adminname; }
     if (color) { updateFields.color = color; }
+    if (investorType) { updateFields.investorType = investorType; }
 
     try {
         const userToUpdate = await Usuario.findOneAndUpdate({ email }, updateFields, { new: true });

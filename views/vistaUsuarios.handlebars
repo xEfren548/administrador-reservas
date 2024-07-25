@@ -35,6 +35,9 @@
                             data-client-privilege="{{privilege}}"
                             data-client-adminname="{{administrator}}"
                             data-client-color="{{color}}"
+                            {{#if investorType}}
+                            data-client-investorType="{{investorType}}"
+                            {{/if}}
                             data-bs-toggle="modal" data-bs-target="#modify-user_entry_modal"
                             onclick="showClientEmail(this)">
                             <i class="fa fa-pencil" aria-hidden="true"></i>
@@ -253,6 +256,20 @@
                                 </select>
                             </div>
                         </div>
+
+                        <div class="row mt-2">
+                            <label for="select-investorTypeUpd" id="labelSelectInvestorTypeUpd" class="d-none">Tipo de Inversionista: </label>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-8 d-none" id="containerSelectInvestorTypeUpd">
+                                <select id="select-investorTypeUpd" name="select-investorTypeUpd" class="form-select form-select-md">
+                                    <option value="A">Tipo A</option>
+                                    <option value="F">Tipo F</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="row mt-2">
                             <label for="exampleColorInput" class="form-label">Color de colaborador: </label>
                             <div class="col-3">
@@ -390,16 +407,24 @@
         if (btnUpdateUser) {
             btnUpdateUser.addEventListener("click", async (event) => {
                 event.preventDefault();
+                const privilege = document.getElementById("slctUserPrivilegesUpd").value.trim()
+
                 const data = {
                     firstName: document.getElementById("txtUserNameUpd").value.trim(),
                     lastName: document.getElementById("txtUserLastnameUpd").value.trim(),
                     email: document.getElementById("txtUserEmailUpd").value.trim(),
                     password: document.getElementById("txtUserPasswordUpd").value.trim(),
-                    privilege: document.getElementById("slctUserPrivilegesUpd").value.trim(),
-                    administrator: document.getElementById("slctUserAdminUpd").value.trim(),
-                    adminname: $("#slctUserAdminUpd option:selected").text(),
+                    privilege: privilege,
                     color: document.getElementById("colaboratorColorUpd").value.trim()
                 };
+
+                if (privilege !== "Inversionistas"){
+                    data.administrator = document.getElementById("slctUserAdminUpd").value.trim();
+                    data.adminname = $("#slctUserAdminUpd option:selected").text()
+                }else {
+                    data.investorType = document.getElementById('select-investorTypeUpd').value
+
+                }
 
                 fetch('/api/usuarios/editar-usuario', {
                     method: 'PUT',
@@ -515,6 +540,10 @@
     const relatedLabelUpd = document.getElementById('relatedLabelUpd');
     const relatedSelectContainerUpd = document.getElementById('relatedSelectContainerUpd');
 
+    const labelInvestorTypeUpd = document.getElementById('labelSelectInvestorTypeUpd');
+    const containerSelectInvestorTypeUpd = document.getElementById('containerSelectInvestorTypeUpd');
+    const selectInvestorTypeUpd = document.getElementById('select-investorTypeUpd');
+
     // Pasar los datos de admins y owners como cadenas JSON
     const owners = {{{json owners}}};
     const admins = {{{json admins}}};
@@ -549,9 +578,26 @@
     selectPrivilegesUpd.addEventListener('change', function () {
         console.log('change');
         if (this.value === 'Colaborador dueño') {
+            labelInvestorTypeUpd.classList.add('d-none');
+            containerSelectInvestorTypeUpd.classList.add('d-none');
+            relatedLabelUpd.classList.remove('d-none');
+            relatedSelectContainerUpd.classList.remove('d-none');
+
             relatedLabelUpd.textContent = 'Dueño ligado:';
             updateSelectOptionsUpd(owners, 'Seleccione un dueño para el usuario --');
+        } else if (this.value === "Inversionistas"){
+            labelInvestorTypeUpd.classList.remove('d-none');
+            containerSelectInvestorTypeUpd.classList.remove('d-none');
+            relatedLabelUpd.classList.add('d-none');
+            relatedSelectContainerUpd.classList.add('d-none');
+            // Falta añadir d-none al relatedContainer
+
         } else {
+            labelInvestorTypeUpd.classList.add('d-none');
+            containerSelectInvestorTypeUpd.classList.add('d-none');
+            relatedLabelUpd.classList.remove('d-none');
+            relatedSelectContainerUpd.classList.remove('d-none');
+
             relatedLabelUpd.textContent = 'Administrador ligado:';
             updateSelectOptionsUpd(admins, 'Seleccione un administrador para el usuario --');
         }
@@ -597,6 +643,43 @@
             const privilege = button.getAttribute('data-client-privilege');
             const adminName = button.getAttribute('data-client-adminname');
             const color = button.getAttribute('data-client-color');
+            const investorType = button.getAttribute('data-client-investorType');
+
+            const owners = {{{json owners}}};
+            const admins = {{{json admins}}};
+
+            const selectPrivilegesUpd = document.getElementById('slctUserPrivilegesUpd');
+            const relatedLabelUpd = document.getElementById('relatedLabelUpd');
+            const relatedSelectContainerUpd = document.getElementById('relatedSelectContainerUpd');
+
+            const labelInvestorTypeUpd = document.getElementById('labelSelectInvestorTypeUpd');
+            const containerSelectInvestorTypeUpd = document.getElementById('containerSelectInvestorTypeUpd');
+            const selectInvestorTypeUpd = document.getElementById('select-investorTypeUpd');
+
+            if (privilege === 'Colaborador dueño') {
+                labelInvestorTypeUpd.classList.add('d-none');
+                containerSelectInvestorTypeUpd.classList.add('d-none');
+                relatedLabelUpd.classList.remove('d-none');
+                relatedSelectContainerUpd.classList.remove('d-none');
+
+                relatedLabelUpd.textContent = 'Dueño ligado:';
+                updateSelectOptionsUpd(owners, 'Seleccione un dueño para el usuario --');
+            } else if (privilege === "Inversionistas"){
+                labelInvestorTypeUpd.classList.remove('d-none');
+                containerSelectInvestorTypeUpd.classList.remove('d-none');
+                relatedLabelUpd.classList.add('d-none');
+                relatedSelectContainerUpd.classList.add('d-none');
+                // Falta añadir d-none al relatedContainer
+
+            } else {
+                labelInvestorTypeUpd.classList.add('d-none');
+                containerSelectInvestorTypeUpd.classList.add('d-none');
+                relatedLabelUpd.classList.remove('d-none');
+                relatedSelectContainerUpd.classList.remove('d-none');
+
+                relatedLabelUpd.textContent = 'Administrador ligado:';
+                updateSelectOptionsUpd(admins, 'Seleccione un administrador para el usuario --');
+            }
 
 
             document.querySelector('#txtUserNameUpd').value = firstName
@@ -605,6 +688,22 @@
             document.querySelector('#slctUserPrivilegesUpd').value = privilege
             document.querySelector('#slctUserAdminUpd').value = adminName;
             document.querySelector('#colaboratorColorUpd').value = color;
+            document.querySelector('#select-investorTypeUpd').value = investorType;
 
+
+    }
+
+    function updateSelectOptionsUpd(options, placeholder) {
+        let selectHTML = `<select id="slctUserAdminUpd" name="slctUserAdminUpd" class="form-select form-select-md">`;
+        selectHTML += `<option value="" selected="true" disabled="true">${placeholder}</option>`;
+        if (options.length > 0) {
+            options.forEach(option => {
+                selectHTML += `<option value="${option._id}">${option.firstName} ${option.lastName}</option>`;
+            });
+        } else {
+            selectHTML += `<option value="0">No se encontraron opciones</option>`;
+        }
+        selectHTML += `</select>`;
+        relatedSelectContainerUpd.innerHTML = selectHTML;
     }
 </script>
