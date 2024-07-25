@@ -834,11 +834,11 @@
         </div>
         <div class="input-group third">
             <label for="txtLat">Latitud</label>
-            <input id="txtLat" name="txtLat" type="number" value="{{location.latitude}}">
+            <input id="txtLat" name="txtLat" type="number" step=".000001" value="{{location.latitude}}">
         </div>
         <div class="input-group third">
             <label for="txtLong">Longitud</label>
-            <input id="txtLong" name="txtLong" type="number" value="{{location.longitude}}">
+            <input id="txtLong" name="txtLong" type="number" step=".000001" value="{{location.longitude}}">
         </div>
         <div class="input-group">
             <iframe id="map" src="{{location.iFrame}}" width="100%" height="450" style="border:0;" allowfullscreen=""

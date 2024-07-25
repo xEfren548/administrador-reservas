@@ -398,6 +398,19 @@
   const botonFormulario = document.querySelector('#update-prices-btn');
 
   botonFormulario.addEventListener('click', async function (e) {
+    const selectElement = document.getElementById('select-cabana');
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const precioBase = selectedOption.getAttribute('data-precio-base');
+    document.getElementById('precio-base-input-id').value = precioBase;
+
+    const precioBase2noches = selectedOption.getAttribute('data-precio-base2+noches');
+    document.getElementById('precio-base2+input-id').value = precioBase2noches;
+
+    const costoBase = selectedOption.getAttribute('data-costo-base');
+    document.getElementById('costo-base-input-id').value = costoBase;
+
+    const costoBase2noches = selectedOption.getAttribute('data-costo-base2+noches');
+    document.getElementById('costo-base2+input-id').value = costoBase2noches;
     console.log('click al boton formulario');
     e.preventDefault();
     // Obtener los datos del formulario
@@ -420,7 +433,6 @@
     const valorCostoBase = parseInt(document.querySelector('#valor-costobase').value);
     const valorCostoBase2noches = parseInt(document.querySelector('#valor-costobase2noches').value);
 
-    const precioCabana = parseInt(document.querySelector('#precio-base-input-id').value);
     let precioFinal = 0
     let precioBaseFinal2noches = 0;
     let costoBaseFinal = 0;
@@ -451,17 +463,17 @@
           precioFinal = valorAccion;
           break;
       case 'incrementar-natural':
-        precioFinal = precioCabana + valorAccion;
+        precioFinal = parseInt(precioBase) +parseInt(valorAccion);
         break;
       case 'disminuir-natural':
-        precioFinal = precioCabana - valorAccion;
+        precioFinal = precioBase - valorAccion;
         break;
       case 'incrementar-porcentual':
-        precioFinal = precioCabana * (valorAccion / 100) + precioCabana;
+        precioFinal =  parseInt(precioBase * (valorAccion / 100)) + parseInt(precioBase);
         break;
       case 'disminuir-porcentual':
-        let pre = precioCabana * (valorAccion / 100)
-        precioFinal = precioCabana - pre;
+        let pre = precioBase * (valorAccion / 100)
+        precioFinal = precioBase - pre;
         break;
     }
 
@@ -470,17 +482,17 @@
           precioBaseFinal2noches = valorPrecioBase2noches;
           break;
       case 'incrementar-natural':
-        precioBaseFinal2noches = precioCabana + valorPrecioBase2noches;
+        precioBaseFinal2noches =  parseInt(precioBase2noches) + parseInt(valorPrecioBase2noches);
         break;
       case 'disminuir-natural':
-        precioBaseFinal2noches = precioCabana - valorPrecioBase2noches;
+        precioBaseFinal2noches = precioBase2noches - valorPrecioBase2noches;
         break;
       case 'incrementar-porcentual':
-        precioBaseFinal2noches = precioCabana * (valorPrecioBase2noches / 100) + precioCabana;
+        precioBaseFinal2noches =  parseInt(precioBase2noches * (valorPrecioBase2noches / 100)) + parseInt(precioBase2noches);
         break;
       case 'disminuir-porcentual':
-        let pre = precioCabana * (valorPrecioBase2noches / 100)
-        precioBaseFinal2noches = precioCabana - pre;
+        let pre = precioBase2noches * (valorPrecioBase2noches / 100)
+        precioBaseFinal2noches = precioBase2noches - pre;
         break;
     }
 
@@ -489,17 +501,17 @@
           costoBaseFinal = valorCostoBase;
           break;
       case 'incrementar-natural':
-        costoBaseFinal = precioCabana + valorCostoBase;
+        costoBaseFinal =  parseInt(costoBase) + parseInt(valorCostoBase);
         break;
       case 'disminuir-natural':
-        costoBaseFinal = precioCabana - valorCostoBase;
+        costoBaseFinal = costoBase - valorCostoBase;
         break;
       case 'incrementar-porcentual':
-        costoBaseFinal = precioCabana * (valorCostoBase / 100) + precioCabana;
+        costoBaseFinal =  parseInt(costoBase * (valorCostoBase / 100)) + parseInt(costoBase);
         break;
       case 'disminuir-porcentual':
-        let pre = precioCabana * (valorCostoBase / 100)
-        costoBaseFinal = precioCabana - pre;
+        let pre = costoBase * (valorCostoBase / 100)
+        costoBaseFinal = costoBase - pre;
         break;
     }
 
@@ -508,17 +520,17 @@
           costoBaseFinal2noches = valorCostoBase2noches;
           break;
       case 'incrementar-natural':
-        costoBaseFinal2noches = precioCabana + valorCostoBase2noches;
+        costoBaseFinal2noches = parseInt(costoBase2noches) + parseInt(valorCostoBase2noches);
         break;
       case 'disminuir-natural':
-        costoBaseFinal2noches = precioCabana - valorCostoBase2noches;
+        costoBaseFinal2noches = costoBase2noches - valorCostoBase2noches;
         break;
       case 'incrementar-porcentual':
-        costoBaseFinal2noches = precioCabana * (valorCostoBase2noches / 100) + precioCabana;
+        costoBaseFinal2noches = parseInt(costoBase2noches * (valorCostoBase2noches / 100)) + parseInt(costoBase2noches);
         break;
       case 'disminuir-porcentual':
-        let pre = precioCabana * (valorCostoBase2noches / 100)
-        costoBaseFinal2noches = precioCabana - pre;
+        let pre = costoBase2noches * (valorCostoBase2noches / 100)
+        costoBaseFinal2noches = costoBase2noches - pre;
         break;
     }
 
@@ -528,6 +540,20 @@
       try {
         const resultados = [];
         console.log('ejecutando fetch repetido...');
+        const selectElement = document.getElementById('select-cabana');
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const precioBase = selectedOption.getAttribute('data-precio-base');
+        document.getElementById('precio-base-input-id').value = precioBase;
+
+        const precioBase2noches = selectedOption.getAttribute('data-precio-base2+noches');
+        document.getElementById('precio-base2+input-id').value = precioBase2noches;
+
+        const costoBase = selectedOption.getAttribute('data-costo-base');
+        document.getElementById('costo-base-input-id').value = costoBase;
+
+        const costoBase2noches = selectedOption.getAttribute('data-costo-base2+noches');
+        document.getElementById('costo-base2+input-id').value = costoBase2noches;
+
 
         // Iterar sobre cada fecha en el rango
         for (const fecha of fechas) {
@@ -538,19 +564,28 @@
             await eliminarRegistroExistente(url, fecha, habitacionAmodificar);
           }
           console.log('existe precio : ', existeprecio);
+          console.log(valorPrecioBase2noches)
           // Solucionar el if para que cuando exista el usuario, se borre el registro y añada el nuevo registro-
           // Obtener el objeto de datos para enviar en la solicitud fetch
-            if ((valorAccion == 0)){
+            if ((valorAccion == 0) && (existeprecio)){
               precioFinal = existeprecio.precio_modificado;
+            }else if((valorAccion == 0)){
+              precioFinal = precioBase;
             }
-            if ((valorPrecioBase2noches == 0)){
+            if ((valorPrecioBase2noches == 0)  && (existeprecio)){
               precioBaseFinal2noches = existeprecio.precio_base_2noches;
+            }else if((valorPrecioBase2noches == 0)){
+              precioBaseFinal2noches = precioBase2noches;
             }
-            if ((valorCostoBase == 0)){
+            if ((valorCostoBase == 0)  && (existeprecio)){
               costoBaseFinal = existeprecio.costo_base;
+            }else if((valorCostoBase == 0)){
+              costoBaseFinal = costoBase;
             }
-            if ((valorCostoBase2noches == 0)){
+            if ((valorCostoBase2noches == 0) && (existeprecio)){
               costoBaseFinal2noches = existeprecio.costo_base_2noches;
+            }else if((valorCostoBase2noches == 0)){
+              costoBaseFinal2noches = costoBase2noches;
             }
           const datosFetch = {
             precio_modificado: precioFinal,
