@@ -398,29 +398,33 @@ async function mostrarUtilidadesGlobales(req, res) {
         if (Object.keys(utilidades).length > 0) {
             utilidadesPorReserva = utilidades.filter(utilidad => utilidad.concepto.includes("Utilidad"))
 
-            utilidades.forEach(utilidad => {
-                utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`
-                utilidad.fecha = moment.utc(utilidad.fecha).format('DD/MM/YYYY');
-                const utilidadFecha = moment.utc(utilidad.fecha, 'DD/MM/YYYY');
-
-                if (utilidadFecha.month() === currentMonth && utilidadFecha.year() === currentYear) {
-                    // Asignar nombre del usuario y formatear fecha
-                    utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`;
-                    utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
-
+            for (let utilidad of utilidades){
+                console.log(utilidad)
+                let idUser = utilidad.idUsuario;
+                console.log(idUser);
+                let user = await usersController.obtenerUsuarioPorIdMongo(idUser)
+                if (user) {
+                    utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`
+                    utilidad.fecha = moment.utc(utilidad.fecha).format('DD/MM/YYYY');
+                    const utilidadFecha = moment.utc(utilidad.fecha, 'DD/MM/YYYY');
+    
+                    if (utilidadFecha.month() === currentMonth && utilidadFecha.year() === currentYear) {
+                        // Asignar nombre del usuario y formatear fecha
+                        utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`;
+                        utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
+    
+    
+                    }
 
                 }
 
+            }
 
-
-            })
             utilidadesPorMes.forEach((total, index) => {
                 const monthName = moment().month(index).format('MMMM');
-                console.log(`${monthName}: ${total}`);
             });
         }
 
-        let utilidadCantidad = 0
 
         utilidadesPorReserva.forEach(utilidad => {
             // utilidadCantidad += utilidad.monto
@@ -440,8 +444,6 @@ async function mostrarUtilidadesGlobales(req, res) {
 
         })
 
-        console.log("Utilidad totales: ", utilidadCantidad)
-        console.log(utilidadesPorMes)
 
         const limit = 10000;
 

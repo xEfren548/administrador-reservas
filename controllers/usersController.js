@@ -192,7 +192,7 @@ async function obtenerUsuarioPorId(req, res, next){
 async function obtenerUsuarioPorIdMongo(uuid){
 
     if(!uuid){
-        return next(new BadRequestError("Missing info in URL"));
+        return null;
     }
 
     let userToFind;
