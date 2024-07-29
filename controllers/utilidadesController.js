@@ -275,13 +275,17 @@ async function generarComisionReserva(req, res) {
         const chaletAdmin = chalet.others.admin.toString();
         const chaletJanitor = chalet.others.janitor.toString();
         const chaletOwner = chalet.others.owner.toString();
+        const chaletInvestors = chalet.others.investors
+        console.log('comision inversionistas')
+        console.log(chaletInvestors)
+        const idBosqueImperial = '66a7c2f2915b94d6630b67f2'
 
         // Comisión de administrador top
         await altaComisionReturn({
             monto: utilidadChalet,
             concepto: `Utilidad de reservación ${chaletName}`,
             fecha: new Date(departureDate),
-            idUsuario: chaletAdmin,
+            idUsuario: idBosqueImperial,
             idReserva: idReserva
         })
 
@@ -294,14 +298,34 @@ async function generarComisionReserva(req, res) {
             idReserva: idReserva
         })
 
-        // Comisión de dueño de cabañas
-        await altaComisionReturn({
-            monto: costoBase - chalet.additionalInfo.extraCleaningCost,
-            concepto: `Comisión Dueño de cabaña: ${chaletName}`,
-            fecha: new Date(departureDate),
-            idUsuario: chaletOwner,
-            idReserva: idReserva
-        })
+        // Comisión de dueño de cabañas (ANTERIOR)
+        // await altaComisionReturn({
+        //     monto: costoBase - chalet.additionalInfo.extraCleaningCost,
+        //     concepto: `Comisión Dueño de cabaña: ${chaletName}`,
+        //     fecha: new Date(departureDate),
+        //     idUsuario: chaletOwner,
+        //     idReserva: idReserva
+        // })
+
+        // Comisión de dueño de cabañas (NUEVA)
+        let nuevoCostoBase = costoBase - chalet.additionalInfo.extraCleaningCost
+        console.log('nuevo costo base: ', nuevoCostoBase)
+        let cuantosInversionistas = chaletInvestors.length
+        console.log('cuantos inversionistas: ', cuantosInversionistas)
+        let comisionInversionistas = nuevoCostoBase / cuantosInversionistas
+        console.log('comision inversionistas: ', comisionInversionistas)
+
+        for (let investor of chaletInvestors) {
+            await altaComisionReturn({
+                monto: comisionInversionistas,
+                concepto: `Comisión por Reserva de cabaña: ${chaletName}`,
+                fecha: new Date(departureDate),
+                idUsuario: investor._id,
+                idReserva: idReserva
+            })
+
+        }
+
 
 
 
