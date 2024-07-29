@@ -929,6 +929,8 @@
         const fileCarousel = document.getElementById('fileCarousel');
         const formData = new FormData();
         const pdfData = new FormData();
+        let imagesarrayDB = [];
+
         let indexadvance = 0
 
 
@@ -1174,9 +1176,9 @@
                         owner: document.getElementById("chalet-owner-select").value.trim(),
                         investors: selectedInvestors
                     },
-                    images: imagesarrayDB,
                     files: pdfarrayDB
                 };
+
                 try {
                     const spinner = document.querySelector('.loader');
                     spinner.classList.remove('loader--hidden');
@@ -1187,6 +1189,9 @@
                     console.log(Object.keys(formData).length)
                     if (isFormDataEmpty(formData) && imagesarrayDB.length == 0) {
                         throw new Error('Sube imágenes para la cabaña.');
+                    }
+                    if (imagesarrayDB.length > 0){
+                        data.other.images = imagesarrayDB
                     }
                     if (!pdfFile && pdfarrayDB.length == 0) {
                         throw new Error('No se ha seleccionado un archivo PDF.');
@@ -1509,7 +1514,6 @@
 
                 // Obtener imagenes
                 imagesarray = [];
-                imagesarrayDB = [];
                 pdfarray = [];
                 pdfarrayDB = [];
 
