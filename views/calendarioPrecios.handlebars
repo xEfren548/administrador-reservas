@@ -1,9 +1,12 @@
 <h1> Calendario de precios con aumento</h1>
 <div class="calendar-header">
-    <div class="bg-dark mb-3">
-        <a name="" id="actualizar-precios-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
-            data-bs-toggle="modal" data-bs-target="#update_prices_modal">Actualizar precios</a>
-    </div>
+  <div class="bg-dark mb-3">
+    <a name="" id="actualizar-precios-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
+      data-bs-toggle="modal" data-bs-target="#update_prices_modal">Actualizar precios</a>
+    <a name="" id="agregar-precios-xpersona" class="btn btn-secondary btn-sm " href="#" role="button"
+      data-bs-toggle="modal" data-bs-target="#preciosxpersona_modal">Agregar precios por personas</a>
+  </div>
+
 
 
 </div>
@@ -22,25 +25,27 @@
         </tr>
       </thead>
       <tbody>
-          {{#each precios}}
-            <tr>
-            {{#each this}}
-               {{#if @first}}
-                <td style="text-aling:center vertical-align:middle">{{this}}</td> <!-- Mostrar la tarifa base de la habitación -->
-              {{else}}
-                <td style="text-aling:center vertical-align:middle">${{this}}</td> <!-- Mostrar la tarifa base de la habitación -->
-              {{/if}}
-            {{/each}}
-            </tr>
+        {{#each precios}}
+        <tr>
+          {{#each this}}
+          {{#if @first}}
+          <td style="text-aling:center vertical-align:middle">{{this}}</td>
+          <!-- Mostrar la tarifa base de la habitación -->
+          {{else}}
+          <td style="text-aling:center vertical-align:middle">${{this}}</td>
+          <!-- Mostrar la tarifa base de la habitación -->
+          {{/if}}
           {{/each}}
+        </tr>
+        {{/each}}
       </tbody>
     </table>
-</div>
-<br>
-{{/each}}
-{{else}}
-<p>No hay habitaciones</p>
-{{/if}}
+  </div>
+  <br>
+  {{/each}}
+  {{else}}
+  <p>No hay habitaciones</p>
+  {{/if}}
 </div>
 
 <!-- Modal Actualizar precios -->
@@ -90,7 +95,7 @@
                       placeholder="Contraseña" required>
 
                   </div>
-                  <div class="col-1 text-center">
+                  <div class="col-2 text-center">
                     <p>Hasta</p>
 
                   </div>
@@ -290,7 +295,7 @@
               </div>
             </div>
           </div>
-          
+
           <div class="row mt-2">
             <div class="col-12">
               <label for="actualizar-precios">En base al costo base de 2+ noches, ¿qué quieres hacer? </label>
@@ -331,6 +336,204 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" id="update-prices-btn">Actualizar precios</button>
         <div class="spinner-border" role="status" id="spinner">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Modal Alta usuario -->
+
+<!-- Modal Agregar precios x persona -->
+
+<div class="modal fade" id="preciosxpersona_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">Actualización de precios</h5>
+        <button type="button" class="close" onclick="$('#preciosxpersona_modal').modal('hide');" aria-label="Close">
+          &times;
+
+      </div>
+      <div class="modal-body">
+        <div class="img-container">
+          <div id="error-modal" class="alert alert-danger" style="display: none;"></div>
+
+          <div class="row mt-2 mb-2">
+            <div class="col-8">
+              <label for="select-cabana">Habitación a modificar: </label>
+            </div>
+          </div> <!-- Cierre row -->
+          <select name="select-cabana" id="select-cabana-persona" class="form-select form-select-md" required>
+            <option value="" selected disabled> Selecciona una cabaña para modificar --
+            </option>
+            {{#if habitaciones}}
+            {{#each habitaciones}}
+            <option value="{{this._id}}" data-precio-base="{{this.others.basePrice}}"
+              data-precio-base2+noches="{{this.others.basePrice2nights}}" data-costo-base="{{this.others.baseCost}}"
+              data-costo-base2+noches="{{this.others.baseCost2nights}}"
+              data-pax="{{this.propertyDetails.maxOccupancy}}">
+              {{this.propertyDetails.name}}
+            </option>
+
+            {{/each}}
+            {{else}}
+            <option value="0">No se encontraron habitaciones</option>
+            {{/if}}
+          </select>
+
+          <div class="row mt-2 mb-2">
+            <div class="col-5">
+              <label for="numero-personas">Numero de personas: </label>
+              <select name="numero-personas" id="numero-personas" class="form-select form-select-md" required>
+                <option value="" selected disabled>Selecciona el número de personas --</option>
+              </select>
+
+            </div>
+          </div>
+
+          <div class="row mb-2">
+            <h3 class="mt-2">Referencias</h3>
+            <div class="col-3">
+              <label for="precio-base-input">Precio Base Estándar</label>
+              <div class="input-group">
+                <input type="number" name="precio-base-input" id="precio-base-input-persona-id"
+                  class="text-center form-control form-control-sm text-black fw-bold" value="0" disabled>
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text" style="font-size: 15px;">
+                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-3">
+              <label for="precio-base-input">Precio Base 2+ noches</label>
+              <div class="input-group">
+                <input type="number" name="precio-base2+-input" id="precio-base2+input-persona-id"
+                  class="text-center form-control form-control-sm text-black fw-bold" value="0" disabled>
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text" style="font-size: 15px;">
+                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-3">
+              <label for="precio-base-input">Costo Base</label>
+              <div class="input-group">
+                <input type="number" name="costo-base-input" id="costo-base-input-persona-id"
+                  class="text-center form-control form-control-sm text-black fw-bold" value="0" disabled>
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text" style="font-size: 15px;">
+                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-3">
+              <label for="precio-base-input">Costo Base 2+ noches</label>
+              <div class="input-group">
+                <input type="number" name="costo-base2+-input" id="costo-base2+input-persona-id"
+                  class="text-center form-control form-control-sm text-black fw-bold" value="0" disabled>
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text" style="font-size: 15px;">
+                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <h3 class="mt-2">Precios especiales por personas</h3>
+            <div class="col-6">
+              <label for="actualizar-precios-pbase">Ingresa Precio base por personas: </label>
+            </div>
+            <div class="col-6">
+              <label for="actualizar-precios-pbase2n">Ingresa Precio base 2+ noches por personas: </label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <div class="input-group">
+                <input type="number" name="actualizar-precios-pbase" id="valor-pbase"
+                  class="form-control bg-light text-black fw-bold text-center" value="0" min="0">
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="input-group">
+                <input type="number" name="actualizar-precios-pbase2n" id="valor-pbase2n"
+                  class="form-control bg-light text-black fw-bold text-center" value="0" min="0">
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-6">
+              <label for="actualizar-precios-cbase">Ingresa Costo base por personas: </label>
+            </div>
+            <div class="col-6">
+              <label for="actualizar-precios-cbase2n">Ingresa Costo base 2+ noches por personas: </label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <div class="input-group">
+                <input type="number" name="actualizar-precios-cbase" id="valor-cbase"
+                  class="form-control bg-light text-black fw-bold text-center" value="0" min="0">
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="input-group">
+                <input type="number" name="actualizar-precios-cbase2n" id="valor-cbase2n"
+                  class="form-control bg-light text-black fw-bold text-center" value="0" min="0">
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+        </div> <!-- Cierre IMG Container -->
+      </div> <!--Cierre MODAL BODY -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="add-prices-persona-btn">Agregar precios</button>
+        <div class="spinner-border-agregarprecios" role="status" id="spinner-agregarprecios">
           <span class="visually-hidden">Loading...</span>
         </div>
       </div>
@@ -392,6 +595,34 @@
     const costoBase2noches = selectedOption.getAttribute('data-costo-base2+noches');
     document.getElementById('costo-base2+input-id').value = costoBase2noches;
 
+  });
+
+  document.getElementById('select-cabana-persona').addEventListener('change', function () {
+    const selectElement = document.getElementById('select-cabana-persona');
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+
+    const precioBase = selectedOption.getAttribute('data-precio-base');
+    document.getElementById('precio-base-input-persona-id').value = precioBase;
+
+    const precioBase2noches = selectedOption.getAttribute('data-precio-base2+noches');
+    document.getElementById('precio-base2+input-persona-id').value = precioBase2noches;
+
+    const costoBase = selectedOption.getAttribute('data-costo-base');
+    document.getElementById('costo-base-input-persona-id').value = costoBase;
+
+    const costoBase2noches = selectedOption.getAttribute('data-costo-base2+noches');
+    document.getElementById('costo-base2+input-persona-id').value = costoBase2noches;
+
+    const numeroPersonasSelect = document.getElementById('numero-personas');
+    const maxOccupancy = selectedOption.getAttribute('data-pax');
+    numeroPersonasSelect.innerHTML = '<option value="" selected disabled>Selecciona el número de personas --</option>';
+
+    for (let i = 1; i < maxOccupancy; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = i;
+      numeroPersonasSelect.appendChild(option);
+    }
 
   });
 
@@ -460,16 +691,16 @@
 
     switch (seleccion) {
       case 'precio-fijo':
-          precioFinal = valorAccion;
-          break;
+        precioFinal = valorAccion;
+        break;
       case 'incrementar-natural':
-        precioFinal = parseInt(precioBase) +parseInt(valorAccion);
+        precioFinal = parseInt(precioBase) + parseInt(valorAccion);
         break;
       case 'disminuir-natural':
         precioFinal = precioBase - valorAccion;
         break;
       case 'incrementar-porcentual':
-        precioFinal =  parseInt(precioBase * (valorAccion / 100)) + parseInt(precioBase);
+        precioFinal = parseInt(precioBase * (valorAccion / 100)) + parseInt(precioBase);
         break;
       case 'disminuir-porcentual':
         let pre = precioBase * (valorAccion / 100)
@@ -479,16 +710,16 @@
 
     switch (seleccionPrecioBase2noches) {
       case 'precio-fijo':
-          precioBaseFinal2noches = valorPrecioBase2noches;
-          break;
+        precioBaseFinal2noches = valorPrecioBase2noches;
+        break;
       case 'incrementar-natural':
-        precioBaseFinal2noches =  parseInt(precioBase2noches) + parseInt(valorPrecioBase2noches);
+        precioBaseFinal2noches = parseInt(precioBase2noches) + parseInt(valorPrecioBase2noches);
         break;
       case 'disminuir-natural':
         precioBaseFinal2noches = precioBase2noches - valorPrecioBase2noches;
         break;
       case 'incrementar-porcentual':
-        precioBaseFinal2noches =  parseInt(precioBase2noches * (valorPrecioBase2noches / 100)) + parseInt(precioBase2noches);
+        precioBaseFinal2noches = parseInt(precioBase2noches * (valorPrecioBase2noches / 100)) + parseInt(precioBase2noches);
         break;
       case 'disminuir-porcentual':
         let pre = precioBase2noches * (valorPrecioBase2noches / 100)
@@ -498,16 +729,16 @@
 
     switch (seleccionCostoBase) {
       case 'precio-fijo':
-          costoBaseFinal = valorCostoBase;
-          break;
+        costoBaseFinal = valorCostoBase;
+        break;
       case 'incrementar-natural':
-        costoBaseFinal =  parseInt(costoBase) + parseInt(valorCostoBase);
+        costoBaseFinal = parseInt(costoBase) + parseInt(valorCostoBase);
         break;
       case 'disminuir-natural':
         costoBaseFinal = costoBase - valorCostoBase;
         break;
       case 'incrementar-porcentual':
-        costoBaseFinal =  parseInt(costoBase * (valorCostoBase / 100)) + parseInt(costoBase);
+        costoBaseFinal = parseInt(costoBase * (valorCostoBase / 100)) + parseInt(costoBase);
         break;
       case 'disminuir-porcentual':
         let pre = costoBase * (valorCostoBase / 100)
@@ -517,8 +748,8 @@
 
     switch (seleccionCostoBase2noches) {
       case 'precio-fijo':
-          costoBaseFinal2noches = valorCostoBase2noches;
-          break;
+        costoBaseFinal2noches = valorCostoBase2noches;
+        break;
       case 'incrementar-natural':
         costoBaseFinal2noches = parseInt(costoBase2noches) + parseInt(valorCostoBase2noches);
         break;
@@ -567,26 +798,26 @@
           console.log(valorPrecioBase2noches)
           // Solucionar el if para que cuando exista el usuario, se borre el registro y añada el nuevo registro-
           // Obtener el objeto de datos para enviar en la solicitud fetch
-            if ((valorAccion == 0) && (existeprecio)){
-              precioFinal = existeprecio.precio_modificado;
-            }else if((valorAccion == 0)){
-              precioFinal = precioBase;
-            }
-            if ((valorPrecioBase2noches == 0)  && (existeprecio)){
-              precioBaseFinal2noches = existeprecio.precio_base_2noches;
-            }else if((valorPrecioBase2noches == 0)){
-              precioBaseFinal2noches = precioBase2noches;
-            }
-            if ((valorCostoBase == 0)  && (existeprecio)){
-              costoBaseFinal = existeprecio.costo_base;
-            }else if((valorCostoBase == 0)){
-              costoBaseFinal = costoBase;
-            }
-            if ((valorCostoBase2noches == 0) && (existeprecio)){
-              costoBaseFinal2noches = existeprecio.costo_base_2noches;
-            }else if((valorCostoBase2noches == 0)){
-              costoBaseFinal2noches = costoBase2noches;
-            }
+          if ((valorAccion == 0) && (existeprecio)) {
+            precioFinal = existeprecio.precio_modificado;
+          } else if ((valorAccion == 0)) {
+            precioFinal = precioBase;
+          }
+          if ((valorPrecioBase2noches == 0) && (existeprecio)) {
+            precioBaseFinal2noches = existeprecio.precio_base_2noches;
+          } else if ((valorPrecioBase2noches == 0)) {
+            precioBaseFinal2noches = precioBase2noches;
+          }
+          if ((valorCostoBase == 0) && (existeprecio)) {
+            costoBaseFinal = existeprecio.costo_base;
+          } else if ((valorCostoBase == 0)) {
+            costoBaseFinal = costoBase;
+          }
+          if ((valorCostoBase2noches == 0) && (existeprecio)) {
+            costoBaseFinal2noches = existeprecio.costo_base_2noches;
+          } else if ((valorCostoBase2noches == 0)) {
+            costoBaseFinal2noches = costoBase2noches;
+          }
           const datosFetch = {
             precio_modificado: precioFinal,
             precio_base_2noches: precioBaseFinal2noches,
@@ -647,11 +878,11 @@
       try {
         const formattedDate = formatDate(fecha); // Formatear la fecha para la URL
         const formattedUrl = `${urlfechas}?fecha=${formattedDate}&habitacionid=${habitacionId}`
-         const response = await fetch(formattedUrl, {
+        const response = await fetch(formattedUrl, {
           method: 'GET'
         });
 
-         if (!response.ok) {
+        if (!response.ok) {
           throw new Error('Error al verificar el precio del registro:', response.statusText);
         }
 
@@ -745,7 +976,7 @@
         throw new Error('No hay fechas seleccionadas para actualizar.');
       }
 
-      
+
       document.getElementById('spinner').style.display = 'none';
 
 
@@ -778,6 +1009,66 @@
       });
     }
   })
+
+  const addPreciosBtn = document.querySelector('#add-prices-persona-btn')
+
+  addPreciosBtn.addEventListener('click', async () => {
+    const precioBasePp = document.querySelector('#valor-pbase').value;
+    const precioBase2nochesPp = document.querySelector('#valor-pbase2n').value;
+    const costoBasePp = document.querySelector('#valor-cbase').value;
+    const costoBase2nochesPp = document.querySelector('#valor-cbase2n').value;
+
+    const noPersonas = document.querySelector('#numero-personas').value;
+    const idHabitacion = document.querySelector('#select-cabana-persona').value;
+
+    
+
+    const body = {
+      precio_modificado: precioBasePp,
+      precio_base_2noches: precioBase2nochesPp,
+      costo_base: costoBasePp,
+      costo_base_2noches: costoBase2nochesPp,
+      criterio: 'personas',
+      noPersonas: noPersonas,
+      habitacionId: idHabitacion
+    }
+
+    console.log(body)
+
+    try {
+      const response = await fetch('/api/agregar-precios-especiales', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.mensaje);
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: '¡Completado!',
+        text: 'Precios agregados correctamente.',
+        confirmButtonText: 'Aceptar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          location.reload();
+        }
+      })
+    } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Hubo un problema al agregar los precios.' + error.message,
+      confirmButtonText: 'Aceptar'
+    })
+  }
+    //precio_modificado, precio_base_2noches, costo_base, costo_base_2noches, criterio, noPersonas, habitacionId
+  });
 
 
 

@@ -29,6 +29,7 @@ const utilidadesRoutes = require('./utilidadesRoutes');
 const surveyModelingRoutes = require('./surveyModelingRoutes');
 const surveyProcessingRoutes = require('./surveyProcessingRoutes');
 const tipologiasRoutes = require('./tipologiasRoutes');
+const preciosEspecialesRoutes = require('./preciosEspecialesRoutes');
 
 const authMiddleware = require('../common/middlewares/authMiddleware');
 const CustomError = require("../common/error/custom-error");
@@ -93,6 +94,7 @@ router.use('/api', serviciosRoutes);
 router.use('/', calendarioPrecios);
 router.use('/api/pagos/', pagosRoutes);
 router.use('/api/', authMiddleware, utilidadesRoutes);
+router.use('/', preciosEspecialesRoutes);
 
 router.use('/modelar-encuesta', surveyModelingRoutes);
 

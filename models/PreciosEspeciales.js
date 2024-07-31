@@ -27,6 +27,10 @@ const precioEspecialSchema = new Schema({
     habitacionId: {
         type: Schema.Types.ObjectId,
         ref: 'habitaciones' // Referencia al modelo de habitaciones existente
+    },
+    fecha: {
+        type: Date,
+        required: true
     }
 });
 
