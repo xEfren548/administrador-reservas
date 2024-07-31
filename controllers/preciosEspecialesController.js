@@ -115,17 +115,16 @@ async function eliminarRegistroPrecio(req, res) {
 }
 
 // Función para verificar si existe un registro con la misma fecha y habitación
-// Función para verificar si existe un registro con la misma fecha y habitación
 async function verificarExistenciaRegistro(req, res) {
     try {
-        const { fecha, habitacionId } = req.query;
+        const { fecha, habitacionId, noPersonas} = req.query;
 
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
 
 
-        const response = await PreciosEspeciales.findOne({ fecha: fechaAjustada, habitacionId: habitacionId });
+        const response = await PreciosEspeciales.findOne({ fecha: fechaAjustada, habitacionId: habitacionId, noPersonas: noPersonas });
         const existeRegistro = response !== null;
 
         res.json({ existeRegistro: existeRegistro });
