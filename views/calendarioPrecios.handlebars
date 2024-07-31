@@ -452,75 +452,68 @@
               </div>
             </div>
           </div>
+          {{!-- Cambiar nombres de inputs y labels --}}
+          <div class="mb-2">
+            <div class="row mb-2">
+              <h3>Agregar precios</h3>
+              <label for="dias-concretos">¿Quieres aplicar esta tarifa a unos dias concretos?</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="checkbox-lunes-persona" value="lunes" checked>
+              <label class="form-check-label" for="lunes">Lunes</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="checkbox-martes-persona" value="martes" checked>
+              <label class="form-check-label" for="martes">Martes</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="checkbox-miercoles-persona" value="miercoles" checked>
+              <label class="form-check-label" for="miercoles">Miércoles</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="checkbox-jueves-persona" value="jueves" checked>
+              <label class="form-check-label" for="jueves">Jueves</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="checkbox-viernes-persona" value="viernes" checked>
+              <label class="form-check-label" for="viernes">Viernes</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="checkbox-sabado-persona" value="sabado" checked>
+              <label class="form-check-label" for="sabado">Sábado</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="checkbox-domingo-persona" value="domingo" checked>
+              <label class="form-check-label" for="domingo">Domingo</label>
+            </div>
+
+
+          </div>
 
           <div class="row">
-            <h3 class="mt-2">Precios especiales por personas</h3>
-            <div class="col-6">
-              <label for="actualizar-precios-pbase">Ingresa Precio base por personas: </label>
-            </div>
-            <div class="col-6">
-              <label for="actualizar-precios-pbase2n">Ingresa Precio base 2+ noches por personas: </label>
+            <div class="col-12">
+              <label for="actualizar-precios-persona">En base al precio base de la habitación, ¿qué quieres hacer? </label>
             </div>
           </div>
           <div class="row">
-            <div class="col-6">
-              <div class="input-group">
-                <input type="number" name="actualizar-precios-pbase" id="valor-pbase"
-                  class="form-control bg-light text-black fw-bold text-center" value="0" min="0">
-                <div class="input-group-append">
-                  <div class="input-group-append">
-                    <span class="input-group-text">
-                      <i class="fa fa-dollar" aria-hidden="true"></i>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="input-group">
-                <input type="number" name="actualizar-precios-pbase2n" id="valor-pbase2n"
-                  class="form-control bg-light text-black fw-bold text-center" value="0" min="0">
-                <div class="input-group-append">
-                  <div class="input-group-append">
-                    <span class="input-group-text">
-                      <i class="fa fa-dollar" aria-hidden="true"></i>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <div class="row">
-            <div class="col-6">
-              <label for="actualizar-precios-cbase">Ingresa Costo base por personas: </label>
+            <div class="col-7">
+              <select name="accion-precios-persona" id="accion-precios-persona" class="form-select form-select-md seleccion-precio-persona"
+                required>
+                <option value="precio-fijo">Precio fijo por noche</option>
+                <option value="incrementar-natural">Incrementar precio en valor natural</option>
+                <option value="incrementar-porcentual">Incrementar precio en valor porcentual</option>
+                <option value="disminuir-natural">Disminuir precio en valor natural</option>
+                <option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
+              </select>
             </div>
-            <div class="col-6">
-              <label for="actualizar-precios-cbase2n">Ingresa Costo base 2+ noches por personas: </label>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-6">
+            <div class="col-2">
               <div class="input-group">
-                <input type="number" name="actualizar-precios-cbase" id="valor-cbase"
-                  class="form-control bg-light text-black fw-bold text-center" value="0" min="0">
+                <input type="number" name="valor-pbase" id="valor-pbase" class="form-control" value="0" min="0">
                 <div class="input-group-append">
                   <div class="input-group-append">
                     <span class="input-group-text">
-                      <i class="fa fa-dollar" aria-hidden="true"></i>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="input-group">
-                <input type="number" name="actualizar-precios-cbase2n" id="valor-cbase2n"
-                  class="form-control bg-light text-black fw-bold text-center" value="0" min="0">
-                <div class="input-group-append">
-                  <div class="input-group-append">
-                    <span class="input-group-text">
-                      <i class="fa fa-dollar" aria-hidden="true"></i>
+                      <span id="icono-seleccionado"></span>
                     </span>
                   </div>
                 </div>
@@ -528,6 +521,102 @@
             </div>
           </div>
 
+          <div class="row mt-2">
+            <div class="col-12">
+              <label for="actualizar-precios-persona-persona">En base al precio base de 2+ noches, ¿qué quieres hacer? </label>
+            </div>
+          </div>
+          <div class="row">
+
+            <div class="col-7">
+              <select name="accion-precios-preciobase2+-persona" id="accion-precios-preciobase2+-persona"
+                class="form-select form-select-md seleccion-precio-persona" required>
+                <option value="precio-fijo">Precio fijo por noche</option>
+                <option value="incrementar-natural">Incrementar precio en valor natural</option>
+                <option value="incrementar-porcentual">Incrementar precio en valor porcentual</option>
+                <option value="disminuir-natural">Disminuir precio en valor natural</option>
+                <option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
+              </select>
+            </div>
+            <div class="col-2">
+              <div class="input-group">
+                <input type="number" name="valor-pbase2n" id="valor-pbase2n" class="form-control"
+                  value="0" min="0">
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <span id="icono-seleccionado"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-12">
+              <label for="actualizar-precios-persona">En base al costo base de la habitación, ¿qué quieres hacer? </label>
+            </div>
+          </div>
+          <div class="row">
+
+            <div class="col-7">
+              <select name="accion-precios-costobase-persona" id="accion-precios-costobase-persona"
+                class="form-select form-select-md seleccion-precio-persona" required>
+                <option value="precio-fijo">Precio fijo por noche</option>
+                <option value="incrementar-natural">Incrementar precio en valor natural</option>
+                <option value="incrementar-porcentual">Incrementar precio en valor porcentual</option>
+                <option value="disminuir-natural">Disminuir precio en valor natural</option>
+                <option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
+              </select>
+            </div>
+            <div class="col-2">
+              <div class="input-group">
+                <input type="number" name="valor-cbase" id="valor-cbase" class="form-control" value="0" min="0">
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <span id="icono-seleccionado"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-2">
+            <div class="col-12">
+              <label for="actualizar-precios-persona">En base al costo base de 2+ noches, ¿qué quieres hacer? </label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-7">
+              <select name="accion-precios-costobase2+-persona" id="accion-precios-costobase2+-persona"
+                class="form-select form-select-md seleccion-precio-persona" required>
+                <option value="precio-fijo">Precio fijo por noche</option>
+                <option value="incrementar-natural">Incrementar precio en valor natural</option>
+                <option value="incrementar-porcentual">Incrementar precio en valor porcentual</option>
+                <option value="disminuir-natural">Disminuir precio en valor natural</option>
+                <option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
+              </select>
+            </div>
+            <div class="col-2">
+              <div class="input-group">
+                <input type="number" name="valor-cbase2n" id="valor-cbase2n" class="form-control"
+                  value="0" min="0">
+                <div class="input-group-append">
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <span id="icono-seleccionado"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-2">
+            <small>IMPORTANTE: Este será el nuevo registro, por lo que si hay alguno anterior para esas fechas, se
+              eliminará.</small>
+          </div>
 
         </div> <!-- Cierre IMG Container -->
       </div> <!--Cierre MODAL BODY -->
@@ -579,6 +668,41 @@
     });
   });
 
+  function mostrarIconoSeleccionadoPersona() {
+    const selects = document.querySelectorAll('.seleccion-precio-persona');
+    selects.forEach(select => {
+      const seleccion = select.value;
+      const iconoSeleccionado = select.parentElement.nextElementSibling.querySelector('#icono-seleccionado');
+
+      // Dependiendo de la opción seleccionada, mostramos el icono correspondiente
+      switch (seleccion) {
+        case 'precio-fijo':
+          iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
+          break;
+        case 'incrementar-natural':
+        case 'disminuir-natural':
+          iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
+          break;
+        case 'incrementar-porcentual':
+        case 'disminuir-porcentual':
+          iconoSeleccionado.innerHTML = '<i class="fa fa-percent" aria-hidden="true"></i>';
+          break;
+        default:
+          break;
+      }
+    });
+  }
+
+  // Llamar a la función al cargar la página para mostrar el icono seleccionado inicialmente
+  mostrarIconoSeleccionadoPersona();
+
+  // Agregar un event listener al campo #accion-precios para actualizar el icono seleccionado cuando cambie la selección
+  document.querySelectorAll('.seleccion-precio-persona').forEach(select => {
+    select.addEventListener('change', function () {
+      mostrarIconoSeleccionadoPersona();
+    });
+  });
+
   document.getElementById('select-cabana').addEventListener('change', function () {
     const selectElement = document.getElementById('select-cabana');
     const selectedOption = selectElement.options[selectElement.selectedIndex];
@@ -617,7 +741,7 @@
     const maxOccupancy = selectedOption.getAttribute('data-pax');
     numeroPersonasSelect.innerHTML = '<option value="" selected disabled>Selecciona el número de personas --</option>';
 
-    for (let i = 1; i < maxOccupancy; i++) {
+    for (let i = 2; i < maxOccupancy; i++) {
       const option = document.createElement('option');
       option.value = i;
       option.textContent = i;

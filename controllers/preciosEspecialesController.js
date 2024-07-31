@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 // Controlador para agregar nuevos datos
 async function agregarNuevoPrecio(req, res) {
-    const { precio_modificado, precio_base_2noches, costo_base, costo_base_2noches, criterio, noPersonas, habitacionId } = req.body;
+    const { precio_modificado, precio_base_2noches, costo_base, costo_base_2noches, fecha, criterio, noPersonas, habitacionId } = req.body;
     try {
         const objectHabitacionId = new mongoose.Types.ObjectId(habitacionId);
         
@@ -18,24 +18,24 @@ async function agregarNuevoPrecio(req, res) {
         console.log('costo base 2 noches: ', costoBase2Noches);
         console.log('precio base 2 noches: ', precioBase2Noches);
 
-        if (costoBase > precioModificado){
-            throw new Error('El costo base no puede ser mayor al precio base');
-        } else if(costoBase2Noches > precioBase2Noches){
-            throw new Error('El costo base 2+ noches no puede ser mayor al precio base 2+ noches');
-        } else if(precioModificado === 0) {
-            throw new Error('El precio no puede ser 0');
-        } else if(precioBase2Noches === 0) {
-            throw new Error('El precio base 2+ noches no puede ser 0');
-        } else if(costoBase === 0) {
-            throw new Error('El costo base no puede ser 0')
-        } else if(costoBase2Noches === 0) {
-            throw new Error('El costo base 2+ noches no puede ser 0')
-        }
+        // if (costoBase > precioModificado){
+        //     throw new Error('El costo base no puede ser mayor al precio base');
+        // } else if(costoBase2Noches > precioBase2Noches){
+        //     throw new Error('El costo base 2+ noches no puede ser mayor al precio base 2+ noches');
+        // } else if(precioModificado === 0) {
+        //     throw new Error('El precio no puede ser 0');
+        // } else if(precioBase2Noches === 0) {
+        //     throw new Error('El precio base 2+ noches no puede ser 0');
+        // } else if(costoBase === 0) {
+        //     throw new Error('El costo base no puede ser 0')
+        // } else if(costoBase2Noches === 0) {
+        //     throw new Error('El costo base 2+ noches no puede ser 0')
+        // }
 
-        const existePrecioEspecial = await PreciosEspeciales.findOne({habitacionId: habitacionId, noPersonas: noPersonas, criterio: criterio})
-        if (existePrecioEspecial) {
-            throw new Error('Ya existe un precio especial para la habitación, número de personas y criterio seleccionados');
-        }
+        // const existePrecioEspecial = await PreciosEspeciales.findOne({habitacionId: habitacionId, noPersonas: noPersonas, criterio: criterio})
+        // if (existePrecioEspecial) {
+        //     throw new Error('Ya existe un precio especial para la habitación, número de personas y criterio seleccionados');
+        // }
 
         const nuevoPrecio = new PreciosEspeciales({
             precio_modificado: precioModificado,
@@ -44,6 +44,7 @@ async function agregarNuevoPrecio(req, res) {
             costo_base_2noches: costoBase2Noches,
             criterio,
             noPersonas,
+            fecha,
             habitacionId: objectHabitacionId
         });
 
