@@ -97,7 +97,7 @@ router.get('/calendario-precios', async (req, res) => {
        
         const pricexday = pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData);
 
-        //console.log(pricexday[0].precios);
+        console.log(pricexday);
 
 
         res.render('calendarioPrecios', {

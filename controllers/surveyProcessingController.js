@@ -96,12 +96,12 @@ async function answerSurvey(req, res, next) {
 
     try {
         var client = await Cliente.findOne({ email: clientEmail });
-        if(!client){ throw new NotFoundError("Current client does not exist. Calling FBI") }
+        if(!client){ throw new NotFoundError("Current client does not exist. Calling FVI") }
         console.log("Cliente 2: ", client);
 
         const reservations = await Evento.findOne();
         const reservation = reservations.events.find(reservation => reservation.client.toString() === client._id.toString());
-        if(!reservation){ throw new NotFoundError("Current client has no reservation. Calling FBI") }
+        if(!reservation){ throw new NotFoundError("Current client has no reservation. Calling FVI") }
 
         console.log("Cliente asociado: ", client);
         console.log("Reservación asociada: ", reservation);
