@@ -19,8 +19,8 @@
       <thead class="table-light">
         <tr>
           <th scope="col">Función</th>
-          {{#each ../daysWithDates}}
-          <th scope="col">{{this}}</th>
+          {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
+          <th scope="col">{{this}}</th> <!-- Mostrar cada fecha como encabezado de columna -->
           {{/each}}
         </tr>
       </thead>
@@ -30,31 +30,40 @@
           {{#each this}}
           {{#if @first}}
           <td style="text-align:center; vertical-align:middle">{{this}}</td>
+          <!-- Mostrar la tarifa base de la habitación -->
           {{else}}
           <td style="text-align:center; vertical-align:middle">${{this}}</td>
+          <!-- Mostrar la tarifa base de la habitación -->
           {{/if}}
           {{/each}}
         </tr>
         {{/each}}
-
         {{#each preciosEspeciales}}
         <tr>
-          <td colspan="100%" style="background-color: #f8f9fa; text-align:center;">Precios Especiales para {{@key}} personas</td>
+          <td colspan="100%" style="text-align:center; background-color:#444;">Precios Especiales para {{@key}} Personas</td>
         </tr>
         <tr>
-          {{#each ../daysWithDates}}
-          <th scope="col">{{this}}</th>
+          <td style="text-align:center; vertical-align:middle">Precio Modificado</td>
+          {{#each this.precio_modificado}}
+          <td style="text-align:center; vertical-align:middle">${{this}}</td>
           {{/each}}
         </tr>
         <tr>
-          {{#each this}}
-          <td style="text-align:center; vertical-align:middle">
-            {{#if this}}
-            ${{this}}
-            {{else}}
-            -
-            {{/if}}
-          </td>
+          <td style="text-align:center; vertical-align:middle">Precio Base 2 Noches</td>
+          {{#each this.precio_base_2noches}}
+          <td style="text-align:center; vertical-align:middle">${{this}}</td>
+          {{/each}}
+        </tr>
+        <tr>
+          <td style="text-align:center; vertical-align:middle">Costo Base</td>
+          {{#each this.costo_base}}
+          <td style="text-align:center; vertical-align:middle">${{this}}</td>
+          {{/each}}
+        </tr>
+        <tr>
+          <td style="text-align:center; vertical-align:middle">Costo Base 2 Noches</td>
+          {{#each this.costo_base_2noches}}
+          <td style="text-align:center; vertical-align:middle">${{this}}</td>
           {{/each}}
         </tr>
         {{/each}}
@@ -67,6 +76,8 @@
   <p>No hay habitaciones</p>
   {{/if}}
 </div>
+
+
 
 <!-- Modal Actualizar precios -->
 
