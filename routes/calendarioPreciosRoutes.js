@@ -1,5 +1,6 @@
 const precioBaseController = require('../controllers/precioBaseController')    
 const habitacionController = require('../controllers/habitacionController')
+const preciosEspecialesController = require('../controllers/preciosEspecialesController')
 
 const DAYS_IN_YEAR = 365; // Definir DAYS_IN_YEAR a nivel global
 
@@ -22,58 +23,72 @@ function getDateFromDayOfYear(dayOfYear) {
 }
 
 // CURRENT CHANGE
-function pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData){
+function pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, preciosEspecialesData) {
     var matrixhabitaciones = [];
     const dayOfYear = date => Math.floor((date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-    habitaciones.forEach((habitacion,index) => {
+    
+    habitaciones.forEach((habitacion, index) => {
         var habitacionesyprecio = {
             name: habitacion.propertyDetails.name,
-            precios: []
-        }
+            precios: [],
+            preciosEspeciales: {}
+        };
         var matrix = [];
         matrix.push(["Precio Base"]);
-        for(var a = 1; a <= daysWithDates.length; a++) {
+        for (var a = 1; a <= daysWithDates.length; a++) {
             matrix.push([habitacion.others.basePrice]);
         }
         var matrix2n = [];
         matrix2n.push(["Precio Base 2 Noches"]);
-        for(var a = 1; a <= daysWithDates.length; a++) {
+        for (var a = 1; a <= daysWithDates.length; a++) {
             matrix2n.push([habitacion.others.basePrice2nights]);
         }
         var matrixc1 = [];
         matrixc1.push(["Costo Base"]);
-        for(var a = 1; a <= daysWithDates.length; a++) {
+        for (var a = 1; a <= daysWithDates.length; a++) {
             matrixc1.push([habitacion.others.baseCost]);
         }
         var matrixc2 = [];
         matrixc2.push(["Costo Base 2 Noches"]);
-        for(var a = 1; a <= daysWithDates.length; a++) {
+        for (var a = 1; a <= daysWithDates.length; a++) {
             matrixc2.push([habitacion.others.baseCost2nights]);
         }
+
         preciosHabitacionesData.forEach((element) => {
             let currentTime = new Date(element.fecha).getTime();
-            //adds 1 day to the element.date so it matches the index correctly
-            let updatedTIme = new Date(currentTime + 24 * 60 * 60 * 1000);
-            //console.log(dayOfYear(updatedTIme));
-            //console.log(habitacion)
-            if(habitacion._id == element.habitacionId){
-                //console.log(index);
-                matrix[dayOfYear(updatedTIme) - 1] = element.precio_modificado;
-                matrix2n[dayOfYear(updatedTIme) - 1] = element.precio_base_2noches;
-                matrixc1[dayOfYear(updatedTIme) - 1] = element.costo_base;
-                matrixc2[dayOfYear(updatedTIme) - 1] = element.costo_base_2noches;
-            };
+            let updatedTime = new Date(currentTime + 24 * 60 * 60 * 1000);
+            if (habitacion._id == element.habitacionId) {
+                matrix[dayOfYear(updatedTime) - 1] = element.precio_modificado;
+                matrix2n[dayOfYear(updatedTime) - 1] = element.precio_base_2noches;
+                matrixc1[dayOfYear(updatedTime) - 1] = element.costo_base;
+                matrixc2[dayOfYear(updatedTime) - 1] = element.costo_base_2noches;
+            }
         });
+
+        preciosEspecialesData.forEach((element) => {
+            let currentTime = new Date(element.fecha).getTime();
+            let updatedTime = new Date(currentTime + 24 * 60 * 60 * 1000);
+            if (habitacion._id == element.habitacionId) {
+                if (!habitacionesyprecio.preciosEspeciales[element.noPersonas]) {
+                    habitacionesyprecio.preciosEspeciales[element.noPersonas] = [];
+                    for (var a = 1; a <= daysWithDates.length; a++) {
+                        habitacionesyprecio.preciosEspeciales[element.noPersonas].push(null);
+                    }
+                }
+                habitacionesyprecio.preciosEspeciales[element.noPersonas][dayOfYear(updatedTime) - 1] = element.precio_modificado;
+            }
+        });
+
         habitacionesyprecio.precios.push(matrix);
         habitacionesyprecio.precios.push(matrix2n);
         habitacionesyprecio.precios.push(matrixc1);
         habitacionesyprecio.precios.push(matrixc2);
-        //console.log(matrix);
-        matrixhabitaciones.push(habitacionesyprecio)
+        matrixhabitaciones.push(habitacionesyprecio);
     });
-    //console.log(matrixhabitaciones);
+
     return matrixhabitaciones;
 }
+
 
 // INCOMING CHANGE
 router.get('/calendario-precios', async (req, res) => {
@@ -93,9 +108,9 @@ router.get('/calendario-precios', async (req, res) => {
 
         const preciosHabitacionesData = await precioBaseController.consultarPrecios();
         //console.log(preciosHabitacionesData);
-        
-       
-        const pricexday = pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData);
+        const preciosEspecialesData = await preciosEspecialesController.consultarPrecios()
+
+        const pricexday = pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData, preciosEspecialesData);
 
         //console.log(pricexday[0].precios);
 

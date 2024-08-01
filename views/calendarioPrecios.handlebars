@@ -19,8 +19,8 @@
       <thead class="table-light">
         <tr>
           <th scope="col">Función</th>
-          {{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
-          <th scope="col">{{this}}</th> <!-- Mostrar cada fecha como encabezado de columna -->
+          {{#each ../daysWithDates}}
+          <th scope="col">{{this}}</th>
           {{/each}}
         </tr>
       </thead>
@@ -29,12 +29,32 @@
         <tr>
           {{#each this}}
           {{#if @first}}
-          <td style="text-aling:center vertical-align:middle">{{this}}</td>
-          <!-- Mostrar la tarifa base de la habitación -->
+          <td style="text-align:center; vertical-align:middle">{{this}}</td>
           {{else}}
-          <td style="text-aling:center vertical-align:middle">${{this}}</td>
-          <!-- Mostrar la tarifa base de la habitación -->
+          <td style="text-align:center; vertical-align:middle">${{this}}</td>
           {{/if}}
+          {{/each}}
+        </tr>
+        {{/each}}
+
+        {{#each preciosEspeciales}}
+        <tr>
+          <td colspan="100%" style="background-color: #f8f9fa; text-align:center;">Precios Especiales para {{@key}} personas</td>
+        </tr>
+        <tr>
+          {{#each ../daysWithDates}}
+          <th scope="col">{{this}}</th>
+          {{/each}}
+        </tr>
+        <tr>
+          {{#each this}}
+          <td style="text-align:center; vertical-align:middle">
+            {{#if this}}
+            ${{this}}
+            {{else}}
+            -
+            {{/if}}
+          </td>
           {{/each}}
         </tr>
         {{/each}}
