@@ -330,6 +330,9 @@ td {
 #spinner {
     display: none;
 }
+#spinner-agregarprecios {
+    display: none;
+}
 
 .table-prices {
     overflow-x: auto;

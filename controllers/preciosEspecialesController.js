@@ -12,25 +12,20 @@ async function agregarNuevoPrecio(req, res) {
         const precioBase2Noches = Number(precio_base_2noches);
         const costoBase = Number(costo_base);
         const costoBase2Noches = Number(costo_base_2noches);
-
-        console.log('costo base: ', costoBase);
-        console.log('precio base: ', precioModificado);
-        console.log('costo base 2 noches: ', costoBase2Noches);
-        console.log('precio base 2 noches: ', precioBase2Noches);
-
-        // if (costoBase > precioModificado){
-        //     throw new Error('El costo base no puede ser mayor al precio base');
-        // } else if(costoBase2Noches > precioBase2Noches){
-        //     throw new Error('El costo base 2+ noches no puede ser mayor al precio base 2+ noches');
-        // } else if(precioModificado === 0) {
-        //     throw new Error('El precio no puede ser 0');
-        // } else if(precioBase2Noches === 0) {
-        //     throw new Error('El precio base 2+ noches no puede ser 0');
-        // } else if(costoBase === 0) {
-        //     throw new Error('El costo base no puede ser 0')
-        // } else if(costoBase2Noches === 0) {
-        //     throw new Error('El costo base 2+ noches no puede ser 0')
-        // }
+        
+        if (costoBase > precioModificado){
+            throw new Error('El costo base no puede ser mayor al precio base');
+        } else if(costoBase2Noches > precioBase2Noches){
+            throw new Error('El costo base 2+ noches no puede ser mayor al precio base 2+ noches');
+        } else if(precioModificado === 0) {
+            throw new Error('El precio no puede ser 0');
+        } else if(precioBase2Noches === 0) {
+            throw new Error('El precio base 2+ noches no puede ser 0');
+        } else if(costoBase === 0) {
+            throw new Error('El costo base no puede ser 0')
+        } else if(costoBase2Noches === 0) {
+            throw new Error('El costo base 2+ noches no puede ser 0')
+        }
 
         // const existePrecioEspecial = await PreciosEspeciales.findOne({habitacionId: habitacionId, noPersonas: noPersonas, criterio: criterio})
         // if (existePrecioEspecial) {
@@ -91,17 +86,55 @@ async function consultarPreciosPorId(req, res) {
     }
 }
 
+async function consultarPreciosPorFecha(req, res) {
+    try {
+        const { fecha, habitacionid, noPersonas } = req.query;
+        // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
+        const fechaAjustada = new Date(fecha);
+        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+        console.log(fechaAjustada);
+        let precio = await PreciosEspeciales.findOne({ fecha: fechaAjustada, habitacionId: habitacionid, noPersonas: noPersonas });
+        console.log(precio);
+
+        if (precio === null) {
+            const habitacionesExistentes = await Habitacion.findOne(); // Buscar el documento que contiene los eventos
+
+            if (!habitacionesExistentes) {
+                throw new Error('No se encontraron eventos');
+            }
+
+            // Buscar la habitacion por su id
+            const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === habitacionid);
+
+            if (!habitacion) {
+                throw new Error('Habitacion no encontrada');
+            }
+
+            precio = {
+                costo_base: habitacion.others.baseCost,
+                costo_base_2noches: habitacion.others.baseCost2nights,
+                precio_modificado: habitacion.others.basePrice,
+                precio_base_2noches: habitacion.others.basePrice2nights
+            }
+        }
+        res.send(precio);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: 'Hubo un error al consultar los precios base.' });
+    }
+}
+
 
 async function eliminarRegistroPrecio(req, res) {
     try {
 
-        const { fecha, habitacionId } = req.query;
+        const { fecha, habitacionId, noPersonas } = req.query;
 
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
 
-        const resultado = await PrecioBaseXDia.PreciosEspeciales({ fecha: fechaAjustada, habitacionId: habitacionId });
+        const resultado = await PreciosEspeciales.findOneAndDelete({ fecha: fechaAjustada, habitacionId: habitacionId, noPersonas });
 
         if (!resultado) {
             return res.status(404).json({ message: 'No se encontró ningún registro para eliminar' });
@@ -143,6 +176,7 @@ module.exports = {
     eliminarPrecio,
     consultarPrecios,
     consultarPreciosPorId,
+    consultarPreciosPorFecha,
     eliminarRegistroPrecio,
     verificarExistenciaRegistro
 };
