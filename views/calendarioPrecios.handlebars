@@ -40,30 +40,52 @@
         {{/each}}
         {{#each preciosEspeciales}}
         <tr>
-          <td colspan="100%" style="text-align:center; background-color:#444;">Precios Especiales para {{@key}} Personas</td>
+          <td style="text-align:center; background-color:#444;">Precios para {{@key}} Personas</td>
         </tr>
         <tr>
-          <td style="text-align:center; vertical-align:middle">Precio Modificado</td>
+          <td style="text-align:center; vertical-align:middle">Precio Base</td>
           {{#each this.precio_modificado}}
-          <td style="text-align:center; vertical-align:middle">${{this}}</td>
+          <td style="text-align:center; vertical-align:middle">
+            {{#if this}}
+              ${{this}}
+            {{else}}
+              -
+            {{/if}}
+            </td>
           {{/each}}
         </tr>
         <tr>
           <td style="text-align:center; vertical-align:middle">Precio Base 2 Noches</td>
           {{#each this.precio_base_2noches}}
-          <td style="text-align:center; vertical-align:middle">${{this}}</td>
+          <td style="text-align:center; vertical-align:middle">
+            {{#if this}}
+              ${{this}}
+            {{else}}
+              -
+            {{/if}}
           {{/each}}
         </tr>
         <tr>
           <td style="text-align:center; vertical-align:middle">Costo Base</td>
           {{#each this.costo_base}}
-          <td style="text-align:center; vertical-align:middle">${{this}}</td>
+          <td style="text-align:center; vertical-align:middle">
+            {{#if this}}
+              ${{this}}
+            {{else}}
+              -
+            {{/if}}
+            </td>
           {{/each}}
         </tr>
         <tr>
           <td style="text-align:center; vertical-align:middle">Costo Base 2 Noches</td>
           {{#each this.costo_base_2noches}}
-          <td style="text-align:center; vertical-align:middle">${{this}}</td>
+          <td style="text-align:center; vertical-align:middle">
+            {{#if this}}
+              ${{this}}
+            {{else}}
+              -
+            {{/if}}
           {{/each}}
         </tr>
         {{/each}}
