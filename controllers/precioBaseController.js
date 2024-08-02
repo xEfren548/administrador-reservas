@@ -1,4 +1,5 @@
 const PrecioBaseXDia = require('../models/PrecioBaseXDia');
+const PreciosEspeciales = require('../models/PreciosEspeciales');
 const Habitacion = require('../models/Habitacion');
 const mongoose = require('mongoose');
 
@@ -62,12 +63,23 @@ async function consultarPreciosPorId(req, res) {
 
 async function consultarPreciosPorFecha(req, res) {
     try {
-        const { fecha, habitacionid } = req.query;
+        const { fecha, habitacionid, needSpecialPrice, pax } = req.query;
+        console.log("need special price? " , needSpecialPrice)
+        console.log(typeof needSpecialPrice)
+        
+        let precio = null;
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
         console.log(fechaAjustada);
-        let precio = await PrecioBaseXDia.findOne({ fecha: fechaAjustada, habitacionId: habitacionid });
+
+        if (needSpecialPrice === "true") {
+            precio = await PreciosEspeciales.findOne({ fecha: fechaAjustada, habitacionId: habitacionid, noPersonas: pax})
+        } else {
+            precio = await PrecioBaseXDia.findOne({ fecha: fechaAjustada, habitacionId: habitacionid });
+
+        }
+        
         console.log(precio);
 
         if (precio === null) {

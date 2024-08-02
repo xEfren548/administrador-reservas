@@ -268,6 +268,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const nightsInput = document.querySelector('#event_nights');
     const arrivalDate = document.getElementById('event_start_date')
     const departureDate = document.getElementById('event_end_date')
+    const selectedPax = document.getElementById('numero-personas')
+
 
 
     arrivalDate.addEventListener('input', calculateNightDifference);
@@ -318,6 +320,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // Agregar un listener para el evento change a departureDate
     departureDate.addEventListener('change', obtenerTotalReserva);
 
+    selectedPax.addEventListener('change', obtenerTotalReserva);
+
     const descuentoReservaInput = document.querySelector('#habitacion_descuento')
     const subtotalInput = document.getElementById('habitacion_total');
     const totalFinal = document.getElementById('habitacion_totalcondescuento');
@@ -345,13 +349,13 @@ document.addEventListener("DOMContentLoaded", function () {
         const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
         const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
 
-
-        if (arrivalDate.value && departureDate.value && tipologiaSelect.value) {
+        console.log('pax: ', selectedPax.value);
+        if (arrivalDate.value && departureDate.value && tipologiaSelect.value && selectedPax.value !=="") {
 
             const calculandoPreciosElement = document.getElementById('calculando-precios');
             calculandoPreciosElement.style.display = 'block';
             // Aquí puedes ejecutar la acción deseada
-            console.log("Los tres elementos tienen un valor. Ejecutar acción...");
+            console.log("Los 4 elementos tienen un valor. Ejecutar acción...");
             const fechas = obtenerRangoFechas(fechaInicio, fechaFin)
             const nNights = document.getElementById("event_nights").value.trim();
             const habitacionId = idHabitacionInput.value
@@ -367,8 +371,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     const formatedDate = `${year}-${month}-${day}`;
 
                     console.log("estoy consultando precios")
+                    const maxOccupation = document.getElementById('ocupacion_habitacion').value.trim()
+                    const selectedPax = document.getElementById('numero-personas').value.trim()
 
-                    const response = await fetch(`/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}`);
+                    const needSpecialPrice = (selectedPax === maxOccupation) ? false : true;
+
+                    const response = await fetch(`/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}&needSpecialPrice=${needSpecialPrice}&pax=${selectedPax}`);
 
                     // Verificar el estado de la respuesta
                     if (!response.ok) {
