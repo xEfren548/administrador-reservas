@@ -296,6 +296,16 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log(idHabitacionInput);
         console.log(idHabitacionInput.value);
 
+        const numeroPersonasSelect = document.getElementById('numero-personas');
+        const maxOccupancy = selectedOption.getAttribute('data-bs-pax');
+        numeroPersonasSelect.innerHTML = '<option value="" selected disabled>Selecciona el número de personas --</option>';
+        for (let i = 2; i <= maxOccupancy; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            numeroPersonasSelect.appendChild(option);
+        }
+
 
 
         obtenerTotalReserva()

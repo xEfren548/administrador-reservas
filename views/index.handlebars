@@ -115,8 +115,8 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
+
                     <div class="row">
                         <div class="col-sm-4">
                             <div class="form-group">
@@ -165,6 +165,15 @@
                             </div>
                         </div>
                     </div> <!-- Cierre row -->
+
+                    <div class="row mt-2 mb-2">
+                        <div class="col-5">
+                            <label for="numero-personas">Numero de personas que se hospedarán: </label>
+                            <select name="numero-personas" id="numero-personas" class="form-select form-select-md" required>
+                                <option value="" selected disabled>Selecciona el número de personas --</option>
+                            </select>
+                        </div>
+                    </div>
 
                     <div class="row mt-2">
                         <div class="col-sm-6">
@@ -380,5 +389,20 @@
             document.body.removeChild(preloader);
         });
     });
+
+    document.getElementById('tipologia_habitacion').addEventListener('change', function () {
+        console.log('Cambia!')
+        const numeroPersonasSelect = document.getElementById('numero-personas');
+        const maxOccupancy = selectedOption.getAttribute('data-pax');
+        numeroPersonasSelect.innerHTML = '<option value="" selected disabled>Selecciona el número de personas --</option>';
+        for (let i = 2; i < maxOccupancy; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            numeroPersonasSelect.appendChild(option);
+        }
+
+    });
+
 
 </script>

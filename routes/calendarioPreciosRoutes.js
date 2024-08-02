@@ -71,16 +71,17 @@ function pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, p
             if (habitacion._id == element.habitacionId) {
                 if (!habitacionesyprecio.preciosEspeciales[element.noPersonas]) {
                     habitacionesyprecio.preciosEspeciales[element.noPersonas] = {
-                        precio_modificado: Array(daysWithDates.length).fill(null),
-                        precio_base_2noches: Array(daysWithDates.length).fill(null),
-                        costo_base: Array(daysWithDates.length).fill(null),
-                        costo_base_2noches: Array(daysWithDates.length).fill(null)
+                        precio_modificado: Array(daysWithDates.length).fill(habitacion.others.basePrice),
+                        precio_base_2noches: Array(daysWithDates.length).fill(habitacion.others.basePrice2nights),
+                        costo_base: Array(daysWithDates.length).fill(habitacion.others.baseCost),
+                        costo_base_2noches: Array(daysWithDates.length).fill(habitacion.others.baseCost2nights)
                     };
                 }
-                let dayIndex = dayOfYear(new Date(currentTime)) - 1;                habitacionesyprecio.preciosEspeciales[element.noPersonas].precio_modificado[dayIndex] = element.precio_modificado;
-                habitacionesyprecio.preciosEspeciales[element.noPersonas].precio_base_2noches[dayIndex] = element.precio_base_2noches;
-                habitacionesyprecio.preciosEspeciales[element.noPersonas].costo_base[dayIndex] = element.costo_base;
-                habitacionesyprecio.preciosEspeciales[element.noPersonas].costo_base_2noches[dayIndex] = element.costo_base_2noches;
+                let dayIndex = dayOfYear(new Date(currentTime)) - 1;
+                habitacionesyprecio.preciosEspeciales[element.noPersonas].precio_modificado[dayIndex] = element.precio_modificado || habitacion.others.basePrice;
+                habitacionesyprecio.preciosEspeciales[element.noPersonas].precio_base_2noches[dayIndex] = element.precio_base_2noches || habitacion.others.basePrice2nights;
+                habitacionesyprecio.preciosEspeciales[element.noPersonas].costo_base[dayIndex] = element.costo_base || habitacion.others.baseCost;
+                habitacionesyprecio.preciosEspeciales[element.noPersonas].costo_base_2noches[dayIndex] = element.costo_base_2noches || habitacion.others.baseCost2nights;
             }
         });
 
@@ -118,7 +119,6 @@ router.get('/calendario-precios', async (req, res) => {
         const pricexday = pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData, preciosEspecialesData);
 
         //console.log(pricexday[0].precios);
-        console.log(pricexday[0].preciosEspeciales)
 
 
         res.render('calendarioPrecios', {
