@@ -1,13 +1,10 @@
 <form id="frmCreateSurvey">
     <div class="page-info">
         <h1>Responder encuesta de satisfacción</h1>
-        <button id="btnSubmitSurvey" type="submit">Enviar respuestas</button>
+        <button class="btn btn-info mr-2" id="btnSubmitSurvey" type="submit">Enviar respuestas</button>
     </div>
 
     <div class="survey-form">
-        <div class="enter-data">
-            <input id="txt-client-email" type="email" placeholder="Ingresa tu dirección de correo electrónico de cliente">
-        </div>
         <div class="error-message"><p></p></div>
         <hr>
 
@@ -79,7 +76,6 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const email = document.querySelector(".survey-form #txt-client-email");
         const inputFieldError = document.querySelector(".survey-form .error-message p");
         const questions = document.querySelectorAll(".survey-form .questions .question");
         const btnAddNewQuestion = document.querySelector(".survey-form .add-new-question button");
@@ -97,14 +93,7 @@
             question.classList.remove("question-error");
             errorTag.innerHTML = "";
         }
-        function setInputFieldInitialValues(inputField){           
-            // Setting events in the corresponding question elements.            
-            inputField.addEventListener("mouseenter", () =>{ resetInputFieldError(inputField, inputFieldError); });
-        } 
-        function setInputFieldError(inputField, errorTag, errorMessage){
-            email.classList.add("input-error");
-            errorTag.innerHTML = errorMessage;
-        }
+
         function resetInputFieldError(inputField, errorTag){
             inputField.classList.remove("input-error");
             errorTag.innerHTML = "";
@@ -115,11 +104,6 @@
             const questions = document.querySelectorAll(".questions .question");
             var answersInfo = [];
             var error = false;            
-
-            if(!email.value){ 
-                setInputFieldError(email, inputFieldError, "Error: ingresa tu dirección de correo electrónico de cliente");
-                error = true; 
-            }
 
             // Retrieving every question in form.
             questions.forEach(question => {
@@ -157,6 +141,24 @@
             });
             if(error){ return; }
 
+            const url = window.location.href;
+            const urlObj = new URL(url);
+            const params = new URLSearchParams(urlObj.search);
+            const reservationId = params.get('id');
+            console.log(reservationId)
+
+            if (!reservationId) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "Error: No se pudo obtener el ID de la reservación.",
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+
+
+
             // Sending form info.
             fetch("/procesar-encuesta/enviar-respuestas", {
                 method: "POST",
@@ -164,8 +166,8 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    clientEmail: email.value,
-                    answersInfo
+                    answersInfo,
+                    reservationId
                 })
             })
             .then(response => {
@@ -206,7 +208,6 @@
         }
         
         // Setting events.
-        setInputFieldInitialValues(email);
         questions.forEach(question => {
             setQuestionInitialValues(question);
         });

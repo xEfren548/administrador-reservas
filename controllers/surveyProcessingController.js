@@ -6,6 +6,7 @@ const Evento = require('../models/Evento');
 const Cliente = require('../models/Cliente');
 const Encuesta = require('../models/Encuesta');
 const habitacionController = require('../controllers/habitacionController')
+const eventController = require('../controllers/eventController');
 const moment = require('moment');
 
 const showSurveyValidators = [
@@ -20,31 +21,31 @@ const showSurveyValidators = [
 ];
 
 const answerSurveyValidators = [
-    check("clientEmail")
-        .custom(async (value, { req }) => {
-            var client = await Cliente.findOne({ email: value });
-            if (!client) {
-                console.log('El cliente no existe');
-                throw new NotFoundError("Current client does not exist. Calling FBI");
-            }
+    // check("clientEmail")
+    //     .custom(async (value, { req }) => {
+    //         var client = await Cliente.findOne({ email: value });
+    //         if (!client) {
+    //             console.log('El cliente no existe');
+    //             throw new NotFoundError("Current client does not exist. Calling FBI");
+    //         }
 
-            var evento = await Evento.findOne();
-            if (!evento || !evento.events || evento.events.length === 0) {
-                throw new NotFoundError("No reservations found for this event.");
-            }
+    //         var evento = await Evento.findOne();
+    //         if (!evento || !evento.events || evento.events.length === 0) {
+    //             throw new NotFoundError("No reservations found for this event.");
+    //         }
 
-            var reservations = evento.events.filter(reservation => reservation.client.toString() === client._id.toString());
-            if (reservations.length === 0) {
-                throw new NotFoundError("Current client has no reservation. Calling FBI");
-            }
+    //         var reservations = evento.events.filter(reservation => reservation.client.toString() === client._id.toString());
+    //         if (reservations.length === 0) {
+    //             throw new NotFoundError("Current client has no reservation. Calling FBI");
+    //         }
 
-            // var latestReservation = reservations[reservations.length - 1];
-            // if (latestReservation.surveySubmited) {
-            //     throw new NotFoundError("You have already submitted this survey");
-            // }
+    //         // var latestReservation = reservations[reservations.length - 1];
+    //         // if (latestReservation.surveySubmited) {
+    //         //     throw new NotFoundError("You have already submitted this survey");
+    //         // }
 
-            return true;
-        }),
+    //         return true;
+    //     }),
 
         
     check('questionsInfo')
@@ -76,6 +77,13 @@ const showClientsResponsesValidator = [
 async function showSurvey(req, res, next) {
     try {
         var survey = await Encuesta.findOne().lean();
+        const reservationId = req.query.id;
+        const reservation = await eventController.obtenerEventoPorId(reservationId);
+        console.log(reservation);
+        if (!reservation) {
+            throw new NotFoundError("No hay una reserva con ese id.")
+        }
+        if (reservation.surveySubmited) {throw new Error ('Una encuesta ya fue respondida para esta reserva.')}
         
         if(!survey){ throw new NotFoundError("No previously existing survey to process") }
         else{ 
@@ -86,24 +94,32 @@ async function showSurvey(req, res, next) {
             }); 
         }
     } catch (err) {
-        return next(err);
+        console.log(err);
+        res.render('errorView', {
+            layout: "layoutProcesarEncuesta",
+            err: err.message || 'Hubo un error, verifica el id de tu reserva.'
+        })
+        // return next(err);
     }
 }
 
 async function answerSurvey(req, res, next) {
-    const { clientEmail, answersInfo } = req.body;
+    const { answersInfo, reservationId } = req.body;
+
+    
+    console.log(reservationId);
     console.log(answersInfo); 
 
     try {
-        var client = await Cliente.findOne({ email: clientEmail });
-        if(!client){ throw new NotFoundError("Current client does not exist. Calling FVI") }
-        console.log("Cliente 2: ", client);
+
+        if (!reservationId) {
+            throw new BadRequestError("Missing reservation id");
+        }
 
         const reservations = await Evento.findOne();
-        const reservation = reservations.events.find(reservation => reservation.client.toString() === client._id.toString());
+        const reservation = reservations.events.find(reservation => reservation._id.toString() === reservationId.toString());
         if(!reservation){ throw new NotFoundError("Current client has no reservation. Calling FVI") }
 
-        console.log("Cliente asociado: ", client);
         console.log("Reservación asociada: ", reservation);
 
         const clientAnswers = await RespuestasUsuario.findOneAndUpdate(
