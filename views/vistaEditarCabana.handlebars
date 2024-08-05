@@ -13,6 +13,9 @@
 <form name="form" id="frm{{this.propertyDetails.name}}" style="display: none;">
     <div class="page-info">
         <h1>Editar alojamiento</h1>
+        <button type="button" class="btn btn-danger mr-1" title="Eliminar cabaña" data-chalet-id="{{this._id}}">
+            <i class="fa fa-trash" aria-hidden="true"></i>
+        </button>
         <button type="submit" class="btn-save-info">Guardar</button>
     </div>
 
@@ -1387,6 +1390,70 @@
             })
         })
     })
+    
+    // Deleting client info.
+    const deleteButtons = document.querySelectorAll('.btn-danger');
+    deleteButtons.forEach(function (button) {
+        button.addEventListener('click', async function () {
+            console.log(this)
+            const chaletId = this.getAttribute('data-chalet-id');
+            console.log(chaletId)
+
+            const confirmacion = await Swal.fire({
+                title: '¿Estás seguro de querer eliminar esta habitación?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+            })
+
+            if (confirmacion.isConfirmed){
+
+                await fetch(`/api/habitaciones/${chaletId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            response.json().then(errorData => {
+                                const errors = errorData.error;
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                    confirmButtonText: 'Aceptar'
+                                });
+                            });
+                            throw new Error('Error en la solicitud');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Completado!',
+                            text: data.mensaje + '.',
+                            confirmButtonText: 'Aceptar'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                location.reload();
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    });
+            }
+        });
+            
+    });
 
     window.addEventListener("load", () => {
         const preloader = document.querySelector(".pre-loader");
