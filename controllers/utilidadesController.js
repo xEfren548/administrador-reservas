@@ -6,6 +6,7 @@ const Habitacion = require('./../models/Habitacion');
 const Costos = require('./../models/Costos');
 const Utilidades = require('./../models/Utilidades');
 const Servicio = require('./../models/Servicio');
+const User = require('./../models/Usuario');
 
 async function obtenerComisionesPorReserva(idReserva) {
     try {
@@ -315,16 +316,63 @@ async function generarComisionReserva(req, res) {
         let comisionInversionistas = nuevoCostoBase / cuantosInversionistas
         console.log('comision inversionistas: ', comisionInversionistas)
 
-        for (let investor of chaletInvestors) {
+        if (cuantosInversionistas > 0) {
+            for (let investor of chaletInvestors) {
+                let userInvestor = await User.findById(investor._id);
+                if (userInvestor) {
+                    if (userInvestor.investorType === 'F'){
+                        // Comision normal
+                        await altaComisionReturn({
+                            monto: comisionInversionistas,
+                            concepto: `Comisión de inversionista por Reserva de cabaña: ${chaletName}`,
+                            fecha: new Date(departureDate),
+                            idUsuario: investor._id,
+                            idReserva: idReserva
+                        })
+                        // Comision negativa de IVA (16%)
+                        let comisionNegativaIva = comisionInversionistas * 0.16;
+                        await altaComisionReturn({
+                            monto: -comisionNegativaIva,
+                            concepto: `Retención IVA inversionista por Reserva de cabaña: ${chaletName}`,
+                            fecha: new Date(departureDate),
+                            idUsuario: investor._id,
+                            idReserva: idReserva
+                        })
+                        // Comision negativa de ISR (5%)
+                        let comisionNegativaIsr = comisionInversionistas * 0.05;
+                        await altaComisionReturn({
+                            monto: -comisionNegativaIsr,
+                            concepto: `Retención ISR inversionista por Reserva de cabaña: ${chaletName}`,
+                            fecha: new Date(departureDate),
+                            idUsuario: investor._id,
+                            idReserva: idReserva
+                        })
+        
+                    } else {
+                        await altaComisionReturn({
+                            monto: comisionInversionistas,
+                            concepto: `Comisión de inversionista por Reserva de cabaña: ${chaletName}`,
+                            fecha: new Date(departureDate),
+                            idUsuario: investor._id,
+                            idReserva: idReserva
+                        })
+                    }
+    
+                } 
+    
+            }
+
+        } else {
+        // Comisión de dueño de cabañas (ANTERIOR)
             await altaComisionReturn({
-                monto: comisionInversionistas,
-                concepto: `Comisión por Reserva de cabaña: ${chaletName}`,
+                monto: costoBase - chalet.additionalInfo.extraCleaningCost,
+                concepto: `Comisión Dueño de cabaña: ${chaletName}`,
                 fecha: new Date(departureDate),
-                idUsuario: investor._id,
+                idUsuario: chaletOwner,
                 idReserva: idReserva
             })
-
         }
+
 
 
 
