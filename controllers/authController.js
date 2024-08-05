@@ -66,7 +66,23 @@ async function login(req, res, next){
         console.log("Usuario logeado con éxito");
         // Uncomment the following line in order to test it on the browser.
         console.log(req.session);
-        res.redirect('/api/dashboard');
+        const redirectToCalendar = ['Administrador', 'Vendedor']
+        const redirectToTheirChalets = ['Dueño de cabañas', 'Colaborador de dueño de cabañas']
+        const redirectToUtilities = ['Inversionistas', 'Limpieza', 'Servicios adicionales']
+
+        const userPrivilege = req.session.privilege;
+
+        if (redirectToCalendar.includes(userPrivilege)){
+            res.redirect('/');
+        } else if(redirectToTheirChalets.includes(userPrivilege)){
+            res.redirect('/api/calendar/duenos')
+        } else if(redirectToUtilities.includes(userPrivilege)){
+            res.redirect('/api/mostrar-utilidades')
+        } else {
+            res.redirect('/api/dashboard');
+
+        }
+        
         
         // Uncomment the following line in order to test it on Postman.
         //res.status(200).json( req.session );

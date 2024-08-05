@@ -21,7 +21,7 @@ async function generateSideMenu(req, res, next) {
     try {
         const privileges = {
             "Administrador": [
-                { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
                 { 'Home': ["/", "fs-5 fa fa-house"] },
                 { 'Usuarios': ["/api/usuarios", "fas fa-users"] },
                 { 'Clientes': ["/api/clientes/mostrar-clientes", "fa fa-user-circle"] },
@@ -34,30 +34,30 @@ async function generateSideMenu(req, res, next) {
                 { 'Precios': ["/calendario-precios", "far fa-calendar-alt"] },
             ],
             'Vendedor': [
-                { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
                 { 'Home': ["/", "fs-5 fa fa-house"] },
                 { 'Reserva cliente cabaña': ["/instrucciones/", "far fa-calendar-alt"] },
                 { 'Mis Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
             ],
             'Limpieza': [
-                { 'Dashboard': ["/dashboard", "fs-5 fa fa-chart-bar"] },
+                // { 'Dashboard': ["/dashboard", "fs-5 fa fa-chart-bar"] },
                 { 'Limpieza': ["/racklimpieza", "fas fa-broom"] },
             ],
             'Servicios adicionales': [
-                { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
                 { 'Servicios adicionales': ["/api/servicios", "fas fa-spa"] },
             ],
             'Dueño de cabañas': [
-                { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
                 { 'Calendario': ["/api/calendar/duenos", "fs-5 fa fa-calendar"] },
                 { 'Mis Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
             ],
             'Colaborador dueño': [
-                { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
                 { 'Calendario': ["/api/calendar/colaboradorduenos", "fs-5 fa fa-calendar"] },
             ],
             'Inversionistas': [
-                { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
                 { 'Calendario': ["/api/calendar/colaboradorduenos", "fs-5 fa fa-calendar"] },
 
             ],
