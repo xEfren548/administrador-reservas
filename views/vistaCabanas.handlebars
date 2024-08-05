@@ -39,7 +39,7 @@
         </div>
         <div class="input-group half">
             <label for="txtChaletEmail">Email</label>
-            <input id="txtChaletEmail" name="txtChaletEmail" type="email">
+            <input id="txtChaletEmail" name="txtChaletEmail" type="email" required>
         </div>
         <div class="input-group half">
             <label for="txtChaletWebsite">Sitio web</label>
@@ -1191,10 +1191,13 @@
                         throw new Error('Sube imágenes para la cabaña.');
                     }
                     if (imagesarrayDB.length > 0){
-                        data.other.images = imagesarrayDB
+                        data.others.images = imagesarrayDB
                     }
                     if (!pdfFile && pdfarrayDB.length == 0) {
                         throw new Error('No se ha seleccionado un archivo PDF.');
+                    }
+                    if (!data.propertyDetails.email || !(validarCorreo(data.propertyDetails.email))){
+                        throw new Error('Ingresa un email válido.');
                     }
                     fetch('/api/cabanas/crear-cabana', {
                         method: 'POST',
@@ -1583,6 +1586,14 @@
                 return false; // If we find an entry, it's not empty
             }
             return true; // No entries found, formData is empty
+        }
+
+        function validarCorreo(correo) {
+            // Expresión regular para validar un correo electrónico
+            const regexCorreo = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+            // Validar el correo con la expresión regular
+            return regexCorreo.test(correo);
         }
     });
 
