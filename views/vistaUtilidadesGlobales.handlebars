@@ -89,6 +89,8 @@
                     {
                         extend: 'csvHtml5',
                         text: 'Exportar a CSV',
+                        footer: true,
+                        
                     },
                     {
                         extend: 'pdfHtml5',
@@ -108,6 +110,19 @@
                             }
                             return mensaje;
                         },
+                        customize: function (doc) {
+                            // Calculate total for all filtered data
+                            var total = dataTable.column(1, { search: 'applied' }).data().reduce(function (a, b) {
+                                return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
+                            }, 0);
+
+                            // Add a footer with the total amount
+                            doc.content.push({
+                                text: 'Total: $' + total.toFixed(2),
+                                alignment: 'right',
+                                margin: [0, 10, 0, 0] // margin: [left, top, right, bottom]
+                            });
+                        }
 
                     }
                 ],
@@ -121,7 +136,7 @@
                 "drawCallback": function () {
                     // Calculate and update the total monto
                     var api = this.api();
-                    var total = api.column(1, { page: 'current' }).data().reduce(function (a, b) {
+                    var total = api.column(1, { search: 'applied' }).data().reduce(function (a, b) {
                         return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
                     }, 0);
                     document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
