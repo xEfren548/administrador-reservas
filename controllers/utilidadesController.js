@@ -471,9 +471,7 @@ async function mostrarUtilidadesGlobales(req, res) {
             utilidadesPorReserva = utilidades.filter(utilidad => utilidad.concepto.includes("Utilidad"))
 
             for (let utilidad of utilidades){
-                console.log(utilidad)
                 let idUser = utilidad.idUsuario;
-                console.log(idUser);
                 let user = await usersController.obtenerUsuarioPorIdMongo(idUser)
                 if (user) {
                     utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`
