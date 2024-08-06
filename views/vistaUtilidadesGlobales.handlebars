@@ -61,7 +61,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td>Total</td>
+                    <td><b>Total</b></td>
                     <td id="totalMonto"></td>
                     <td colspan="2"></td>
                 </tr>
@@ -90,7 +90,7 @@
                         extend: 'csvHtml5',
                         text: 'Exportar a CSV',
                         footer: true,
-                        
+
                     },
                     {
                         extend: 'pdfHtml5',
@@ -140,6 +140,7 @@
                         return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
                     }, 0);
                     document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
+                    updateChart(api);
                 }
             });
 
@@ -174,94 +175,106 @@
 
     });
 
-
-    let utilidadesPorMes = {{ json utilidadesPorMes }}
-    console.log(utilidadesPorMes)
-    var lineChartData = {
-        labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-        datasets: [{
-            label: "Comisión del mes",
-            tension: 0.4,
-            borderWidth: 4,
-            pointRadius: 5,
-            pointBackgroundColor: "rgba(255, 99, 132, 0.8)",
-            pointBorderColor: "transparent",
-            borderColor: "rgba(255, 99, 132, 0.8)",
-            backgroundColor: "transparent",
-            fill: true,
-            data: utilidadesPorMes,
-            maxBarThickness: 6
-        }],
-    };
-
-    // Opciones para el gráfico de líneas
-    var lineChartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false,
-            }
+    chartInstance = new Chart(document.getElementById("chart-line").getContext("2d"), {
+        type: "line",
+        data: {
+            labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            datasets: [{
+                label: "Comisión del mes",
+                tension: 0.4,
+                borderWidth: 4,
+                pointRadius: 5,
+                pointBackgroundColor: "rgba(255, 99, 132, 0.8)",
+                pointBorderColor: "transparent",
+                borderColor: "rgba(255, 99, 132, 0.8)",
+                backgroundColor: "transparent",
+                fill: true,
+                data: Array(12).fill(0), // Initialize with zeros
+                maxBarThickness: 6
+            }],
         },
-        interaction: {
-            intersect: false,
-            mode: 'index',
-        },
-        scales: {
-            y: {
-                grid: {
-                    drawBorder: false,
-                    display: true,
-                    drawOnChartArea: true,
-                    drawTicks: false,
-                    borderDash: [5, 5],
-                    color: 'rgba(255, 99, 132, 0.2)'
-                },
-                ticks: {
-                    beginAtZero: true,
-                    padding: 10,
-                    font: {
-                        size: 14,
-                        weight: 300,
-                        family: "Roboto",
-                        style: 'normal',
-                        lineHeight: 2
-                    },
-                    color: "#f8f9fa"
-                },
-            },
-            x: {
-                grid: {
-                    drawBorder: false,
-                    display: true,
-                    drawOnChartArea: true,
-                    drawTicks: false,
-                    borderDash: [5, 5],
-                    color: 'rgba(255, 99, 132, 0.2)'
-                },
-                ticks: {
-                    display: true,
-                    color: '#f8f9fa',
-                    padding: 10,
-                    font: {
-                        size: 14,
-                        weight: 300,
-                        family: "Roboto",
-                        style: 'normal',
-                        lineHeight: 2
-                    },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
                 }
             },
-        },
-    };
-
-
-    var ctxLine = document.getElementById("chart-line").getContext("2d");
-    new Chart(ctxLine, {
-        type: "line",
-        data: lineChartData,
-        options: lineChartOptions,
+            interaction: {
+                intersect: false,
+                mode: 'index',
+            },
+            scales: {
+                y: {
+                    grid: {
+                        drawBorder: false,
+                        display: true,
+                        drawOnChartArea: true,
+                        drawTicks: false,
+                        borderDash: [5, 5],
+                        color: 'rgba(255, 99, 132, 0.2)'
+                    },
+                    ticks: {
+                        beginAtZero: true,
+                        padding: 10,
+                        font: {
+                            size: 14,
+                            weight: 300,
+                            family: "Roboto",
+                            style: 'normal',
+                            lineHeight: 2
+                        },
+                        color: "#f8f9fa"
+                    },
+                },
+                x: {
+                    grid: {
+                        drawBorder: false,
+                        display: true,
+                        drawOnChartArea: true,
+                        drawTicks: false,
+                        borderDash: [5, 5],
+                        color: 'rgba(255, 99, 132, 0.2)'
+                    },
+                    ticks: {
+                        display: true,
+                        color: '#f8f9fa',
+                        padding: 10,
+                        font: {
+                            size: 14,
+                            weight: 300,
+                            family: "Roboto",
+                            style: 'normal',
+                            lineHeight: 2
+                        },
+                    }
+                },
+            },
+        }
     });
+
+    // Function to update the chart with filtered data
+    function updateChart(api) {
+        var monthlyData = Array(12).fill(0); // Initialize array for 12 months
+
+        api.rows({ search: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
+            var data = this.data();
+            var date = moment(data[2], "DD/MM/YYYY"); // Assuming date is in the 3rd column
+            var monthIndex = date.month(); // Get the month index (0-based)
+            var amount = parseFloat(data[1].replace(/[^\d.-]/g, '')); // Parse the amount
+
+            if (!isNaN(monthIndex) && !isNaN(amount)) {
+                monthlyData[monthIndex] += amount; // Accumulate amount for each month
+            }
+        });
+
+        // Update the chart data and redraw
+        if (chartInstance) {
+            chartInstance.data.datasets[0].data = monthlyData;
+            chartInstance.update();
+        }
+    }
 
     const ctx = document.getElementById('doughnut-chart').getContext('2d');
     const totalEarnings = {{ totalEarnings }};
