@@ -33,6 +33,7 @@
         <table class="table table-dark table-hover text-center nowrap" id="tablaUtilidades">
             <thead class="table-light">
                 <tr>
+                    <th scope="col">Habitación</th>
                     <th scope="col">Concepto</th>
                     <th scope="col">Monto</th>
                     <th scope="col">Fecha</th>
@@ -44,6 +45,7 @@
                 {{#if utilidades.length}}
                 {{#each utilidades}}
                 <tr>
+                    <td>Hola</td>
                     <td>{{this.concepto}}</td>
                     <td>${{this.monto}}</td>
                     <td>{{this.fecha}}</td>
@@ -61,7 +63,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td><b>Total</b></td>
+                    <td colspan="2"><b>Total</b></td>
                     <td id="totalMonto"></td>
                     <td colspan="2"></td>
                 </tr>
@@ -112,7 +114,7 @@
                         },
                         customize: function (doc) {
                             // Calculate total for all filtered data
-                            var total = dataTable.column(1, { search: 'applied' }).data().reduce(function (a, b) {
+                            var total = dataTable.column(2, { search: 'applied' }).data().reduce(function (a, b) {
                                 return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
                             }, 0);
 
@@ -136,7 +138,7 @@
                 "drawCallback": function () {
                     // Calculate and update the total monto
                     var api = this.api();
-                    var total = api.column(1, { search: 'applied' }).data().reduce(function (a, b) {
+                    var total = api.column(2, { search: 'applied' }).data().reduce(function (a, b) {
                         return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
                     }, 0);
                     document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
@@ -147,7 +149,7 @@
             DataTable.ext.search.push(function (settings, data, dataIndex) {
                 var minDate = moment(document.getElementById('startDate').value, "YYYY-MM-DD").startOf('day');
                 var maxDate = moment(document.getElementById('endDate').value, "YYYY-MM-DD").endOf('day');
-                var targetDate = moment(data[2], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
+                var targetDate = moment(data[3], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
 
                 if ((isNaN(minDate) && isNaN(maxDate)) ||
                     (isNaN(minDate) && targetDate <= maxDate) ||
@@ -260,9 +262,10 @@
 
         api.rows({ search: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
             var data = this.data();
-            var date = moment(data[2], "DD/MM/YYYY"); // Assuming date is in the 3rd column
+            var date = moment(data[3], "DD/MM/YYYY"); // Assuming date is in the 4rd column
             var monthIndex = date.month(); // Get the month index (0-based)
-            var amount = parseFloat(data[1].replace(/[^\d.-]/g, '')); // Parse the amount
+            var amount = parseFloat(data[2].replace(/[^\d.-]/g, '')); // Parse the amount
+
 
             if (!isNaN(monthIndex) && !isNaN(amount)) {
                 monthlyData[monthIndex] += amount; // Accumulate amount for each month
