@@ -485,6 +485,7 @@ async function mostrarUtilidadesGlobales(req, res) {
         const utilidadesPorMes = Array(12).fill(0); // Inicializa un array con 12 elementos, todos con valor 0
         
         let userMontos = {}; // Object to store total monto for each user
+        let utilidadMontos = {}; // Object to store total monto for each user
 
         if (Object.keys(utilidades).length > 0) {
             utilidadesPorReserva = utilidades.filter(utilidad => utilidad.concepto.includes("Utilidad"))
@@ -501,6 +502,12 @@ async function mostrarUtilidadesGlobales(req, res) {
                         // Asignar nombre del usuario y formatear fecha
                         utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`;
                         utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
+
+                        // Sum the monto for each user
+                        if (!userMontos[idUser]) {
+                            userMontos[idUser] = { monto: 0, nombreUsuario: utilidad.nombreUsuario };
+                        }
+                        userMontos[idUser].monto += utilidad.monto;
     
     
                     }
@@ -518,11 +525,7 @@ async function mostrarUtilidadesGlobales(req, res) {
                         utilidad.nombreHabitacion = "N/A";
                     }
 
-                    // Sum the monto for each user
-                    if (!userMontos[idUser]) {
-                        userMontos[idUser] = { monto: 0, nombreUsuario: utilidad.nombreUsuario };
-                    }
-                    userMontos[idUser].monto += utilidad.monto;
+
 
                 }
 
@@ -544,6 +547,16 @@ async function mostrarUtilidadesGlobales(req, res) {
                 // Sumar al total de comisiones
                 totalEarnings += utilidad.monto;
 
+                if (utilidad.nombreHabitacion !== 'N/A' && utilidad.nombreHabitacion !== null){
+                    if (!utilidadMontos[utilidad.nombreHabitacion]) {
+                        utilidadMontos[utilidad.nombreHabitacion] = { monto: 0, nombreHabitacion: utilidad.nombreHabitacion };
+                    }
+                    utilidadMontos[utilidad.nombreHabitacion].monto += utilidad.monto;
+
+                }
+
+
+
 
             }
 
@@ -555,7 +568,9 @@ async function mostrarUtilidadesGlobales(req, res) {
 
         const limit = 10000;
 
-        console.log(Object.values(userMontos));
+        // console.log(Object.values(userMontos));
+        console.log(Object.values(utilidadMontos));
+        
 
         utilidades.sort((a, b) => moment(b.fecha, 'DD-MM-YYYY').valueOf() - moment(a.fecha, 'DD-MM-YYYY').valueOf());
         res.render('vistaUtilidadesGlobales', {
@@ -563,7 +578,8 @@ async function mostrarUtilidadesGlobales(req, res) {
             totalEarnings,
             limit,
             utilidadesPorMes,
-            userMontos: Object.values(userMontos)
+            userMontos: Object.values(userMontos),
+            utilidadMontos: Object.values(utilidadMontos)
         })
 
     } catch (error) {
