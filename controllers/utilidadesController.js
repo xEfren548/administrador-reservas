@@ -461,6 +461,16 @@ async function mostrarUtilidadesGlobales(req, res) {
 
         utilidades = await Utilidades.find().lean();
 
+        
+        const habitacionesExistentes = await Habitacion.findOne().lean();
+        if (!habitacionesExistentes) {
+            return res.status(404).send('No rooms found');
+        }
+        // // Extract the IDs and names of the rooms
+        const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
+        console.log('Nombre cabañas: ')
+        console.log(nombreCabañas);
+
         let totalEarnings = 0
 
         const currentMonth = moment().month(); // Mes actual (0-11)
@@ -484,6 +494,18 @@ async function mostrarUtilidadesGlobales(req, res) {
                         utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
     
     
+                    }
+                    if (utilidad.idReserva){
+                        const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === utilidad.idReserva.toString())
+                        console.log('utilidad id reserva: ', utilidad.idReserva.toString());
+                        if (matchId) {
+                            utilidad.nombreHabitacion = matchId.name;
+                        } else {
+                            utilidad.nombreHabitacion = 'N/A';
+                        }
+
+                    } else {
+                        utilidad.nombreHabitacion = "N/A";
                     }
 
                 }
