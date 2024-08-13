@@ -605,6 +605,8 @@ async function createOwnerReservation(req, res, next) {
 
 
 
+
+
         const documento = await Documento.findOne();
         documento.events.push(reservationToAdd);
         await documento.save();
@@ -618,6 +620,27 @@ async function createOwnerReservation(req, res, next) {
 
         evento.url = url;
         await documento2.save();
+
+        await utilidadesController.altaComisionReturn({
+            monto: 0,
+            concepto: `Reserva de dueño/inversionista ${chalet.propertyDetails.name}`,
+            fecha: new Date(departureDate),
+            idUsuario: createdBy.toString(),
+            idReserva: idReserva
+        })
+
+        if (privilege === "Inversionistas"){
+            console.log('Entra')
+            const costoLimpieza = chalet.additionalInfo.extraCleaningCost;
+            console.log('Costo Limpieza: ', costoLimpieza)
+            await utilidadesController.altaComisionReturn({
+                monto: -costoLimpieza ,
+                concepto: `Limpieza Reserva de inversionista ${chalet.propertyDetails.name}`,
+                fecha: new Date(departureDate),
+                idUsuario: createdBy.toString(),
+                idReserva: idReserva
+            })
+        }
 
         // Log
         const logBody = {

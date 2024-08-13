@@ -181,7 +181,7 @@ async function obtenerUsuarioPorId(req, res, next){
     try{
         userToFind = await Usuario.findById(uuid);
 
-        // console.log("Usuario recuperado con éxito");
+        console.log("Usuario recuperado con éxito");
         res.status(200).json( {userToFind} );
     
     } catch(err){
@@ -199,7 +199,7 @@ async function obtenerUsuarioPorIdMongo(uuid){
     try{
         userToFind = await Usuario.findById(uuid).lean();
 
-        // console.log("Usuario recuperado con éxito");
+        console.log("Usuario recuperado con éxito");
         return userToFind;
     
     } catch(err){

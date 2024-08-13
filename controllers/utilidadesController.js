@@ -612,7 +612,7 @@ async function altaComisionReturn(req, res) {
     try {
         const { monto, concepto, fecha, idUsuario, idReserva, idServicio } = req
 
-        if (monto !== 0) {
+        if (monto !== null) {
 
             const newUtilidad = new Utilidades({
                 monto,
