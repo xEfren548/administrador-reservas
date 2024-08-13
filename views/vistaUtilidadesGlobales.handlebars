@@ -82,7 +82,7 @@
         var table = document.getElementById("tablaUtilidades");
         if (table) {
             var dataTable = new DataTable(table, {
-                "order": [[2, 'des']], // Puedes especificar aquí el orden inicial de las columnas
+                "ordering": false, // Puedes especificar aquí el orden inicial de las columnas
                 "paging": true, // Habilita la paginación
                 "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
                 "pageLength": 10, // Establece la longitud de página inicial

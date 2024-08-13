@@ -6,6 +6,7 @@ const Habitacion = require('./../models/Habitacion');
 const Costos = require('./../models/Costos');
 const Utilidades = require('./../models/Utilidades');
 const Servicio = require('./../models/Servicio');
+const Documento = require('./../models/Evento');
 const User = require('./../models/Usuario');
 
 async function obtenerComisionesPorReserva(idReserva) {
@@ -466,8 +467,14 @@ async function mostrarUtilidadesGlobales(req, res) {
         if (!habitacionesExistentes) {
             return res.status(404).send('No rooms found');
         }
+
+        const reservas = await Documento.findOne().lean();
+        if (!reservas) {
+            return res.status(404).send('No documents found');
+        }
         // // Extract the IDs and names of the rooms
         const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
+        const reservasMap = reservas.events.map(reserva => ({id: reserva._id.toString(), resourceId: reserva.resourceId.toString()}));
         console.log('Nombre cabañas: ')
         console.log(nombreCabañas);
 
@@ -496,9 +503,10 @@ async function mostrarUtilidadesGlobales(req, res) {
     
                     }
                     if (utilidad.idReserva){
-                        const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === utilidad.idReserva.toString())
-                        console.log('utilidad id reserva: ', utilidad.idReserva.toString());
-                        if (matchId) {
+                        const reserva = reservasMap.find(reservation => reservation.id.toString() === utilidad.idReserva.toString())
+                        if (reserva) {  
+                            const idHabitacion = reserva.resourceId;
+                            const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
                             utilidad.nombreHabitacion = matchId.name;
                         } else {
                             utilidad.nombreHabitacion = 'N/A';
@@ -539,6 +547,8 @@ async function mostrarUtilidadesGlobales(req, res) {
 
         const limit = 10000;
 
+        utilidades.sort((a, b) => moment(b.fecha, 'DD-MM-YYYY').valueOf() - moment(a.fecha, 'DD-MM-YYYY').valueOf());
+        console.log(utilidades);
         res.render('vistaUtilidadesGlobales', {
             utilidades: utilidades,
             totalEarnings,
