@@ -483,6 +483,8 @@ async function mostrarUtilidadesGlobales(req, res) {
         const currentMonth = moment().month(); // Mes actual (0-11)
         const currentYear = moment().year(); // Año actual
         const utilidadesPorMes = Array(12).fill(0); // Inicializa un array con 12 elementos, todos con valor 0
+        
+        let userMontos = {}; // Object to store total monto for each user
 
         if (Object.keys(utilidades).length > 0) {
             utilidadesPorReserva = utilidades.filter(utilidad => utilidad.concepto.includes("Utilidad"))
@@ -516,6 +518,12 @@ async function mostrarUtilidadesGlobales(req, res) {
                         utilidad.nombreHabitacion = "N/A";
                     }
 
+                    // Sum the monto for each user
+                    if (!userMontos[idUser]) {
+                        userMontos[idUser] = { monto: 0, nombreUsuario: utilidad.nombreUsuario };
+                    }
+                    userMontos[idUser].monto += utilidad.monto;
+
                 }
 
             }
@@ -547,13 +555,15 @@ async function mostrarUtilidadesGlobales(req, res) {
 
         const limit = 10000;
 
+        console.log(Object.values(userMontos));
+
         utilidades.sort((a, b) => moment(b.fecha, 'DD-MM-YYYY').valueOf() - moment(a.fecha, 'DD-MM-YYYY').valueOf());
-        console.log(utilidades);
         res.render('vistaUtilidadesGlobales', {
             utilidades: utilidades,
             totalEarnings,
             limit,
-            utilidadesPorMes
+            utilidadesPorMes,
+            userMontos: Object.values(userMontos)
         })
 
     } catch (error) {
