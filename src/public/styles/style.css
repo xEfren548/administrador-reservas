@@ -645,13 +645,10 @@ ul.rb li .timestamp {
 
 /* Bloqueo de calendario */
 
-
-
 #calendar-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
+    flex-wrap: nowrap;
+    overflow-x: auto;
 }
 
 .month {
@@ -662,6 +659,8 @@ ul.rb li .timestamp {
     padding: 10px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin: 10px;
+    flex: 0 0 auto;
 }
 
 .month-header {

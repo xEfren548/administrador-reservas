@@ -10,7 +10,7 @@ function createCalendar(month, year) {
     const firstDay = new Date(year, month, 1).getDay();
     
     const monthDiv = document.createElement('div');
-    monthDiv.classList.add('month');
+    monthDiv.classList.add('month', 'col-md-4');
     
     const monthHeader = document.createElement('div');
     monthHeader.classList.add('month-header');
