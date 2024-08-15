@@ -12,7 +12,7 @@ router.get('/calendario-bloqueofechas', async (req, res) => {
     const habitacionesMapeadas = habitaciones.resources.map(habitacion => {
         return {
             id: habitacion._id,
-            nombre: habitacion.propertyDetails.name,
+            name: habitacion.propertyDetails.name,
         }
 
     });
@@ -27,18 +27,11 @@ router.get('/calendario-bloqueofechas', async (req, res) => {
     ]
     
 
-    res.render('bloqueoFechas',
-        {
+    res.render('bloqueoFechas', {
             chalets: habitacionesMapeadas
         }
     );
 });
 
-function generateMonth(year, month){
-    const monthNames = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const firstDay = new Date(year, month, 1).getDay();
-
-}
 
 module.exports = router;

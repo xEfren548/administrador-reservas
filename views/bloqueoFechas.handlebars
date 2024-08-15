@@ -6,9 +6,12 @@
         <a name="" id="agregar-precios-xpersona" class="btn btn-secondary btn-sm " href="#" role="button"
             data-bs-toggle="modal" data-bs-target="#preciosxpersona_modal">Agregar precios por personas</a>
     </div>
-
+    
+    {{#each chalets}}
+    <h2>{{this.name}}</h2>
     <div class="container">
-        <div class="row" id="calendar-container" style="color: black !important">
+        <div class="row" id="calendar-container-{{this.name}}" style="color: black !important">
         </div>
     </div>
+    {{/each}}
     <script src="/scripts/blockCalendar.js"></script>
