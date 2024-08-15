@@ -19,7 +19,7 @@ async function crearFechaBloqueada(req, res){
         min,
         habitacionId: new mongoose.Types.ObjectId(habitacionId)
     })
-    
+
     const agregarFecha = await newFechaBloqueada.save();
     if (!agregarFecha){
         res.status(400).send({ message: 'Failed to create date' });
@@ -27,7 +27,29 @@ async function crearFechaBloqueada(req, res){
     res.status(200).send({ message: 'Date created successfully', date: agregarFecha});
 }
 
+async function eliminarFechaBloqueada(req, res){
+    try{
+        const { fecha, habitacionId } = req.query;
+    
+        const fechaAjustada = new Date(fecha);
+        fechaAjustada.setUTCHours(0); // Ajustar la hora a 00:00:00 UTC
+            
+        const resultado = await BloqueoFechas.findOneAndDelete({ fecha: fechaAjustada, habitacionId: habitacionId });
+    
+        if (!resultado) {
+            return res.status(404).json({ message: 'No se encontró ningún registro para eliminar' });
+        }
+    
+        res.status(200).json({ message: 'Registro eliminado correctamente' });
+
+    } catch(error){
+        console.error('Error al eliminar el registro de precio:', error);
+        res.status(500).json({ error: 'Error al eliminar el registro de precio' });
+    }
+}
+
 module.exports = {
     obtenerFechasBloqueadas,
-    crearFechaBloqueada
+    crearFechaBloqueada,
+    eliminarFechaBloqueada
 }

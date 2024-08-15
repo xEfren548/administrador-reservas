@@ -73,9 +73,11 @@ function createCalendar(month, year, calendarContainerId, chaletId) {
 
         // Crear un objeto de fecha para este día y normalizarla
         const currentDate = new Date(year, month, day).toISOString().split("T")[0];
+        let description = ''
         // Verificar si la fecha actual coincide con alguna fecha restringida
         const isRestricted = restrictedDates.some(restrictedDate => {
             if (restrictedDate.habitacionId === chaletId){
+                description = restrictedDate.description;
                 return restrictedDate.date.split("T")[0] === currentDate;
 
             }
@@ -84,6 +86,7 @@ function createCalendar(month, year, calendarContainerId, chaletId) {
         // Si es una fecha restringida, añadir la clase .restricted
         if (isRestricted) {
             dayDiv.classList.add('restricted');
+            dayDiv.setAttribute('data-description', description);
         }
 
         daysDiv.appendChild(dayDiv);
@@ -130,3 +133,16 @@ window.addEventListener("load", () => {
         }
     });
 });
+
+// document.addEventListener("DOMContentLoaded", () => {
+//     const fechasBloqueadas = document.querySelectorAll('.restricted');
+//     console.log(fechasBloqueadas)
+    
+//     fechasBloqueadas.forEach(fechasBloqueada => {
+//         fechasBloqueada.addEventListener('click', (event) => {
+//             const description = event.target.getAttribute('data-description');
+//             alert(description);
+//         });
+//     });
+
+// })
