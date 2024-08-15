@@ -958,23 +958,26 @@
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#inversionistas">+
         Inversionistas</button>
     <div id="inversionistas-{{this.propertyDetail.name}}">
-    <form>
-        <label for="options-{{this.propertyDetails.name}}" class="form-label">Selecciona hasta 10 inversionistas:</label>
+        <form>
+            <label for="options-{{this.propertyDetails.name}}" class="form-label">Selecciona hasta 10
+                inversionistas:</label>
 
-        <div class="row">
-            <div class="col-12">
-                <select class="form-select form-select-md bg-dark select-edit-investors" id="select-edit-investors-{{this.propertyDetails.name}}" name="options-{{this.propertyDetails.name}}" multiple style="width: 100%;"
-                data-investors='{{json this.others.investors}}'>
-                    {{#each ../investors}}
-                    <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
-                    {{/each}}
-                </select>
+            <div class="row">
+                <div class="col-12">
+                    <select class="form-select form-select-md bg-dark select-edit-investors"
+                        id="select-edit-investors-{{this.propertyDetails.name}}"
+                        name="options-{{this.propertyDetails.name}}" multiple style="width: 100%;"
+                        data-investors='{{json this.others.investors}}'>
+                        {{#each ../investors}}
+                        <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
+                        {{/each}}
+                    </select>
 
+                </div>
             </div>
-        </div>
 
     </div>
-    </form>
+</form>
 </form>
 {{/each}}
 
@@ -982,13 +985,13 @@
 <script>
     // Change forms.
     document.addEventListener("DOMContentLoaded", function () {
-        $('.select-edit-investors').each(function() {
+        $('.select-edit-investors').each(function () {
             $(this).select2({
                 placeholder: "Select investors",
                 maximumSelectionLength: 10
             });
 
-                    // Retrieve and parse the investors data from the data attribute
+            // Retrieve and parse the investors data from the data attribute
             const investorsData = $(this).data('investors');
             if (investorsData) {
                 // Set the pre-selected values
@@ -1369,7 +1372,7 @@
                             }
                         }).then((result) => {
                             Swal.fire({
-                                icon:'success',
+                                icon: 'success',
                                 title: 'Cabaña editada correctamente',
                                 confirmButtonText: 'Aceptar'
                             }).then((result) => {
@@ -1390,7 +1393,7 @@
             })
         })
     })
-    
+
     // Deleting client info.
     const deleteButtons = document.querySelectorAll('.btn-danger');
     deleteButtons.forEach(function (button) {
@@ -1407,7 +1410,7 @@
                 confirmButtonColor: '#3085d6',
             })
 
-            if (confirmacion.isConfirmed){
+            if (confirmacion.isConfirmed) {
 
                 await fetch(`/api/habitaciones/${chaletId}`, {
                     method: 'DELETE',
@@ -1452,16 +1455,16 @@
                     });
             }
         });
-            
+
     });
 
     window.addEventListener("load", () => {
         const preloader = document.querySelector(".pre-loader");
-
         preloader.classList.add("loader--hidden");
-
         preloader.addEventListener("transitionend", () => {
-            document.body.removeChild(preloader);
+            if (preloader) {
+                preloader.style.display = "none"; // Hide instead of removing
+            }
         });
     });
 </script>

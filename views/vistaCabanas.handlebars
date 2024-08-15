@@ -708,7 +708,7 @@
         </div>
         <div class="input-group third">
             <label for="txtLat">Latitud</label>
-            <input id="txtLat" name="txtLat" type="number" step=".000001"> 
+            <input id="txtLat" name="txtLat" type="number" step=".000001">
         </div>
         <div class="input-group third">
             <label for="txtLong">Longitud</label>
@@ -835,27 +835,27 @@
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#inversionistas">+
         Inversionistas</button>
     <div id="inversionistas">
-    <form>
-        <label for="options" class="form-label">Selecciona hasta 10 inversionistas:</label>
+        <form>
+            <label for="options" class="form-label">Selecciona hasta 10 inversionistas:</label>
 
-        <select class="form-select form-select-md bg-dark" id="select-investors" name="options[]" multiple>
-            {{#if investors}}
-            {{#each investors}}
-            <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
-            {{/each}}
-            {{else}}
-            <option value="0">No se encontraron inversionistas</option>
-            {{/if}}
-        </select>
+            <select class="form-select form-select-md bg-dark" id="select-investors" name="options[]" multiple>
+                {{#if investors}}
+                {{#each investors}}
+                <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
+                {{/each}}
+                {{else}}
+                <option value="0">No se encontraron inversionistas</option>
+                {{/if}}
+            </select>
 
-        </div>
-    </form>
-
-
-
-    <div class="form-item">
-        <p id="txtCreateChaletError" name="errMsg" class="error"></p>
     </div>
+</form>
+
+
+
+<div class="form-item">
+    <p id="txtCreateChaletError" name="errMsg" class="error"></p>
+</div>
 </form>
 
 
@@ -920,7 +920,7 @@
         }
 
 
-        
+
 
         // Upload chalet images.
         const fileUpload = document.getElementById('file-upload');
@@ -1190,13 +1190,13 @@
                     if (isFormDataEmpty(formData) && imagesarrayDB.length == 0) {
                         throw new Error('Sube imágenes para la cabaña.');
                     }
-                    if (imagesarrayDB.length > 0){
+                    if (imagesarrayDB.length > 0) {
                         data.others.images = imagesarrayDB
                     }
                     if (!pdfFile && pdfarrayDB.length == 0) {
                         throw new Error('No se ha seleccionado un archivo PDF.');
                     }
-                    if (!data.propertyDetails.email || !(validarCorreo(data.propertyDetails.email))){
+                    if (!data.propertyDetails.email || !(validarCorreo(data.propertyDetails.email))) {
                         throw new Error('Ingresa un email válido.');
                     }
                     fetch('/api/cabanas/crear-cabana', {
@@ -1211,7 +1211,8 @@
                             if (!response.ok) {
                                 return response.json().then(errorData => {
                                     const errorMessages = errorData.error.map(err => err.message).join(', ');
-                                    throw new Error(errorMessages || 'Error occurred while creating the chalet');                            });
+                                    throw new Error(errorMessages || 'Error occurred while creating the chalet');
+                                });
                             }
                             return response.json();
                         })
@@ -1599,11 +1600,11 @@
 
     window.addEventListener("load", () => {
         const preloader = document.querySelector(".pre-loader");
-
         preloader.classList.add("loader--hidden");
-
         preloader.addEventListener("transitionend", () => {
-            document.body.removeChild(preloader);
+            if (preloader) {
+                preloader.style.display = "none"; // Hide instead of removing
+            }
         });
     });
 

@@ -68,6 +68,7 @@ router.use('/',
     calendarioPrecios,
     logsRoutes
 );
+router.use('/', bloqueoFechasRoutes);
 
 router.use('/api', 
     eventRoutes, 
@@ -96,7 +97,6 @@ router.use('/', calendarioPrecios);
 router.use('/api/pagos/', pagosRoutes);
 router.use('/api/', authMiddleware, utilidadesRoutes);
 router.use('/', preciosEspecialesRoutes);
-router.use('/', bloqueoFechasRoutes);
 
 router.use('/modelar-encuesta', surveyModelingRoutes);
 

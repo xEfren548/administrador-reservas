@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 const Habitacion = require('../models/Habitacion');
+const BloqueoFechas = require('../models/BloqueoFechas');
+const bloqueoFechasController  = require('../controllers/bloqueoFechasController');
 
 router.get('/calendario-bloqueofechas', async (req, res) => {
     const habitaciones = await Habitacion.findOne().lean();
@@ -17,21 +19,13 @@ router.get('/calendario-bloqueofechas', async (req, res) => {
 
     });
 
-    // const restrictedDates = await getRestrictedDatesFromBackend(); // fetch restricted dates from backend
-    const restrictedDates = [
-        {
-            date: new Date('2024-12-01'),
-            description: 'Min 2 pax',
-            min: 2
-        }
-    ]
-    
-
     res.render('bloqueoFechas', {
             chalets: habitacionesMapeadas
         }
     );
 });
 
+router.get('/api/calendario-bloqueofechas', bloqueoFechasController.obtenerFechasBloqueadas);
+router.post('/api/calendario-bloqueofechas', bloqueoFechasController.crearFechaBloqueada)
 
 module.exports = router;

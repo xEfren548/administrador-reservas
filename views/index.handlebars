@@ -169,7 +169,8 @@
                     <div class="row mt-2 mb-2">
                         <div class="col-5">
                             <label for="numero-personas">Numero de personas que se hospedarán: </label>
-                            <select name="numero-personas" id="numero-personas" class="form-select form-select-md" required>
+                            <select name="numero-personas" id="numero-personas" class="form-select form-select-md"
+                                required>
                                 <option value="" selected disabled>Selecciona el número de personas --</option>
                             </select>
                         </div>
@@ -360,7 +361,7 @@
     const tipologiaHabitacionSelect = document.getElementById('tipologia_habitacion');
     const originalOptions = Array.from(tipologiaHabitacionSelect.options);
 
-    tipologiaSelect.addEventListener('change', function() {
+    tipologiaSelect.addEventListener('change', function () {
         const selectedTipologia = this.value;
 
         // Remove all existing options in tipologiaHabitacionSelect
@@ -386,7 +387,9 @@
         const preloader = document.querySelector(".pre-loader");
         preloader.classList.add("loader--hidden");
         preloader.addEventListener("transitionend", () => {
-            document.body.removeChild(preloader);
+            if (preloader) {
+                preloader.style.display = "none"; // Hide instead of removing
+            }
         });
     });
 
