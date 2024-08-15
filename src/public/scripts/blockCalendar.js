@@ -4,6 +4,16 @@ let currentMonth = today.getMonth();
 let currentYear = today.getFullYear();
 const monthsToShow = 24; // Mostrar 2 años
 
+const restrictedDates = [
+
+    { month: 12, day: 15, year: 2024 }, // June 15, 2023
+  
+    { month: 12, day: 20, year: 2024 }, // July 20, 2023
+  
+    // ...
+  
+  ];
+
 function createCalendar(month, year) {
     const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     const daysInMonth = new Date(year, month + 1, 0).getDate();

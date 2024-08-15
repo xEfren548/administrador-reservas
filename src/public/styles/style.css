@@ -700,3 +700,8 @@ ul.rb li .timestamp {
     background-color: transparent;
     cursor: default;
 }
+
+.restricted {
+    background-color: #daf173; /* yellow background */
+    cursor: not-allowed;
+}
