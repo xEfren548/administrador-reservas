@@ -645,35 +645,42 @@ ul.rb li .timestamp {
 
 /* Bloqueo de calendario */
 
-#calendar-container {
+.calendar-container {
     display: flex;
     flex-wrap: nowrap;
     overflow-x: auto;
+
 }
 
 .month {
     display: flex;
     flex-direction: column;
     width: 250px;
+    height: 230px;
     background-color: white;
     padding: 10px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     margin: 10px;
-    flex: 0 0 auto;
+    flex: 1;
+    min-width: 200px; /* Ajusta el tamaño mínimo de cada calendario */
+    max-width: 100px;
+    max-height: 250px;
+
 }
 
 .month-header {
     text-align: center;
-    font-size: 18px;
-    margin-bottom: 10px;
+    font-size: 14px;
+    margin-bottom: 5px;
     font-weight: bold;
 }
 
 .weekdays, .days {
     display: grid;
+    font-size: 12px;
     grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
+    gap: 2px;  
 }
 
 .weekdays div, .days div {
@@ -690,6 +697,14 @@ ul.rb li .timestamp {
 .days div {
     background-color: #f9f9f9;
     cursor: pointer;
+    text-align: center;
+    padding: 1px; /* Reduce el padding para hacer los días más pequeños */
+    margin: 1px; /* Espacio mínimo alrededor de cada día */
+    font-size: 10px; /* Ajusta el tamaño de la fuente para que se vea más pequeño */
+    width: 20px; /* Establece un ancho específico para cada día */
+    height: 20px; /* Establece una altura específica para cada día */
+    line-height: 20px; /* Centra el número verticalmente */
+    box-sizing: border-box; /* Asegura que padding y border se incluyan en el tamaño total */
 }
 
 .days div:hover {

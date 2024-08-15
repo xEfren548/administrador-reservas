@@ -1,22 +1,26 @@
-const calendarContainer = document.getElementById('calendar-container');
 const today = new Date();
 let currentMonth = today.getMonth();
 let currentYear = today.getFullYear();
 const monthsToShow = 24; // Mostrar 2 años
 
+// Arreglo para almacenar todas las fechas generadas
 const dateArray = [];
 
 const restrictedDates = [
     {
-        date: new Date('2024-12-01T00:00:00'),
+        date: new Date('2024-12-01T00:00:00'), // Hora configurada
         description: 'Min 2 pax',
         min: 2
-    }
-]
+    },
+    // Puedes agregar más fechas restringidas aquí
+];
 
+// Función para normalizar las fechas a medianoche (00:00:00)
+function normalizeDate(date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
 
-
-function createCalendar(month, year) {
+function createCalendar(month, year, calendarContainerId) {
     const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDay = new Date(year, month, 1).getDay();
@@ -51,40 +55,49 @@ function createCalendar(month, year) {
     for (let day = 1; day <= daysInMonth; day++) {
         const dayDiv = document.createElement('div');
         dayDiv.textContent = day;
-        
-        // Crear un objeto de fecha y agregarlo al arreglo
-        const currentDate = new Date(year, month, day);
-        
+
+        // Crear un objeto de fecha para este día y normalizarla
+        const currentDate = normalizeDate(new Date(year, month, day));
+
         // Verificar si la fecha actual coincide con alguna fecha restringida
         const isRestricted = restrictedDates.some(restrictedDate => {
-            console.log('Restricted date: ' + restrictedDate.date);
-            console.log('Current date: ' + currentDate);
-            return restrictedDate.date.getTime() === currentDate.getTime();
+            return normalizeDate(restrictedDate.date).getTime() === currentDate.getTime();
         });
-        
-        
+
         // Si es una fecha restringida, añadir la clase .restricted
         if (isRestricted) {
-            console.log('Coincide!!!')
             dayDiv.classList.add('restricted');
         }
 
         daysDiv.appendChild(dayDiv);
-
+        
+        // Agregar la fecha al arreglo dateArray
         dateArray.push({ date: currentDate });
     }
     
     monthDiv.appendChild(daysDiv);
+
+    const calendarContainer = document.getElementById(calendarContainerId);
     calendarContainer.appendChild(monthDiv);
 }
 
-for (let i = 0; i < monthsToShow; i++) {
-    createCalendar(currentMonth, currentYear);
-    currentMonth++;
-    if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
-    }
+function generateCalendars() {
+    const calendarContainers = document.querySelectorAll('[id^="calendar-container-"]');
+
+    calendarContainers.forEach(container => {
+        let currentMonth = today.getMonth();
+        let currentYear = today.getFullYear();
+        for (let i = 0; i < monthsToShow; i++) {
+            createCalendar(currentMonth, currentYear, container.id);
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+        }
+    });
 }
 
-console.log(dateArray)
+generateCalendars();
+
+console.log(dateArray); // Aquí puedes ver todas las fechas generadas
