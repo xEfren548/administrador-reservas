@@ -702,6 +702,6 @@ ul.rb li .timestamp {
 }
 
 .restricted {
-    background-color: #daf173; /* yellow background */
+    background-color: #f6ff00 !important; /* yellow background */
     cursor: not-allowed;
 }

@@ -8,30 +8,7 @@
     </div>
 
     <div class="container">
-
         <div class="row" id="calendar-container" style="color: black !important">
-
-            {{#each months}}
-            <div class="month">
-                <div class="month-header">{{monthName}} {{year}}</div>
-                <div class="weekdays">
-                    {{#each weekdays}}
-                    <div>{{this}}</div>
-                    {{/each}}
-                </div>
-                <div class="days">
-                    {{#each days}}
-                    {{#if isRestricted}}
-                    <div class="restricted">{{this.day}}</div>
-                    {{else}}
-                    <div>{{this.day}}</div>
-                    {{/if}}
-                    {{/each}}
-                </div>
-            </div>
-            {{/each}}
-
         </div>
-
     </div>
-    {{!-- <script src="/scripts/blockCalendar.js"></script> --}}
+    <script src="/scripts/blockCalendar.js"></script>
