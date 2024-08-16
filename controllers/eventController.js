@@ -5,6 +5,7 @@ const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const logController = require('../controllers/logController');
 const utilidadesController = require('../controllers/utilidadesController');
 const pagoController = require('../controllers/pagoController');
+const BloqueoFechas = require('../models/BloqueoFechas');
 const mongoose = require('mongoose');
 const { format } = require('date-fns');
 const moment = require('moment');
@@ -423,10 +424,26 @@ async function createReservation(req, res, next) {
             throw new NotFoundError('Client does not exist');
         }
 
+        const fechaAjustada = new Date(arrivalDate);
+        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+        console.log(fechaAjustada);
+        
+        
+        
         const chalets = await Habitacion.findOne();
         const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
         if (!chalet) {
             throw new NotFoundError('Chalet does not exist 2');
+        }
+
+        const mongooseChaletId = new mongoose.Types.ObjectId(chalet._id);
+        console.log(fechaAjustada);
+        const fechasBloqueadas = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId});
+        console.log(fechasBloqueadas);
+        if (fechasBloqueadas) {
+            if (nNights < fechasBloqueadas.min) {
+                return res.status(400).send({ message: `La estancia minima es de ${fechasBloqueadas.min} noches`});
+            }
         }
 
         arrivalDate.setHours(arrivalDate.getHours() + chalet.others.arrivalTime.getHours());
@@ -541,7 +558,7 @@ async function createReservation(req, res, next) {
         res.status(200).json({ success: true, reservationId: documento.events[documento.events.length - 1]._id, message });
     } catch (err) {
         console.log(err);
-        return next(err);
+        res.status(400).send({ message: err.message});
     }
 }
 

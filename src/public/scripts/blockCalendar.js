@@ -38,15 +38,15 @@ function createCalendar(month, year, calendarContainerId, chaletId) {
     const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDay = new Date(year, month, 1).getDay();
-    
+
     const monthDiv = document.createElement('div');
     monthDiv.classList.add('month', 'col-md-4');
-    
+
     const monthHeader = document.createElement('div');
     monthHeader.classList.add('month-header');
     monthHeader.textContent = `${monthNames[month]} ${year}`;
     monthDiv.appendChild(monthHeader);
-    
+
     const weekdaysDiv = document.createElement('div');
     weekdaysDiv.classList.add('weekdays');
     const weekdays = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
@@ -56,16 +56,16 @@ function createCalendar(month, year, calendarContainerId, chaletId) {
         weekdaysDiv.appendChild(dayDiv);
     });
     monthDiv.appendChild(weekdaysDiv);
-    
+
     const daysDiv = document.createElement('div');
     daysDiv.classList.add('days');
-    
+
     for (let i = 0; i < firstDay; i++) {
         const emptyDiv = document.createElement('div');
         emptyDiv.classList.add('empty-day');
         daysDiv.appendChild(emptyDiv);
     }
-    
+
     for (let day = 1; day <= daysInMonth; day++) {
         const dayDiv = document.createElement('div');
         dayDiv.textContent = day;
@@ -76,7 +76,7 @@ function createCalendar(month, year, calendarContainerId, chaletId) {
         let description = ''
         // Verificar si la fecha actual coincide con alguna fecha restringida
         const isRestricted = restrictedDates.some(restrictedDate => {
-            if (restrictedDate.habitacionId === chaletId){
+            if (restrictedDate.habitacionId === chaletId) {
                 description = restrictedDate.description;
                 return restrictedDate.date.split("T")[0] === currentDate;
 
@@ -90,11 +90,11 @@ function createCalendar(month, year, calendarContainerId, chaletId) {
         }
 
         daysDiv.appendChild(dayDiv);
-        
+
         // Agregar la fecha al arreglo dateArray
         dateArray.push({ date: currentDate });
     }
-    
+
     monthDiv.appendChild(daysDiv);
 
     const calendarContainer = document.getElementById(calendarContainerId);
@@ -134,15 +134,124 @@ window.addEventListener("load", () => {
     });
 });
 
-// document.addEventListener("DOMContentLoaded", () => {
-//     const fechasBloqueadas = document.querySelectorAll('.restricted');
-//     console.log(fechasBloqueadas)
-    
-//     fechasBloqueadas.forEach(fechasBloqueada => {
-//         fechasBloqueada.addEventListener('click', (event) => {
-//             const description = event.target.getAttribute('data-description');
-//             alert(description);
-//         });
-//     });
+const agregarFechasBtn = document.querySelector('#add-bloqueadas-btn');
 
-// })
+agregarFechasBtn.addEventListener("click", async (e) => {
+    e.preventDefault()
+    const fechaInicioString = document.querySelector('#fecha-inicio').value; // Obtener el valor del input de tipo date
+    const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
+
+    const fechaFinString = document.querySelector('#fecha-fin').value; // Obtener el valor del input de tipo date
+    const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
+
+    const diasSeleccionados = [];
+
+    const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-general');
+    checkboxes.forEach(function (checkbox) {
+        if (checkbox.checked) {
+            diasSeleccionados.push(checkbox.value);
+        }
+    });
+
+    const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
+
+    try {
+        const resultados = await fetchRepetido(fechas);
+        console.log(resultados)
+        if (resultados.length === 0) {
+            throw new Error('No hay fechas seleccionadas para actualizar.');
+        }
+
+        Swal.fire({
+            icon: 'success',
+            title: '¡Completado!',
+            text: 'Precios actualizados correctamente.',
+            confirmButtonText: 'Aceptar'
+        }).then((result) => {
+            console.log('Resultados de fetch repetido:', resultados);
+            // Verificar si el usuario hizo clic en el botón de confirmación
+            if (result.isConfirmed) {
+                // Actualizar la página
+                location.reload();
+            }
+        });
+
+    } catch (error) {
+        console.error(error)
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Hubo un problema al actualizar los precios. Por favor, verifica que todos los campos están completos o intenta de nuevo más tarde.',
+            confirmButtonText: 'Aceptar'
+        });
+    }
+
+
+
+    async function fetchRepetido(fechas) {
+        try {
+            console.log('Holaaaaa')
+
+            const resultados = [];
+            console.log('ejecutando fetch repetido...');
+
+            // const {date, description, min, habitacionId} = req.body;
+            const estanciaMinima = document.querySelector('#estancia-minima-select')
+            const habitacionId = document.querySelector('#select-cabana').value
+
+            for (const fecha of fechas) {
+
+                const jsonBody = {
+                    date: fecha,
+                    min: estanciaMinima.value,
+                    habitacionId: habitacionId
+                }
+
+                const response = await fetch('/api/calendario-bloqueofechas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(jsonBody)
+                })
+
+                // Verificar el estado de la respuesta
+                if (!response.ok) {
+                    throw new Error('Error en la solicitud fetch: ' + response.message);
+                }
+
+                // Convertir la respuesta a JSON
+                const data = await response.json();
+                console.log(data);
+
+                // Agregar el resultado al array de resultados
+                resultados.push(data);
+
+            }
+
+            return resultados;
+
+        } catch (e) {
+            console.error(e);
+            throw error;
+        }
+    }
+
+    function obtenerRangoFechas(fechaInicio, fechaFin) {
+        const fechas = [];
+        let fechaActual = new Date(fechaInicio);
+
+        while (fechaActual <= fechaFin) {
+            if (diasSeleccionados.includes(obtenerNombreDia(fechaActual))) {
+                fechas.push(new Date(fechaActual));
+            }
+            fechaActual.setDate(fechaActual.getDate() + 1);
+        }
+        return fechas;
+    }
+
+    function obtenerNombreDia(fecha) {
+        const diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+        return diasSemana[fecha.getDay()];
+    }
+});

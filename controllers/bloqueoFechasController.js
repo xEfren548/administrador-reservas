@@ -11,7 +11,24 @@ async function obtenerFechasBloqueadas(req, res){
 }
 
 async function crearFechaBloqueada(req, res){
-    const {date, description, min, habitacionId} = req.body;
+    const {date, min, habitacionId} = req.body;
+
+    const fechaFormatted = new Date(date)
+    fechaFormatted.setUTCHours(0); // Ajustar la hora a 00:00:00 UTC
+    const mongooseHabitacionId = new mongoose.Types.ObjectId(habitacionId);
+
+    const description = `Estancia mínima de ${min} noches.`
+
+
+    const existeFecha = await BloqueoFechas.findOne({date: date, habitacionId: mongooseHabitacionId})
+    if (existeFecha){
+        // edit the existe fecha to the new description and min
+        existeFecha.description = description;
+        existeFecha.min = min;
+        await existeFecha.save();
+        return res.status(201).send({ message: 'Date modified successfully', date: existeFecha});
+
+    }
 
     const newFechaBloqueada = new BloqueoFechas({
         date: new Date(date),
@@ -22,7 +39,7 @@ async function crearFechaBloqueada(req, res){
 
     const agregarFecha = await newFechaBloqueada.save();
     if (!agregarFecha){
-        res.status(400).send({ message: 'Failed to create date' });
+        return res.status(400).send({ message: 'Failed to create date' });
     }
     res.status(200).send({ message: 'Date created successfully', date: agregarFecha});
 }
@@ -47,6 +64,7 @@ async function eliminarFechaBloqueada(req, res){
         res.status(500).json({ error: 'Error al eliminar el registro de precio' });
     }
 }
+
 
 module.exports = {
     obtenerFechasBloqueadas,

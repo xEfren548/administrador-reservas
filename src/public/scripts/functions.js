@@ -176,14 +176,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                const errors = errorData.error;
+                const errors = errorData.message;
+                console.log(errors)
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                    text: "Error en la solicitud: " + errors + ".",
                     confirmButtonText: 'Aceptar'
                 });
-                throw new Error('Error en la solicitud');
+                throw new Error(errors);
             }
 
             const data = await response.json();
