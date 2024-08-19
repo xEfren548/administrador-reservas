@@ -321,7 +321,7 @@ async function generarComisionReserva(req, res) {
             for (let investor of chaletInvestors) {
                 let userInvestor = await User.findById(investor._id);
                 if (userInvestor) {
-                    if (userInvestor.investorType === 'F'){
+                    if (userInvestor.investorType === 'A'){
                         // Comision normal
                         await altaComisionReturn({
                             monto: comisionInversionistas,
