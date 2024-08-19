@@ -31,7 +31,7 @@ async function generateSideMenu(req, res, next) {
                 { 'Utilidades': [] },
                 { 'Encuestas': [] },
                 { 'Logs': ["/logs", "fas fa-cogs"] },
-                { 'Precios': ["/calendario-precios", "far fa-calendar-alt"] },
+                { 'Calendarios': [] },
             ],
             'Vendedor': [
                 // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
@@ -185,6 +185,29 @@ async function generateSideMenu(req, res, next) {
                                     <a href="/api/mostrar-utilidades-globales" class="nav-link px-5" title="Utilidades globales">
                                         <i class="fas fa-globe"></i></i><span class="d-none d-sm-inline"
                                             style="margin-left: 8px;">Utilidades globales</span>
+                                    </a>
+
+                                </li>
+                            </ul>
+                        </li>`;
+                }else if (key === "Calendarios") {
+                    sideMenuContent +=
+                        `<li class="nav-item py-2 py-sm-0">
+                            <a href="#submenu5" data-bs-toggle="collapse" class="nav-link px-4 align-middle " title="Calendarios">
+                                <i class="far fa-calendar-alt"></i><span
+                                    class="fs-5 ms-3 d-none d-sm-inline">Calendarios
+                                </span></a>
+                            <ul class="collapse nav flex-column ms-1" id="submenu5" data-bs-parent="#menu">
+                                <li class="w-100">
+                                    <a href="/calendario-precios" class="nav-link px-5" title="Calendario precios">
+                                        <i class="far fa-calendar-alt"></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Calendario precios</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/calendario-bloqueofechas" class="nav-link px-5" title="Calendario bloqueos">
+                                        <i class="fas fa-window-close"></i></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Calendario bloqueos</span>
                                     </a>
 
                                 </li>
