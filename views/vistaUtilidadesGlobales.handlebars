@@ -97,6 +97,9 @@
                 "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
                 "pageLength": 10, // Establece la longitud de página inicial
                 "dom": 'Bfrtip', // Añade los botones a la interfaz
+                "search": {
+                    "smart": false
+                },
                 "buttons": [
                     {
                         extend: 'csvHtml5',
@@ -144,6 +147,34 @@
                     buttons.forEach(function (button) {
                         button.classList.add('btn', 'btn-info');
                     });
+
+                    this.api()
+                        .columns([0,4])
+                        .every(function () {
+                            let column = this;
+
+                            // Create select element
+                            let select = document.createElement('select');
+                            select.classList.add('d-flex', 'justify-content-start');        
+                            select.add(new Option(''));
+                            column.footer().replaceChildren(select);
+
+                            // Apply listener for user change in value
+                            select.addEventListener('change', function () {
+                                column
+                                    .search(select.value, { exact: true })
+                                    .draw();
+                            });
+
+                            // Add list of options
+                            column
+                                .data()
+                                .unique()
+                                .sort()
+                                .each(function (d, j) {
+                                    select.add(new Option(d));
+                                });
+                        });
                 },
                 "drawCallback": function () {
                     // Calculate and update the total monto
@@ -338,7 +369,7 @@
         options: doughnutChartOptions
     });
 
-    const userMontos = {{{json userMontos}}}
+    const userMontos = {{{ json userMontos }}}
     userMontos.sort((a, b) => b.monto - a.monto);
 
 
@@ -347,7 +378,7 @@
     const backgroundColors = generateRandomColors(userMontos.length)
 
     const ctxUsers = document.getElementById('userMontos-chart').getContext('2d');
-    
+
     const userMontosChart = new Chart(ctxUsers, {
         type: 'pie',
         data: {
@@ -375,7 +406,7 @@
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(tooltipItem){
+                        label: function (tooltipItem) {
                             return `${tooltipItem.label}: $${tooltipItem.raw.toFixed(2)}`;
 
                         }
@@ -384,7 +415,7 @@
             }
         }
     })
-    const utilidadMontos = {{{json utilidadMontos}}}
+    const utilidadMontos = {{{ json utilidadMontos }}}
     utilidadMontos.sort((a, b) => b.monto - a.monto);
 
 
@@ -393,7 +424,7 @@
     const backgroundColorsChalet = generateRandomColors(utilidadMontos.length)
 
     const ctxChalets = document.getElementById('chaletUtilities-chart').getContext('2d');
-    
+
     const chaletUtilitiesChart = new Chart(ctxChalets, {
         type: 'pie',
         data: {
@@ -421,7 +452,7 @@
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(tooltipItem){
+                        label: function (tooltipItem) {
                             return `${tooltipItem.label}: $${tooltipItem.raw.toFixed(2)}`;
 
                         }
