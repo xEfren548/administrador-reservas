@@ -335,15 +335,23 @@
             groupedData[usuario] += monto;
         });
 
-        // Convert groupedData to arrays
-        const labels = Object.keys(groupedData);
-        const data = Object.values(groupedData);
+        // Convert groupedData to array of objects
+        const userMontoArray = Object.keys(groupedData).map(usuario => ({
+            usuario,
+            monto: groupedData[usuario]
+        }));
+
+        // Sort array by monto in descending order
+        userMontoArray.sort((a, b) => b.monto - a.monto);
+
+        // Extract sorted labels and data
+        const labels = userMontoArray.map(item => item.usuario);
+        const data = userMontoArray.map(item => item.monto);
         const backgroundColors = generateRandomColors(labels.length);
-        
-        // Update the chart
+
+        // Update the user montos chart
         userMontosChart.data.labels = labels;
         userMontosChart.data.datasets[0].data = data;
-        console.log(data);
         userMontosChart.data.datasets[0].backgroundColor = backgroundColors;
         userMontosChart.update();
     }
