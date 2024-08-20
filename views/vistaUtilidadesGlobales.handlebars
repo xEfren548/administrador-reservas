@@ -149,13 +149,13 @@
                     });
 
                     this.api()
-                        .columns([0,4])
+                        .columns([0, 4])
                         .every(function () {
                             let column = this;
 
                             // Create select element
                             let select = document.createElement('select');
-                            select.classList.add('d-flex', 'justify-content-start');        
+                            select.classList.add('d-flex', 'justify-content-start');
                             select.add(new Option(''));
                             column.footer().replaceChildren(select);
 
@@ -184,6 +184,7 @@
                     }, 0);
                     document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
                     updateChart(api);
+                    updateUsersChart(api);
                 }
             });
 
@@ -320,6 +321,33 @@
         }
     }
 
+    function updateUsersChart(api) {
+        // Group data by usuario
+        var groupedData = {};
+        api.rows({ search: 'applied' }).every(function () {
+            var data = this.data();
+            var usuario = data[4];
+            var monto = parseFloat(data[2].replace(/[^\d.-]/g, ''));
+
+            if (!groupedData[usuario]) {
+                groupedData[usuario] = 0;
+            }
+            groupedData[usuario] += monto;
+        });
+
+        // Convert groupedData to arrays
+        const labels = Object.keys(groupedData);
+        const data = Object.values(groupedData);
+        const backgroundColors = generateRandomColors(labels.length);
+        
+        // Update the chart
+        userMontosChart.data.labels = labels;
+        userMontosChart.data.datasets[0].data = data;
+        console.log(data);
+        userMontosChart.data.datasets[0].backgroundColor = backgroundColors;
+        userMontosChart.update();
+    }
+
     const ctx = document.getElementById('doughnut-chart').getContext('2d');
     const totalEarnings = {{ totalEarnings }};
     const limit = {{ limit }};
@@ -369,24 +397,19 @@
         options: doughnutChartOptions
     });
 
-    const userMontos = {{{ json userMontos }}}
-    userMontos.sort((a, b) => b.monto - a.monto);
-
-
-    const labels = userMontos.map(item => item.nombreUsuario);
-    const data = userMontos.map(item => item.monto);
-    const backgroundColors = generateRandomColors(userMontos.length)
+    //const userMontos = {{{ json userMontos }}}
+    //userMontos.sort((a, b) => b.monto - a.monto);
 
     const ctxUsers = document.getElementById('userMontos-chart').getContext('2d');
 
     const userMontosChart = new Chart(ctxUsers, {
         type: 'pie',
         data: {
-            labels: labels,
+            labels: [],
             datasets: [{
-                label: 'Montos del mes por usuario',
-                data: data,
-                backgroundColor: backgroundColors,
+                label: 'Comisiones por usuario',
+                data: [],
+                backgroundColor: [],
                 borderColor: [
                     'rgba(255, 99, 132, 1)',
 
