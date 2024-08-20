@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const Pago = require('../models/Pago');
 const logController = require('../controllers/logController');
 const utilidadesController = require('../controllers/utilidadesController');
+const Habitacion = require('../models/Habitacion');
+const Documento = require('../models/Evento');
 
 async function obtenerPagos(idReservacion) {
     try {
@@ -26,6 +28,16 @@ async function registrarPago(req, res) {
     try {
         const { fechaPago, importe, metodoPago, codigoOperacion, reservacionId, notas } = req.body;
 
+        const allReservations = await Documento.findOne();
+        const reservacion = allReservations.events.find(event => event._id.toString() === reservacionId);
+
+        const chaletId = reservacion.resourceId;
+
+        const allChalets = await Habitacion.findOne();
+        const chalet = allChalets.resources.find(chalet => chalet._id.toString() === chaletId.toString());
+        const chaletOwner = chalet.others.owner;
+
+        console.log("chalet id: ", chaletId);
         const pago = new Pago({
             fechaPago: new Date(fechaPago),
             importe,
@@ -35,6 +47,16 @@ async function registrarPago(req, res) {
             notas
         });
         await pago.save();
+
+        if (metodoPago === "Recibio dueño"){
+            await utilidadesController.altaComisionReturn({
+                monto: -importe ,
+                concepto: `Comisión negativa por Recepción de pago ${chalet.propertyDetails.name}`,
+                fecha: new Date(fechaPago),
+                idUsuario: chaletOwner,
+                idReserva: reservacionId
+            })
+        }
 
         const logBody = {
             fecha: Date.now(),
