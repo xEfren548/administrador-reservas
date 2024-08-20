@@ -26,14 +26,18 @@
                 <tr>
                     <td>{{firstName}}</td>
                     <td>{{lastName}}</td>
-                    <td> {{phone}}</td>
+                    <td>{{phone}}</td>
                     <td>{{email}}</td>
                     <td> {{address}}</td>
                     <td>{{identificationType}}</td>
                     <td>{{identificationNumber}}</td>
                     <td class="text-center">
                         <button type="button" class="btn btn-primary" data-client-email="{{email}}"
-                            data-bs-toggle="modal" data-bs-target="#modifyClientEntryModal">
+                        data-client-firstName="{{firstName}}" data-client-lastName="{{lastName}}"
+                        data-client-phone="{{phone}}" data-client-address="{{address}}"
+                        data-client-identificationType="{{identificationType}}" data-client-identificationNumber="{{identificationNumber}}"
+
+                            data-bs-toggle="modal" data-bs-target="#modifyClientEntryModal" onclick="showData(this)">
                             <i class="fa fa-pencil" aria-hidden="true"></i>
                         </button>
                         <button type="button" class="btn btn-danger" data-client-email="{{email}}">
@@ -438,4 +442,25 @@
         });
 
     });
+
+    function showData(button) {
+        const firstName = button.getAttribute('data-client-firstName');
+        const lastName = button.getAttribute('data-client-lastName');
+        const email = button.getAttribute('data-client-email');
+        const address = button.getAttribute('data-client-address');
+        const identificationType = button.getAttribute('data-client-identificationType');
+        const identificationNumber = button.getAttribute('data-client-identificationNumber');
+        const phone = button.getAttribute('data-client-phone');
+
+
+        document.querySelector('#txtClientNameUpd').value = firstName
+        document.querySelector('#txtClientLastnameUpd').value = lastName
+        document.querySelector('#txtClientAddressUpd').value = address
+        document.querySelector('#slctClientIdTypeUpd').value = identificationType;
+        document.querySelector('#txtClientIdNumberUpd').value = identificationNumber;
+        document.querySelector('#txtClientPhoneUpd').value = phone;
+        document.querySelector('#txtClientEmailUpd').value = email;
+
+
+    }
 </script>

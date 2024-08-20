@@ -104,13 +104,16 @@ async function showUsersView(req, res, next){
 }
 
 async function createUser(req, res, next) {
-    const { firstName, lastName, email, password, privilege, administrator } = req.body;
-    const userToAdd = new Usuario ({
-        firstName, lastName, email, password, privilege, administrator
-    });
+    const { firstName, lastName, email, phone, password, privilege, administrator } = req.body;
+    try{
+        console.log("first name: ", firstName)
+        console.log("PHONE NUMBER: ", phone)
+        const userToAdd = new Usuario ({
+            firstName, lastName, email, phone, password, privilege, administrator
+        });
 
-    try{    
         sendPassword(userToAdd.email, userToAdd.password, userToAdd.privilege);        
+        console.log(userToAdd)
         await userToAdd.save();
         
         console.log("Usuario agregado con éxito");
