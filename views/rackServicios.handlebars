@@ -21,8 +21,9 @@
                     <td>{{this.status}}</td>
                     <td class="text-center">
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#editarRackLimpiezaModal" data-service-id="{{this._id}}"
-                            onclick="mostrarInfoServicio('{{this._id}}')"><i class="fa fa-pencil"
+                            data-bs-target="#editarRackLimpiezaModal" 
+                            data-service-id="{{this._id}}" data-service-status="{{this.status}}"
+                            onclick="mostrarInfoServicio(this)"><i class="fa fa-pencil"
                                 aria-hidden="true"></i>
                     </td>
 
@@ -98,11 +99,18 @@
         }
     });
 
-    function mostrarInfoServicio(serviceId) {
+    function mostrarInfoServicio(button) {
         // Use serviceId to perform actions specific to the clicked service
-        console.log("Service ID:", serviceId);
         const modificarStatusSelect = document.querySelector("#modificar-status");
         const btnUpdateService = document.querySelector("#btnUpdateService");
+
+        const serviceId = button.getAttribute('data-service-id')
+        const serviceStatus = button.getAttribute('data-service-status')
+
+        console.log("Service ID:", serviceId);
+        console.log('status: ', serviceStatus);
+
+        modificarStatusSelect.value = serviceStatus;
 
 
         btnUpdateService.addEventListener("click", function (e) {
