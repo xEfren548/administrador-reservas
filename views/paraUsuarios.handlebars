@@ -1,16 +1,17 @@
 {{#if reservation}}
-    <div class="container">
+<div class="container">
 
-        <div id="carouselExampleIndicators" class="carousel slide" style="height: 350px;" data-ride="carousel">
-            <ol class="carousel-indicators">
-                {{#each chalet.images}}
-                    <li data-target="#carouselExampleIndicators" data-slide-to="{{@index}}" class="{{#if @first}}active{{/if}}" ></li>
-                {{/each}}
-            </ol>
-            <div class="carousel-inner">
-                {{#each chalet.images}}
-                    <div class="carousel-item {{#if @first}}active{{/if}}">
-                        <img class="d-block" style="
+    <div id="carouselExampleIndicators" class="carousel slide" style="height: 350px;" data-ride="carousel">
+        <ol class="carousel-indicators">
+            {{#each chalet.images}}
+            <li data-target="#carouselExampleIndicators" data-slide-to="{{@index}}" class="{{#if @first}}active{{/if}}">
+            </li>
+            {{/each}}
+        </ol>
+        <div class="carousel-inner">
+            {{#each chalet.images}}
+            <div class="carousel-item {{#if @first}}active{{/if}}">
+                <img class="d-block" style="
                             height: 300px;
                             background-color: white;
                             background-image: url('https://navarro.integradev.site/navarro/{{this}}');
@@ -18,180 +19,188 @@
                             background-size: cover;
                             background-position: center;
                             font-family: 'Open Sans', sans-serif;
-                        " alt=" ">                    
-                    </div>
-                {{/each}}
+                        " alt=" ">
             </div>
-            <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="sr-only">Previous</span>
-            </a>
-            <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="sr-only">Next</span>
-            </a>
+            {{/each}}
         </div>
+        <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
 
-        <h1 class="mt-3 mb-3 d-flex justify-content-center">{{chalet.propertyDetails.name}}</h1>
+    <h1 class="mt-3 mb-3 d-flex justify-content-center">{{chalet.propertyDetails.name}}</h1>
 
-        <div class="row">
-            <div class="col-md-6 col-xl-6 col-xs-12 col-sm-12">
-                <div class="row d-flex justify-content-center">
-                    <div class="col-2 ">
-                        <img src="https://panel.hotelgest.com/files/media/male_profile_sm.jpg" id="profile-pic-alone"
-                            class="rounded-pill" style="width: 70px;">
-                    </div>
-                    <div class="col-6 ps-0">
-                        <h4 class="detailsRoom" style="margin-bottom: 5px;">{{chalet.propertyDetails.propertyDetails}}
-                        </h4>
-                        <p class="bold text-uppercase">
-                            {{fullname}}
-                            <br>
-                            (#8926527)
-                        </p>
-                        <hr>
-                    </div>
+    <div class="row">
+        <div class="col-md-6 col-xl-6 col-xs-12 col-sm-12">
+            <div class="row d-flex justify-content-center">
+                <div class="col-2 ">
+                    <img src="https://panel.hotelgest.com/files/media/male_profile_sm.jpg" id="profile-pic-alone"
+                        class="rounded-pill" style="width: 70px;">
                 </div>
-                <div class="row d-flex justify-content-center">
-                    <div class="col-8 ">
-                        <div class="text-center">
-                            <p style="max-width: 500px; word-wrap: break-word;">{{chalet.accomodationDescription}}</p>
-                            <button type="button" class="btn btn-lg btn-outline-light mb-2">
-                                {{#if chalet.files}}
-                                <a href="https://navarro.integradev.site/navarro/{{chalet.files}}" style="text-decoration: none;">Ver instrucciones de llegada</a>
-                                {{else}}
-                                <a href="#">Ver instrucciones de llegada</a>
-                                {{/if}}
-                            </button>
-                            <div class="some-div-1">
-                                <div class="some-div-2">
-                                    <add-to-calendar-button
-                                        name="My Event"
-                                        startDate="2022-04-15"
-                                        endDate="2022-04-17"
-                                        options="['Google', 
+                <div class="col-6 ps-0">
+                    <h4 class="detailsRoom" style="margin-bottom: 5px;">{{chalet.propertyDetails.propertyDetails}}
+                    </h4>
+                    <p class="bold text-uppercase">
+                        {{fullname}}
+                        <br>
+                        (#8926527)
+                    </p>
+                    <hr>
+                </div>
+            </div>
+            <div class="row d-flex justify-content-center">
+                <div class="col-8 ">
+                    <div class="text-center">
+                        <p style="max-width: 500px; word-wrap: break-word;">{{chalet.accomodationDescription}}</p>
+                        <button type="button" class="btn btn-lg btn-outline-light mb-2">
+                            {{#if chalet.files}}
+                            <a href="https://navarro.integradev.site/navarro/{{chalet.files}}"
+                                style="text-decoration: none;">Ver instrucciones de llegada</a>
+                            {{else}}
+                            <a href="#">Ver instrucciones de llegada</a>
+                            {{/if}}
+                        </button>
+                        <div class="some-div-1">
+                            <div class="some-div-2">
+                                <add-to-calendar-button name="My Event" startDate="2022-04-15" endDate="2022-04-17"
+                                    options="['Google', 
                                             'Apple', 
                                             'Outlook.com', 
                                             'Microsoft365', 
                                             'MicrosoftTeams',
                                             'Outlook.com', 
                                             'Yahoo', 
-                                            'iCal']"
-                                        >
-                                        </add-to-calendar-button>
-                                </div>
+                                            'iCal']">
+                                </add-to-calendar-button>
                             </div>
-                            <div id="map"></div>
                         </div>
+                        {{!-- <div id="map"></div> --}}
+                        <iframe src="https://www.google.com/maps?q={{chalet.location.latitude}},{{chalet.location.longitude}}&z=16&output=embed" width="600"
+                            height="450" style="border:0;" allowfullscreen="" loading="lazy">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-md-6 col-xl-6 col-xs-12 col-sm-12">
+            <div class="row">
+                <div class="col-6 text-center">
+                    <div class="col-xs-6 no-padding-left">
+                        <h4>Llegada</h4>
+                        <p class="font-bold"> <i class="fa fa-sign-in" aria-hidden="true"></i> <b
+                                id="arrivalDate">{{reservation.arrivalDate}}</b> </p>
+                    </div>
+                    <div class="col-xs-6 no-padding-left">
+                        <h4>Salida</h4>
+                        <p class="font-bold"> <i class="fa fa-sign-out" aria-hidden="true"></i> <b
+                                id="departureDate">{{reservation.departureDate}}</b> </p>
+                    </div>
+                    <div class="col-xs-6 no-padding-left">
+                        <h4>Origen</h4>
+                        <p class="font-bold"><b>Recepción</b> </p>
+                    </div>
+                </div>
+                <div class="col-6 text-center">
+                    <div class="col-xs-6 no-padding-left">
+                        <h4> Noches</h4>
+                        <p class="font-bold"> <i class="fa fa-moon" aria-hidden="true"></i>
+                            <b>{{reservation.nNights}}</b>
+                        </p>
+                    </div>
+                    <div class="col-xs-6 no-padding-left">
+                        <h4> Recibida</h4>
+                        <p class="font-bold"> <b id="reservationDate">{{reservation.reservationDate}}</b></p>
                     </div>
                 </div>
 
-            </div>
+                <div id="weather" class="text-center mb-3"></div>
 
-            <div class="col-md-6 col-xl-6 col-xs-12 col-sm-12">
-                <div class="row">
-                    <div class="col-6 text-center">
-                        <div class="col-xs-6 no-padding-left">
-                            <h4>Llegada</h4>
-                            <p class="font-bold"> <i class="fa fa-sign-in" aria-hidden="true"></i> <b id="arrivalDate">{{reservation.arrivalDate}}</b> </p>
+                <div class="card-details m-3" style="background-color: #faf1d2; height: auto; width: 80%;">
+                    <div class="row">
+                        <div class="col-6">
+                            <a href="#" id="comentarios-btn" class="fw-bold" style="text-decoration: none !important;">
+                                <p style="color: black; text-decoration: none !important;">COMENTARIOS</p>
+                            </a>
                         </div>
-                        <div class="col-xs-6 no-padding-left">
-                            <h4>Salida</h4>
-                            <p class="font-bold"> <i class="fa fa-sign-out" aria-hidden="true"></i> <b id="departureDate">{{reservation.departureDate}}</b> </p>
-                        </div>
-                        <div class="col-xs-6 no-padding-left">
-                            <h4>Origen</h4>
-                            <p class="font-bold"><b>Recepción</b> </p>
-                        </div>
+
                     </div>
-                    <div class="col-6 text-center">
-                        <div class="col-xs-6 no-padding-left">
-                            <h4> Noches</h4>
-                            <p class="font-bold"> <i class="fa fa-moon" aria-hidden="true"></i> <b>{{reservation.nNights}}</b></p>
-                        </div>
-                        <div class="col-xs-6 no-padding-left">
-                            <h4> Recibida</h4>
-                            <p class="font-bold"> <b id="reservationDate">{{reservation.reservationDate}}</b></p>
-                        </div>
+                    {{#if reservation.notes}}
+                    {{#each reservation.notes}}
+                    <div class="nota-container" style="display: block;">
+                        <p class="text-black fs-6">{{this.texto}}</p>
+                        <button class="btn btn-eliminar btn-sm" style="display: none;"
+                            onclick="eliminarNota('{{this._id}}')"><i class="fa fa-trash"
+                                aria-hidden="true"></i></button>
                     </div>
-
-                    <div id="weather" class="text-center mb-3"></div>
-
-                    <div class="card-details m-3" style="background-color: #faf1d2; height: auto; width: 80%;">
-                        <div class="row">
-                            <div class="col-6">
-                                <a href="#" id="comentarios-btn" class="fw-bold" style="text-decoration: none !important;"><p style="color: black; text-decoration: none !important;">COMENTARIOS</p></a>
-                            </div>
-
-                        </div>
-                        {{#if reservation.notes}}
-                        {{#each reservation.notes}}
-                        <div class="nota-container" style="display: block;">
-                            <p class="text-black fs-6">{{this.texto}}</p>
-                            <button class="btn btn-eliminar btn-sm" style="display: none;" onclick="eliminarNota('{{this._id}}')"><i
-                                    class="fa fa-trash" aria-hidden="true"></i></button>
-                        </div>
-                        {{/each}}
-                        {{else}}
-                        <div class="nota-container" style="display: block;">
-                            <p class="text-black fs-6">No se han agregado notas para esta reserva</p>
-                        </div>
-                        {{/if}}
-        </div>
-
+                    {{/each}}
+                    {{else}}
+                    <div class="nota-container" style="display: block;">
+                        <p class="text-black fs-6">No se han agregado notas para esta reserva</p>
+                    </div>
+                    {{/if}}
                 </div>
+
             </div>
-        </div>
-
-        
-
-        <div class="form-item">
-            <p id="txtSubmitReservationError" name="errMsg" class="error"></p>
         </div>
     </div>
 
-    <!-- prettier-ignore -->
-    <script>(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
-        ({key: "AIzaSyCDcOvg6Ufu7WnKBU8A09g_XPcX976N23I", v: "beta"});</script>
 
-    <!-- Terms and conditions modal -->
-    <div class="modal" id="mdlTerms" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="false">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content update-info">
-                <div class="modal-header">
-                    <h2 class="modal-title">Términos y condiciones</h2>
+
+    <div class="form-item">
+        <p id="txtSubmitReservationError" name="errMsg" class="error"></p>
+    </div>
+</div>
+
+<!-- prettier-ignore -->
+<script>(g => { var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window; b = b[c] || (b[c] = {}); var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams, u = () => h || (h = new Promise(async (f, n) => { await (a = m.createElement("script")); e.set("libraries", [...r] + ""); for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]); e.set("callback", c + ".maps." + q); a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => h = n(Error(p + " could not load.")); a.nonce = m.querySelector("script[nonce]")?.nonce || ""; m.head.append(a) })); d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)) })
+        ({ key: "AIzaSyCDcOvg6Ufu7WnKBU8A09g_XPcX976N23I", v: "beta" });</script>
+
+<!-- Terms and conditions modal -->
+<div class="modal" id="mdlTerms" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content update-info">
+            <div class="modal-header">
+                <h2 class="modal-title">Términos y condiciones</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-item">
+                    <p>{{chalet.legalNotice}}</p>
                 </div>
-                <div class="modal-body">
-                    <div class="form-item">
-                        <p>{{chalet.legalNotice}}</p>
-                    </div>
-                    <div class="form-item">
-                        <div class="signature">
-                            <div class="canvas">
-                                <button id="btnClrCanvas" class="delete-signature"><span class="material-symbols-outlined">delete</span></button>
-                                <canvas id="signatureCanvas"></canvas>
-                                <label for="signatureCanvas">Ingrese su firma</label>
-                            </div>   
+                <div class="form-item">
+                    <div class="signature">
+                        <div class="canvas">
+                            <button id="btnClrCanvas" class="delete-signature"><span
+                                    class="material-symbols-outlined">delete</span></button>
+                            <canvas id="signatureCanvas"></canvas>
+                            <label for="signatureCanvas">Ingrese su firma</label>
                         </div>
                     </div>
-                    <div class="form-item">
-                        <div class="checkbox-option">
-                            <input type="checkbox" id="chckAcceptTerms" name="chckAcceptTerms">
-                            <label for="chckAcceptTerms">He léido y aceptado los términos y condiciones</label>
-                        </div> 
-                    </div>
-                    <div class="form-item">
-                        <p id="txtTermsError" class="error"></p>
+                </div>
+                <div class="form-item">
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="chckAcceptTerms" name="chckAcceptTerms">
+                        <label for="chckAcceptTerms">He léido y aceptado los términos y condiciones</label>
                     </div>
                 </div>
-                <div class="modal-footer">                               
-                    <button type="button" class="btn-save" id="btnAccept"> Acepto</button>
+                <div class="form-item">
+                    <p id="txtTermsError" class="error"></p>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-save" id="btnAccept"> Acepto</button>
             </div>
         </div>
     </div>
+</div>
 {{else}}
-    <h1>Mega error</h1>
+<h1>Mega error</h1>
 {{/if}}
 
 <script>
@@ -209,7 +218,7 @@
         return new Date(date).toLocaleDateString('en-US', options).replace(',', '');
     }
 
-    document.addEventListener("DOMContentLoaded", () =>{
+    document.addEventListener("DOMContentLoaded", () => {
         // Formating dates.
         const departureDate = document.getElementById('departureDate');
         const arrivalDate = document.getElementById('arrivalDate');
@@ -217,7 +226,7 @@
         departureDate.textContent = formatDate(departureDate.textContent);
         arrivalDate.textContent = formatDate(arrivalDate.textContent);
         reservationDate.textContent = formatDate(reservationDate.textContent);
-            
+
         // Llamar a la API de OpenWeatherMap
         const apiKey = '26d8231cf1380644673deb5e34aad872'; // Reemplaza 'TU_CLAVE_DE_API' con tu clave de API de OpenWeatherMap
         const city = 'Mazamitla'; // Reemplaza 'NOMBRE_DE_LA_CIUDAD' con el nombre de la ciudad que desees
@@ -279,134 +288,134 @@
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => {
-            if (!response.ok) {
-                const error = response.statusText;
-                txtTermsError.innerHTML = "Error en la solicitud 1: " + error.toLowerCase() + ".";
-                throw new Error('Error en la solicitud 1: ' + error);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Respuesta del servidor 1:', data);
-            if(data.termsAccepted){
-                modal.style.display = "none";
-            }
-            else{
-                // If they have not been accepted, show them to the user. 
-                modal.style.display = "block";  
-                var acceptBtn = document.getElementById("btnAccept");
-                var checkbox = document.getElementById("chckAcceptTerms");
-                var txtTermsError = document.getElementById("txtTermsError")
-                var acceptTerms = false;
-                
-                // Canvas
-                const canvas = document.getElementById('signatureCanvas');
-                var btnClrCanvas = document.getElementById("btnClrCanvas");
-                var btnSaveCanvas = document.getElementById("btnSaveCanvas");
-                var signatureImage;
-                const ctx = canvas.getContext('2d');
-                let isDrawing = false;
-                let lastX = 0;
-                let lastY = 0;
+            .then(response => {
+                if (!response.ok) {
+                    const error = response.statusText;
+                    txtTermsError.innerHTML = "Error en la solicitud 1: " + error.toLowerCase() + ".";
+                    throw new Error('Error en la solicitud 1: ' + error);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Respuesta del servidor 1:', data);
+                if (data.termsAccepted) {
+                    modal.style.display = "none";
+                }
+                else {
+                    // If they have not been accepted, show them to the user. 
+                    modal.style.display = "block";
+                    var acceptBtn = document.getElementById("btnAccept");
+                    var checkbox = document.getElementById("chckAcceptTerms");
+                    var txtTermsError = document.getElementById("txtTermsError")
+                    var acceptTerms = false;
 
-                canvas.addEventListener('mousedown', (e) => {
-                    isDrawing = true;
-                    [lastX, lastY] = [e.offsetX, e.offsetY];
-                });
+                    // Canvas
+                    const canvas = document.getElementById('signatureCanvas');
+                    var btnClrCanvas = document.getElementById("btnClrCanvas");
+                    var btnSaveCanvas = document.getElementById("btnSaveCanvas");
+                    var signatureImage;
+                    const ctx = canvas.getContext('2d');
+                    let isDrawing = false;
+                    let lastX = 0;
+                    let lastY = 0;
 
-                canvas.addEventListener('mousemove', (e) => {
-                    if (!isDrawing) return;
-                    ctx.beginPath();
-                    ctx.moveTo(lastX, lastY);
-                    ctx.lineTo(e.offsetX, e.offsetY);
-                    ctx.stroke();
-                    [lastX, lastY] = [e.offsetX, e.offsetY];
-                });
+                    canvas.addEventListener('mousedown', (e) => {
+                        isDrawing = true;
+                        [lastX, lastY] = [e.offsetX, e.offsetY];
+                    });
 
-                canvas.addEventListener('mouseup', () => {
-                    isDrawing = false;
-                });
+                    canvas.addEventListener('mousemove', (e) => {
+                        if (!isDrawing) return;
+                        ctx.beginPath();
+                        ctx.moveTo(lastX, lastY);
+                        ctx.lineTo(e.offsetX, e.offsetY);
+                        ctx.stroke();
+                        [lastX, lastY] = [e.offsetX, e.offsetY];
+                    });
 
-                btnClrCanvas.addEventListener("click", () => {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                });
+                    canvas.addEventListener('mouseup', () => {
+                        isDrawing = false;
+                    });
 
-                // Validate if user entered their signaure and accepted the terms and conditions
-                checkbox.checked = false;
-                acceptBtn.addEventListener("click", () => {
-                    if (ctx.getImageData(0, 0, canvas.width, canvas.height).data.some(channel => channel !== 0)) {
-                        if (!checkbox.checked) {
-                            txtTermsError.innerHTML = "Debes aceptar los términos y condiciones";
-                        } else {
-                            signatureImage = canvas.toDataURL();
-                            console.log(signatureImage);
-                            console.log(chckAcceptTerms.checked);
-                            acceptTerms = true;
-                            
-                            fetch(window.location.pathname + "/accept-terms", {
-                                method: "POST",
-                                headers: {
-                                    // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    termsAccepted: chckAcceptTerms.checked
+                    btnClrCanvas.addEventListener("click", () => {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    });
+
+                    // Validate if user entered their signaure and accepted the terms and conditions
+                    checkbox.checked = false;
+                    acceptBtn.addEventListener("click", () => {
+                        if (ctx.getImageData(0, 0, canvas.width, canvas.height).data.some(channel => channel !== 0)) {
+                            if (!checkbox.checked) {
+                                txtTermsError.innerHTML = "Debes aceptar los términos y condiciones";
+                            } else {
+                                signatureImage = canvas.toDataURL();
+                                console.log(signatureImage);
+                                console.log(chckAcceptTerms.checked);
+                                acceptTerms = true;
+
+                                fetch(window.location.pathname + "/accept-terms", {
+                                    method: "POST",
+                                    headers: {
+                                        // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        termsAccepted: chckAcceptTerms.checked
+                                    })
                                 })
-                            })
-                            .then(response => {
-                                if (!response.ok) {
-                                    const error = response.statusText;
-                                    txtTermsError.innerHTML = "Error en la solicitud 2: " + error.toLowerCase() + ".";
-                                    throw new Error('Error en la solicitud 2: ' + error);
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                console.log('Respuesta del servidor 2:', data);
-                                modal.style.display = "none";
-                            })
-                            .catch(error => {
-                                console.error('Error al enviar la solicitud 2:', error);
-                            });                            
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            const error = response.statusText;
+                                            txtTermsError.innerHTML = "Error en la solicitud 2: " + error.toLowerCase() + ".";
+                                            throw new Error('Error en la solicitud 2: ' + error);
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        console.log('Respuesta del servidor 2:', data);
+                                        modal.style.display = "none";
+                                    })
+                                    .catch(error => {
+                                        console.error('Error al enviar la solicitud 2:', error);
+                                    });
+                            }
+                        } else {
+                            txtTermsError.innerHTML = "Debes ingresar tu firma";
                         }
-                    } else {
-                        txtTermsError.innerHTML = "Debes ingresar tu firma";
-                    }
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error al enviar la solicitud 1:', error);
-        });
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error al enviar la solicitud 1:', error);
+            });
 
         // Format map according to coordenates.
         // Initialize and add the map
         let map;
         async function initMap() {
-            alert({{chalet.location.latitude}})
-            const position = { lat: {{chalet.location.latitude}}, lng: {{chalet.location.longitude}} };
-            
-            // Request needed libraries.
-            //@ts-ignore
-            const { Map } = await google.maps.importLibrary("maps");
-            const { AdvancedMarkerView } = await google.maps.importLibrary("marker");
+            alert({{ chalet.location.latitude }})
+    const position = { lat: {{ chalet.location.latitude }}, lng: { { chalet.location.longitude } } };
 
-            // The map, centered at Uluru
-            map = new Map(document.getElementById("map"), {
-                zoom: 4,
-                center: position,
-                mapId: "DEMO_MAP_ID",
-            });
+    // Request needed libraries.
+    //@ts-ignore
+    const { Map } = await google.maps.importLibrary("maps");
+    const { AdvancedMarkerView } = await google.maps.importLibrary("marker");
 
-            // The marker, positioned at Uluru
-            const marker = new AdvancedMarkerView({
-                map: map,
-                position: position,
-                title: "{{chalet.propertyDetails.name}}",
-            });
+    // The map, centered at Uluru
+    map = new Map(document.getElementById("map"), {
+        zoom: 4,
+        center: position,
+        mapId: "DEMO_MAP_ID",
+    });
+
+    // The marker, positioned at Uluru
+    const marker = new AdvancedMarkerView({
+        map: map,
+        position: position,
+        title: "{{chalet.propertyDetails.name}}",
+    });
         }
 
-        initMap();
+        //initMap();
     });
 </script>
