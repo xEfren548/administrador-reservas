@@ -97,6 +97,9 @@
                 "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
                 "pageLength": 10, // Establece la longitud de página inicial
                 "dom": 'Bfrtip', // Añade los botones a la interfaz
+                "search": {
+                    "smart": false
+                },
                 "buttons": [
                     {
                         extend: 'csvHtml5',
@@ -144,6 +147,34 @@
                     buttons.forEach(function (button) {
                         button.classList.add('btn', 'btn-info');
                     });
+
+                    this.api()
+                        .columns([0, 4])
+                        .every(function () {
+                            let column = this;
+
+                            // Create select element
+                            let select = document.createElement('select');
+                            select.classList.add('d-flex', 'justify-content-start');
+                            select.add(new Option(''));
+                            column.footer().replaceChildren(select);
+
+                            // Apply listener for user change in value
+                            select.addEventListener('change', function () {
+                                column
+                                    .search(select.value, { exact: true })
+                                    .draw();
+                            });
+
+                            // Add list of options
+                            column
+                                .data()
+                                .unique()
+                                .sort()
+                                .each(function (d, j) {
+                                    select.add(new Option(d));
+                                });
+                        });
                 },
                 "drawCallback": function () {
                     // Calculate and update the total monto
@@ -153,6 +184,7 @@
                     }, 0);
                     document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
                     updateChart(api);
+                    updateUsersChart(api);
                 }
             });
 
@@ -289,6 +321,41 @@
         }
     }
 
+    function updateUsersChart(api) {
+        // Group data by usuario
+        var groupedData = {};
+        api.rows({ search: 'applied' }).every(function () {
+            var data = this.data();
+            var usuario = data[4];
+            var monto = parseFloat(data[2].replace(/[^\d.-]/g, ''));
+
+            if (!groupedData[usuario]) {
+                groupedData[usuario] = 0;
+            }
+            groupedData[usuario] += monto;
+        });
+
+        // Convert groupedData to array of objects
+        const userMontoArray = Object.keys(groupedData).map(usuario => ({
+            usuario,
+            monto: groupedData[usuario]
+        }));
+
+        // Sort array by monto in descending order
+        userMontoArray.sort((a, b) => b.monto - a.monto);
+
+        // Extract sorted labels and data
+        const labels = userMontoArray.map(item => item.usuario);
+        const data = userMontoArray.map(item => item.monto);
+        const backgroundColors = generateRandomColors(labels.length);
+
+        // Update the user montos chart
+        userMontosChart.data.labels = labels;
+        userMontosChart.data.datasets[0].data = data;
+        userMontosChart.data.datasets[0].backgroundColor = backgroundColors;
+        userMontosChart.update();
+    }
+
     const ctx = document.getElementById('doughnut-chart').getContext('2d');
     const totalEarnings = {{ totalEarnings }};
     const limit = {{ limit }};
@@ -338,24 +405,19 @@
         options: doughnutChartOptions
     });
 
-    const userMontos = {{{json userMontos}}}
-    userMontos.sort((a, b) => b.monto - a.monto);
-
-
-    const labels = userMontos.map(item => item.nombreUsuario);
-    const data = userMontos.map(item => item.monto);
-    const backgroundColors = generateRandomColors(userMontos.length)
+    //const userMontos = {{{ json userMontos }}}
+    //userMontos.sort((a, b) => b.monto - a.monto);
 
     const ctxUsers = document.getElementById('userMontos-chart').getContext('2d');
-    
+
     const userMontosChart = new Chart(ctxUsers, {
         type: 'pie',
         data: {
-            labels: labels,
+            labels: [],
             datasets: [{
-                label: 'Montos del mes por usuario',
-                data: data,
-                backgroundColor: backgroundColors,
+                label: 'Comisiones por usuario',
+                data: [],
+                backgroundColor: [],
                 borderColor: [
                     'rgba(255, 99, 132, 1)',
 
@@ -375,7 +437,7 @@
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(tooltipItem){
+                        label: function (tooltipItem) {
                             return `${tooltipItem.label}: $${tooltipItem.raw.toFixed(2)}`;
 
                         }
@@ -384,7 +446,7 @@
             }
         }
     })
-    const utilidadMontos = {{{json utilidadMontos}}}
+    const utilidadMontos = {{{ json utilidadMontos }}}
     utilidadMontos.sort((a, b) => b.monto - a.monto);
 
 
@@ -393,7 +455,7 @@
     const backgroundColorsChalet = generateRandomColors(utilidadMontos.length)
 
     const ctxChalets = document.getElementById('chaletUtilities-chart').getContext('2d');
-    
+
     const chaletUtilitiesChart = new Chart(ctxChalets, {
         type: 'pie',
         data: {
@@ -421,7 +483,7 @@
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(tooltipItem){
+                        label: function (tooltipItem) {
                             return `${tooltipItem.label}: $${tooltipItem.raw.toFixed(2)}`;
 
                         }

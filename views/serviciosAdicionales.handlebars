@@ -35,7 +35,18 @@
                         <td>{{secondCommission}}</td>
                         <td>{{finalPrice}}</td>
                         <td class="text-center">
-                            <button type="button" class="btn btn-primary" data-service-name="{{service}}"  data-bs-toggle="modal"
+                            <button type="button" class="btn btn-primary" 
+                            data-service-name="{{service}}"
+                            data-service-description="{{description}}"
+                            data-service-provider="{{supplierEmail}}"
+                            data-service-manager="{{serviceManagerEmail}}"
+                            data-service-cost-price="{{costPrice}}"
+                            data-service-base-price="{{basePrice}}"
+                            data-service-first-commission="{{firstCommission}}"
+                            data-service-second-commission="{{secondCommission}}"
+                            data-service-final-price="{{finalPrice}}"
+                            onclick="showData(this)"
+                            data-bs-toggle="modal"
                                 data-bs-target="#modify-service_entry_modal">
                                 <i class="fa fa-pencil" aria-hidden="true"></i>
                             </button>
@@ -500,5 +511,30 @@
             });
         });
     });
+
+        function showData(button) {
+
+            const name = button.getAttribute('data-service-name')
+            const description = button.getAttribute('data-service-description')   
+            const supplier = button.getAttribute('data-service-provider')   
+            const serviceManager = button.getAttribute('data-service-manager')    
+            const costPrice = button.getAttribute('data-service-cost-price') 
+            const basePrice = button.getAttribute('data-service-base-price')    
+            const firstCommission = button.getAttribute('data-service-first-commission')    
+            const secondCommission = button.getAttribute('data-service-second-commission')    
+            const finalPrice = button.getAttribute('data-service-final-price')
+
+            document.querySelector('#txtServiceUpd').value = name
+            document.querySelector('#txtServiceDescriptionUpd').value = description
+            document.querySelector('#txtSupplierUpd').value = supplier
+            document.querySelector('#txtServiceManagerUpd').value = serviceManager;
+            document.querySelector('#txtCostPriceUpd').value = costPrice;
+            document.querySelector('#txtBasePriceUpd').value = basePrice;
+            document.querySelector('#txtFirstCommissionUpd').value = firstCommission;
+            document.querySelector('#txtSecondCommissionUpd').value = secondCommission;
+            document.querySelector('#txtFinalPriceUpd').value = finalPrice;
+
+
+    }
 
 </script>

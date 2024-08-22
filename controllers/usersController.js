@@ -146,9 +146,10 @@ async function showUsersView(req, res, next){
 }
 
 async function createUser(req, res, next) {
-    const { firstName, lastName, email, password, privilege, administrator, adminname, color, investorType } = req.body;
+    const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType } = req.body;
+    const mexPhone = `+52${phone}`
     const userToAdd = new Usuario ({
-        firstName, lastName, email, password, privilege, administrator,adminname, color, investorType
+        firstName, lastName, email, phone: mexPhone, password, privilege, administrator,adminname, color, investorType
     });
 
     try{    
@@ -208,13 +209,20 @@ async function obtenerUsuarioPorIdMongo(uuid){
 }
 
 async function editarUsuario(req, res, next) {
-    const { firstName, lastName, email, password, privilege, administrator,adminname, color, investorType } = req.body;
+    const { firstName, lastName, email, phone, password, privilege, administrator,adminname, color, investorType } = req.body;
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
     if (password) {
         const salt = await bcrypt.genSalt(10);
         updateFields.password = await bcrypt.hash(password, salt);
+    }
+    if (phone){
+        const mexPhone = `+52${phone}`
+        if(!validarTelefono(mexPhone)){
+            return next(new BadRequestError("Invalid phone number"));
+        }
+        updateFields.phone = mexPhone
     }
     if (privilege) { updateFields.privilege = privilege; }
     if (administrator) { updateFields.administrator = administrator; }
@@ -241,6 +249,11 @@ async function editarUsuario(req, res, next) {
     } catch(err) {
         return next(err);
     }
+}
+
+function validarTelefono(numero) {
+    const regex = /^\+?52? ?\d{10}$/;
+    return regex.test(numero);
 }
 
 // Maybe this function is not completely necessary.

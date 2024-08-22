@@ -16,6 +16,18 @@ const userSchema = new Schema({
         required: true,
         unique: true,
     },
+    phone: {
+        type: String,
+        unique: true,
+        required: true,
+        validate: {
+            validator: function(v) {
+                const regex = /^\+?52? ?\d{10}$/;
+                return regex.test(v);
+            },
+            message: props => `${props.value} no es un número de teléfono válido de México.`
+        }
+    },
     password: {
         type: String,
         required: true
