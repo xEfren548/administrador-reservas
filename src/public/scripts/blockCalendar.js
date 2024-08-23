@@ -45,6 +45,12 @@ function createCalendar(month, year, calendarContainerId, chaletId) {
     const monthHeader = document.createElement('div');
     monthHeader.classList.add('month-header');
     monthHeader.textContent = `${monthNames[month]} ${year}`;
+
+    // Set an ID if this is the current month and year
+    if (month === today.getMonth() && year === today.getFullYear()) {
+        monthHeader.id = `current-month-${calendarContainerId}`;
+    }
+
     monthDiv.appendChild(monthHeader);
 
     const weekdaysDiv = document.createElement('div');
@@ -108,7 +114,7 @@ async function generateCalendars() {
 
     calendarContainers.forEach(container => {
         const chaletId = container.getAttribute('data-id');
-        let currentMonth = today.getMonth();
+        let currentMonth = 0;
         let currentYear = today.getFullYear();
         for (let i = 0; i < monthsToShow; i++) {
             createCalendar(currentMonth, currentYear, container.id, chaletId);
@@ -119,9 +125,36 @@ async function generateCalendars() {
             }
         }
     });
+
 }
 
 generateCalendars();
+
+function goToCurrentMonth(name) {
+
+    const currentMonthElement = document.getElementById(`current-month-calendar-container-${name}`);
+    if (currentMonthElement) {
+        currentMonthElement.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function scrollToCurrentMonth() {
+    const currentMonthName = today.toLocaleString('es-ES', { month: 'long' });
+    const currentYear = today.getFullYear();
+
+    const calendarContainers = document.querySelectorAll('[id^="calendar-container-"]');
+
+    calendarContainers.forEach(container => {
+        const monthHeaders = container.querySelectorAll('.month-header');
+        monthHeaders.forEach(header => {
+            if (header.textContent.trim().toLowerCase() === `${currentMonthName} ${currentYear}`.toLowerCase()) {
+                setTimeout(() => {
+                    header.scrollIntoView({ behavior: 'smooth' });
+                }, 0);
+            }
+        });
+    });
+}
 
 console.log(dateArray); // Aquí puedes ver todas las fechas generadas
 window.addEventListener("load", () => {
@@ -255,3 +288,4 @@ agregarFechasBtn.addEventListener("click", async (e) => {
         return diasSemana[fecha.getDay()];
     }
 });
+
