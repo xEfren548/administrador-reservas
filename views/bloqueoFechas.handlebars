@@ -14,7 +14,19 @@
 </div>
 
 {{#each chalets}}
-<h2>{{this.name}}</h2>
+<div class="row d-flex bd-highlight mb-3">
+    <div class="me-auto p-2 bd-highlight">
+        <h2>{{this.name}}</h2>
+    </div>
+    <div class="ms-auto p-2 bd-highlight">
+        <a name="" id="cn-{{this.name}}" class="btn btn-primary" href="#" role="button">Hoy</a>
+    </div>
+
+    
+
+
+
+</div>
 <div class="container mb-3">
     <div class="row calendar-container" id="calendar-container-{{this.name}}" style="color: black !important;"
         data-id="{{this.id}}">
