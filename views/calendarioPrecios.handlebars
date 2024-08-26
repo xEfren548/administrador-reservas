@@ -15,16 +15,21 @@
 		<div class="color-box" style="background-color: #ccc;"></div>
 		<span class="color-text">Fin de semana</span>
 	</div>
+
 	{{#if pricexday}}
 	{{#each pricexday}}
 	<h1>{{this.name}}</h1> <!-- Título de la habitación -->
+	<div class="ms-auto p-2 bd-highlight">
+		<a name="" id="cn-{{this.name}}" class="btn btn-primary hoy-btn" href="#" role="button"
+			data-chalet="{{this.name}}">Hoy</a>
+	</div>
 	<div class="table-responsive">
-		<table class="table table-primary table-dark table-hover">
+		<table class="table table-primary table-dark table-hover" id="calendar-container-{{this.name}}">
 			<thead class="table-light">
 				<tr>
-					<th scope="col">Función</th>
+					<th scope="col" class="sticky-column">Función</th>
 					{{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
-					<th scope="col">{{this}}</th> <!-- Mostrar cada fecha como encabezado de columna -->
+					<th scope="col" style="position: sticky; left: 0;">{{this}}</th> <!-- Mostrar cada fecha como encabezado de columna -->
 					{{/each}}
 				</tr>
 			</thead>
@@ -33,7 +38,7 @@
 				<tr>
 					{{#each this}}
 					{{#if @first}}
-					<td style="text-align:center; vertical-align:middle">{{this}}</td>
+					<td style="text-align:center; vertical-align:middle" class="sticky-column">{{this}}</td>
 					<!-- Mostrar la tarifa base de la habitación -->
 					{{else}}
 					<td style="text-align:center; vertical-align:middle">${{this}}</td>
@@ -44,10 +49,10 @@
 				{{/each}}
 				{{#each preciosEspeciales}}
 				<tr>
-					<td style="text-align:center; background-color:#444;">Precios para {{@key}} Personas</td>
+					<td style="text-align:center; background-color:#444;" class="sticky-column">Precios para {{@key}} Personas</td>
 				</tr>
 				<tr>
-					<td style="text-align:center; vertical-align:middle">Precio Base</td>
+					<td style="text-align:center; vertical-align:middle" class="sticky-column">Precio Base</td>
 					{{#each this.precio_modificado}}
 					<td style="text-align:center; vertical-align:middle">
 						{{#if this}}
@@ -59,7 +64,7 @@
 					{{/each}}
 				</tr>
 				<tr>
-					<td style="text-align:center; vertical-align:middle">Precio Base 2 Noches</td>
+					<td style="text-align:center; vertical-align:middle" class="sticky-column">Precio Base 2 Noches</td>
 					{{#each this.precio_base_2noches}}
 					<td style="text-align:center; vertical-align:middle">
 						{{#if this}}
@@ -70,7 +75,7 @@
 						{{/each}}
 				</tr>
 				<tr>
-					<td style="text-align:center; vertical-align:middle">Costo Base</td>
+					<td style="text-align:center; vertical-align:middle" class="sticky-column">Costo Base</td>
 					{{#each this.costo_base}}
 					<td style="text-align:center; vertical-align:middle">
 						{{#if this}}
@@ -82,7 +87,7 @@
 					{{/each}}
 				</tr>
 				<tr>
-					<td style="text-align:center; vertical-align:middle">Costo Base 2 Noches</td>
+					<td style="text-align:center; vertical-align:middle" class="sticky-column">Costo Base 2 Noches</td>
 					{{#each this.costo_base_2noches}}
 					<td style="text-align:center; vertical-align:middle">
 						{{#if this}}
@@ -1702,9 +1707,12 @@
 	  **/
 		//precio_modificado, precio_base_2noches, costo_base, costo_base_2noches, criterio, noPersonas, habitacionId
 	});
+	const hoyButtons = document.querySelectorAll('.hoy-btn');
+	const today = new Date();
+	let currentMonth = today.getMonth();
+	let currentYear = today.getFullYear();
 
-	// Selecciona todas las tablas en el documento
-	const tables = document.querySelectorAll("table");
+
 
 	// Función para determinar si una fecha es viernes, sábado o domingo
 	function esFinDeSemana(fechaStr) {
@@ -1735,9 +1743,43 @@
 		return diaSemana === 0 || diaSemana === 5 || diaSemana === 6;
 	}
 
+	function esHoy(fechaStr) {
+		const partesFecha = fechaStr.split(" ");
+		const dia = parseInt(partesFecha[0]);
+		const mes = partesFecha[1];
+		const anio = parseInt(partesFecha[2]);
+
+		// Mapear los nombres de los meses a números (enero = 0, diciembre = 11)
+		const meses = {
+			"ene": 0,
+			"feb": 1,
+			"mar": 2,
+			"abr": 3,
+			"may": 4,
+			"jun": 5,
+			"jul": 6,
+			"ago": 7,
+			"sept": 8,
+			"oct": 9,
+			"nov": 10,
+			"dic": 11
+		};
+
+		const fecha = new Date(anio, meses[mes], dia);
+		const fechaHoy = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+
+		const todayDate = new Date();
+		todayDate.setHours(0, 0, 0, 0); // Eliminar la hora para comparar solo la fecha
+
+		return fechaHoy.getTime() === todayDate.getTime();
+	}
+
+	// Selecciona todas las tablas en el documento
+	const tables = document.querySelectorAll("table");
+
 	tables.forEach(table => {
 		const ths = table.querySelectorAll("th");
-		
+
 		ths.forEach((th, index) => {
 			if (esFinDeSemana(th.textContent.trim())) {
 				for (let i = 1; i < table.rows.length; i++) {
@@ -1749,6 +1791,46 @@
 			}
 		});
 	});
+
+
+	hoyButtons.forEach(button => {
+		button.addEventListener('click', function (event) {
+			event.preventDefault();
+
+			const chaletName = this.getAttribute('data-chalet');
+
+			const currentMonthName = today.toLocaleString('es-ES', { month: 'long' });
+			const currentYear = today.getFullYear();
+
+			const calendarContainer = document.getElementById(`calendar-container-${chaletName}`);
+
+			console.log(`Button clicked for ${chaletName}`)
+
+			const ths = calendarContainer.querySelectorAll("th");
+
+			ths.forEach((th, index) => {
+				if (esHoy(th.textContent.trim())) {
+					console.log("Es hoy!!!")
+					setTimeout(() => {
+						th.scrollIntoView({ behavior: 'smooth', block: "nearest", inline: "start" });
+					}, 0);
+					return;
+				}
+			});
+			/** 
+
+			const monthHeaders = calendarContainer.querySelectorAll('.month-header');
+			monthHeaders.forEach(header => {
+				if (header.textContent.trim().toLowerCase() === `${currentMonthName} ${currentYear}`.toLowerCase()) {
+					setTimeout(() => {
+						header.scrollIntoView({ behavior: 'smooth', block: "nearest", inline: "center" });
+					}, 0);
+				}
+			});
+			**/
+		});
+
+	})
 
 
 

@@ -738,3 +738,10 @@ ul.rb li .timestamp {
 .color-text {
     font-size: 14px;
 }
+
+.sticky-column {
+    position: sticky;
+    left: 0;
+    background-color: white;
+    z-index: 1; /* Para que la columna quede por encima de las demás */
+}
