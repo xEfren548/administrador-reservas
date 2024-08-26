@@ -156,6 +156,8 @@ function scrollToCurrentMonth() {
     });
 }
 
+
+
 console.log(dateArray); // Aquí puedes ver todas las fechas generadas
 window.addEventListener("load", () => {
     const preloader = document.querySelector(".pre-loader");
