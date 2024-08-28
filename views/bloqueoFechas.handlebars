@@ -19,10 +19,11 @@
         <h2>{{this.name}}</h2>
     </div>
     <div class="ms-auto p-2 bd-highlight">
-        <a name="" id="cn-{{this.name}}" class="btn btn-primary" href="#" role="button">Hoy</a>
+        <a name="" id="cn-{{this.name}}" class="btn btn-primary hoy-btn" href="#" role="button"
+            data-chalet="{{this.name}}">Hoy</a>
     </div>
 
-    
+
 
 
 
@@ -186,6 +187,57 @@
             alert(description);
         }
     });
+
+    function goToCurrentMonth(name) {
+
+        const currentMonthElement = document.getElementById(`current-month-calendar-container-${name}`);
+        if (currentMonthElement) {
+            currentMonthElement.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    function scrollToCurrentMonth() {
+        const currentMonthName = today.toLocaleString('es-ES', { month: 'long' });
+        const currentYear = today.getFullYear();
+
+        const calendarContainers = document.querySelectorAll('[id^="calendar-container-"]');
+
+        calendarContainers.forEach(container => {
+            const monthHeaders = container.querySelectorAll('.month-header');
+            monthHeaders.forEach(header => {
+                if (header.textContent.trim().toLowerCase() === `${currentMonthName} ${currentYear}`.toLowerCase()) {
+                    setTimeout(() => {
+                        header.scrollIntoView({ behavior: 'smooth' });
+                    }, 0);
+                }
+            });
+        });
+    }
+
+    const hoyButtons = document.querySelectorAll('.hoy-btn');
+
+    hoyButtons.forEach(button => {
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+
+            const chaletName = this.getAttribute('data-chalet');
+
+            const currentMonthName = today.toLocaleString('es-ES', { month: 'long' });
+            const currentYear = today.getFullYear();
+
+            const calendarContainer = document.getElementById(`calendar-container-${chaletName}`);
+
+            const monthHeaders = calendarContainer.querySelectorAll('.month-header');
+            monthHeaders.forEach(header => {
+                if (header.textContent.trim().toLowerCase() === `${currentMonthName} ${currentYear}`.toLowerCase()) {
+                    setTimeout(() => {
+                        header.scrollIntoView({ behavior: 'smooth', block: "nearest", inline: "center" });
+                    }, 0);
+                }
+            });
+        });
+
+    })
 </script>
 
 <script src="/scripts/blockCalendar.js"></script>
