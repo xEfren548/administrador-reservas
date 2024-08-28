@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     })
             },
         eventContent: function (info) {
-            
+
             let background;
             let textColor;
 
@@ -110,9 +110,19 @@ document.addEventListener('DOMContentLoaded', async function () {
             console.log(info);
             return {
                 html: `
-                <div class="p-1 rounded ${background} bg-gradient ${textColor}" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: "Overpass", sans-serif;">
-                    <div>Reserva</div>
-                    <div><b>Total: $ ${info.event.extendedProps.total}</b></div>
+                <div class="event-content ${background} ${textColor}" style="position: relative; cursor: pointer; font-family: 'Overpass', sans-serif;">
+                    <div class="split-rectangles">
+                        <div class="top-half"></div>
+                        <div class="middle-half"></div>
+                        <div class="bottom-halves">
+                            <div class="left-half bg-white"></div>
+                            <div class="right-half bg-dark"></div>
+                        </div>
+                    </div>
+                    <div class="event-details">
+                        <div>Reserva</div>
+                        <div><b>Total: $ ${info.event.extendedProps.total}</b></div>
+                    </div>
                 </div>
                 `
             }
@@ -646,7 +656,7 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
             // totalPrecios += comisionVendedor // Precio maximo permitido
 
             // console.log("Total precios con comisiones: ", totalPrecios)
-            const comisionUsuarios = await obtenerComisiones() 
+            const comisionUsuarios = await obtenerComisiones()
             let precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
             console.log("Precio minimo permitido: ", precioMinimoPermitido)
             precioMinimoPermitido += comisionVendedor;
