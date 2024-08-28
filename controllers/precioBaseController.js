@@ -118,9 +118,9 @@ async function eliminarRegistroPrecio(req, res) {
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
-
+        console.log(fechaAjustada);
         const resultado = await PrecioBaseXDia.findOneAndDelete({ fecha: fechaAjustada, habitacionId: habitacionId });
-
+        console.log(resultado);
         if (!resultado) {
             return res.status(404).json({ message: 'No se encontró ningún registro para eliminar' });
         }
