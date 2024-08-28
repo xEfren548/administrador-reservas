@@ -141,6 +141,17 @@ async function obtenerEventos(req, res) {
     const { id } = req.params;
     try {
         const eventos = await Documento.find();
+        let eventosExistentes = eventos[0].events;
+        for (let evento of eventosExistentes){
+            const reservationClient = evento.client;
+            if (reservationClient){
+                const client = await Cliente.findById(reservationClient);
+                if (client){
+                    evento.clientName = (client.firstName + ' ' +client.lastName).toUpperCase();
+                }
+            }
+        }
+        console.log(eventos[0])
         res.send(eventos);
     } catch (error) {
         console.error(error);

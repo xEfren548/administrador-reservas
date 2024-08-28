@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', async function () {
-
+    const spinner = $('.loader');
+    $(spinner).removeClass('loader--hidden')
     // const url =  `${process.env.URL}/eventos`;
     // const urlEventos = 'https://administrador-reservas.onrender.com/eventos'
     const urlEventos = './api/eventos';
@@ -74,10 +75,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     clientId: event.client,
                                     status: event.status,
                                     createdBy: event.createdBy,
-                                    comisionVendedor: event.comisionVendedor
+                                    comisionVendedor: event.comisionVendedor,
+                                    clientName: event.clientName
                                 }
                             })
                         successCallback(events);
+                        $(spinner).addClass('loader--hidden')
                         // console.log(events);
                     })
                     .catch(function (error) {
@@ -88,6 +91,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             let background;
             let textColor;
+            const clientName = info.event.extendedProps.clientName || "Reserva de dueño/inversionista"
 
             if (info.event.extendedProps.status === 'active') {
                 background = 'bg-success';
@@ -104,10 +108,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
 
 
-
-
-
-            console.log(info);
             return {
                 html: `
                 <div class="event-content ${background} ${textColor}" style="position: relative; cursor: pointer; font-family: 'Overpass', sans-serif;">
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         </div>
                     </div>
                     <div class="event-details">
-                        <div>Reserva</div>
+                        <div>${clientName}</div>
                         <div><b>Total: $ ${info.event.extendedProps.total}</b></div>
                     </div>
                 </div>
@@ -313,7 +313,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
 
     document.getElementById('edit').addEventListener('click', function () {
-        console.log(currentEvent.url);
         window.location.replace(currentEvent.url)
     });
 
@@ -491,7 +490,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 .then(data => {
                     // console.log('Respuesta del servidor: ', data);
                     eventData = data[0]
-                    console.log(eventData);
 
                 })
                 .catch(err => {
