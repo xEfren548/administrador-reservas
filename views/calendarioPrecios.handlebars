@@ -2138,6 +2138,8 @@
 			const habitacionId = $('#select-cabana-eliminarespeciales').val();
 
 			if (selected === "eliminarpreciosespeciales") {
+
+				const noPersonas = $('#numero-personas-eliminarespeciales').val();
 				const fechaInicioString = document.querySelector('#fecha-inicio-eliminarespeciales').value; // Obtener el valor del input de tipo date
 				const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
 				const fechaFinString = document.querySelector('#fecha-fin-eliminarespeciales').value; // Obtener el valor del input de tipo date
@@ -2154,7 +2156,34 @@
 
 				const fechas = obtenerRangoFechas(fechaInicio, fechaFin, diasSeleccionados);
 
+				try {
+					const resultados = await fetchRepetido(fechas, habitacionId, noPersonas, selected);
+					console.log(resultados);
+					if (resultados.length === 0) {
+						throw new Error('No hay fechas seleccionadas para actualizar.');
+					}
 
+					Swal.fire({
+						icon: 'success',
+						title: '¡Completado!',
+						text: 'Precios actualizados correctamente.',
+						confirmButtonText: 'Aceptar'
+					}).then((result) => {
+						// Verificar si el usuario hizo clic en el botón de confirmación
+						if (result.isConfirmed) {
+							// Actualizar la página
+							location.reload();
+						}
+					});
+
+				} catch (e) {
+					Swal.fire({
+						icon: 'error',
+						title: 'Error',
+						text: e.message,
+						confirmButtonText: 'Aceptar'
+					})
+				}
 			} else if (selected === "eliminarpreciosgenerales") {
 				const fechaInicioString = document.querySelector('#fecha-inicio-eliminargenerales').value; // Obtener el valor del input de tipo date
 				const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
@@ -2256,6 +2285,10 @@
 
 					if (referencia === "eliminarpreciosgenerales") {
 						url = `/api/calendario-precios?fecha=${formattedDate}&habitacionId=${idHabitacion}`
+					} else if (referencia === "eliminarpreciosespeciales") {
+						url = `/api/precios-especiales?fecha=${formattedDate}&habitacionId=${idHabitacion}&noPersonas=${noPersonas}`
+					} else {
+						throw new Error("No se ha seleccionado un tipo de precio a eliminar.");
 					}
 
 
