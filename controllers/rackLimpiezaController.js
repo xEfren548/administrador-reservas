@@ -27,12 +27,12 @@ async function getAllServicesMongo(req, res, next) {
 
 async function getSpecificServicesMongo(idChalet) {
     try {
-
-        const services = await RackLimpieza.find({idHabitacion: idChalet}).lean()
+        const newChaletId = new mongoose.Types.ObjectId(idChalet);
+        const services = await RackLimpieza.find({idHabitacion: newChaletId}).lean()
         return services
     } catch (error) {
         console.log(error.message);
-        res.status(200).send('Something went wrong while retrieving services.');
+        return error.message
     }
 }
 

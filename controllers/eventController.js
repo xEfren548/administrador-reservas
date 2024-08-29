@@ -143,6 +143,32 @@ async function obtenerEventos(req, res) {
         const eventos = await Documento.find().lean();
         let eventosExistentes = eventos[0].events;
 
+        let cleaningDetailsMap = {};
+
+        const idAllChalets = [...new Set(eventosExistentes.map(evento => evento.resourceId.toString()))];
+
+        for (let chaletId of idAllChalets) {
+            const rackLimpieza = await rackLimpiezaController.getSpecificServicesMongo(chaletId);
+            const sortedRackLimpieza = rackLimpieza.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+            // Guardar el primer objeto de sortedRackLimpieza en el mapa
+            if (sortedRackLimpieza.length > 0) {
+                const firstCleaningDetail = sortedRackLimpieza[0];
+                cleaningDetailsMap[chaletId] = {
+                    idHabitacion: firstCleaningDetail.idHabitacion,
+                    fecha: firstCleaningDetail.fecha,
+                    status: firstCleaningDetail.status
+                };
+            }
+
+        }
+
+
+
+
+        // const rackLimpieza = await rackLimpiezaController.getSpecificServicesMongo();
+        // console.log(rackLimpieza);
+
         for (let evento of eventosExistentes) {
             let pagos = await pagoController.obtenerPagos(evento._id);
             let pagoTotal = 0
@@ -151,8 +177,7 @@ async function obtenerEventos(req, res) {
             })
             evento.pagosTotales = pagoTotal;
 
-            const rackLimpieza = await rackLimpiezaController.getSpecificServicesMongo(evento.resourceId);
-            console.log(rackLimpieza);
+
 
             const reservationClient = evento.client;
             if (reservationClient) {
@@ -161,11 +186,17 @@ async function obtenerEventos(req, res) {
                     evento.clientName = (client.firstName + ' ' + client.lastName).toUpperCase();
                 }
             }
+
+            // Agregar cleaningDetails si el resourceId coincide con un ID en cleaningDetailsMap
+            const chaletId = evento.resourceId.toString();
+            if (cleaningDetailsMap[chaletId]) {
+                evento.cleaningDetails = cleaningDetailsMap[chaletId];
+            }
         }
         // console.log(eventos[0])
         res.send(eventos);
     } catch (error) {
-        console.error(error);
+        console.log(error);
         res.status(500).json({ message: 'Error al obtener eventos' });
     }
 }

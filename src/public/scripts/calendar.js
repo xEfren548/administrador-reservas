@@ -78,14 +78,16 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     comisionVendedor: event.comisionVendedor,
                                     clientName: event.clientName,
                                     clientPayments: event.pagosTotales,
-                                    termsAccepted: event.termsAccepted
+                                    termsAccepted: event.termsAccepted,
+                                    cleaningDetails: event.cleaningDetails
                                 }
                             })
+                        console.log(events);
                         successCallback(events);
                         $(spinner).addClass('loader--hidden')
-                        // console.log(events);
                     })
                     .catch(function (error) {
+                        console.log(error);
                         failureCallback(error);
                     })
             },
@@ -101,11 +103,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const clientName = info.event.extendedProps.clientName || "Reserva de dueño/inversionista"
             const clientPayments = info.event.extendedProps.clientPayments;
-            const termsAccepted = info.event.extendedProps.termsAccepted
+            const termsAccepted = info.event.extendedProps.termsAccepted;
+            const cleaningDetails = info.event.extendedProps.cleaningDetails;
 
-            if (clientPayments === 0){
+            if (clientPayments === 0) {
                 colorRectanguloTop = 'bg-danger'
-            } else if(clientPayments >= (info.event.extendedProps.total / 2) && clientPayments < info.event.extendedProps.total) {
+            } else if (clientPayments >= (info.event.extendedProps.total / 2) && clientPayments < info.event.extendedProps.total) {
                 colorRectanguloTop = 'bg-warning'
             } else if (clientPayments >= info.event.extendedProps.total) {
                 colorRectanguloTop = 'bg-success'
@@ -118,6 +121,20 @@ document.addEventListener('DOMContentLoaded', async function () {
             } else {
                 colorRectanguloBottomLeft = 'bg-danger'
             }
+
+            if (cleaningDetails) {
+                if (cleaningDetails.status === 'Completado') {
+                    colorRectanguloBottomRight = 'bg-success'
+                } else if (cleaningDetails.status === 'En proceso') {
+                    colorRectanguloBottomRight = 'bg-warning'
+                } else if (cleaningDetails.status === 'Pendiente') {
+                    colorRectanguloBottomRight = 'bg-danger'
+                }
+
+            } else {
+                colorRectanguloBottomRight = 'bg-dark'
+            }
+
             /*
             if (info.event.extendedProps.status === 'active') {
                 background = 'bg-success';
@@ -141,8 +158,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                         <div class="top-half ${colorRectanguloTop}"></div>
                         <div class="middle-half"></div>
                         <div class="bottom-halves">
-                            <div class="left-half ${colorRectanguloBottomLeft}"></div>
-                            <div class="right-half bg-dark"></div>
+                            <div class="left-half ${colorRectanguloBottomLeft}" style="border: 1px solid black;"></div>
+                            <div class="right-half ${colorRectanguloBottomRight}" style="border: 1px solid black;"></div>
                         </div>
                     </div>
                     <div class="event-details text-white">
