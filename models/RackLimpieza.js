@@ -25,6 +25,10 @@ const rackLimpiezaSchema = new Schema({
     },
     nombreHabitacion: {
         type: String
+    },
+    idHabitacion: {
+        type: Schema.Types.ObjectId,
+        ref: 'habitaciones'
     }
     
 });

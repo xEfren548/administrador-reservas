@@ -76,7 +76,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     status: event.status,
                                     createdBy: event.createdBy,
                                     comisionVendedor: event.comisionVendedor,
-                                    clientName: event.clientName
+                                    clientName: event.clientName,
+                                    clientPayments: event.pagosTotales,
+                                    termsAccepted: event.termsAccepted
                                 }
                             })
                         successCallback(events);
@@ -91,8 +93,32 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             let background;
             let textColor;
-            const clientName = info.event.extendedProps.clientName || "Reserva de dueño/inversionista"
+            // Rectángulo de hasta arriba
+            let colorRectanguloTop;
+            let colorRectanguloMiddle;
+            let colorRectanguloBottomLeft;
+            let colorRectanguloBottomRight;
 
+            const clientName = info.event.extendedProps.clientName || "Reserva de dueño/inversionista"
+            const clientPayments = info.event.extendedProps.clientPayments;
+            const termsAccepted = info.event.extendedProps.termsAccepted
+
+            if (clientPayments === 0){
+                colorRectanguloTop = 'bg-danger'
+            } else if(clientPayments >= (info.event.extendedProps.total / 2) && clientPayments < info.event.extendedProps.total) {
+                colorRectanguloTop = 'bg-warning'
+            } else if (clientPayments >= info.event.extendedProps.total) {
+                colorRectanguloTop = 'bg-success'
+            } else {
+                colorRectanguloTop = 'bg-info'
+            }
+
+            if (termsAccepted) {
+                colorRectanguloBottomLeft = 'bg-success'
+            } else {
+                colorRectanguloBottomLeft = 'bg-danger'
+            }
+            /*
             if (info.event.extendedProps.status === 'active') {
                 background = 'bg-success';
                 textColor = 'text-white';
@@ -106,22 +132,22 @@ document.addEventListener('DOMContentLoaded', async function () {
                 background = 'bg-info';
                 textColor = 'text-black';
             }
-
+            */
 
             return {
                 html: `
-                <div class="event-content ${background} ${textColor}" style="position: relative; cursor: pointer; font-family: 'Overpass', sans-serif;">
+                <div class="event-content ${textColor}" style="position: relative; cursor: pointer; font-family: 'Overpass', sans-serif;">
                     <div class="split-rectangles">
-                        <div class="top-half"></div>
+                        <div class="top-half ${colorRectanguloTop}"></div>
                         <div class="middle-half"></div>
                         <div class="bottom-halves">
-                            <div class="left-half bg-white"></div>
+                            <div class="left-half ${colorRectanguloBottomLeft}"></div>
                             <div class="right-half bg-dark"></div>
                         </div>
                     </div>
-                    <div class="event-details">
-                        <div>${clientName}</div>
-                        <div><b>Total: $ ${info.event.extendedProps.total}</b></div>
+                    <div class="event-details text-white">
+                        <div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"><b>${clientName}</div></b>
+                        <div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"><b>Total: $ ${info.event.extendedProps.total}</b></div>
                     </div>
                 </div>
                 `
@@ -721,7 +747,9 @@ function calculateNightDifference(arrivalDate, departureDate) {
 async function obtenerComisiones() {
     try {
         const response = await fetch('/api/utilidades');
+        console.log(response);
         const data = await response.json();
+        console.log(data);
         const minComission = data.minComission
         const finalComission = data.finalComission
         const comisiones = { minComission: minComission, finalComission: finalComission }

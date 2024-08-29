@@ -25,10 +25,10 @@ async function getAllServicesMongo(req, res, next) {
     }
 }
 
-async function getSpecificServicesMongo(req, res, next) {
+async function getSpecificServicesMongo(idChalet) {
     try {
 
-        const services = await RackLimpieza.find()
+        const services = await RackLimpieza.find({idHabitacion: idChalet}).lean()
         return services
     } catch (error) {
         console.log(error.message);
@@ -58,6 +58,7 @@ async function createService(req, res, next) {
         const habitacion = await habitacionController.obtenerHabitacionPorId(resourceId);
 
         const nombreHabitacion = habitacion.propertyDetails.name;
+        const idHabitacion = habitacion._id;
         const encargadoLimpieza = habitacion.others.janitor;
 
 
@@ -67,6 +68,7 @@ async function createService(req, res, next) {
             fecha,
             status,
             nombreHabitacion,
+            idHabitacion,
             encargadoLimpieza
         }
 

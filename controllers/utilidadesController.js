@@ -31,7 +31,6 @@ async function calcularComisiones(req, res) {
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
         const costosAdministrador = await Costos.findOne({ category: "Administrador" }); //
 
-
         let counter = 0
 
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
@@ -105,6 +104,7 @@ async function calcularComisiones(req, res) {
         console.log("max comission", finalComission)
         res.status(200).send({ minComission, finalComission });
     } catch (err) {
+        console.log(err.message);
         res.status(404).send(err.message);
     }
 }
