@@ -25,7 +25,7 @@
 		<a name="" id="cn-{{this.name}}" class="btn btn-primary hoy-btn" href="#" role="button"
 			data-chalet="{{this.name}}">Hoy</a>
 	</div>
-	<div class="table-responsive">
+	<div class="table-responsive min-vh-100 p-4">
 		<table class="table table-primary table-dark table-hover" id="calendar-container-{{this.name}}">
 			<thead class="table-light">
 				<tr>
@@ -2001,9 +2001,11 @@
 			};
 
 			const fecha = new Date(anio, meses[mes], dia);
+			console.log(fecha);
 			const diaSemana = fecha.getDay(); // 0 = Domingo, 5 = Viernes, 6 = Sábado
 
-			return diaSemana === 0 || diaSemana === 5 || diaSemana === 6;
+
+			return diaSemana === 0 || diaSemana === 6;
 		}
 
 		function esHoy(fechaStr) {
@@ -2073,7 +2075,6 @@
 
 				ths.forEach((th, index) => {
 					if (esHoy(th.textContent.trim())) {
-						console.log("Es hoy!!!")
 						setTimeout(() => {
 							th.scrollIntoView({ behavior: 'smooth', block: "nearest", inline: "start" });
 						}, 0);
