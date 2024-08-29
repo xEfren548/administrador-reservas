@@ -25,14 +25,14 @@ async function getAllServicesMongo(req, res, next) {
     }
 }
 
-async function getSpecificServicesMongo(req, res, next) {
+async function getSpecificServicesMongo(idChalet) {
     try {
-
-        const services = await RackLimpieza.find()
+        const newChaletId = new mongoose.Types.ObjectId(idChalet);
+        const services = await RackLimpieza.find({idHabitacion: newChaletId}).lean()
         return services
     } catch (error) {
         console.log(error.message);
-        res.status(200).send('Something went wrong while retrieving services.');
+        return error.message
     }
 }
 
@@ -58,6 +58,7 @@ async function createService(req, res, next) {
         const habitacion = await habitacionController.obtenerHabitacionPorId(resourceId);
 
         const nombreHabitacion = habitacion.propertyDetails.name;
+        const idHabitacion = habitacion._id;
         const encargadoLimpieza = habitacion.others.janitor;
 
 
@@ -67,6 +68,7 @@ async function createService(req, res, next) {
             fecha,
             status,
             nombreHabitacion,
+            idHabitacion,
             encargadoLimpieza
         }
 

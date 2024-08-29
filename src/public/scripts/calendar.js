@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', async function () {
-
+    const spinner = $('.loader');
+    $(spinner).removeClass('loader--hidden')
     // const url =  `${process.env.URL}/eventos`;
     // const urlEventos = 'https://administrador-reservas.onrender.com/eventos'
     const urlEventos = './api/eventos';
@@ -74,21 +75,67 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     clientId: event.client,
                                     status: event.status,
                                     createdBy: event.createdBy,
-                                    comisionVendedor: event.comisionVendedor
+                                    comisionVendedor: event.comisionVendedor,
+                                    clientName: event.clientName,
+                                    clientPayments: event.pagosTotales,
+                                    termsAccepted: event.termsAccepted,
+                                    cleaningDetails: event.cleaningDetails
                                 }
                             })
+                        console.log(events);
                         successCallback(events);
-                        // console.log(events);
+                        $(spinner).addClass('loader--hidden')
                     })
                     .catch(function (error) {
+                        console.log(error);
                         failureCallback(error);
                     })
             },
         eventContent: function (info) {
-            
+
             let background;
             let textColor;
+            // Rectángulo de hasta arriba
+            let colorRectanguloTop;
+            let colorRectanguloMiddle;
+            let colorRectanguloBottomLeft;
+            let colorRectanguloBottomRight;
 
+            const clientName = info.event.extendedProps.clientName || "Reserva de dueño/inversionista"
+            const clientPayments = info.event.extendedProps.clientPayments;
+            const termsAccepted = info.event.extendedProps.termsAccepted;
+            const cleaningDetails = info.event.extendedProps.cleaningDetails;
+
+            if (clientPayments === 0) {
+                colorRectanguloTop = 'bg-danger'
+            } else if (clientPayments >= (info.event.extendedProps.total / 2) && clientPayments < info.event.extendedProps.total) {
+                colorRectanguloTop = 'bg-warning'
+            } else if (clientPayments >= info.event.extendedProps.total) {
+                colorRectanguloTop = 'bg-success'
+            } else {
+                colorRectanguloTop = 'bg-info'
+            }
+
+            if (termsAccepted) {
+                colorRectanguloBottomLeft = 'bg-success'
+            } else {
+                colorRectanguloBottomLeft = 'bg-danger'
+            }
+
+            if (cleaningDetails) {
+                if (cleaningDetails.status === 'Completado') {
+                    colorRectanguloBottomRight = 'bg-success'
+                } else if (cleaningDetails.status === 'En proceso') {
+                    colorRectanguloBottomRight = 'bg-warning'
+                } else if (cleaningDetails.status === 'Pendiente') {
+                    colorRectanguloBottomRight = 'bg-danger'
+                }
+
+            } else {
+                colorRectanguloBottomRight = 'bg-dark'
+            }
+
+            /*
             if (info.event.extendedProps.status === 'active') {
                 background = 'bg-success';
                 textColor = 'text-white';
@@ -102,17 +149,23 @@ document.addEventListener('DOMContentLoaded', async function () {
                 background = 'bg-info';
                 textColor = 'text-black';
             }
+            */
 
-
-
-
-
-            console.log(info);
             return {
                 html: `
-                <div class="p-1 rounded ${background} bg-gradient ${textColor}" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: "Overpass", sans-serif;">
-                    <div>Reserva</div>
-                    <div><b>Total: $ ${info.event.extendedProps.total}</b></div>
+                <div class="event-content ${textColor}" style="position: relative; cursor: pointer; font-family: 'Overpass', sans-serif;">
+                    <div class="split-rectangles">
+                        <div class="top-half ${colorRectanguloTop}"></div>
+                        <div class="middle-half"></div>
+                        <div class="bottom-halves">
+                            <div class="left-half ${colorRectanguloBottomLeft}" style="border: 1px solid black;"></div>
+                            <div class="right-half ${colorRectanguloBottomRight}" style="border: 1px solid black;"></div>
+                        </div>
+                    </div>
+                    <div class="event-details text-white">
+                        <div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"><b>${clientName}</div></b>
+                        <div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"><b>Total: $ ${info.event.extendedProps.total}</b></div>
+                    </div>
                 </div>
                 `
             }
@@ -303,7 +356,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
 
     document.getElementById('edit').addEventListener('click', function () {
-        console.log(currentEvent.url);
         window.location.replace(currentEvent.url)
     });
 
@@ -481,7 +533,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 .then(data => {
                     // console.log('Respuesta del servidor: ', data);
                     eventData = data[0]
-                    console.log(eventData);
 
                 })
                 .catch(err => {
@@ -646,7 +697,7 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
             // totalPrecios += comisionVendedor // Precio maximo permitido
 
             // console.log("Total precios con comisiones: ", totalPrecios)
-            const comisionUsuarios = await obtenerComisiones() 
+            const comisionUsuarios = await obtenerComisiones()
             let precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
             console.log("Precio minimo permitido: ", precioMinimoPermitido)
             precioMinimoPermitido += comisionVendedor;
@@ -713,7 +764,9 @@ function calculateNightDifference(arrivalDate, departureDate) {
 async function obtenerComisiones() {
     try {
         const response = await fetch('/api/utilidades');
+        console.log(response);
         const data = await response.json();
+        console.log(data);
         const minComission = data.minComission
         const finalComission = data.finalComission
         const comisiones = { minComission: minComission, finalComission: finalComission }

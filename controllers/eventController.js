@@ -140,10 +140,63 @@ const submitReservationValidators = [
 async function obtenerEventos(req, res) {
     const { id } = req.params;
     try {
-        const eventos = await Documento.find();
+        const eventos = await Documento.find().lean();
+        let eventosExistentes = eventos[0].events;
+
+        let cleaningDetailsMap = {};
+
+        const idAllChalets = [...new Set(eventosExistentes.map(evento => evento.resourceId.toString()))];
+
+        for (let chaletId of idAllChalets) {
+            const rackLimpieza = await rackLimpiezaController.getSpecificServicesMongo(chaletId);
+            const sortedRackLimpieza = rackLimpieza.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+            // Guardar el primer objeto de sortedRackLimpieza en el mapa
+            if (sortedRackLimpieza.length > 0) {
+                const firstCleaningDetail = sortedRackLimpieza[0];
+                cleaningDetailsMap[chaletId] = {
+                    idHabitacion: firstCleaningDetail.idHabitacion,
+                    fecha: firstCleaningDetail.fecha,
+                    status: firstCleaningDetail.status
+                };
+            }
+
+        }
+
+
+
+
+        // const rackLimpieza = await rackLimpiezaController.getSpecificServicesMongo();
+        // console.log(rackLimpieza);
+
+        for (let evento of eventosExistentes) {
+            let pagos = await pagoController.obtenerPagos(evento._id);
+            let pagoTotal = 0
+            pagos.forEach(pago => {
+                pagoTotal += pago.importe;
+            })
+            evento.pagosTotales = pagoTotal;
+
+
+
+            const reservationClient = evento.client;
+            if (reservationClient) {
+                const client = await Cliente.findById(reservationClient);
+                if (client) {
+                    evento.clientName = (client.firstName + ' ' + client.lastName).toUpperCase();
+                }
+            }
+
+            // Agregar cleaningDetails si el resourceId coincide con un ID en cleaningDetailsMap
+            const chaletId = evento.resourceId.toString();
+            if (cleaningDetailsMap[chaletId]) {
+                evento.cleaningDetails = cleaningDetailsMap[chaletId];
+            }
+        }
+        // console.log(eventos[0])
         res.send(eventos);
     } catch (error) {
-        console.error(error);
+        console.log(error);
         res.status(500).json({ message: 'Error al obtener eventos' });
     }
 }
@@ -320,9 +373,9 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
                 return res.status(404).send('No rooms found');
             }
 
-            habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => 
-                (Array.isArray(habitacion.others.investors) && 
-                    habitacion.others.investors.some(investorId => investorId.toString() === investor._id.toString()))
+            habitacionesDueno = habitacionesExistentes.resources.filter(habitacion =>
+            (Array.isArray(habitacion.others.investors) &&
+                habitacion.others.investors.some(investorId => investorId.toString() === investor._id.toString()))
             );
 
             const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
@@ -339,7 +392,7 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
             if (!documentos) {
                 return res.status(404).send('No documents found');
             }
-    
+
             eventosFiltradosOrdenadosConPagos = await Promise.all(documentos.events
                 .filter(evento => cabañaIds.includes(evento.resourceId.toString()))
                 .map(async evento => {
@@ -351,7 +404,7 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
                         departureDate: moment.utc(evento.departureDate).format('DD-MM-YYYY, h:mm:ss a'),
                     };
                 }));
-    
+
             eventosFiltradosOrdenadosConPagos.sort((a, b) => moment(b.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf() - moment(a.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf());
 
 
@@ -359,33 +412,33 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
             // Get the owner's ID from the session
             const user = await Usuario.findById(req.session.id);
             const duenoId = user.administrator;
-    
+
             // Find the existing rooms
             const habitacionesExistentes = await Habitacion.findOne().lean();
             if (!habitacionesExistentes) {
                 return res.status(404).send('No rooms found');
             }
-    
+
             // Filter the rooms that belong to the owner
             habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
             // Extract the IDs and names of the rooms
             const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
             const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
-    
+
             // Create a map of room IDs to names
             const cabañaIdToNameMap = {};
             nombreCabañas.forEach(cabaña => {
                 cabañaIdToNameMap[cabaña.id] = cabaña.name;
             });
-    
+
             // Find documents containing events
             const documentos = await Documento.findOne().lean();
             if (!documentos) {
                 return res.status(404).send('No documents found');
             }
 
-            
-    
+
+
             // Filter events that correspond to the owner's rooms and add the room name to each event
             eventosFiltradosOrdenadosConPagos = await Promise.all(documentos.events
                 .filter(evento => cabañaIds.includes(evento.resourceId.toString()))
@@ -398,7 +451,7 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
                         departureDate: moment.utc(evento.departureDate).format('DD-MM-YYYY, h:mm:ss a'),
                     };
                 }));
-    
+
             eventosFiltradosOrdenadosConPagos.sort((a, b) => moment(b.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf() - moment(a.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf());
 
         }
@@ -427,9 +480,9 @@ async function createReservation(req, res, next) {
         const fechaAjustada = new Date(arrivalDate);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
         console.log(fechaAjustada);
-        
-        
-        
+
+
+
         const chalets = await Habitacion.findOne();
         const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
         if (!chalet) {
@@ -438,11 +491,11 @@ async function createReservation(req, res, next) {
 
         const mongooseChaletId = new mongoose.Types.ObjectId(chalet._id);
         console.log(fechaAjustada);
-        const fechasBloqueadas = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId});
+        const fechasBloqueadas = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId });
         console.log(fechasBloqueadas);
         if (fechasBloqueadas) {
             if (nNights < fechasBloqueadas.min) {
-                return res.status(400).send({ message: `La estancia minima es de ${fechasBloqueadas.min} noches`});
+                return res.status(400).send({ message: `La estancia minima es de ${fechasBloqueadas.min} noches` });
             }
         }
 
@@ -558,7 +611,7 @@ async function createReservation(req, res, next) {
         res.status(200).json({ success: true, reservationId: documento.events[documento.events.length - 1]._id, message });
     } catch (err) {
         console.log(err);
-        res.status(400).send({ message: err.message});
+        res.status(400).send({ message: err.message });
     }
 }
 
@@ -569,14 +622,14 @@ async function createOwnerReservation(req, res, next) {
         const privilege = req.session.privilege;
         const investorId = req.session.id
         console.log(req.session)
-        if (privilege === "Inversionistas"){
+        if (privilege === "Inversionistas") {
             // Definicion de reglas de inversionistas
             const documento = await Documento.findOne();
             const reservasDeInversionista = documento.events.filter(reserva => reserva.createdBy.toString() === investorId.toString());
             reservasDeInversionista.sort((a, b) => new Date(a.departureDate) - new Date(b.departureDate));
 
             const reservaActiva = reservasDeInversionista.find(reserva => new Date(reserva.departureDate) > new Date());
-            
+
             if (reservaActiva) {
                 throw new Error('Ya tienes una reserva activa.')
             }
@@ -587,7 +640,7 @@ async function createOwnerReservation(req, res, next) {
             for (let i = 0; i < reservasDeInversionista.length; i++) {
                 const reserva = reservasDeInversionista[i];
                 const salidaAnterior = new Date(reserva.departureDate);
-            
+
                 if ((nuevaLlegada - salidaAnterior) / (1000 * 60 * 60 * 24) < 9) {
                     throw new Error("Entre reserva y reserva tienen que pasar al menos 9 días.");
                 }
@@ -646,12 +699,12 @@ async function createOwnerReservation(req, res, next) {
             idReserva: idReserva
         })
 
-        if (privilege === "Inversionistas"){
+        if (privilege === "Inversionistas") {
             console.log('Entra')
             const costoLimpieza = chalet.additionalInfo.extraCleaningCost;
             console.log('Costo Limpieza: ', costoLimpieza)
             await utilidadesController.altaComisionReturn({
-                monto: -costoLimpieza ,
+                monto: -costoLimpieza,
                 concepto: `Limpieza Reserva de inversionista ${chalet.propertyDetails.name}`,
                 fecha: new Date(departureDate),
                 idUsuario: createdBy.toString(),
@@ -1187,7 +1240,7 @@ async function eliminarNota(req, res) {
 function cifrarMensaje(mensaje, desplazamiento) {
     desplazamiento = (desplazamiento % 26 + 26) % 26; // Asegurar que el desplazamiento esté en el rango adecuado
 
-    return mensaje.replace(/[a-zA-Z]/g, function(letra) {
+    return mensaje.replace(/[a-zA-Z]/g, function (letra) {
         var codigo = letra.charCodeAt(0);
         var inicio = letra >= 'a' ? 'a'.charCodeAt(0) : 'A'.charCodeAt(0);
         return String.fromCharCode(inicio + (codigo - inicio + desplazamiento) % 26);
