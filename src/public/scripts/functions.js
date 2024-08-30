@@ -270,8 +270,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // const datePicker = $('#date_range')
     // arrivalDate.addEventListener('input', calculateNightDifference);
     // departureDate.addEventListener('input', calculateNightDifference);
-    arrivalDate.addEventListener('input', showAvailableChalets);
-    departureDate.addEventListener('input', showAvailableChalets);
+    // arrivalDate.addEventListener('input', showAvailableChalets);
+    // departureDate.addEventListener('input', showAvailableChalets);
 
     const tipologiaSelect = document.getElementById('tipologia_habitacion');
     const ocupacionInput = document.getElementById('ocupacion_habitacion');
@@ -311,10 +311,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
-    arrivalDate.addEventListener('change', obtenerTotalReserva);
+    // arrivalDate.addEventListener('change', obtenerTotalReserva);
 
     // Agregar un listener para el evento change a departureDate
-    departureDate.addEventListener('change', obtenerTotalReserva);
+    // departureDate.addEventListener('change', obtenerTotalReserva);
 
     selectedPax.addEventListener('change', obtenerTotalReserva);
 
@@ -537,6 +537,7 @@ document.addEventListener("DOMContentLoaded", function () {
     flatpickr("#date_range", {
         mode: "range",
         dateFormat: "d-m-Y",
+        minDate: "today",        
         onChange: function(selectedDates, dateStr, instance) {
             if (selectedDates.length === 2) {
                 // Guardar las fechas en los campos ocultos
@@ -550,7 +551,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 obtenerTotalReserva()
                 showAvailableChalets()
             }
-        }
+        },
+        
     });
 
 
