@@ -128,8 +128,8 @@ document.addEventListener("DOMContentLoaded", function () {
         // Mostrar el spinner y deshabilitar el botón
         const spinner = document.querySelector('.loader');
         spinner.classList.remove('loader--hidden');
-        
-        
+
+
         try {
 
             // Esperar a que obtenerComisiones() se resuelva            
@@ -267,9 +267,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectedPax = document.getElementById('numero-personas')
 
 
-
-    arrivalDate.addEventListener('input', calculateNightDifference);
-    departureDate.addEventListener('input', calculateNightDifference);
+    // const datePicker = $('#date_range')
+    // arrivalDate.addEventListener('input', calculateNightDifference);
+    // departureDate.addEventListener('input', calculateNightDifference);
     arrivalDate.addEventListener('input', showAvailableChalets);
     departureDate.addEventListener('input', showAvailableChalets);
 
@@ -346,7 +346,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
 
         console.log('pax: ', selectedPax.value);
-        if (arrivalDate.value && departureDate.value && tipologiaSelect.value && selectedPax.value !=="") {
+        if (arrivalDate.value && departureDate.value && tipologiaSelect.value && selectedPax.value !== "") {
 
             const calculandoPreciosElement = document.getElementById('calculando-precios');
             calculandoPreciosElement.style.display = 'block';
@@ -533,6 +533,26 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+
+    flatpickr("#date_range", {
+        mode: "range",
+        dateFormat: "d-m-Y",
+        onChange: function(selectedDates, dateStr, instance) {
+            if (selectedDates.length === 2) {
+                // Guardar las fechas en los campos ocultos
+                document.getElementById('event_start_date').value = selectedDates[0].toISOString().split('T')[0];
+                document.getElementById('event_end_date').value = selectedDates[1].toISOString().split('T')[0];
+
+                console.log("Initial date: ", $('#event_start_date').val());
+                console.log("Final date: ", $('#event_end_date').val());
+
+                calculateNightDifference()
+                obtenerTotalReserva()
+                showAvailableChalets()
+            }
+        }
+    });
+
 
 
 });

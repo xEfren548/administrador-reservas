@@ -76,18 +76,13 @@
                     <div class="row mt-2">
                         <div class="col-sm-5">
                             <div class="form-group">
-                                <label for="event_start_date">Fecha llegada</label>
-                                <input type="date" name="event_start_date" id="event_start_date"
-                                    class="form-control onlydatepicker" placeholder="Event start date">
+                                <label for="date_range">Rango de fechas</label>
+                                <input type="text" name="date_range" id="date_range" class="form-control"
+                                    placeholder="Selecciona un rango de fechas">
                             </div>
                         </div>
-                        <div class="col-sm-5">
-                            <div class="form-group">
-                                <label for="event_end_date">Fecha salida</label>
-                                <input type="date" name="event_end_date" id="event_end_date" class="form-control"
-                                    placeholder="Event end date">
-                            </div>
-                        </div>
+                        <input type="hidden" name="event_start_date" id="event_start_date">
+                        <input type="hidden" name="event_end_date" id="event_end_date">
                         <div class="col-sm-2">
                             <div class="form-group">
                                 <label for="event_end_date">Noches: </label>
@@ -127,7 +122,8 @@
                                 <label for="tipologia_habitacion">Habitación</label>
                                 <select name="tipologia_habitacion" id="tipologia_habitacion"
                                     class="form-select form-select-md" required>
-                                    <option value="" selected="true" disabled="true"> Selecciona una habitación --</option>
+                                    <option value="" selected="true" disabled="true"> Selecciona una habitación --
+                                    </option>
                                     {{#if chalets}}
                                     {{#each chalets}}
                                     <option value="{{this.name}}" data-bs-pax="{{this.pax}}" data-bs-id="{{this.id}}"
