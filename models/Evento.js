@@ -36,10 +36,6 @@ const reservaSchema = new Schema({
         type: String,
         required: true
     },
-    units: {
-        type: String,
-        required: true
-    },
     total: {
         type: Number,
     },

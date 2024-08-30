@@ -84,7 +84,7 @@ async function createService(req, res, next) {
 async function createServiceForReservation(req, res, next) {
     try {
         console.log(req)
-        const { id_reserva, descripcion, fecha, status } = req;
+        const { id_reserva, descripcion, fecha, status, idHabitacion } = req;
 
 
         const documento = await Documento.findOne({ 'events._id': id_reserva });
@@ -113,6 +113,7 @@ async function createServiceForReservation(req, res, next) {
             fecha,
             status,
             nombreHabitacion,
+            idHabitacion,
             encargadoLimpieza: new mongoose.Types.ObjectId(encargadoLimpieza)
         }
 

@@ -118,17 +118,16 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-sm-4">
+                        <div class="col-sm-6">
                             <div class="form-group">
                                 <p id="verificar-disponibilidad" style="display: none;">Verificando
                                     disponibilidad...
                                 </p>
 
-                                <label for="tipologia_habitacion">Tipología</label>
+                                <label for="tipologia_habitacion">Habitación</label>
                                 <select name="tipologia_habitacion" id="tipologia_habitacion"
                                     class="form-select form-select-md" required>
-                                    <option value="" selected="true" disabled="true"> Selecciona una cabaña para
-                                        modificar --</option>
+                                    <option value="" selected="true" disabled="true"> Selecciona una habitación --</option>
                                     {{#if chalets}}
                                     {{#each chalets}}
                                     <option value="{{this.name}}" data-bs-pax="{{this.pax}}" data-bs-id="{{this.id}}"
@@ -148,20 +147,6 @@
                                 <input type="number" name="ocupacion_habitacion" id="ocupacion_habitacion"
                                     class="form-control" placeholder="Ocupación" readonly>
                                 <input type="hidden" id="id_cabana">
-                            </div>
-                        </div>
-
-                        <div class="col-sm-4">
-                            <div class="form-group">
-                                <label for="ocupacion_habitacion"></label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Unidades: </span>
-                                    </div>
-                                    <input type="number" id="habitacion_unidades"
-                                        class="form-control bg-light text-black" aria-label="Unidades" min="1"
-                                        step="any" max="1" value="1">
-                                </div>
                             </div>
                         </div>
                     </div> <!-- Cierre row -->
@@ -226,7 +211,7 @@
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="">
-                                    <input id="chckDeposit" type="checkbox"> Por depo
+                                    <input id="chckDeposit" type="checkbox" checked> Por depo
                                 </label>
                             </div>
                         </div>

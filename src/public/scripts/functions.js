@@ -143,16 +143,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 nNights: document.getElementById("event_nights").value.trim(),
                 chaletName: document.getElementById('tipologia_habitacion').value.trim(),
                 maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
-                units: document.getElementById('habitacion_unidades').value.trim(),
                 total: document.getElementById('habitacion_total').value.trim(),
                 discount: document.getElementById('habitacion_descuento').value.trim(),
                 isDeposit: document.getElementById('chckDeposit').checked,
                 comisionVendedor: comisionesReserva
             };
-
-            if (!formData.units) {
-                throw new Error('Asegúrate de poner las unidades.')
-            }
 
             console.log(preciosTotalesGlobal)
             console.log("precioMinimoPermitido: ", precioMinimoPermitido)
