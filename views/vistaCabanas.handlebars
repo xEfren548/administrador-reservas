@@ -197,6 +197,10 @@
                     <label for="chkboxFan">Ventilador</label>
                 </div>
                 <div class="checkbox-option">
+                    <input type="checkbox" id="chkboxGrill" name="chkboxGrill" value="Asador">
+                    <label for="chkboxGrill">Asador</label>
+                </div>
+                <div class="checkbox-option">
                     <input type="checkbox" id="chkboxDressingRoom" name="chkboxDressingRoom" value="Vestidor">
                     <label for="chkboxDressingRoom">Vestidor</label>
                 </div>
@@ -691,6 +695,10 @@
         Ubicación</button>
     <div id="location" class="chalet-details collapse">
         <div class="input-group third">
+            <label for="txtAddress">Dirección</label>
+            <input id="txtAddress" name="txtAddress" type="text" placeholder="Calle">
+        </div>
+        <div class="input-group third">
             <label for="txtState">Provincia / estado</label>
             <input id="txtState" name="txtState" type="text">
         </div>
@@ -1035,7 +1043,8 @@
                             roomService: document.getElementById("chkboxRoomService").checked,
                             fan: document.getElementById("chkboxFan").checked,
                             dressingRoom: document.getElementById("chkboxDressingRoom").checked,
-                            smokers: document.getElementById("chkboxSmokingAllowed").checked
+                            smokers: document.getElementById("chkboxSmokingAllowed").checked,
+                            grill: document.getElementById("chkboxGrill").checked
                         },
                         views: {
                             cityView: document.getElementById("chkboxCityViews").checked,
@@ -1156,6 +1165,7 @@
                     location: {
                         state: document.getElementById("txtState").value.trim(),
                         population: document.getElementById("txtPopulation").value.trim(),
+                        address: document.getElementById("txtAddress").value.trim(),
                         addressNumber: document.getElementById("txtAddressNumber").value.trim(),
                         postalCode: document.getElementById("txtPostalCode").value.trim(),
                         latitude: document.getElementById("txtLat").value.trim(),
@@ -1360,6 +1370,8 @@
                 document.getElementById("chkboxFan").checked = accomodationFeatures.generalFeatures.fan
                 document.getElementById("chkboxDressingRoom").checked = accomodationFeatures.generalFeatures.dressingRoom
                 document.getElementById("chkboxSmokingAllowed").checked = accomodationFeatures.generalFeatures.smokers
+                document.getElementById("chkboxGrill").checked = accomodationFeatures.generalFeatures.grill
+
 
                 // views
                 document.getElementById("chkboxCityViews").checked = accomodationFeatures.views.cityView,
@@ -1482,6 +1494,7 @@
                 //location: {
                 document.getElementById("txtState").value = data.location.state
                 document.getElementById("txtPopulation").value = data.location.population
+                document.getElementById("txtAddress").value = data.location.address
                 document.getElementById("txtAddressNumber").value = data.location.addressNumber
                 document.getElementById("txtPostalCode").value = data.location.postalCode
                 document.getElementById("txtLat").value = data.location.latitude
