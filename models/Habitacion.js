@@ -32,7 +32,8 @@ const generalFeaturesSchema = new mongoose.Schema({
     roomService: { type: Boolean, default: false },
     fan: { type: Boolean, default: false },
     dressingRoom: { type: Boolean, default: false },
-    smokers: { type: Boolean, default: false }
+    smokers: { type: Boolean, default: false },
+    grill: { type: Boolean, default: false },
 });
 
 const viewsSchema = new mongoose.Schema({
@@ -228,6 +229,9 @@ const locationSchema = new mongoose.Schema({
     population: {
         type: String,
         //required: true
+    },
+    address: {
+        type: String,
     },
     addressNumber: {
         type: Number,

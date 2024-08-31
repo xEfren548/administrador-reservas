@@ -66,9 +66,6 @@ const createReservationValidators = [
     check("maxOccupation")
         .notEmpty().withMessage('Max occupation is required')
         .isNumeric().withMessage('Max occupation must be a number'),
-    check("units")
-        .notEmpty().withMessage('Number of units is required')
-        .isNumeric().withMessage('Number of units must be a number'),
     check('total')
         .notEmpty().withMessage('Total amount is required')
         .isNumeric().withMessage('Total amount must be a number')
@@ -469,7 +466,7 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
 
 async function createReservation(req, res, next) {
-    const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, units, total, discount, isDeposit, comisionVendedor } = req.body;
+    const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, total, discount, isDeposit, comisionVendedor } = req.body;
 
     try {
         const client = await Cliente.find({ email: clientEmail });
@@ -516,7 +513,6 @@ async function createReservation(req, res, next) {
                 maxOccupation: maxOccupation,
                 nNights: nNights,
                 url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
-                units: units,
                 total: total,
                 discount: discount,
                 createdBy: createdBy,
@@ -553,7 +549,6 @@ async function createReservation(req, res, next) {
                 maxOccupation: maxOccupation,
                 nNights: nNights,
                 url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
-                units: units,
                 total: total,
                 discount: discount,
                 isDeposit: true,
@@ -584,11 +579,15 @@ async function createReservation(req, res, next) {
         fechaLimpieza.setDate(fechaLimpieza.getDate() + 1)
         const statusLimpieza = 'Pendiente'
 
+        console.log("EVENTO: ")
+        console.log(evento)
+
         await rackLimpiezaController.createServiceForReservation({
             id_reserva: idReserva,
             descripcion: descripcionLimpieza,
             fecha: fechaLimpieza,
-            status: statusLimpieza
+            status: statusLimpieza,
+            idHabitacion: evento.resourceId
         })
 
         console.log("SendMessages.sendReminders");
@@ -668,7 +667,6 @@ async function createOwnerReservation(req, res, next) {
             nNights: nNights,
             status: 'reserva de dueño',
             url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
-            units: 1,
             createdBy: createdBy,
             clienteProvisional: clienteProvisional
         };

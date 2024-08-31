@@ -251,6 +251,11 @@
                         accommodationFeatures.generalFeatures.smokers}}checked{{/if}}>
                     <label for="chkboxSmokingAllowed">Fumadores</label>
                 </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" id="chkboxGrill" name="chkboxGrill" value="Asador" {{#if
+                        accommodationFeatures.generalFeatures.grill}}checked{{/if}}>
+                    <label for="chkboxGrill">Asador</label>
+                </div>
             </div>
         </fieldset>
         <fieldset class="inline-input-group">
@@ -820,6 +825,10 @@
         Ubicación</button>
     <div id="location" class="chalet-details collapse">
         <div class="input-group third">
+            <label for="txtAddress">Dirección</label>
+            <input id="txtAddress" name="txtAddress" type="text" value="{{location.address}}">
+        </div>
+        <div class="input-group third">
             <label for="txtState">Provincia / estado</label>
             <input id="txtState" name="txtState" type="text" value="{{location.state}}">
         </div>
@@ -1183,7 +1192,8 @@
                             roomService: form.querySelector("#chkboxRoomService").checked,
                             fan: form.querySelector("#chkboxFan").checked,
                             dressingRoom: form.querySelector("#chkboxDressingRoom").checked,
-                            smokers: form.querySelector("#chkboxSmokingAllowed").checked
+                            smokers: form.querySelector("#chkboxSmokingAllowed").checked,
+                            grill: form.querySelector("#chkboxGrill").checked
                         },
                         views: {
                             cityView: form.querySelector("#chkboxCityViews").checked,
@@ -1304,6 +1314,7 @@
                     location: {
                         state: form.querySelector("#txtState").value.trim(),
                         population: form.querySelector("#txtPopulation").value.trim(),
+                        address: form.querySelector("#txtAddress").value.trim(),
                         addressNumber: form.querySelector("#txtAddressNumber").value.trim(),
                         postalCode: form.querySelector("#txtPostalCode").value.trim(),
                         latitude: form.querySelector("#txtLat").value.trim(),

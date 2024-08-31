@@ -128,8 +128,8 @@ document.addEventListener("DOMContentLoaded", function () {
         // Mostrar el spinner y deshabilitar el botón
         const spinner = document.querySelector('.loader');
         spinner.classList.remove('loader--hidden');
-        
-        
+
+
         try {
 
             // Esperar a que obtenerComisiones() se resuelva            
@@ -143,16 +143,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 nNights: document.getElementById("event_nights").value.trim(),
                 chaletName: document.getElementById('tipologia_habitacion').value.trim(),
                 maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
-                units: document.getElementById('habitacion_unidades').value.trim(),
                 total: document.getElementById('habitacion_total').value.trim(),
                 discount: document.getElementById('habitacion_descuento').value.trim(),
                 isDeposit: document.getElementById('chckDeposit').checked,
                 comisionVendedor: comisionesReserva
             };
-
-            if (!formData.units) {
-                throw new Error('Asegúrate de poner las unidades.')
-            }
 
             console.log(preciosTotalesGlobal)
             console.log("precioMinimoPermitido: ", precioMinimoPermitido)
@@ -272,11 +267,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectedPax = document.getElementById('numero-personas')
 
 
-
-    arrivalDate.addEventListener('input', calculateNightDifference);
-    departureDate.addEventListener('input', calculateNightDifference);
-    arrivalDate.addEventListener('input', showAvailableChalets);
-    departureDate.addEventListener('input', showAvailableChalets);
+    // const datePicker = $('#date_range')
+    // arrivalDate.addEventListener('input', calculateNightDifference);
+    // departureDate.addEventListener('input', calculateNightDifference);
+    // arrivalDate.addEventListener('input', showAvailableChalets);
+    // departureDate.addEventListener('input', showAvailableChalets);
 
     const tipologiaSelect = document.getElementById('tipologia_habitacion');
     const ocupacionInput = document.getElementById('ocupacion_habitacion');
@@ -316,10 +311,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
-    arrivalDate.addEventListener('change', obtenerTotalReserva);
+    // arrivalDate.addEventListener('change', obtenerTotalReserva);
 
     // Agregar un listener para el evento change a departureDate
-    departureDate.addEventListener('change', obtenerTotalReserva);
+    // departureDate.addEventListener('change', obtenerTotalReserva);
 
     selectedPax.addEventListener('change', obtenerTotalReserva);
 
@@ -351,7 +346,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
 
         console.log('pax: ', selectedPax.value);
-        if (arrivalDate.value && departureDate.value && tipologiaSelect.value && selectedPax.value !=="") {
+        if (arrivalDate.value && departureDate.value && tipologiaSelect.value && selectedPax.value !== "") {
 
             const calculandoPreciosElement = document.getElementById('calculando-precios');
             calculandoPreciosElement.style.display = 'block';
@@ -538,6 +533,28 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+
+    flatpickr("#date_range", {
+        mode: "range",
+        dateFormat: "d-m-Y",
+        minDate: "today",        
+        onChange: function(selectedDates, dateStr, instance) {
+            if (selectedDates.length === 2) {
+                // Guardar las fechas en los campos ocultos
+                document.getElementById('event_start_date').value = selectedDates[0].toISOString().split('T')[0];
+                document.getElementById('event_end_date').value = selectedDates[1].toISOString().split('T')[0];
+
+                console.log("Initial date: ", $('#event_start_date').val());
+                console.log("Final date: ", $('#event_end_date').val());
+
+                calculateNightDifference()
+                obtenerTotalReserva()
+                showAvailableChalets()
+            }
+        },
+        
+    });
+
 
 
 });
