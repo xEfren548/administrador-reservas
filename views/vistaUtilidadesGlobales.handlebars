@@ -156,13 +156,13 @@
                             // Create select element
                             let select = document.createElement('select');
                             select.classList.add('d-flex', 'justify-content-start');
-                            select.add(new Option(''));
+                            select.add(new Option('Mostrar todo', ''));
                             column.footer().replaceChildren(select);
 
                             // Apply listener for user change in value
                             select.addEventListener('change', function () {
                                 column
-                                    .search(select.value, { exact: true })
+                                    .search(select.value)
                                     .draw();
                             });
 
