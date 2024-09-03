@@ -65,6 +65,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.log(arrivalValue)
                 console.log(departureValue)
 
+
+                verificarDisponibilidadElement.style.display = '';
                 verificarDisponibilidadElement.style.display = 'block';
 
                 const arrivalYear = arrivalValue.getFullYear();
@@ -104,8 +106,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         option.style.backgroundColor = 'lightgreen'; // Marca las cabañas disponibles
                         option.disabled = false;
                     } else {
-                        option.style.backgroundColor = 'lightcoral'; // Marca las cabañas no disponibles
-                        option.disabled = true;
+                        // option.style.backgroundColor = 'lightcoral'; // Marca las cabañas no disponibles
+                        // option.disabled = true;
+                        option.style.display = 'none';
                     }
                 });
             }
@@ -118,6 +121,8 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         } finally {
             verificarDisponibilidadElement.style.display = 'none';
+            tipologiaHabitacionInput.disabled = false;
+
         }
 
 
@@ -171,12 +176,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                const errors = errorData.message;
+                console.log(errorData)
+                const errors = errorData.error.map(err => err.message);
                 console.log(errors)
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: "Error en la solicitud: " + errors + ".",
+                    text: "Error en la solicitud: " + errors.join(' ') + ".",
                     confirmButtonText: 'Aceptar'
                 });
                 throw new Error(errors);
