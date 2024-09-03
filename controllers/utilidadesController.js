@@ -31,9 +31,9 @@ async function calcularComisiones(req, res) {
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
         const costosAdministrador = await Costos.findOne({ category: "Administrador" }); //
 
-        if (!costosGerente) {throw new Error("No se encontró costos para gerente. Favor de agregar.")}
-        if (!costosVendedor) {throw new Error("No se encontró costos para vendedor. Favor de agregar.")}
-        if (!costosAdministrador) {throw new Error("No se encontró costos para administrador. Favor de agregar.")}
+        if (!costosGerente) { throw new Error("No se encontró costos para gerente. Favor de agregar.") }
+        if (!costosVendedor) { throw new Error("No se encontró costos para vendedor. Favor de agregar.") }
+        if (!costosAdministrador) { throw new Error("No se encontró costos para administrador. Favor de agregar.") }
 
         let counter = 0
 
@@ -325,7 +325,11 @@ async function generarComisionReserva(req, res) {
             for (let investor of chaletInvestors) {
                 let userInvestor = await User.findById(investor._id);
                 if (userInvestor) {
+<<<<<<< HEAD
                     if (userInvestor.investorType === 'A'){
+=======
+                    if (userInvestor.investorType === 'F') {
+>>>>>>> waranties
                         // Comision normal
                         await altaComisionReturn({
                             monto: comisionInversionistas,
@@ -352,7 +356,7 @@ async function generarComisionReserva(req, res) {
                             idUsuario: investor._id,
                             idReserva: idReserva
                         })
-        
+
                     } else {
                         await altaComisionReturn({
                             monto: comisionInversionistas,
@@ -362,13 +366,13 @@ async function generarComisionReserva(req, res) {
                             idReserva: idReserva
                         })
                     }
-    
-                } 
-    
+
+                }
+
             }
 
         } else {
-        // Comisión de dueño de cabañas (ANTERIOR)
+            // Comisión de dueño de cabañas (ANTERIOR)
             await altaComisionReturn({
                 monto: costoBase - chalet.additionalInfo.extraCleaningCost,
                 concepto: `Comisión Dueño de cabaña: ${chaletName}`,
@@ -463,10 +467,13 @@ async function mostrarUtilidadesGlobales(req, res) {
         let utilidades = {};
         let utilidadesPorReserva = []
 
+        let totalEarnings = 0
 
-        utilidades = await Utilidades.find().lean();
+        const currentMonth = moment().month(); // Mes actual (0-11)
+        const currentYear = moment().year(); // Año actual
+        const utilidadesPorMes = Array(12).fill(0); // Inicializa un array con 12 elementos, todos con valor 0
 
-        
+
         const habitacionesExistentes = await Habitacion.findOne().lean();
         if (!habitacionesExistentes) {
             return res.status(404).send('No rooms found');
@@ -476,49 +483,52 @@ async function mostrarUtilidadesGlobales(req, res) {
         if (!reservas) {
             return res.status(404).send('No documents found');
         }
+
         // // Extract the IDs and names of the rooms
         const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
-        const reservasMap = reservas.events.map(reserva => ({id: reserva._id.toString(), resourceId: reserva.resourceId.toString()}));
-        console.log('Nombre cabañas: ')
-        console.log(nombreCabañas);
+        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString() }));
 
-        let totalEarnings = 0
 
-        const currentMonth = moment().month(); // Mes actual (0-11)
-        const currentYear = moment().year(); // Año actual
-        const utilidadesPorMes = Array(12).fill(0); // Inicializa un array con 12 elementos, todos con valor 0
-        
+        utilidades = await Utilidades.find().lean();
+
+        const idAllUsers = [...new Set(utilidades.map(utilidad => utilidad.idUsuario.toString()))];
+
+        console.log(idAllUsers)
+
         let userMontos = {}; // Object to store total monto for each user
         let utilidadMontos = {}; // Object to store total monto for each user
 
-        if (Object.keys(utilidades).length > 0) {
-            utilidadesPorReserva = utilidades.filter(utilidad => utilidad.concepto.includes("Utilidad"))
 
-            for (let utilidad of utilidades){
-                let idUser = utilidad.idUsuario;
-                let user = await usersController.obtenerUsuarioPorIdMongo(idUser)
-                if (user) {
+        for (let userId of idAllUsers) {
+            let utilidadPorUsuario = utilidades.filter(utilidad => utilidad.idUsuario.toString() === userId);
+            console.log("Utilidad por usuario: ")
+            let user = await usersController.obtenerUsuarioPorIdMongo(userId)
+            if (user) {
+                for (let utilidad of utilidadPorUsuario) {
+
                     utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`
                     utilidad.fecha = moment.utc(utilidad.fecha).format('DD/MM/YYYY');
                     const utilidadFecha = moment.utc(utilidad.fecha, 'DD/MM/YYYY');
-    
+
                     if (utilidadFecha.month() === currentMonth && utilidadFecha.year() === currentYear) {
                         // Asignar nombre del usuario y formatear fecha
                         utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`;
                         utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
 
                         // Sum the monto for each user
-                        if (!userMontos[idUser]) {
-                            userMontos[idUser] = { monto: 0, nombreUsuario: utilidad.nombreUsuario };
+                        if (!userMontos[userId]) {
+                            userMontos[userId] = { monto: 0, nombreUsuario: utilidad.nombreUsuario };
                         }
-                        userMontos[idUser].monto += utilidad.monto;
-    
-    
+                        userMontos[userId].monto += utilidad.monto;
+
+
                     }
-                    if (utilidad.idReserva){
+
+                    if (utilidad.idReserva) {
                         const reserva = reservasMap.find(reservation => reservation.id.toString() === utilidad.idReserva.toString())
-                        if (reserva) {  
+                        if (reserva) {
                             const idHabitacion = reserva.resourceId;
+                            utilidad.idHabitacion = idHabitacion;
                             const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
                             utilidad.nombreHabitacion = matchId.name;
                         } else {
@@ -528,18 +538,75 @@ async function mostrarUtilidadesGlobales(req, res) {
                     } else {
                         utilidad.nombreHabitacion = "N/A";
                     }
-
-
-
                 }
-
             }
+        }
 
+
+
+
+        // let userMontos = {}; // Object to store total monto for each user
+        // let utilidadMontos = {}; // Object to store total monto for each user
+
+        // if (Object.keys(utilidades).length > 0) {
+        //     utilidadesPorReserva = utilidades.filter(utilidad => utilidad.concepto.includes("Utilidad"))
+
+        //     for (let utilidad of utilidades) {
+        //         let idUser = utilidad.idUsuario;
+        //         let user = await usersController.obtenerUsuarioPorIdMongo(idUser)
+        //         if (user) {
+        //             utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`
+        //             utilidad.fecha = moment.utc(utilidad.fecha).format('DD/MM/YYYY');
+        //             const utilidadFecha = moment.utc(utilidad.fecha, 'DD/MM/YYYY');
+
+        //             if (utilidadFecha.month() === currentMonth && utilidadFecha.year() === currentYear) {
+        //                 // Asignar nombre del usuario y formatear fecha
+        //                 utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`;
+        //                 utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
+
+        //                 // Sum the monto for each user
+        //                 if (!userMontos[idUser]) {
+        //                     userMontos[idUser] = { monto: 0, nombreUsuario: utilidad.nombreUsuario };
+        //                 }
+        //                 userMontos[idUser].monto += utilidad.monto;
+
+
+        //             }
+        //             if (utilidad.idReserva) {
+        //                 const reserva = reservasMap.find(reservation => reservation.id.toString() === utilidad.idReserva.toString())
+        //                 if (reserva) {
+        //                     const idHabitacion = reserva.resourceId;
+        //                     const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
+        //                     utilidad.nombreHabitacion = matchId.name;
+        //                 } else {
+        //                     utilidad.nombreHabitacion = 'N/A';
+        //                 }
+
+        //             } else {
+        //                 utilidad.nombreHabitacion = "N/A";
+        //             }
+
+
+
+        //         }
+
+        //     }
+
+        //     utilidadesPorMes.forEach((total, index) => {
+        //         const monthName = moment().month(index).format('MMMM');
+        //     });
+        // }
+
+
+        if (Object.keys(utilidades).length > 0) {
+            utilidadesPorReserva = utilidades.filter(utilidad => utilidad.concepto.includes("Utilidad"))
             utilidadesPorMes.forEach((total, index) => {
                 const monthName = moment().month(index).format('MMMM');
             });
-        }
 
+        } else {
+            throw new Error("No hay utilidades para mostrar")
+        }
 
         utilidadesPorReserva.forEach(utilidad => {
             // utilidadCantidad += utilidad.monto
@@ -551,7 +618,7 @@ async function mostrarUtilidadesGlobales(req, res) {
                 // Sumar al total de comisiones
                 totalEarnings += utilidad.monto;
 
-                if (utilidad.nombreHabitacion !== 'N/A' && utilidad.nombreHabitacion !== null){
+                if (utilidad.nombreHabitacion !== 'N/A' && utilidad.nombreHabitacion !== null) {
                     if (!utilidadMontos[utilidad.nombreHabitacion]) {
                         utilidadMontos[utilidad.nombreHabitacion] = { monto: 0, nombreHabitacion: utilidad.nombreHabitacion };
                     }
@@ -573,8 +640,8 @@ async function mostrarUtilidadesGlobales(req, res) {
         const limit = 10000;
 
         // console.log(Object.values(userMontos));
-        console.log(Object.values(utilidadMontos));
-        
+        // console.log(Object.values(utilidadMontos));
+        console.log(utilidades)
 
         utilidades.sort((a, b) => moment(b.fecha, 'DD-MM-YYYY').valueOf() - moment(a.fecha, 'DD-MM-YYYY').valueOf());
         res.render('vistaUtilidadesGlobales', {
