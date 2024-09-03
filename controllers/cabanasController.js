@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const Habitacion = require('../models/Habitacion');
 const logController = require('../controllers/logController')
 const TipologiasCabana = require('../models/TipologiasCabana');
+const Cliente = require('../models/Cliente');
 const NotFoundError = require("../common/error/not-found-error");
 const BadRequestError = require("../common/error/bad-request-error");
 const { check } = require("express-validator");
@@ -887,14 +888,28 @@ async function renderCalendarPerChalet(req, res, next) {
         const data = habitaciones;
         // console.log(data);
 
+
         const chalets = data[0].resources.map(chalet => ({
             name: chalet.propertyDetails.name,
             basePrice: chalet.others.basePrice,
             pax: chalet.propertyDetails.maxOccupancy,
+            tipologia: chalet.propertyDetails.accomodationType,
             id: chalet._id.toString()
         }));
+
+        const clientes = await Cliente.find({}).lean();
+        if(!clientes){
+            throw new NotFoundError("No client not found");
+        }
+
+        const tipologias = await TipologiasCabana.find().lean();
+        if (!tipologias) {
+            throw new NotFoundError("No tipologies found");
+        }
         res.render('calendarPerChalet', {
-            chalets: chalets
+            chalets: chalets,
+            tipologias: tipologias,
+            clientes: clientes
 
         })
 

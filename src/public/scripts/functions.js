@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.log(departureValue)
 
 
-                verificarDisponibilidadElement.style.display = '';
+                tipologiaHabitacionInput.disabled = true;
                 verificarDisponibilidadElement.style.display = 'block';
 
                 const arrivalYear = arrivalValue.getFullYear();
@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.log(results);
 
                 results.forEach(result => {
-                    const option = document.querySelector(`option[data-bs-id="${result.idHabitacion}"]`);
+                    const option = document.querySelector(`option[data-bs-chid="${result.idHabitacion}"]`);
                     if (result.available) {
                         option.style.backgroundColor = 'lightgreen'; // Marca las cabañas disponibles
                         option.disabled = false;
