@@ -100,7 +100,7 @@ function pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, p
 router.get('/calendario-precios', async (req, res) => {
     try {
         
-        const url = `http://${process.env.URL}/api/habitaciones`; 
+        const url = `/api/habitaciones`; 
 
         // Obtener las habitaciones
         const response = await fetch(url);
