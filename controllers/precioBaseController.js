@@ -140,8 +140,8 @@ async function verificarExistenciaRegistro(req, res) {
 
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
-        fechaAjustada.setUTCHours(0); // Ajustar la hora a 06:00:00 UTC
-
+        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+// No changes
 
         const response = await PrecioBaseXDia.findOne({ fecha: fechaAjustada, habitacionId: habitacionId });
         const existeRegistro = response !== null;
