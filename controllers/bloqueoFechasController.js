@@ -14,7 +14,7 @@ async function crearFechaBloqueada(req, res){
     const {date, min, habitacionId} = req.body;
 
     const fechaFormatted = new Date(date)
-    fechaFormatted.setUTCHours(0); // Ajustar la hora a 00:00:00 UTC
+    fechaFormatted.setUTCHours(6); // Ajustar la hora a 00:00:00 UTC
     const mongooseHabitacionId = new mongoose.Types.ObjectId(habitacionId);
 
     const description = `Estancia mínima de ${min} noches.`
@@ -49,7 +49,7 @@ async function eliminarFechaBloqueada(req, res){
         const { fecha, habitacionId } = req.query;
     
         const fechaAjustada = new Date(fecha);
-        fechaAjustada.setUTCHours(0); // Ajustar la hora a 00:00:00 UTC
+        fechaAjustada.setUTCHours(6); // Ajustar la hora a 00:00:00 UTC
             
         const resultado = await BloqueoFechas.findOneAndDelete({ fecha: fechaAjustada, habitacionId: habitacionId });
     
