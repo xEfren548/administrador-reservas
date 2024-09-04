@@ -91,7 +91,7 @@ async function consultarPreciosPorFecha(req, res) {
         const { fecha, habitacionid, noPersonas } = req.query;
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
-        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+        fechaAjustada.setUTCHours(0); // Ajustar la hora a 06:00:00 UTC
         console.log(fechaAjustada);
         let precio = await PreciosEspeciales.findOne({ fecha: fechaAjustada, habitacionId: habitacionid, noPersonas: noPersonas });
         console.log(precio);
@@ -132,7 +132,7 @@ async function eliminarRegistroPrecio(req, res) {
 
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
-        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+        fechaAjustada.setUTCHours(0); // Ajustar la hora a 06:00:00 UTC
 
         const resultado = await PreciosEspeciales.findOneAndDelete({ fecha: fechaAjustada, habitacionId: habitacionId, noPersonas });
 
@@ -154,7 +154,7 @@ async function verificarExistenciaRegistro(req, res) {
 
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
-        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+        fechaAjustada.setUTCHours(0); // Ajustar la hora a 06:00:00 UTC
 
 
         const response = await PreciosEspeciales.findOne({ fecha: fechaAjustada, habitacionId: habitacionId, noPersonas: noPersonas });

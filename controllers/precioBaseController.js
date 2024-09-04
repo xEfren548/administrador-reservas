@@ -70,7 +70,7 @@ async function consultarPreciosPorFecha(req, res) {
         let precio = null;
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
-        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+        fechaAjustada.setUTCHours(0); // Ajustar la hora a 06:00:00 UTC
         console.log(fechaAjustada);
 
         if (needSpecialPrice === "true") {
@@ -117,7 +117,7 @@ async function eliminarRegistroPrecio(req, res) {
 
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
-        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+        fechaAjustada.setUTCHours(0); // Ajustar la hora a 06:00:00 UTC
         console.log(fechaAjustada);
         const resultado = await PrecioBaseXDia.findOneAndDelete({ fecha: fechaAjustada, habitacionId: habitacionId });
         console.log(resultado);
@@ -140,7 +140,7 @@ async function verificarExistenciaRegistro(req, res) {
 
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
-        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+        fechaAjustada.setUTCHours(0); // Ajustar la hora a 06:00:00 UTC
 
 
         const response = await PrecioBaseXDia.findOne({ fecha: fechaAjustada, habitacionId: habitacionId });
