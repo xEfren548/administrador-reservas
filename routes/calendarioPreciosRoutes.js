@@ -1,6 +1,7 @@
-const precioBaseController = require('../controllers/precioBaseController')    
+const precioBaseController = require('../controllers/precioBaseController')
 const habitacionController = require('../controllers/habitacionController')
 const preciosEspecialesController = require('../controllers/preciosEspecialesController')
+const Habitacion = require('../models/Habitacion')
 
 const DAYS_IN_YEAR = 365; // Definir DAYS_IN_YEAR a nivel global
 
@@ -18,7 +19,7 @@ function getDaysInYear() {
 function getDateFromDayOfYear(dayOfYear) {
     const date = new Date(new Date().getFullYear(), 0); // Empezar desde el primer día del año actual
     date.setDate(dayOfYear); // Establecer el día del año
-    const options = { day: 'numeric', month: 'short' , year: 'numeric'};
+    const options = { day: 'numeric', month: 'short', year: 'numeric' };
     return date.toLocaleDateString('es-ES', options); // Devolver la fecha en formato 'DD/MM'
 }
 
@@ -26,7 +27,7 @@ function getDateFromDayOfYear(dayOfYear) {
 function pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, preciosEspecialesData) {
     var matrixhabitaciones = [];
     const dayOfYear = date => Math.floor((date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-    
+
     habitaciones.forEach((habitacion, index) => {
         var habitacionesyprecio = {
             name: habitacion.propertyDetails.name,
@@ -57,7 +58,7 @@ function pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, p
         preciosHabitacionesData.forEach((element) => {
             let currentTime = new Date(element.fecha).getTime();
             let updatedTime = new Date(currentTime + 24 * 60 * 60 * 1000);
-            if (habitacion._id == element.habitacionId) {
+            if (habitacion._id.toString() === element.habitacionId.toString()) {
                 matrix[dayOfYear(updatedTime) - 1] = element.precio_modificado;
                 matrix2n[dayOfYear(updatedTime) - 1] = element.precio_base_2noches;
                 matrixc1[dayOfYear(updatedTime) - 1] = element.costo_base;
@@ -65,10 +66,11 @@ function pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, p
             }
         });
 
+
         preciosEspecialesData.forEach((element) => {
             let currentTime = new Date(element.fecha).getTime();
             let updatedTime = new Date(currentTime + 24 * 60 * 60 * 1000);
-            if (habitacion._id == element.habitacionId) {
+            if (habitacion._id.toString() === element.habitacionId.toString()) {
                 if (!habitacionesyprecio.preciosEspeciales[element.noPersonas]) {
                     habitacionesyprecio.preciosEspeciales[element.noPersonas] = {
                         precio_modificado: Array(daysWithDates.length).fill(habitacion.others.basePrice),
@@ -99,13 +101,16 @@ function pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, p
 // INCOMING CHANGE
 router.get('/calendario-precios', async (req, res) => {
     try {
-        
-        const url = `/api/habitaciones`; 
 
-        // Obtener las habitaciones
-        const response = await fetch(url);
-        const data = await response.json();
-        const habitaciones = data[0].resources;
+        // const url = `http://${process.env.URL}/api/habitaciones`
+        // // Obtener las habitaciones
+        // const response = await fetch(url);
+        // const data = await response.json();
+        // const habitaciones = data[0].resources;
+        // console.log(typeof habitaciones)
+
+        const allHabitaciones = await Habitacion.find().lean();
+        const habitaciones = allHabitaciones[0].resources;
 
         // Crear un arreglo con las fechas correspondientes a cada día del año
         const daysWithDates = Array.from({ length: getDaysInYear() }, (_, index) => getDateFromDayOfYear(index + 1));
@@ -116,7 +121,7 @@ router.get('/calendario-precios', async (req, res) => {
         //console.log(preciosHabitacionesData);
         const preciosEspecialesData = await preciosEspecialesController.consultarPrecios()
 
-        const pricexday = pricexdaymatrix(daysWithDates,habitaciones,preciosHabitacionesData, preciosEspecialesData);
+        const pricexday = pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, preciosEspecialesData);
 
 
 
@@ -131,6 +136,8 @@ router.get('/calendario-precios', async (req, res) => {
         res.status(500).send('Error al obtener las habitaciones');
     }
 })
+
+
 
 router.get('/api/calendario-precios', precioBaseController.verificarExistenciaRegistro);
 router.post('/api/calendario-precios', precioBaseController.agregarNuevoPrecio);
