@@ -45,6 +45,7 @@
                 <tr>
                     <th scope="col">Habitación</th>
                     <th scope="col">Concepto</th>
+                    <th scope="col">Id Reserva</th>
                     <th scope="col">Monto</th>
                     <th scope="col">Fecha</th>
                     <th scope="col">Usuario</th>
@@ -57,6 +58,7 @@
                 <tr>
                     <td>{{this.nombreHabitacion}}</td>
                     <td>{{this.concepto}}</td>
+                    <td>{{this.idReserva}}</td>
                     <td>${{this.monto}}</td>
                     <td>{{this.fecha}}</td>
                     <td>{{this.nombreUsuario}}</td>
@@ -73,7 +75,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="2"><b>Total</b></td>
+                    <td colspan="3"><b>Total</b></td>
                     <td id="totalMonto"></td>
                     <td colspan="2"></td>
                 </tr>
@@ -127,7 +129,7 @@
                         },
                         customize: function (doc) {
                             // Calculate total for all filtered data
-                            var total = dataTable.column(2, { search: 'applied' }).data().reduce(function (a, b) {
+                            var total = dataTable.column(3, { search: 'applied' }).data().reduce(function (a, b) {
                                 return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
                             }, 0);
 
@@ -149,7 +151,7 @@
                     });
 
                     this.api()
-                        .columns([0, 4])
+                        .columns([0, 5])
                         .every(function () {
                             let column = this;
 
@@ -179,19 +181,20 @@
                 "drawCallback": function () {
                     // Calculate and update the total monto
                     var api = this.api();
-                    var total = api.column(2, { search: 'applied' }).data().reduce(function (a, b) {
+                    var total = api.column(3, { search: 'applied' }).data().reduce(function (a, b) {
                         return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
                     }, 0);
                     document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
                     updateChart(api);
                     updateUsersChart(api);
+                    updateChaletsChart(api);
                 }
             });
 
             DataTable.ext.search.push(function (settings, data, dataIndex) {
                 var minDate = moment(document.getElementById('startDate').value, "YYYY-MM-DD").startOf('day');
                 var maxDate = moment(document.getElementById('endDate').value, "YYYY-MM-DD").endOf('day');
-                var targetDate = moment(data[3], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
+                var targetDate = moment(data[4], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
 
                 if ((isNaN(minDate) && isNaN(maxDate)) ||
                     (isNaN(minDate) && targetDate <= maxDate) ||
@@ -304,9 +307,9 @@
 
         api.rows({ search: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
             var data = this.data();
-            var date = moment(data[3], "DD/MM/YYYY"); // Assuming date is in the 4rd column
+            var date = moment(data[4], "DD/MM/YYYY"); // Assuming date is in the 4rd column
             var monthIndex = date.month(); // Get the month index (0-based)
-            var amount = parseFloat(data[2].replace(/[^\d.-]/g, '')); // Parse the amount
+            var amount = parseFloat(data[3].replace(/[^\d.-]/g, '')); // Parse the amount
 
 
             if (!isNaN(monthIndex) && !isNaN(amount)) {
@@ -326,8 +329,8 @@
         var groupedData = {};
         api.rows({ search: 'applied' }).every(function () {
             var data = this.data();
-            var usuario = data[4];
-            var monto = parseFloat(data[2].replace(/[^\d.-]/g, ''));
+            var usuario = data[5];
+            var monto = parseFloat(data[3].replace(/[^\d.-]/g, ''));
 
             if (!groupedData[usuario]) {
                 groupedData[usuario] = 0;
@@ -354,6 +357,42 @@
         userMontosChart.data.datasets[0].data = data;
         userMontosChart.data.datasets[0].backgroundColor = backgroundColors;
         userMontosChart.update();
+    }
+
+    function updateChaletsChart(api) {
+        // Group data by usuario
+        var groupedData = {};
+        api.rows({ search: 'applied' }).every(function () {
+            var data = this.data();
+            var habitacion = data[0];
+            var monto = parseFloat(data[3].replace(/[^\d.-]/g, ''));
+
+
+            if (!groupedData[habitacion] && habitacion !== "N/A") {
+                groupedData[habitacion] = 0;
+            }
+            groupedData[habitacion] += monto;
+        });
+
+        // Convert groupedData to array of objects
+        const chaletMontoArray = Object.keys(groupedData).map(habitacion => ({
+            habitacion,
+            monto: groupedData[habitacion]
+        }));
+
+        // Sort array by monto in descending order
+        chaletMontoArray.sort((a, b) => b.monto - a.monto);
+
+        // Extract sorted labels and data
+        const labels = chaletMontoArray.map(item => item.habitacion);
+        const data = chaletMontoArray.map(item => item.monto);
+        const backgroundColors = generateRandomColors(labels.length);
+
+        // Update the user montos chart
+        montosChaletsChart.data.labels = labels;
+        montosChaletsChart.data.datasets[0].data = data;
+        montosChaletsChart.data.datasets[0].backgroundColor = backgroundColors;
+        montosChaletsChart.update();
     }
 
     const ctx = document.getElementById('doughnut-chart').getContext('2d');
@@ -446,24 +485,16 @@
             }
         }
     })
-    const utilidadMontos = {{{ json utilidadMontos }}}
-    utilidadMontos.sort((a, b) => b.monto - a.monto);
-
-
-    const labelsChalet = utilidadMontos.map(item => item.nombreHabitacion);
-    const dataChalet = utilidadMontos.map(item => item.monto);
-    const backgroundColorsChalet = generateRandomColors(utilidadMontos.length)
-
     const ctxChalets = document.getElementById('chaletUtilities-chart').getContext('2d');
 
-    const chaletUtilitiesChart = new Chart(ctxChalets, {
+    const montosChaletsChart = new Chart(ctxChalets, {
         type: 'pie',
         data: {
-            labels: labelsChalet,
+            labels: [],
             datasets: [{
-                label: 'Utilidades del mes por habitación',
-                data: dataChalet,
-                backgroundColor: backgroundColorsChalet,
+                label: 'Comisiones por habitación',
+                data: [],
+                backgroundColor: [],
                 borderColor: [
                     'rgba(255, 99, 132, 1)',
 
@@ -479,7 +510,7 @@
                 },
                 title: {
                     display: true,
-                    text: 'Utilidades del mes por habitación'
+                    text: 'Comisiones por habitación'
                 },
                 tooltip: {
                     callbacks: {
