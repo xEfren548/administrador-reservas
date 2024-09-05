@@ -229,7 +229,22 @@
                 "order": [], // Puedes especificar aquí el orden inicial de las columnas
                 "paging": true, // Habilita la paginación
                 "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
-                "pageLength": 10 // Establece la longitud de página inicial
+                "pageLength": 10, // Establece la longitud de página inicial
+                "dom": 'Bfrtip', // Añade los botones a la interfaz
+                "buttons": [
+                    {
+                        extend: 'csvHtml5',
+                        text: 'Exportar a CSV',
+
+                    }
+                ],
+                "initComplete": function () {
+                    // Aplica las clases a los botones después de la inicialización
+                    var buttons = document.querySelectorAll('.dt-button');
+                    buttons.forEach(function (button) {
+                        button.classList.add('btn', 'btn-info');
+                    });
+                }
             });
         }
 
