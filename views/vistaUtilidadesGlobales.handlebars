@@ -185,6 +185,7 @@
                     document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
                     updateChart(api);
                     updateUsersChart(api);
+                    updateChaletsChart(api);
                 }
             });
 
@@ -356,6 +357,42 @@
         userMontosChart.update();
     }
 
+    function updateChaletsChart(api) {
+        // Group data by usuario
+        var groupedData = {};
+        api.rows({ search: 'applied' }).every(function () {
+            var data = this.data();
+            var habitacion = data[0];
+            var monto = parseFloat(data[2].replace(/[^\d.-]/g, ''));
+
+
+            if (!groupedData[habitacion] && habitacion !== "N/A") {
+                groupedData[habitacion] = 0;
+            }
+            groupedData[habitacion] += monto;
+        });
+
+        // Convert groupedData to array of objects
+        const chaletMontoArray = Object.keys(groupedData).map(habitacion => ({
+            habitacion,
+            monto: groupedData[habitacion]
+        }));
+
+        // Sort array by monto in descending order
+        chaletMontoArray.sort((a, b) => b.monto - a.monto);
+
+        // Extract sorted labels and data
+        const labels = chaletMontoArray.map(item => item.habitacion);
+        const data = chaletMontoArray.map(item => item.monto);
+        const backgroundColors = generateRandomColors(labels.length);
+
+        // Update the user montos chart
+        montosChaletsChart.data.labels = labels;
+        montosChaletsChart.data.datasets[0].data = data;
+        montosChaletsChart.data.datasets[0].backgroundColor = backgroundColors;
+        montosChaletsChart.update();
+    }
+
     const ctx = document.getElementById('doughnut-chart').getContext('2d');
     const totalEarnings = {{ totalEarnings }};
     const limit = {{ limit }};
@@ -446,24 +483,16 @@
             }
         }
     })
-    const utilidadMontos = {{{ json utilidadMontos }}}
-    utilidadMontos.sort((a, b) => b.monto - a.monto);
-
-
-    const labelsChalet = utilidadMontos.map(item => item.nombreHabitacion);
-    const dataChalet = utilidadMontos.map(item => item.monto);
-    const backgroundColorsChalet = generateRandomColors(utilidadMontos.length)
-
     const ctxChalets = document.getElementById('chaletUtilities-chart').getContext('2d');
 
-    const chaletUtilitiesChart = new Chart(ctxChalets, {
+    const montosChaletsChart = new Chart(ctxChalets, {
         type: 'pie',
         data: {
-            labels: labelsChalet,
+            labels: [],
             datasets: [{
-                label: 'Utilidades del mes por habitación',
-                data: dataChalet,
-                backgroundColor: backgroundColorsChalet,
+                label: 'Comisiones por habitación',
+                data: [],
+                backgroundColor: [],
                 borderColor: [
                     'rgba(255, 99, 132, 1)',
 
@@ -479,7 +508,7 @@
                 },
                 title: {
                     display: true,
-                    text: 'Utilidades del mes por habitación'
+                    text: 'Comisiones por habitación'
                 },
                 tooltip: {
                     callbacks: {
