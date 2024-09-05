@@ -2136,10 +2136,8 @@
 			let selected = $('#select-opcioneliminar').val();
 			console.log(selected)
 
-			const habitacionId = $('#select-cabana-eliminarespeciales').val();
-
 			if (selected === "eliminarpreciosespeciales") {
-
+				const habitacionId = $('#select-cabana-eliminarespeciales').val();
 				const noPersonas = $('#numero-personas-eliminarespeciales').val();
 				const fechaInicioString = document.querySelector('#fecha-inicio-eliminarespeciales').value; // Obtener el valor del input de tipo date
 				const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
@@ -2186,6 +2184,7 @@
 					})
 				}
 			} else if (selected === "eliminarpreciosgenerales") {
+				const habitacionId = $('#select-cabana-eliminargenerales').val();
 				const fechaInicioString = document.querySelector('#fecha-inicio-eliminargenerales').value; // Obtener el valor del input de tipo date
 				const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
 				const fechaFinString = document.querySelector('#fecha-fin-eliminargenerales').value; // Obtener el valor del input de tipo date
@@ -2205,6 +2204,13 @@
 					console.log(resultados);
 					if (resultados.length === 0) {
 						throw new Error('No hay fechas seleccionadas para actualizar.');
+					}
+
+					// Verificar si todos los objetos en el array están vacíos
+					const allEmpty = resultados.every(obj => Object.keys(obj).length === 0);
+
+					if (allEmpty) {
+						throw new Error('No se encontraron fechas para eliminar.');
 					}
 
 					Swal.fire({
