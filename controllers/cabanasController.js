@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const moment = require("moment-timezone");
 const Habitacion = require('../models/Habitacion');
 const logController = require('../controllers/logController')
 const TipologiasCabana = require('../models/TipologiasCabana');
@@ -709,10 +710,17 @@ async function showEditChaletsView(req, res, next) {
             chalet.others.owner = [owner._id, owner.firstName + " " + owner.lastName];
         }
         for (const chalet of chalets) {
-            let arrivalstr = chalet.others.arrivalTime.toString();
-            let departurestr = chalet.others.departureTime.toString();
-            let arrival = arrivalstr.split(':')[0].slice(-2) + ":" + arrivalstr.split(':')[1]
-            let departure = departurestr.split(':')[0].slice(-2) + ":" + departurestr.split(':')[1]
+            // Convertir arrivalTime a un objeto moment y ajustar a UTC
+            let arrivalStr = chalet.others.arrivalTime; // Asume que es un objeto Date
+            let arrivalUtc = moment(arrivalStr).utc(); // Ajusta el objeto Date a UTC
+            let arrival = arrivalUtc.tz('America/Mexico_City').format("HH:mm"); // Formatear solo hora
+            // Convertir departureTime a un objeto moment y ajustar a UTC
+            let departureStr = chalet.others.departureTime; // Asume que es un objeto Date
+            let departureUtc = moment(departureStr).utc(); // Ajusta el objeto Date a UTC
+                
+            // Convertir a la zona horaria de 'America/Mexico_City' y extraer solo la hora
+            let departure = departureUtc.tz('America/Mexico_City').format("HH:mm"); // Formatear solo hora
+    
             chalet.others.arrivalTime = arrival;
             chalet.others.departureTime = departure;
         }
