@@ -1,3 +1,6 @@
+<div class="pre-loader"></div>
+
+
 <h1> Calendario de precios con aumento</h1>
 <div class="calendar-header">
 	<div class="bg-dark mb-3">
@@ -26,12 +29,27 @@
 			data-chalet="{{this.propertyDetails.name}}">Hoy</a>
 	</div>
 	<div class="table-responsive">
-		<table border="1" class="table">
-			<thead>
-				<tr id="header-row-{{this.propertyDetails.name}}">
+		<table border="1" class="table table-{{this.propertyDetails.name}} table-dark text-center table-hover" id="table-{{this.propertyDetails.name}}">
+			<thead class="table-light">
+				<tr id="header-row-{{this.propertyDetails.name}}" >
+					<th class="sticky-column">Función</th>
 				</tr>
 
 			</thead>
+			<tbody>
+                <tr id="costo-base-row-{{this.propertyDetails.name}}">
+					<td class="sticky-column">Costo Base</td>
+				</tr>
+                <tr id="precio-base-row-{{this.propertyDetails.name}}">
+                    <td class="sticky-column">Precio Base</td>
+                </tr>
+                <tr id="costo-base2-row-{{this.propertyDetails.name}}">
+                    <td class="sticky-column">Costo Base 2+ noches</td>
+                </tr>
+                <tr id="precio-base2nights-row-{{this.propertyDetails.name}}">
+                    <td class="sticky-column">Precio Base 2+ noches</td>
+                </tr>
+			</tbody>
 		</table>
 	</div>
 	<br>
@@ -1995,7 +2013,7 @@
 				const currentMonthName = today.toLocaleString('es-ES', { month: 'long' });
 				const currentYear = today.getFullYear();
 
-				const calendarContainer = document.getElementById(`calendar-container-${chaletName}`);
+				const calendarContainer = document.getElementById(`table-${chaletName}`);
 
 				console.log(`Button clicked for ${chaletName}`)
 
@@ -2261,10 +2279,18 @@
 
     // Función para agregar las fechas a cada habitación
     function addDatesToRooms() {
-        const habitaciones = {{{json habitaciones}}};  // Asumimos que el objeto habitaciones es accesible en el contexto
+        const habitaciones = {{{json habitaciones}}};
+		const preciosHabitaciones = {{{json preciosHabitaciones}}}
 
         habitaciones.forEach((habitacion) => {
             const roomName = habitacion.propertyDetails.name;
+			const roomId = habitacion._id;
+
+			const costoBase = habitacion.others.baseCost;
+			const costoBase2 = habitacion.others.baseCost2nights;
+			const precioBase = habitacion.others.basePrice;
+			const precioBase2nights = habitacion.others.basePrice2nights;
+
             const headerRow = document.getElementById(`header-row-${roomName}`);
 
             // Generar las fechas desde 1 año antes hasta 2 años después
@@ -2273,12 +2299,61 @@
 
             let currentDate = startDate;
 
+			const costoBaseRow = document.getElementById(`costo-base-row-${roomName}`);
+			const precioBaseRow = document.getElementById(`precio-base-row-${roomName}`);
+			const costoBase2Row = document.getElementById(`costo-base2-row-${roomName}`);
+			const precioBase2nightsRow = document.getElementById(`precio-base2nights-row-${roomName}`);
+			
+			const preciosPorHabitacion = preciosHabitaciones.filter(precio => precio.habitacionId === roomId)
+			preciosPorHabitacion.map(precio => {
+				precio.fecha = convertirFechaMexicoCity(precio.fecha)
+			})
+			
             while (currentDate <= endDate) {
                 // Crear un th para cada día
                 const th = document.createElement('th');
                 th.id = generateId(currentDate);  // Asignar el identificador
-                th.textContent = currentDate.toLocaleDateString('es-ES');  // Mostrar la fecha completa como texto
+                //th.textContent = currentDate.toLocaleDateString('es-ES');  // Mostrar la fecha completa como texto
+				const options = { day: 'numeric', month: 'short' , year: 'numeric'};
+    			th.textContent =  currentDate.toLocaleDateString('es-ES', options); // Devolver la fecha en formato 'DD/MM'
                 headerRow.appendChild(th);
+
+				// Crear celdas correspondientes para cada precio
+				const costoBaseTd = document.createElement('td');
+				const precioBaseTd = document.createElement('td');
+				const costoBase2Td = document.createElement('td');
+				const precioBase2nightsTd = document.createElement('td');
+
+				const currentDateMx = convertirFechaMexicoCity(currentDate)
+
+				const precioEncontrado = preciosPorHabitacion.find(precio => precio.fecha === currentDateMx)
+				if (precioEncontrado){
+					costoBaseTd.textContent = precioEncontrado.costo_base;
+					costoBaseRow.appendChild(costoBaseTd);
+
+					precioBaseTd.textContent = precioEncontrado.precio_modificado;
+					precioBaseRow.appendChild(precioBaseTd);
+
+					costoBase2Td.textContent = precioEncontrado.costo_base_2noches;
+					costoBase2Row.appendChild(costoBase2Td);
+
+					precioBase2nightsTd.textContent = precioEncontrado.precio_base_2noches;
+					precioBase2nightsRow.appendChild(precioBase2nightsTd);
+				} else {
+					costoBaseTd.textContent = costoBase;
+					costoBaseRow.appendChild(costoBaseTd);
+					
+					precioBaseTd.textContent = precioBase;
+					precioBaseRow.appendChild(precioBaseTd);
+
+					costoBase2Td.textContent = costoBase2;
+					costoBase2Row.appendChild(costoBase2Td);
+					
+					precioBase2nightsTd.textContent = precioBase2nights;
+					precioBase2nightsRow.appendChild(precioBase2nightsTd);
+
+				}
+
 
                 // Avanzar al siguiente día
                 currentDate.setDate(currentDate.getDate() + 1);
@@ -2288,6 +2363,32 @@
 
     // Llamar a la función para agregar las fechas
     addDatesToRooms();
+
+	function convertirFechaMexicoCity(fechaISO) {
+		const fecha = new Date(fechaISO);
+		const opciones = {
+			timeZone: 'America/Mexico_City',
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+		};
+	
+		const formatter = new Intl.DateTimeFormat('es-MX', opciones);
+		return formatter.format(fecha);
+	}
+
+	window.addEventListener("load", () => {
+        const preloader = document.querySelector(".pre-loader");
+        preloader.classList.add("loader--hidden");
+        preloader.addEventListener("transitionend", () => {
+            if (preloader) {
+                preloader.style.display = "none"; // Hide instead of removing
+            }
+        });
+    });
 
 
 
