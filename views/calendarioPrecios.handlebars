@@ -18,91 +18,20 @@
 		<span class="color-text">Fin de semana</span>
 	</div>
 
-	{{#if pricexday}}
-	{{#each pricexday}}
-	<h1>{{this.name}}</h1> <!-- Título de la habitación -->
+	{{#if habitaciones}}
+	{{#each habitaciones}}
+	<h1>{{this.propertyDetails.name}}</h1> <!-- Título de la habitación -->
 	<div class="ms-auto p-2 bd-highlight">
-		<a name="" id="cn-{{this.name}}" class="btn btn-primary hoy-btn" href="#" role="button"
-			data-chalet="{{this.name}}">Hoy</a>
+		<a name="" id="cn-{{this.propertyDetails.name}}" class="btn btn-primary hoy-btn" href="#" role="button"
+			data-chalet="{{this.propertyDetails.name}}">Hoy</a>
 	</div>
 	<div class="table-responsive">
-		<table class="table table-primary table-dark table-hover" id="calendar-container-{{this.name}}">
-			<thead class="table-light">
-				<tr>
-					<th scope="col" class="sticky-column">Función</th>
-					{{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
-					<th scope="col" style="position: sticky; left: 0;">{{this}}</th>
-					<!-- Mostrar cada fecha como encabezado de columna -->
-					{{/each}}
+		<table border="1" class="table">
+			<thead>
+				<tr id="header-row-{{this.propertyDetails.name}}">
 				</tr>
+
 			</thead>
-			<tbody>
-				{{#each precios}}
-				<tr>
-					{{#each this}}
-					{{#if @first}}
-					<td style="text-align:center; vertical-align:middle" class="sticky-column">{{this}}</td>
-					<!-- Mostrar la tarifa base de la habitación -->
-					{{else}}
-					<td style="text-align:center; vertical-align:middle">${{this}}</td>
-					<!-- Mostrar la tarifa base de la habitación -->
-					{{/if}}
-					{{/each}}
-				</tr>
-				{{/each}}
-				{{#each preciosEspeciales}}
-				<tr>
-					<td style="text-align:center; background-color:#444;" class="sticky-column">Precios para {{@key}}
-						Personas</td>
-				</tr>
-				<tr>
-					<td style="text-align:center; vertical-align:middle" class="sticky-column">Precio Base</td>
-					{{#each this.precio_modificado}}
-					<td style="text-align:center; vertical-align:middle">
-						{{#if this}}
-						${{this}}
-						{{else}}
-						-
-						{{/if}}
-					</td>
-					{{/each}}
-				</tr>
-				<tr>
-					<td style="text-align:center; vertical-align:middle" class="sticky-column">Precio Base 2 Noches</td>
-					{{#each this.precio_base_2noches}}
-					<td style="text-align:center; vertical-align:middle">
-						{{#if this}}
-						${{this}}
-						{{else}}
-						-
-						{{/if}}
-						{{/each}}
-				</tr>
-				<tr>
-					<td style="text-align:center; vertical-align:middle" class="sticky-column">Costo Base</td>
-					{{#each this.costo_base}}
-					<td style="text-align:center; vertical-align:middle">
-						{{#if this}}
-						${{this}}
-						{{else}}
-						-
-						{{/if}}
-					</td>
-					{{/each}}
-				</tr>
-				<tr>
-					<td style="text-align:center; vertical-align:middle" class="sticky-column">Costo Base 2 Noches</td>
-					{{#each this.costo_base_2noches}}
-					<td style="text-align:center; vertical-align:middle">
-						{{#if this}}
-						${{this}}
-						{{else}}
-						-
-						{{/if}}
-						{{/each}}
-				</tr>
-				{{/each}}
-			</tbody>
 		</table>
 	</div>
 	<br>
@@ -111,6 +40,7 @@
 	<p>No hay habitaciones</p>
 	{{/if}}
 </div>
+
 
 
 
@@ -2320,6 +2250,44 @@
 				throw error;
 			}
 		}
+
+
+	// NUEVA TABLA DE CALENDARIO DE PRECIOS
+
+    // Función para generar el identificador de cada fecha
+    function generateId(date) {
+        return `date-${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+    }
+
+    // Función para agregar las fechas a cada habitación
+    function addDatesToRooms() {
+        const habitaciones = {{{json habitaciones}}};  // Asumimos que el objeto habitaciones es accesible en el contexto
+
+        habitaciones.forEach((habitacion) => {
+            const roomName = habitacion.propertyDetails.name;
+            const headerRow = document.getElementById(`header-row-${roomName}`);
+
+            // Generar las fechas desde 1 año antes hasta 2 años después
+            const startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+            const endDate = new Date(today.getFullYear() + 2, today.getMonth(), today.getDate());
+
+            let currentDate = startDate;
+
+            while (currentDate <= endDate) {
+                // Crear un th para cada día
+                const th = document.createElement('th');
+                th.id = generateId(currentDate);  // Asignar el identificador
+                th.textContent = currentDate.toLocaleDateString('es-ES');  // Mostrar la fecha completa como texto
+                headerRow.appendChild(th);
+
+                // Avanzar al siguiente día
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+        });
+    }
+
+    // Llamar a la función para agregar las fechas
+    addDatesToRooms();
 
 
 
