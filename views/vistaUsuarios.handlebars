@@ -8,48 +8,51 @@
 <div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
     <div class="col-10">
         <h1>Lista de usuarios</h1>
-        <table class="table table-dark table-hover" id="tablaUsuarios">
-            <thead class="table-light">
-                <tr>
-                    <th scope="col">Nombre</th>
-                    <th scope="col">Apellido</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Celular</th>
-                    <th scope="col">Privilegio</th>
-                    <th scope="col">Administrador</th>
-                    <th scope="col">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each users}}
-                <tr>
-                    <td>{{firstName}}</td>
-                    <td>{{lastName}}</td>
-                    <td>{{email}}</td>
-                    <td>{{phone}}</td>
-                    <td>{{privilege}}</td>
-                    <td>{{adminname}}</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary" data-client-firstName="{{firstName}}"
-                            data-client-lastName="{{lastName}}" data-client-email="{{email}}" data-client-phone="{{phone}}"
-                            data-client-privilege="{{privilege}}" data-client-adminname="{{administrator}}"
-                            data-client-color="{{color}}" {{#if investorType}}
-                            data-client-investorType="{{investorType}}"
-                            {{/if}} data-bs-toggle="modal"
-                            data-bs-target="#modify-user_entry_modal" onclick="showClientEmail(this)">
-                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger" data-client-email="{{email}}">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                        <div class="form-item">
-                            <p name="errMsg" class="error"></p>
-                        </div>
-                    </td>
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+
+            <table class="table table-dark table-hover" id="tablaUsuarios">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Apellido</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Celular</th>
+                        <th scope="col">Privilegio</th>
+                        <th scope="col">Administrador</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each users}}
+                    <tr>
+                        <td>{{firstName}}</td>
+                        <td>{{lastName}}</td>
+                        <td>{{email}}</td>
+                        <td>{{phone}}</td>
+                        <td>{{privilege}}</td>
+                        <td>{{adminname}}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-primary" data-client-firstName="{{firstName}}"
+                                data-client-lastName="{{lastName}}" data-client-email="{{email}}" data-client-phone="{{phone}}"
+                                data-client-privilege="{{privilege}}" data-client-adminname="{{administrator}}"
+                                data-client-color="{{color}}" {{#if investorType}}
+                                data-client-investorType="{{investorType}}"
+                                {{/if}} data-bs-toggle="modal"
+                                data-bs-target="#modify-user_entry_modal" onclick="showClientEmail(this)">
+                                <i class="fa fa-pencil" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger" data-client-email="{{email}}">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                            <div class="form-item">
+                                <p name="errMsg" class="error"></p>
+                            </div>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
 
     </div>
 </div>

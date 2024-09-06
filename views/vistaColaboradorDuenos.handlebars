@@ -8,28 +8,31 @@
 <div class="row flex-nowrap justify-content-center mt-3 " style="width: 100%;">
     <div class="col-10">
         <h1>Reservas</h1>
-        <table class="table table-dark table-hover text-center" id="tablaParaDuenos">
-            <thead class="table-light">
-                <tr>
-                    <th scope="col">Cabaña</th>
-                    <th scope="col">Fecha de llegada</th>
-                    <th scope="col">Fecha de salida</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#if eventos.length}}
-                {{#each eventos}}
-                <tr>
-                    <td>{{this.roomName}}</td>
-                    <td>{{this.arrivalDate}}</td>
-                    <td>{{this.departureDate}}</td>
-                </tr>
-                {{/each}}
-                {{else}}
-                <td colspan="3">No se encontraron servicios</td>
-                {{/if}}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+
+            <table class="table table-dark table-hover text-center" id="tablaParaDuenos">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Cabaña</th>
+                        <th scope="col">Fecha de llegada</th>
+                        <th scope="col">Fecha de salida</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#if eventos.length}}
+                    {{#each eventos}}
+                    <tr>
+                        <td>{{this.roomName}}</td>
+                        <td>{{this.arrivalDate}}</td>
+                        <td>{{this.departureDate}}</td>
+                    </tr>
+                    {{/each}}
+                    {{else}}
+                    <td colspan="3">No se encontraron servicios</td>
+                    {{/if}}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
