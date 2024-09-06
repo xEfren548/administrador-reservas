@@ -1,3 +1,6 @@
+<div class="pre-loader"></div>
+
+
 <h1> Calendario de precios con aumento</h1>
 <div class="calendar-header">
 	<div class="bg-dark mb-3">
@@ -18,90 +21,34 @@
 		<span class="color-text">Fin de semana</span>
 	</div>
 
-	{{#if pricexday}}
-	{{#each pricexday}}
-	<h1>{{this.name}}</h1> <!-- Título de la habitación -->
+	{{#if habitaciones}}
+	{{#each habitaciones}}
+	<h1>{{this.propertyDetails.name}}</h1> <!-- Título de la habitación -->
 	<div class="ms-auto p-2 bd-highlight">
-		<a name="" id="cn-{{this.name}}" class="btn btn-primary hoy-btn" href="#" role="button"
-			data-chalet="{{this.name}}">Hoy</a>
+		<a name="" id="cn-{{this.propertyDetails.name}}" class="btn btn-primary hoy-btn" href="#" role="button"
+			data-chalet="{{this.propertyDetails.name}}">Hoy</a>
 	</div>
-	<div class="table-responsive min-vh-100 p-4">
-		<table class="table table-primary table-dark table-hover" id="calendar-container-{{this.name}}">
+	<div class="table-responsive">
+		<table border="1" class="table table-{{this.propertyDetails.name}} table-dark text-center table-hover" id="table-{{this.propertyDetails.name}}">
 			<thead class="table-light">
-				<tr>
-					<th scope="col" class="sticky-column">Función</th>
-					{{#each ../daysWithDates}} <!-- Iterar sobre las fechas -->
-					<th scope="col" style="position: sticky; left: 0;">{{this}}</th>
-					<!-- Mostrar cada fecha como encabezado de columna -->
-					{{/each}}
+				<tr id="header-row-{{this.propertyDetails.name}}" >
+					<th class="sticky-column">Función</th>
 				</tr>
+
 			</thead>
 			<tbody>
-				{{#each precios}}
-				<tr>
-					{{#each this}}
-					{{#if @first}}
-					<td style="text-align:center; vertical-align:middle" class="sticky-column">{{this}}</td>
-					<!-- Mostrar la tarifa base de la habitación -->
-					{{else}}
-					<td style="text-align:center; vertical-align:middle">${{this}}</td>
-					<!-- Mostrar la tarifa base de la habitación -->
-					{{/if}}
-					{{/each}}
+                <tr id="costo-base-row-{{this.propertyDetails.name}}">
+					<td class="sticky-column">Costo Base</td>
 				</tr>
-				{{/each}}
-				{{#each preciosEspeciales}}
-				<tr>
-					<td style="text-align:center; background-color:#444;" class="sticky-column">Precios para {{@key}}
-						Personas</td>
-				</tr>
-				<tr>
-					<td style="text-align:center; vertical-align:middle" class="sticky-column">Precio Base</td>
-					{{#each this.precio_modificado}}
-					<td style="text-align:center; vertical-align:middle">
-						{{#if this}}
-						${{this}}
-						{{else}}
-						-
-						{{/if}}
-					</td>
-					{{/each}}
-				</tr>
-				<tr>
-					<td style="text-align:center; vertical-align:middle" class="sticky-column">Precio Base 2 Noches</td>
-					{{#each this.precio_base_2noches}}
-					<td style="text-align:center; vertical-align:middle">
-						{{#if this}}
-						${{this}}
-						{{else}}
-						-
-						{{/if}}
-						{{/each}}
-				</tr>
-				<tr>
-					<td style="text-align:center; vertical-align:middle" class="sticky-column">Costo Base</td>
-					{{#each this.costo_base}}
-					<td style="text-align:center; vertical-align:middle">
-						{{#if this}}
-						${{this}}
-						{{else}}
-						-
-						{{/if}}
-					</td>
-					{{/each}}
-				</tr>
-				<tr>
-					<td style="text-align:center; vertical-align:middle" class="sticky-column">Costo Base 2 Noches</td>
-					{{#each this.costo_base_2noches}}
-					<td style="text-align:center; vertical-align:middle">
-						{{#if this}}
-						${{this}}
-						{{else}}
-						-
-						{{/if}}
-						{{/each}}
-				</tr>
-				{{/each}}
+                <tr id="precio-base-row-{{this.propertyDetails.name}}">
+                    <td class="sticky-column">Precio Base</td>
+                </tr>
+                <tr id="costo-base2-row-{{this.propertyDetails.name}}">
+                    <td class="sticky-column">Costo Base 2+ noches</td>
+                </tr>
+                <tr id="precio-base2nights-row-{{this.propertyDetails.name}}">
+                    <td class="sticky-column">Precio Base 2+ noches</td>
+                </tr>
 			</tbody>
 		</table>
 	</div>
@@ -111,6 +58,7 @@
 	<p>No hay habitaciones</p>
 	{{/if}}
 </div>
+
 
 
 
@@ -2067,7 +2015,7 @@
 				const currentMonthName = today.toLocaleString('es-ES', { month: 'long' });
 				const currentYear = today.getFullYear();
 
-				const calendarContainer = document.getElementById(`calendar-container-${chaletName}`);
+				const calendarContainer = document.getElementById(`table-${chaletName}`);
 
 				console.log(`Button clicked for ${chaletName}`)
 
@@ -2321,6 +2269,127 @@
 				throw error;
 			}
 		}
+
+
+	// NUEVA TABLA DE CALENDARIO DE PRECIOS
+
+    // Función para generar el identificador de cada fecha
+    function generateId(date) {
+        return `date-${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+    }
+
+    // Función para agregar las fechas a cada habitación
+    function addDatesToRooms() {
+        const habitaciones = {{{json habitaciones}}};
+		const preciosHabitaciones = {{{json preciosHabitaciones}}}
+
+        habitaciones.forEach((habitacion) => {
+            const roomName = habitacion.propertyDetails.name;
+			const roomId = habitacion._id;
+
+			const costoBase = habitacion.others.baseCost;
+			const costoBase2 = habitacion.others.baseCost2nights;
+			const precioBase = habitacion.others.basePrice;
+			const precioBase2nights = habitacion.others.basePrice2nights;
+
+            const headerRow = document.getElementById(`header-row-${roomName}`);
+
+            // Generar las fechas desde 1 año antes hasta 2 años después
+            const startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+            const endDate = new Date(today.getFullYear() + 2, today.getMonth(), today.getDate());
+
+            let currentDate = startDate;
+
+			const costoBaseRow = document.getElementById(`costo-base-row-${roomName}`);
+			const precioBaseRow = document.getElementById(`precio-base-row-${roomName}`);
+			const costoBase2Row = document.getElementById(`costo-base2-row-${roomName}`);
+			const precioBase2nightsRow = document.getElementById(`precio-base2nights-row-${roomName}`);
+			
+			const preciosPorHabitacion = preciosHabitaciones.filter(precio => precio.habitacionId === roomId)
+			preciosPorHabitacion.map(precio => {
+				precio.fecha = convertirFechaMexicoCity(precio.fecha)
+			})
+			
+            while (currentDate <= endDate) {
+                // Crear un th para cada día
+                const th = document.createElement('th');
+                th.id = generateId(currentDate);  // Asignar el identificador
+                //th.textContent = currentDate.toLocaleDateString('es-ES');  // Mostrar la fecha completa como texto
+				const options = { day: 'numeric', month: 'short' , year: 'numeric'};
+    			th.textContent =  currentDate.toLocaleDateString('es-ES', options); // Devolver la fecha en formato 'DD/MM'
+                headerRow.appendChild(th);
+
+				// Crear celdas correspondientes para cada precio
+				const costoBaseTd = document.createElement('td');
+				const precioBaseTd = document.createElement('td');
+				const costoBase2Td = document.createElement('td');
+				const precioBase2nightsTd = document.createElement('td');
+
+				const currentDateMx = convertirFechaMexicoCity(currentDate)
+
+				const precioEncontrado = preciosPorHabitacion.find(precio => precio.fecha === currentDateMx)
+				if (precioEncontrado){
+					costoBaseTd.textContent = precioEncontrado.costo_base;
+					costoBaseRow.appendChild(costoBaseTd);
+
+					precioBaseTd.textContent = precioEncontrado.precio_modificado;
+					precioBaseRow.appendChild(precioBaseTd);
+
+					costoBase2Td.textContent = precioEncontrado.costo_base_2noches;
+					costoBase2Row.appendChild(costoBase2Td);
+
+					precioBase2nightsTd.textContent = precioEncontrado.precio_base_2noches;
+					precioBase2nightsRow.appendChild(precioBase2nightsTd);
+				} else {
+					costoBaseTd.textContent = costoBase;
+					costoBaseRow.appendChild(costoBaseTd);
+					
+					precioBaseTd.textContent = precioBase;
+					precioBaseRow.appendChild(precioBaseTd);
+
+					costoBase2Td.textContent = costoBase2;
+					costoBase2Row.appendChild(costoBase2Td);
+					
+					precioBase2nightsTd.textContent = precioBase2nights;
+					precioBase2nightsRow.appendChild(precioBase2nightsTd);
+
+				}
+
+
+                // Avanzar al siguiente día
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+        });
+    }
+
+    // Llamar a la función para agregar las fechas
+    addDatesToRooms();
+
+	function convertirFechaMexicoCity(fechaISO) {
+		const fecha = new Date(fechaISO);
+		const opciones = {
+			timeZone: 'America/Mexico_City',
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+		};
+	
+		const formatter = new Intl.DateTimeFormat('es-MX', opciones);
+		return formatter.format(fecha);
+	}
+
+	window.addEventListener("load", () => {
+        const preloader = document.querySelector(".pre-loader");
+        preloader.classList.add("loader--hidden");
+        preloader.addEventListener("transitionend", () => {
+            if (preloader) {
+                preloader.style.display = "none"; // Hide instead of removing
+            }
+        });
+    });
 
 
 

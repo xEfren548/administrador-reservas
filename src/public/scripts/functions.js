@@ -89,7 +89,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         dataBsIds.push(dataBsId);
                     }
                 });
-                console.log(dataBsIds);
 
                 const results = [];
                 for (const idHabitacion of dataBsIds) {
@@ -98,10 +97,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     results.push({ idHabitacion, available: result.available });
                 }
 
-                console.log(results);
 
                 results.forEach(result => {
-                    const option = document.querySelector(`option[data-bs-chid="${result.idHabitacion}"]`);
+                    const option = document.querySelector(`option[data-bs-id="${result.idHabitacion}"]`);
                     if (result.available) {
                         option.style.backgroundColor = 'lightgreen'; // Marca las cabañas disponibles
                         option.disabled = false;
@@ -177,8 +175,16 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!response.ok) {
                 const errorData = await response.json();
                 console.log(errorData)
-                const errors = errorData.error.map(err => err.message);
-                console.log(errors)
+                let errors = []
+
+                if (errorData.message){
+                    errors.push(errorData.message);
+                } else {
+                    errors = errorData.error.map(err => err.message);
+
+                }
+                
+
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',

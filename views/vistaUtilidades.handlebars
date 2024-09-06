@@ -29,36 +29,39 @@
                 <button id="clearDates" class="btn btn-secondary"><span><i class="fa fa-eraser" aria-hidden="true"></i></span></button>
             </div>
         </div>
-        <table class="table table-dark table-hover text-center table-responsive" id="tablaUtilidades">
-            <thead class="table-light">
-                <tr>
-                    <th scope="col">Concepto</th>
-                    <th scope="col">Monto</th>
-                    <th scope="col">Fecha</th>
-                    <th scope="col">Usuario</th>
+        <div class="table-responsive">
 
-                </tr>
-            </thead>
-            <tbody>
-                {{#if utilidades.length}}
-                {{#each utilidades}}
-                <tr>
-                    <td>{{this.concepto}}</td>
-                    <td>${{this.monto}}</td>
-                    <td>{{this.fecha}}</td>
-                    <td>{{this.nombreUsuario}}</td>
+            <table class="table table-dark table-hover text-center" id="tablaUtilidades">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Concepto</th>
+                        <th scope="col">Monto</th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Usuario</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#if utilidades.length}}
+                    {{#each utilidades}}
+                    <tr>
+                        <td>{{this.concepto}}</td>
+                        <td>${{this.monto}}</td>
+                        <td>{{this.fecha}}</td>
+                        <td>{{this.nombreUsuario}}</td>
 
 
-                </tr>
-                {{/each}}
-                {{else}}
-                <tr>
-                    <td colspan="4">No se encontraron utilidades</td>
-                </tr>
+                    </tr>
+                    {{/each}}
+                    {{else}}
+                    <tr>
+                        <td colspan="4">No se encontraron utilidades</td>
+                    </tr>
 
-                {{/if}}
-            </tbody>
-        </table>
+                    {{/if}}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

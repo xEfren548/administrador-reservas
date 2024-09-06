@@ -7,60 +7,63 @@
 <div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
     <div class="col-10">
         <h1>Lista de servicios</h1>
-        <table class="table table-dark table-hover table-responsive" id="tablaServicios">
-            <thead class="table-light">
-                <tr>
-                    <th scope="col">Servicio</th>
-                    <th scope="col">Descripción</th>
-                    <th scope="col">Proveedor</th>
-                    <th scope="col">Administrador de servicios</th>
-                    <th scope="col">Costo base</th>
-                    <th scope="col">Precio base</th>
-                    <th scope="col">1ra comisión</th>
-                    <th scope="col">2da comisión</th>
-                    <th scope="col">Precio final</th>
-                    <th scope="col">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each services}}
+        <div class="table-responsive">
+
+            <table class="table table-dark table-hover" id="tablaServicios">
+                <thead class="table-light">
                     <tr>
-                        <td>{{service}}</td>
-                        <td>{{description}}</td>
-                        <td> {{supplier}}</td>
-                        <td>{{serviceManager}}</td>
-                        <td> {{costPrice}}</td>
-                        <td> {{basePrice}}</td>
-                        <td>{{firstCommission}}</td>
-                        <td>{{secondCommission}}</td>
-                        <td>{{finalPrice}}</td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-primary" 
-                            data-service-name="{{service}}"
-                            data-service-description="{{description}}"
-                            data-service-provider="{{supplierEmail}}"
-                            data-service-manager="{{serviceManagerEmail}}"
-                            data-service-cost-price="{{costPrice}}"
-                            data-service-base-price="{{basePrice}}"
-                            data-service-first-commission="{{firstCommission}}"
-                            data-service-second-commission="{{secondCommission}}"
-                            data-service-final-price="{{finalPrice}}"
-                            onclick="showData(this)"
-                            data-bs-toggle="modal"
-                                data-bs-target="#modify-service_entry_modal">
-                                <i class="fa fa-pencil" aria-hidden="true"></i>
-                            </button>
-                            <button type="button" class="btn btn-danger" data-service-name="{{service}}">
-                                <i class="fa fa-trash" aria-hidden="true"></i>
-                            </button>
-                            <div class="form-item">
-                                <p name="errMsg" class="error"></p>
-                            </div>
-                        </td>
+                        <th scope="col">Servicio</th>
+                        <th scope="col">Descripción</th>
+                        <th scope="col">Proveedor</th>
+                        <th scope="col">Administrador de servicios</th>
+                        <th scope="col">Costo base</th>
+                        <th scope="col">Precio base</th>
+                        <th scope="col">1ra comisión</th>
+                        <th scope="col">2da comisión</th>
+                        <th scope="col">Precio final</th>
+                        <th scope="col">Acciones</th>
                     </tr>
-                {{/each}}  
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {{#each services}}
+                        <tr>
+                            <td>{{service}}</td>
+                            <td>{{description}}</td>
+                            <td> {{supplier}}</td>
+                            <td>{{serviceManager}}</td>
+                            <td> {{costPrice}}</td>
+                            <td> {{basePrice}}</td>
+                            <td>{{firstCommission}}</td>
+                            <td>{{secondCommission}}</td>
+                            <td>{{finalPrice}}</td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-primary" 
+                                data-service-name="{{service}}"
+                                data-service-description="{{description}}"
+                                data-service-provider="{{supplierEmail}}"
+                                data-service-manager="{{serviceManagerEmail}}"
+                                data-service-cost-price="{{costPrice}}"
+                                data-service-base-price="{{basePrice}}"
+                                data-service-first-commission="{{firstCommission}}"
+                                data-service-second-commission="{{secondCommission}}"
+                                data-service-final-price="{{finalPrice}}"
+                                onclick="showData(this)"
+                                data-bs-toggle="modal"
+                                    data-bs-target="#modify-service_entry_modal">
+                                    <i class="fa fa-pencil" aria-hidden="true"></i>
+                                </button>
+                                <button type="button" class="btn btn-danger" data-service-name="{{service}}">
+                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                </button>
+                                <div class="form-item">
+                                    <p name="errMsg" class="error"></p>
+                                </div>
+                            </td>
+                        </tr>
+                    {{/each}}  
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

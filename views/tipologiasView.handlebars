@@ -8,29 +8,32 @@
 <div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
     <div class="col-10">
         <h2>Tipologias de Habitaciones</h2>
-        <table class="table table-dark table-hover text-center table-responsive" id="tablaTipologias">
-            <thead class="table-light">
-                <tr>
-                    <th scope="col">Tipología</th>
-                    <th scope="col" class="w-25">Acciones</th>
+        <div class="table-responsive">
+
+            <table class="table table-dark table-hover text-center" id="tablaTipologias">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Tipología</th>
+                        <th scope="col" class="w-25">Acciones</th>
 
 
-                </tr>
-            </thead>
-            <tbody>
-                {{#each tipologias}}
-                <tr>
-                    <td>{{tipologia}}</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each tipologias}}
+                    <tr>
+                        <td>{{tipologia}}</td>
 
-                    <td class="text-center">
-                        <button type="button" class="btn btn-danger" onclick="eliminarTipologia('{{_id}}')">
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </button>
-                    </td>
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-danger" onclick="eliminarTipologia('{{_id}}')">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

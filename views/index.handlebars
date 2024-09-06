@@ -377,7 +377,7 @@
     document.getElementById('tipologia_habitacion').addEventListener('change', function () {
         console.log('Cambia!')
         const numeroPersonasSelect = document.getElementById('numero-personas');
-        const maxOccupancy = selectedOption.getAttribute('data-pax');
+        const maxOccupancy = numeroPersonasSelect.getAttribute('data-pax');
         numeroPersonasSelect.innerHTML = '<option value="" selected disabled>Selecciona el número de personas --</option>';
         for (let i = 2; i < maxOccupancy; i++) {
             const option = document.createElement('option');

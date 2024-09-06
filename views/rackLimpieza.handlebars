@@ -1,35 +1,38 @@
 <div class="row flex-nowrap justify-content-center mt-3 " style="width: 100%;">
     <div class="col-10">
         <h1>Tabla Rack Limpieza</h1>
-        <table class="table table-dark table-hover text-center table-responsive" id="tablaRacklimpieza">
-            <thead class="table-light">
-                <tr>
-                    <th scope="col">Habitación</th>
-                    <th scope="col">Descripción</th>
-                    <th scope="col">Fecha</th>
-                    <th scope="col">Estatus</th>
-                    <th scope="col">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#if services.length}}
-                {{#each services}}
-                <tr>
-                    <td>{{this.nombreHabitacion}}</td>
-                    <td>{{this.descripcion}}</td>
-                    <td>{{this.fecha}}</td>
-                    <td>{{this.status}}</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#editarRackLimpiezaModal" data-service-id="{{this._id}}"
-                            onclick="mostrarInfoServicio('{{this._id}}')"><i class="fa fa-pencil"
-                                aria-hidden="true"></i>
-                    </td>
+        <div class="table-responsive">
 
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
+            <table class="table table-dark table-hover text-center" id="tablaRacklimpieza">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Habitación</th>
+                        <th scope="col">Descripción</th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Estatus</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#if services.length}}
+                    {{#each services}}
+                    <tr>
+                        <td>{{this.nombreHabitacion}}</td>
+                        <td>{{this.descripcion}}</td>
+                        <td>{{this.fecha}}</td>
+                        <td>{{this.status}}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#editarRackLimpiezaModal" data-service-id="{{this._id}}"
+                                onclick="mostrarInfoServicio('{{this._id}}')"><i class="fa fa-pencil"
+                                    aria-hidden="true"></i>
+                        </td>
+
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {{else}}
