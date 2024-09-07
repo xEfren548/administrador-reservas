@@ -109,11 +109,12 @@ router.get('/calendario-precios', async (req, res) => {
         // const habitaciones = data[0].resources;
         // console.log(typeof habitaciones)
 
+
         const allHabitaciones = await Habitacion.find().lean();
         const habitaciones = allHabitaciones[0].resources;
-
+        
         // Crear un arreglo con las fechas correspondientes a cada día del año
-        const daysWithDates = Array.from({ length: getDaysInYear() }, (_, index) => getDateFromDayOfYear(index + 1));
+        //const daysWithDates = Array.from({ length: getDaysInYear() }, (_, index) => getDateFromDayOfYear(index + 1));
 
         //console.log(habitaciones);
 
@@ -121,15 +122,16 @@ router.get('/calendario-precios', async (req, res) => {
         //console.log(preciosHabitacionesData);
         const preciosEspecialesData = await preciosEspecialesController.consultarPrecios()
 
-        const pricexday = pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, preciosEspecialesData);
+        //const pricexday = pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, preciosEspecialesData);
 
-
+        
 
         res.render('calendarioPrecios', {
             habitaciones: habitaciones, // Pasa las habitaciones a la plantilla
-            daysWithDates: daysWithDates, // Pasa el arreglo de fechas a la plantilla
+            //daysWithDates: daysWithDates, // Pasa el arreglo de fechas a la plantilla
             preciosHabitaciones: preciosHabitacionesData, // Pasa los precios de las habitaciones a la plantilla
-            pricexday: pricexday
+            preciosEspeciales: preciosEspecialesData
+            //pricexday: pricexday
         });
     } catch (error) {
         console.log(error);
