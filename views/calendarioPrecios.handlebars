@@ -87,12 +87,24 @@
 			<div class="modal-body">
 				<div class="img-container">
 					<div id="error-modal-persona" class="alert alert-danger" style="display: none;"></div>
-
+					{{#each habitaciones}}
+					<div class="form-check form-check-inline">
+						<input
+							class="checkboxes-chalets"
+							type="checkbox"
+							id="{{this._id}}"
+							value="{{this._id}}"
+						/>
+						<label class="form-check-label" for="">{{this.propertyDetails.name}}</label>
+					</div>
+					{{/each}}
+					
 					<div class="row mt-2 mb-2">
 						<div class="col-8">
 							<label for="select-cabana">Habitación a modificar: </label>
 						</div>
 					</div> <!-- Cierre row -->
+					
 					<select name="select-cabana" id="select-cabana" class="form-select form-select-md" required>
 						<option value="" selected disabled> Selecciona una cabaña para modificar --
 						</option>
@@ -1106,6 +1118,25 @@
 		botonFormulario.addEventListener('click', async function (e) {
 			const selectElement = document.getElementById('select-cabana');
 			const selectedOption = selectElement.options[selectElement.selectedIndex];
+			const chaletsCheckboxes = document.querySelectorAll('.checkboxes-chalets');
+			const checkedChalets = [];
+
+			chaletsCheckboxes.forEach(function(checkbox) {
+				if (checkbox.checked) {
+					checkedChalets.push(checkbox.value);
+				}
+			})
+			
+			if (checkedChalets.length === 0){
+				Swal.fire({
+					title: 'Error',
+                    text: 'Debes seleccionar al menos una habitacion',
+                    icon: 'error',
+					confirmButtonText: 'Ok'
+				})
+				return;
+			}
+			
 			const precioBase = selectedOption.getAttribute('data-precio-base');
 			document.getElementById('precio-base-input-id').value = precioBase;
 
@@ -2054,6 +2085,8 @@
 			}
 		})
 
+		const checkboxesChalets = document.querySelector('#checkboxes-chalets');
+		console.log(checkboxesChalets)
 
 		$('#select-cabana-eliminarespeciales').on('change', function (e) {
 			const selectElement = document.getElementById('select-cabana-eliminarespeciales');
@@ -2292,6 +2325,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedHabitacionContainer.style.display = 'block';
             }
         }
+
     });
 });
 
