@@ -14,12 +14,25 @@
 
 
 
+	<div class="mb-3">
+		<label for="" class="form-label">Habitacion: </label>
+		<select class="form-select form-select-md" name="" id="">
+			<option selected>Seleccione una habitación --</option>
+			{{#if habitaciones}}
+			{{#each habitaciones}}
+			<option value="{{this._id}}">{{this.propertyDetails.name}}</option>
+			{{/each}}
+			{{/if}}
+		</select>
+	</div>
+
 </div>
 <div class="table-pricescol min-vh-100 p-4">
 	<div class="color-label">
 		<div class="color-box" style="background-color: #ccc;"></div>
 		<span class="color-text">Fin de semana</span>
 	</div>
+	
 
 	{{#if habitaciones}}
 	{{#each habitaciones}}
