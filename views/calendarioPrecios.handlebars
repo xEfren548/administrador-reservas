@@ -1273,7 +1273,7 @@
 
 
 			// Función para realizar el fetch repetido para cada fecha en el rango
-			async function fetchRepetido(url, fechas) {
+			async function fetchRepetido(url, fechas, idHabitacion) {
 				try {
 					const resultados = [];
 					console.log('ejecutando fetch repetido...');
@@ -1294,11 +1294,11 @@
 
 					// Iterar sobre cada fecha en el rango
 					for (const fecha of fechas) {
-						const existeRegistro = await verificarExistenciaRegistro(url, fecha, habitacionAmodificar);
+						const existeRegistro = await verificarExistenciaRegistro(url, fecha, idHabitacion);
 						var existeprecio;
 						if (existeRegistro) {
-							existeprecio = await consultarprecio(urlfechas, fecha, habitacionAmodificar);
-							await eliminarRegistroExistente(url, fecha, habitacionAmodificar);
+							existeprecio = await consultarprecio(urlfechas, fecha, idHabitacion);
+							await eliminarRegistroExistente(url, fecha, idHabitacion);
 						}
 						console.log('existe precio : ', existeprecio);
 						console.log(valorPrecioBase2noches)
@@ -1330,7 +1330,7 @@
 							costo_base: costoBaseFinal,
 							costo_base_2noches: costoBaseFinal2noches,
 							fecha: fecha,
-							habitacionId: habitacionAmodificar
+							habitacionId: idHabitacion
 						};
 
 						console.log(JSON.stringify(datosFetch));
@@ -1469,51 +1469,54 @@
 			const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
 
 
+			for (const habitacionAmodificar of checkedChalets){
+				
+				try {
+					// Realizar el fetch repetido para cada fecha en el rango
+					document.getElementById('spinner').style.display = 'block';
+					Swal.close();
 
-			try {
-				// Realizar el fetch repetido para cada fecha en el rango
-				document.getElementById('spinner').style.display = 'block';
-				Swal.close();
-
-				const resultados = await fetchRepetido(url, fechas);
-
-
-				if (resultados.length === 0) {
-					throw new Error('No hay fechas seleccionadas para actualizar.');
-				}
+					const resultados = await fetchRepetido(url, fechas, habitacionAmodificar);
 
 
-				document.getElementById('spinner').style.display = 'none';
-
-
-				Swal.fire({
-					icon: 'success',
-					title: '¡Completado!',
-					text: 'Precios actualizados correctamente.',
-					confirmButtonText: 'Aceptar'
-				}).then((result) => {
-					// Verificar si el usuario hizo clic en el botón de confirmación
-					if (result.isConfirmed) {
-						// Actualizar la página
-						location.reload();
+					if (resultados.length === 0) {
+						throw new Error('No hay fechas seleccionadas para actualizar.');
 					}
-				});
 
 
-				// Manejar los resultados obtenidos
-				console.log('Resultados de fetch repetido:', resultados);
-				// Aquí puedes realizar cualquier otra acción con los resultados obtenidos
-			} catch (error) {
-				console.error('Error al realizar el fetch repetido:', error.message);
-				document.getElementById('spinner').style.display = 'none';
+					document.getElementById('spinner').style.display = 'none';
 
-				Swal.fire({
-					icon: 'error',
-					title: 'Error',
-					text: 'Hubo un problema al actualizar los precios. Por favor, verifica que todos los campos están completos o intenta de nuevo más tarde.',
-					confirmButtonText: 'Aceptar'
-				});
+
+					Swal.fire({
+						icon: 'success',
+						title: '¡Completado!',
+						text: 'Precios actualizados correctamente.',
+						confirmButtonText: 'Aceptar'
+					}).then((result) => {
+						// Verificar si el usuario hizo clic en el botón de confirmación
+						if (result.isConfirmed) {
+							// Actualizar la página
+							location.reload();
+						}
+					});
+
+
+					// Manejar los resultados obtenidos
+					console.log('Resultados de fetch repetido:', resultados);
+					// Aquí puedes realizar cualquier otra acción con los resultados obtenidos
+				} catch (error) {
+					console.error('Error al realizar el fetch repetido:', error.message);
+					document.getElementById('spinner').style.display = 'none';
+
+					Swal.fire({
+						icon: 'error',
+						title: 'Error',
+						text: 'Hubo un problema al actualizar los precios. Por favor, verifica que todos los campos están completos o intenta de nuevo más tarde.',
+						confirmButtonText: 'Aceptar'
+					});
+				}
 			}
+
 		})
 
 		const addPreciosBtn = document.querySelector('#add-prices-persona-btn')
