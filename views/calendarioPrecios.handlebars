@@ -1996,27 +1996,6 @@
 			return fechaHoy.getTime() === todayDate.getTime();
 		}
 
-		// Selecciona todas las tablas en el documento
-		const tables = document.querySelectorAll("table");
-
-		tables.forEach(table => {
-			const ths = table.querySelectorAll("th");
-
-
-			ths.forEach((th, index) => {
-				console.log(th.textContent.trim())
-				if (esFinDeSemana(th.textContent.trim())) {
-					console.log("Es fin de semana")
-					for (let i = 1; i < table.rows.length; i++) {
-						const cell = table.rows[i].cells[index];
-						if (cell) {
-							cell.style.backgroundColor = "rgba(240, 240, 240, 0.1)"; // Aplica el color con opacidad
-						}
-					}
-				}
-			});
-		});
-
 
 		hoyButtons.forEach(button => {
 			button.addEventListener('click', function (event) {
@@ -2442,11 +2421,14 @@ document.getElementById('habitacion-select').addEventListener('change', function
 
     	// Insertar las fechas y precios de la habitación seleccionada
     	while (currentDate <= endDate) {
+			const dayOfWeek = currentDate.getDay();
+			const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     	    // Crear un th para cada día
     	    const th = document.createElement('th');
     	    th.id = generateId(currentDate);  
     	    const options = { day: 'numeric', month: 'short', year: 'numeric' };
-    	    th.textContent = currentDate.toLocaleDateString('es-ES', options); 
+    	    th.textContent = currentDate.toLocaleDateString('es-ES', options);
+
     	    headerRow.appendChild(th);
 
     	    // Crear celdas correspondientes para cada precio
@@ -2456,6 +2438,14 @@ document.getElementById('habitacion-select').addEventListener('change', function
     	    const precioBase2nightsTd = document.createElement('td');
 
     	    const currentDateMx = convertirFechaMexicoCity(currentDate);
+
+			if (isWeekend){
+				costoBaseTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+				precioBaseTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+				costoBase2Td.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+				precioBase2nightsTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+			}
+
 
     	    const precioEncontrado = preciosPorHabitacion.find(precio => precio.fecha === currentDateMx);
     	    if (precioEncontrado) {
@@ -2496,6 +2486,15 @@ document.getElementById('habitacion-select').addEventListener('change', function
 					const precioBaseEspecialTd = document.createElement("td");
 					const costoBase2EspecialTd = document.createElement("td");
 					const precioBase2EspecialTd = document.createElement("td");
+
+					if (isWeekend){
+						costoBaseEspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+						precioBaseEspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+						costoBase2EspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+						precioBase2EspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+					}
+
+
 					const precioEspecialPorPersonaEncontrado = precioData.find(precio => precio.fecha === currentDateMx)
 					if (precioEspecialPorPersonaEncontrado) {
 						// Dates match, use special prices
