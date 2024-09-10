@@ -2326,72 +2326,76 @@
 			preciosEspecialesPorHabitacion.map(precio => {
 				precio.fecha = convertirFechaMexicoCity(precio.fecha)
 			})
+			
+			let preciosEspecialesPorPersonas = {};
+			if (preciosEspecialesPorHabitacion.length > 0) { 
+				// Group by habitacionId first, then by noPersonas for each habitacion
+				preciosEspecialesPorPersonas = preciosEspecialesPorHabitacion.reduce((result, item) => {
+					const { habitacionId, noPersonas } = item;
 
-			const preciosEspecialesPorPersonas = {}
-				preciosEspecialesPorHabitacion.forEach(precio => {
-					if (!preciosEspecialesPorPersonas[precio.noPersonas]) {
-						preciosEspecialesPorPersonas[precio.noPersonas] = { 
-							id: precio._id, 
-							precio_modificado: precio.precio_modificado, 
-							precio_base_2noches: precio.precio_base_2noches,
-							costo_base: precio.costo_base,
-							costo_base_2noches: precio.costo_base_2noches,
-							fecha: precio.fecha
-						}
-                    }
-				})
+					// Initialize the room group if it doesn't exist
+					if (!result[habitacionId]) {
+						result[habitacionId] = {};
+					}
 
+					// Initialize the noPersonas group within the room if it doesn't exist
+					if (!result[habitacionId][noPersonas]) {
+						result[habitacionId][noPersonas] = [];
+					}
 
-			if (Object.keys(preciosEspecialesPorPersonas).length > 0) {
-				for (const key in preciosEspecialesPorPersonas){
-					if (preciosEspecialesPorPersonas.hasOwnProperty(key)){
+					// Push the current item into the appropriate group
+					result[habitacionId][noPersonas].push(item);
+
+					return result;
+				}, {});
+
+				if (Object.keys(preciosEspecialesPorPersonas[roomId]).length > 0) {
+					for (const key in preciosEspecialesPorPersonas[roomId]) {
 						const rowTexto = document.createElement("tr")
-						rowTexto.id = `row-especiales-${roomName}`
-						const textoTh = document.createElement('th');
-						const textoPersonas = `Precios especiales para ${key} personas`;
-						textoTh.classList.add("sticky-column");
-						textoTh.textContent = textoPersonas;
+							rowTexto.id = `row-especiales-${roomName}`
+							const textoTh = document.createElement('th');
+							const textoPersonas = `Precios especiales para ${key} personas`;
+							textoTh.classList.add("sticky-column");
+							textoTh.textContent = textoPersonas;
 
-						const rowCostoBase = document.createElement("tr");
-						rowCostoBase.id = `costo-base-especialestd-${roomName}-${key}pax`
-						const tdCostoBase = document.createElement("td");
-						tdCostoBase.textContent = "Precio Base"
-						tdCostoBase.classList.add("sticky-column");
-						rowCostoBase.appendChild(tdCostoBase);
+							const rowCostoBase = document.createElement("tr");
+							rowCostoBase.id = `costo-base-especialestd-${roomName}-${key}pax`
+							const tdCostoBase = document.createElement("td");
+							tdCostoBase.textContent = "Precio Base"
+							tdCostoBase.classList.add("sticky-column");
+							rowCostoBase.appendChild(tdCostoBase);
 
-						const rowPrecioBase = document.createElement("tr");
-						const tdPrecioBase = document.createElement("td");
-						tdPrecioBase.textContent = "Costo Base"
-						tdPrecioBase.classList.add("sticky-column");
-						rowPrecioBase.id = `precio-base-especialestd-${roomName}-${key}pax`
-						rowPrecioBase.appendChild(tdPrecioBase);
+							const rowPrecioBase = document.createElement("tr");
+							const tdPrecioBase = document.createElement("td");
+							tdPrecioBase.textContent = "Costo Base"
+							tdPrecioBase.classList.add("sticky-column");
+							rowPrecioBase.id = `precio-base-especialestd-${roomName}-${key}pax`
+							rowPrecioBase.appendChild(tdPrecioBase);
 
-						const rowCostoBase2 = document.createElement("tr");
-						const tdCostoBase2 = document.createElement("td");
-						tdCostoBase2.textContent = "Costo Base 2 Noches"
-						tdCostoBase2.classList.add("sticky-column");
-						rowCostoBase2.id = `costo-base2-especialestd-${roomName}-${key}pax`
-                        rowCostoBase2.appendChild(tdCostoBase2);
+							const rowCostoBase2 = document.createElement("tr");
+							const tdCostoBase2 = document.createElement("td");
+							tdCostoBase2.textContent = "Costo Base 2 Noches"
+							tdCostoBase2.classList.add("sticky-column");
+							rowCostoBase2.id = `costo-base2-especialestd-${roomName}-${key}pax`
+							rowCostoBase2.appendChild(tdCostoBase2);
 
-						const rowPrecioBase2 = document.createElement("tr");
-						const tdPrecioBase2 = document.createElement("td");
-						tdPrecioBase2.textContent = "Precio Base 2 Noches"
-						tdPrecioBase2.classList.add("sticky-column");
-						rowPrecioBase2.id = `precio-base2-especialestd-${roomName}-${key}pax`
-						rowPrecioBase2.appendChild(tdPrecioBase2)
+							const rowPrecioBase2 = document.createElement("tr");
+							const tdPrecioBase2 = document.createElement("td");
+							tdPrecioBase2.textContent = "Precio Base 2 Noches"
+							tdPrecioBase2.classList.add("sticky-column");
+							rowPrecioBase2.id = `precio-base2-especialestd-${roomName}-${key}pax`
+							rowPrecioBase2.appendChild(tdPrecioBase2)
 
-						rowTexto.appendChild(textoTh);
-						tbodyTable.appendChild(rowTexto);
-						tbodyTable.appendChild(rowCostoBase);
-						tbodyTable.appendChild(rowPrecioBase);
-						tbodyTable.appendChild(rowCostoBase2);
-						tbodyTable.appendChild(rowPrecioBase2);
+							rowTexto.appendChild(textoTh);
+							tbodyTable.appendChild(rowTexto);
+							tbodyTable.appendChild(rowCostoBase);
+							tbodyTable.appendChild(rowPrecioBase);
+							tbodyTable.appendChild(rowCostoBase2);
+							tbodyTable.appendChild(rowPrecioBase2);
 					}
 				}
-			}				
-			
-			console.log(preciosEspecialesPorPersonas)
 
+			}
 
             while (currentDate <= endDate) {
                 // Crear un th para cada día
@@ -2438,70 +2442,50 @@
 
 				}
 
+					
+				if (preciosEspecialesPorHabitacion.length > 0) { 
+					for (const personas in preciosEspecialesPorPersonas[roomId]) {
+						const precioData = preciosEspecialesPorPersonas[roomId][personas];
+						const rowCostoBase = document.getElementById(`costo-base-especialestd-${roomName}-${personas}pax`);
+						const rowPrecioBase = document.getElementById(`precio-base-especialestd-${roomName}-${personas}pax`);
+						const rowCostoBase2 = document.getElementById(`costo-base2-especialestd-${roomName}-${personas}pax`);
+						const rowPrecioBase2 = document.getElementById(`precio-base2-especialestd-${roomName}-${personas}pax`);
+						
+						const costoBaseEspecialTd = document.createElement("td");
+						const precioBaseEspecialTd = document.createElement("td");
+						const costoBase2EspecialTd = document.createElement("td");
+						const precioBase2EspecialTd = document.createElement("td");
 
-				for (const personas in preciosEspecialesPorPersonas) {
-    				if (preciosEspecialesPorPersonas.hasOwnProperty(personas)) {
-        				const precioData = preciosEspecialesPorPersonas[personas];
-        				const rowCostoBase = document.getElementById(`costo-base-especialestd-${roomName}-${personas}pax`);
-        				const rowPrecioBase = document.getElementById(`precio-base-especialestd-${roomName}-${personas}pax`);
-        				const rowCostoBase2 = document.getElementById(`costo-base2-especialestd-${roomName}-${personas}pax`);
-        				const rowPrecioBase2 = document.getElementById(`precio-base2-especialestd-${roomName}-${personas}pax`);
-
-        				const costoBaseEspecialTd = document.createElement("td");
-        				const precioBaseEspecialTd = document.createElement("td");
-        				const costoBase2EspecialTd = document.createElement("td");
-        				const precioBase2EspecialTd = document.createElement("td");
-
-        				// Convert both dates to Date objects
-        				const precioDataDate = new Date(precioData.fecha);
-        				let currentDateDate;
-        				if (currentDateMx && !isNaN(Date.parse(currentDateMx))) {
-        				    currentDateDate = new Date(currentDateMx);
-        				} else {
-        				    // Attempt to reformat currentDateMx if necessary
-        				    currentDateDate = new Date(currentDateMx.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$2/$1/$3"));
-        				}
-
-        				// If currentDateDate is still invalid, handle the error
-        				if (isNaN(currentDateDate)) {
-        				    console.log("Invalid current date format:", currentDateMx);
-        				    continue;
-        				}
-
-						//console.log("Precio data date: ", precioDataDate)
-						//console.log("Current date date: ", currentDateDate)
-
-        				// Always render, but only apply special prices if the dates match
-        				if (precioDataDate.getTime() === currentDateDate.getTime()) {
-        				    // Dates match, use special prices
-        				    costoBaseEspecialTd.textContent = precioData.precio_modificado;
-        				    precioBaseEspecialTd.textContent = precioData.precio_base_2noches;
-        				    costoBase2EspecialTd.textContent = precioData.costo_base_2noches;
-        				    precioBase2EspecialTd.textContent = precioData.costo_base_2noches;
-        				} else {
-        				    // Use default or found prices if they don't match
-        				    if (precioEncontrado) {
-        				        costoBaseEspecialTd.textContent = precioEncontrado.costo_base;
-        				        precioBaseEspecialTd.textContent = precioEncontrado.precio_modificado;
-        				        costoBase2EspecialTd.textContent = precioEncontrado.costo_base_2noches;
-        				        precioBase2EspecialTd.textContent = precioEncontrado.precio_base_2noches;
-        				    } else {
-        				        // Default prices for non-special dates
-        				        costoBaseEspecialTd.textContent = costoBase;
-        				        precioBaseEspecialTd.textContent = precioBase;
-        				        costoBase2EspecialTd.textContent = costoBase2;
-        				        precioBase2EspecialTd.textContent = precioBase2nights;
-        				    }
-        				}
-
-        				// Append the cells to the respective rows
-        				rowCostoBase.appendChild(costoBaseEspecialTd);
-        				rowPrecioBase.appendChild(precioBaseEspecialTd);
-        				rowCostoBase2.appendChild(costoBase2EspecialTd);
-        				rowPrecioBase2.appendChild(precioBase2EspecialTd);
-    				}
+						const precioEspecialPorPersonaEncontrado = precioData.find(precio => precio.fecha === currentDateMx)
+						if (precioEspecialPorPersonaEncontrado) {
+							// Dates match, use special prices
+							costoBaseEspecialTd.textContent = precioEspecialPorPersonaEncontrado.precio_modificado;
+							precioBaseEspecialTd.textContent = precioEspecialPorPersonaEncontrado.precio_base_2noches;
+							costoBase2EspecialTd.textContent = precioEspecialPorPersonaEncontrado.costo_base_2noches;
+							precioBase2EspecialTd.textContent = precioEspecialPorPersonaEncontrado.costo_base_2noches;
+						} else {
+							// Use default or found prices if they don't match
+							if (precioEncontrado) {
+								costoBaseEspecialTd.textContent = precioEncontrado.costo_base;
+								precioBaseEspecialTd.textContent = precioEncontrado.precio_modificado;
+								costoBase2EspecialTd.textContent = precioEncontrado.costo_base_2noches;
+								precioBase2EspecialTd.textContent = precioEncontrado.precio_base_2noches;
+							} else {
+								// Default prices for non-special dates
+								costoBaseEspecialTd.textContent = costoBase;
+								precioBaseEspecialTd.textContent = precioBase;
+								costoBase2EspecialTd.textContent = costoBase2;
+								precioBase2EspecialTd.textContent = precioBase2nights;
+							}
+						}
+						// Append the cells to the respective rows
+						rowCostoBase.appendChild(costoBaseEspecialTd);
+						rowPrecioBase.appendChild(precioBaseEspecialTd);
+						rowCostoBase2.appendChild(costoBase2EspecialTd);
+						rowPrecioBase2.appendChild(precioBase2EspecialTd);
+					}
+					
 				}
-
                 // Avanzar al siguiente día
                 currentDate.setDate(currentDate.getDate() + 1);
             }
