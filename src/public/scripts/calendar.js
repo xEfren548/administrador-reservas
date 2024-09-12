@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     comisionVendedor: event.comisionVendedor,
                                     clientName: event.clientName,
                                     clientPayments: event.pagosTotales,
-                                    termsAccepted: event.termsAccepted,
+                                    madeCheckIn: event.madeCheckIn,
                                     cleaningDetails: event.cleaningDetails
                                 }
                             })
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const clientName = info.event.extendedProps.clientName || "Reserva de dueño/inversionista"
             const clientPayments = info.event.extendedProps.clientPayments;
-            const termsAccepted = info.event.extendedProps.termsAccepted;
+            const madeCheckIn = info.event.extendedProps.madeCheckIn;
             const cleaningDetails = info.event.extendedProps.cleaningDetails;
 
             if (clientPayments === 0) {
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 colorRectanguloTop = 'bg-info'
             }
 
-            if (termsAccepted) {
+            if (madeCheckIn) {
                 colorRectanguloBottomLeft = 'bg-success'
             } else {
                 colorRectanguloBottomLeft = 'bg-danger'

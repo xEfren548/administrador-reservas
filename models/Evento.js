@@ -49,6 +49,10 @@ const reservaSchema = new Schema({
         type: Boolean,
         default: false
     },
+    madeCheckIn: {
+        type: Boolean,
+        default: false
+    },
     surveySubmited: {
         type: Boolean,
         default: false

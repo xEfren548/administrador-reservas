@@ -147,6 +147,23 @@
                     {{/if}}
                 </div>
 
+                {{#if reservation.madeCheckIn}}
+                <div class="row d-flex justify-content-center align-items-center" style="height: 100px;">
+                    <div class="col-12 text-center">
+                        <span
+                            class="btn btn-success"
+                            >Check In Realizado</span
+                        >
+                        
+                    </div>
+                </div>
+                {{else}}
+                <div class="row d-flex justify-content-center align-items-center" style="height: 100px;">
+                    <div class="col-12 text-center">
+                        <a class="btn btn-info btn-lg " href="#" role="button" id="checkin-btn" data-reservationid="{{reservation._id}}">Realizar Check In</a>
+                    </div>
+                </div>
+                {{/if}}
             </div>
         </div>
     </div>
@@ -388,34 +405,45 @@
             .catch(error => {
                 console.error('Error al enviar la solicitud 1:', error);
             });
+    })
 
-        // Format map according to coordenates.
-        // Initialize and add the map
-        let map;
-        async function initMap() {
-            alert({{ chalet.location.latitude }})
-    const position = { lat: {{ chalet.location.latitude }}, lng: { { chalet.location.longitude } } };
+    jQuery(document).ready(function($) {
+        
+        const checkInBtn = $('#checkin-btn');
+        checkInBtn.click(async function(e) {
+            e.preventDefault();
+            const reservationId = $(this).attr('data-reservationid');
+            console.log(reservationId)
+            await $.ajax({
+                type: "POST",
+                data: {idReserva: reservationId},
+                dataType: "json",
+                url: `/api/eventos/realizarcheckin?id=${reservationId}`,
+                success: function(response) {
+                    console.log(response);
+                    Swal.fire({
+                        title: 'Check-in realizado!',
+                        icon:'success',
+                        confirmButtonText: 'Cerrar'
+                    })
+                    
+                },
+                error: function(xhr, status, error) {
+                    console.log(xhr.responseText);
+                    Swal.fire({
+                        title: 'Error al realizar el check-in',
+                        text: xhr.responseText,
+                        icon: 'error',
+                        confirmButtonText: 'Cerrar'
+                    })
+                }
+            })
 
-    // Request needed libraries.
-    //@ts-ignore
-    const { Map } = await google.maps.importLibrary("maps");
-    const { AdvancedMarkerView } = await google.maps.importLibrary("marker");
-
-    // The map, centered at Uluru
-    map = new Map(document.getElementById("map"), {
-        zoom: 4,
-        center: position,
-        mapId: "DEMO_MAP_ID",
+        })
     });
 
-    // The marker, positioned at Uluru
-    const marker = new AdvancedMarkerView({
-        map: map,
-        position: position,
-        title: "{{chalet.propertyDetails.name}}",
-    });
-        }
+        
 
-        //initMap();
-    });
+
+
 </script>

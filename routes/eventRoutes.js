@@ -148,5 +148,6 @@ router.get('/check-availability', async (req, res) => {
 router.post('/eventos/move-to-playground', eventController.moveToPlayground)
 router.get('/calendar/duenos', eventController.reservasDeDuenos)
 router.get('/calendar/colaboradorduenos', eventController.reservasDeDuenosParaColaborador)
+router.post('/eventos/realizarcheckin', eventController.realizarCheckIn)
 
 module.exports = router;
