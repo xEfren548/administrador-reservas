@@ -32,6 +32,7 @@ async function generateSideMenu(req, res, next) {
                 { 'Encuestas': [] },
                 { 'Logs': ["/logs", "fas fa-cogs"] },
                 { 'Calendarios': [] },
+                { 'Reportes' : ["/api/reportes", "fas fa-sheet-plastic"] },
             ],
             'Vendedor': [
                 // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
