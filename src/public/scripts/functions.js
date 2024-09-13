@@ -148,7 +148,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
                 pax: document.getElementById('numero-personas').value.trim(),
                 total: document.getElementById('habitacion_total').value.trim(),
-                discount: document.getElementById('habitacion_descuento').value.trim(),
                 isDeposit: document.getElementById('chckDeposit').checked,
                 comisionVendedor: comisionesReserva
             };
@@ -331,24 +330,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     selectedPax.addEventListener('change', obtenerTotalReserva);
 
-    const descuentoReservaInput = document.querySelector('#habitacion_descuento')
-    const subtotalInput = document.getElementById('habitacion_total');
-    const totalFinal = document.getElementById('habitacion_totalcondescuento');
 
-    function actualizarTotalConDescuento() {
-        const descuento = parseFloat(descuentoReservaInput.value);
-        const subtotal = parseFloat(subtotalInput.value);
 
-        if (!isNaN(descuento) && descuento >= 0 && descuento <= 100 && !isNaN(subtotal)) {
-            const descuentoCalculado = subtotal * (descuento / 100);
-            totalFinal.value = (subtotal - descuentoCalculado).toFixed(2);
-        } else {
-            totalFinal.value = subtotal.toFixed(2);
-        }
-    }
-
-    descuentoReservaInput.addEventListener('input', actualizarTotalConDescuento);
-    subtotalInput.addEventListener('input', actualizarTotalConDescuento);
 
 
 
