@@ -1,13 +1,16 @@
 const moment = require('moment');
+const momentTz = require('moment-timezone');
 const mongoose = require('mongoose');
 
 const usersController = require('./../controllers/usersController');
+const Pago = require('./../models/Pago');
 const Habitacion = require('./../models/Habitacion');
 const Costos = require('./../models/Costos');
 const Utilidades = require('./../models/Utilidades');
 const Servicio = require('./../models/Servicio');
 const Documento = require('./../models/Evento');
 const User = require('./../models/Usuario');
+const Cliente = require('./../models/Cliente');
 
 async function obtenerComisionesPorReserva(idReserva) {
     try {
@@ -654,6 +657,84 @@ async function mostrarUtilidadesGlobales(req, res) {
         res.status(200).send('Something went wrong while retrieving services.');
     }
 }
+async function vistaParaReporte(req, res) {
+    try {
+        
+        let users = await usersController.getAllUsersMongo();
+        const pagos = await Pago.find().lean();
+        const clientes = await Cliente.find().lean();
+
+
+
+        const currentMonth = moment().month(); // Mes actual (0-11)
+        const currentYear = moment().year(); // Año actual
+
+
+        const habitacionesExistentes = await Habitacion.findOne().lean();
+        if (!habitacionesExistentes) {
+            return res.status(404).send('No rooms found');
+        }
+
+        const reservasExistentes = await Documento.findOne().lean();
+        if (!reservasExistentes) {
+            return res.status(404).send('No documents found');
+        }
+
+        const reservas = reservasExistentes.events.filter(reserva => reserva.status !== 'cancelled');
+
+        const habitaciones = habitacionesExistentes.resources;
+
+        reservas.forEach(reserva => {
+            reserva.reservationDate = momentTz.tz(reserva.reservationDate, "America/Mexico_City").format("DD-MM-YYYY HH:mm")
+            reserva.arrivalDate = momentTz.tz(reserva.arrivalDate, "America/Mexico_City").format("DD-MM-YYYY HH:mm")
+            reserva.departureDate = momentTz.tz(reserva.departureDate, "America/Mexico_City").format("DD-MM-YYYY HH:mm")
+
+            const creadaPor = users.find(user => user._id.toString() === reserva.createdBy.toString());
+            reserva.agenteReserva = creadaPor ? creadaPor.firstName + " " + creadaPor.lastName : "N/A"
+            reserva.adminLigado = creadaPor ? creadaPor.adminname : "N/A"
+
+            const habitacion = habitaciones.find(habitacion => habitacion._id.toString() === reserva.resourceId.toString());
+            reserva.nombreHabitacion = habitacion ? habitacion.propertyDetails.name : "N/A"
+
+            const pagosReserva = pagos.filter(pago => pago.reservacionId.toString() === reserva._id.toString())
+            const totalPagosReserva = pagosReserva.reduce((total, pago) => total + pago.importe, 0);
+            reserva.pagosCliente = totalPagosReserva !== NaN ? totalPagosReserva : "N/A"
+
+            const liquidaEfectivo = pagosReserva.filter(pago => pago.metodoPago === "Recibio dueño").reduce((liquidaEfectivo, pago) =>
+                liquidaEfectivo + pago.importe, 0);
+            reserva.liquidaEfectivo = liquidaEfectivo !== NaN ? liquidaEfectivo : "N/A"
+
+            const cliente = clientes.find(cliente => {
+                if (!reserva.client) {
+                    return false;
+                } else {
+                    return cliente._id.toString() === reserva.client.toString();
+                }
+            });
+            reserva.nombreCliente = cliente ? (cliente.firstName + " " + cliente.lastName) : (reserva.clienteProvisional || "N/A");
+
+
+        })
+
+        reservas.sort((a, b) => moment(b.arrivalDate, 'DD-MM-YYYY').valueOf() - moment(a.arrivalDate, 'DD-MM-YYYY').valueOf());
+        // // Extract the IDs and names of the rooms
+        // const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
+        // const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString() }));
+
+        // console.log(reservas)
+
+    
+
+
+        res.render('reportes', {
+            reservas: reservas
+        })
+
+    } catch (error) {
+        console.log(error.message);
+        res.status(200).send('Something went wrong while retrieving services.');
+    }
+}
 
 async function altaComision(req, res) {
     try {
@@ -799,6 +880,7 @@ module.exports = {
     calcularComisiones,
     mostrarUtilidadesPorUsuario,
     mostrarUtilidadesGlobales,
+    vistaParaReporte,
     generarComisionReserva,
     altaComision,
     altaComisionReturn,

@@ -28,6 +28,9 @@ const reservaSchema = new Schema({
         type: Number,
         required: true
     },
+    pax: {
+        type: Number,
+    },
     nNights: {
         type: Number,
         required: true

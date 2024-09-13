@@ -145,6 +145,16 @@ async function showUsersView(req, res, next){
     }
 }
 
+async function getAllUsersMongo(){
+    try {
+        const users = await Usuario.find({}).lean();
+        return users;
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
+}
+
 async function createUser(req, res, next) {
     const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType } = req.body;
     const mexPhone = `+52${phone}`
@@ -338,6 +348,7 @@ module.exports = {
     createUserValidators,
     editUserValidators,
     deleteUserValidators,
+    getAllUsersMongo,
     showUsersView,
     createUser,
     obtenerUsuarioPorId,

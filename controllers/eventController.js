@@ -466,7 +466,7 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
 
 async function createReservation(req, res, next) {
-    const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, nNights, total, discount, isDeposit, comisionVendedor } = req.body;
+    const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit, comisionVendedor } = req.body;
 
     try {
         const client = await Cliente.find({ email: clientEmail });
@@ -511,6 +511,7 @@ async function createReservation(req, res, next) {
                 arrivalDate: arrivalDate,
                 departureDate: departureDate,
                 maxOccupation: maxOccupation,
+                pax: pax,
                 nNights: nNights,
                 url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
                 total: total,
@@ -547,6 +548,7 @@ async function createReservation(req, res, next) {
                 arrivalDate: arrivalDate,
                 departureDate: departureDate,
                 maxOccupation: maxOccupation,
+                pax: pax,
                 nNights: nNights,
                 url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
                 total: total,

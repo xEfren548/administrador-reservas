@@ -146,6 +146,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 nNights: document.getElementById("event_nights").value.trim(),
                 chaletName: document.getElementById('tipologia_habitacion').value.trim(),
                 maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
+                pax: document.getElementById('numero-personas').value.trim(),
                 total: document.getElementById('habitacion_total').value.trim(),
                 discount: document.getElementById('habitacion_descuento').value.trim(),
                 isDeposit: document.getElementById('chckDeposit').checked,
