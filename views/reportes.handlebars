@@ -110,7 +110,13 @@
 
                     {{/if}}
                 </tbody>
-
+                {{!-- <tfoot>
+                    <tr>
+                        <td colspan="3"></td>
+                        <td id="totalMonto"></td>
+                        <td colspan="9"></td>
+                    </tr>
+                </tfoot> --}}
             </table>
         </div>
     </div>
@@ -138,7 +144,6 @@
                     {
                         extend: 'csvHtml5',
                         text: 'Exportar a CSV',
-                        footer: true,
 
                     },
                     {
@@ -159,6 +164,44 @@
                             }
                             return mensaje;
                         },
+                        orientation: 'landscape',
+                        pageSize: 'A4',
+                        customize: function(doc) {
+                                                // Reduce font size to fit all columns
+                            doc.styles.tableHeader.fontSize = 8;
+                            doc.defaultStyle.fontSize = 7;
+                            
+                            // Adjust the layout and width
+                            doc.content[1].table.widths = '*'.repeat(doc.content[1].table.body[0].length).split('');
+                            
+                            // Auto fit columns (each column will take an equal amount of space)
+                            doc.content[1].layout = {
+                                hLineWidth: function(i, node) {
+                                    return 0.5;
+                                },
+                                vLineWidth: function(i, node) {
+                                    return 0.5;
+                                },
+                                hLineColor: function(i, node) {
+                                    return '#aaa';
+                                },
+                                vLineColor: function(i, node) {
+                                    return '#aaa';
+                                },
+                                paddingLeft: function(i, node) {
+                                    return 4;
+                                },
+                                paddingRight: function(i, node) {
+                                    return 4;
+                                },
+                                paddingTop: function(i, node) {
+                                    return 2;
+                                },
+                                paddingBottom: function(i, node) {
+                                    return 2;
+                                }
+                            }
+                        }
                     }
                 ],
                 "initComplete": function () {
@@ -167,9 +210,9 @@
                     buttons.forEach(function (button) {
                         button.classList.add('btn', 'btn-info');
                     });
-
+                    /** 
                     this.api()
-                        .columns([0, 5])
+                        .columns([3])
                         .every(function () {
                             let column = this;
 
@@ -195,13 +238,14 @@
                                     select.add(new Option(d));
                                 });
                         });
+                **/
                 }
             });
 
             DataTable.ext.search.push(function (settings, data, dataIndex) {
                 var minDate = moment(document.getElementById('startDate').value, "YYYY-MM-DD").startOf('day');
                 var maxDate = moment(document.getElementById('endDate').value, "YYYY-MM-DD").endOf('day');
-                var targetDate = moment(data[4], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
+                var targetDate = moment(data[5], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
 
                 if ((isNaN(minDate) && isNaN(maxDate)) ||
                     (isNaN(minDate) && targetDate <= maxDate) ||
