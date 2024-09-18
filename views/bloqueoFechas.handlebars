@@ -51,23 +51,21 @@
 
                     <div class="row mt-2 mb-2">
                         <div class="col-8">
-                            <label for="select-cabana">Habitación a modificar: </label>
+                            <label for="select-cabana"><b>Selecciona una o más habitaciones: </b></label>
                         </div>
                     </div> <!-- Cierre row -->
-                    <select name="select-cabana" id="select-cabana" class="form-select form-select-md" required>
-                        <option value="" selected disabled> Selecciona una cabaña para modificar --
-                        </option>
-                        {{#if chalets}}
-                        {{#each chalets}}
-                        <option value="{{this.id}}">{{this.name}}
-                        </option>
-
-                        {{/each}}
-                        {{else}}
-                        <option value="0">No se encontraron habitaciones</option>
-                        {{/if}}
-                    </select>
-
+                    {{#each chalets}}
+                    <div class="form-check form-check-inline">
+						<input
+							class="checkboxes-chalets"
+							type="checkbox"
+							id="{{this.id}}"
+							value="{{this.id}}"
+							name="chkb-{{this.id}}"
+						/>
+						<label class="form-check-label" for="chkb-{{this.id}}">{{this.name}}</label>
+					</div>
+                    {{/each}}
                     <div class="row">
 
                         <div class="col-12 mb-2 mt-2">
