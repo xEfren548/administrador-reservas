@@ -200,7 +200,7 @@ agregarFechasBtn.addEventListener("click", async (e) => {
         Swal.fire({
             icon: 'success',
             title: '¡Completado!',
-            text: 'Precios actualizados correctamente.',
+            text: 'Fechas bloqueadas correctamente.',
             confirmButtonText: 'Aceptar'
         }).then((result) => {
             console.log('Resultados de fetch repetido:', resultados);
@@ -286,7 +286,7 @@ agregarFechasBtn.addEventListener("click", async (e) => {
     }
 
     function obtenerNombreDia(fecha) {
-        const diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+        const diasSemana = ['domingo','lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
         return diasSemana[fecha.getDay()];
     }
 });
