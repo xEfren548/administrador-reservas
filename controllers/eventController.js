@@ -513,7 +513,7 @@ async function createReservation(req, res, next) {
                 maxOccupation: maxOccupation,
                 pax: pax,
                 nNights: nNights,
-                url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
+                url: `https://${process.env.URL}/api/eventos/${chalet._id}`,
                 total: total,
                 discount: discount,
                 createdBy: createdBy,
@@ -550,7 +550,7 @@ async function createReservation(req, res, next) {
                 maxOccupation: maxOccupation,
                 pax: pax,
                 nNights: nNights,
-                url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
+                url: `https://${process.env.URL}/api/eventos/${chalet._id}`,
                 total: total,
                 discount: discount,
                 isDeposit: true,
@@ -668,7 +668,7 @@ async function createOwnerReservation(req, res, next) {
             maxOccupation: maxOccupation,
             nNights: nNights,
             status: 'reserva de dueño',
-            url: `http://${process.env.URL}/api/eventos/${chalet._id}`,
+            url: `https://${process.env.URL}/api/eventos/${chalet._id}`,
             createdBy: createdBy,
             clienteProvisional: clienteProvisional
         };
