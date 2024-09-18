@@ -2,6 +2,8 @@ const express = require('express');
 require('dotenv').config();
 const mongoose = require('mongoose');
 const path = require('path');
+const fs = require('fs');
+const https = require('https');
 const app = express();
 const { engine } = require('express-handlebars');
 const routes = require('./routes/indexRoutes');
@@ -39,11 +41,18 @@ app.set('trust proxy', true);
 // Set up all routes.
 app.use(routes);
 
+const sslOptions = {
+  key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
+  cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem'))
+};
+
 // Connecting app to Mongoose
 mongoose.connect(db_url).then(async () => {
-    app.listen(port, () => {
-        console.log(`App is running on port ${port}`);
-    })
+    const server = https.createServer(sslOptions, app);
+
+    server.listen(port, () => {
+      console.log(`HTTPS server is running on port ${port}`);
+    });
 
     
     // const job = schedule.scheduleJob('* * * * *', async () => {         
@@ -57,8 +66,12 @@ mongoose.connect(db_url).then(async () => {
     // Para mantener la aplicación escuchando
     process.on('SIGINT', () => {
         job.cancel(); // Cancela el scheduler cuando se detiene la aplicación
-        client.close();
-        process.exit();
+        mongoose.connection.close();
+        server.close(() => {
+          console.log('HTTPS server closed');
+          process.exit(0);
+        });
+        process.exit(0);
     });
 
 }).catch((err) => {
