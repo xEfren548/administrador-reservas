@@ -38,6 +38,14 @@ const db_url = process.env.DB_URL;
 // Ensures Express correctly handles requests and interprets the necessary headers when using cookie sessions with postman.
 app.set('trust proxy', true);
 
+app.use((req, res, next) => {
+  if (req.secure) {
+    next();
+  } else {
+    res.redirect('https://' + req.headers.host + req.url);
+  }
+});
+
 // Set up all routes.
 app.use(routes);
 
