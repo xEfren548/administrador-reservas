@@ -39,7 +39,7 @@ const db_url = process.env.DB_URL;
 app.set('trust proxy', true);
 
 app.use((req, res, next) => {
-  if (req.secure) {
+  if (req.secure || process.env.NODE_ENV === 'development') {
     next();
   } else {
     res.redirect('https://' + req.headers.host + req.url);
