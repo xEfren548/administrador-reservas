@@ -3,6 +3,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 const https = require('https');
 const app = express();
 const { engine } = require('express-handlebars');
@@ -32,11 +33,23 @@ app.engine('handlebars', engine({
 app.set('view engine', 'handlebars');
 app.set('views', './views');
 
-const port = process.env.PORT || 3005;
+console.log(`Env variable: ${process.env.NODE_ENV}`)
+
+const port = process.env.NODE_ENV === 'development' ? 3005 : process.env.PORT || 443; // 3005 for development, HTTPS for production
 const db_url = process.env.DB_URL;
 
 // Ensures Express correctly handles requests and interprets the necessary headers when using cookie sessions with postman.
 app.set('trust proxy', true);
+
+if (process.env.NODE_ENV !== 'development'){
+  app.use((req, res, next) => {
+    if (req.secure) {
+      next(); // Already using HTTPS
+    } else {
+      res.redirect('https://' + req.headers.host + req.url); // Redirect to HTTPS
+    }
+  });
+}
 
 app.use((req, res, next) => {
   if (req.secure || process.env.NODE_ENV === 'development') {
@@ -56,7 +69,17 @@ const sslOptions = {
 
 // Connecting app to Mongoose
 mongoose.connect(db_url).then(async () => {
-    const server = https.createServer(sslOptions, app);
+  let server;
+  
+  if (process.env.NODE_ENV === 'development') {
+    // For development, run on HTTP at port 3005
+    server = http.createServer(app);
+    console.log('Development mode: Running on HTTP at port 3005');
+  } else {
+    // For production, run on HTTPS
+    server = https.createServer(sslOptions, app);
+    console.log('Production mode: Running on HTTPS');
+  }
 
     server.listen(port, () => {
       console.log(`HTTPS server is running on port ${port}`);
