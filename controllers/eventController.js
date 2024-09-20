@@ -593,7 +593,16 @@ async function createReservation(req, res, next) {
         })
 
         console.log("SendMessages.sendReminders");
-        SendMessages.sendReservationConfirmation(client[0], chalet, reservationToAdd);
+        // SendMessages.sendReservationConfirmation(client[0], chalet, reservationToAdd);
+        SendMessages.sendInstructions(client[0], chalet, idReserva)
+
+        const agenteQueReserva = await Usuario.findById(createdBy);
+        if (agenteQueReserva) {
+            if (agenteQueReserva.phone){
+                SendMessages.sendReservationConfirmation(agenteQueReserva, chalet, reservationToAdd);
+                console.log("Mensaje enviado al agente.")
+            }
+        }
 
         // Log
         const logBody = {

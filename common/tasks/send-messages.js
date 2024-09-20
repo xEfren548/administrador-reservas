@@ -5,7 +5,7 @@ const Pago = require("../../models/Pago");
 const pagoController = require('../../controllers/pagoController');
 const utilidadesController = require('../../controllers/utilidadesController');
 
-
+const moment = require('moment-timezone');
 const { format } = require('date-fns');
 const { es } = require('date-fns/locale');
 
@@ -64,13 +64,21 @@ function sendTemplateMsg(clientInfo, template, params) {
 }
 
 function sendReservationConfirmation(clientInfo, chaletInfo, reservationInfo) {
+    const formatArrivalDate = moment(reservationInfo.arrivalDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
+    const formatDepartureDate = moment(reservationInfo.departureDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
     console.log("sendReservationConfirmation");
 
     sendTemplateMsg(clientInfo, "confirmacion_de_reserva", [
         chaletInfo.propertyDetails.name,
-        reservationInfo.arrivalDate,
-        reservationInfo.departureDate
+        formatArrivalDate,
+        formatDepartureDate
     ])
+}
+
+function sendInstructions(clientInfo, chaletInfo, idReserva){
+    console.log(`Sending instructions`);
+    sendTemplateMsg(clientInfo, "purchase_receipt_1", [clientInfo.firstName, chaletInfo.propertyDetails.name, idReserva]);
+    
 }
 
 async function sendReminders() {
@@ -227,6 +235,7 @@ async function cancelReservation() {
 
 module.exports = {
     sendReservationConfirmation,
+    sendInstructions,
     sendReminders,
     sendThanks,
     cancelReservation

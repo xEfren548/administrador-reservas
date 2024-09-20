@@ -157,7 +157,7 @@ async function getAllUsersMongo(){
 
 async function createUser(req, res, next) {
     const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType } = req.body;
-    const mexPhone = `+52${phone}`
+    const mexPhone = `${phone}`
     const userToAdd = new Usuario ({
         firstName, lastName, email, phone: mexPhone, password, privilege, administrator,adminname, color, investorType
     });
