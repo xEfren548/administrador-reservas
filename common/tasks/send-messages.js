@@ -196,11 +196,6 @@ async function sendThanks() {
                 continue;
             }
 
-            // Filter by specific client ID
-            if (reservation.client && reservation.client.toString() !== "668c771c3b9c755c82fe5603") {
-                continue;
-            }
-
             console.log("Current date:", new Date());
             console.log("Reservation date:", reservation.arrivalDate);
 
