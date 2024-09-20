@@ -487,17 +487,27 @@ async function createReservation(req, res, next) {
         }
 
         const mongooseChaletId = new mongoose.Types.ObjectId(chalet._id);
-        console.log(fechaAjustada);
         const fechasBloqueadas = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId });
-        console.log(fechasBloqueadas);
         if (fechasBloqueadas) {
             if (nNights < fechasBloqueadas.min) {
                 return res.status(400).send({ message: `La estancia minima es de ${fechasBloqueadas.min} noches` });
             }
         }
 
+        console.log ("Arrival date before: ")
+        console.log(arrivalDate)
+
+        console.log("Departure date before: ")
+        console.log(departureDate)
+
         arrivalDate.setHours(arrivalDate.getHours() + chalet.others.arrivalTime.getHours());
         departureDate.setHours(departureDate.getHours() + chalet.others.departureTime.getHours());
+
+        console.log ("Arrival date after: ")
+        console.log(arrivalDate)
+
+        console.log("Departure date after: ")
+        console.log(departureDate)
 
         var reservationToAdd;
         var message;
@@ -592,6 +602,8 @@ async function createReservation(req, res, next) {
             idHabitacion: evento.resourceId
         })
 
+        /**
+
         console.log("SendMessages.sendReminders");
         SendMessages.sendReservationConfirmation(client[0], chalet, reservationToAdd);
         SendMessages.sendInstructions(client[0], chalet, idReserva)
@@ -603,6 +615,8 @@ async function createReservation(req, res, next) {
                 console.log("Mensaje enviado al agente.")
             }
         }
+
+        **/
 
         // Log
         const logBody = {

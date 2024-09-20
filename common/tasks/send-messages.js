@@ -84,14 +84,14 @@ function sendTemplateMsg(clientInfo, template, params, buttons = []) {
 }
 
 function sendReservationConfirmation(clientInfo, chaletInfo, reservationInfo) {
-    const formatArrivalDate = moment(reservationInfo.arrivalDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
-    const formatDepartureDate = moment(reservationInfo.departureDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
+    // const formatArrivalDate = moment(reservationInfo.arrivalDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
+    // const formatDepartureDate = moment(reservationInfo.departureDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
     console.log("sendReservationConfirmation");
 
     sendTemplateMsg(clientInfo, "confirmacion_de_reserva", [
         chaletInfo.propertyDetails.name,
-        formatArrivalDate,
-        formatDepartureDate
+        reservationInfo.arrivalDate,
+        reservationInfo.departureDate
     ])
 }
 

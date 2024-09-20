@@ -88,6 +88,7 @@ async function showInstructionsView(req, res, next) {
             throw new NotFoundError('Reservation does not exist');
         }
 
+        
         const client = await Cliente.findById(reservation.client.toString());
         if(!client){
             throw new NotFoundError('Client does not exist');
@@ -98,7 +99,19 @@ async function showInstructionsView(req, res, next) {
         if(!chalet){
             throw new NotFoundError('Chalet does not exist');
         }
+        
+        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+        const arrivalDate = new Date(reservation.arrivalDate);
+        const departureDate = new Date(reservation.departureDate);
 
+        reservation.arrivalDate = arrivalDate.toISOString();
+        reservation.departureDate = departureDate.toISOString();
+
+        console.log("Fechassss: ")
+
+        
+        console.log(reservation)
+        
         res.render('paraUsuarios', {
             layout: 'layoutParaUsuarios',
             fullname: client.firstName + ' ' + client.lastName,
