@@ -26,14 +26,22 @@ function sendTemplateMsg(clientInfo, template, params, buttons = []) {
     const formatedParams = createParamsArray(params);
     console.log(formatedParams);
 
-    let components = formatedParams
+    let components = [
+        {
+            type: "body",
+            parameters: formatedParams
+        }
+    ]
 
     if (buttons.length > 0) {
         components.push({
             type: "button",
-            sub_type: "url", // For URL buttons
-            index: 0,
-            parameters: buttons
+            sub_type: "url",
+            index: "0",
+            parameters: [{
+                type: "text",
+                text: buttons[0].text
+            }],
         });
     }
     
@@ -96,9 +104,25 @@ function sendInstructions(clientInfo, chaletInfo, idReserva){
         [clientInfo.firstName, chaletInfo.propertyDetails.name, idReserva],
         [
             {
-                type: "web_url",
-                url: url,
-                title: "View Instructions"
+                text: idReserva
+
+            }
+        ]
+    );
+    
+}
+function sendSurveyToClient(clientInfo, chaletInfo, idReserva){
+    
+    console.log(`Sending instructions`);
+
+    sendTemplateMsg(
+        clientInfo, 
+        "encuesta_de_satisfaccion",
+        [chaletInfo.propertyDetails.name, idReserva],
+        [
+            {
+                text: idReserva
+
             }
         ]
     );
@@ -137,35 +161,75 @@ async function sendReminders() {
 }
 
 async function sendThanks() {
-    // console.log("--------------------------------------------------------------------------------");
-    // console.log("SENDIND THANKS");
-    var reservations = await Evento.findOne();
-    reservations = reservations.events;
+    // Fetch reservations and their events
+    const eventDocument = await Evento.findOne();
+    if (!eventDocument) {
+        console.log("No reservations found.");
+        return;
+    }
+    
+    let reservations = eventDocument.events;
+    if (!reservations || reservations.length === 0) {
+        console.log("No events in reservations.");
+        return;
+    }
 
-    if (reservations) {
-        for (const reservation of reservations) {
+    // Fetch all chalets once
+    const allChalets = await Habitacion.findOne();
+    if (!allChalets || !allChalets.resources) {
+        console.log("No chalets found.");
+        return;
+    }
 
+    // Process each reservation
+    for (const reservation of reservations) {
+        try {
             const client = await Cliente.findById(reservation.client);
             if (!client) {
-                // console.log(reservation.client, ': Client does not exist');
+                console.log(`Client ${reservation.client} does not exist.`);
                 continue;
             }
 
-            const chalet = await Habitacion.findById(reservation.chalet);
+            const chalet = allChalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
             if (!chalet) {
-                // console.log(reservation.resourceId, ': Chalet does not exist');
+                console.log(`Chalet ${reservation.resourceId} does not exist.`);
                 continue;
             }
 
-            console.log("Current date: ", new Date);
-            console.log("Reservation date: ", reservation.arrivalDate);
-            if (new Date() === reservation.departureDate.getTime()) {
-                console.log(`Sending thanks for reservation with departure date: ${reservation.departureDate}`);
-                sendTemplateMsg(client, "encuesta_de_satisfaccion", [chalet.propertyDetails.name]);
+            // Filter by specific client ID
+            if (reservation.client && reservation.client.toString() !== "668c771c3b9c755c82fe5603") {
+                continue;
             }
-        };
+
+            console.log("Current date:", new Date());
+            console.log("Reservation date:", reservation.arrivalDate);
+
+            // Check if thanks need to be sent
+            if (new Date() > reservation.departureDate.getTime() && reservation.status !== "cancelled" && (reservation.thanksSent === false || !reservation.thanksSent)) {
+                console.log(`Sending thanks for reservation with departure date: ${reservation.departureDate}`);
+                
+                // Send the thank-you message
+                sendTemplateMsg(
+                    client, 
+                    "encuesta_de_satisfaccion",
+                    [chalet.propertyDetails.name, reservation._id.toString()],
+                    [
+                        { text: reservation._id.toString() }
+                    ]
+                );
+
+                // Mark thanks as sent
+                reservation.thanksSent = true;
+            }
+        } catch (error) {
+            console.log(`Error processing reservation ${reservation._id}:`, error);
+        }
     }
+
+    // Save the updated document
+    await eventDocument.save();
 }
+
 
 async function cancelReservation() {
     console.log("--------------------------------------------------------------------------------");
@@ -260,6 +324,7 @@ async function cancelReservation() {
 module.exports = {
     sendReservationConfirmation,
     sendInstructions,
+    sendSurveyToClient,
     sendReminders,
     sendThanks,
     cancelReservation

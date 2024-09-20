@@ -82,6 +82,10 @@ const reservaSchema = new Schema({
     },
     comisionVendedor: {
         type: Number
+    },
+    thanksSent: {
+        type: Boolean,
+        default: false
     }
 });
 
