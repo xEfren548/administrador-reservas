@@ -196,8 +196,8 @@ async function sendThanks() {
                 continue;
             }
 
-            console.log("Current date:", new Date());
-            console.log("Reservation date:", reservation.arrivalDate);
+            // console.log("Current date:", new Date());
+            // console.log("Reservation date:", reservation.arrivalDate);
 
             // Check if thanks need to be sent
             if (new Date() > reservation.departureDate.getTime() && reservation.status !== "cancelled" && (reservation.thanksSent === false || !reservation.thanksSent)) {

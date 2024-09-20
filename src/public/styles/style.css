@@ -795,3 +795,8 @@ ul.rb li .timestamp {
     padding-bottom: 40px; /* Adjust padding as needed */
     text-align: center;
 }
+
+.my-font {
+    font-family: "Overpass", sans-serif !important;
+
+}
