@@ -570,7 +570,7 @@ async function createReservation(req, res, next) {
         const documento2 = await Documento.findOne()
 
         const idReserva = documento.events[documento.events.length - 1]._id.toString();
-        const url = `http://${process.env.URL}/api/eventos/${idReserva}`;
+        const url = `https://${process.env.URL}/api/eventos/${idReserva}`;
         const evento = documento2.events.find(habitacion => habitacion.id === idReserva);
 
         evento.url = url;
@@ -694,7 +694,7 @@ async function createOwnerReservation(req, res, next) {
         const documento2 = await Documento.findOne()
 
         const idReserva = documento.events[documento.events.length - 1]._id.toString();
-        const url = `http://${process.env.URL}/api/eventos/${idReserva}`;
+        const url = `https://${process.env.URL}/api/eventos/${idReserva}`;
         const evento = documento2.events.find(habitacion => habitacion.id === idReserva);
 
         evento.url = url;

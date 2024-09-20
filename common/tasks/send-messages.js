@@ -18,7 +18,7 @@ function createParamsArray(params) {
     })
 }
 
-function sendTemplateMsg(clientInfo, template, params) {
+function sendTemplateMsg(clientInfo, template, params, buttons = []) {
     console.log("sendTemplateMsg");
 
     const botId = '368142649713367';
@@ -26,7 +26,24 @@ function sendTemplateMsg(clientInfo, template, params) {
     const formatedParams = createParamsArray(params);
     console.log(formatedParams);
 
+    let components = formatedParams
+
+    if (buttons.length > 0) {
+        components.push({
+            type: "button",
+            sub_type: "url", // For URL buttons
+            index: 0,
+            parameters: buttons
+        });
+    }
+    
+
     const url = 'https://graph.facebook.com/v15.0/' + botId + '/messages';
+
+    console.log("COMPONTENS: ******")
+    console.log(components);
+
+    
     const data = {
         messaging_product: 'whatsapp',
         to: clientInfo.phone,
@@ -34,12 +51,7 @@ function sendTemplateMsg(clientInfo, template, params) {
         template: {
             name: template,
             language: { code: 'es_MX' },
-            components: [
-                {
-                    type: "body",
-                    parameters: formatedParams
-                }
-            ]
+            components: components
         }
     };
 
@@ -76,8 +88,20 @@ function sendReservationConfirmation(clientInfo, chaletInfo, reservationInfo) {
 }
 
 function sendInstructions(clientInfo, chaletInfo, idReserva){
+    const url = `https://nynhoteles.com.mx/instrucciones/${idReserva}`
     console.log(`Sending instructions`);
-    sendTemplateMsg(clientInfo, "purchase_receipt_1", [clientInfo.firstName, chaletInfo.propertyDetails.name, idReserva]);
+    sendTemplateMsg(
+        clientInfo, 
+        "purchase_receipt_1",
+        [clientInfo.firstName, chaletInfo.propertyDetails.name, idReserva],
+        [
+            {
+                type: "web_url",
+                url: url,
+                title: "View Instructions"
+            }
+        ]
+    );
     
 }
 
