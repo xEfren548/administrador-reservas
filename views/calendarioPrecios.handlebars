@@ -2429,9 +2429,7 @@ document.getElementById('habitacion-select').addEventListener('change', function
 
     	// Insertar las fechas y precios de la habitación seleccionada
     	while (currentDate <= endDate) {
-			console.log(currentDate)
 			const dayOfWeek = currentDate.getDay();
-			console.log(dayOfWeek)
 			const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     	    // Crear un th para cada día
     	    const th = document.createElement('th');
