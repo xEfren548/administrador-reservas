@@ -459,69 +459,6 @@
 						</div>
 					</div>
 
-					<div class="row mb-2">
-						<h3 class="mt-2">Referencias</h3>
-						<div class="col-3">
-							<label for="precio-base-input">Precio Base Estándar</label>
-							<div class="input-group">
-								<input type="number" name="precio-base-input" id="precio-base-input-persona-id"
-									class="text-center form-control form-control-sm text-black fw-bold" value="0"
-									disabled>
-								<div class="input-group-append">
-									<div class="input-group-append">
-										<span class="input-group-text" style="font-size: 15px;">
-											<i class="fa fa-dollar" aria-hidden="true"></i>
-										</span>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="col-3">
-							<label for="precio-base-input">Precio Base 2+ noches</label>
-							<div class="input-group">
-								<input type="number" name="precio-base2+-input" id="precio-base2+input-persona-id"
-									class="text-center form-control form-control-sm text-black fw-bold" value="0"
-									disabled>
-								<div class="input-group-append">
-									<div class="input-group-append">
-										<span class="input-group-text" style="font-size: 15px;">
-											<i class="fa fa-dollar" aria-hidden="true"></i>
-										</span>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="col-3">
-							<label for="precio-base-input">Costo Base</label>
-							<div class="input-group">
-								<input type="number" name="costo-base-input" id="costo-base-input-persona-id"
-									class="text-center form-control form-control-sm text-black fw-bold" value="0"
-									disabled>
-								<div class="input-group-append">
-									<div class="input-group-append">
-										<span class="input-group-text" style="font-size: 15px;">
-											<i class="fa fa-dollar" aria-hidden="true"></i>
-										</span>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="col-3">
-							<label for="precio-base-input">Costo Base 2+ noches</label>
-							<div class="input-group">
-								<input type="number" name="costo-base2+-input" id="costo-base2+input-persona-id"
-									class="text-center form-control form-control-sm text-black fw-bold" value="0"
-									disabled>
-								<div class="input-group-append">
-									<div class="input-group-append">
-										<span class="input-group-text" style="font-size: 15px;">
-											<i class="fa fa-dollar" aria-hidden="true"></i>
-										</span>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
 					<div class="mb-2">
 						<div class="row mb-2">
 							<h3>Agregar precios</h3>
@@ -1573,6 +1510,8 @@
 						diasSeleccionados.push(checkbox.value);
 					}
 				});
+				
+				console.log("dias seleccionados: ", diasSeleccionados)
 
 				const costoBase = habitacionAmodificar.getAttribute('data-costo-base');
 				const costoBase2noches = habitacionAmodificar.getAttribute('data-costo-base2+noches');
@@ -1718,6 +1657,7 @@
 
 
 				const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
+				console.log(fechas)
 				try {
 					// Realizar el fetch repetido para cada fecha en el rango
 					document.getElementById('spinner-agregarprecios').style.display = 'block';
@@ -1854,13 +1794,16 @@
 			function obtenerRangoFechas(fechaInicio, fechaFin) {
 				const fechas = [];
 				let fechaActual = new Date(fechaInicio);
+				console.log("Fecha actual obtener rango fechas: ", fechaActual)
 
 				while (fechaActual <= fechaFin) {
+					console.log(diasSeleccionados.includes(obtenerNombreDia(fechaActual)))
 					if (diasSeleccionados.includes(obtenerNombreDia(fechaActual))) {
 						fechas.push(new Date(fechaActual));
 					}
 					fechaActual.setDate(fechaActual.getDate() + 1);
 				}
+			
 				return fechas;
 			}
 
@@ -1889,7 +1832,7 @@
 
 			// Función para obtener el nombre del día de la semana
 			function obtenerNombreDia(fecha) {
-				const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+				const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 				return diasSemana[fecha.getDay()];
 			}
 
@@ -1997,7 +1940,7 @@
 
 
 		// Función para determinar si una fecha es viernes, sábado o domingo
-		function esFinDeSemana(fechaStr) {
+		function esFinDeSemana(fechaStr) {	
 			const partesFecha = fechaStr.split(" ");
 			const dia = parseInt(partesFecha[0]);
 			const mes = partesFecha[1];
@@ -2273,7 +2216,7 @@
 
 
 		function obtenerNombreDia(fecha) {
-			const diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+			const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 			return diasSemana[fecha.getDay()];
 		}
 
@@ -2486,7 +2429,9 @@ document.getElementById('habitacion-select').addEventListener('change', function
 
     	// Insertar las fechas y precios de la habitación seleccionada
     	while (currentDate <= endDate) {
+			console.log(currentDate)
 			const dayOfWeek = currentDate.getDay();
+			console.log(dayOfWeek)
 			const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     	    // Crear un th para cada día
     	    const th = document.createElement('th');

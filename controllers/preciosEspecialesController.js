@@ -137,7 +137,7 @@ async function eliminarRegistroPrecio(req, res) {
         const resultado = await PreciosEspeciales.findOneAndDelete({ fecha: fechaAjustada, habitacionId: habitacionId, noPersonas });
 
         if (!resultado) {
-            return res.status(404).json({ message: 'No se encontró ningún registro para eliminar' });
+            return res.status(200).json({});
         }
 
         res.status(200).json({ message: 'Registro eliminado correctamente' });
