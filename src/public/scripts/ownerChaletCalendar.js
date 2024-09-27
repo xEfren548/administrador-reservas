@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         title: event.title,
                         start: new Date(event.arrivalDate),
                         end: new Date(event.departureDate),
-                        url: event.url,
+                        // url: event.url,
                         total: event.total,
                         clientId: event.client,
                         status: event.status,
