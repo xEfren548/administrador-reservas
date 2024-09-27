@@ -1640,6 +1640,15 @@
 
                         }
                     })
+                } else {
+                    const data = await response.json()
+                    console.log(data.error)
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error,
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
             }
         } catch (error) {

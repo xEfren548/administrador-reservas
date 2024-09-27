@@ -1074,6 +1074,9 @@ async function moveToPlayground(req, res) {
         }
 
         if (evento.status === 'active' && status === 'cancelled') {
+            if (req.session.privilege !== "Administrador"){
+                throw new Error("Solo los administradores pueden cancelar reservas.")
+            }
             const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
 
             const pagos = await pagoController.obtenerPagos(idReserva);
@@ -1122,6 +1125,11 @@ async function moveToPlayground(req, res) {
             }
         }
 
+        if (status === "cancelled"){
+            if (req.session.privilege !== "Administrador"){
+                throw new Error("Solo los administradores pueden cancelar reservas.")
+            }
+        }   
         evento.status = status;
         const confirmation = await eventosExistentes.save();
         if (!confirmation) {
@@ -1145,7 +1153,8 @@ async function moveToPlayground(req, res) {
         res.status(200).json({ mensaje: 'Evento movido al playground correctamente', reserva: evento });
 
     } catch (error) {
-        res.status(500).send({ error: 'Error al mover al playground: ' + error.message });
+        console.log(error);
+        res.status(500).send({ error: 'Error al modificar status: ' + error });
     }
 }
 
