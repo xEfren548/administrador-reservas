@@ -6,6 +6,7 @@ const logController = require('../controllers/logController');
 const utilidadesController = require('../controllers/utilidadesController');
 const pagoController = require('../controllers/pagoController');
 const BloqueoFechas = require('../models/BloqueoFechas');
+const BloqueoInversionistas = require('../models/BloqueoInversionistas');
 const mongoose = require('mongoose');
 const { format } = require('date-fns');
 const moment = require('moment');
@@ -646,6 +647,13 @@ async function createOwnerReservation(req, res, next) {
         const privilege = req.session.privilege;
         const investorId = req.session.id
         console.log(req.session)
+
+        const chalets = await Habitacion.findOne();
+        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+        if (!chalet) {
+            throw new NotFoundError('Chalet does not exist 2');
+        }
+
         if (privilege === "Inversionistas") {
             // Definicion de reglas de inversionistas
             const documento = await Documento.findOne();
@@ -673,12 +681,15 @@ async function createOwnerReservation(req, res, next) {
             if (nNights > 4) {
                 throw new Error('No puedes reservar más de 4 noches, intenta de nuevo.')
             }
+            console.log(arrivalDate)
+            console.log(departureDate)
+            const fechasBloqueadas = await BloqueoInversionistas.find({date: { $gte: arrivalDate, $lte: departureDate }, habitacionId: chalet._id});
+            console.log(fechasBloqueadas)
+            if (fechasBloqueadas.length > 0) {
+                throw new Error('Fechas bloqueadas para esas fechas, por favor intenta de nuevo con otras.')
+            }
         }
-        const chalets = await Habitacion.findOne();
-        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
-        if (!chalet) {
-            throw new NotFoundError('Chalet does not exist 2');
-        }
+
 
         var reservationToAdd;
 
