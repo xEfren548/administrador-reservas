@@ -1,7 +1,7 @@
 const today = new Date();
 let currentMonth = today.getMonth();
 let currentYear = today.getFullYear();
-const monthsToShow = 24; // Mostrar 2 años
+const monthsToShow = 36; // Mostrar 2 años
 
 // Arreglo para almacenar todas las fechas generadas
 const dateArray = [];

@@ -42,9 +42,7 @@ const createReservationValidators = [
             const departureDate = new Date(req.body.departureDate);
             const currentDate = new Date();
 
-            if (arrivalDate <= currentDate) {
-                throw new BadRequestError('Arrival date must be after the current date');
-            }
+
             if (arrivalDate >= departureDate) {
                 throw new BadRequestError('Departure date must be after arrival date');
             }
@@ -99,9 +97,7 @@ const createOwnersReservationValidators = [
             const departureDate = new Date(req.body.departureDate);
             const currentDate = new Date();
 
-            if (arrivalDate <= currentDate) {
-                throw new BadRequestError('Arrival date must be after the current date');
-            }
+
             if (arrivalDate >= departureDate) {
                 throw new BadRequestError('Departure date must be after arrival date');
             }
