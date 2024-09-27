@@ -1,0 +1,352 @@
+<div class="pre-loader"></div>
+
+<h1 class="ml-2"> Calendario de bloqueo de fechas para inversionistas</h1>
+<div class="calendar-header">
+    <div class="bg-dark mb-3">
+        <a name="" id="acciones-btn" class="btn btn-info btn-sm m-3" href="#" role="button" data-bs-toggle="modal"
+            data-bs-target="#acciones_modal">Acciones</a>
+        <a name="" id="eliminar-precios-openmodalbtn" class="btn btn-secondary btn-sm " href="#" role="button"
+			data-bs-toggle="modal" data-bs-target="#delete-prices-modal">Eliminar precios</a>
+    </div>
+</div>
+
+<div class="color-label">
+    <div class="color-box" style="background-color: #f6ff00;"></div>
+    <span class="color-text">Fecha bloqueada</span>
+</div>
+
+{{#each chalets}}
+<div class="row d-flex bd-highlight mb-3">
+    <div class="me-auto p-2 bd-highlight">
+        <h2>{{this.name}}</h2>
+    </div>
+    <div class="ms-auto p-2 bd-highlight">
+        <a name="" id="cn-{{this.name}}" class="btn btn-primary hoy-btn" href="#" role="button"
+            data-chalet="{{this.name}}">Hoy</a>
+    </div>
+
+
+
+
+
+</div>
+<div class="container mb-3">
+    <div class="row calendar-container" id="calendar-container-{{this.name}}" style="color: black !important;"
+        data-id="{{this.id}}">
+    </div>
+</div>
+{{/each}}
+
+
+<div class="modal fade" id="acciones_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Bloqueo de fechas</h5>
+                <button type="button" class="close" onclick="$('#acciones_modal').modal('hide');" aria-label="Close">
+                    &times;
+
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div id="error-modal-persona" class="alert alert-danger" style="display: none;"></div>
+
+                    <div class="row mt-2 mb-2">
+                        <div class="col-8">
+                            <label for="select-cabana"><b>Selecciona una o más habitaciones: </b></label>
+                        </div>
+                    </div> <!-- Cierre row -->
+                    {{#each chalets}}
+                    <div class="form-check form-check-inline">
+						<input
+							class="checkboxes-chalets"
+							type="checkbox"
+							id="{{this.id}}"
+							value="{{this.id}}"
+							name="chkb-{{this.id}}"
+						/>
+						<label class="form-check-label" for="chkb-{{this.id}}">{{this.name}}</label>
+					</div>
+                    {{/each}}
+                    <div class="row">
+
+                        <div class="col-12 mb-2 mt-2">
+                            <div class="form-group">
+                                <label for="rango-fechas">Rango de fechas: </label>
+                                <div class="row ">
+                                    <div class="col-3">
+                                        <input type="date" name="fecha-inicio" id="fecha-inicio" class="form-control"
+                                            placeholder="Contraseña" required>
+
+                                    </div>
+                                    <div class="col-2 text-center">
+                                        <p>Hasta</p>
+
+                                    </div>
+                                    <div class="col-3">
+                                        <input type="date" name="fecha-fin" id="fecha-fin" class="form-control"
+                                            required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div> <!-- Cierre row -->
+
+                    <div class="mb-2">
+                        <div class="row mb-2">
+                            <label for="dias-concretos">¿Quieres aplicar esta tarifa a unos dias concretos?</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general" type="checkbox" id="checkbox-lunes"
+                                value="lunes" checked>
+                            <label class="form-check-label" for="lunes">Lunes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general" type="checkbox" id="checkbox-martes"
+                                value="martes" checked>
+                            <label class="form-check-label" for="martes">Martes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general" type="checkbox" id="checkbox-miercoles"
+                                value="miercoles" checked>
+                            <label class="form-check-label" for="miercoles">Miércoles</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general" type="checkbox" id="checkbox-jueves"
+                                value="jueves" checked>
+                            <label class="form-check-label" for="jueves">Jueves</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general" type="checkbox" id="checkbox-viernes"
+                                value="viernes" checked>
+                            <label class="form-check-label" for="viernes">Viernes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general" type="checkbox" id="checkbox-sabado"
+                                value="sabado" checked>
+                            <label class="form-check-label" for="sabado">Sábado</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general" type="checkbox" id="checkbox-domingo"
+                                value="domingo" checked>
+                            <label class="form-check-label" for="domingo">Domingo</label>
+                        </div>
+
+
+                    </div>
+
+                    <div class="row mt-2">
+                        <small>IMPORTANTE: Este será el nuevo registro, por lo que si hay alguno anterior para esas
+                            fechas, se
+                            eliminará.</small>
+                    </div>
+
+                </div> <!-- Cierre IMG Container -->
+            </div> <!--Cierre MODAL BODY -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add-bloqueadas-btn">Agregar</button>
+                <div class="spinner-border" role="status" id="spinner">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Modal Alta usuario -->
+
+<!-- Modal eliminar precios -->
+
+<div class="modal fade" id="delete-prices-modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+	aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="modalLabel">Eliminar precios</h5>
+				<button type="button" class="close" onclick="$('#delete-prices-modal').modal('hide');"
+					aria-label="Close">
+					&times;
+
+			</div>
+			<div class="modal-body">
+				<div class="img-container">
+					<div id="error-modal-persona" class="alert alert-danger" style="display: none;"></div>
+
+						<div id="div-preciogeneral">
+
+							<div class="row mt-2 mb-2">
+								<div class="col-8 ml-1">
+									<div class="mb-3">
+										<label for="select-cabana">Habitación a modificar: </label>
+										<select name="select-cabana" id="select-cabana-eliminargenerales"
+											class="form-select form-select-md" required>
+											<option value="" selected disabled> Selecciona una cabaña para eliminar
+												precios --
+											</option>
+											{{#if chalets}}
+											{{#each chalets}}
+											<option value="{{this.id}}">
+												{{this.name}}
+											</option>
+
+											{{/each}}
+											{{else}}
+											<option value="0">No se encontraron habitaciones</option>
+											{{/if}}
+										</select>
+
+									</div>
+								</div>
+							</div>
+							<div class="row mr-1">
+
+								<div class="col-12 mb-2 mt-2 ml-1">
+									<div class="form-group">
+										<label for="rango-fechas">Rango de fechas: </label>
+										<div class="row ">
+											<div class="col-3">
+												<input type="date" name="fecha-inicio-eliminar"
+													id="fecha-inicio-eliminar" class="form-control" required>
+
+											</div>
+											<div class="col-2 text-center">
+												<p>Hasta</p>
+
+											</div>
+											<div class="col-3">
+												<input type="date" name="fecha-fin-eliminar"
+													id="fecha-fin-eliminar" class="form-control" required>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="mb-2">
+								<div class="row mb-2 ml-1">
+									<label for="dias-concretos">¿Quieres aplicar esta tarifa a unos dias
+										concretos?</label>
+								</div>
+								<div class="ml-2">
+
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-lunes-eliminar" value="lunes" checked>
+										<label class="form-check-label" for="lunes">Lunes</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-martes-eliminar" value="martes" checked>
+										<label class="form-check-label" for="martes">Martes</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-miercoles-eliminar" value="miercoles" checked>
+										<label class="form-check-label" for="miercoles">Miércoles</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-jueves-eliminar" value="jueves" checked>
+										<label class="form-check-label" for="jueves">Jueves</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-viernes-eliminar" value="viernes" checked>
+										<label class="form-check-label" for="viernes">Viernes</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-sabado-eliminar" value="sabado" checked>
+										<label class="form-check-label" for="sabado">Sábado</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-domingo-eliminar" value="domingo" checked>
+										<label class="form-check-label" for="domingo">Domingo</label>
+									</div>
+								</div>
+
+
+							</div>
+
+
+						</div> <!-- Cierre row div precios -->
+
+					</div> <!-- Cierre IMG Container -->
+				</div> <!--Cierre MODAL BODY -->
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" id="delete-prices-btn">Eliminar Fechas</button>
+					<div class="spinner-border" role="status" id="spinner">
+						<span class="visually-hidden">Loading...</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+
+
+
+<script>
+    document.addEventListener('click', (event) => {
+        if (event.target.classList.contains('restricted')) {
+            const description = event.target.getAttribute('data-description');
+            alert(description);
+        }
+    });
+
+    function goToCurrentMonth(name) {
+
+        const currentMonthElement = document.getElementById(`current-month-calendar-container-${name}`);
+        if (currentMonthElement) {
+            currentMonthElement.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    function scrollToCurrentMonth() {
+        const currentMonthName = today.toLocaleString('es-ES', { month: 'long' });
+        const currentYear = today.getFullYear();
+
+        const calendarContainers = document.querySelectorAll('[id^="calendar-container-"]');
+
+        calendarContainers.forEach(container => {
+            const monthHeaders = container.querySelectorAll('.month-header');
+            monthHeaders.forEach(header => {
+                if (header.textContent.trim().toLowerCase() === `${currentMonthName} ${currentYear}`.toLowerCase()) {
+                    setTimeout(() => {
+                        header.scrollIntoView({ behavior: 'smooth' });
+                    }, 0);
+                }
+            });
+        });
+    }
+
+    const hoyButtons = document.querySelectorAll('.hoy-btn');
+
+    hoyButtons.forEach(button => {
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+
+            const chaletName = this.getAttribute('data-chalet');
+
+            const currentMonthName = today.toLocaleString('es-ES', { month: 'long' });
+            const currentYear = today.getFullYear();
+
+            const calendarContainer = document.getElementById(`calendar-container-${chaletName}`);
+
+            const monthHeaders = calendarContainer.querySelectorAll('.month-header');
+            monthHeaders.forEach(header => {
+                if (header.textContent.trim().toLowerCase() === `${currentMonthName} ${currentYear}`.toLowerCase()) {
+                    setTimeout(() => {
+                        header.scrollIntoView({ behavior: 'smooth', block: "nearest", inline: "center" });
+                    }, 0);
+                }
+            });
+        });
+
+    })
+</script>
+
+<script src="/scripts/blockCalendarInv.js"></script>

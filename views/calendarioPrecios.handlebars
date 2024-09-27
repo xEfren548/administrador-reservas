@@ -10,7 +10,7 @@
 		<a name="" id="agregar-precios-xpersona" class="btn btn-secondary btn-sm mr-3" href="#" role="button"
 			data-bs-toggle="modal" data-bs-target="#preciosxpersona_modal">Agregar precios por personas</a>
 		<a name="" id="eliminar-precios-openmodalbtn" class="btn btn-secondary btn-sm " href="#" role="button"
-			data-bs-toggle="modal" data-bs-target="#delete-prices-modal">Eliminar precios</a>
+			data-bs-toggle="modal" data-bs-target="#delete-prices-modal">Eliminar fechas</a>
 	</div>
 </div>
 
@@ -741,7 +741,7 @@
 </div>
 <!-- End Modal Alta usuario -->
 
-<!-- Modal Actualizar precios -->
+<!-- Modal eliminar precios -->
 
 <div class="modal fade" id="delete-prices-modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
 	aria-hidden="true">
@@ -998,6 +998,7 @@
 			</div>
 		</div>
 	</div>
+</div>
 	<!-- End Modal -->
 
 	<script>
@@ -2273,7 +2274,7 @@
 
 
 		function obtenerNombreDia(fecha) {
-			const diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+			const diasSemana = ['domingo','lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 			return diasSemana[fecha.getDay()];
 		}
 
