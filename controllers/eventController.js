@@ -6,6 +6,7 @@ const logController = require('../controllers/logController');
 const utilidadesController = require('../controllers/utilidadesController');
 const pagoController = require('../controllers/pagoController');
 const BloqueoFechas = require('../models/BloqueoFechas');
+const BloqueoInversionistas = require('../models/BloqueoInversionistas');
 const mongoose = require('mongoose');
 const { format } = require('date-fns');
 const moment = require('moment');
@@ -41,9 +42,7 @@ const createReservationValidators = [
             const departureDate = new Date(req.body.departureDate);
             const currentDate = new Date();
 
-            if (arrivalDate <= currentDate) {
-                throw new BadRequestError('Arrival date must be after the current date');
-            }
+
             if (arrivalDate >= departureDate) {
                 throw new BadRequestError('Departure date must be after arrival date');
             }
@@ -98,9 +97,7 @@ const createOwnersReservationValidators = [
             const departureDate = new Date(req.body.departureDate);
             const currentDate = new Date();
 
-            if (arrivalDate <= currentDate) {
-                throw new BadRequestError('Arrival date must be after the current date');
-            }
+
             if (arrivalDate >= departureDate) {
                 throw new BadRequestError('Departure date must be after arrival date');
             }
@@ -646,6 +643,13 @@ async function createOwnerReservation(req, res, next) {
         const privilege = req.session.privilege;
         const investorId = req.session.id
         console.log(req.session)
+
+        const chalets = await Habitacion.findOne();
+        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+        if (!chalet) {
+            throw new NotFoundError('Chalet does not exist 2');
+        }
+
         if (privilege === "Inversionistas") {
             // Definicion de reglas de inversionistas
             const documento = await Documento.findOne();
@@ -673,12 +677,15 @@ async function createOwnerReservation(req, res, next) {
             if (nNights > 4) {
                 throw new Error('No puedes reservar más de 4 noches, intenta de nuevo.')
             }
+            console.log(arrivalDate)
+            console.log(departureDate)
+            const fechasBloqueadas = await BloqueoInversionistas.find({date: { $gte: arrivalDate, $lte: departureDate }, habitacionId: chalet._id});
+            console.log(fechasBloqueadas)
+            if (fechasBloqueadas.length > 0) {
+                throw new Error('Fechas bloqueadas para esas fechas, por favor intenta de nuevo con otras.')
+            }
         }
-        const chalets = await Habitacion.findOne();
-        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
-        if (!chalet) {
-            throw new NotFoundError('Chalet does not exist 2');
-        }
+
 
         var reservationToAdd;
 
@@ -1067,6 +1074,9 @@ async function moveToPlayground(req, res) {
         }
 
         if (evento.status === 'active' && status === 'cancelled') {
+            if (req.session.privilege !== "Administrador"){
+                throw new Error("Solo los administradores pueden cancelar reservas.")
+            }
             const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
 
             const pagos = await pagoController.obtenerPagos(idReserva);
@@ -1115,6 +1125,11 @@ async function moveToPlayground(req, res) {
             }
         }
 
+        if (status === "cancelled"){
+            if (req.session.privilege !== "Administrador"){
+                throw new Error("Solo los administradores pueden cancelar reservas.")
+            }
+        }   
         evento.status = status;
         const confirmation = await eventosExistentes.save();
         if (!confirmation) {
@@ -1138,7 +1153,8 @@ async function moveToPlayground(req, res) {
         res.status(200).json({ mensaje: 'Evento movido al playground correctamente', reserva: evento });
 
     } catch (error) {
-        res.status(500).send({ error: 'Error al mover al playground: ' + error.message });
+        console.log(error);
+        res.status(500).send({ error: 'Error al modificar status: ' + error });
     }
 }
 

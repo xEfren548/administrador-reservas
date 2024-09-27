@@ -31,6 +31,7 @@ const surveyProcessingRoutes = require('./surveyProcessingRoutes');
 const tipologiasRoutes = require('./tipologiasRoutes');
 const preciosEspecialesRoutes = require('./preciosEspecialesRoutes');
 const bloqueoFechasRoutes = require('./bloqueoFechasRoutes');
+const bloqueoInversionistasRoutes = require('./bloqueoInversionistasRoutes');
 
 const authMiddleware = require('../common/middlewares/authMiddleware');
 const CustomError = require("../common/error/custom-error");
@@ -69,6 +70,7 @@ router.use('/',
     logsRoutes
 );
 router.use('/', bloqueoFechasRoutes);
+router.use('/', bloqueoInversionistasRoutes);
 
 router.use('/api', 
     eventRoutes, 

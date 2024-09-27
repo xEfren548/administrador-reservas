@@ -212,6 +212,13 @@ async function generateSideMenu(req, res, next) {
                                     </a>
 
                                 </li>
+                                <li>
+                                    <a href="/calendario-bloqueofechasinversionistas" class="nav-link px-5" title="Calendario inversionistas">
+                                        <i class="fas fa-calendar-times"></i></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Calendario inversionistas</span>
+                                    </a>
+
+                                </li>
                             </ul>
                         </li>`;
                 }
