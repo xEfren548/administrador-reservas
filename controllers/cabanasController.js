@@ -767,9 +767,8 @@ async function showEditChaletsView(req, res, next) {
 }
 
 async function editChalet(req, res, next) {
-    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images } = req.body;
+    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images, txtChaletId } = req.body;
     console.log('Entrando a edit chalet');
-    console.log(propertyDetails)
 
     try {
         const [admin, janitor, owner] = await Promise.all([
@@ -799,7 +798,7 @@ async function editChalet(req, res, next) {
         const habitacion = await Habitacion.findOne();
         let chalets = habitacion.resources;
 
-        const indexToUpdate = chalets.findIndex(c => c.propertyDetails.name === propertyDetails.name);
+        const indexToUpdate = chalets.findIndex(c => c._id.toString() === txtChaletId.toString());
         if (indexToUpdate === -1) throw new NotFoundError("Chalet not found");
 
         const chaletId = chalets[indexToUpdate]._id; // Keep the original _id

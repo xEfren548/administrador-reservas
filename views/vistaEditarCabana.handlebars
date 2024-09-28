@@ -22,6 +22,7 @@
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#propertyDetails">+
         Detalles de la propiedad</button>
     <div id="propertyDetails" class="chalet-details collapse">
+        <input type="text" id="chaletId" value="{{this._id}}" hidden>
         <div class="input-group half">
             <label for="slctchaletAccomodationType">Tipo de alojamiento</label>
             <select id="slctchaletAccomodationType" name="slctchaletAccomodationType">
@@ -1150,6 +1151,7 @@
                 const selectedInvestors = Array.from(selectElement.selectedOptions).map(option => option.value);
                 console.log(selectedInvestors);
                 const data = {
+                    txtChaletId: form.querySelector('#chaletId').value.trim(),
                     propertyDetails: {
                         accomodationType: form.querySelector("#slctchaletAccomodationType").value.trim(),
                         name: form.querySelector("#txtChaletName").value.trim(),
