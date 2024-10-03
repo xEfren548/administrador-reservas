@@ -83,11 +83,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 //     background = 'bg-info';
                 //     textColor = 'text-black';
                 // }
-                const color = info.event.extendedProps.color || '#0dcaf0';
+                const color = info.backgroundColor || '#0dcaf0';
 
                 return {
                     html: `
-                    <div class="p-1 rounded bg-gradient text-black" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: 'Overpass', sans-serif; color: ${color};">
+                    <div class="p-1 rounded bg-gradient text-black" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: 'Overpass', sans-serif; background-color: ${color} !important;">
                         <div>Reserva</div>
                         <div><b>Total: $ ${info.event.extendedProps.total}</b></div>
                     </div>
