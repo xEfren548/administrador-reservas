@@ -338,3 +338,112 @@ agregarFechasBtn.addEventListener("click", async (e) => {
     
 });
 
+$('#delete-prices-btn').on('click', async () => {
+    console.log("Btn eliminar fechas")
+    const chaletId = $('#select-cabana-eliminargenerales').val()
+    console.log(chaletId)
+
+    const fechaInicioString = document.querySelector('#fecha-inicio-eliminar').value; // Obtener el valor del input de tipo date
+    const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
+    const fechaFinString = document.querySelector('#fecha-fin-eliminar').value; // Obtener el valor del input de tipo date
+    const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
+
+    const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-eliminar');
+    const diasSeleccionados = [];
+    checkboxes.forEach(function (checkbox) {
+        if (checkbox.checked) {
+            diasSeleccionados.push(checkbox.value);
+        }
+    });
+
+    const fechas = obtenerRangoFechas(fechaInicio, fechaFin, diasSeleccionados);
+    let resultados = []
+
+    for (const fecha of fechas){
+
+        try {
+            let formattedDate = formatDate(fecha)
+            const response = await fetch(`/api/calendario-bloqueofechas?fecha=${formattedDate}&habitacionId=${chaletId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+
+            if (!response.ok){
+                throw new Error('Error en la solicitud fetch: '+ response.message);
+            }
+            const data = await response.json();
+            console.log(data);
+            resultados.push(data);
+        } catch (error) {
+            console.log(error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Hubo un problema al eliminar los precios. Por favor, verifica que todos los campos están completos o intenta de nuevo más tarde.',
+                confirmButtonText: 'Aceptar'
+            })
+            return;
+        }
+    }
+
+    console.log(resultados)
+    const allEmpty = resultados.every(obj => Object.keys(obj).length === 0);
+
+    if (!allEmpty) {
+        Swal.fire({
+            icon: 'success',
+            title: "¡Completado!",
+            text: 'Fechas eliminadas correctamente.',
+            confirmButtonText: 'Aceptar'
+        }).then((result) => {
+            if (result.isConfirmed){
+                // Actualizar la página
+                location.reload();
+            }
+        })
+    } else {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No hay fechas seleccionadas para eliminar.',
+            confirmButtonText: 'Aceptar'
+        })
+    }
+
+
+})
+
+function obtenerRangoFechas(fechaInicio, fechaFin, diasSeleccionados) {
+    const fechas = [];
+    let fechaActual = new Date(fechaInicio);
+
+
+    while (fechaActual <= fechaFin) {
+        if (diasSeleccionados.includes(obtenerNombreDia(fechaActual))) {
+            fechas.push(new Date(fechaActual.getTime())); // Create a new Date instance
+            console.log(fechaActual); // This will now log unique dates
+        } else {
+            console.log(fechaActual, "No esta incluida"); // This will now log
+        }
+        fechaActual.setDate(fechaActual.getDate() + 1);
+    }
+
+    console.log(fechas);
+    return fechas;
+}
+
+
+function obtenerNombreDia(fecha) {
+    const diasSemana = ['domingo','lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    return diasSemana[fecha.getDay()];
+}
+
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+    const day = date.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+    return `${year}-${month}-${day}`;
+}
+

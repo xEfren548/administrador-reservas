@@ -5,6 +5,8 @@
     <div class="bg-dark mb-3">
         <a name="" id="acciones-btn" class="btn btn-info btn-sm m-3" href="#" role="button" data-bs-toggle="modal"
             data-bs-target="#acciones_modal">Acciones</a>
+        <a name="" id="eliminar-precios-openmodalbtn" class="btn btn-secondary btn-sm " href="#" role="button"
+			data-bs-toggle="modal" data-bs-target="#delete-prices-modal">Eliminar bloqueos</a>
     </div>
 </div>
 
@@ -174,7 +176,134 @@
 <!-- End Modal Alta usuario -->
 
 
+<!-- Modal eliminar precios -->
 
+<div class="modal fade" id="delete-prices-modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+	aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="modalLabel">Eliminar precios</h5>
+				<button type="button" class="close" onclick="$('#delete-prices-modal').modal('hide');"
+					aria-label="Close">
+					&times;
+
+			</div>
+			<div class="modal-body">
+				<div class="img-container">
+					<div id="error-modal-persona" class="alert alert-danger" style="display: none;"></div>
+
+						<div id="div-preciogeneral">
+
+							<div class="row mt-2 mb-2">
+								<div class="col-8 ml-1">
+									<div class="mb-3">
+										<label for="select-cabana">Habitación a modificar: </label>
+										<select name="select-cabana" id="select-cabana-eliminargenerales"
+											class="form-select form-select-md" required>
+											<option value="" selected disabled> Selecciona una cabaña para eliminar
+												precios --
+											</option>
+											{{#if chalets}}
+											{{#each chalets}}
+											<option value="{{this.id}}">
+												{{this.name}}
+											</option>
+
+											{{/each}}
+											{{else}}
+											<option value="0">No se encontraron habitaciones</option>
+											{{/if}}
+										</select>
+
+									</div>
+								</div>
+							</div>
+							<div class="row mr-1">
+
+								<div class="col-12 mb-2 mt-2 ml-1">
+									<div class="form-group">
+										<label for="rango-fechas">Rango de fechas: </label>
+										<div class="row ">
+											<div class="col-3">
+												<input type="date" name="fecha-inicio-eliminar"
+													id="fecha-inicio-eliminar" class="form-control" required>
+
+											</div>
+											<div class="col-2 text-center">
+												<p>Hasta</p>
+
+											</div>
+											<div class="col-3">
+												<input type="date" name="fecha-fin-eliminar"
+													id="fecha-fin-eliminar" class="form-control" required>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="mb-2">
+								<div class="row mb-2 ml-1">
+									<label for="dias-concretos">¿Quieres aplicar esta tarifa a unos dias
+										concretos?</label>
+								</div>
+								<div class="ml-2">
+
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-lunes-eliminar" value="lunes" checked>
+										<label class="form-check-label" for="lunes">Lunes</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-martes-eliminar" value="martes" checked>
+										<label class="form-check-label" for="martes">Martes</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-miercoles-eliminar" value="miercoles" checked>
+										<label class="form-check-label" for="miercoles">Miércoles</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-jueves-eliminar" value="jueves" checked>
+										<label class="form-check-label" for="jueves">Jueves</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-viernes-eliminar" value="viernes" checked>
+										<label class="form-check-label" for="viernes">Viernes</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-sabado-eliminar" value="sabado" checked>
+										<label class="form-check-label" for="sabado">Sábado</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input chk-eliminar" type="checkbox"
+											id="checkbox-domingo-eliminar" value="domingo" checked>
+										<label class="form-check-label" for="domingo">Domingo</label>
+									</div>
+								</div>
+
+
+							</div>
+
+
+						</div> <!-- Cierre row div precios -->
+
+					</div> <!-- Cierre IMG Container -->
+				</div> <!--Cierre MODAL BODY -->
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" id="delete-prices-btn">Eliminar Fechas</button>
+					<div class="spinner-border" role="status" id="spinner">
+						<span class="visually-hidden">Loading...</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 
 
 
