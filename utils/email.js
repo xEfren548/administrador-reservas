@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 
 function sendPassword(email, password, privilege) {
-    const message = "Hemos recibido una solicitud de creación de usuario para el sistema web de Cabañas Navarro con privilegio de [privilege] para esta dirección de correo electrónico.";
+    const message = "Hemos recibido una solicitud de creación de usuario para el sistema web de N&N Hoteles con privilegio de [privilege] para esta dirección de correo electrónico.";
     let htmlContent  = fs.readFileSync("views/templates/emailUserPwd.html", 'utf8');
     
     htmlContent = htmlContent.replace("[message]", message);
@@ -20,7 +20,7 @@ function sendPassword(email, password, privilege) {
     });
 
     const mailOptions = {
-        from: '"Cabañas Navarro" <no-reply@jfsoluciones.com.mx>',
+        from: '"N&N Hoteles" <no-reply@jfsoluciones.com.mx>',
         to: email,
         subject: "Creación de usuario",
         html: htmlContent
