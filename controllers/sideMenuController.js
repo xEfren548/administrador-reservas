@@ -59,6 +59,7 @@ async function generateSideMenu(req, res, next) {
             ],
             'Inversionistas': [
                 // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                { 'Mis Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
                 { 'Calendario': ["/api/calendar/colaboradorduenos", "fs-5 fa fa-calendar"] },
 
             ],

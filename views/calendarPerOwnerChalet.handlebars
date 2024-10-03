@@ -1,6 +1,6 @@
 <div class="row flex-nowrap justify-content-center mt-3" style="width: 100%;">
     <div class="col-12">
-        <h1>Calendario de Habitaciones de Dueños</h1>
+        <h1>Calendario de Habitaciones de Dueños/Inversionistas</h1>
 
         <label for="tipologia_habitacion" class="form-label">Tipologia</label>
         <select name="tipologia_habitacion" id="tipologia_habitacion" class="form-select form-select-md" required>
@@ -26,7 +26,12 @@
                 </li>
             </ul>
         </div>
+    
+    {{#if (eq privilege 'Inversionistas')}}
+    <a name="" id="" class="btn btn-primary mt-5" href="/api/calendar/colaboradorduenos" role="button">Cambiar a vista de tabla</a>
+    {{else}}
     <a name="" id="" class="btn btn-primary mt-5" href="/api/calendar/duenos" role="button">Cambiar a vista de tabla</a>
+    {{/if}}
     </div>
 </div>
 

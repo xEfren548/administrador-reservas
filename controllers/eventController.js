@@ -452,7 +452,8 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
         res.render('vistaColaboradorDuenos', {
             eventos: eventosFiltradosOrdenadosConPagos,
-            chalets: habitacionesDueno
+            chalets: habitacionesDueno,
+            privilege: privilege
         });
 
     } catch (error) {

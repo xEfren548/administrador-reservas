@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const mongoose = require('mongoose');
 const moment = require("moment-timezone");
 const Habitacion = require('../models/Habitacion');
 const logController = require('../controllers/logController')
@@ -928,6 +929,7 @@ async function renderCalendarPerChalet(req, res, next) {
 
 async function renderCalendarPerChaletOwner(req, res, next) {
     try {
+        const privilege = req.session.privilege;
         const duenoId = req.session.id;
 
         // Find the existing rooms   
@@ -936,8 +938,20 @@ async function renderCalendarPerChaletOwner(req, res, next) {
             return res.status(404).send('No rooms found');
         }
 
+        
+
+        const mDuenoId = new mongoose.Types.ObjectId(duenoId);
+
         // // Filter the rooms that belong to the owner
-        const habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
+        let habitacionesDueno;
+        if (privilege === "Inversionistas") {
+            habitacionesDueno = habitacionesExistentes.resources.filter(habitacion =>
+                habitacion.others.investors.some(investor => investor.equals(mDuenoId))
+            ); 
+        } else {
+            habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
+
+        }
         // // Extract the IDs and names of the rooms
         const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
         const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
@@ -972,6 +986,7 @@ async function renderCalendarPerChaletOwner(req, res, next) {
         console.log(chalets);
         res.render('calendarPerOwnerChalet', {
             chalets: chalets,
+            privilege: privilege
             // events: eventosFiltrados
 
         })
