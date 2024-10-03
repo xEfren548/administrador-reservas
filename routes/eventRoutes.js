@@ -41,6 +41,8 @@ router.get('/eventos/:idevento', async (req, res) => {
         eventoObjeto.departureDate = moment.utc(eventoObjeto.departureDate).format('DD/MM/YYYY');
         eventoObjeto.reservationDate = moment.utc(eventoObjeto.reservationDate).format('DD/MM/YYYY');
 
+        eventoObjeto.comisionVendedor = eventoObjeto.comisionVendedor ? eventoObjeto.comisionVendedor : 0;
+
 
         const habitacion = await habitacionController.obtenerHabitacionPorId(eventoObjeto.resourceId);
         const habitacionJson = JSON.stringify(habitacion);
@@ -49,7 +51,14 @@ router.get('/eventos/:idevento', async (req, res) => {
         const idCliente = eventoObjeto.client;
 
         const clientes = await Cliente.find({ _id: idCliente }).lean();
-        const cliente = clientes[0]
+        let cliente = clientes[0]
+        if (!cliente) {
+            cliente = {
+                firstName: eventoObjeto.clienteProvisional,
+            }
+        }
+
+        // cliente.firstName = cliente.firstName ? cliente.firstName : eventoObjeto.clienteProvisional;
 
         const pagos = await pagoController.obtenerPagos(idEvento);
 

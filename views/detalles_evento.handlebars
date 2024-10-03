@@ -1168,22 +1168,22 @@
         const nightsInput = document.querySelector('#edit_nights').value;
         const arrivalDateInput = document.getElementById('edit_start_date').value
         const departureDateInput = document.getElementById('edit_end_date').value
-
         const eventDateStart = new Date(arrivalDateInput)
         const eventDateEnd = new Date(departureDateInput)
-
+        
         const reservacionId = document.querySelector('#reservacion_id').value;
+        
         const comisionVendedor = {{ evento.comisionVendedor }}
         const resourceId = '{{ evento.resourceId }}'
-
         const nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor, nightsInput);
         console.log(nuevoTotal)
         nuevoTotal.chaletName = '{{habitacion.propertyDetails.name}}'
         nuevoTotal.idReserva = reservacionId;
         nuevoTotal.arrivalDate = eventDateStart
         nuevoTotal.departureDate = eventDateEnd
-
         const totalServicios = parseFloat(document.querySelector('#total-servicios').value);
+
+    
 
 
     try {
