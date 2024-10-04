@@ -15,6 +15,18 @@
     <span class="color-text">Estancia mínima</span>
 </div>
 
+<div class="mb-3">
+	<label for="" class="form-label">Habitacion: </label>
+	<select class="form-select form-select-md" name="habitacion" id="habitacion-select">
+		<option selected>Seleccione una habitación --</option>
+		{{#if chalets}}
+		{{#each chalets}}
+		<option value="{{this.name}}">{{this.name}}</option>
+		{{/each}}
+		{{/if}}
+	</select>
+</div>
+
 {{#each chalets}}
 <div class="row d-flex bd-highlight mb-3">
     <div class="me-auto p-2 bd-highlight">
@@ -31,7 +43,7 @@
 
 </div>
 <div class="container mb-3">
-    <div class="row calendar-container" id="calendar-container-{{this.name}}" style="color: black !important;"
+    <div class="row calendar-container d-none" id="calendar-container-{{this.name}}" style="color: black !important;"
         data-id="{{this.id}}">
     </div>
 </div>
@@ -364,6 +376,32 @@
             });
         });
 
+    })
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectHabitacion = document.getElementById('habitacion-select');
+        const calendarContainers = document.querySelectorAll('[id^="calendar-container-"]');
+
+        
+        selectHabitacion.addEventListener('change', function() {
+            const selectedHabitacionId = selectHabitacion.value;
+
+            // Oculta todos los contenedores de habitaciones
+            calendarContainers.forEach(container => {
+                if(!container.classList.contains('d-none')) {
+                    container.classList.add('d-none');
+                }
+            });
+            console.log(selectedHabitacionId);
+            // Si se seleccionó una habitación, mostrar el contenedor correspondiente
+            if (selectedHabitacionId) {
+                const selectedHabitacionContainer = document.getElementById(`calendar-container-${selectedHabitacionId}`);
+                if (selectedHabitacionContainer) {
+                    console.log(selectedHabitacionContainer)
+                    selectedHabitacionContainer.classList.remove('d-none');
+                }
+            }
+        });
     })
 </script>
 
