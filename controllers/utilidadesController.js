@@ -119,7 +119,7 @@ async function calcularComisiones(req, res) {
 async function generarComisionReserva(req, res) {
     try {
         const loggedUserId = req.session.id;
-        const { precioAsignado, precioMinimo, costoBase, totalSinComisiones, idReserva, chaletName, arrivalDate, departureDate } = req.body;
+        const { precioAsignado, precioMinimo, costoBase, totalSinComisiones, idReserva, chaletName, arrivalDate, departureDate, nNights } = req.body;
         console.log("Desde generar comision reserva")
         console.log("Costo base: " + costoBase)
 
@@ -178,15 +178,15 @@ async function generarComisionReserva(req, res) {
                 if (user.administrator.toString() === user._id.toString()) {
                     if (costosGerente.commission === "Aumento por costo fijo") {
                         if (counter > 1) {
-                            conceptoAdmin = `Comisión administrador ligado por reservación ${chaletName}`
+                            conceptoAdmin = `Comisión administrador ligado por reservación ${chaletName} ${nNights} noches`
 
                         } else {
-                            conceptoAdmin = `Reservación ${chaletName}`
+                            conceptoAdmin = `Reservación ${chaletName} ${nNights} noches`
                         }
                         // finalComission += costosGerente.amount;
                         // minComission += costosGerente.amount;
                         await altaComisionReturn({
-                            monto: costosAdministrador.amount,
+                            monto: costosAdministrador.amount * nNights,
                             concepto: conceptoAdmin,
                             fecha: new Date(departureDate),
                             idUsuario: user._id.toString(),
@@ -197,8 +197,8 @@ async function generarComisionReserva(req, res) {
                 } else {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
                         await altaComisionReturn({
-                            monto: comisionVendedor,
-                            concepto: `Comisión por Reservación admin. ${chaletName}`,
+                            monto: comisionVendedor * nNights,
+                            concepto: `Comisión por Reservación admin. ${chaletName} ${nNights} noches`,
                             fecha: new Date(departureDate),
                             idUsuario: user._id.toString(),
                             idReserva: idReserva
@@ -248,8 +248,8 @@ async function generarComisionReserva(req, res) {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
 
                         await altaComisionReturn({
-                            monto: comisionVendedor,
-                            concepto: `Reservación ${chaletName}`,
+                            monto: comisionVendedor * nNights,
+                            concepto: `Reservación ${chaletName} ${nNights} noches`,
                             fecha: new Date(departureDate),
                             idUsuario: user._id.toString(),
                             idReserva: idReserva
@@ -264,8 +264,8 @@ async function generarComisionReserva(req, res) {
                     }
                 } else if (user.privilege === "Gerente") {
                     await altaComisionReturn({
-                        monto: costosGerente.amount,
-                        concepto: `Reservación ${chaletName}`,
+                        monto: costosGerente.amount * nNights,
+                        concepto: `Reservación ${chaletName} ${nNights} noches`,
                         fecha: new Date(departureDate),
                         idUsuario: user._id.toString(),
                         idReserva: idReserva
@@ -296,8 +296,8 @@ async function generarComisionReserva(req, res) {
 
         // Comisión de administrador top
         await altaComisionReturn({
-            monto: utilidadChalet,
-            concepto: `Utilidad de reservación ${chaletName}`,
+            monto: utilidadChalet * nNights,
+            concepto: `Utilidad de reservación ${chaletName} ${nNights} noches`,
             fecha: new Date(departureDate),
             idUsuario: idBosqueImperial,
             idReserva: idReserva

@@ -208,7 +208,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 chaletName: formData.chaletName,
                 idReserva: reservationId,
                 arrivalDate: formData.arrivalDate,
-                departureDate: formData.departureDate
+                departureDate: formData.departureDate,
+                nNights: formData.nNights
 
             }
 
