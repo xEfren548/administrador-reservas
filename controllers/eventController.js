@@ -970,11 +970,6 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
     // console.log(`Checking overlaps for Resource ID: ${newResourceId}`);
     // console.log(`Arrival Date: ${arrivalDateObj}`);
     // console.log(`Departure Date: ${departureDateObj}`);
-    if (eventId) {
-        console.log(`Ignoring event id: ${eventId}`);
-    } else {
-        console.log('event id: ' + eventId);
-    }
 
     const matchConditions = {
         'events.resourceId': newResourceId,

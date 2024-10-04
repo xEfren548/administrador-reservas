@@ -416,7 +416,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 totalSinComisiones.value = totalPrecios;
 
                 // Asignar comisiones
-                const comisionUsuarios = await obtenerComisiones(nNights)
+                const comisionUsuarios = await obtenerComisiones(nNights, habitacionId)
                 precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
                 totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
                 console.log("Total máximo permitido con comisiones: ", totalPrecios)
@@ -443,9 +443,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    async function obtenerComisiones(nNights) {
+    async function obtenerComisiones(nNights, habitacionId) {
         try {
-            const response = await fetch(`/api/utilidades?nnights=${nNights}`);
+            const response = await fetch(`/api/utilidades?nnights=${nNights}&habitacionid=${habitacionId}`);
             const data = await response.json();
             const minComission = data.minComission
             const finalComission = data.finalComission
