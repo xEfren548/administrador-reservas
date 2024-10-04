@@ -60,8 +60,8 @@ async function calcularComisiones(req, res) {
                     break;
                 } else {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
-                        finalComission += costosVendedor.maxAmount;
-                        minComission += costosVendedor.minAmount;
+                        finalComission += costosVendedor.amount;
+                        minComission += costosVendedor.amount;
 
                         console.log('comision admin vendedor: ', costosAdministrador.amount, user._id.toString());
                         user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
@@ -79,11 +79,11 @@ async function calcularComisiones(req, res) {
 
                 if (user.privilege === "Vendedor") {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
-                        finalComission += costosVendedor.maxAmount;
+                        finalComission += costosVendedor.amount;
 
-                        minComission += costosVendedor.minAmount;
+                        minComission += costosVendedor.amount;
 
-                        console.log('comision vendedor: ', costosVendedor.maxAmount, user._id.toString())
+                        console.log('comision vendedor: ', costosVendedor.amount, user._id.toString())
                     }
                 } else if (user.privilege === "Gerente") {
                     if (costosGerente.commission === "Aumento por costo fijo") {
@@ -148,13 +148,18 @@ async function generarComisionReserva(req, res) {
             throw new NotFoundError('Chalet does not exist 2');
         }
 
-        let comisionVendedor = precioAsignado - precioMinimo;
         let utilidadChalet = totalSinComisiones - costoBase;
-
-
+        
+        
         const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
         const costosAdministrador = await Costos.findOne({ category: "Administrador" }); //
+
+        if (!costosGerente) { throw new NotFoundError('Costos de gerente no existente'); }
+        if (!costosVendedor) { throw new NotFoundError('Costos de vendedor no existente'); }
+        if (!costosAdministrador) { throw new NotFoundError('Costos de administrador no existente'); }
+        
+        let comisionVendedor = costosVendedor.amount;
 
         const fechaActual = new Date();
 
