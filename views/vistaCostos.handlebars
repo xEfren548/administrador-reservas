@@ -17,8 +17,6 @@
                         <th scope="col">Categoría</th>
                         <th scope="col">Comisión</th>
                         <th scope="col">Monto</th>
-                        <th scope="col">Monto mínimo (si aplica)</th>
-                        <th scope="col">Monto máximo (si aplica)</th>
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
@@ -31,20 +29,6 @@
                             <td>
                                 {{#if amount}}
                                     {{amount}}
-                                {{else}}
-                                    0
-                                {{/if}}
-                            </td>
-                            <td>
-                                {{#if minAmount}}
-                                    {{minAmount}}
-                                {{else}}
-                                    0
-                                {{/if}}
-                            </td>
-                            <td>
-                                {{#if maxAmount}}
-                                    {{maxAmount}}
                                 {{else}}
                                     0
                                 {{/if}}
@@ -298,6 +282,7 @@
         });
 
         // Showing fields depending on cost category
+        /** 
         var slctUserCategory = document.getElementById("slctUserCategory");
         slctUserCategory.addEventListener("change", () => {
             if(slctUserCategory.value == "Vendedor"){
@@ -311,7 +296,7 @@
                 document.getElementById("maxAmount").style.display = "none";
             }
         });
-
+        **/
         // Saving new cost.
         var btnSaveUser = document.getElementById("btnSaveUser")
         if (btnSaveUser){
