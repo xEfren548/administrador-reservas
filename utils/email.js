@@ -10,17 +10,17 @@ function sendPassword(email, password, privilege) {
     htmlContent = htmlContent.replace("[password]", password);
 
     const transporter = nodemailer.createTransport({
-        host: 'premium68.web-hosting.com',
-        port: 587,
-        secure: false,
+        host: 'mail.privateemail.com',
+        port: 465,
+        secure: true,
         auth: {
-            user: 'no-reply@jfsoluciones.com.mx',
-            pass: '~3GoVL-2P{%K'
+            user: 'administracion@nynhoteles.com.mx',
+            pass: 'Martes.123'
         }
     });
 
     const mailOptions = {
-        from: '"N&N Hoteles" <no-reply@jfsoluciones.com.mx>',
+        from: '"N&N Hoteles" <administracion@nynhoteles.com.mx>',
         to: email,
         subject: "Creación de usuario",
         html: htmlContent
