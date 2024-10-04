@@ -28,7 +28,8 @@ async function obtenerComisionesPorReserva(idReserva) {
 async function calcularComisiones(req, res) {
     try {
         const loggedUserId = req.session.id;
-        console.log(loggedUserId)
+        const nNights = req.query.nnights;
+        console.log("nnights: ",  nNights)
 
         const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
@@ -53,17 +54,17 @@ async function calcularComisiones(req, res) {
 
                 if (user.administrator.toString() === user._id.toString()) {
                     if (costosGerente.commission === "Aumento por costo fijo") {
-                        finalComission += costosAdministrador.amount;
-                        minComission += costosAdministrador.amount
-                        console.log('comision master admin: ', costosAdministrador.amount, user._id.toString());
+                        finalComission += costosAdministrador.amount * nNights;
+                        minComission += costosAdministrador.amount * nNights;
+                        console.log('comision master admin: ', costosAdministrador.amount * nNights, user._id.toString());
                     }
                     break;
                 } else {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
-                        finalComission += costosVendedor.amount;
-                        minComission += costosVendedor.amount;
+                        finalComission += costosVendedor.amount * nNights;
+                        minComission += costosVendedor.amount * nNights;
 
-                        console.log('comision admin vendedor: ', costosAdministrador.amount, user._id.toString());
+                        console.log('comision admin vendedor: ', costosVendedor.amount * nNights, user._id.toString());
                         user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
                     }
                 }
@@ -79,18 +80,18 @@ async function calcularComisiones(req, res) {
 
                 if (user.privilege === "Vendedor") {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
-                        finalComission += costosVendedor.amount;
+                        finalComission += costosVendedor.amount * nNights;
 
-                        minComission += costosVendedor.amount;
+                        minComission += costosVendedor.amount * nNights;
 
-                        console.log('comision vendedor: ', costosVendedor.amount, user._id.toString())
+                        console.log('comision vendedor: ', costosVendedor.amount * nNights, user._id.toString())
                     }
                 } else if (user.privilege === "Gerente") {
                     if (costosGerente.commission === "Aumento por costo fijo") {
-                        finalComission += costosGerente.amount;
-                        minComission += costosGerente.amount;
+                        finalComission += costosGerente.amount * nNights;
+                        minComission += costosGerente.amount * nNights;
 
-                        console.log('comision gerente: ', costosGerente.amount, user._id.toString())
+                        console.log('comision gerente: ', costosGerente.amount * nNights, user._id.toString())
                     }
 
                 }
@@ -294,9 +295,9 @@ async function generarComisionReserva(req, res) {
         console.log(chaletInvestors)
         const idBosqueImperial = '66a7c2f2915b94d6630b67f2'
 
-        // Comisión de administrador top
+        // Utilidad
         await altaComisionReturn({
-            monto: utilidadChalet * nNights,
+            monto: utilidadChalet,
             concepto: `Utilidad de reservación ${chaletName} ${nNights} noches`,
             fecha: new Date(departureDate),
             idUsuario: idBosqueImperial,
