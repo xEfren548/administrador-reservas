@@ -28,7 +28,7 @@
 </div>
 
 {{#each chalets}}
-<div class="row d-flex bd-highlight mb-3">
+<div class="row bd-highlight mb-3 names-container d-none" id="names-container-{{this.name}}">
     <div class="me-auto p-2 bd-highlight">
         <h2>{{this.name}}</h2>
     </div>
@@ -36,12 +36,8 @@
         <a name="" id="cn-{{this.name}}" class="btn btn-primary hoy-btn" href="#" role="button"
             data-chalet="{{this.name}}">Hoy</a>
     </div>
-
-
-
-
-
 </div>
+
 <div class="container mb-3">
     <div class="row calendar-container d-none" id="calendar-container-{{this.name}}" style="color: black !important;"
         data-id="{{this.id}}">
@@ -381,6 +377,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const selectHabitacion = document.getElementById('habitacion-select');
         const calendarContainers = document.querySelectorAll('[id^="calendar-container-"]');
+        const namesContainers = document.querySelectorAll('.names-container')
 
         
         selectHabitacion.addEventListener('change', function() {
@@ -392,13 +389,20 @@
                     container.classList.add('d-none');
                 }
             });
+            namesContainers.forEach(container => {
+                if(!container.classList.contains('d-none')) {
+                    container.classList.add('d-none');
+                }
+            })
             console.log(selectedHabitacionId);
             // Si se seleccionó una habitación, mostrar el contenedor correspondiente
             if (selectedHabitacionId) {
                 const selectedHabitacionContainer = document.getElementById(`calendar-container-${selectedHabitacionId}`);
+                const namesContainer = document.getElementById(`names-container-${selectedHabitacionId}`);
                 if (selectedHabitacionContainer) {
                     console.log(selectedHabitacionContainer)
                     selectedHabitacionContainer.classList.remove('d-none');
+                    namesContainer.classList.remove('d-none');
                 }
             }
         });
