@@ -5,6 +5,7 @@ const userPrivilege = (req, res, next) => {
     if(!privilege){   
         return next(new BadRequestError("Privilege needed"));
     }
+    console.log(req.session)
     
     const allowedRoutes = {       
         "Administrador": [
@@ -125,7 +126,8 @@ const userPrivilege = (req, res, next) => {
             "/api/perfil-usuario/editar-email",
             "/api/perfil-usuario/editar-email/:uuid",
             "/api/perfil-usuario/editar-contrasena",
-            "/api/perfil-usuario/editar-contrasena/:uuid", 
+            "/api/perfil-usuario/editar-contrasena/:uuid",
+            "/api/calendar/duenos"
         ], 
         'Inversionistas': [
             "/sidemenu",
@@ -152,6 +154,8 @@ const userPrivilege = (req, res, next) => {
     };
     const currentRoute = req.path;
     const allowedRoutesForUser = allowedRoutes[privilege];
+
+    console.log(allowedRoutesForUser)
     
     let routeAllowed = false;
     for (const allowedRoute of allowedRoutesForUser) {
@@ -162,7 +166,10 @@ const userPrivilege = (req, res, next) => {
                 break;
             }
         } else {
+            console.log("allowed route: ", allowedRoute, typeof allowedRoute)
+            console.log("current route: ", currentRoute, typeof currentRoute)
             if (allowedRoute === currentRoute) {
+                console.log("Is true")
                 routeAllowed = true;
                 break;
             }
