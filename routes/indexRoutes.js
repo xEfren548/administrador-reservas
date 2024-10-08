@@ -3,8 +3,8 @@ const router = express.Router();
 const cookieSession = require("cookie-session");
 
 const authRoutes = require('./authRoutes');
-const currentuser = require("../common/middlewares/currentUser")
-const userPrivilege = require("../common/middlewares/userPrivilege")
+const currentUser = require("../common/middlewares/currentUser");
+const userPrivilege = require("../common/middlewares/userPrivilege");
 const cabanasRoutes = require('./cabanasRoutes');
 const clientesRoutes = require('./clientesRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
@@ -34,86 +34,82 @@ const bloqueoFechasRoutes = require('./bloqueoFechasRoutes');
 const bloqueoInversionistasRoutes = require('./bloqueoInversionistasRoutes');
 
 const authMiddleware = require('../common/middlewares/authMiddleware');
+
+// Privileges middlewares authentication
+const adminPrivilege = require('../common/middlewares/authPrivileges/authAdmin');
+
+
 const CustomError = require("../common/error/custom-error");
 const NotFoundError = require("../common/error/not-found-error");
+const { error } = require('qrcode-terminal');
 
-// Formating incoming data.
+// Middleware for parsing incoming data
 router.use(express.json());
-router.use(express.urlencoded( {extended: false} ));
+router.use(express.urlencoded({ extended: false }));
 
-// Enabling cookies.
+// Enable cookie sessions
 router.use(cookieSession({
     signed: false, // No extra layer of security will be added.
-    secure: false // Can recieve both HTTP and HTTPS request.
+    secure: false // Can receive both HTTP and HTTPS requests.
 }));
 
 // Public routes
 router.use('/login', loginRoute);
-router.use('/', instruccionesRoutes)
+router.use('/', instruccionesRoutes);
 router.use('/procesar-encuesta', surveyProcessingRoutes);
-router.use("/api", authRoutes);
+router.use('/getchaletsRoutes', getchaletsRoutes);
 
-router.use("/getchaletsRoutes", getchaletsRoutes)
+router.use('/api', authRoutes);
 
-//Validating user's token in later requests.
-// router.use(currentuser);
-
-//Determining user access based on privileges.
-// router.use(userPrivilege);
-
+// Static files route
 router.use("/download", express.static("download"));
-router.use('/', sideMenuRoutes);
 
-router.use('/', 
-    instruccionesRoutes,
-    calendarioPrecios,
-    logsRoutes
-);
+// Grouping routes
+router.use('/', authMiddleware)
+router.use('/', sideMenuRoutes);
+router.use('/', calendarioPrecios);
+router.use('/', logsRoutes);
 router.use('/', bloqueoFechasRoutes);
 router.use('/', bloqueoInversionistasRoutes);
 
-router.use('/api', 
-    eventRoutes, 
-    habitacionesRoutes, 
-    serviciosRoutes, 
-    clientesRoutes, 
-    cabanasRoutes, 
-    editarCabanaRoutes,
-    dashboardRoutes,
-    costosRoutes
-);
+// API routes
+router.use('/api', eventRoutes);
+router.use('/api', habitacionesRoutes);
+router.use('/api', serviciosRoutes);
+router.use('/api', clientesRoutes);
+router.use('/api', cabanasRoutes);
+router.use('/api', editarCabanaRoutes);
+router.use('/api', dashboardRoutes);
 router.use('/api/usuarios', userRoutes);
-router.use('/api/perfil-usuario/', userProfileRoutes);
+router.use('/api/perfil-usuario', userProfileRoutes);
+router.use('/api/pagos', pagosRoutes);
+router.use('/api', utilidadesRoutes);
 
-router.get('/', authMiddleware, reservationRoutes);
-
+// Additional routes
 router.use('/', rackLimpiezaRoutes);
 router.use('/', rackServiciosRoutes);
 router.use('/', tipologiasRoutes);
-
-router.use('/api', eventRoutes);
-router.use('/api', habitacionesRoutes);
-router.use('/api', userRoutes);
-router.use('/api', serviciosRoutes);
-router.use('/', calendarioPrecios);
-router.use('/api/pagos/', pagosRoutes);
-router.use('/api/', authMiddleware, utilidadesRoutes);
 router.use('/', preciosEspecialesRoutes);
-
 router.use('/modelar-encuesta', surveyModelingRoutes);
 
-// Not found resource handling middleware.
+// Reservation route with authentication
+router.get('/', authMiddleware, reservationRoutes);
+
+// Not found resource handling middleware
 router.all("*", (req, res, next) => {
     next(new NotFoundError("Page not found"));
 });
 
-// Error handling middleware.
+// Error handling middleware
 router.use((err, req, res, next) => {
-    if(err.statusCode){
-        res.status(err.statusCode).json({error: err.generateErrors()})
+    if (err.statusCode) {
+        res.status(err.statusCode).json({ error: err.generateErrors() });
         return;
     }
-    res.status(500).json({error: "Internal server error: something went wrong", message: err.message });
+    // res.status(500).json({ error: "Internal server error: something went wrong", message: err.message });
+    res.render('errorView',{
+        err: err.message
+    })
 });
 
 module.exports = router;
