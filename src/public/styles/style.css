@@ -139,6 +139,27 @@ body {
     display: none !important;
 }
 
+.fc-event {
+    height: 100%; /* Ensure event takes the full height of the row */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: normal; /* Allow text to wrap within the event */
+    overflow: hidden;
+    box-sizing: border-box; /* Ensure padding is accounted for */
+}
+
+.fc-event-container {
+    width: calc(100% - 10px); /* Ensure event width fills the cell, with padding/margin */
+    max-width: 100%; /* Prevent overflow */
+}
+
+.fc-event {
+    font-size: 12px; /* Smaller font to prevent overflow */
+    padding: 2px; /* Less padding to fit content better */
+}
+
+
 .content {
     margin-left: 250px;
     /* Igual al ancho del navbar */

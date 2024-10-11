@@ -22,6 +22,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         nowIndicator: true,
         dayMaxEvents: true, // allow "more" link when too many events
         timeZone: 'UTC',
+        resourceAreaWidth: '200px', // Adjust as per your layout
+        resourceAreaHeight: '100%', // Adjust as per your layout when
+        slotMinWidth: 100, // Adjust column width for better layout
+
 
         headerToolbar: {
             left: 'today prev,next',
