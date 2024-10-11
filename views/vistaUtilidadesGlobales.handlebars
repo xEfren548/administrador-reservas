@@ -1,26 +1,27 @@
 <div class="row flex-column justify-content-center mt-3 " style="width: 95%;">
     <h1 class="mt-5">Gráficas de Utilidades por Reservación</h1>
-    <div class="row flex-nowrap mb-3 ">
-        <div class="col-6 h-100 w-75">
-            <canvas id="chart-line" class="w-100 h-100" style="max-width: 100%; max-height: 400px;"></canvas>
+    <div class="row mb-3 ">
+        <div class="col-sm-12 col-md-12 col-lg-6 col-xl-6 h-100 w-100">
+            <canvas id="chart-line" class="w-100 h-100 utCharts" style="max-width: 100%; max-height: 400px;"></canvas>
         </div>
 
-        <div class="col-6 h-100 w-75">
+        <div class="col-12 col-md-12 col-lg-6 col-xl-6 h-100 w-100">
             <p>Utilidades del mes: <strong>${{totalEarnings}}</strong></p>
-            <canvas id="doughnut-chart" class="w-100 h-100" style="max-width: 100%; max-height: 200px;"></canvas>
+            <canvas id="doughnut-chart" class="w-100 h-100 utCharts" style="max-width: 100%; max-height: 200px;"></canvas>
         </div>
-
     </div>
-    <div class="row flex-nowrap mb-3 mt-3 ">
-        <div class="col-6 h-100 w-75">
-            <canvas id="userMontos-chart" class="w-100 h-100" style="max-width: 100%; max-height: 400px;"></canvas>
+
+    <div class="row mb-3 mt-3 ">
+        <div class="col-12 col-md-12 col-lg-6 col-xl-6 h-100 w-100">
+            <canvas id="userMontos-chart" class="w-100 h-100 utCharts" style="max-width: 100%; max-height: 400px;"></canvas>
         </div>
 
-        <div class="col-6 h-100 w-75">
-            <canvas id="chaletUtilities-chart" class="w-100 h-100" style="max-width: 100%; max-height: 400px;"></canvas>
-        </div>
 
+        <div class="col-12 col-md-12 col-lg-6 col-xl-6 h-100 w-100">
+            <canvas id="chaletUtilities-chart" class="w-100 h-100 utCharts" style="max-width: 100%; max-height: 400px;"></canvas>
+        </div>
     </div>
+
 
 
     <div class="col-12">
@@ -421,7 +422,7 @@
 
     const doughnutChartOptions = {
         responsive: true,
-        maintainAspectRatio: true, // Mantener la relación de aspecto
+        maintainAspectRatio: false, // Mantener la relación de aspecto
         plugins: {
             legend: {
                 display: false, // Ocultar la leyenda
@@ -469,6 +470,7 @@
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: top
@@ -507,6 +509,7 @@
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: top

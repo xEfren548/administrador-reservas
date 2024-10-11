@@ -821,3 +821,9 @@ ul.rb li .timestamp {
     font-family: "Overpass", sans-serif !important;
 
 }
+
+@media (max-width: 576px) {
+    .utCharts {
+        max-height: 300px;
+    }
+}
