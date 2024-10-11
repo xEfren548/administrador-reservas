@@ -21,8 +21,8 @@ function createParamsArray(params) {
 function sendTemplateMsg(clientInfo, template, params, buttons = []) {
     console.log("sendTemplateMsg");
 
-    const botId = '466422333216648';
-    const bearerToken = 'EAALyoAZAkGtcBO2x279y5TJBpTspofAGAeyRggnu6jXZB5Sw8CyCpMtZBKvzGCaiuaFpJqfRGZBog7CdLagsElSeODIUOs3gIRCjbKHrkj8MQZAdut2RmqS4RCEAU0HonixXNd1PhhdOJvsPYFIDRIdm4FPvixvd4NBNWhHxsM1yqsI2vlhplPgVudQ8AMmFYeAl7VaD6SPWPuTLmYZCCj8eLo';
+    const botId = '472231735966563';
+    const bearerToken = 'EAALyoAZAkGtcBOyF7nrWtCTKE4DB0c0gOpg0voO26Pn9EkVpWB6jTw9O9sYT7sSY9I67jBO1cTVjqqTPDSjqjZCtpfCdrGtNAUpBa8M05ZC7qxwFDTV75dQYZAmQcNsJ63om1sq35ZC33BXEYuQFxrM0ZCojFLFVHmYfEqHPRLZBaBJCqCUpuoLttpzTF5A4SfMdgZDZD';
     const formatedParams = createParamsArray(params);
     console.log(formatedParams);
 
@@ -46,7 +46,7 @@ function sendTemplateMsg(clientInfo, template, params, buttons = []) {
     }
     
 
-    const url = 'https://graph.facebook.com/v15.0/' + botId + '/messages';
+    const url = 'https://graph.facebook.com/v20.0/' + botId + '/messages';
 
     console.log("COMPONTENS: ******")
     console.log(components);

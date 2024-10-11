@@ -495,11 +495,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
 
                 if (!response.ok) {
-                    throw new Error('Error en la solicitud');
+                    const errorData = await response.json(); // Extract the error data
+                    const errorMessage = errorData.error && errorData.error[0] && errorData.error[0].message
+                        ? errorData.error[0].message
+                        : 'Error en la solicitud'; // Fallback if message is not found
+                    throw new Error(errorMessage);
                 }
-
+            
                 const dataR = await response.json();
                 console.log(dataR);
+
 
                 Swal.fire({
                     icon: 'success',
@@ -524,7 +529,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Error al enviar la solicitud: ' + error,
+                    text: 'Error al enviar la solicitud: ' + error.message,
                     confirmButtonText: 'Aceptar'
                 });
             }

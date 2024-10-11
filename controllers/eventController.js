@@ -599,11 +599,12 @@ async function createReservation(req, res, next) {
             status: statusLimpieza,
             idHabitacion: evento.resourceId
         })
+        
+        SendMessages.sendReservationConfirmation(client[0], chalet, reservationToAdd);
 
         /**
 
         console.log("SendMessages.sendReminders");
-        SendMessages.sendReservationConfirmation(client[0], chalet, reservationToAdd);
         SendMessages.sendInstructions(client[0], chalet, idReserva)
 
         const agenteQueReserva = await Usuario.findById(createdBy);
