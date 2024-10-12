@@ -311,16 +311,16 @@ async function generarComisionReserva(req, res) {
         const chaletInvestors = chalet.others.investors
         console.log('comision inversionistas')
         console.log(chaletInvestors)
-        const idBosqueImperial = '66a7c2f2915b94d6630b67f2'
+        // const idBosqueImperial = '66a7c2f2915b94d6630b67f2'
 
-        // Utilidad
-        await altaComisionReturn({
-            monto: utilidadChalet,
-            concepto: `Utilidad de reservación ${chaletName} ${nNights} noches`,
-            fecha: new Date(departureDate),
-            idUsuario: idBosqueImperial,
-            idReserva: idReserva
-        })
+        // // Utilidad
+        // await altaComisionReturn({
+        //     monto: utilidadChalet,
+        //     concepto: `Utilidad de reservación ${chaletName} ${nNights} noches`,
+        //     fecha: new Date(departureDate),
+        //     idUsuario: idBosqueImperial,
+        //     idReserva: idReserva
+        // })
 
         // Comisión de limpieza
         await altaComisionReturn({

@@ -405,6 +405,9 @@ async function showChaletsView(req, res, next) {
             throw new NotFoundError("No investors found");
         }
 
+        const bosqueImperial = await Usuario.findById("66a7c2f2915b94d6630b67f2").lean();
+        owners.push(bosqueImperial);
+
 
         res.render('vistaCabanas', {
             chalets: mapChalets,
@@ -740,6 +743,9 @@ async function showEditChaletsView(req, res, next) {
         if (!investors) {
             throw new NotFoundError("No investors found");
         }
+
+        const bosqueImperial = await Usuario.findById("66a7c2f2915b94d6630b67f2").lean();
+        owners.push(bosqueImperial);
         //console.log("CHALETS: ", chalets);
         //console.log("CHALETS2222: ", chalets[0].others.admin[0]);
         //console.log("ADMINS: ", admins);
