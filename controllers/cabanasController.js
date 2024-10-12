@@ -438,7 +438,7 @@ async function createChalet(req, res, next) {
         throw new NotFoundError("Janitor not found");
     }
 
-    const owner = await Usuario.findOne({ _id: others.owner, privilege: "Dueño de cabañas" });
+    const owner = await Usuario.findOne({ _id: others.owner});
     if (!owner) {
         throw new NotFoundError("Owner not found");
     }
@@ -781,7 +781,7 @@ async function editChalet(req, res, next) {
         const [admin, janitor, owner] = await Promise.all([
             Usuario.findOne({ email: others.admin, privilege: "Administrador" }),
             Usuario.findOne({ email: others.janitor, privilege: "Limpieza" }),
-            Usuario.findOne({ _id: others.owner, privilege: "Dueño de cabañas" })
+            Usuario.findOne({ _id: others.owner})
         ]);
 
         if (!admin) throw new NotFoundError("Admin not found");

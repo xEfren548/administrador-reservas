@@ -305,7 +305,7 @@ async function generarComisionReserva(req, res) {
             }
         }
 
-        const chaletAdmin = chalet.others.admin.toString();
+        const chaletAdminId = chalet.others.admin.toString();
         const chaletJanitor = chalet.others.janitor.toString();
         const chaletOwner = chalet.others.owner.toString();
         const chaletInvestors = chalet.others.investors
@@ -313,14 +313,19 @@ async function generarComisionReserva(req, res) {
         console.log(chaletInvestors)
         // const idBosqueImperial = '66a7c2f2915b94d6630b67f2'
 
-        // // Utilidad
-        // await altaComisionReturn({
-        //     monto: utilidadChalet,
-        //     concepto: `Utilidad de reservación ${chaletName} ${nNights} noches`,
-        //     fecha: new Date(departureDate),
-        //     idUsuario: idBosqueImperial,
-        //     idReserva: idReserva
-        // })
+        const chaletAdmin = await User.findById(chaletAdminId)
+        if (!chaletAdmin){
+            throw new Error("No chalet admin found.")
+        }
+
+        // Utilidad
+        await altaComisionReturn({
+            monto: utilidadChalet,
+            concepto: `Utilidad de reservación ${chaletName} ${nNights} noches`,
+            fecha: new Date(departureDate),
+            idUsuario: chaletAdmin._id.toString(),
+            idReserva: idReserva
+        })
 
         // Comisión de limpieza
         await altaComisionReturn({
