@@ -602,7 +602,7 @@ async function createReservation(req, res, next) {
         
         SendMessages.sendReservationConfirmation(client[0], chalet, reservationToAdd);
 
-        /**
+        
 
         console.log("SendMessages.sendReminders");
         SendMessages.sendInstructions(client[0], chalet, idReserva)
@@ -615,7 +615,7 @@ async function createReservation(req, res, next) {
             }
         }
 
-        **/
+        
 
         // Log
         const logBody = {

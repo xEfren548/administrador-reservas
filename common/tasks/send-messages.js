@@ -22,7 +22,7 @@ function sendTemplateMsg(clientInfo, template, params, buttons = []) {
     console.log("sendTemplateMsg");
 
     const botId = '472231735966563';
-    const bearerToken = 'EAALyoAZAkGtcBOyF7nrWtCTKE4DB0c0gOpg0voO26Pn9EkVpWB6jTw9O9sYT7sSY9I67jBO1cTVjqqTPDSjqjZCtpfCdrGtNAUpBa8M05ZC7qxwFDTV75dQYZAmQcNsJ63om1sq35ZC33BXEYuQFxrM0ZCojFLFVHmYfEqHPRLZBaBJCqCUpuoLttpzTF5A4SfMdgZDZD';
+    const bearerToken = 'EAALyoAZAkGtcBO9Nf0uqLDA0cxW0VOyk5ozi1E70RdKm9ZAMZB9TV7pP3snHnamENisrszYYUV8msl9NX4GAA7ftlt8p5akNT41khotJ88pp1JtYGbC8DlrBDcnCvf1HnXAbEPvnjPq6dZCTux2Rp4IjBhUoEYQkkvg0BJbmNHNjksYWBEzCSQZDZD';
     const formatedParams = createParamsArray(params);
     console.log(formatedParams);
 
