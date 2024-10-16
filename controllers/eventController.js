@@ -1,6 +1,7 @@
 const Documento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const Usuario = require('../models/Usuario');
+const Costos = require('./../models/Costos');
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const logController = require('../controllers/logController');
 const utilidadesController = require('../controllers/utilidadesController');
@@ -464,7 +465,7 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
 
 async function createReservation(req, res, next) {
-    const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit, comisionVendedor } = req.body;
+    const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit } = req.body;
 
     try {
         const client = await Cliente.find({ email: clientEmail });
@@ -491,6 +492,11 @@ async function createReservation(req, res, next) {
                 return res.status(400).send({ message: `La estancia minima es de ${fechasBloqueadas.min} noches` });
             }
         }
+
+        const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
+        if (!costosVendedor) {throw new NotFoundError('Costos vendedor not found');}
+
+        const comisionVendedor = costosVendedor.amount * nNights;
 
         console.log ("Arrival date before: ")
         console.log(arrivalDate)

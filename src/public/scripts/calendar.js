@@ -627,8 +627,8 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
     const departureDay = departureDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
     const departureDateSend = `${departureYear}-${departureMonth}-${departureDay}`;
 
-    console.log(arrivalDateSend)
-    console.log(departureDateSend)
+    console.log( "arrival send: ", arrivalDateSend)
+    console.log("departure send", departureDateSend)
 
     if (arrivalDateSend && departureDateSend && resourceId) {
         // Aquí puedes ejecutar la acción deseada
@@ -701,7 +701,7 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
             // totalPrecios += comisionVendedor // Precio maximo permitido
 
             // console.log("Total precios con comisiones: ", totalPrecios)
-            const comisionUsuarios = await obtenerComisiones()
+            const comisionUsuarios = await obtenerComisiones(nNights, habitacionId);
             let precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
             console.log("Precio minimo permitido: ", precioMinimoPermitido)
             precioMinimoPermitido += comisionVendedor;
@@ -765,9 +765,9 @@ function calculateNightDifference(arrivalDate, departureDate) {
     return nightsInput;
 }
 
-async function obtenerComisiones() {
+async function obtenerComisiones(nNights, habitacionId) {
     try {
-        const response = await fetch('/api/utilidades');
+        const response = await fetch(`/api/utilidades?nnights=${nNights}&habitacionid=${habitacionId}`);
         console.log(response);
         const data = await response.json();
         console.log(data);
