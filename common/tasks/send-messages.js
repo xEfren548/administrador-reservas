@@ -196,11 +196,18 @@ async function sendThanks() {
                 continue;
             }
 
-            // console.log("Current date:", new Date());
-            // console.log("Reservation date:", reservation.arrivalDate);
+            if (reservation.status === "cancelled"){
+                continue;
+            }
+
+            //console.log("Current date:", new Date());
+            //console.log("Reservation date:", typeof reservation.departureDate);
+            
+            const departureDate = new Date(reservation.departureDate);
+            
 
             // Check if thanks need to be sent
-            if (new Date() > reservation.departureDate.getTime() && reservation.status !== "cancelled" && (reservation.thanksSent === false || !reservation.thanksSent)) {
+            if (new Date() > departureDate && reservation.status !== "cancelled" &&  !reservation.thanksSent) {
                 console.log(`Sending thanks for reservation with departure date: ${reservation.departureDate}`);
                 
                 // Send the thank-you message

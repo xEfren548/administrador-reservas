@@ -130,8 +130,8 @@
 
                     <div class="col-xs-12 no-padding">
                         <h4 class="fw-bold fs-6" style="margin-top: 5px; margin-bottom:0px;">
-                            <button class="btn btn-style-blue enviar-email-btn" type="button" data-toggle="modal"
-                                data-target="#modalSendConfirmation" data-id="">
+                            <button class="btn btn-style-blue enviar-email-btn" type="button"
+                                id="enviar-whats-btn" data-id="">
                                 <i class="fa fa-mobile-phone" aria-hidden="true"></i> <b>{{cliente.phone}}</b> | Enviar
                                 Whatsapp
                                 <div class="ripple-container"></div>
@@ -2086,5 +2086,67 @@
         notasPrivadasBtn.classList.add('fw-bold');
         comentariosBtn.classList.remove('fw-bold');
     });
+
+    const enviarWhatsBtn = document.querySelector('#enviar-whats-btn');
+    enviarWhatsBtn.addEventListener('click', async function (e) {
+        e.preventDefault();
+
+        const reservacionId = "{{evento._id}}"
+        console.log(reservacionId)
+
+        try {
+            const confirmation = await Swal.fire({
+                title: 'Enviar WhatsApp',
+                text: '¿Estás seguro de enviar la reservación  por Whatsapp al cliente?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Si',
+                cancelButtonText: 'No'
+            })
+
+            if (confirmation.isConfirmed){
+                console.log("Confirmado!!")
+                const response = await fetch(`/api/whatsapp/send-whatsapp`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idReserva: reservacionId
+                    })
+                })
+
+                if (!response.ok) {
+                    const errorData = await response.json(); // Extract the error data
+                    const errorMessage = errorData.error && errorData.error[0] && errorData.error[0].message
+                        ? errorData.error[0].message
+                        : 'Error en la solicitud'; // Fallback if message is not found
+                    throw new Error(errorMessage);
+                }
+            
+                const dataR = await response.json();
+                console.log(dataR);
+
+                Swal.fire({
+                    icon:'success',
+                    title: '¡Completado!',
+                    text: 'Las instrucciones han sido enviadas por Whatsapp correctamente.',
+                    confirmButtonText: 'Aceptar'
+                })
+            }
+
+        } catch (error){
+            console.error('Error al enviar Whatsapp:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Hubo un error al intentar enviar la reservación por Whatsapp.',
+                confirmButtonText: 'Aceptar'
+            })
+        }
+
+        
+
+    })
 
 </script>

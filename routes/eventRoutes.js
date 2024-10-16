@@ -158,5 +158,6 @@ router.post('/eventos/move-to-playground', eventController.moveToPlayground)
 router.get('/calendar/duenos', eventController.reservasDeDuenos)
 router.get('/calendar/colaboradorduenos', eventController.reservasDeDuenosParaColaborador)
 router.post('/eventos/realizarcheckin', eventController.realizarCheckIn)
+router.post('/whatsapp/send-whatsapp', eventController.sendIntructionsToWhatsapp);
 
 module.exports = router;

@@ -638,6 +638,36 @@ async function createReservation(req, res, next) {
     }
 }
 
+async function sendIntructionsToWhatsapp(req, res){
+    try {
+
+        const {idReserva} = req.body;
+    
+        const allReservations = await Documento.findOne();
+        const reservation = allReservations.events.find(evento => evento._id.toString() === idReserva);
+    
+        if (!reservation) {throw new NotFoundError('Reserva no encontrada.')}
+
+        const client = await Cliente.findById(reservation.client);
+        if (!client) {throw new NotFoundError('Cliente no encontrado.')}
+
+
+        const chaletId = reservation.resourceId;
+
+        const chalets = await Habitacion.findOne();
+        const chalet = chalets.resources.find(chalet => chalet._id.toString() === chaletId.toString());
+        if (!chalet) {throw new NotFoundError('Chalet no encontrado.')}
+
+    
+        
+        
+        SendMessages.sendInstructions(client, chalet, idReserva)
+        res.status(200).send({message: 'Instrucciones enviadas correctamente!'})
+    } catch(error){
+        res.send({message: error.message})
+    }
+}
+
 async function createOwnerReservation(req, res, next) {
     const { chaletName, arrivalDate, departureDate, maxOccupation, nNights, clienteProvisional } = req.body;
 
@@ -1323,6 +1353,7 @@ module.exports = {
     obtenerEventoPorId,
     obtenerEventoPorIdRoute,
     createReservation,
+    sendIntructionsToWhatsapp,
     createOwnerReservation,
     editarEvento,
     eliminarEvento,
