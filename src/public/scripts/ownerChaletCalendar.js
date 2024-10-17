@@ -62,7 +62,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         total: event.total,
                         clientId: event.client,
                         status: event.status,
-                        color: event.colorUsuario
+                        color: event.colorUsuario,
+                        clientName: event.clientName,
+                        montoPendiente: event.montoPendiente
                     }));
                     successCallback(events);
                 } catch (error) {
@@ -85,11 +87,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     textColor = 'text-black';
                 }
 
+                const clientName = info.event.extendedProps.clientName;
+                let montoPendiente = info.event.extendedProps.montoPendiente;
+                let montoPendienteMsg = (montoPendiente === null || montoPendiente === undefined) ? 'Reserva de dueño/inversionista' : `<div><b>Monto pendiente: $ ${montoPendiente}</b></div>`
+
                 return {
                     html: `
                     <div class="p-1 rounded ${background} bg-gradient ${textColor}" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: "Overpass", sans-serif;">
-                        <div>Reserva</div>
-                        <div><b>Total: $ ${info.event.extendedProps.total}</b></div>
+                        <div>${clientName}</div>
+                        ${montoPendienteMsg}
                     </div>
                     `
                 }

@@ -212,16 +212,46 @@ async function obtenerEventosDeCabana(req, res) {
         const eventosWithColorUsuario = await Promise.all(eventos.map(async evento => {
             const createdBy = evento.createdBy;
             let colorUsuario = null; // Default to null if usuario is not found
+            let clientName = null;
+            let creadaPor = null;
+            let montoPendiente = null;
             if (createdBy) {
-                const usuario = await Usuario.findById(createdBy).select('color').exec();
+                const usuario = await Usuario.findById(createdBy).select('color firstName lastName').exec();
                 if (usuario) {
                     colorUsuario = usuario.color;
+                    creadaPor = usuario.firstName + ' ' + usuario.lastName;
                 }
+            }
+            if (evento.client){
+                const client = await Cliente.findById(evento.client);
+                if (client){
+                    clientName = (client.firstName + ' ' + client.lastName).toUpperCase();
+                } else {
+                    clientName = "Reserva"
+                }
+            } else {
+                if (evento.clienteProvisional){
+                    clientName = evento.clienteProvisional;
+                }
+            }
+
+            if (evento.status !== "reserva dueño"){
+                const pagosReserva = await pagoController.obtenerPagos(evento._id);
+                let pagoTotal = 0
+                pagosReserva.forEach(pago => {
+                    pagoTotal += pago.importe;
+                })
+                const totalReserva = evento.total;
+                montoPendiente = totalReserva - pagoTotal;
+
             }
 
             return {
                 ...evento.toObject(),
-                colorUsuario: colorUsuario
+                colorUsuario: colorUsuario,
+                clientName: clientName,
+                creadaPor: creadaPor,
+                montoPendiente: montoPendiente
             };
 
         }));

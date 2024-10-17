@@ -61,7 +61,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             total: event.total,
                             clientId: event.client,
                             status: event.status,
-                            color: event.colorUsuario
+                            color: event.colorUsuario,
+                            clientName: event.clientName,
+                            creadaPor: event.creadaPor
                         }));
                     successCallback(events);
                 } catch (error) {
@@ -84,12 +86,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 //     textColor = 'text-black';
                 // }
                 const color = info.backgroundColor || '#0dcaf0';
+                const clientName = info.event.extendedProps.clientName;
+                const creadaPor = info.event.extendedProps.creadaPor;
+                let total = info.event.extendedProps.total
+                let totalMsg = total === undefined ? `<div>Reserva de dueño/inversionista</div>` : `<div><b>Total: $ ${total}</b></div>`
 
                 return {
                     html: `
                     <div class="p-1 rounded bg-gradient text-black" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: 'Overpass', sans-serif; background-color: ${color} !important;">
-                        <div>Reserva</div>
-                        <div><b>Total: $ ${info.event.extendedProps.total}</b></div>
+                        <div>${clientName}</div>
+                        ${totalMsg}
+                        <div><b>Creada por: ${creadaPor}</b></div>
                     </div>
                     `
                 };
