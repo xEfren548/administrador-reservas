@@ -105,10 +105,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             let colorRectanguloBottomLeft;
             let colorRectanguloBottomRight;
 
-            const clientName = info.event.extendedProps.clientName || "Reserva de dueño/inversionista"
+            const clientName = info.event.extendedProps.clientName || "\nRESERVA INTERNA"
             const clientPayments = info.event.extendedProps.clientPayments;
             const madeCheckIn = info.event.extendedProps.madeCheckIn;
             const cleaningDetails = info.event.extendedProps.cleaningDetails;
+
+            const total = info.event.extendedProps.total
+            const totalMsg = total === undefined ? '<div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"> \n </div>' : `<div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"><b>Total: $ ${total}</b></div>`
 
             if (clientPayments === 0) {
                 colorRectanguloTop = 'bg-danger'
@@ -168,7 +171,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </div>
                     <div class="event-details text-white">
                         <div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"><b>${clientName}</div></b>
-                        <div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"><b>Total: $ ${info.event.extendedProps.total}</b></div>
+                        ${totalMsg}
                     </div>
                 </div>
                 `
