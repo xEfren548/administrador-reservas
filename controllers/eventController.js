@@ -709,6 +709,7 @@ async function sendIntructionsToWhatsapp(req, res){
         
         
         SendMessages.sendInstructions(client, chalet, idReserva)
+        SendMessages.sendReservationConfirmation(client, chalet, reservation)
         res.status(200).send({message: 'Instrucciones enviadas correctamente!'})
     } catch(error){
         res.send({message: error.message})

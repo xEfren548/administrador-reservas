@@ -88,10 +88,23 @@ function sendReservationConfirmation(clientInfo, chaletInfo, reservationInfo) {
     // const formatDepartureDate = moment(reservationInfo.departureDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
     console.log("sendReservationConfirmation");
 
+    const chaletArrivalHour = moment.tz(chaletInfo.others.arrivalTime, "America/Mexico_City").format("HH:mm");
+    const chaletDepartureHour = moment.tz(chaletInfo.others.departureTime, "America/Mexico_City").format("HH:mm");
+    
+
+    console.log("chaletArrivalHour", chaletArrivalHour)
+    console.log("chaletDepartureHour", chaletDepartureHour)
+
+    const formattedArrivalDate = moment(reservationInfo.arrivalDate).format("DD/MM/YYYY");
+    const formattedDepartureDate = moment(reservationInfo.departureDate).format("DD/MM/YYYY");
+
+    const arrMsg = `${formattedArrivalDate} a las ${chaletArrivalHour}`
+    const depMsg = `${formattedDepartureDate} a las ${chaletDepartureHour}`
+
     sendTemplateMsg(clientInfo, "confirmacion_de_reserva", [
         chaletInfo.propertyDetails.name,
-        reservationInfo.arrivalDate,
-        reservationInfo.departureDate
+        arrMsg,
+        depMsg
     ])
 }
 
