@@ -328,24 +328,61 @@
                     let isDrawing = false;
                     let lastX = 0;
                     let lastY = 0;
+
+                    // Helper function to get the correct coordinates for both mouse and touch events
+                    function getCoordinates(event) {
+                        if (event.touches) {
+                            return [event.touches[0].clientX - canvas.getBoundingClientRect().left,
+                                    event.touches[0].clientY - canvas.getBoundingClientRect().top];
+                        } else {
+                            return [event.offsetX, event.offsetY];
+                        }
+                    }
+
+                    // Start drawing (mouse and touch)
                     canvas.addEventListener('mousedown', (e) => {
                         isDrawing = true;
-                        [lastX, lastY] = [e.offsetX, e.offsetY];
+                        [lastX, lastY] = getCoordinates(e);
                     });
+
+                    canvas.addEventListener('touchstart', (e) => {
+                        isDrawing = true;
+                        [lastX, lastY] = getCoordinates(e);
+                        e.preventDefault();  // Prevent scrolling when drawing
+                    });
+
+                    // Drawing in motion (mouse and touch)
                     canvas.addEventListener('mousemove', (e) => {
                         if (!isDrawing) return;
+                        const [x, y] = getCoordinates(e);
                         ctx.beginPath();
                         ctx.moveTo(lastX, lastY);
-                        ctx.lineTo(e.offsetX, e.offsetY);
+                        ctx.lineTo(x, y);
                         ctx.stroke();
-                        [lastX, lastY] = [e.offsetX, e.offsetY];
+                        [lastX, lastY] = [x, y];
                     });
-                    canvas.addEventListener('mouseup', () => {
-                        isDrawing = false;
+
+                    canvas.addEventListener('touchmove', (e) => {
+                        if (!isDrawing) return;
+                        const [x, y] = getCoordinates(e);
+                        ctx.beginPath();
+                        ctx.moveTo(lastX, lastY);
+                        ctx.lineTo(x, y);
+                        ctx.stroke();
+                        [lastX, lastY] = [x, y];
+                        e.preventDefault();  // Prevent scrolling when drawing
                     });
+
+                    // Stop drawing (mouse and touch)
+                    canvas.addEventListener('mouseup', () => isDrawing = false);
+                    canvas.addEventListener('touchend', () => isDrawing = false);
+
+                    // Clear canvas
                     btnClrCanvas.addEventListener("click", () => {
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    });
+});
+
+
                     // Validate if user entered their signaure and accepted the terms and conditions
                     checkbox.checked = false;
                     acceptBtn.addEventListener("click", () => {
