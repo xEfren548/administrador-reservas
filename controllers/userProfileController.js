@@ -2,6 +2,8 @@ const bcrypt = require('bcrypt');
 const Usuario = require('../models/Usuario');
 const NotFoundError = require('../common/error/not-found-error');
 const BadRequestError = require('../common/error/bad-request-error');
+const sendPassword = require("../utils/email");
+
 const {check} = require("express-validator");
 
 // No uuid validator has been implemented for those functions that take parameters form the URL.
@@ -191,6 +193,9 @@ async function updateUserEmail(req, res, next) {
         }
 
         req.session.email = updateFields.email;
+
+        sendPassword(userToUpdate.email, userToUpdate.password, userToAdd.privilege)
+
     
         res.status(200).json({ success: true, message: "Email editado con éxito" });
     } catch(err){

@@ -185,6 +185,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             let newElTitle = mouseEnterInfo.event.id;
             let newElTotal = mouseEnterInfo.event.extendedProps.total;
             let newElStatus = mouseEnterInfo.event.extendedProps.status;
+            if (newElStatus === "pending"){
+                newElStatus = "Por Depo"    
+            }
             newEl.innerHTML = `
             <div
                 class="fc-hoverable-event"

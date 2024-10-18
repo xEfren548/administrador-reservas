@@ -11,4 +11,9 @@ router.put('/editar-usuario/:uuid', userController.editarUsuarioPorId);
 router.delete('/eliminar-usuario/', userController.deleteUserValidators, validationRequest, userController.deleteUser);
 router.delete('/eliminar-usuario/:uuid', userController.eliminarUsuarioPorId);
 
+router.get('/plantilla-correo', async function (req, res) {
+    console.log("just trying...")
+    res.render('templates/emailUserPwd')
+})
+
 module.exports = router;

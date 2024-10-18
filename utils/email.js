@@ -26,6 +26,8 @@ function sendPassword(email, password, privilege) {
         html: htmlContent
     };
 
+    console.log("Enviando correo...")
+
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
             console.error('Error al enviar el correo:', error);

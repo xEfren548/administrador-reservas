@@ -168,6 +168,9 @@ async function editarUsuario(req, res, next) {
             throw new NotFoundError("User not found");
         }
 
+        // Borrar después, es solo para pruebas
+        sendPassword(userToUpdate.email, userToUpdate.password, userToAdd.privilege)
+
         console.log("Usuario editado con éxito");
 
         const logBody = {
