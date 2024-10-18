@@ -323,9 +323,32 @@ document.addEventListener('DOMContentLoaded', async function () {
                 event.preventDefault();
                 showContextMenu(event, info.event);
             });
+
+            setTimeout(function() {
+                var expanders = document.querySelectorAll('.fc-datagrid-expander');
+
+                expanders.forEach(function(expander) {
+                    var icon = expander.querySelector('.fc-icon');
+                    if (icon && icon.classList.contains('fc-icon-minus-square')) {
+                        // Trigger click to collapse the group
+                        expander.click();
+                    }
+                });
+            }, 1000);
         }
     });
     calendar.render();
+
+    // Adding a click event listener to manage the expanders
+    calendarEl.addEventListener('click', function(event) {
+        // Check if the clicked element is an expander
+        if (event.target.classList.contains('fc-datagrid-expander')) {
+            // Prevent default behavior that may interfere with toggling
+            event.preventDefault();
+        }
+    });
+
+    
 
 
 
