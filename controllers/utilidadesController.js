@@ -205,7 +205,7 @@ async function generarComisionReserva(req, res) {
                             await altaComisionReturn({
                                 monto: costosAdministrador.amount * nNights,
                                 concepto: conceptoAdmin,
-                                fecha: new Date(departureDate),
+                                fecha: new Date(arrivalDate),
                                 idUsuario: user._id.toString(),
                                 idReserva: idReserva
                             })
@@ -218,7 +218,7 @@ async function generarComisionReserva(req, res) {
                         await altaComisionReturn({
                             monto: comisionVendedor * nNights,
                             concepto: `Comisión por Reservación admin. ${chaletName} ${nNights} noches`,
-                            fecha: new Date(departureDate),
+                            fecha: new Date(arrivalDate),
                             idUsuario: user._id.toString(),
                             idReserva: idReserva
                         })
@@ -269,7 +269,7 @@ async function generarComisionReserva(req, res) {
                         await altaComisionReturn({
                             monto: comisionVendedor * nNights,
                             concepto: `Reservación ${chaletName} ${nNights} noches`,
-                            fecha: new Date(departureDate),
+                            fecha: new Date(arrivalDate),
                             idUsuario: user._id.toString(),
                             idReserva: idReserva
                         })
@@ -285,7 +285,7 @@ async function generarComisionReserva(req, res) {
                     await altaComisionReturn({
                         monto: costosGerente.amount * nNights,
                         concepto: `Reservación ${chaletName} ${nNights} noches`,
-                        fecha: new Date(departureDate),
+                        fecha: new Date(arrivalDate),
                         idUsuario: user._id.toString(),
                         idReserva: idReserva
                     })
@@ -322,7 +322,7 @@ async function generarComisionReserva(req, res) {
         await altaComisionReturn({
             monto: utilidadChalet,
             concepto: `Utilidad de reservación ${chaletName} ${nNights} noches`,
-            fecha: new Date(departureDate),
+            fecha: new Date(arrivalDate),
             idUsuario: chaletAdmin._id.toString(),
             idReserva: idReserva
         })
@@ -331,7 +331,7 @@ async function generarComisionReserva(req, res) {
         await altaComisionReturn({
             monto: chalet.additionalInfo.extraCleaningCost,
             concepto: `Comisión limpieza ${chaletName}`,
-            fecha: new Date(departureDate),
+            fecha: new Date(arrivalDate),
             idUsuario: chaletJanitor,
             idReserva: idReserva
         })
@@ -362,7 +362,7 @@ async function generarComisionReserva(req, res) {
                         await altaComisionReturn({
                             monto: comisionInversionistas,
                             concepto: `Comisión de inversionista por Reserva de cabaña: ${chaletName}`,
-                            fecha: new Date(departureDate),
+                            fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
                         })
@@ -371,7 +371,7 @@ async function generarComisionReserva(req, res) {
                         await altaComisionReturn({
                             monto: -comisionNegativaIva,
                             concepto: `Retención IVA inversionista por Reserva de cabaña: ${chaletName}`,
-                            fecha: new Date(departureDate),
+                            fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
                         })
@@ -380,7 +380,7 @@ async function generarComisionReserva(req, res) {
                         await altaComisionReturn({
                             monto: -comisionNegativaIsr,
                             concepto: `Retención ISR inversionista por Reserva de cabaña: ${chaletName}`,
-                            fecha: new Date(departureDate),
+                            fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
                         })
@@ -389,7 +389,7 @@ async function generarComisionReserva(req, res) {
                         await altaComisionReturn({
                             monto: comisionInversionistas,
                             concepto: `Comisión de inversionista por Reserva de cabaña: ${chaletName}`,
-                            fecha: new Date(departureDate),
+                            fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
                         })
@@ -404,7 +404,7 @@ async function generarComisionReserva(req, res) {
             await altaComisionReturn({
                 monto: costoBase - chalet.additionalInfo.extraCleaningCost,
                 concepto: `Comisión Dueño de cabaña: ${chaletName}`,
-                fecha: new Date(departureDate),
+                fecha: new Date(arrivalDate),
                 idUsuario: chaletOwner,
                 idReserva: idReserva
             })
@@ -514,14 +514,13 @@ async function mostrarUtilidadesGlobales(req, res) {
 
         // // Extract the IDs and names of the rooms
         const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
-        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString() }));
+        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights }));
 
 
         utilidades = await Utilidades.find().lean();
 
         const idAllUsers = [...new Set(utilidades.map(utilidad => utilidad.idUsuario.toString()))];
 
-        console.log(idAllUsers)
 
         let userMontos = {}; // Object to store total monto for each user
         let utilidadMontos = {}; // Object to store total monto for each user
@@ -559,6 +558,7 @@ async function mostrarUtilidadesGlobales(req, res) {
                             utilidad.idHabitacion = idHabitacion;
                             const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
                             utilidad.nombreHabitacion = matchId.name;
+                            utilidad.nochesReservadas = reserva.nNights
                         } else {
                             utilidad.nombreHabitacion = 'N/A';
                         }
@@ -669,7 +669,7 @@ async function mostrarUtilidadesGlobales(req, res) {
 
         // console.log(Object.values(userMontos));
         // console.log(Object.values(utilidadMontos));
-        console.log(utilidades)
+        // console.log(utilidades)
 
         utilidades.sort((a, b) => moment(b.fecha, 'DD-MM-YYYY').valueOf() - moment(a.fecha, 'DD-MM-YYYY').valueOf());
         res.render('vistaUtilidadesGlobales', {

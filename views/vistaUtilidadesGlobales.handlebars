@@ -50,6 +50,7 @@
                         <th scope="col">Concepto</th>
                         <th scope="col">Id Reserva</th>
                         <th scope="col">Monto</th>
+                        <th scope="col">Noches reservadas</th>
                         <th scope="col">Fecha</th>
                         <th scope="col">Usuario</th>
 
@@ -63,6 +64,7 @@
                         <td>{{this.concepto}}</td>
                         <td>{{this.idReserva}}</td>
                         <td>${{this.monto}}</td>
+                        <td>{{this.nochesReservadas}}</td>
                         <td>{{this.fecha}}</td>
                         <td>{{this.nombreUsuario}}</td>
 
@@ -80,7 +82,7 @@
                     <tr>
                         <td colspan="3"><b>Total</b></td>
                         <td id="totalMonto"></td>
-                        <td colspan="2"></td>
+                        <td colspan="3"></td>
                     </tr>
                 </tfoot>
             </table>
@@ -155,7 +157,7 @@
                     });
 
                     this.api()
-                        .columns([0, 5])
+                        .columns([0, 6])
                         .every(function () {
                             let column = this;
 
@@ -311,7 +313,7 @@
 
         api.rows({ search: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
             var data = this.data();
-            var date = moment(data[4], "DD/MM/YYYY"); // Assuming date is in the 4rd column
+            var date = moment(data[5], "DD/MM/YYYY"); // Assuming date is in the 4rd column
             var monthIndex = date.month(); // Get the month index (0-based)
             var amount = parseFloat(data[3].replace(/[^\d.-]/g, '')); // Parse the amount
 
@@ -333,7 +335,7 @@
         var groupedData = {};
         api.rows({ search: 'applied' }).every(function () {
             var data = this.data();
-            var usuario = data[5];
+            var usuario = data[6];
             var monto = parseFloat(data[3].replace(/[^\d.-]/g, ''));
 
             if (!groupedData[usuario]) {
