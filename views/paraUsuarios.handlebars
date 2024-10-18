@@ -188,7 +188,7 @@
                         <div class="canvas">
                             <button id="btnClrCanvas" class="delete-signature"><span
                                     class="material-symbols-outlined">delete</span></button>
-                            <canvas id="signatureCanvas"></canvas>
+                            <canvas id="signatureCanvas" width="500" height="200"></canvas>
                             <label for="signatureCanvas">Ingrese su firma</label>
                         </div>
                     </div>
@@ -329,18 +329,38 @@
                     let lastX = 0;
                     let lastY = 0;
 
+                    const scaleCanvas = () => {
+                        const ratio = window.devicePixelRatio || 1;
+                        canvas.width = canvas.clientWidth * ratio;
+                        canvas.height = canvas.clientHeight * ratio;
+                        ctx.scale(ratio, ratio);
+                    };
+
+                    scaleCanvas();
+
+                    // Adjust mouse position to canvas
+                    function getMousePos(canvas, evt) {
+                        const rect = canvas.getBoundingClientRect();
+                        return {
+                            x: (evt.clientX - rect.left) * (canvas.width / rect.width),
+                            y: (evt.clientY - rect.top) * (canvas.height / rect.height)
+                        };
+                    }
+
                     canvas.addEventListener('mousedown', (e) => {
                         isDrawing = true;
-                        [lastX, lastY] = [e.offsetX, e.offsetY];
+                        const pos = getMousePos(canvas, e);
+                        [lastX, lastY] = [pos.x, pos.y];
                     });
 
                     canvas.addEventListener('mousemove', (e) => {
                         if (!isDrawing) return;
+                        const pos = getMousePos(canvas, e);
                         ctx.beginPath();
                         ctx.moveTo(lastX, lastY);
-                        ctx.lineTo(e.offsetX, e.offsetY);
+                        ctx.lineTo(pos.x, pos.y);
                         ctx.stroke();
-                        [lastX, lastY] = [e.offsetX, e.offsetY];
+                        [lastX, lastY] = [pos.x, pos.y];
                     });
 
                     canvas.addEventListener('mouseup', () => {
