@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const urlClientes = './api/clientes/show-clients';
     var today = new Date();
     var milliseconds = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) - Date.UTC(today.getFullYear(), 0, 7);
-
+    let resourcesCollapsed = false; // Flag to ensure collapse happens only once
 
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
@@ -324,29 +324,27 @@ document.addEventListener('DOMContentLoaded', async function () {
                 showContextMenu(event, info.event);
             });
 
-            setTimeout(function() {
-                var expanders = document.querySelectorAll('.fc-datagrid-expander');
+            if (!resourcesCollapsed) {
+                setTimeout(function() {
+                    var expanders = document.querySelectorAll('.fc-datagrid-expander');
+        
+                    expanders.forEach(function(expander) {
+                        var icon = expander.querySelector('.fc-icon');
+                        if (icon && icon.classList.contains('fc-icon-minus-square')) {
+                            // Trigger click to collapse the group
+                            expander.click();
+                        }
+                    });
+        
+                    resourcesCollapsed = true; // Set the flag to true to prevent further collapsing
+                }, 100);
+            }
 
-                expanders.forEach(function(expander) {
-                    var icon = expander.querySelector('.fc-icon');
-                    if (icon && icon.classList.contains('fc-icon-minus-square')) {
-                        // Trigger click to collapse the group
-                        expander.click();
-                    }
-                });
-            }, 1000);
+
         }
     });
     calendar.render();
-
-    // Adding a click event listener to manage the expanders
-    calendarEl.addEventListener('click', function(event) {
-        // Check if the clicked element is an expander
-        if (event.target.classList.contains('fc-datagrid-expander')) {
-            // Prevent default behavior that may interfere with toggling
-            event.preventDefault();
-        }
-    });
+    
 
     
 
