@@ -17,6 +17,7 @@
                         <th scope="col">Fecha de llegada</th>
                         <th scope="col">Fecha de salida</th>
                         <th scope="col">Estatus</th>
+                        <th scope="col">Vendedor</th>
                         <th scope="col">Monto pendiente</th>
                         <th scope="col">Acciones</th>
                     </tr>
@@ -29,6 +30,7 @@
                         <td>{{this.arrivalDate}}</td>
                         <td>{{this.departureDate}}</td>
                         <td>{{this.status}}</td>
+                        <td>{{this.vendedor}}</td>
                         {{#if this.montoPendiente}}
                         <td>${{this.montoPendiente}}</td>
                         {{else}}

@@ -335,7 +335,7 @@ async function reservasDeDuenos(req, res, next) {
 
         // Filter events that correspond to the owner's rooms and add the room name to each event
         const eventosFiltradosOrdenadosConPagos = await Promise.all(documentos.events
-            .filter(evento => cabañaIds.includes(evento.resourceId.toString()))
+            .filter(evento => cabañaIds.includes(evento.resourceId.toString()) && evento.status != "cancelled")
             .map(async evento => {
                 // Obtener los pagos para este evento
                 const pagos = await pagoController.obtenerPagos(evento._id);
@@ -354,6 +354,16 @@ async function reservasDeDuenos(req, res, next) {
                 let total = subtotal - preTotal;
 
                 let montoPendiente = total - pagoTotal;
+                
+
+                let vendedor = null;
+                const usuarioQueReserva = await Usuario.findById(evento.createdBy);
+                if (usuarioQueReserva){
+                    if (usuarioQueReserva.privilege !== "Inversionistas" && usuarioQueReserva.privilege !== "Dueño de cabañas" && usuarioQueReserva.privilege !== "Colaborador dueño"){
+                        vendedor = usuarioQueReserva.firstName + ' ' + usuarioQueReserva.lastName
+
+                    }
+                }
 
 
 
@@ -366,13 +376,14 @@ async function reservasDeDuenos(req, res, next) {
                     departureDate: moment.utc(evento.departureDate).format('DD-MM-YYYY, h:mm:ss a'),
                     pagoTotal: pagoTotal,  // Asignar los pagos al evento
                     montoPendiente: montoPendiente,
-                    mostrarCancelarReserva: evento.status === 'reserva de dueño'  // Nueva propiedad
+                    mostrarCancelarReserva: evento.status === 'reserva de dueño',  // Nueva propiedad.
+                    vendedor: vendedor
 
                 };
             }));
 
         eventosFiltradosOrdenadosConPagos.sort((a, b) => moment(b.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf() - moment(a.departureDate, 'DD-MM-YYYY, h:mm:ss a').valueOf());
-
+        console.log(eventosFiltradosOrdenadosConPagos);
         res.render('vistaParaDuenos', {
             eventos: eventosFiltradosOrdenadosConPagos,
             chalets: habitacionesDueno
