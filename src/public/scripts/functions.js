@@ -138,19 +138,42 @@ document.addEventListener("DOMContentLoaded", function () {
             // Esperar a que obtenerComisiones() se resuelva            
             comisionesReserva = document.getElementById('habitacion_total').value.trim() - precioMinimoPermitido; // 3250 - 3000
             console.log(comisionesReserva)
+            const tipoReserva = document.getElementById('tipo-reserva-select').value.trim();
+            const isDeposit = tipoReserva === 'por-depo' ? true : false;
+
+            let formData = {};
+
+            if (isDeposit){
+                formData = {
+                    clientFirstName: document.getElementById('nombre-cliente-provisional').value.trim(),
+                    clientLastName: document.getElementById('apellido-cliente-provisional').value.trim(),
+                    arrivalDate: document.getElementById('event_start_date').value.trim(),
+                    departureDate: document.getElementById('event_end_date').value.trim(),
+                    nNights: document.getElementById("event_nights").value.trim(),
+                    chaletName: document.getElementById('tipologia_habitacion').value.trim(),
+                    maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
+                    pax: document.getElementById('numero-personas').value.trim(),
+                    total: document.getElementById('habitacion_total').value.trim(),
+                    isDeposit: isDeposit,
+                    comisionVendedor: comisionesReserva
+                }
+            } else {
+                formData = {
+                    clientEmail: document.getElementById("lblClient").value.trim(),
+                    arrivalDate: document.getElementById('event_start_date').value.trim(),
+                    departureDate: document.getElementById('event_end_date').value.trim(),
+                    nNights: document.getElementById("event_nights").value.trim(),
+                    chaletName: document.getElementById('tipologia_habitacion').value.trim(),
+                    maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
+                    pax: document.getElementById('numero-personas').value.trim(),
+                    total: document.getElementById('habitacion_total').value.trim(),
+                    isDeposit: isDeposit,
+                    comisionVendedor: comisionesReserva
+                };
+            }
+
             // Crear un objeto con los datos del formulario
-            const formData = {
-                clientEmail: document.getElementById("lblClient").value.trim(),
-                arrivalDate: document.getElementById('event_start_date').value.trim(),
-                departureDate: document.getElementById('event_end_date').value.trim(),
-                nNights: document.getElementById("event_nights").value.trim(),
-                chaletName: document.getElementById('tipologia_habitacion').value.trim(),
-                maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
-                pax: document.getElementById('numero-personas').value.trim(),
-                total: document.getElementById('habitacion_total').value.trim(),
-                isDeposit: document.getElementById('chckDeposit').checked,
-                comisionVendedor: comisionesReserva
-            };
+
 
             console.log(preciosTotalesGlobal)
             console.log("precioMinimoPermitido: ", precioMinimoPermitido)
@@ -563,7 +586,8 @@ document.addEventListener("DOMContentLoaded", function () {
         
         const containerBuscarCliente = document.querySelector('#container-buscar-cliente');
         const containerAltaCliente = document.querySelectorAll('.container-alta-cliente');
-        
+        const containerAltaClienteProvisional = document.querySelector('#container-alta-cliente-provisional')
+
         const selectedOption = tipoReservaSelect.options[tipoReservaSelect.selectedIndex];
         console.log(selectedOption)
 
@@ -572,11 +596,13 @@ document.addEventListener("DOMContentLoaded", function () {
             containerAltaCliente.forEach(element => {
                 element.classList.remove('d-none')
             });
+            containerAltaClienteProvisional.classList.add('d-none')
         } else {
             containerBuscarCliente.classList.add('d-none')
             containerAltaCliente.forEach(element => {
                 element.classList.add('d-none')
             });
+            containerAltaClienteProvisional.classList.remove('d-none')
         }
     });
 
