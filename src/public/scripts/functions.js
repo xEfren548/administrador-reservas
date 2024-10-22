@@ -557,6 +557,29 @@ document.addEventListener("DOMContentLoaded", function () {
         
     });
 
+    const tipoReservaSelect = document.querySelector('#tipo-reserva-select');
+    tipoReservaSelect.addEventListener('change', function() {
+        console.log("Ejecutando...")
+        
+        const containerBuscarCliente = document.querySelector('#container-buscar-cliente');
+        const containerAltaCliente = document.querySelectorAll('.container-alta-cliente');
+        
+        const selectedOption = tipoReservaSelect.options[tipoReservaSelect.selectedIndex];
+        console.log(selectedOption)
+
+        if (selectedOption.value === "reserva"){
+            containerBuscarCliente.classList.remove('d-none')
+            containerAltaCliente.forEach(element => {
+                element.classList.remove('d-none')
+            });
+        } else {
+            containerBuscarCliente.classList.add('d-none')
+            containerAltaCliente.forEach(element => {
+                element.classList.add('d-none')
+            });
+        }
+    });
+
 
 
 });
