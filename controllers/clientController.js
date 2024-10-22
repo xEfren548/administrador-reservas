@@ -142,6 +142,37 @@ async function createClient(req, res, next) {
     }
 }
 
+async function createClientLocal(cliente) {
+    const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = cliente;
+    const clienteToAdd = new Cliente({
+        firstName,
+        lastName,
+        phone,
+        address,
+        email,
+        identificationType,
+        identificationNumber
+    });
+
+    try {
+        await clienteToAdd.save();
+
+        console.log("Cliente agregado con éxito");
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'registration',
+            acciones: `Cliente agregado por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        }
+        
+        await logController.createBackendLog(logBody);
+        res.status(200).json({ success: true, message: "Client successfully created", client: clienteToAdd});
+    } catch (err) {
+        return next(err);
+    }
+}
+
 async function editClient(req, res, next) {
     const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = req.body;
     const updateFields = {};
@@ -262,6 +293,7 @@ module.exports = {
     showClientsView,
     showClients,
     createClient,
+    createClientLocal,
     editClient,
     editClientById,
     deleteClient,

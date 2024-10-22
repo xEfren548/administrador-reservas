@@ -11,25 +11,20 @@ const clientSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
-        required: true
     },
     address: {
         type: String,
-        required: true
     },
     email: {
         type: String,
-        required: true,
         unique: true
     },
     identificationType: {
         type: String,
         enum: ['INE', 'Pasaporte', 'Licencia de conducir'],
-        required: true
     },
     identificationNumber: {
         type: String,
-        required: true,
         unique: true
     }
 });
