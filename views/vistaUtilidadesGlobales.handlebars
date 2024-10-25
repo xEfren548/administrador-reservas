@@ -1,24 +1,24 @@
 <div class="row flex-column justify-content-center mt-3 " style="width: 95%;">
     <h1 class="mt-5">Gráficas de Utilidades por Reservación</h1>
-    <div class="row mb-3 ">
-        <div class="col-sm-12 col-md-12 col-lg-6 col-xl-6 h-100 w-100">
-            <canvas id="chart-line" class="w-100 h-100 utCharts" style="max-width: 100%; max-height: 400px;"></canvas>
+    <div class="row mb-5 ">
+        <div class="col-sm-12 col-md-12 col-lg-6 col-xl-6 mb-3" style="width: 800px; height: 400px;">
+            <canvas id="chart-line" class="utCharts"></canvas>
         </div>
 
-        <div class="col-12 col-md-12 col-lg-6 col-xl-6 h-100 w-100">
+        <div class="col-12 col-md-12 col-lg-6 col-xl-6 mb-3" style="width: 800px; height: 400px;">
             <p>Utilidades del mes: <strong>${{totalEarnings}}</strong></p>
-            <canvas id="doughnut-chart" class="w-100 h-100 utCharts" style="max-width: 100%; max-height: 200px;"></canvas>
+            <canvas id="doughnut-chart" class="utCharts"></canvas>
         </div>
     </div>
 
-    <div class="row mb-3 mt-3 ">
-        <div class="col-12 col-md-12 col-lg-6 col-xl-6 h-100 w-100">
-            <canvas id="userMontos-chart" class="w-100 h-100 utCharts" style="max-width: 100%; max-height: 400px;"></canvas>
+    <div class="row mb-5 mt-3 ">
+        <div class="col-12 col-md-12 col-lg-6 col-xl-6 mb-3" style="width: 800px; height: 400px;">
+            <canvas id="userMontos-chart" class="utCharts"></canvas>
         </div>
 
 
-        <div class="col-12 col-md-12 col-lg-6 col-xl-6 h-100 w-100">
-            <canvas id="chaletUtilities-chart" class="w-100 h-100 utCharts" style="max-width: 100%; max-height: 400px;"></canvas>
+        <div class="col-12 col-md-12 col-lg-6 col-xl-6 mb-3" style="width: 800px; height: 400px;">
+            <canvas id="chaletUtilities-chart" class="utCharts"></canvas>
         </div>
     </div>
 
@@ -202,7 +202,7 @@
             DataTable.ext.search.push(function (settings, data, dataIndex) {
                 var minDate = moment(document.getElementById('startDate').value, "YYYY-MM-DD").startOf('day');
                 var maxDate = moment(document.getElementById('endDate').value, "YYYY-MM-DD").endOf('day');
-                var targetDate = moment(data[4], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
+                var targetDate = moment(data[5], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
 
                 if ((isNaN(minDate) && isNaN(maxDate)) ||
                     (isNaN(minDate) && targetDate <= maxDate) ||
@@ -311,6 +311,7 @@
 
     // Function to update the chart with filtered data
     function updateChart(api) {
+        console.log("UpdateChart data: ")
         var monthlyData = Array(12).fill(0); // Initialize array for 12 months
 
         api.rows({ search: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
@@ -323,7 +324,9 @@
             if (!isNaN(monthIndex) && !isNaN(amount)) {
                 monthlyData[monthIndex] += amount; // Accumulate amount for each month
             }
+            console.log(data)
         });
+
 
         // Update the chart data and redraw
         if (chartInstance) {
@@ -333,6 +336,7 @@
     }
 
     function updateUsersChart(api) {
+        console.log("UpdateUsersChart data: ")
         // Group data by usuario
         var groupedData = {};
         api.rows({ search: 'applied' }).every(function () {
@@ -345,6 +349,8 @@
             }
             groupedData[usuario] += monto;
         });
+
+        console.log(groupedData);
 
         // Convert groupedData to array of objects
         const userMontoArray = Object.keys(groupedData).map(usuario => ({
@@ -368,6 +374,7 @@
     }
 
     function updateChaletsChart(api) {
+        console.log("UpdateChalets data: ")
         // Group data by usuario
         var groupedData = {};
         api.rows({ search: 'applied' }).every(function () {
@@ -381,6 +388,8 @@
             }
             groupedData[habitacion] += monto;
         });
+
+        console.log(groupedData)
 
         // Convert groupedData to array of objects
         const chaletMontoArray = Object.keys(groupedData).map(habitacion => ({
@@ -455,45 +464,32 @@
     //const userMontos = {{{ json userMontos }}}
     //userMontos.sort((a, b) => b.monto - a.monto);
 
-    const ctxUsers = document.getElementById('userMontos-chart').getContext('2d');
-
-    const userMontosChart = new Chart(ctxUsers, {
-        type: 'pie',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Comisiones por usuario',
-                data: [],
-                backgroundColor: [],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-
-                ],
-                borderWidth: 1,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: top
+                const ctxUsers = document.getElementById('userMontos-chart').getContext('2d');
+                userMontosChart = new Chart(ctxUsers, {
+                type: 'pie',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Comisiones por usuario',
+                        data: [],
+                        backgroundColor: [],
+                        borderWidth: 1
+                    }]
                 },
-                title: {
-                    display: true,
-                    text: 'Montos por usuario'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (tooltipItem) {
-                            return `${tooltipItem.label}: $${tooltipItem.raw.toFixed(2)}`;
-
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Comisiones por usuario'
                         }
                     }
                 }
-            }
-        }
-    })
+            });
     const ctxChalets = document.getElementById('chaletUtilities-chart').getContext('2d');
 
     const montosChaletsChart = new Chart(ctxChalets, {
