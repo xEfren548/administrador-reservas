@@ -16,6 +16,12 @@ router.get('/rackservicios', async (req, res) => {
             service.fecha = moment.utc(service.fecha).format('DD-MM-YYYY');
         });
 
+        services.sort((a, b) => {
+            if (a.status === "Pendiente" && b.status !== "Pendiente") return -1;
+            if (a.status !== "Pendiente" && b.status === "Pendiente") return 1;
+            return moment(b.fecha, 'DD-MM-YYYY') - moment(a.fecha, 'DD-MM-YYYY');
+        });
+
 
 
         res.render('rackServicios', {
