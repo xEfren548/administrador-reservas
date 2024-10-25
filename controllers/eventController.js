@@ -356,6 +356,16 @@ async function reservasDeDuenos(req, res, next) {
                     }
                 }
 
+                let cliente = null;
+                const clienteFound = await Cliente.findById(evento.client)
+                if (clienteFound){
+                    cliente = (clienteFound.firstName + ' ' + clienteFound.lastName).toUpperCase();
+                } else {
+                    if (evento.clienteProvisional){
+                        cliente = evento.clienteProvisional;
+                    }
+                }
+
 
 
 
@@ -368,7 +378,8 @@ async function reservasDeDuenos(req, res, next) {
                     pagoTotal: pagoTotal,  // Asignar los pagos al evento
                     montoPendiente: montoPendiente,
                     mostrarCancelarReserva: evento.status === 'reserva de dueño',  // Nueva propiedad.
-                    vendedor: vendedor
+                    vendedor: vendedor,
+                    cliente: cliente
 
                 };
             }));

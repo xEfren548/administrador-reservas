@@ -19,6 +19,7 @@
                         <th scope="col">Estatus</th>
                         <th scope="col">Vendedor</th>
                         <th scope="col">Monto pendiente</th>
+                        <th scope="col">Cliente</th>
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
@@ -36,6 +37,7 @@
                         {{else}}
                         <td>-</td>
                         {{/if}}
+                        <td>{{this.cliente}}</td>
                         {{#if this.mostrarCancelarReserva}}
                         <td class="text-center">
                             <button type="button" class="btn btn-danger btn-sm" data-event-id="{{this._id}}"

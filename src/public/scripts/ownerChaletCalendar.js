@@ -108,6 +108,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     let newElTitle = mouseEnterInfo.event.id;
                     let newElTotal = mouseEnterInfo.event.extendedProps.total;
                     let newElStatus = mouseEnterInfo.event.extendedProps.status;
+                    if (newElStatus === "pending"){
+                        newElStatus = "Por Depo"    
+                    }
                     newEl.innerHTML = `
                     <div class="fc-hoverable-event" style="position: absolute; top: 100%; left: 0; width: 300px; height: auto; background-color: black; z-index: 100000000 !important; border: 1px solid #e2e8f0; border-radius: 0.375rem; padding: 0.75rem; font-size: 14px; font-family: 'Inter', sans-serif; cursor: pointer;">
                         <strong>${newElTitle}</strong>

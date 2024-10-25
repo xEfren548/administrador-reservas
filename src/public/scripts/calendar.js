@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             let colorRectanguloBottomLeft;
             let colorRectanguloBottomRight;
 
-            const clientName = info.event.extendedProps.clientName || "\nRESERVA INTERNA"
+            const clientName = info.event.extendedProps.clientName || "\nRESERVA DUEÑO/INVERSIONISTA"
             const clientPayments = info.event.extendedProps.clientPayments;
             const madeCheckIn = info.event.extendedProps.madeCheckIn;
             const cleaningDetails = info.event.extendedProps.cleaningDetails;
