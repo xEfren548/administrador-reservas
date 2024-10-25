@@ -294,6 +294,11 @@
     </div>
 
     <input type="hidden" value="{{rackServicios.totalServicios}}" id="total-servicios">
+    <input type="hidden" value="{{cliente._id}}" id="cliente-id">
+    <input type="hidden" value="{{cliente.email}}" id="cliente-email">
+    <input type="hidden" value="{{cliente.phone}}" id="cliente-phone">
+    <input type="hidden" value="{{cliente.address}}" id="cliente-address">
+    
 
 
     <div class="col-sm-12 col-md-12 col-lg-4 col-xl-4 mt-3">
@@ -911,6 +916,90 @@
 {{!-- Fin Modal agregar servicios adicionales --}}
 
 
+<!-- Modal modificar cliente -->
+<div class="modal fade" id="modifyClientEntryModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <form id="frmUpdateClient" action="/api/servicios/editar-servicio" method="put" class="modal-dialog modal-lg"
+        role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Completar datos de cliente</h5>
+                <button type="button" class="close" onclick="$('#modifyClientEntryModal').modal('hide');"
+                    aria-label="Close">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row mt-2">
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtClientNameUpd">Nombre</label>
+                                <input type="text" name="txtClientNameUpd" id="txtClientNameUpd"
+                                    class="form-control onlydatepicker" placeholder="Nombre" value="{{cliente.firstName}}">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtClientLastnameUpd">Apellido</label>
+                                <input type="text" name="txtClientLastnameUpd" id="txtClientLastnameUpd"
+                                    class="form-control" placeholder="Apellido" value="{{cliente.lastName}}">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtClientPhoneUpd">Teléfono</label>
+                                <input type="tel" name="txtClientPhoneUpd" id="txtClientPhoneUpd" class="form-control"
+                                    placeholder="Teléfono">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtClientAddressUpd">Dirección</label>
+                                <input type="text" name="txtClientAddressUpd" id="txtClientAddressUpd"
+                                    class="form-control" placeholder="Dirección">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtClientEmailUpd">Email</label>
+                                <input type="email" name="txtClientEmailUpd" id="txtClientEmailUpd" class="form-control"
+                                    placeholder="Email">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-8 mb-2">
+                                <label for="slctClientIdTypeUpd" class="form-label">Tipo de identificación</label>
+                                <select name="slctClientIdTypeUpd" id="slctClientIdTypeUpd" class="form-select form-select-md" required>
+                                    <option value="" selected disabled> Selecciona el tipo de identificación del cliente
+                                    </option>
+                                    <option value="INE">INE</option>
+                                    <option value="Pasaporte">Pasaporte</option>
+                                    <option value="Licencia de conducir">Licencia de conducir</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2">
+                            <div class="form-group">
+                                <label for="txtClientIdNumberUpd">Número de identificación</label>
+                                <input type="text" name="txtClientIdNumberUpd" id="txtClientIdNumberUpd"
+                                    class="form-control" placeholder="Tipo de identificación">
+                            </div>
+                        </div>
+                    </div> <!-- Cierre row -->
+                </div>
+            </div>
+            <div class="form-item">
+                <p id="txtUpdClientError" name="errMsg" class="error"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnUpdateClient">Modificar Cliente</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
 <script>
 
     function toggleContent() {
@@ -1012,8 +1101,29 @@
 
     let paymentId;
 
+    let isClientUpdated = false;
+    const modificarClienteModal = new bootstrap.Modal(document.getElementById('modifyClientEntryModal'));
+
+
     addPaymentBtn.addEventListener('click', async function (event) {
         event.preventDefault();
+        console.log("Se ejecuta la funcion")
+
+        const clienteEmail = document.getElementById('cliente-email').value;
+        const clientePhone = document.getElementById('cliente-phone').value;
+        const clienteAddress = document.getElementById('cliente-address').value;
+
+        console.log(clienteEmail)
+        console.log(clientePhone)
+        console.log(clienteAddress)
+
+        // Validación de los campos
+        if ((!clienteEmail ||!clientePhone ||!clienteAddress) || (clienteEmail == "undefined" || clientePhone == "undefined" || clienteAddress == "undefined")) {
+            modificarClienteModal.show()
+            return;
+        }
+
+
 
         try {
             const fechaPago = document.querySelector('#payment_emision_date').value;
@@ -1037,6 +1147,7 @@
             if (!metodoPago || metodoPago == 0) {
                 throw new Error('Método de pago no puede estar vacío.');
             }
+
 
             const bodyNuevoPago = {
                 fechaPago: new Date(fechaPago),
@@ -1349,6 +1460,24 @@
         const reservacionId = document.querySelector('#reservacion_id').value;
 
         console.log(selectModificarStatus.value);
+        
+        const clienteEmail = document.getElementById('cliente-email').value;
+        const clientePhone = document.getElementById('cliente-phone').value;
+        const clienteAddress = document.getElementById('cliente-address').value;
+
+        console.log(clienteEmail)
+        console.log(clientePhone)
+        console.log(clienteAddress)
+
+        if (selectModificarStatus.value === "active"){
+            // Validación de los campos
+            if ((!clienteEmail ||!clientePhone ||!clienteAddress) || (clienteEmail == "undefined" || clientePhone == "undefined" || clienteAddress == "undefined")) {
+                modificarClienteModal.show()
+                return;
+            }
+
+        }
+
         try {
             const response = await fetch(`/api/eventos/move-to-playground`, {
                 method: 'POST',
@@ -2148,5 +2277,71 @@
         
 
     })
+
+    var btnUpdateClient = document.getElementById("btnUpdateClient");
+
+    if (btnUpdateClient) {
+        btnUpdateClient.addEventListener("click", async (event) => {
+            event.preventDefault();
+
+            const clientId = document.querySelector('#cliente-id').value;
+            const data = {
+                firstName: document.getElementById("txtClientNameUpd").value.trim(),
+                lastName: document.getElementById("txtClientLastnameUpd").value.trim(),
+                phone: document.getElementById("txtClientPhoneUpd").value.trim(),
+                address: document.getElementById("txtClientAddressUpd").value.trim(),
+                email: document.getElementById("txtClientEmailUpd").value.trim(),
+                identificationType: document.getElementById("slctClientIdTypeUpd").value.trim(),
+                identificationNumber: document.getElementById("txtClientIdNumberUpd").value.trim()
+            };
+
+            try {
+                const response = await fetch(`/api/clientes/editar-cliente/${clientId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    const errorMessage = errorData?.error?.[0]?.message.toLowerCase() || "Unknown error";
+                    
+                    return Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: "Error en la solicitud: " + errorMessage + ".",
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+
+                const updatedData = await response.json();
+                document.getElementById('cliente-email').value = updatedData.clienteToUpdate.email;
+                document.getElementById('cliente-phone').value = updatedData.clienteToUpdate.phone;
+                document.getElementById('cliente-address').value = updatedData.clienteToUpdate.address;
+
+                isClientUpdated = true; 
+
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Completado!',
+                    text: "Cliente actualizado con éxito.",
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $('#modifyClientEntryModal').modal('hide');
+                    }
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al enviar la solicitud: ' + error.message.toLowerCase() + '.',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        });
+    }
 
 </script>

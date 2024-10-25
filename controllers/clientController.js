@@ -52,14 +52,7 @@ const editClientValidators = [
         .isLength({ max: 255 }).withMessage('Address must be less than 255 characters'),
     check('email')
         .notEmpty().withMessage('Email is required')
-        .isEmail().withMessage('Invalid email format')
-        .custom(async (value, { req }) => {
-            const user = await Cliente.findOne({ email: value });
-            if (!user) {
-                throw new NotFoundError('Email not registered');
-            }
-            return true;
-        }),
+        .isEmail().withMessage('Invalid email format'),
     check('identificationType')
         .optional({ checkFalsy: true })
         .isIn(['INE', 'Pasaporte', 'Licencia de conducir']).withMessage('Invalid identification type'),
