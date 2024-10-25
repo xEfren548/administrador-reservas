@@ -64,11 +64,10 @@ async function calcularComisiones(req, res) {
 
                 if (user.administrator.toString() === user._id.toString()) {
                     if (costosGerente.commission === "Aumento por costo fijo") {
-                        if (chaletType !== "Bosque Imperial") {
-                            finalComission += costosAdministrador.amount * nNights;
-                            minComission += costosAdministrador.amount * nNights;
-                            console.log('comision master admin: ', costosAdministrador.amount * nNights, user._id.toString());
-                        }
+                        finalComission += costosAdministrador.amount * nNights;
+                        minComission += costosAdministrador.amount * nNights;
+                        console.log('comision master admin: ', costosAdministrador.amount * nNights, user._id.toString());
+                        
                     }
                     break;
                 } else {
@@ -120,6 +119,10 @@ async function calcularComisiones(req, res) {
 
             }
         }
+
+        minComission += 35; // Comision Administracion NyN
+        finalComission += 35; // Comision Administracion NyN
+
         console.log("min comission", minComission)
         console.log("max comission", finalComission)
         res.status(200).send({ minComission, finalComission });
@@ -192,26 +195,25 @@ async function generarComisionReserva(req, res) {
                 counter += 1;
 
                 if (user.administrator.toString() === user._id.toString()) {
-                    if (chaletType !== "Bosque Imperial") {
-                        if (costosGerente.commission === "Aumento por costo fijo") {
-                            if (counter > 1) {
-                                conceptoAdmin = `Comisión administrador ligado por reservación ${chaletName} ${nNights} noches`
-    
-                            } else {
-                                conceptoAdmin = `Reservación ${chaletName} ${nNights} noches`
-                            }
-                            // finalComission += costosGerente.amount;
-                            // minComission += costosGerente.amount;
-                            await altaComisionReturn({
-                                monto: costosAdministrador.amount * nNights,
-                                concepto: conceptoAdmin,
-                                fecha: new Date(arrivalDate),
-                                idUsuario: user._id.toString(),
-                                idReserva: idReserva
-                            })
+                    if (costosGerente.commission === "Aumento por costo fijo") {
+                        if (counter > 1) {
+                            conceptoAdmin = `Comisión administrador ligado por reservación ${chaletName} ${nNights} noches`
+
+                        } else {
+                            conceptoAdmin = `Reservación A. vendedor: ${chaletName} ${nNights} noches`
                         }
-                        
+                        // finalComission += costosGerente.amount;
+                        // minComission += costosGerente.amount;
+                        await altaComisionReturn({
+                            monto: costosAdministrador.amount * nNights,
+                            concepto: conceptoAdmin,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: user._id.toString(),
+                            idReserva: idReserva
+                        })
                     }
+                        
+                    
                     break;
                 } else {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
@@ -225,15 +227,6 @@ async function generarComisionReserva(req, res) {
                         user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
                     }
                 }
-
-
-
-
-
-
-
-
-
 
                 // let costos = await Costos.find({ category: "Gerente" });
                 // if (costosGerente.commission === "Aumento por costo fijo") {
@@ -312,6 +305,7 @@ async function generarComisionReserva(req, res) {
         console.log('comision inversionistas')
         console.log(chaletInvestors)
         // const idBosqueImperial = '66a7c2f2915b94d6630b67f2'
+        const idAdministracionNyN = '671be608256c4d53c3f5e12f'
 
         const chaletAdmin = await User.findById(chaletAdminId)
         if (!chaletAdmin){
@@ -333,6 +327,15 @@ async function generarComisionReserva(req, res) {
             concepto: `Comisión limpieza ${chaletName}`,
             fecha: new Date(arrivalDate),
             idUsuario: chaletJanitor,
+            idReserva: idReserva
+        })
+
+        // Comisión de $35 para administracion
+        await altaComisionReturn({
+            monto: 35,
+            concepto: `Comisión por reservación Administracion NyN: ${chaletName}`,
+            fecha: new Date(arrivalDate),
+            idUsuario: idAdministracionNyN,
             idReserva: idReserva
         })
 
@@ -515,7 +518,7 @@ async function mostrarUtilidadesGlobales(req, res) {
 
         // // Extract the IDs and names of the rooms
         const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
-        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights }));
+        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, arrivalDate: reserva.arrivalDate }));
 
 
         utilidades = await Utilidades.find().lean();
@@ -560,6 +563,9 @@ async function mostrarUtilidadesGlobales(req, res) {
                             const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
                             utilidad.nombreHabitacion = matchId.name;
                             utilidad.nochesReservadas = reserva.nNights
+                            const arrivalCheckIn =  moment.utc(reserva.arrivalDate, 'DD/MM/YYYY');
+                            utilidad.checkIn = arrivalCheckIn.format('DD/MM/YYYY');
+                            
                         } else {
                             utilidad.nombreHabitacion = 'N/A';
                         }

@@ -51,7 +51,8 @@
                         <th scope="col">Id Reserva</th>
                         <th scope="col">Monto</th>
                         <th scope="col">Noches reservadas</th>
-                        <th scope="col">Fecha</th>
+                        <th scope="col">Check In</th>
+                        <th scope="col">Check Out</th>
                         <th scope="col">Usuario</th>
 
                     </tr>
@@ -65,6 +66,7 @@
                         <td>{{this.idReserva}}</td>
                         <td>${{this.monto}}</td>
                         <td>{{this.nochesReservadas}}</td>
+                        <td>{{this.checkIn}}</td>
                         <td>{{this.fecha}}</td>
                         <td>{{this.nombreUsuario}}</td>
 
@@ -82,7 +84,7 @@
                     <tr>
                         <td colspan="3"><b>Total</b></td>
                         <td id="totalMonto"></td>
-                        <td colspan="3"></td>
+                        <td colspan="4"></td>
                     </tr>
                 </tfoot>
             </table>
@@ -157,7 +159,7 @@
                     });
 
                     this.api()
-                        .columns([0, 6])
+                        .columns([0, 7])
                         .every(function () {
                             let column = this;
 
@@ -335,7 +337,7 @@
         var groupedData = {};
         api.rows({ search: 'applied' }).every(function () {
             var data = this.data();
-            var usuario = data[6];
+            var usuario = data[7];
             var monto = parseFloat(data[3].replace(/[^\d.-]/g, ''));
 
             if (!groupedData[usuario]) {
