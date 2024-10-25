@@ -512,7 +512,7 @@ async function createReservation(req, res, next) {
     let newCliente = null;
 
     try {
-        let client = await Cliente.find({ email: clientEmail });
+        let client = await Cliente.findOne({ email: clientEmail });
         console.log("Client initial")
         if (!client || client.length === 0) {
             newCliente = await clienteController.createClientLocal(clientFirstName, clientLastName, req.session)
@@ -575,7 +575,7 @@ async function createReservation(req, res, next) {
 
         if (!isDeposit) {
             reservationToAdd = {
-                client: client[0]._id,
+                client: client._id,
                 resourceId: chalet._id,
                 arrivalDate: arrivalDate,
                 departureDate: departureDate,
@@ -612,7 +612,7 @@ async function createReservation(req, res, next) {
             console.log("Cancelation date: ", format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es }));
 
             reservationToAdd = {
-                client: client[0]._id,
+                client: client._id,
                 resourceId: chalet._id,
                 arrivalDate: arrivalDate,
                 departureDate: departureDate,
@@ -660,13 +660,16 @@ async function createReservation(req, res, next) {
             status: statusLimpieza,
             idHabitacion: evento.resourceId
         })
-        /** Pausar mensajes de wha 
-        SendMessages.sendReservationConfirmation(client[0], chalet, reservationToAdd);
+        /** Pausar mensajes de wha
+        
+        if (client.phone){
+            SendMessages.sendReservationConfirmation(client, chalet, reservationToAdd);
+            console.log("SendMessages.sendReminders");
+            SendMessages.sendInstructions(client, chalet, idReserva)
+        }
 
         
 
-        console.log("SendMessages.sendReminders");
-        SendMessages.sendInstructions(client[0], chalet, idReserva)
 
         const agenteQueReserva = await Usuario.findById(createdBy);
         if (agenteQueReserva) {

@@ -9,9 +9,11 @@ const app = express();
 const { engine } = require('express-handlebars');
 const routes = require('./routes/indexRoutes');
 const schedule = require('node-schedule');
+const cron = require('node-cron');
 const Evento = require('./models/Evento');
 const Cliente = require('./models/Cliente');
 const Habitacion = require('./models/Habitacion');
+const logController = require('./controllers/logController');
 const NotFoundError = require('./common/error/not-found-error');
 const SendMessages = require('./common/tasks/send-messages');
 
@@ -67,6 +69,36 @@ const sslOptions = {
   cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem'))
 };
 
+async function cleanupInactiveUsers() {
+  try {
+      console.log('Starting inactive users cleanup');
+
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const result = await Cliente.deleteMany({
+          $or: [
+              { email: { $in: [null, '', undefined] } },
+              { phone: { $in: [null, '', undefined] } },
+              { address: { $in: [null, '', undefined] } 
+            }],
+            createdAt: { $lt: oneWeekAgo}
+      });
+
+      // Log
+      const logBody = {
+          fecha: Date.now(),
+          type: 'elimination',
+          acciones: `Usuario eliminado por inactividad`
+      }
+      await logController.createBackendLog(logBody);
+
+      console.log(`Deleted ${result.deletedCount} inactive users`);
+  } catch (error) {
+      console.log('Error in cleanupInactiveUsers:', error);
+  }
+}
+
 // Connecting app to Mongoose
 mongoose.connect(db_url).then(async () => {
   let server;
@@ -92,12 +124,19 @@ mongoose.connect(db_url).then(async () => {
         await SendMessages.sendThanks();
         await SendMessages.cancelReservation();
     });
+
+    const quarterlyJob = schedule.scheduleJob('0 0 1 */3 *', async () => {
+        await cleanupInactiveUsers();
+    });
+
+    
     
 
     // Para mantener la aplicación escuchando
-    process.on('SIGINT', () => {
+    process.on('SIGINT', async () => {
         job.cancel(); // Cancela el scheduler cuando se detiene la aplicación
-        mongoose.connection.close();
+        quarterlyJob.cancel();
+        await mongoose.connection.close();
         server.close(() => {
           console.log('HTTPS server closed');
           process.exit(0);
