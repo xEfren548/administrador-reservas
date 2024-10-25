@@ -142,17 +142,15 @@ async function createClient(req, res, next) {
     }
 }
 
-async function createClientLocal(cliente) {
-    const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = cliente;
+async function createClientLocal(firstName, lastName, reqUser) {
+    console.log("Entrando a la funcion")
+    console.log(firstName, lastName)
     const clienteToAdd = new Cliente({
-        firstName,
-        lastName,
-        phone,
-        address,
-        email,
-        identificationType,
-        identificationNumber
+        firstName: firstName,
+        lastName: lastName
     });
+
+    console.log(clienteToAdd)
 
     try {
         await clienteToAdd.save();
@@ -160,16 +158,17 @@ async function createClientLocal(cliente) {
         console.log("Cliente agregado con éxito");
         const logBody = {
             fecha: Date.now(),
-            idUsuario: req.session.id,
+            idUsuario: reqUser.id,
             type: 'registration',
-            acciones: `Cliente agregado por ${req.session.firstName} ${req.session.lastName}`,
-            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+            acciones: `Cliente agregado por ${reqUser.firstName} ${reqUser.lastName}`,
+            nombreUsuario: `${reqUser.firstName} ${reqUser.lastName}`
         }
         
         await logController.createBackendLog(logBody);
-        res.status(200).json({ success: true, message: "Client successfully created", client: clienteToAdd});
+        return clienteToAdd
     } catch (err) {
-        return next(err);
+        console.log(err)
+        return null;
     }
 }
 

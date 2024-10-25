@@ -5,6 +5,7 @@ const Costos = require('./../models/Costos');
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const logController = require('../controllers/logController');
 const utilidadesController = require('../controllers/utilidadesController');
+const clienteController = require('../controllers/clientController');
 const pagoController = require('../controllers/pagoController');
 const BloqueoFechas = require('../models/BloqueoFechas');
 const BloqueoInversionistas = require('../models/BloqueoInversionistas');
@@ -21,16 +22,6 @@ const NotFoundError = require('../common/error/not-found-error');
 const SendMessages = require('../common/tasks/send-messages');
 
 const createReservationValidators = [
-    check('clientEmail')
-        .notEmpty().withMessage('Email is required')
-        .isEmail().withMessage('Invalid email format')
-        .custom(async (value, { req }) => {
-            const client = await Cliente.findOne({ email: value });
-            if (!client) {
-                throw new NotFoundError('Client does not exist');
-            }
-            return true;
-        }),
     check('arrivalDate')
         .notEmpty().withMessage('Start date is required')
         .toDate(),
@@ -506,13 +497,25 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
 
 async function createReservation(req, res, next) {
-    const { clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit } = req.body;
+    const { clientFirstName, clientLastName,clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit } = req.body;
+    let newCliente = null;
 
     try {
-        const client = await Cliente.find({ email: clientEmail });
-        if (!client) {
-            throw new NotFoundError('Client does not exist');
+        let client = await Cliente.find({ email: clientEmail });
+        console.log("Client initial")
+        if (!client || client.length === 0) {
+            newCliente = await clienteController.createClientLocal(clientFirstName, clientLastName, req.session)
+            console.log("No cliente")
+            console.log(newCliente)
+            if (newCliente.length === 0 || !newCliente){
+                throw new NotFoundError('Client does not exist');
+            }
+            client = newCliente;
+            
         }
+
+        console.log("client: ");
+        console.log(client);
 
         const fechaAjustada = new Date(arrivalDate);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
@@ -646,7 +649,7 @@ async function createReservation(req, res, next) {
             status: statusLimpieza,
             idHabitacion: evento.resourceId
         })
-        
+        /** Pausar mensajes de wha 
         SendMessages.sendReservationConfirmation(client[0], chalet, reservationToAdd);
 
         
@@ -661,7 +664,7 @@ async function createReservation(req, res, next) {
                 console.log("Mensaje enviado al agente.")
             }
         }
-
+*/
         
 
         // Log

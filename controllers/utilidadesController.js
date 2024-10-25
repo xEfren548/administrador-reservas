@@ -132,7 +132,7 @@ async function calcularComisiones(req, res) {
 async function generarComisionReserva(req, res) {
     try {
         const loggedUserId = req.session.id;
-        const { habitacionId, costoBase, totalSinComisiones, idReserva, chaletName, departureDate, nNights } = req.body;
+        const { habitacionId, costoBase, totalSinComisiones, idReserva, chaletName, arrivalDate, departureDate, nNights } = req.body;
         console.log("Desde generar comision reserva")
         console.log("Costo base: " + costoBase)
 
@@ -416,6 +416,7 @@ async function generarComisionReserva(req, res) {
 
         res.status(200).json({ success: true, message: "Comision agregada con éxito" })
     } catch (err) {
+        console.log(err)
         res.status(404).send(err.message);
     }
 }
