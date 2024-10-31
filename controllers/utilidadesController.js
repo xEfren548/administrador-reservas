@@ -518,7 +518,7 @@ async function mostrarUtilidadesGlobales(req, res) {
 
         // // Extract the IDs and names of the rooms
         const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
-        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, arrivalDate: reserva.arrivalDate }));
+        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, departureDate: reserva.departureDate }));
 
 
         utilidades = await Utilidades.find().lean();
@@ -563,8 +563,8 @@ async function mostrarUtilidadesGlobales(req, res) {
                             const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
                             utilidad.nombreHabitacion = matchId.name;
                             utilidad.nochesReservadas = reserva.nNights
-                            const arrivalCheckIn =  moment.utc(reserva.arrivalDate, 'DD/MM/YYYY');
-                            utilidad.checkIn = arrivalCheckIn.format('DD/MM/YYYY');
+                            const arrivalCheckOut =  moment.utc(reserva.departureDate, 'DD/MM/YYYY');
+                            utilidad.checkOut = arrivalCheckOut.format('DD/MM/YYYY');
                             
                         } else {
                             utilidad.nombreHabitacion = 'N/A';
@@ -676,7 +676,7 @@ async function mostrarUtilidadesGlobales(req, res) {
 
         // console.log(Object.values(userMontos));
         // console.log(Object.values(utilidadMontos));
-        // console.log(utilidades)
+        console.log(utilidades)
 
         utilidades.sort((a, b) => moment(b.fecha, 'DD-MM-YYYY').valueOf() - moment(a.fecha, 'DD-MM-YYYY').valueOf());
         res.render('vistaUtilidadesGlobales', {
