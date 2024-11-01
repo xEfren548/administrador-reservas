@@ -55,13 +55,24 @@
                     <div class="row">
                         <div class="col-sm-6">
                             <div class="form-group">
+                                <label for="tipo-reserva-select">Selecciona un tipo:</label>
+                                <select id="tipo-reserva-select" name="tipo-reserva-select" class="form-select form-select-md" required>
+                                    <option value="por-depo" selected="true"> Por depo</option>
+                                    <option value="reserva">Reserva</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row d-none" id="container-buscar-cliente">
+                        <div class="col-sm-6">
+                            <div class="form-group">
                                 <label for="searchClient">Buscar Cliente</label>
                                 <input type="text" id="searchClient" class="form-control"
                                     placeholder="Buscar cliente...">
                             </div>
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row container-alta-cliente d-none">
                         <div class="col-sm-8">
                             <div class="form-group">
                                 <label for="lblClient">Cliente</label>
@@ -79,11 +90,30 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-sm-3 d-flex align-items-center justify-content-center">
+                        <div class="col-sm-3 d-flex align-items-center justify-content-center container-alta-cliente d-none">
                             <a name="" id="crear-reserva-btn" class="btn btn-info btn-sm m-3" href="#" role="button"
                                 data-bs-toggle="modal" data-bs-target="#clientEntryModal">Alta de Cliente</a>
                         </div>
                     </div>
+
+                    <div class="row" id="container-alta-cliente-provisional">
+                        <h3>Cliente</h3>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="searchClient">Nombre</label>
+                                <input type="text" id="nombre-cliente-provisional" class="form-control"
+                                    placeholder="Nombre de cliente">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="searchClient">Apellido</label>
+                                <input type="text" id="apellido-cliente-provisional" class="form-control"
+                                    placeholder="Apellido de cliente...">
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row mt-2">
                         <div class="col-sm-5">
                             <div class="form-group">
@@ -185,37 +215,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="descuento_altotal">Descuento</label>
-                                <div class="input-group ig-shopping-price mb-3">
-                                    <input type="number" class="form-control bg-light text-black"
-                                        id="habitacion_descuento" aria-label="Descuento" min="0" max="100"
-                                        placeholder="Descuento">
-                                    <div class="input-group-append">
-                                        <span class="input-group-text"> % </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div> <!-- Cierre row -->
 
-                    <div class="row mt-2">
-                        <div class="col-sm-8">
-                            <div class="form-group">
-                                <label for="ocupacion_habitacion">Total con descuento</label>
-                                <div class="input-group ig-shopping-price mb-3">
-                                    <input type="number" class="form-control bg-light text-black fw-bold"
-                                        id="habitacion_totalcondescuento" aria-label="Amount (to the nearest dollar)"
-                                        min="0.00" placeholder="Total con descuento" readonly>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text">$ M.N.</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div> <!-- Cierre row -->
                     <div class="form-item">
                         <p id="txtReservationError" name="errMsg" class="error"></p>
                     </div>

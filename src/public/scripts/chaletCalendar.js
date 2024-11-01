@@ -511,19 +511,39 @@ document.addEventListener('DOMContentLoaded', function () {
             // Esperar a que obtenerComisiones() se resuelva            
             comisionesReserva = document.getElementById('habitacion_total').value.trim() - precioMinimoPermitido; // 3250 - 3000
             console.log(comisionesReserva)
-            // Crear un objeto con los datos del formulario
-            const formData = {
-                clientEmail: document.getElementById("lblClient").value.trim(),
-                arrivalDate: document.getElementById('event_start_date').value.trim(),
-                departureDate: document.getElementById('event_end_date').value.trim(),
-                nNights: document.getElementById("event_nights").value.trim(),
-                chaletName: document.getElementById('tipologia_habitacion_reserva').value.trim(),
-                maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
-                total: document.getElementById('habitacion_total').value.trim(),
-                discount: document.getElementById('habitacion_descuento').value.trim(),
-                isDeposit: document.getElementById('chckDeposit').checked,
-                comisionVendedor: comisionesReserva
-            };
+            const tipoReserva = document.getElementById('tipo-reserva-select').value.trim();
+            const isDeposit = tipoReserva === 'por-depo' ? true : false;
+
+            let formData = {};
+
+            if (isDeposit){
+                formData = {
+                    clientFirstName: document.getElementById('nombre-cliente-provisional').value.trim(),
+                    clientLastName: document.getElementById('apellido-cliente-provisional').value.trim(),
+                    arrivalDate: document.getElementById('event_start_date').value.trim(),
+                    departureDate: document.getElementById('event_end_date').value.trim(),
+                    nNights: document.getElementById("event_nights").value.trim(),
+                    chaletName: document.getElementById('tipologia_habitacion_reserva').value.trim(),
+                    maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
+                    total: document.getElementById('habitacion_total').value.trim(),
+                    isDeposit: isDeposit,
+                    comisionVendedor: comisionesReserva
+
+                }
+            } else {
+                formData = {
+                    clientEmail: document.getElementById("lblClient").value.trim(),
+                    arrivalDate: document.getElementById('event_start_date').value.trim(),
+                    departureDate: document.getElementById('event_end_date').value.trim(),
+                    nNights: document.getElementById("event_nights").value.trim(),
+                    chaletName: document.getElementById('tipologia_habitacion_reserva').value.trim(),
+                    maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
+                    pax: document.getElementById('numero-personas').value.trim(),
+                    total: document.getElementById('habitacion_total').value.trim(),
+                    isDeposit: isDeposit,
+                    comisionVendedor: comisionesReserva
+                }
+            }
 
             console.log(preciosTotalesGlobal)
             console.log("precioMinimoPermitido: ", precioMinimoPermitido)
@@ -548,15 +568,18 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!response.ok) {
                 const errorData = await response.json();
                 console.log(errorData)
-                const errors = errorData.error.map(err => err.message);
-                console.log(errors)
+                const errorMessage = errorData.error && errorData.error[0] && errorData.error[0].message
+                    ? errorData.message
+                    : 'Error en la solicitud';
+                // const errors = errorData.error.map(err => err.message);
+                console.log(errorMessage)
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: "Error en la solicitud: " + errors.join(' ') + ".",
+                    text: errorMessage,
                     confirmButtonText: 'Aceptar'
                 });
-                throw new Error(errors);
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
@@ -573,7 +596,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 chaletName: formData.chaletName,
                 idReserva: reservationId,
                 arrivalDate: formData.arrivalDate,
-                departureDate: formData.departureDate
+                departureDate: formData.departureDate,
+                nNights: formData.nNights
 
             }
 
@@ -693,24 +717,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     selectedPax.addEventListener('change', obtenerTotalReserva);
 
-    const descuentoReservaInput = document.querySelector('#habitacion_descuento')
-    const subtotalInput = document.getElementById('habitacion_total');
-    const totalFinal = document.getElementById('habitacion_totalcondescuento');
-
-    function actualizarTotalConDescuento() {
-        const descuento = parseFloat(descuentoReservaInput.value);
-        const subtotal = parseFloat(subtotalInput.value);
-
-        if (!isNaN(descuento) && descuento >= 0 && descuento <= 100 && !isNaN(subtotal)) {
-            const descuentoCalculado = subtotal * (descuento / 100);
-            totalFinal.value = (subtotal - descuentoCalculado).toFixed(2);
-        } else {
-            totalFinal.value = subtotal.toFixed(2);
-        }
-    }
-
-    descuentoReservaInput.addEventListener('input', actualizarTotalConDescuento);
-    subtotalInput.addEventListener('input', actualizarTotalConDescuento);
 
 
 
@@ -794,7 +800,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 totalSinComisiones.value = totalPrecios;
 
                 // Asignar comisiones
-                const comisionUsuarios = await obtenerComisiones()
+                const comisionUsuarios = await obtenerComisiones(nNights, habitacionId)
                 precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
                 totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
                 console.log("Total máximo permitido con comisiones: ", totalPrecios)
@@ -821,9 +827,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    async function obtenerComisiones() {
+    async function obtenerComisiones(nNights, habitacionId) {
         try {
-            const response = await fetch('/api/utilidades');
+            const response = await fetch(`/api/utilidades?nnights=${nNights}&habitacionid=${habitacionId}`);
             const data = await response.json();
             const minComission = data.minComission
             const finalComission = data.finalComission
@@ -929,6 +935,35 @@ document.addEventListener('DOMContentLoaded', function () {
         },
 
     });
+
+    const tipoReservaSelect = document.querySelector('#tipo-reserva-select');
+    tipoReservaSelect.addEventListener('change', function() {
+        console.log("Ejecutando...")
+        
+        const containerBuscarCliente = document.querySelector('#container-buscar-cliente');
+        const containerAltaCliente = document.querySelectorAll('.container-alta-cliente');
+        const containerAltaClienteProvisional = document.querySelector('#container-alta-cliente-provisional')
+
+        const selectedOption = tipoReservaSelect.options[tipoReservaSelect.selectedIndex];
+        console.log(selectedOption)
+
+        if (selectedOption.value === "reserva"){
+            containerBuscarCliente.classList.remove('d-none')
+            containerAltaCliente.forEach(element => {
+                element.classList.remove('d-none')
+            });
+            containerAltaClienteProvisional.classList.add('d-none')
+        } else {
+            containerBuscarCliente.classList.add('d-none')
+            containerAltaCliente.forEach(element => {
+                element.classList.add('d-none')
+            });
+            containerAltaClienteProvisional.classList.remove('d-none')
+        }
+    });
+
+
+    
 
 
 });
