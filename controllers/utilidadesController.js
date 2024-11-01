@@ -197,7 +197,7 @@ async function generarComisionReserva(req, res) {
                 if (user.administrator.toString() === user._id.toString()) {
                     if (costosGerente.commission === "Aumento por costo fijo") {
                         if (counter > 1) {
-                            conceptoAdmin = `Comisión administrador ligado por reservación ${chaletName} ${nNights} noches`
+                            conceptoAdmin = `Comisión administrador ligado de vendedor por reservación ${chaletName} ${nNights} noches`
 
                         } else {
                             conceptoAdmin = `Reservación A. vendedor: ${chaletName} ${nNights} noches`
@@ -219,7 +219,7 @@ async function generarComisionReserva(req, res) {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
                         await altaComisionReturn({
                             monto: comisionVendedor * nNights,
-                            concepto: `Comisión por Reservación admin. ${chaletName} ${nNights} noches`,
+                            concepto: `Comisión por Reservación vendedor ${chaletName} ${nNights} noches`,
                             fecha: new Date(arrivalDate),
                             idUsuario: user._id.toString(),
                             idReserva: idReserva
@@ -315,7 +315,7 @@ async function generarComisionReserva(req, res) {
         // Utilidad
         await altaComisionReturn({
             monto: utilidadChalet,
-            concepto: `Utilidad de reservación ${chaletName} ${nNights} noches`,
+            concepto: `Comisión administrador ligado de Cabaña ${chaletName} ${nNights} noches`,
             fecha: new Date(arrivalDate),
             idUsuario: chaletAdmin._id.toString(),
             idReserva: idReserva
