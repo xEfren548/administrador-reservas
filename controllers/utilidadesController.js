@@ -353,8 +353,9 @@ async function generarComisionReserva(req, res) {
         console.log('nuevo costo base: ', nuevoCostoBase)
         let cuantosInversionistas = chaletInvestors.length
         console.log('cuantos inversionistas: ', cuantosInversionistas)
-        let comisionInversionistas = nuevoCostoBase / cuantosInversionistas
+        let comisionInversionistas = Math.round((nuevoCostoBase / cuantosInversionistas + Number.EPSILON) * 100) / 100;
         console.log('comision inversionistas: ', comisionInversionistas)
+
 
         if (cuantosInversionistas > 0) {
             for (let investor of chaletInvestors) {

@@ -157,8 +157,9 @@
                             <div class="col-8 d-none" id="containerSelectInvestorType">
                                 <select id="select-investorType" name="select-investorType"
                                     class="form-select form-select-md">
-                                    <option value="A">Tipo A</option>
-                                    <option value="F">Tipo F</option>
+                                    <option value="Asimilado">Tipo Asimilado</option>
+                                    <option value="RESICO Fisico">RESICO Físico</option>
+                                    <option value="PF con AE y PM">PF con AE y PM</option>
                                 </select>
                             </div>
                         </div>
@@ -287,8 +288,9 @@
                             <div class="col-8 d-none" id="containerSelectInvestorTypeUpd">
                                 <select id="select-investorTypeUpd" name="select-investorTypeUpd"
                                     class="form-select form-select-md">
-                                    <option value="A">Tipo A</option>
-                                    <option value="F">Tipo F</option>
+                                    <option value="Asimilado">Tipo Asimilado</option>
+                                    <option value="RESICO Fisico">RESICO Físico</option>
+                                    <option value="PF con AE y PM">PF con AE y PM</option>
                                 </select>
                             </div>
                         </div>
@@ -406,7 +408,11 @@
                     .then(response => {
                         if (!response.ok) {
                             response.json().then(errorData => {
-                                const errors = errorData.message;
+                                let errors = errorData.message;
+
+                                if (errors === undefined) {
+                                    errorData[0].message;
+                                }
                                 
 
                                 console.log(errors)

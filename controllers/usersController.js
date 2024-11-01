@@ -158,6 +158,12 @@ async function getAllUsersMongo(){
 async function createUser(req, res, next) {
     const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType } = req.body;
     const mexPhone = `${phone}`
+
+    if (investorType){
+        if (investorType !== 'Asimilado' && investorType !== 'RESICO Fisico' && investorType !== 'PF con AE y PM'){
+            return next(new BadRequestError("Invalid investor type"));
+        }
+    }
     const userToAdd = new Usuario ({
         firstName, lastName, email, phone: mexPhone, password, privilege, administrator,adminname, color, investorType
     });
@@ -238,7 +244,12 @@ async function editarUsuario(req, res, next) {
     if (administrator) { updateFields.administrator = administrator; }
     if (adminname) { updateFields.adminname = adminname; }
     if (color) { updateFields.color = color; }
-    if (investorType) { updateFields.investorType = investorType; }
+    if (investorType){
+        if (investorType !== 'Asimilado' && investorType !== 'RESICO Fisico' && investorType !== 'PF con AE y PM'){
+            return next(new BadRequestError("Invalid investor type"));
+        }
+        updateFields.investorType = investorType;
+    }
 
     try {
         const userToUpdate = await Usuario.findOneAndUpdate({ email }, updateFields, { new: true });

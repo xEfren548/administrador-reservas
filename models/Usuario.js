@@ -45,7 +45,7 @@ const userSchema = new Schema({
     },
     investorType: {
         type: String,
-        enum: ['A', 'F']    
+        enum: ['Asimilado', 'RESICO Fisico', 'PF con AE y PM']    
     },
     reservation: {
         type: mongoose.Schema.Types.ObjectId,
