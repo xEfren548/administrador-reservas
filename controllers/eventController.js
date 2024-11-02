@@ -660,7 +660,6 @@ async function createReservation(req, res, next) {
             status: statusLimpieza,
             idHabitacion: evento.resourceId
         })
-        /** Pausar mensajes de wha
         
         if (client.phone){
             SendMessages.sendReservationConfirmation(client, chalet, reservationToAdd);
@@ -678,8 +677,6 @@ async function createReservation(req, res, next) {
                 console.log("Mensaje enviado al agente.")
             }
         }
-*/
-        
 
         // Log
         const logBody = {
