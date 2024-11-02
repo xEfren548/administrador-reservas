@@ -313,13 +313,33 @@ async function generarComisionReserva(req, res) {
         }
 
         // Utilidad
-        await altaComisionReturn({
-            monto: utilidadChalet,
-            concepto: `Comisión administrador ligado de Cabaña ${chaletName} ${nNights} noches`,
-            fecha: new Date(arrivalDate),
-            idUsuario: chaletAdmin._id.toString(),
-            idReserva: idReserva
-        })
+        if (chaletType === "Bosque Imperial"){
+            await altaComisionReturn({
+                monto: utilidadChalet,
+                concepto: `Comisión administrador ligado de Cabaña ${chaletName} ${nNights} noches`,
+                fecha: new Date(arrivalDate),
+                idUsuario: chaletAdmin._id.toString(),
+                idReserva: idReserva
+            })
+
+            let comisionNegativaIva = Math.round((utilidadChalet * 0.16 + Number.EPSILON) * 100) / 100;
+
+            await altaComisionReturn({
+                monto: -comisionNegativaIva,
+                concepto: `Retención IVA ${chaletName} ${nNights} noches`,
+                fecha: new Date(arrivalDate),
+                idUsuario: chaletAdmin._id.toString(),
+                idReserva: idReserva
+            })
+        } else {
+            await altaComisionReturn({
+                monto: utilidadChalet,
+                concepto: `Comisión administrador ligado de Cabaña ${chaletName} ${nNights} noches`,
+                fecha: new Date(arrivalDate),
+                idUsuario: chaletAdmin._id.toString(),
+                idReserva: idReserva
+            })
+        }
 
         // Comisión de limpieza
         await altaComisionReturn({
