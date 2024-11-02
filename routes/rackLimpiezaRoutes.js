@@ -16,6 +16,14 @@ router.get('/rackLimpieza', async (req, res) => {
             services = await RackLimpieza.find().lean();
         }
 
+        const fechaHoy = moment.tz("America/Mexico_City").startOf('day')
+        const unaSemana = moment.tz("America/Mexico_City").add(7, 'days').endOf('day'); // Fin del día dentro de una semana
+
+        services = services.filter(service => {
+            const serviceDate = moment.tz(service.fecha, "America/Mexico_City");
+            return serviceDate.isSameOrAfter(fechaHoy) && serviceDate.isBefore(unaSemana);
+        });
+
         // Procesar los servicios obtenidos
         services.forEach(service => {
             service._id = service._id.toString();

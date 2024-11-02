@@ -8,13 +8,21 @@ const rackServiciosController = require('../controllers/rackServiciosController'
 router.get('/rackservicios', async (req, res) => {
     try {
 
-        const services = await rackServiciosController.getAllRackServicesMongo(req, res); // Pass req and res to the controller function
-        console.log(services)
+        let services = await rackServiciosController.getAllRackServicesMongo(req, res); // Pass req and res to the controller function
         services.forEach(service => {
             service._id = service._id.toString();
             service.id_reserva = service.id_reserva.toString();
             service.fecha = moment.utc(service.fecha).format('DD-MM-YYYY');
         });
+
+        const fechaHoy = moment.tz("America/Mexico_City").startOf('day')
+        const unaSemana = moment.tz("America/Mexico_City").add(7, 'days').endOf('day'); // Fin del día dentro de una semana
+
+        services = services.filter(service => {
+            const serviceDate = moment.tz(service.fecha, "America/Mexico_City");
+            return serviceDate.isSameOrAfter(fechaHoy) && serviceDate.isBefore(unaSemana);
+        });
+
 
         services.sort((a, b) => {
             if (a.status === "Pendiente" && b.status !== "Pendiente") return -1;
