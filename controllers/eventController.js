@@ -660,7 +660,7 @@ async function createReservation(req, res, next) {
             status: statusLimpieza,
             idHabitacion: evento.resourceId
         })
-        /** 
+        
         
         if (client.phone){
             SendMessages.sendReservationConfirmation(client, chalet, reservationToAdd);
@@ -677,7 +677,7 @@ async function createReservation(req, res, next) {
                 console.log("Mensaje enviado al agente.")
             }
         }
-        */
+        
         // Log
         const logBody = {
             fecha: Date.now(),
