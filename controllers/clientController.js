@@ -213,6 +213,16 @@ async function editClientById(req, res, next) {
     if (identificationNumber) { updateFields.identificationNumber = identificationNumber; }
 
     try {
+
+        if (email) {
+            const existingClient = await Cliente.findOne({ email: email, _id: { $ne: uuid } });
+            if (existingClient) {
+                return res.status(400).json({ 
+                    error: [{ message: "El email ya se encuentra asociado a otro cliente" }]     
+                });       
+            }
+        }
+
         const clienteToUpdate = await Cliente.findByIdAndUpdate(uuid, updateFields, { new: true });
         if (!clienteToUpdate) {
             throw new NotFoundError("Client not found");
