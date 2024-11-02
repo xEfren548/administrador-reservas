@@ -84,6 +84,7 @@ router.use('/api/usuarios', userRoutes);
 router.use('/api/perfil-usuario', userProfileRoutes);
 router.use('/api/pagos', pagosRoutes);
 router.use('/api', utilidadesRoutes);
+router.use('/api', costosRoutes);
 
 // Additional routes
 router.use('/', rackLimpiezaRoutes);
