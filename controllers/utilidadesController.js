@@ -434,19 +434,12 @@ async function generarComisionReserva(req, res) {
                             idReserva: idReserva
                         })
 
-                                                // Comision negativa de IVA (16%)
+                        // Comision negativa de IVA (16%)
                         // let comisionNegativaIva = comisionInversionistas * 0.16;
                         let comisionNegativaIva = Math.round((comisionInversionistas * 0.16 + Number.EPSILON) * 100) / 100;
 
-                        await altaComisionReturn({
-                            monto: -comisionNegativaIva,
-                            concepto: `IVA inversionista por Reserva de cabaña: ${chaletName}`,
-                            fecha: new Date(arrivalDate),
-                            idUsuario: investor._id,
-                            idReserva: idReserva
-                        })
                         // Comision Retencion IVA
-                        let comisionNegativaRetIva = Math.round(((comisionInversionistas - comisionNegativaIva) * 0.1066 + Number.EPSILON) * 100) / 100;
+                        let comisionNegativaRetIva = Math.round((comisionInversionistas * 0.1066 + Number.EPSILON) * 100) / 100;
 
                         await altaComisionReturn({
                             monto: -comisionNegativaRetIva,
@@ -457,7 +450,7 @@ async function generarComisionReserva(req, res) {
                         })
 
                         // Comision Retencion ISR
-                        let comisionNegativaRetIsr = Math.round(((comisionInversionistas - comisionNegativaIva) * 0.0125 + Number.EPSILON) * 100) / 100;
+                        let comisionNegativaRetIsr = Math.round((comisionInversionistas * 0.0125 + Number.EPSILON) * 100) / 100;
                         await altaComisionReturn({
                             monto: -comisionNegativaRetIsr,
                             concepto: `ISR inversionista por Reserva de cabaña: ${chaletName}`,
