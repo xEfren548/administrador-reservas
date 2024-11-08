@@ -85,7 +85,9 @@
         
         function setQuestionInitialValues(question){           
             // Setting events in the corresponding question elements.            
-            question.addEventListener("mouseenter", () =>{ resetQuestionError(question, question.querySelector(".question-body .error-message p")); });
+            question.addEventListener("mouseenter", () => { 
+                resetQuestionError(question, question.querySelector(".question-body .error-message p"));
+            });
         }            
         function setQuestionError(question, errorTag, errorMessage){
             question.classList.add("question-error");

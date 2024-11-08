@@ -449,7 +449,9 @@
                     Swal.fire({
                         title: 'Check-in realizado!',
                         icon:'success',
-                        confirmButtonText: 'Cerrar'
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) =>{
+                        window.location.reload()
                     })
                     
                 },
