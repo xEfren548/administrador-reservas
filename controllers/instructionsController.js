@@ -148,10 +148,13 @@ async function showInstructionsView(req, res, next) {
 
         
         console.log(reservation)
+
+        client.fullName = client.firstName + ' ' + client.lastName;
+
         
         res.render('paraUsuarios', {
             layout: 'layoutParaUsuarios',
-            fullname: client.firstName + ' ' + client.lastName,
+            client: client,
             reservation: reservation,
             chalet: chalet
         });
