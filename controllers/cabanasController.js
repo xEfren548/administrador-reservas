@@ -879,7 +879,7 @@ async function editChalet(req, res, next) {
             fecha: Date.now(),
             idUsuario: req.session.id,
             type: 'modification',
-            acciones: `Cabaña modificada por ${req.session.firstName} ${req.session.lastName}`,
+            acciones: `${updatedChalet.propertyDetails.name} modificada por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
         };
 
