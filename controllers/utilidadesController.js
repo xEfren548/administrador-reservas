@@ -197,10 +197,10 @@ async function generarComisionReserva(req, res) {
                 if (user.administrator.toString() === user._id.toString()) {
                     if (costosGerente.commission === "Aumento por costo fijo") {
                         if (counter > 1) {
-                            conceptoAdmin = `Comisión administrador ligado de vendedor por reservación ${chaletName} ${nNights} noches`
+                            conceptoAdmin = `Comisión administrador ligado de vendedor por reservación ${nNights} noches`
 
                         } else {
-                            conceptoAdmin = `Reservación A. vendedor: ${chaletName} ${nNights} noches`
+                            conceptoAdmin = `Reservación A. vendedor: ${nNights} noches`
                         }
                         // finalComission += costosGerente.amount;
                         // minComission += costosGerente.amount;
@@ -219,7 +219,7 @@ async function generarComisionReserva(req, res) {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
                         await altaComisionReturn({
                             monto: comisionVendedor * nNights,
-                            concepto: `Comisión por Reservación vendedor ${chaletName} ${nNights} noches`,
+                            concepto: `Comisión por Reservación vendedor ${nNights} noches`,
                             fecha: new Date(arrivalDate),
                             idUsuario: user._id.toString(),
                             idReserva: idReserva
@@ -261,7 +261,7 @@ async function generarComisionReserva(req, res) {
 
                         await altaComisionReturn({
                             monto: comisionVendedor * nNights,
-                            concepto: `Reservación ${chaletName} ${nNights} noches`,
+                            concepto: `Reservación ${nNights} noches`,
                             fecha: new Date(arrivalDate),
                             idUsuario: user._id.toString(),
                             idReserva: idReserva
@@ -277,7 +277,7 @@ async function generarComisionReserva(req, res) {
                 } else if (user.privilege === "Gerente") {
                     await altaComisionReturn({
                         monto: costosGerente.amount * nNights,
-                        concepto: `Reservación ${chaletName} ${nNights} noches`,
+                        concepto: `Reservación ${nNights} noches`,
                         fecha: new Date(arrivalDate),
                         idUsuario: user._id.toString(),
                         idReserva: idReserva
@@ -316,7 +316,7 @@ async function generarComisionReserva(req, res) {
         if (chaletType === "Bosque Imperial"){
             await altaComisionReturn({
                 monto: utilidadChalet,
-                concepto: `Comisión administrador ligado de Cabaña ${chaletName} ${nNights} noches`,
+                concepto: `Comisión administrador ligado de Cabaña ${nNights} noches`,
                 fecha: new Date(arrivalDate),
                 idUsuario: chaletAdmin._id.toString(),
                 idReserva: idReserva
@@ -344,7 +344,7 @@ async function generarComisionReserva(req, res) {
         // Comisión de limpieza
         await altaComisionReturn({
             monto: chalet.additionalInfo.extraCleaningCost,
-            concepto: `Comisión limpieza ${chaletName}`,
+            concepto: `Comisión limpieza`,
             fecha: new Date(arrivalDate),
             idUsuario: chaletJanitor,
             idReserva: idReserva
@@ -353,7 +353,7 @@ async function generarComisionReserva(req, res) {
         // Comisión de $35 para administracion
         await altaComisionReturn({
             monto: 35,
-            concepto: `Comisión por reservación Administracion NyN: ${chaletName}`,
+            concepto: `Costo por uso de sistema Multipropiedad plataformas digitales NyN`,
             fecha: new Date(arrivalDate),
             idUsuario: idAdministracionNyN,
             idReserva: idReserva
@@ -385,7 +385,7 @@ async function generarComisionReserva(req, res) {
                         // Comision normal
                         await altaComisionReturn({
                             monto: comisionInversionistas,
-                            concepto: `Comisión de inversionista por Reserva de cabaña: ${chaletName}`,
+                            concepto: `Comisión de inversionista por Reserva de cabaña`,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
@@ -396,7 +396,7 @@ async function generarComisionReserva(req, res) {
 
                         await altaComisionReturn({
                             monto: -comisionNegativaIva,
-                            concepto: `IVA inversionista por Reserva de cabaña: ${chaletName}`,
+                            concepto: `IVA inversionista por Reserva de cabaña`,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
@@ -407,7 +407,7 @@ async function generarComisionReserva(req, res) {
 
                         await altaComisionReturn({
                             monto: -comisionNegativaIsr,
-                            concepto: `ISR inversionista por Reserva de cabaña: ${chaletName}`,
+                            concepto: `ISR inversionista por Reserva de cabaña`,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
@@ -418,7 +418,7 @@ async function generarComisionReserva(req, res) {
 
                         await altaComisionReturn({
                             monto: -comisionNegativaServiciosIndirectos,
-                            concepto: `Servicios Indirectos Bosque Imperial: ${chaletName}`,
+                            concepto: `Servicios Indirectos Bosque Imperial`,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
@@ -428,7 +428,7 @@ async function generarComisionReserva(req, res) {
                         // Comision normal
                         await altaComisionReturn({
                             monto: comisionInversionistas,
-                            concepto: `Comisión de inversionista por Reserva de cabaña: ${chaletName}`,
+                            concepto: `Comisión de inversionista por Reserva de cabaña`,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
@@ -443,7 +443,7 @@ async function generarComisionReserva(req, res) {
 
                         await altaComisionReturn({
                             monto: -comisionNegativaRetIva,
-                            concepto: `Retención IVA inversionista por Reserva de cabaña: ${chaletName}`,
+                            concepto: `Retención IVA inversionista por Reserva de cabaña`,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
@@ -453,7 +453,7 @@ async function generarComisionReserva(req, res) {
                         let comisionNegativaRetIsr = Math.round((comisionInversionistas * 0.0125 + Number.EPSILON) * 100) / 100;
                         await altaComisionReturn({
                             monto: -comisionNegativaRetIsr,
-                            concepto: `ISR inversionista por Reserva de cabaña: ${chaletName}`,
+                            concepto: `ISR inversionista por Reserva de cabaña`,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
@@ -463,7 +463,7 @@ async function generarComisionReserva(req, res) {
                         let comisionServIndirectos = Math.round(((comisionInversionistas - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
                         await altaComisionReturn({
                             monto: -comisionServIndirectos,
-                            concepto: `Servicios Indirectos Bosque Imperial: ${chaletName}`,
+                            concepto: `Servicios Indirectos Bosque Imperial`,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
@@ -473,7 +473,7 @@ async function generarComisionReserva(req, res) {
                         // Comision normal
                         await altaComisionReturn({
                             monto: comisionInversionistas,
-                            concepto: `Comisión de inversionista por Reserva de cabaña: ${chaletName}`,
+                            concepto: `Comisión de inversionista por Reserva de cabaña`,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
@@ -486,7 +486,7 @@ async function generarComisionReserva(req, res) {
                         let comisionServIndirectos = Math.round(((comisionInversionistas - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
                         await altaComisionReturn({
                             monto: -comisionServIndirectos,
-                            concepto: `Servicios Indirectos Bosque Imperial: ${chaletName}`,
+                            concepto: `Servicios Indirectos Bosque Imperial`,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
@@ -501,7 +501,7 @@ async function generarComisionReserva(req, res) {
             // Comisión de dueño de cabañas (ANTERIOR)
             await altaComisionReturn({
                 monto: costoBase - chalet.additionalInfo.extraCleaningCost,
-                concepto: `Comisión Dueño de cabaña: ${chaletName}`,
+                concepto: `Comisión Dueño de cabaña`,
                 fecha: new Date(arrivalDate),
                 idUsuario: chaletOwner,
                 idReserva: idReserva
