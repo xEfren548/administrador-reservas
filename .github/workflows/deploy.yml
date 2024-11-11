@@ -24,7 +24,11 @@ jobs:
             # Clone fresh copy
             git clone https://github.com/xEfren548/administrador-reservas
 
+            # Copy local cert to repository
+            cp -r cert administrador-reservas/
+
             # Install dependencies and start
             cd administrador-reservas
             npm install
-            pm2 start index.js
+            echo "NODE_ENV=production" > .env
+            NODE_ENV=production pm2 start index.js
