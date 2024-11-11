@@ -268,7 +268,8 @@ async function editarUsuario(req, res, next) {
         await logController.createBackendLog(logBody);
         res.status(200).json({ success: true, message: "Usuario editado con éxito" });
     } catch(err) {
-        return next(err);
+        console.log(err)
+        res.status(404).json({ message: err.message });
     }
 }
 

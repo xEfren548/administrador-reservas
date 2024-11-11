@@ -498,11 +498,11 @@
                     .then(response => {
                         if (!response.ok) {
                             response.json().then(errorData => {
-                                const errors = errorData.error;
+                                const errors = errorData.message;
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Error',
-                                    text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
+                                    text: "Error en la solicitud: " + errors+ ".",
                                     confirmButtonText: 'Aceptar'
                                 });
                             });
@@ -525,6 +525,7 @@
                         });
                     })
                     .catch(error => {
+                        console.log(error)
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
