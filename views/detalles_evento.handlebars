@@ -1679,7 +1679,7 @@
                 // totalPrecios += comisionVendedor // Precio maximo permitido
 
                 // console.log("Total precios con comisiones: ", totalPrecios)
-                const comisionUsuarios = await obtenerComisiones()
+                const comisionUsuarios = await obtenerComisiones(nNights, habitacionId)
                 let precioMinimoPermitidoSinComision = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
                 console.log("Precio minimo permitido: ", precioMinimoPermitidoSinComision)
                 const precioMinimoPermitido = precioMinimoPermitidoSinComision + comisionVendedor;
@@ -1720,10 +1720,11 @@
         }
     }
 
-    async function obtenerComisiones() {
+    async function obtenerComisiones(nNights, habitacionId) {
         try {
-            const response = await fetch('/api/utilidades');
+            const response = await fetch(`/api/utilidades?nnights=${nNights}&habitacionid=${habitacionId}`);
             const data = await response.json();
+            console.log(data);
             const minComission = data.minComission
             const finalComission = data.finalComission
             const comisiones = { minComission: minComission, finalComission: finalComission }
