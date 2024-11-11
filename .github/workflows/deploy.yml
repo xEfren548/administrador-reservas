@@ -37,4 +37,6 @@ jobs:
             FTP_USER=${{ secrets.FTP_USER }}
             FTP_PASSWORD=${{ secrets.FTP_PASSWORD }}
             DB_PORT=${{ secrets.PORT }}
-            NODE_ENV=production pm2 start index.js
+            EOL
+            
+            pm2 start index.js
