@@ -36,8 +36,7 @@ async function generateSideMenu(req, res, next) {
             ],
             'Vendedor': [
                 // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
-                { 'Home': ["/", "fs-5 fa fa-house"] },
-                { 'Reserva cliente cabaña': ["/instrucciones/", "far fa-calendar-alt"] },
+                { 'Calendario': ["/", "fs-5 fa fa-calendar"] },
                 { 'Mis Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
             ],
             'Limpieza': [
