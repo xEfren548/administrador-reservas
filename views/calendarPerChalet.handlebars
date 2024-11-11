@@ -324,3 +324,19 @@
 
 
 <script src="/scripts/chaletCalendar.js"></script>
+<script>
+    const searchInput = document.getElementById('searchClient');
+    const clientSelect = document.getElementById('lblClient');
+
+    searchInput.addEventListener('keyup', function (event) {
+        const searchTerm = event.target.value.toLowerCase();
+        Array.from(clientSelect.options).forEach(function (option) {
+            const text = `${option.text} ${option.value}`.toLowerCase();
+            if (text.includes(searchTerm)) {
+                option.style.display = 'block';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+    });
+</script>
