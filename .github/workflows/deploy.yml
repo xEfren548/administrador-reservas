@@ -1,44 +1,30 @@
-name: Deploy to DigitalOcean Droplet 2
-
+name: Deploy to DigitalOcean
 on:
   push:
     branches:
-      - main  # Triggers this workflow on pushes to the main branch
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.3
+      - name: Deploy to Digital Ocean
+        uses: appleboy/ssh-action@master
         with:
-          ssh-private-key: ${{ secrets.DO_SSH_KEY }}
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            # Stop and delete current PM2 process
+            pm2 delete index || true
 
-      - name: Deploy to DigitalOcean
-        env:
-          SSH_HOST: root@192.34.62.25  # Replace with your droplet IP
-        run: |
-          ssh -o StrictHostKeyChecking=no $SSH_HOST 'bash -s' << 'EOF'
-            # Change to the directory where you want to clone the project
-            cd administrador-reservas
+            # Remove old directory
+            sudo rm -r administrador-reservas || true
 
-            # Remove the existing project directory
-            sudo rm -r administrador-reservas
-
-            # Clone the latest version of the project from GitHub
+            # Clone fresh copy
             git clone https://github.com/xEfren548/administrador-reservas
 
-            # Change to the newly cloned project directory
+            # Install dependencies and start
             cd administrador-reservas
-
-            # Install dependencies
             npm install
-
-            # Stop any existing pm2 process for the app and start a new one
-            pm2 delete index || true  # Ignore if the process doesn't exist
             pm2 start index.js
-          EOF
