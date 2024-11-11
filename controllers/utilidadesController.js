@@ -612,13 +612,22 @@ async function mostrarUtilidadesGlobales(req, res) {
         }
 
         // // Extract the IDs and names of the rooms
-        const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
+        const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name, chaletAdmin: habitacion.others.admin.toString() }));
         const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, departureDate: reserva.departureDate }));
 
 
         utilidades = await Utilidades.find().lean();
 
         const idAllUsers = [...new Set(utilidades.map(utilidad => utilidad.idUsuario.toString()))];
+
+        const chaletAdminIds = [...new Set(nombreCabañas.map(cabana => cabana.chaletAdmin))];
+        const chaletAdminMap = {};
+        for (let adminId of chaletAdminIds) {
+            const userChaletAdmin = await usersController.obtenerUsuarioPorIdMongo(adminId);
+            chaletAdminMap[adminId] = userChaletAdmin
+                ? `${userChaletAdmin.firstName} ${userChaletAdmin.lastName}`
+                : "-";
+        }
 
 
         let userMontos = {}; // Object to store total monto for each user
@@ -657,6 +666,8 @@ async function mostrarUtilidadesGlobales(req, res) {
                             utilidad.idHabitacion = idHabitacion;
                             const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
                             utilidad.nombreHabitacion = matchId.name;
+                            utilidad.chaletAdmin = chaletAdminMap[matchId.chaletAdmin] || "-";
+
                             utilidad.nochesReservadas = reserva.nNights
                             const arrivalCheckOut =  moment.utc(reserva.departureDate, 'DD/MM/YYYY');
                             utilidad.checkOut = arrivalCheckOut.format('DD/MM/YYYY');

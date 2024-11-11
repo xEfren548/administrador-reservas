@@ -47,6 +47,7 @@
                 <thead class="table-light">
                     <tr>
                         <th scope="col">Habitación</th>
+                        <th scope="col">Admin Ligado</th>
                         <th scope="col">Concepto</th>
                         <th scope="col">Id Reserva</th>
                         <th scope="col">Monto</th>
@@ -62,6 +63,7 @@
                     {{#each utilidades}}
                     <tr>
                         <td>{{this.nombreHabitacion}}</td>
+                        <td>{{this.chaletAdmin}}</td>
                         <td>{{this.concepto}}</td>
                         <td>{{this.idReserva}}</td>
                         <td>${{this.monto}}</td>
@@ -82,7 +84,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="3"><b>Total</b></td>
+                        <td colspan="4"><b>Total</b></td>
                         <td id="totalMonto"></td>
                         <td colspan="4"></td>
                     </tr>
@@ -159,7 +161,7 @@
                     });
 
                     this.api()
-                        .columns([0, 7])
+                        .columns([0, 8])
                         .every(function () {
                             let column = this;
 
@@ -189,7 +191,7 @@
                 "drawCallback": function () {
                     // Calculate and update the total monto
                     var api = this.api();
-                    var total = api.column(3, { search: 'applied' }).data().reduce(function (a, b) {
+                    var total = api.column(4, { search: 'applied' }).data().reduce(function (a, b) {
                         return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
                     }, 0);
                     document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
@@ -202,7 +204,7 @@
             DataTable.ext.search.push(function (settings, data, dataIndex) {
                 var minDate = moment(document.getElementById('startDate').value, "YYYY-MM-DD").startOf('day');
                 var maxDate = moment(document.getElementById('endDate').value, "YYYY-MM-DD").endOf('day');
-                var targetDate = moment(data[5], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
+                var targetDate = moment(data[6], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
 
                 if ((isNaN(minDate) && isNaN(maxDate)) ||
                     (isNaN(minDate) && targetDate <= maxDate) ||
@@ -316,9 +318,9 @@
 
         api.rows({ search: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
             var data = this.data();
-            var date = moment(data[5], "DD/MM/YYYY"); // Assuming date is in the 4rd column
+            var date = moment(data[6], "DD/MM/YYYY"); // Assuming date is in the 4rd column
             var monthIndex = date.month(); // Get the month index (0-based)
-            var amount = parseFloat(data[3].replace(/[^\d.-]/g, '')); // Parse the amount
+            var amount = parseFloat(data[4].replace(/[^\d.-]/g, '')); // Parse the amount
 
 
             if (!isNaN(monthIndex) && !isNaN(amount)) {
@@ -341,8 +343,8 @@
         var groupedData = {};
         api.rows({ search: 'applied' }).every(function () {
             var data = this.data();
-            var usuario = data[7];
-            var monto = parseFloat(data[3].replace(/[^\d.-]/g, ''));
+            var usuario = data[8];
+            var monto = parseFloat(data[4].replace(/[^\d.-]/g, ''));
 
             if (!groupedData[usuario]) {
                 groupedData[usuario] = 0;
@@ -380,7 +382,7 @@
         api.rows({ search: 'applied' }).every(function () {
             var data = this.data();
             var habitacion = data[0];
-            var monto = parseFloat(data[3].replace(/[^\d.-]/g, ''));
+            var monto = parseFloat(data[4].replace(/[^\d.-]/g, ''));
 
 
             if (!groupedData[habitacion] && habitacion !== "N/A") {
