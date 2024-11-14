@@ -353,7 +353,7 @@ async function generarComisionReserva(req, res) {
         // Comisión de $35 para administracion
         await altaComisionReturn({
             monto: 35,
-            concepto: `Costo por uso de sistema Multipropiedad plataformas digitales NyN`,
+            concepto: `Costo por uso de sistema NyN`,
             fecha: new Date(arrivalDate),
             idUsuario: idAdministracionNyN,
             idReserva: idReserva
