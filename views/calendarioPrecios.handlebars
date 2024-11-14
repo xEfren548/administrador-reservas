@@ -1968,7 +1968,7 @@
 			const diaSemana = fecha.getDay(); // 0 = Domingo, 5 = Viernes, 6 = Sábado
 
 
-			return diaSemana === 0 || diaSemana === 6;
+			return diaSemana === 5 || diaSemana === 6;
 		}
 
 		function esHoy(fechaStr) {
@@ -2432,7 +2432,7 @@ document.getElementById('habitacion-select').addEventListener('change', function
     	// Insertar las fechas y precios de la habitación seleccionada
     	while (currentDate <= endDate) {
 			const dayOfWeek = currentDate.getDay();
-			const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+			const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
     	    // Crear un th para cada día
     	    const th = document.createElement('th');
     	    th.id = generateId(currentDate);  
