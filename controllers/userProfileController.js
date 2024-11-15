@@ -1,5 +1,8 @@
 const bcrypt = require('bcrypt');
 const Usuario = require('../models/Usuario');
+const ftp = require('basic-ftp');
+const path = require('path');
+const fs = require('fs');
 const NotFoundError = require('../common/error/not-found-error');
 const BadRequestError = require('../common/error/bad-request-error');
 const sendPassword = require("../utils/email");
@@ -267,6 +270,55 @@ async function updateUserPasswordById(req, res, next) {
     }
 }
 
+async function updateProfileImage(req, res) {
+    const userId = req.session.id;
+    const client = new ftp.Client();
+    client.ftp.verbose = true;
+
+    try {
+        if (!req.files || Object.keys(req.files).length === 0) {
+            return res.status(400).send('No files were uploaded.');
+        }
+
+        const user = await Usuario.findById(userId);
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        await client.access({
+            host: 'integradev.site',
+            user: process.env.FTP_USER,
+            password: process.env.FTP_PASSWORD,
+            secure: false
+        });
+
+        const file = req.files.profileImage;
+        console.log(file)
+        const localFilePath = file.path;
+        console.log(localFilePath)
+        const remoteFileName = `profile_${userId}.jpg`;
+
+        await client.uploadFrom(localFilePath, remoteFileName);
+        console.log(`Archivo '${remoteFileName}' subido con éxito`);
+
+        user.profileImageUrl = `https://navarro.integradev.site/navarro/${remoteFileName}`;
+
+        fs.unlink(localFilePath, (err) => {
+            if (err) {
+                console.error('Error al eliminar el archivo local:', err);
+            } else {
+                console.log('Archivo local eliminado con éxito');
+            }
+        });
+
+        res.status(200).send("Profile image updated successfully.");
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    } finally {
+        client.close();
+    }
+}
+
 module.exports = {
     nameValidator,
     emailValidator,
@@ -277,5 +329,6 @@ module.exports = {
     updateUserEmail,
     updateUserEmailById,
     updateUserPassword,
-    updateUserPasswordById
+    updateUserPasswordById,
+    updateProfileImage
 }

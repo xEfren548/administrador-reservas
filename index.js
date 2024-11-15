@@ -2,6 +2,7 @@ const express = require('express');
 require('dotenv').config();
 const mongoose = require('mongoose');
 const path = require('path');
+const fileUpload = require('express-fileupload');
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
@@ -17,9 +18,13 @@ const logController = require('./controllers/logController');
 const NotFoundError = require('./common/error/not-found-error');
 const SendMessages = require('./common/tasks/send-messages');
 
+
 // Configura Express para servir archivos estáticos desde la carpeta 'public'
 app.use(express.static(path.join(__dirname, 'src', 'public')));
 app.use(express.json())
+
+// Express File Upload
+// app.use(fileUpload());
 
 // Configuración del motor de plantillas
 app.engine('handlebars', engine({

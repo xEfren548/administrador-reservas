@@ -341,22 +341,98 @@
 	const fileInput = document.getElementById('fileInput');
 
 	// Evento para mostrar la vista previa al seleccionar una nueva imagen
-	fileInput.addEventListener('change', (event) => {
-		const file = event.target.files[0];
-		if (file) {
-			const reader = new FileReader();
-			reader.onload = function(e) {
-				previewImg.src = e.target.result; // Actualizar vista previa en el modal
-			};
-			reader.readAsDataURL(file);
-		}
-	});
+fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        // Validate file type and size
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Formato no soportado',
+                text: 'Por favor, selecciona una imagen en formato JPG, PNG o GIF.',
+                confirmButtonText: 'Aceptar'
+            });
+            fileInput.value = ''; // Clear the input
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) { // Limit file size to 2MB
+            Swal.fire({
+                icon: 'error',
+                title: 'Archivo demasiado grande',
+                text: 'Por favor, selecciona una imagen de menos de 2MB.',
+                confirmButtonText: 'Aceptar'
+            });
+            fileInput.value = ''; // Clear the input
+            return;
+        }
 
-	// Función para guardar la imagen y cerrar el modal
-	function saveImage() {
-		profileImg.src = previewImg.src; // Actualizar la imagen de perfil en la página principal
-		const modal = bootstrap.Modal.getInstance(document.getElementById('imageModal'));
-		modal.hide(); // Cerrar el modal
-	}
+        // Show the preview in the modal
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+async function saveImage() {
+    const file = fileInput.files[0];
+
+    if (!file) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se ha seleccionado ninguna imagen.',
+            confirmButtonText: 'Aceptar'
+        });
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('profileImage', file);
+
+        Swal.fire({
+            title: 'Subiendo imagen...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Send the PUT request to the API endpoint
+        const response = await fetch('/api/perfil-usuario/editar-imagen', {
+            method: 'PUT',
+            body: formData
+        });
+
+        Swal.close(); // Close the loading indicator
+
+        if (!response.ok) {
+            const data = await response.json();
+            console.log(data);
+            throw new Error(`Error al actualizar la imagen: ${data.message}`);
+        }
+
+        profileImg.src = previewImg.src; // Update profile image on the main page
+        const modal = bootstrap.Modal.getInstance(document.getElementById('imageModal'));
+        modal.hide(); // Close the modal
+        Swal.fire({
+            icon: 'success',
+            title: '¡Completado!',
+            text: 'Imagen actualizada correctamente.',
+            confirmButtonText: 'Aceptar'
+        });
+    } catch (error) {
+        console.error(error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Error al actualizar la imagen.',
+            confirmButtonText: 'Aceptar'
+        });
+    }
+}
 
 </script>

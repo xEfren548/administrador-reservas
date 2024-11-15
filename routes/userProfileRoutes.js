@@ -10,5 +10,6 @@ router.put('/editar-email', userProfileController.emailValidator, validationRequ
 router.put('/editar-email/:uuid', userProfileController.emailValidator, validationRequest, userProfileController.updateUserEmailById);
 router.put('/editar-contrasena', userProfileController.passwordValidator, validationRequest, userProfileController.updateUserPassword);
 router.put('/editar-contrasena/:uuid', userProfileController.passwordValidator, validationRequest, userProfileController.updateUserPasswordById);
+router.put('/editar-imagen', userProfileController.updateProfileImage);
 
 module.exports = router;
