@@ -60,7 +60,8 @@ async function login(req, res, next){
             privilege: user.privilege,
             id: user._id,
             privilege: user.privilege,
-            userId: user._id.toString()
+            userId: user._id.toString(),
+            profileImageUrl: user.profileImageUrl
         };        
         
         console.log("Usuario logeado con éxito");

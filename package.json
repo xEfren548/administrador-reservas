@@ -25,6 +25,7 @@
     "express-fileupload": "^1.5.1",
     "express-handlebars": "^7.1.2",
     "express-validator": "^7.0.1",
+    "formidable": "^3.5.2",
     "fs": "^0.0.1-security",
     "ftp": "^0.3.10",
     "handlebars": "^4.7.8",

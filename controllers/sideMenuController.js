@@ -18,7 +18,7 @@ const validators = [
 ];
 
 async function generateSideMenu(req, res, next) {
-    const profileImg = req.session.profileImg || '/images/default-pp.jpg'
+    const profileImg = req.session.profileImageUrl || '/images/default-pp.jpg'
     try {
         const privileges = {
             "Administrador": [

@@ -1,7 +1,7 @@
 <div class="user-profile d-flex align-items-center">
     <div class="d-flex justify-content-center container-pp-image">
-        {{#if req.session.profileImg}}
-            <img src="{{req.session.profileImg}}" alt="profile-img" class="rounded-circle" id="profile-img">
+        {{#if req.session.profileImageUrl}}
+            <img src="{{req.session.profileImageUrl}}" alt="profile-img" class="rounded-circle" id="profile-img">
             <div class="overlay"><a href="#" data-bs-toggle="modal" data-bs-target="#imageModal">Cambiar foto</a></div>
         {{else}}
             <img src="/images/default-pp.jpg" alt="profile-img" class="rounded-circle" id="profile-img">
@@ -127,7 +127,11 @@
 			</div>
 			<div class="modal-body text-center">
 				<!-- Imagen de vista previa -->
+                {{#if req.session.profileImageUrl}}
+                    <img id="preview-img" src="{{req.session.profileImageUrl}}" alt="Vista previa de imagen" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px;">
+                {{else}}
 				<img id="preview-img" src="/images/default-pp.jpg" alt="Vista previa de imagen" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px;">
+                {{/if}}
 				<!-- Input para cargar imagen -->
 				<input type="file" id="fileInput" class="form-control" accept="image/*">
 			</div>
@@ -345,12 +349,12 @@ fileInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (file) {
         // Validate file type and size
-        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        const validTypes = ['image/jpeg', 'image/png'];
         if (!validTypes.includes(file.type)) {
             Swal.fire({
                 icon: 'error',
                 title: 'Formato no soportado',
-                text: 'Por favor, selecciona una imagen en formato JPG, PNG o GIF.',
+                text: 'Por favor, selecciona una imagen en formato JPG o PNG.',
                 confirmButtonText: 'Aceptar'
             });
             fileInput.value = ''; // Clear the input
