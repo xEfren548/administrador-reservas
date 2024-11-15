@@ -19,7 +19,6 @@ const userSchema = new Schema({
     phone: {
         type: String,
         unique: true,
-        required: true,
         validate: {
             validator: function(v) {
                 const regex = /^\d{10}$/;

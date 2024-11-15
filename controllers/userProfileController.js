@@ -305,25 +305,25 @@ async function updateProfileImage(req, res) {
                 secure: false,
             });
 
-            const filePathOnFTP = `/profile_${userId}.jpg`;
+            // const filePathOnFTP = `/profile_${userId}.jpg`;
 
-            try {
-                await client.downloadTo(null, filePathOnFTP); // Null destination to check existence
-                await client.remove(filePathOnFTP); // Remove if exists
-                console.log(`File ${filePathOnFTP} deleted successfully.`)
-            } catch (error) {
-                if (error.code === 500) {
-                    console.log(`File ${filePathOnFTP} does not exist.`)
-                } else {
-                    throw error;
-                }
-            }
+            // const fileExists = await client.size(filePathOnFTP).catch(() => null); // `null` si no existe
+            // if (fileExists) {
+            //     console.log(`Archivo ${filePathOnFTP} encontrado. Eliminando...`);
+            //     await client.remove(filePathOnFTP);
+            //     console.log(`Archivo ${filePathOnFTP} eliminado exitosamente.`);
+            // } else {
+            //     console.log(`Archivo ${filePathOnFTP} no existe.`);
+            // }
 
             // Upload the file to the FTP server
-            await client.uploadFrom(profileImage[0].filepath, `/profile_${userId}.jpg`);
+            const originalName = profileImage[0].originalFilename;
+            console.log(profileImage[0].filepath);
+            await client.uploadFrom(profileImage[0].filepath, `/profile_${userId}_${originalName}.jpg`);
 
             // Update the user's profile image in the database
-            user.profileImageUrl = `https://navarro.integradev.site/navarro/profile_${userId}.jpg`;
+            user.profileImageUrl = `https://navarro.integradev.site/navarro/profile_${userId}_${originalName}.jpg`;
+            req.session.profileImageUrl = `https://navarro.integradev.site/navarro/profile_${userId}_${originalName}.jpg`;
             await user.save();
 
             res.status(200).json({ message: "File uploaded successfully" });

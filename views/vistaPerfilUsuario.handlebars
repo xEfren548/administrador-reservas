@@ -427,7 +427,11 @@ async function saveImage() {
             title: '¡Completado!',
             text: 'Imagen actualizada correctamente.',
             confirmButtonText: 'Aceptar'
-        });
+        }).then((result) => {
+            if (result.isConfirmed) {
+                location.reload();
+            }
+        })
     } catch (error) {
         console.error(error);
         Swal.fire({
