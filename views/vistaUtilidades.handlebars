@@ -34,9 +34,14 @@
             <table class="table table-dark table-hover text-center" id="tablaUtilidades">
                 <thead class="table-light">
                     <tr>
+                        <th scope="col">Habitación</th>
+                        <th scope="col">Admin Ligado</th>
                         <th scope="col">Concepto</th>
+                        <th scope="col">Id Reserva</th>
                         <th scope="col">Monto</th>
-                        <th scope="col">Fecha</th>
+                        <th scope="col">Noches reservadas</th>
+                        <th scope="col">Check In</th>
+                        <th scope="col">Check Out</th>
                         <th scope="col">Usuario</th>
 
                     </tr>
@@ -45,21 +50,30 @@
                     {{#if utilidades.length}}
                     {{#each utilidades}}
                     <tr>
+                        <td>{{this.nombreHabitacion}}</td>
+                        <td>{{this.chaletAdmin}}</td>
                         <td>{{this.concepto}}</td>
+                        <td>{{this.idReserva}}</td>
                         <td>${{this.monto}}</td>
+                        <td>{{this.nochesReservadas}}</td>
                         <td>{{this.fecha}}</td>
+                        <td>{{this.checkOut}}</td>
                         <td>{{this.nombreUsuario}}</td>
-
-
                     </tr>
                     {{/each}}
                     {{else}}
                     <tr>
-                        <td colspan="4">No se encontraron utilidades</td>
+                        <td colspan="9">No se encontraron utilidades</td>
                     </tr>
-
                     {{/if}}
                 </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4"><b>Total</b></td>
+                        <td id="totalMonto"></td>
+                        <td colspan="4"></td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>
@@ -72,11 +86,14 @@
         var table = document.getElementById("tablaUtilidades");
         if (table) {
             var dataTable = new DataTable(table, {
-                "order": [[2, 'des']], // Puedes especificar aquí el orden inicial de las columnas
+                "ordering": false,
                 "paging": true, // Habilita la paginación
                 "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
                 "pageLength": 10, // Establece la longitud de página inicial
                 "dom": 'Bfrtip', // Añade los botones a la interfaz
+                "search": {
+                    "smart": true
+                },
                 "buttons": [
                     {
                         extend: 'csvHtml5',
@@ -109,7 +126,17 @@
                     buttons.forEach(function (button) {
                         button.classList.add('btn', 'btn-info');
                     });
-                }      
+
+                    
+                },
+                "drawCallback": function () {
+                    // Calculate and update the total monto
+                    var api = this.api();
+                    var total = api.column(4, { search: 'applied' }).data().reduce(function (a, b) {
+                        return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
+                    }, 0);
+                    document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
+                }
             });
 
             DataTable.ext.search.push(function(settings, data, dataIndex) {

@@ -524,10 +524,33 @@ async function mostrarUtilidadesPorUsuario(req, res) {
         const loggedUserId = req.session.id;
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
 
+        const habitacionesExistentes = await Habitacion.findOne().lean();
+        if (!habitacionesExistentes) {
+            return res.status(404).send('No rooms found');
+        }
+
+        const reservas = await Documento.findOne().lean();
+        if (!reservas) {
+            return res.status(404).send('No documents found');
+        }
+
         let utilidades = {};
 
 
         utilidades = await Utilidades.find({ idUsuario: loggedUserId }).lean();
+
+        const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name, chaletAdmin: habitacion.others.admin.toString() }));
+        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, departureDate: reserva.departureDate }));
+
+        const chaletAdminIds = [...new Set(nombreCabañas.map(cabana => cabana.chaletAdmin))];
+        const chaletAdminMap = {};
+        for (let adminId of chaletAdminIds) {
+            const userChaletAdmin = await usersController.obtenerUsuarioPorIdMongo(adminId);
+            chaletAdminMap[adminId] = userChaletAdmin
+                ? `${userChaletAdmin.firstName} ${userChaletAdmin.lastName}`
+                : "-";
+        }
+
 
         let totalEarnings = 0
 
@@ -556,6 +579,27 @@ async function mostrarUtilidadesPorUsuario(req, res) {
                 const monthIndex = utilidadFecha.month(); // Obtiene el índice del mes (0-11)
                 utilidadesPorMes[monthIndex] += utilidad.monto;
 
+                if (utilidad.idReserva) {
+                        const reserva = reservasMap.find(reservation => reservation.id.toString() === utilidad.idReserva.toString())
+                        if (reserva) {
+                            const idHabitacion = reserva.resourceId;
+                            utilidad.idHabitacion = idHabitacion;
+                            const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
+                            utilidad.nombreHabitacion = matchId.name;
+                            utilidad.chaletAdmin = chaletAdminMap[matchId.chaletAdmin] || "-";
+
+                            utilidad.nochesReservadas = reserva.nNights
+                            const arrivalCheckOut =  moment.utc(reserva.departureDate, 'DD/MM/YYYY');
+                            utilidad.checkOut = arrivalCheckOut.format('DD/MM/YYYY');
+                            
+                        } else {
+                            utilidad.nombreHabitacion = 'N/A';
+                        }
+
+                    } else {
+                        utilidad.nombreHabitacion = "N/A";
+                    }
+
             })
             utilidadesPorMes.forEach((total, index) => {
                 const monthName = moment().month(index).format('MMMM');
@@ -572,6 +616,9 @@ async function mostrarUtilidadesPorUsuario(req, res) {
 
 
         console.log(utilidades);
+
+        utilidades.sort((a, b) => moment(b.fecha, 'DD-MM-YYYY').valueOf() - moment(a.fecha, 'DD-MM-YYYY').valueOf());
+
 
         res.render('vistaUtilidades', {
             utilidades: utilidades,
