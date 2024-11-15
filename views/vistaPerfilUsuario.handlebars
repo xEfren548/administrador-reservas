@@ -1,4 +1,13 @@
-<div class="user-profile">
+<div class="user-profile d-flex align-items-center">
+    <div class="d-flex justify-content-center container-pp-image">
+        {{#if req.session.profileImg}}
+            <img src="{{req.session.profileImg}}" alt="profile-img" class="rounded-circle" id="profile-img">
+            <div class="overlay"><a href="#" data-bs-toggle="modal" data-bs-target="#imageModal">Cambiar foto</a></div>
+        {{else}}
+            <img src="/images/default-pp.jpg" alt="profile-img" class="rounded-circle" id="profile-img">
+            <div class="overlay"><a href="#" data-bs-toggle="modal" data-bs-target="#imageModal">Cambiar foto</a></div>
+        {{/if}}
+    </div>
     <div class="form-item">
         <h2>{{req.session.firstName}}  {{req.session.lastName}}</h2>
         <button class="btn-edit" data-bs-toggle="modal" data-bs-target="#mdlUpdateFullName"><span   class="material-symbols-outlined">edit</span></button>
@@ -106,6 +115,28 @@
             </div>
         </div>
     </form>
+</div>
+
+<!-- Modal cambio de imagen -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="imageModalLabel">Vista previa de la imagen</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body text-center">
+				<!-- Imagen de vista previa -->
+				<img id="preview-img" src="/images/default-pp.jpg" alt="Vista previa de imagen" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px;">
+				<!-- Input para cargar imagen -->
+				<input type="file" id="fileInput" class="form-control" accept="image/*">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+				<button type="button" class="btn btn-primary" onclick="saveImage()">Guardar cambios</button>
+			</div>
+		</div>
+	</div>
 </div>
 
 <script>
@@ -300,6 +331,32 @@
             });
         }
 
+        // Updating user's profile picture.
+        const btnUpdProfilePic = document.getElementById("profile-img");
+
     });
+
+    const profileImg = document.getElementById('profile-img');
+	const previewImg = document.getElementById('preview-img');
+	const fileInput = document.getElementById('fileInput');
+
+	// Evento para mostrar la vista previa al seleccionar una nueva imagen
+	fileInput.addEventListener('change', (event) => {
+		const file = event.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = function(e) {
+				previewImg.src = e.target.result; // Actualizar vista previa en el modal
+			};
+			reader.readAsDataURL(file);
+		}
+	});
+
+	// Función para guardar la imagen y cerrar el modal
+	function saveImage() {
+		profileImg.src = previewImg.src; // Actualizar la imagen de perfil en la página principal
+		const modal = bootstrap.Modal.getInstance(document.getElementById('imageModal'));
+		modal.hide(); // Cerrar el modal
+	}
 
 </script>

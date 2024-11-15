@@ -18,6 +18,7 @@ const validators = [
 ];
 
 async function generateSideMenu(req, res, next) {
+    const profileImg = req.session.profileImg || '/images/default-pp.jpg'
     try {
         const privileges = {
             "Administrador": [
@@ -239,7 +240,7 @@ async function generateSideMenu(req, res, next) {
                 <div class="dropdown mt-auto">
                     <a href="#" class="d-flex align-items-center justify-content-center text-white text-decoration-none dropdown-toggle"
                         id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="https://github.com/mdo.png" alt="hugenerd" width="30" height="30" class="rounded-circle">
+                        <img src="${profileImg}" alt="hugenerd" width="30" height="30" class="rounded-circle">
                         <span class="d-none d-sm-inline mx-1">${req.session.firstName}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
