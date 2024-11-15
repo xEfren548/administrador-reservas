@@ -292,11 +292,10 @@ async function updateProfileImage(req, res) {
             return res.status(400).json({ error: "No image file provided" });
         }
 
-        console.log(profileImage[0].filepath);
-
         // FTP client setup
         const client = new ftp.Client();
         client.ftp.verbose = true;
+        client.ftp.timeout = 30000; // Increase timeout to 30 seconds
 
         try {
             await client.access({
@@ -308,11 +307,17 @@ async function updateProfileImage(req, res) {
 
             const filePathOnFTP = `/profile_${userId}.jpg`;
 
-            const fileExists = await client.exists(filePathOnFTP);
-            if (fileExists) {
-                await client.remove(filePathOnFTP);
+            try {
+                await client.downloadTo(null, filePathOnFTP); // Null destination to check existence
+                await client.remove(filePathOnFTP); // Remove if exists
+                console.log(`File ${filePathOnFTP} deleted successfully.`)
+            } catch (error) {
+                if (error.code === 500) {
+                    console.log(`File ${filePathOnFTP} does not exist.`)
+                } else {
+                    throw error;
+                }
             }
-
 
             // Upload the file to the FTP server
             await client.uploadFrom(profileImage[0].filepath, `/profile_${userId}.jpg`);
