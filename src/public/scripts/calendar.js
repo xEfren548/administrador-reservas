@@ -185,8 +185,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             let newElTitle = mouseEnterInfo.event.id;
             let newElTotal = mouseEnterInfo.event.extendedProps.total;
             let newElStatus = mouseEnterInfo.event.extendedProps.status;
-            if (newElStatus === "pending"){
-                newElStatus = "Por Depo"    
+            if (newElStatus === "pending") {
+                newElStatus = "Por Depo"
             }
             newEl.innerHTML = `
             <div
@@ -325,28 +325,64 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
 
             if (!resourcesCollapsed) {
-                setTimeout(function() {
+                setTimeout(function () {
                     var expanders = document.querySelectorAll('.fc-datagrid-expander');
-        
-                    expanders.forEach(function(expander) {
+
+                    expanders.forEach(function (expander) {
                         var icon = expander.querySelector('.fc-icon');
                         if (icon && icon.classList.contains('fc-icon-minus-square')) {
                             // Trigger click to collapse the group
                             expander.click();
                         }
                     });
-        
+
                     resourcesCollapsed = true; // Set the flag to true to prevent further collapsing
                 }, 100);
             }
 
 
+        },
+        windowResize: function (view) {
+            console.log("window resize")
+            const width = window.innerWidth;
+
+            if (width < 768) {
+                calendar.changeView('resourceTimelineMonth');
+            } else {
+                calendar.changeView('resourceTimelineYear');
+            }
         }
     });
     calendar.render();
-    
 
-    
+    // Define and call the responsive adjustment function
+    function adjustCalendarLayout() {
+        console.log("adjusting calendar")
+        const width = window.innerWidth;
+
+        calendar.setOption('resourceAreaWidth', width < 768 ? '100px' : '200px');
+        calendar.setOption('slotMinWidth', width < 768 ? 50 : 100);
+    }
+
+    function adjustToolbar() {
+        const isMobile = window.innerWidth < 768;
+        calendar.setOption('headerToolbar', {
+            left: isMobile ? 'prev,next' : 'today prev,next',
+            center: 'title',
+            right: isMobile ? 'resourceTimelineMonth' : 'resourceTimelineMonth,resourceTimelineYear'
+        });
+    }
+    // Attach the resize event listener
+    window.addEventListener('resize', adjustCalendarLayout);
+    window.addEventListener('resize', adjustToolbar);
+
+
+    // Call it immediately after rendering the calendar
+    adjustCalendarLayout();
+    adjustToolbar(); // Call initially
+
+
+
 
 
 
@@ -654,7 +690,7 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
     const departureDay = departureDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
     const departureDateSend = `${departureYear}-${departureMonth}-${departureDay}`;
 
-    console.log( "arrival send: ", arrivalDateSend)
+    console.log("arrival send: ", arrivalDateSend)
     console.log("departure send", departureDateSend)
 
     if (arrivalDateSend && departureDateSend && resourceId) {
