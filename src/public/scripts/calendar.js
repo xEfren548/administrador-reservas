@@ -343,7 +343,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         },
         windowResize: function (view) {
-            console.log("window resize")
             const width = window.innerWidth;
 
             if (width < 768) {
@@ -357,7 +356,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Define and call the responsive adjustment function
     function adjustCalendarLayout() {
-        console.log("adjusting calendar")
         const width = window.innerWidth;
 
         calendar.setOption('resourceAreaWidth', width < 768 ? '100px' : '200px');
