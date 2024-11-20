@@ -72,8 +72,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     id: event._id,
                                     resourceId: event.resourceId,
                                     title: event.title,
-                                    start: new Date(event.arrivalDate),
-                                    end: new Date(event.departureDate),
+                                    start: event.arrivalDate.split('T')[0],
+                                    end: event.departureDate.split('T')[0],
                                     url: event.url,
                                     total: event.total,
                                     clientId: event.client,
@@ -83,7 +83,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     clientName: event.clientName,
                                     clientPayments: event.pagosTotales,
                                     madeCheckIn: event.madeCheckIn,
-                                    cleaningDetails: event.cleaningDetails
+                                    cleaningDetails: event.cleaningDetails,
+                                    allDay: true
                                 }
                             })
                         console.log(events);
