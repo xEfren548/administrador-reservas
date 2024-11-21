@@ -113,7 +113,7 @@ function sendInstructions(clientInfo, chaletInfo, idReserva){
     console.log(`Sending instructions`);
     sendTemplateMsg(
         clientInfo, 
-        "purchase_receipt_1",
+        "instrucciones_de_cliente",
         [clientInfo.firstName, chaletInfo.propertyDetails.name, idReserva],
         [
             {
