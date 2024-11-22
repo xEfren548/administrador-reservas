@@ -56,15 +56,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         id: event._id,
                         resourceId: event.resourceId,
                         title: event.title,
-                        start: new Date(event.arrivalDate),
-                        end: new Date(event.departureDate),
+                        start: event.arrivalDate.split('T')[0],
+                        end: event.departureDate.split('T')[0],
                         // url: event.url,
                         total: event.total,
                         clientId: event.client,
                         status: event.status,
                         color: event.colorUsuario,
                         clientName: event.clientName,
-                        montoPendiente: event.montoPendiente
+                        montoPendiente: event.montoPendiente,
+                        allDay: true
                     }));
                     successCallback(events);
                 } catch (error) {

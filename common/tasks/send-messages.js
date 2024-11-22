@@ -62,16 +62,6 @@ function sendTemplateMsg(clientInfo, template, params, buttons = []) {
             components: components
         }
     };
-    console.log("DATA: ******")
-    console.log(data)
-    console.log("Components: ")
-    console.log(data.template.components)
-    console.log("parameters: ")
-    console.log(data.template.components[0].parameters[0])
-
-    console.log("Complete data: ")
-    console.dir(data, { depth: null });
-
     var postReq = {
         method: 'POST',
         headers: {
