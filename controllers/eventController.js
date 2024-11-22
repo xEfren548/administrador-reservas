@@ -975,6 +975,10 @@ async function modificarEvento(req, res) {
 
         console.log('eventoRecibido: ', event);
 
+        if (req.session.privilege !== "Administrador") {
+            return res.status(403).json({ mensaje: 'No tienes permiso para modificar un evento.' });
+        }
+
         // Obtener el ID del evento y la nueva fecha
         const eventId = req.params.id;
         let newStartDate = event.start;

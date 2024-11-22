@@ -28,6 +28,10 @@ async function registrarPago(req, res) {
     try {
         const { fechaPago, importe, metodoPago, codigoOperacion, reservacionId, notas } = req.body;
 
+        if (req.session.privilege !== "Administrador") {
+            return res.status(403).json({ mensaje: 'No tienes permiso para registrar un pago.' });
+        }
+
         const allReservations = await Documento.findOne();
         const reservacion = allReservations.events.find(event => event._id.toString() === reservacionId);
 
@@ -71,7 +75,7 @@ async function registrarPago(req, res) {
         res.status(201).json({ mensaje: 'Pago registrado correctamente.' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ mensaje: 'Hubo un error al registrar el pago.' });
+        res.status(500).json({ mensaje: error.message });
     }
 }
 
@@ -109,6 +113,11 @@ async function editarPago(req, res) {
 async function eliminarPago(req, res) {
     try {
         const { id } = req.params;
+
+        if (req.session.privilege !== "Administrador") {
+            return res.status(403).json({ mensaje: 'No tienes permiso para eliminar un pago.' });
+        }
+        
         await Pago.findByIdAndDelete(id);
 
         const logBody = {
@@ -130,6 +139,10 @@ async function eliminarPago(req, res) {
 async function liquidarReservaDueno(req, res, next){
     try {
         const { fechaPago, importe, metodoPago, codigoOperacion, reservacionId, notas } = req.body;
+
+        if (req.session.privilege !== "Administrador") {
+            return res.status(403).json({ mensaje: 'No tienes permiso para registrar un pago.' });
+        }
 
         const pago = new Pago({
             fechaPago: new Date(fechaPago),
