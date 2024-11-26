@@ -32,6 +32,7 @@ const tipologiasRoutes = require('./tipologiasRoutes');
 const preciosEspecialesRoutes = require('./preciosEspecialesRoutes');
 const bloqueoFechasRoutes = require('./bloqueoFechasRoutes');
 const bloqueoInversionistasRoutes = require('./bloqueoInversionistasRoutes');
+const webhookRoutes = require('./webHook');
 
 const authMiddleware = require('../common/middlewares/authMiddleware');
 
@@ -58,6 +59,8 @@ router.use('/login', loginRoute);
 router.use('/', instruccionesRoutes);
 router.use('/procesar-encuesta', surveyProcessingRoutes);
 router.use('/getchaletsRoutes', getchaletsRoutes);
+router.use('/', webhookRoutes);
+
 
 router.use('/api', authRoutes);
 
