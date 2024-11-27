@@ -61,6 +61,14 @@
         btnLoginSubmit.addEventListener("click", (event) => {
             event.preventDefault();
 
+            Swal.fire({
+              title: 'Autorizando...',
+              allowOutsideClick: false,
+              didOpen: () => {
+                  Swal.showLoading();
+              }
+            });
+
             const data = {
                 email: document.getElementById("txtUserEmail").value.trim(),
                 password: document.getElementById("txtUserPassword").value.trim()
@@ -73,6 +81,7 @@
                 body: JSON.stringify(data)                
             })
             .then(response => {
+                Swal.close(); // Close the loading indicator
                 if (!response.ok) {
                     response.json().then(errorData => {
                         const errors = errorData.error;
@@ -88,6 +97,7 @@
                 window.location.href = response.url;
             })
             .catch(error => {
+                Swal.close(); // Close the loading indicator
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
