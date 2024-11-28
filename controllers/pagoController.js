@@ -99,8 +99,13 @@ async function editarPago(req, res) {
         // }
 
         if (pagoActual.metodoPago === "Recibio dueño" && metodoPago === "Recibio dueño") {
+            if (!mongoose.Types.ObjectId.isValid(reservacionId)) {
+                console.error("Invalid reservacionId:", reservacionId);
+                return res.status(400).json({ mensaje: "ID de reservación no válido." });
+            }
             console.log("reservacionId: ", reservacionId)
             console.log("monto: ",-pagoActual.importe)
+
             const utilidadDelPago = await Utilidades.findOne({ idReserva: new mongoose.Types.ObjectId(reservacionId), monto: -pagoActual.importe });
             console.log("utilidad del pago: ", utilidadDelPago)
 
@@ -113,8 +118,8 @@ async function editarPago(req, res) {
                 }
 
                 await utilidadesController.altaComisionReturn({
-                    monto: pagoActual.monto,
-                    concepto: `Comisión negativa por Recepción de pago ${pagoActual.reservacionId}`,
+                    monto: -importe,
+                    concepto: `Comisión negativa por Recepción de pago`,
                     fecha: new Date(fechaPago),
                     idUsuario: utilidadEliminada.idUsuario,
                     idReserva: reservacionId
@@ -125,6 +130,10 @@ async function editarPago(req, res) {
 
         if (pagoActual.metodoPago === "Recibio dueño" && metodoPago !== "Recibio dueño") {
             const utilidadDelPago = await Utilidades.findOne({ idReserva: reservacionId, monto: -pagoActual.importe });
+            if (!mongoose.Types.ObjectId.isValid(reservacionId)) {
+                console.error("Invalid reservacionId:", reservacionId);
+                return res.status(400).json({ mensaje: "ID de reservación no válido." });
+            }
 
             if (utilidadDelPago) {
                 const utilidadEliminada = await Utilidades.findOneAndDelete({ idReserva: reservacionId, monto: -pagoActual.importe });
@@ -170,6 +179,35 @@ async function eliminarPago(req, res) {
 
         if (req.session.privilege !== "Administrador") {
             return res.status(403).json({ mensaje: 'No tienes permiso para eliminar un pago.' });
+        }
+
+        const pagoActual = await Pago.findById(id);
+        if (!pagoActual) {
+            return res.status(404).json({ mensaje: 'Pago no encontrado.' });
+        }
+
+        const reservacionId = pagoActual.reservacionId;
+
+        if (pagoActual.metodoPago === "Recibio dueño") {
+            if (!mongoose.Types.ObjectId.isValid(reservacionId)) {
+                console.error("Invalid reservacionId:", reservacionId);
+                return res.status(400).json({ mensaje: "ID de reservación no válido." });
+            }
+            console.log("reservacionId: ", reservacionId)
+            console.log("monto: ",-pagoActual.importe)
+
+            const utilidadDelPago = await Utilidades.findOne({ idReserva: new mongoose.Types.ObjectId(reservacionId), monto: -pagoActual.importe });
+            console.log("utilidad del pago: ", utilidadDelPago)
+
+            if (utilidadDelPago) {
+                const utilidadEliminada = await Utilidades.findOneAndDelete({ idReserva: reservacionId, monto: -pagoActual.importe });
+                console.log("utilidad eliminada: ")
+                console.log(utilidadEliminada)
+                if (!utilidadEliminada) {
+                    return res.status(500).json({ mensaje: 'Hubo un error al eliminar la utilidad.' });
+                }
+            }
+
         }
         
         await Pago.findByIdAndDelete(id);
