@@ -9,6 +9,7 @@ const clienteController = require('../controllers/clientController');
 const pagoController = require('../controllers/pagoController');
 const BloqueoFechas = require('../models/BloqueoFechas');
 const BloqueoInversionistas = require('../models/BloqueoInversionistas');
+const sendEmail = require('../common/tasks/send-mails');
 const mongoose = require('mongoose');
 const { format } = require('date-fns');
 const moment = require('moment');
@@ -1410,6 +1411,17 @@ function cifrarMensaje(mensaje, desplazamiento) {
     });
 }
 
+async function sendReservationMail(req, res) {
+    const { email, reservationId } = req.body;
+    try {
+        sendEmail(email, reservationId);
+        res.status(200).json({ message: 'Correo enviado exitosamente' });
+    } catch (error) {
+        console.error('Error al enviar el correo:', error);
+        res.status(500).json({ message: 'Error al enviar el correo' });
+    }
+}
+
 module.exports = {
     createReservationValidators,
     createOwnersReservationValidators,
@@ -1431,6 +1443,7 @@ module.exports = {
     reservasDeDuenos,
     reservasDeDuenosParaColaborador,
     cifrarMensaje,
-    realizarCheckIn
+    realizarCheckIn,
+    sendReservationMail
 };
 
