@@ -1109,6 +1109,14 @@
         event.preventDefault();
         console.log("Se ejecuta la funcion")
 
+        Swal.fire({
+            title: 'Generando pago...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         const clienteEmail = document.getElementById('cliente-email').value;
         const clientePhone = document.getElementById('cliente-phone').value;
         const clienteAddress = document.getElementById('cliente-address').value;
@@ -1167,6 +1175,8 @@
                 body: JSON.stringify(bodyNuevoPago)
             });
 
+            Swal.close(); // Close the loading indicator
+
             if (response.ok) {
                 Swal.fire({
                     icon: 'success',
@@ -1181,6 +1191,7 @@
             }
 
         } catch (error) {
+            Swal.close(); // Close the loading indicator
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
@@ -1215,7 +1226,8 @@
                 importe: editarImporteInput.value,
                 metodoPago: editarMetodoPagoInput.value,
                 codigoOperacion: editarCodigoOperacionInput.value,
-                notas: editarNotasInput.value
+                notas: editarNotasInput.value,
+                reservacionId: document.querySelector('#reservacion_id').value
             };
 
             const response = await fetch(`/api/pagos/${paymentId}`, {

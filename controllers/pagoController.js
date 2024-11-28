@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Pago = require('../models/Pago');
 const logController = require('../controllers/logController');
 const utilidadesController = require('../controllers/utilidadesController');
+const Utilidades = require('../models/Utilidades');
 const Habitacion = require('../models/Habitacion');
 const Documento = require('../models/Evento');
 
@@ -83,6 +84,59 @@ async function editarPago(req, res) {
     try {
         const { id } = req.params;
         const { fechaPago, importe, metodoPago, codigoOperacion, reservacionId, notas } = req.body;
+
+        if (req.session.privilege !== "Administrador") {
+            return res.status(403).json({ mensaje: 'No tienes permiso para editar un pago.' });
+        }
+
+        const pagoActual = await Pago.findById(id);
+        if (!pagoActual) {
+            return res.status(404).json({ mensaje: 'Pago no encontrado.' });
+        }
+
+        // if (pagoActual.metodoPago === "Recibio dueño" && metodoPago !== "Recibio dueño") {
+
+        // }
+
+        if (pagoActual.metodoPago === "Recibio dueño" && metodoPago === "Recibio dueño") {
+            console.log("reservacionId: ", reservacionId)
+            console.log("monto: ",-pagoActual.importe)
+            const utilidadDelPago = await Utilidades.findOne({ idReserva: new mongoose.Types.ObjectId(reservacionId), monto: -pagoActual.importe });
+            console.log("utilidad del pago: ", utilidadDelPago)
+
+            if (utilidadDelPago) {
+                const utilidadEliminada = await Utilidades.findOneAndDelete({ idReserva: reservacionId, monto: -pagoActual.importe });
+                console.log("utilidad eliminada: ")
+                console.log(utilidadEliminada)
+                if (!utilidadEliminada) {
+                    return res.status(500).json({ mensaje: 'Hubo un error al eliminar la utilidad.' });
+                }
+
+                await utilidadesController.altaComisionReturn({
+                    monto: pagoActual.monto,
+                    concepto: `Comisión negativa por Recepción de pago ${pagoActual.reservacionId}`,
+                    fecha: new Date(fechaPago),
+                    idUsuario: utilidadEliminada.idUsuario,
+                    idReserva: reservacionId
+                })
+            }
+
+        }
+
+        if (pagoActual.metodoPago === "Recibio dueño" && metodoPago !== "Recibio dueño") {
+            const utilidadDelPago = await Utilidades.findOne({ idReserva: reservacionId, monto: -pagoActual.importe });
+
+            if (utilidadDelPago) {
+                const utilidadEliminada = await Utilidades.findOneAndDelete({ idReserva: reservacionId, monto: -pagoActual.importe });
+                console.log("utilidad eliminada: ")
+                console.log(utilidadEliminada)
+
+                if (!utilidadEliminada) {
+                    return res.status(500).json({ mensaje: 'Hubo un error al eliminar la utilidad.' });
+                }
+            }
+
+        }
 
         const pago = await Pago.findByIdAndUpdate(id, {
             fechaPago: new Date(fechaPago),

@@ -829,7 +829,6 @@ async function mostrarUtilidadesGlobales(req, res) {
 
         // console.log(Object.values(userMontos));
         // console.log(Object.values(utilidadMontos));
-        console.log(utilidades)
 
         utilidades.sort((a, b) => moment(b.fecha, 'DD-MM-YYYY').valueOf() - moment(a.fecha, 'DD-MM-YYYY').valueOf());
         res.render('vistaUtilidadesGlobales', {
