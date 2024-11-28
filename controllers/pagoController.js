@@ -168,7 +168,7 @@ async function editarPago(req, res) {
         res.status(200).json({ mensaje: 'Pago editado correctamente.' });
     } catch (e) {
         console.error(e);
-        res.status(500).json({ mensaje: 'Hubo un error al editar el pago.' });
+        res.status(500).json({ mensaje: 'Hubo un error al editar el pago: ' + e.message + '.' });
 
     }
 }
@@ -233,7 +233,7 @@ async function liquidarReservaDueno(req, res, next){
         const { fechaPago, importe, metodoPago, codigoOperacion, reservacionId, notas } = req.body;
 
         if (req.session.privilege !== "Administrador") {
-            return res.status(403).json({ mensaje: 'No tienes permiso para registrar un pago.' });
+            return res.status(403).json({ mensaje: 'No tienes permiso para liquidar un pago.' });
         }
 
         const pago = new Pago({

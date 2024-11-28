@@ -1188,6 +1188,9 @@
                         location.reload();
                     }
                 });
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.mensaje);
             }
 
         } catch (error) {
@@ -1250,7 +1253,8 @@
                     }
                 });
             } else {
-                throw new Error('Error al actualizar el pago. Por favor, inténtalo de nuevo más tarde.');
+                const errorData = await response.json();
+                throw new Error(errorData.mensaje);
             }
         } catch (error) {
             Swal.fire({
@@ -1594,7 +1598,8 @@
                         }
                     });
                 } else {
-                    throw new Error('Error al eliminar el pago. Por favor, inténtalo de nuevo más tarde.');
+                    const errorData = await response.json();
+                    throw new Error(errorData.mensaje);
                 }
             }
         } catch (error) {
