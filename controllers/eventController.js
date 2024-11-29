@@ -73,6 +73,9 @@ const createReservationValidators = [
             }
             return true;
         }),
+    check('pax')
+        .notEmpty().withMessage('Por favor, selecciona el número de personas')
+        .isNumeric().withMessage('Por favor, selecciona el número de personas')
 ];
 
 const createOwnersReservationValidators = [
@@ -669,6 +672,10 @@ async function createReservation(req, res, next) {
             SendMessages.sendInstructions(client, chalet, idReserva)
         }
 
+        if (client.email){
+            sendEmail(client.email, idReserva);
+        }
+
 
 
         const agenteQueReserva = await Usuario.findById(createdBy);
@@ -676,6 +683,9 @@ async function createReservation(req, res, next) {
             if (agenteQueReserva.phone){
                 SendMessages.sendReservationConfirmation(agenteQueReserva, chalet, reservationToAdd);
                 console.log("Mensaje enviado al agente.")
+            }
+            if (agenteQueReserva.email){
+                sendEmail(agenteQueReserva.email, idReserva);
             }
         }
         

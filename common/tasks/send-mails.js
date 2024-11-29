@@ -36,12 +36,23 @@ async function sendEmail(email, reservationId) {
         // <p style="margin: 10px 0;"><strong>Precio total:</strong> $[precioTotal]</p>
         // <p style="margin: 10px 0;"><strong>Nombre del cliente:</strong> [nombreCliente]</p>
     
+        // Testing
+        // const transporter = nodemailer.createTransport({
+        //     host: 'sandbox.smtp.mailtrap.io',
+        //     port: 25,
+        //     auth: {
+        //         user: '1a5a5292926a0e',
+        //         pass: '21c4f402383c4a'
+        //     }
+        // });
+
         const transporter = nodemailer.createTransport({
-            host: 'sandbox.smtp.mailtrap.io',
-            port: 25,
+            host: 'mail.privateemail.com',
+            port: 465,
+            secure: true,
             auth: {
-                user: '1a5a5292926a0e',
-                pass: '21c4f402383c4a'
+                user: 'administracion@nynhoteles.com.mx',
+                pass: 'Martes.123'
             }
         });
     
@@ -52,7 +63,7 @@ async function sendEmail(email, reservationId) {
             html: htmlContent
         };
     
-        console.log("Enviando correo...")
+        console.log(`Enviando correo a ${email}`)
     
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
@@ -62,6 +73,7 @@ async function sendEmail(email, reservationId) {
             }
         });
     } catch (error) {
+        console.error('Error al enviar el correo:', error);
 
     }
 }
