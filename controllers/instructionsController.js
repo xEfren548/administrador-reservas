@@ -219,11 +219,43 @@ async function acceptTermsAndConditions(req, res, next) {
     }
 }
 
+async function realizarCheckIn(req, res){
+    try {
+        const {idReserva} = req.body;
+        console.log(req.body)
+        console.log(idReserva);
+        const documento = await Reservation.findOne();
+
+        if (!documento) {
+            throw new Error('No se encontraron eventos');
+        }
+
+        // Buscar el evento por su ID dentro del array de eventos
+        const reserva = documento.events.find(evento => evento._id.toString() === idReserva);
+        if (!reserva) {
+            throw new Error('La reserva no fue encontrada');
+        }
+
+        reserva.madeCheckIn = true;
+        await documento.save();
+        res.status(200).json({ message: 'Check-in realizado exitosamente' });
+
+
+
+    } catch (error) {
+        // Manejar cualquier error y enviar una respuesta de error al cliente
+        console.error('Error al realizar el check-in:', error.message);
+        res.status(500).json({ message: error.message });
+    }
+
+}
+
 module.exports = {
     getViewValidators,
     areTermsAcceptedValidators,
     acceptTermsAndConditionsValidators,
     showInstructionsView,
     areTermsAccepted,
-    acceptTermsAndConditions
+    acceptTermsAndConditions,
+    realizarCheckIn
 };

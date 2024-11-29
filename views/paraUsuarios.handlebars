@@ -443,7 +443,7 @@
                 type: "POST",
                 data: {idReserva: reservationId},
                 dataType: "json",
-                url: `/api/eventos/realizarcheckin?id=${reservationId}`,
+                url: `/instrucciones/realizarcheckin?id=${reservationId}`,
                 success: function(response) {
                     console.log(response);
                     Swal.fire({
