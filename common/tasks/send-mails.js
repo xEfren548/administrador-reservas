@@ -28,13 +28,7 @@ async function sendEmail(email, reservationId) {
         htmlContent = htmlContent.replace("[precioTotal]", reservation.total);
         htmlContent = htmlContent.replace("[nombreCliente]", client.firstName + " " + client.lastName);
         htmlContent = htmlContent.replace("[reservationId]", reservationId);
-    
-        // <p style="margin: 10px 0;"><strong>Fecha de llegada:</strong> [arrivalDate]</p>
-        // <p style="margin: 10px 0;"><strong>Fecha de salida:</strong> [departureDate]</p>
-        // <p style="margin: 10px 0;"><strong>Huéspedes:</strong> [huespedes]</p>
-        // <p style="margin: 10px 0;"><strong>Noches:</strong> [nNights[</p>
-        // <p style="margin: 10px 0;"><strong>Precio total:</strong> $[precioTotal]</p>
-        // <p style="margin: 10px 0;"><strong>Nombre del cliente:</strong> [nombreCliente]</p>
+        htmlContent = htmlContent.replace("[reservationId2]", reservationId);
     
         // Testing
         // const transporter = nodemailer.createTransport({
@@ -58,8 +52,8 @@ async function sendEmail(email, reservationId) {
     
         const mailOptions = {
             from: '"N&N Hoteles" <administracion@nynhoteles.com.mx>',
-            to: email,
-            subject: "Creación de usuario",
+            to: `<${email}>`,
+            subject: "Confirmación de Reserva N&N Hoteles",
             html: htmlContent
         };
     
