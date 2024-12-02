@@ -1203,12 +1203,24 @@ async function moveToPlayground(req, res) {
 
             if (pagoDel50) {
 
+                const mitadDelTotal = totalReserva / 2;
+                const remanente = pagoTotal - mitadDelTotal;
+
                 const newComisiones = [];
                 for (const comisiones of comisionesReserva) {
                     if (comisiones.concepto.includes('limpieza')) {
                         const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
                         if (utilidadEliminada) {
-                            console.log('Utilidad eliminada correctamente');
+                            if (chalet.others.owner) {
+                                utilidadesController.altaComisionReturn({
+                                    monto: utilidadEliminada.monto / 2,
+                                    concepto: `Reserva cancelada (limpieza), 50%`,
+                                    status: 'aplicado',
+                                    fecha: utilidadEliminada.fecha,
+                                    idReserva: utilidadEliminada.idReserva,
+                                    idUsuario: chalet.others.owner
+                                })
+                            }
                         } else {
                             throw new Error('Error al eliminar comision.');
                         }
@@ -1226,13 +1238,44 @@ async function moveToPlayground(req, res) {
                     await utilidadesController.editarComisionReturn(comision);
                 }
             } else {
-                for (const comisiones of comisionesReserva) {
-                    const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
-                    if (utilidadEliminada) {
-                        console.log('Utilidad eliminada correctamente');
-                    } else {
-                        throw new Error('Error al eliminar comision.');
+                if (pagoTotal < 1){
+                    for (const comisiones of comisionesReserva) {
+                        const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
+                        if (utilidadEliminada) {
+                            console.log('Utilidad eliminada correctamente');
+                        } else {
+                            throw new Error('Error al eliminar comision.');
+                        }
                     }
+                    
+                    // Find the index of the room to delete by its ID
+                    const index = eventosExistentes.events.findIndex(evento => evento.id.toString() === idReserva.toString());
+                            
+                    if (index === -1) {
+                        return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
+                    }
+                
+                    // Remove the room from the array
+                    eventosExistentes.events.splice(index, 1);
+                
+                    // Save the updated room list to the database
+                    await eventosExistentes.save();
+                    console.log("Reserva cancelada de la base de datos.")
+                    return res.status(200).json({ mensaje: 'Reserva cancelada' });
+
+                } else {
+                    utilidadesController.altaComisionReturn({
+                        monto: pagoTotal,
+                        concepto: `Reserva cancelada remanente depositado`,
+                        status: 'aplicado',
+                        fecha: evento.arrivalDate,
+                        idReserva: evento.idReserva,
+                        idUsuario: chalet.others.admin
+                    })
+                    evento.status = 'cancelled';
+                    await evento.save();
+                    console.log("Reserva cancelada (cambio de status)")
+                    return res.status(200).json({ mensaje: 'Reserva cancelada' });
                 }
             }
         }
@@ -1294,6 +1337,7 @@ async function moveToPlayground(req, res) {
                 throw new Error("No se puede marcar como no show si el 50% no ha sido pagado.");
             }
         }
+
         evento.status = status;
         const confirmation = await eventosExistentes.save();
         if (!confirmation) {
@@ -1314,7 +1358,7 @@ async function moveToPlayground(req, res) {
 
 
 
-        res.status(200).json({ mensaje: 'Evento movido al playground correctamente', reserva: evento });
+        res.status(200).json({ mensaje: 'Estaus modificado correctamente', reserva: evento });
 
     } catch (error) {
         console.log(error);
