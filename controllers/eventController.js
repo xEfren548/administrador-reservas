@@ -1131,7 +1131,15 @@ async function moveToPlayground(req, res) {
         const eventosExistentes = await Documento.findOne();
         const evento = eventosExistentes.events.find(evento => evento._id.toString() === idReserva);
 
-        if (!['active', 'playground', 'cancelled'].includes(status)) {
+        const chalets = await Habitacion.findOne();
+        const chalet = chalets.resources.find(chalet => chalet._id.toString() === evento.resourceId.toString());
+        if (!chalet) {
+            throw new NotFoundError('Chalet does not exist');
+        }
+
+        
+
+        if (!['active', 'playground', 'cancelled', 'no-show'].includes(status)) {
             return res.status(400).send({ error: 'Invalid status' });
         }
         if (!evento) {
@@ -1233,7 +1241,59 @@ async function moveToPlayground(req, res) {
             if (req.session.privilege !== "Administrador"){
                 throw new Error("Solo los administradores pueden cancelar reservas.")
             }
-        }   
+        }
+
+        if (status === 'no-show') {
+            const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
+
+            const pagos = await pagoController.obtenerPagos(idReserva);
+            let pagoTotal = 0
+            pagos.forEach(pago => {
+                pagoTotal += pago.importe;
+            })
+            const totalReserva = evento.total;
+            const montoPendiente = totalReserva - pagoTotal;
+
+            const pagoDel50 = (montoPendiente <= totalReserva / 2) ? true : false;
+
+            if (pagoDel50) {
+
+                const newComisiones = [];
+                for (const comisiones of comisionesReserva) {
+                    if (comisiones.concepto.includes('limpieza')) {
+                        const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
+                        if (utilidadEliminada) {
+                            console.log('Utilidad eliminada correctamente');
+                            if (chalet.others.owner) {
+                                utilidadesController.altaComisionReturn({
+                                    monto: utilidadEliminada.monto / 2,
+                                    concepto: `(Reserva No Show (limpieza), 50%)`,
+                                    status: 'aplicado',
+                                    fecha: utilidadEliminada.fecha,
+                                    idReserva: utilidadEliminada.idReserva,
+                                    idUsuario: chalet.others.owner
+                                })
+                            }
+                        } else {
+                            throw new Error('Error al eliminar comision.');
+                        }
+                    } else {
+                        newComisiones.push({
+                            id: comisiones._id,
+                            monto: comisiones.monto / 2,
+                            concepto: `${comisiones.concepto} (Reserva No Show, 50%)`,
+                            status: 'aplicado'
+                        });
+                    }
+                }
+
+                for (const comision of newComisiones) {
+                    await utilidadesController.editarComisionReturn(comision);
+                }
+            } else {
+                throw new Error("No se puede marcar como no show si el 50% no ha sido pagado.");
+            }
+        }
         evento.status = status;
         const confirmation = await eventosExistentes.save();
         if (!confirmation) {

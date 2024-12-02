@@ -391,26 +391,32 @@ document.addEventListener('DOMContentLoaded', async function () {
     const moveToActiveEl = document.getElementById('move-to-active');
     const moveToPlaygroundEl = document.getElementById('move-to-playground');
     const cancelReservationEl = document.getElementById('delete');
+    const moveToNoShow = document.getElementById('move-to-noshow');
     var currentEvent;
 
     function showContextMenu(event, calendarEvent) {
         currentEvent = calendarEvent;
         contextMenu.style.display = 'block';
+
         if (currentEvent.extendedProps.status === 'active') {
             moveToActiveEl.style.display = 'none';
             moveToPlaygroundEl.style.display = 'block';
+            moveToNoShow.style.display = 'block';
         } else if (currentEvent.extendedProps.status === 'playground') {
             moveToPlaygroundEl.style.display = 'none';
             moveToActiveEl.style.display = 'block';
+            moveToNoShow.style.display = 'block';
         } else if (currentEvent.extendedProps.status === 'pending') {
             moveToPlaygroundEl.style.display = 'none';
             moveToActiveEl.style.display = 'none';
             cancelReservationEl.style.display = 'block';
+            moveToNoShow.style.display = 'none';
         }
         else {
             moveToPlaygroundEl.style.display = 'none';
             moveToActiveEl.style.display = 'none';
             cancelReservationEl.style.display = 'none';
+            moveToNoShow.style.display = 'none';
 
         }
         contextMenu.style.left = event.pageX + 'px';
@@ -472,6 +478,59 @@ document.addEventListener('DOMContentLoaded', async function () {
                 icon: 'error',
                 title: 'Error',
                 text: 'Hubo un error al mover la reserva al Playground.' + error.message,
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+    });
+    
+    document.getElementById('move-to-noshow').addEventListener('click', async function () {
+        const confirmacion = await Swal.fire({
+            icon: 'warning',
+            title: '¿Estás seguro?',
+            text: 'Esta acción moverá la reserva a No Show.',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, mover',
+            cancelButtonText: 'Cancelar'
+        });
+
+        try {
+
+            if (confirmacion.isConfirmed) {
+                const response = await fetch(`/api/eventos/move-to-playground`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        idReserva: currentEvent.id,
+                        status: 'no-show'
+                    })
+                });
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Reserva movida a No Show',
+                        text: 'La reserva ha sido movida a No Show.',
+                        showConfirmButton: false,
+                        timer: 3000
+                    }).then((result) => {
+
+                        window.location.reload();
+
+                    })
+                } else {
+                    throw new Error('Error al mover reserva a No Show');
+                }
+
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un error al mover la reserva a No Show.' + error.message,
                 showConfirmButton: false,
                 timer: 3000
             });
