@@ -391,6 +391,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const moveToActiveEl = document.getElementById('move-to-active');
     const moveToPlaygroundEl = document.getElementById('move-to-playground');
     const cancelReservationEl = document.getElementById('delete');
+    const editEl = document.getElementById('edit');
     const moveToNoShow = document.getElementById('move-to-noshow');
     var currentEvent;
 
@@ -417,6 +418,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             moveToActiveEl.style.display = 'none';
             cancelReservationEl.style.display = 'none';
             moveToNoShow.style.display = 'none';
+            editEl.style.display = 'none';
 
         }
         contextMenu.style.left = event.pageX + 'px';

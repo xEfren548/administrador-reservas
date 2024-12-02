@@ -1150,6 +1150,10 @@ async function moveToPlayground(req, res) {
             throw new Error('El evento ya estaba en ese estatus');
         }
 
+        if (evento.status === 'no-show') {
+            throw new Error('No se pueden hacer modificaciones a esta reserva');
+        }
+
         if (evento.status === 'active' && status === 'playground') {
             const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
 
@@ -1205,6 +1209,17 @@ async function moveToPlayground(req, res) {
 
                 const mitadDelTotal = totalReserva / 2;
                 const remanente = pagoTotal - mitadDelTotal;
+
+                if (remanente >= 1) {
+                    utilidadesController.altaComisionReturn({
+                        monto: remanente,
+                        concepto: `Remanente pago No Show`,
+                        status: 'aplicado',
+                        fecha: utilidadEliminada.fecha,
+                        idReserva: utilidadEliminada.idReserva,
+                        idUsuario: chalet.others.admin
+                    })
+                }
 
                 const newComisiones = [];
                 for (const comisiones of comisionesReserva) {
@@ -1300,6 +1315,19 @@ async function moveToPlayground(req, res) {
             const pagoDel50 = (montoPendiente <= totalReserva / 2) ? true : false;
 
             if (pagoDel50) {
+                const mitadDelTotal = totalReserva / 2;
+                const remanente = pagoTotal - mitadDelTotal;
+
+                if (remanente >= 1) {
+                    utilidadesController.altaComisionReturn({
+                        monto: remanente,
+                        concepto: `Remanente pago No Show`,
+                        status: 'aplicado',
+                        fecha: evento.arrivalDate,
+                        idReserva: evento._id,
+                        idUsuario: chalet.others.admin
+                    })
+                }
 
                 const newComisiones = [];
                 for (const comisiones of comisionesReserva) {
