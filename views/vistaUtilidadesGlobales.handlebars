@@ -54,8 +54,9 @@
                         <th scope="col">Noches reservadas</th>
                         <th scope="col">Check In</th>
                         <th scope="col">Check Out</th>
+                        <th scope="col">Estatus Reserva</th>
                         <th scope="col">Usuario</th>
-
+                        <th scope="col">Estatus Utilidad</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -70,9 +71,27 @@
                         <td>{{this.nochesReservadas}}</td>
                         <td>{{this.fecha}}</td>
                         <td>{{this.checkOut}}</td>
+                        {{#if (eq this.statusReserva "ACTIVE")}}
+                        <td>Activa</td>
+                        {{else if (eq this.statusReserva "PLAYGROUND")}}
+                        <td>Playground</td>
+                        {{else if (eq this.statusReserva "CANCELLED")}}
+                        <td>Cancelada</td>
+                        {{else if (eq this.statusReserva "NO-SHOW")}}
+                        <td>No Show</td>
+                        {{else if (eq this.statusReserva "PENDING")}}
+                        <td>Pendiente</td>
+                        {{else}}
+                        <td>{{this.statusReserva}}</td>
+                        {{/if}}
                         <td>{{this.nombreUsuario}}</td>
-
-
+                        {{#if (eq this.status "pendiente")}}
+                        <td><span class="badge bg-warning text-dark">Pendiente</span></td>
+                        {{else if (eq this.status "aplicado")}}
+                        <td><span class="badge bg-success text-dark">Aplicado</span></td>
+                        {{else}}
+                        <td>{{this.status}}</td>
+                        {{/if}}
                     </tr>
                     {{/each}}
                     {{else}}
@@ -86,7 +105,7 @@
                     <tr>
                         <td colspan="4"><b>Total</b></td>
                         <td id="totalMonto"></td>
-                        <td colspan="4"></td>
+                        <td colspan="6"></td>
                     </tr>
                 </tfoot>
             </table>
@@ -466,32 +485,32 @@
     //const userMontos = {{{ json userMontos }}}
     //userMontos.sort((a, b) => b.monto - a.monto);
 
-                const ctxUsers = document.getElementById('userMontos-chart').getContext('2d');
-                userMontosChart = new Chart(ctxUsers, {
-                type: 'pie',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Comisiones por usuario',
-                        data: [],
-                        backgroundColor: [],
-                        borderWidth: 1
-                    }]
+    const ctxUsers = document.getElementById('userMontos-chart').getContext('2d');
+    userMontosChart = new Chart(ctxUsers, {
+        type: 'pie',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Comisiones por usuario',
+                data: [],
+                backgroundColor: [],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        title: {
-                            display: true,
-                            text: 'Comisiones por usuario'
-                        }
-                    }
+                title: {
+                    display: true,
+                    text: 'Comisiones por usuario'
                 }
-            });
+            }
+        }
+    });
     const ctxChalets = document.getElementById('chaletUtilities-chart').getContext('2d');
 
     const montosChaletsChart = new Chart(ctxChalets, {
