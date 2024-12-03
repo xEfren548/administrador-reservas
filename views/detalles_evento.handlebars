@@ -1517,13 +1517,14 @@
                     }
                 })
             } else {
-                throw new Error('Error al modificar el status de la reserva')
+                const data = await response.json()
+                throw new Error('Error al modificar el status de la reserva: ' + data.message);
             }
         } catch (error) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Hubo un error al mover la reserva al Playground.',
+                text: error.message,
                 showConfirmButton: false,
                 timer: 3000
 

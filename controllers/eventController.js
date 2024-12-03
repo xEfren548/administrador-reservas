@@ -1140,7 +1140,7 @@ async function moveToPlayground(req, res) {
         
 
         if (!['active', 'playground', 'cancelled', 'no-show'].includes(status)) {
-            return res.status(400).send({ error: 'Invalid status' });
+            return res.status(400).json({ message: 'Invalid status' });
         }
         if (!evento) {
             throw new Error('El evento no fue encontrado');
@@ -1267,7 +1267,7 @@ async function moveToPlayground(req, res) {
                     const index = eventosExistentes.events.findIndex(evento => evento.id.toString() === idReserva.toString());
                             
                     if (index === -1) {
-                        return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
+                        return res.status(404).json({ message: 'El evento no fue encontrado' });
                     }
                 
                     // Remove the room from the array
@@ -1276,7 +1276,7 @@ async function moveToPlayground(req, res) {
                     // Save the updated room list to the database
                     await eventosExistentes.save();
                     console.log("Reserva cancelada de la base de datos.")
-                    return res.status(200).json({ mensaje: 'Reserva cancelada' });
+                    return res.status(200).json({ message: 'Reserva cancelada' });
 
                 } else {
                     utilidadesController.altaComisionReturn({
@@ -1290,7 +1290,7 @@ async function moveToPlayground(req, res) {
                     evento.status = 'cancelled';
                     await evento.save();
                     console.log("Reserva cancelada (cambio de status)")
-                    return res.status(200).json({ mensaje: 'Reserva cancelada' });
+                    return res.status(200).json({ message: 'Reserva cancelada' });
                 }
             }
         }
@@ -1386,11 +1386,11 @@ async function moveToPlayground(req, res) {
 
 
 
-        res.status(200).json({ mensaje: 'Estaus modificado correctamente', reserva: evento });
+        res.status(200).json({ message: 'Estaus modificado correctamente', reserva: evento });
 
     } catch (error) {
         console.log(error);
-        res.status(500).send({ error: 'Error al modificar status: ' + error });
+        res.status(500).json({ message: 'Error al modificar status: ' + error });
     }
 }
 

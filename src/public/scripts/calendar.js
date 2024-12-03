@@ -471,7 +471,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     })
                 } else {
-                    throw new Error('Error al mover reserva a cancelada');
+                    const data = await response.json();
+                    throw new Error('Error al mover reserva a cancelada: ' + data.message);
                 }
 
             }
@@ -479,7 +480,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Hubo un error al mover la reserva al Playground.' + error.message,
+                text: error.message,
                 showConfirmButton: false,
                 timer: 3000
             });
@@ -524,7 +525,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     })
                 } else {
-                    throw new Error('Error al mover reserva a No Show');
+                    const data = await response.json();
+                    throw new Error('Error al mover reserva a No Show: ' + data.message);
                 }
 
             }
@@ -532,7 +534,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Hubo un error al mover la reserva a No Show.' + error.message,
+                text: error.message,
                 showConfirmButton: false,
                 timer: 3000
             });
@@ -577,7 +579,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     })
                 } else {
-                    throw new Error('Error al mover reserva a playground')
+                    const data = await response.json();
+                    throw new Error('Error al mover reserva a playground: ' + data.message);
                 }
 
             }
@@ -585,7 +588,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Hubo un error al mover la reserva al Playground.' + error.message,
+                text: error.message,
                 showConfirmButton: false,
                 timer: 3000
             });
@@ -631,7 +634,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     })
                 } else {
-                    throw new Error('Error al mover reserva a activa');
+                    const data = await response.json();
+                    throw new Error('Error al mover reserva a activa: ' + data.message);
                 }
 
             }
