@@ -141,6 +141,17 @@
                         extend: 'csvHtml5',
                         text: 'Exportar a CSV',
                         footer: true,
+                        exportOptions: {
+                            format: {
+                                footer: function(data, columnIdx) {
+                                    if (columnIdx === 4) {
+
+                                        return data;
+                                    }
+                                    return ''
+                                }
+                            }
+                        }
 
                     },
                     {
@@ -350,7 +361,6 @@
             if (!isNaN(monthIndex) && !isNaN(amount)) {
                 monthlyData[monthIndex] += amount; // Accumulate amount for each month
             }
-            console.log(data)
         });
 
 
