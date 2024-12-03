@@ -769,9 +769,24 @@
                                     <div class="mb-3">
                                         <label for="" class="form-label">Estatus</label>
                                         <select class="form-select form-select-md" name="" id="select-modificar-status">
-                                            <option selected disabled>Select one</option>
-                                            <option value="active">Reserva activa</option>
-                                            <option value="playground">Playground</option>
+                                            <option selected disabled>Selecciona</option>
+                                            {{#if (eq evento.status "active")}}
+                                                <option value="playground">Playground</option>
+                                                <option value="no-show">No show</option>
+                                            {{else if (eq evento.status "no-show")}}
+                                                <option value="0">No se puede modificar el status</option>
+                                            {{else if (eq evento.status "playground")}}
+                                                <option value="active">Reserva activa</option>
+                                                <option value="no-show">No show</option>
+                                            {{else if (eq evento.status "cancelled")}}
+                                                <option value="0">No se puede modificar el status</option>
+                                            {{else if (eq evento.status "pending")}}
+                                                <option value="active">Reserva activa</option>
+                                                <option value="no-show">No show</option>
+                                                <option value="playground">Playground</option>
+                                            {{else}}
+                                                <option value="0">No se puede modificar el status</option>
+                                            {{/if}}
                                         </select>
                                     </div>
 
@@ -787,7 +802,13 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="update-status-btn">Modificar estatus</button>
+                    {{#if (eq evento.status "no-show")}}
+                    <button type="button" class="btn btn-primary" id="update-status-btn" disabled>Modificar estatus</button>
+                    {{else if (eq evento.status "cancelled")}}
+                    <button type="button" class="btn btn-primary" id="update-status-btn" disabled>Modificar estatus</button>
+                    {{else}}
+                    <button type="button" class="btn btn-primary" id="update-status-btn">Modificar estatus</button>
+                    {{/if}}
             </div>
         </div>
     </div>
