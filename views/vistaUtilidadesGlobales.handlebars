@@ -180,7 +180,7 @@
                     });
 
                     this.api()
-                        .columns([0, 8])
+                        .columns([0, 9])
                         .every(function () {
                             let column = this;
 
@@ -362,7 +362,7 @@
         var groupedData = {};
         api.rows({ search: 'applied' }).every(function () {
             var data = this.data();
-            var usuario = data[8];
+            var usuario = data[9];
             var monto = parseFloat(data[4].replace(/[^\d.-]/g, ''));
 
             if (!groupedData[usuario]) {
