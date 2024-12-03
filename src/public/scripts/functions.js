@@ -52,6 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const arrivalValue = new Date(`${arrivalDate.value}T00:00:00`);
         const departureValue = new Date(`${departureDate.value}T00:00:00`);
         const tipologiaHabitacionInput = document.querySelector('#tipologia_habitacion');
+        const tipologiaSelect = document.querySelector('#tipologia_select');
         const options = tipologiaHabitacionInput.querySelectorAll('option');
 
         const verificarDisponibilidadElement = document.getElementById('verificar-disponibilidad');
@@ -67,6 +68,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
                 tipologiaHabitacionInput.disabled = true;
+                tipologiaSelect.disabled = true;
                 verificarDisponibilidadElement.style.display = 'block';
 
                 const arrivalYear = arrivalValue.getFullYear();
@@ -120,6 +122,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } finally {
             verificarDisponibilidadElement.style.display = 'none';
             tipologiaHabitacionInput.disabled = false;
+            tipologiaSelect.disabled = false;
 
         }
 
