@@ -1243,7 +1243,7 @@ async function moveToPlayground(req, res) {
                         newComisiones.push({
                             id: comisiones._id,
                             monto: comisiones.monto / 2,
-                            concepto: `${comisiones.concepto} (Reserva cancelada, 50%)`,
+                            concepto: `${comisiones.concepto} (Reserva No show, 50%)`,
                             status: 'aplicado'
                         });
                     }
