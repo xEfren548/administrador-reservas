@@ -430,7 +430,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
 
     document.getElementById('edit').addEventListener('click', function () {
-        window.location.replace(currentEvent.url)
+        window.open(currentEvent.url, "_blank")
     });
 
     document.getElementById('delete').addEventListener('click', async function () {

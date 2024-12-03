@@ -1215,8 +1215,8 @@ async function moveToPlayground(req, res) {
                         monto: remanente,
                         concepto: `Remanente pago No Show`,
                         status: 'aplicado',
-                        fecha: utilidadEliminada.fecha,
-                        idReserva: utilidadEliminada.idReserva,
+                        fecha: evento.arrivalDate,
+                        idReserva: evento._id,
                         idUsuario: chalet.others.admin
                     })
                 }
