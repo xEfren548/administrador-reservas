@@ -1338,6 +1338,13 @@
                     images: imagesarray
                 };
                 try {
+                    Swal.fire({
+                        title: 'Editando cabaña...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
                     fetch('/api/cabanas/editar-cabana', {
                         method: 'POST',
                         headers: {
@@ -1384,6 +1391,7 @@
                                 }
                             }
                         }).then((result) => {
+                            Swal.close()
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Cabaña editada correctamente',
@@ -1395,6 +1403,7 @@
 
 
                 } catch (error) {
+                    Swal.close()
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',

@@ -560,7 +560,7 @@ async function uploadChaletFiles(req, res, next) {
     } catch (error) {
         console.log("Error:", error);
     } finally {
-        await client.close();
+        client.close();
     }
 }
 

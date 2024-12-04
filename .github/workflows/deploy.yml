@@ -39,4 +39,4 @@ jobs:
             EOL
             
             npm install
-            pm2 start index.js --wait-ready --watch
+            pm2 start index.js --wait-ready
