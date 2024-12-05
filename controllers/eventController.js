@@ -1081,7 +1081,7 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
 
     const matchConditions = {
         'events.resourceId': newResourceId,
-        'events.status': { $ne: 'cancelled' }, // Excluir eventos cancelados
+        'events.status': { $nin: ['cancelled', 'no-show'] },
         $and: [
             { 'events.arrivalDate': { $lte: departureDateObj } },
             { 'events.departureDate': { $gte: arrivalDateObj } }
@@ -1115,8 +1115,8 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
     //         }
     //     }
     // ]);
-
-    // console.log('Overlapping Reservations:', overlappingReservations);
+    console.log(resourceId)
+    console.log('Overlapping Reservations:', overlappingReservations);
     // console.log('Overlapping Reservations Length:', overlappingReservations.length);
 
     return overlappingReservations.length === 0;
