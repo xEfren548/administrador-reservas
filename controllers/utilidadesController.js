@@ -491,6 +491,26 @@ async function generarComisionReserva(req, res) {
                             idUsuario: investor._id,
                             idReserva: idReserva
                         })
+                    } else if (userInvestor.investorType === 'Efectivo') {
+                        // Comision normal
+                        await altaComisionReturn({
+                            monto: comisionInversionistas,
+                            concepto: `Comisión de inversionista por Reserva de cabaña`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: investor._id,
+                            idReserva: idReserva
+                        })
+                        // Comision negativa de IVA (16%)
+                        // let comisionNegativaIva = comisionInversionistas * 0.16;
+                        let comisionNegativaIva = Math.round((comisionInversionistas * 0.08 + Number.EPSILON) * 100) / 100;
+
+                        await altaComisionReturn({
+                            monto: -comisionNegativaIva,
+                            concepto: `IVA inversionista por Reserva de cabaña`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: investor._id,
+                            idReserva: idReserva
+                        })
                     }
 
                 }
