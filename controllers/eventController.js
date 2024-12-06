@@ -1205,54 +1205,7 @@ async function moveToPlayground(req, res) {
 
             const pagoDel50 = (montoPendiente <= totalReserva / 2) ? true : false;
 
-            if (pagoDel50) {
-
-                const mitadDelTotal = totalReserva / 2;
-                const remanente = pagoTotal - mitadDelTotal;
-
-                if (remanente >= 1) {
-                    utilidadesController.altaComisionReturn({
-                        monto: remanente,
-                        concepto: `Remanente pago No Show`,
-                        status: 'aplicado',
-                        fecha: evento.arrivalDate,
-                        idReserva: evento._id,
-                        idUsuario: chalet.others.admin
-                    })
-                }
-
-                const newComisiones = [];
-                for (const comisiones of comisionesReserva) {
-                    if (comisiones.concepto.includes('limpieza')) {
-                        const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
-                        if (utilidadEliminada) {
-                            if (chalet.others.owner) {
-                                utilidadesController.altaComisionReturn({
-                                    monto: utilidadEliminada.monto / 2,
-                                    concepto: `Reserva cancelada (limpieza), 50%`,
-                                    status: 'aplicado',
-                                    fecha: utilidadEliminada.fecha,
-                                    idReserva: utilidadEliminada.idReserva,
-                                    idUsuario: chalet.others.owner
-                                })
-                            }
-                        } else {
-                            throw new Error('Error al eliminar comision.');
-                        }
-                    } else {
-                        newComisiones.push({
-                            id: comisiones._id,
-                            monto: comisiones.monto / 2,
-                            concepto: `${comisiones.concepto} (Reserva No show, 50%)`,
-                            status: 'aplicado'
-                        });
-                    }
-                }
-
-                for (const comision of newComisiones) {
-                    await utilidadesController.editarComisionReturn(comision);
-                }
-            } else {
+            if (!pagoDel50) {
                 if (pagoTotal < 1){
                     for (const comisiones of comisionesReserva) {
                         const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
@@ -1279,6 +1232,15 @@ async function moveToPlayground(req, res) {
                     return res.status(200).json({ message: 'Reserva cancelada' });
 
                 } else {
+                    for (const comisiones of comisionesReserva) {
+                        const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
+                        if (utilidadEliminada) {
+                            console.log('Utilidad eliminada correctamente');
+                        } else {
+                            throw new Error('Error al eliminar comision.');
+                        }
+                    }
+                    
                     utilidadesController.altaComisionReturn({
                         monto: pagoTotal,
                         concepto: `Reserva cancelada remanente depositado`,

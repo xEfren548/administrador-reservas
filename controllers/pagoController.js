@@ -232,8 +232,19 @@ async function liquidarReservaDueno(req, res, next){
     try {
         const { fechaPago, importe, metodoPago, codigoOperacion, reservacionId, notas } = req.body;
 
-        if (req.session.privilege !== "Administrador") {
+        if (req.session.privilege !== "Administrador" && req.session.privilege !== "Dueño de cabañas") {
             return res.status(403).json({ mensaje: 'No tienes permiso para liquidar un pago.' });
+        }
+
+        const reservas = await Documento.find().lean();
+        const reservacion = reservas[0].events.find(event => event._id.toString() === reservacionId.toString());
+
+        if (!reservacion) {
+            return res.status(404).json({ mensaje: 'Reservación no encontrada.' });
+        }
+
+        if (reservacion.status === "no-show" || reservacion.status === "cancelled") {
+            return res.status(400).json({ mensaje: 'La reservación ya ha sido liquidada.' });
         }
 
         const pago = new Pago({

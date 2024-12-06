@@ -48,6 +48,11 @@
                             <button type="button" class="btn btn-info btn-sm" data-event-id="{{this._id}}"
                                 data-pagoTotal="{{this.pagoTotal}}" data-montoPendiente="{{this.montoPendiente}}"
                                 onclick="mostrarInfoServicio('{{this._id}}')">Liquidar Reserva
+                            {{#if (eq this.status "no-show")}}
+                            {{else}}
+                            <button type="button" class="btn btn-warning btn-sm mt-2 w-100" data-event-id="{{this._id}}"
+                                onclick="cambiarStatusReserva('{{this._id}}')">No Show
+                            {{/if}}
                         </td>
                         {{/if}}
 
@@ -401,6 +406,56 @@
                     })
                 } else {
                     throw new Error('Error al hacer el pago')
+                }
+
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error.message,
+                })
+            }
+        }
+    }
+
+    async function cambiarStatusReserva(id) {
+        console.log(id)
+        const button = document.querySelector(`button[data-event-id="${id}"]`);
+
+        const confirmacion = await Swal.fire({
+            title: 'Advertencia',
+            text: `Estás a punto de mover la reserva a No Show, ¿deseas continuar?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'Mover'
+        })
+
+        if (confirmacion.isConfirmed) {
+            // Aquí puedes usar los valores como necesites
+            console.log('Confirmacion:', confirmacion);
+            try {
+                const response = await fetch(`/api/eventos/move-to-playground`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idReserva: id,
+                        status: 'no-show'
+                    })
+                })
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Completado',
+                        text: 'La reserva se cambió a No Show',
+                    }).then(result => {
+                        window.location.reload()
+                    })
+                } else {
+                    throw new Error('Error al mover el status')
                 }
 
             } catch (error) {
