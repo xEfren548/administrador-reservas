@@ -144,6 +144,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const tipoReserva = document.getElementById('tipo-reserva-select').value.trim();
             const isDeposit = tipoReserva === 'por-depo' ? true : false;
 
+            console.log("Por depo?: ", isDeposit)
+
             let formData = {};
 
             if (isDeposit){

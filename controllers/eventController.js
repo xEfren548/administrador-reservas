@@ -514,15 +514,22 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 async function createReservation(req, res, next) {
     const { clientFirstName, clientLastName,clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit } = req.body;
     let newCliente = null;
+    let client = null;
 
     try {
-        let client = await Cliente.findOne({ email: clientEmail });
-        console.log("Client initial")
-        if (!client || client.length === 0) {
+        console.log("is depo: ", isDeposit);
+        console.log("cliente email: ", clientEmail);
+
+        if (clientEmail) {
+            client = await Cliente.findOne({ email: clientEmail });
+            console.log("Client initial")
+
+        }
+        if (!client) {
             newCliente = await clienteController.createClientLocal(clientFirstName, clientLastName, req.session)
             console.log("No cliente")
             console.log(newCliente)
-            if (newCliente.length === 0 || !newCliente){
+            if (!newCliente){
                 throw new NotFoundError('Client does not exist');
             }
             client = newCliente;
