@@ -565,7 +565,7 @@ document.addEventListener("DOMContentLoaded", function () {
     flatpickr("#date_range", {
         mode: "range",
         dateFormat: "d-m-Y",
-        minDate: "today",        
+        //minDate: "today",        
         onChange: function(selectedDates, dateStr, instance) {
             if (selectedDates.length === 2) {
                 // Guardar las fechas en los campos ocultos
