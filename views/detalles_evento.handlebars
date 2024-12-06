@@ -1148,6 +1148,7 @@
 
         // Validación de los campos
         if ((!clienteEmail ||!clientePhone ||!clienteAddress) || (clienteEmail == "undefined" || clientePhone == "undefined" || clienteAddress == "undefined")) {
+            Swal.close()
             modificarClienteModal.show()
             return;
         }
