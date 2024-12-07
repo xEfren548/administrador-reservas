@@ -3,6 +3,7 @@ const momentTz = require('moment-timezone');
 const mongoose = require('mongoose');
 
 const usersController = require('./../controllers/usersController');
+const pagoController = require('./../controllers/pagoController');
 const Pago = require('./../models/Pago');
 const Habitacion = require('./../models/Habitacion');
 const Costos = require('./../models/Costos');
@@ -679,7 +680,19 @@ async function mostrarUtilidadesGlobales(req, res) {
 
         // // Extract the IDs and names of the rooms
         const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name, chaletAdmin: habitacion.others.admin.toString() }));
-        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, departureDate: reserva.departureDate, status: reserva.status }));
+        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, departureDate: reserva.departureDate, status: reserva.status, total: reserva.total }));
+
+        for (let reserva of reservasMap) {
+            const pagos = await pagoController.obtenerPagos(reserva.id);
+    
+            let pagadoReserva = pagos.reduce((total, pago) => total + pago.importe, 0);
+            let restanteReserva = reserva.total - pagadoReserva;
+        
+            reserva.totalReserva = reserva.total;
+            reserva.pagadoReserva = pagadoReserva;
+            reserva.restanteReserva = restanteReserva;
+        
+        }
 
 
         utilidades = await Utilidades.find().lean();
@@ -738,7 +751,11 @@ async function mostrarUtilidadesGlobales(req, res) {
                             const arrivalCheckOut =  moment.utc(reserva.departureDate, 'DD/MM/YYYY');
                             utilidad.checkOut = arrivalCheckOut.format('DD/MM/YYYY');
                             utilidad.statusReserva = reserva.status.toUpperCase();
-                            
+
+                            utilidad.totalReserva = reserva.total;
+                            utilidad.pagadoReserva = reserva.pagadoReserva;
+                            utilidad.restanteReserva = reserva.restanteReserva;
+
                         } else {
                             utilidad.nombreHabitacion = 'N/A';
                         }

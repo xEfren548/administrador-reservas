@@ -56,7 +56,10 @@
                         <th scope="col">Check Out</th>
                         <th scope="col">Estatus Reserva</th>
                         <th scope="col">Usuario</th>
-                        <th scope="col">Estatus Utilidad</th>
+                        {{!-- <th scope="col">Estatus Utilidad</th> --}}
+                        <th scope="col">Total Reserva</th>
+                        <th scope="col">Pagado Reserva</th>
+                        <th scope="col">Pendiente Reserva</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -71,6 +74,7 @@
                         <td>{{this.nochesReservadas}}</td>
                         <td>{{this.fecha}}</td>
                         <td>{{this.checkOut}}</td>
+                                                
                         {{#if (eq this.statusReserva "ACTIVE")}}
                         <td>Activa</td>
                         {{else if (eq this.statusReserva "PLAYGROUND")}}
@@ -85,13 +89,17 @@
                         <td>{{this.statusReserva}}</td>
                         {{/if}}
                         <td>{{this.nombreUsuario}}</td>
+                        <!--
                         {{#if (eq this.status "pendiente")}}
                         <td><span class="badge bg-warning text-dark">Pendiente</span></td>
                         {{else if (eq this.status "aplicado")}}
                         <td><span class="badge bg-success text-dark">Aplicado</span></td>
                         {{else}}
                         <td>{{this.status}}</td>
-                        {{/if}}
+                        {{/if}} -->
+                        <td>${{this.totalReserva}}</td>
+                        <td>${{this.pagadoReserva}}</td>
+                        <td>${{this.restanteReserva}}</td>
                     </tr>
                     {{/each}}
                     {{else}}
@@ -110,6 +118,8 @@
                         <td></td> 
                         <td></td> 
                         <td colspan="1"></td>
+                        <td></td>
+                        <td></td>
                         <td></td>
                     </tr>
                 </tfoot>
