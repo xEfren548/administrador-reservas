@@ -271,8 +271,6 @@ async function cancelReservation() {
                 const montoPendiente = totalReserva - pagoTotal;
 
                 const pagoDel50 = (montoPendiente <= totalReserva / 2) ? true : false;
-                console.log(pagoDel50);
-
 
                 if (isDeposit) {
                     if (pagoDel50) {
