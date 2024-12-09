@@ -2,7 +2,7 @@ const cron = require('node-cron');
 const { exec } = require('child_process');
 const path = require('path');
 
-const backupPath = path.join(__dirname, '..', 'backups');
+const backupPath = path.join(__dirname, '..', '..', 'backups');
 
 const createBackup = () => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
