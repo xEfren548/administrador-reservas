@@ -17,6 +17,7 @@ const Habitacion = require('./models/Habitacion');
 const logController = require('./controllers/logController');
 const NotFoundError = require('./common/error/not-found-error');
 const SendMessages = require('./common/tasks/send-messages');
+const backupController = require('./controllers/backupController');
 
 
 // Configura Express para servir archivos estáticos desde la carpeta 'public'
@@ -64,6 +65,11 @@ app.use((req, res, next) => {
   } else {
     res.redirect('https://' + req.headers.host + req.url);
   }
+});
+
+app.get('/backup', (req, res) => {
+  backupController.createBackup();
+  res.send('Respaldo iniciado manualmente');
 });
 
 // Set up all routes.
@@ -132,6 +138,11 @@ mongoose.connect(db_url).then(async () => {
 
     const quarterlyJob = schedule.scheduleJob('0 0 1 */3 *', async () => {
         await cleanupInactiveUsers();
+    });
+
+    cron.schedule('0 2 1,15 * *', () => {
+      console.log('Iniciando respaldo de la base de datos cada 15 días...');
+      backupController.createBackup();
     });
 
     
