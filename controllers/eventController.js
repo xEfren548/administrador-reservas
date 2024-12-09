@@ -1081,28 +1081,76 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
     const arrivalDateObj = new Date(`${arrivalDate}T00:00:00`);
     const departureDateObj = new Date(`${departureDate}T00:00:00`);
 
+    const eventosExistentes = await Documento.findOne();
+    if (!eventosExistentes) {
+        throw new Error('No se encontraron eventos');
+    }
+
+    const eventos = eventosExistentes.events;
+
+    // Filter reservations with overlapping dates using JS utilities
+    const overlappingReservations = eventos.filter((event) => {
+        // Exclude the current event if `eventId` is provided
+        if (eventId && event._id.toString() === eventId) {
+            return false;
+        }
+
+        // Ensure the event is for the given resource and not cancelled or no-show
+        if (
+            !event.resourceId.equals(newResourceId) ||
+            event.status === 'cancelled' ||
+            event.status === 'no-show'
+        ) {
+            return false;
+        }
+
+        // Convert event dates to Date objects (ignore time)
+        // const eventArrivalDate = new Date(event.arrivalDate);
+        const eventArrivalDate = moment.utc(event.arrivalDate).toDate();
+        // const eventDepartureDate = new Date(event.departureDate);
+        const eventDepartureDate = moment.utc(event.departureDate).toDate();
+
+        console.log(`Checking overlaps for Resource ID: ${newResourceId}`);
+
+
+        console.log("arrival date obj: ", arrivalDateObj)
+        console.log("departure date obj: ", departureDateObj)
+        console.log("event arrival date: ", eventArrivalDate)
+        console.log("event departure date: ", eventDepartureDate)
+
+        // Compare only the dates (not hours)
+        const eventArrivalDay = eventArrivalDate.toISOString().split('T')[0];
+        const eventDepartureDay = eventDepartureDate.toISOString().split('T')[0];
+        const arrivalDay = arrivalDateObj.toISOString().split('T')[0];
+        const departureDay = departureDateObj.toISOString().split('T')[0];
+
+        return (
+            eventArrivalDay <= departureDay && // 14 dic <= 17 dic
+            eventDepartureDay > arrivalDay // 15 dic >= 15 dic
+        );
+    });
 
     // console.log(`Checking overlaps for Resource ID: ${newResourceId}`);
     // console.log(`Arrival Date: ${arrivalDateObj}`);
     // console.log(`Departure Date: ${departureDateObj}`);
 
-    const matchConditions = {
-        'events.resourceId': newResourceId,
-        'events.status': { $nin: ['cancelled', 'no-show'] },
-        $and: [
-            { 'events.arrivalDate': { $lte: departureDateObj } },
-            { 'events.departureDate': { $gte: arrivalDateObj } }
-        ]
-    };
+    // const matchConditions = {
+    //     'events.resourceId': newResourceId,
+    //     'events.status': { $nin: ['cancelled', 'no-show'] },
+    //     $and: [
+    //         { 'events.arrivalDate': { $lte: departureDateObj } },
+    //         { 'events.departureDate': { $gte: arrivalDateObj } }
+    //     ]
+    // };
 
-    if (eventId) {
-        matchConditions['events._id'] = { $ne: new mongoose.Types.ObjectId(eventId) };
-    }
+    // if (eventId) {
+    //     matchConditions['events._id'] = { $ne: new mongoose.Types.ObjectId(eventId) };
+    // }
 
-    const overlappingReservations = await Documento.aggregate([
-        { $unwind: '$events' },
-        { $match: matchConditions }
-    ]);
+    // const overlappingReservations = await Documento.aggregate([
+    //     { $unwind: '$events' },
+    //     { $match: matchConditions }
+    // ]);
 
     // const overlappingReservations = await Documento.aggregate([
     //     { $unwind: '$events' },
