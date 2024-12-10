@@ -1082,6 +1082,11 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
     const arrivalDateObj = new Date(`${arrivalDate}T00:00:00`);
     const departureDateObj = new Date(`${departureDate}T00:00:00`);
 
+    const fechasBloqueadas = await BloqueoFechas.find({ habitacionId: newResourceId, type: 'bloqueo', date: { $gte: arrivalDateObj, $lte: departureDateObj } });
+    if (fechasBloqueadas.length > 0) {
+        return false;
+    }
+
     const eventosExistentes = await Documento.findOne();
     if (!eventosExistentes) {
         throw new Error('No se encontraron eventos');
