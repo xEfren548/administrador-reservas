@@ -8,7 +8,6 @@ const logSchema = new mongoose.Schema({
     idUsuario: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'usuarios',
-        required: true
     },
     type: {
         type: String,
@@ -24,7 +23,6 @@ const logSchema = new mongoose.Schema({
     },
     nombreUsuario: {
         type: String,
-        required: true
     }
 });
 

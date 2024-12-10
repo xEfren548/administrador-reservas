@@ -2,8 +2,10 @@ const Cliente = require("../../models/Cliente");
 const Evento = require("../../models/Evento");
 const Habitacion = require("../../models/Habitacion");
 const Pago = require("../../models/Pago");
+const RackLimpieza = require("../../models/RackLimpieza");
 const pagoController = require('../../controllers/pagoController');
 const utilidadesController = require('../../controllers/utilidadesController');
+const logController = require('../../controllers/logController');
 
 const moment = require('moment-timezone');
 const { format } = require('date-fns');
@@ -300,6 +302,22 @@ async function cancelReservation() {
                         if (new Date().getTime() >= reservation.paymentCancelation.getTime()) {
                             console.log(`Canceling reservation as it is: ${reservation.departureDate} and no payment has been recorded`);
                             reservation.status = "cancelled"
+
+                            const rackLimpieza = await RackLimpieza.findOne({id_reserva: reservation._id});
+                            if (rackLimpieza) {
+                                await RackLimpieza.findByIdAndDelete(rackLimpieza._id);
+                                console.log("Rack de limpieza eliminado con éxito");
+
+                            }
+                            
+                            const logBody = {
+                                fecha: Date.now(),
+                                type: 'reservation',
+                                acciones: `Reserva cancelada por falta de pago`,
+                                idReserva: reservation._id
+                            }
+                            
+                            await logController.createBackendLog(logBody);
                         }
                     }
 
