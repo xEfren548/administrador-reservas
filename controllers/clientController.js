@@ -105,18 +105,25 @@ async function showClients(req, res, next){
 }
 
 async function createClient(req, res, next) {
-    const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = req.body;
-    const clienteToAdd = new Cliente({
-        firstName,
-        lastName,
-        phone,
-        address,
-        email,
-        identificationType,
-        identificationNumber
-    });
-
     try {
+        const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = req.body;
+        if (email !== null) {
+            const client = await Cliente.findOne({ email: email });
+            if (client) {
+                throw new BadRequestError("Email already exists");
+            }
+
+        }
+        const clienteToAdd = new Cliente({
+            firstName,
+            lastName,
+            phone,
+            address,
+            email: email || null,
+            identificationType,
+            identificationNumber
+        });
+
         await clienteToAdd.save();
 
         console.log("Cliente agregado con éxito");

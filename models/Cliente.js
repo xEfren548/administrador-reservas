@@ -17,16 +17,15 @@ const clientSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        unique: true
+        default: null
     },
     identificationType: {
         type: String,
         enum: ['INE', 'Pasaporte', 'Licencia de conducir'],
     },
     identificationNumber: {
-        type: String,
-        unique: true
-    }
+        type: String
+    },
 },{timestamps: true});
 
 const Client = mongoose.model('Cliente', clientSchema);
