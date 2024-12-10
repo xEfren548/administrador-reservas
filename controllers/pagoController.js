@@ -269,6 +269,17 @@ async function liquidarReservaDueno(req, res, next){
             idReserva: reservacionId
         })
 
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            acciones: `Liquidación realizada por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`,
+            idReserva: reservacionId
+        }
+        
+        await logController.createBackendLog(logBody);
+
         res.status(200).send({success: true})
 
     } catch (error) {
