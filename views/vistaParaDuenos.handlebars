@@ -369,6 +369,16 @@
         console.log('Pago Total:', pagoTotal);
         console.log('Monto Pendiente:', montoPendiente);
 
+        if (montoPendiente <= 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Información',
+                text: 'La reserva ya se encuentra liquidada',
+                confirmButtonText: 'Aceptar'
+            });
+            return
+        }
+
         const confirmacion = await Swal.fire({
             title: 'Advertencia',
             text: `¿Confirmas haber recibido la cantidad de $${montoPendiente}? Esta acción agregará un pago a la reserva. `,

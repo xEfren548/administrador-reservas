@@ -258,24 +258,49 @@ async function liquidarReservaDueno(req, res, next){
         const pagoConfirmation = await pago.save();
 
         if (!pagoConfirmation){
-            res.status(500).json({ mensaje: 'Hubo un error al registrar el pago.' });
+            return res.status(500).json({ mensaje: 'Hubo un error al registrar el pago en su confirmación' });
         }
-
-        const utilidad = {
+        
+        await altaComisionReturnC({
             monto: -importe,
             concepto: "Comisión negativa por liquidación de cabaña en efectivo",
             fecha: fechaPago,
             idUsuario: req.session.id,
             idReserva: reservacionId
-        }
-        
-        await utilidadesController.altaComisionReturn(utilidad)
+        })
 
         res.status(200).send({success: true})
 
     } catch (error) {
         console.log(error.message);
-        res.status(500).json({ mensaje: 'Hubo un error al registrar el pago.' });
+        res.status(500).json({ mensaje: error.message });
+    }
+}
+
+async function altaComisionReturnC(req, res) {
+    try {
+        const { monto, concepto, fecha, idUsuario, idReserva, idServicio } = req
+
+        if (monto !== null) {
+
+            const newUtilidad = new Utilidades({
+                monto,
+                concepto,
+                fecha,
+                idUsuario,
+                idReserva,
+                idServicio
+            })
+            const savedUtilidad = await newUtilidad.save()
+            if (savedUtilidad) {
+                console.log("Utility created successfully.")
+            } else {
+                console.log("'Failed to create utility.'")
+            }
+        }
+    } catch (error) {
+        console.log(error.message);
+        // res.status(200).send('Something went wrong while creating utility.');
     }
 }
 
