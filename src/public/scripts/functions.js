@@ -63,9 +63,11 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             if (!isNaN(arrivalValue) && !isNaN(departureValue) && departureValue >= arrivalValue) {
 
-                console.log(arrivalValue)
-                console.log(departureValue)
-
+                options.forEach(option => {
+                    option.style.display = ''; // Asegúrate de mostrar la opción
+                    option.style.backgroundColor = ''; // Limpia colores anteriores
+                    option.disabled = false; // Habilita la opción
+                });
 
                 tipologiaHabitacionInput.disabled = true;
                 tipologiaSelect.disabled = true;

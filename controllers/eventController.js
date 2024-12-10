@@ -1116,14 +1116,6 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
         // const eventDepartureDate = new Date(event.departureDate);
         const eventDepartureDate = moment.utc(event.departureDate).toDate();
 
-        console.log(`Checking overlaps for Resource ID: ${newResourceId}`);
-
-
-        console.log("arrival date obj: ", arrivalDateObj)
-        console.log("departure date obj: ", departureDateObj)
-        console.log("event arrival date: ", eventArrivalDate)
-        console.log("event departure date: ", eventDepartureDate)
-
         // Compare only the dates (not hours)
         const eventArrivalDay = eventArrivalDate.toISOString().split('T')[0];
         const eventDepartureDay = eventDepartureDate.toISOString().split('T')[0];
@@ -1176,8 +1168,8 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
     //         }
     //     }
     // ]);
-    console.log(resourceId)
-    console.log('Overlapping Reservations:', overlappingReservations);
+    // console.log(resourceId)
+    // console.log('Overlapping Reservations:', overlappingReservations);
     // console.log('Overlapping Reservations Length:', overlappingReservations.length);
 
     return overlappingReservations.length === 0;
