@@ -194,9 +194,6 @@ agregarFechasBtn.addEventListener("click", async (e) => {
         return;
     }
 
-
-
-    
     const fechaInicioString = document.querySelector('#fecha-inicio').value; // Obtener el valor del input de tipo date
     const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
     

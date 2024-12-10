@@ -13,35 +13,45 @@ async function obtenerFechasBloqueadas(req, res){
 async function crearFechaBloqueada(req, res){
     const {date, min, habitacionId} = req.body;
 
-    const fechaFormatted = new Date(date)
-    fechaFormatted.setUTCHours(6); // Ajustar la hora a 00:00:00 UTC
-    const mongooseHabitacionId = new mongoose.Types.ObjectId(habitacionId);
+    try {
 
-    const description = `Estancia mínima de ${min} noches.`
+        if (isNaN(min) || min <= 0) {
+            return res.status(400).send({ message: 'Invalid min value' });
+        }
 
-
-    const existeFecha = await BloqueoFechas.findOne({date: date, habitacionId: mongooseHabitacionId})
-    if (existeFecha){
-        // edit the existe fecha to the new description and min
-        existeFecha.description = description;
-        existeFecha.min = min;
-        await existeFecha.save();
-        return res.status(201).send({ message: 'Date modified successfully', date: existeFecha});
-
+        const fechaFormatted = new Date(date)
+        fechaFormatted.setUTCHours(6); // Ajustar la hora a 00:00:00 UTC
+        const mongooseHabitacionId = new mongoose.Types.ObjectId(habitacionId);
+    
+        const description = `Estancia mínima de ${min} noches.`
+    
+    
+        const existeFecha = await BloqueoFechas.findOne({date: date, habitacionId: mongooseHabitacionId})
+        if (existeFecha){
+            // edit the existe fecha to the new description and min
+            existeFecha.description = description;
+            existeFecha.min = min;
+            await existeFecha.save();
+            return res.status(201).send({ message: 'Date modified successfully', date: existeFecha});
+    
+        }
+    
+        const newFechaBloqueada = new BloqueoFechas({
+            date: new Date(date),
+            description,
+            min,
+            habitacionId: new mongoose.Types.ObjectId(habitacionId)
+        })
+    
+        const agregarFecha = await newFechaBloqueada.save();
+        if (!agregarFecha){
+            return res.status(400).send({ message: 'Failed to create date' });
+        }
+        res.status(200).send({ message: 'Date created successfully', date: agregarFecha});
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send(error.message);
     }
-
-    const newFechaBloqueada = new BloqueoFechas({
-        date: new Date(date),
-        description,
-        min,
-        habitacionId: new mongoose.Types.ObjectId(habitacionId)
-    })
-
-    const agregarFecha = await newFechaBloqueada.save();
-    if (!agregarFecha){
-        return res.status(400).send({ message: 'Failed to create date' });
-    }
-    res.status(200).send({ message: 'Date created successfully', date: agregarFecha});
 }
 
 async function eliminarFechaBloqueada(req, res){
