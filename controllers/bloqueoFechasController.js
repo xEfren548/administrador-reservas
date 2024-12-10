@@ -103,7 +103,7 @@ async function crearFechaBloqueada(req, res){
 
 async function eliminarFechaBloqueada(req, res){
     try{
-        const { fecha, habitacionId } = req.query;
+        const { fecha, habitacionId, type } = req.query;
         console.log(fecha)
         console.log(habitacionId)
     
@@ -111,8 +111,22 @@ async function eliminarFechaBloqueada(req, res){
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 00:00:00 UTC
         const newHabitacionId = new mongoose.Types.ObjectId(habitacionId);
 
-        const resultado = await BloqueoFechas.findOneAndDelete({ date: fechaAjustada, habitacionId: newHabitacionId });
-    
+        if (type === 'bloqueo') {
+            const resultado = await BloqueoFechas.findOneAndDelete({ date: fechaAjustada, habitacionId: newHabitacionId, type: 'bloqueo' });
+
+            if (!resultado) {
+                return res.status(200).json({});
+            }
+
+            return res.status(200).json({ message: 'Registro eliminado correctamente' });
+
+        }
+
+        const resultado = await BloqueoFechas.findOneAndDelete({
+            date: fechaAjustada,
+            habitacionId: newHabitacionId,
+            type: { $ne: 'bloqueo' }
+        });
         if (!resultado) {
             return res.status(200).json({});
         }

@@ -352,6 +352,19 @@ $('#delete-prices-btn').on('click', async () => {
     const fechaFinString = document.querySelector('#fecha-fin-eliminar').value; // Obtener el valor del input de tipo date
     const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
 
+    const tipoBloqueo = document.querySelector('#select-tipo-bloqueo-eliminar').value
+
+    if (tipoBloqueo !== 'restriccion' && tipoBloqueo !== 'bloqueo'){
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Seleccione un tipo de bloqueo',
+            showConfirmButton: false,
+            timer: 3000
+        });
+        return;
+    }
+
     const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-eliminar');
     const diasSeleccionados = [];
     checkboxes.forEach(function (checkbox) {
@@ -367,7 +380,7 @@ $('#delete-prices-btn').on('click', async () => {
 
         try {
             let formattedDate = formatDate(fecha)
-            const response = await fetch(`/api/calendario-bloqueofechas?fecha=${formattedDate}&habitacionId=${chaletId}`, {
+            const response = await fetch(`/api/calendario-bloqueofechas?fecha=${formattedDate}&habitacionId=${chaletId}&type=${tipoBloqueo}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
