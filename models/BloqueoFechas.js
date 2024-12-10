@@ -15,6 +15,10 @@ const bloqueoFechasSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'habitaciones' // Referencia al modelo de habitaciones existente
     },
+    type: {
+        type: String,
+        enum: ['bloqueo', 'restriccion']
+    }
 });
 
 // Modelo de precio_base_x_dia

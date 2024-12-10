@@ -3,9 +3,11 @@
 <h1 class="ml-2"> Calendario de bloqueo de fechas</h1>
 <div class="calendar-header">
     <div class="bg-dark mb-3">
-        <a name="" id="acciones-btn" class="btn btn-info btn-sm m-3" href="#" role="button" data-bs-toggle="modal"
-            data-bs-target="#acciones_modal">Acciones</a>
-        <a name="" id="eliminar-precios-openmodalbtn" class="btn btn-secondary btn-sm " href="#" role="button"
+        <a name="" id="acciones-btn" class="btn btn-info btn-sm ml-3" href="#" role="button" data-bs-toggle="modal"
+            data-bs-target="#acciones_modal">Restringir fechas</a>
+        <a name="" id="acciones-btn" class="btn btn-info btn-sm ml-3" href="#" role="button" data-bs-toggle="modal"
+            data-bs-target="#bloqueo_modal">Bloquear fechas</a>
+        <a name="" id="eliminar-precios-openmodalbtn" class="btn btn-secondary btn-sm ml-3 " href="#" role="button"
 			data-bs-toggle="modal" data-bs-target="#delete-prices-modal">Eliminar bloqueos</a>
     </div>
 </div>
@@ -45,12 +47,12 @@
 </div>
 {{/each}}
 
-
+{{!-- Modal Restriccion de fechas --}}
 <div class="modal fade" id="acciones_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Bloqueo de fechas</h5>
+                <h5 class="modal-title" id="modalLabel">Restricción de fechas</h5>
                 <button type="button" class="close" onclick="$('#acciones_modal').modal('hide');" aria-label="Close">
                     &times;
 
@@ -182,6 +184,122 @@
     </div>
 </div>
 <!-- End Modal Alta usuario -->
+
+{{!-- Modal Bloqueo de fechas --}}
+<div class="modal fade" id="bloqueo_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Bloqueo de fechas</h5>
+                <button type="button" class="close" onclick="$('#acciones_modal').modal('hide');" aria-label="Close">
+                    &times;
+
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div id="error-modal-persona" class="alert alert-danger" style="display: none;"></div>
+
+                    <div class="row mt-2 mb-2">
+                        <div class="col-8">
+                            <label for="select-cabana"><b>Selecciona una o más habitaciones: </b></label>
+                        </div>
+                    </div> <!-- Cierre row -->
+                    {{#each chalets}}
+                    <div class="form-check form-check-inline">
+						<input
+							class="checkboxes-chalets-block"
+							type="checkbox"
+							id="{{this.id}}"
+							value="{{this.id}}"
+							name="chkb-{{this.id}}"
+						/>
+						<label class="form-check-label" for="chkb-{{this.id}}">{{this.name}}</label>
+					</div>
+                    {{/each}}
+                    <div class="row">
+
+                        <div class="col-12 mb-2 mt-2">
+                            <div class="form-group">
+                                <label for="rango-fechas">Rango de fechas: </label>
+                                <div class="row ">
+                                    <div class="col-3">
+                                        <input type="date" name="fecha-inicio" id="fecha-inicio-block" class="form-control"
+                                            placeholder="Contraseña" required>
+
+                                    </div>
+                                    <div class="col-2 text-center">
+                                        <p>Hasta</p>
+
+                                    </div>
+                                    <div class="col-3">
+                                        <input type="date" name="fecha-fin" id="fecha-fin-block" class="form-control"
+                                            required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div> <!-- Cierre row -->
+
+                    <div class="mb-2">
+                        <div class="row mb-2">
+                            <label for="dias-concretos">¿Quieres aplicar esta tarifa a unos dias concretos?</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general-block" type="checkbox" id="checkbox-lunes"
+                                value="lunes" checked>
+                            <label class="form-check-label" for="lunes">Lunes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general-block" type="checkbox" id="checkbox-martes"
+                                value="martes" checked>
+                            <label class="form-check-label" for="martes">Martes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general-block" type="checkbox" id="checkbox-miercoles"
+                                value="miercoles" checked>
+                            <label class="form-check-label" for="miercoles">Miércoles</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general-block" type="checkbox" id="checkbox-jueves"
+                                value="jueves" checked>
+                            <label class="form-check-label" for="jueves">Jueves</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general-block" type="checkbox" id="checkbox-viernes"
+                                value="viernes" checked>
+                            <label class="form-check-label" for="viernes">Viernes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general-block" type="checkbox" id="checkbox-sabado"
+                                value="sabado" checked>
+                            <label class="form-check-label" for="sabado">Sábado</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input chk-general-block" type="checkbox" id="checkbox-domingo"
+                                value="domingo" checked>
+                            <label class="form-check-label" for="domingo">Domingo</label>
+                        </div>
+                    </div>
+
+                    <div class="row mt-2">
+                        <small>IMPORTANTE: Este será el nuevo registro, por lo que si hay alguno anterior para esas
+                            fechas, se
+                            eliminará.</small>
+                    </div>
+
+                </div> <!-- Cierre IMG Container -->
+            </div> <!--Cierre MODAL BODY -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add-bloqueadas-2-btn">Agregar</button>
+                <div class="spinner-border" role="status" id="spinner">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Modal Bloqueo de fechas -->
 
 
 <!-- Modal eliminar precios -->
@@ -317,7 +435,7 @@
 
 <script>
     document.addEventListener('click', (event) => {
-        if (event.target.classList.contains('restricted')) {
+        if (event.target.classList.contains('restricted') || event.target.classList.contains('blocked')) {
             const description = event.target.getAttribute('data-description');
             alert(description);
         }

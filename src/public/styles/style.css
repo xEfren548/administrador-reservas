@@ -742,6 +742,11 @@ ul.rb li .timestamp {
     cursor: not-allowed;
 }
 
+.blocked {
+    background-color: #FF3939 !important; /* yellow background */
+    cursor: not-allowed;
+}
+
 /* Indicators */
 
 .color-label {
