@@ -29,6 +29,8 @@
     
     {{#if (eq privilege 'Inversionistas')}}
     <a name="" id="" class="btn btn-primary mt-5" href="/api/calendar/colaboradorduenos" role="button">Cambiar a vista de tabla</a>
+    {{else if (eq privilege 'Colaborador dueño')}}
+    <a name="" id="" class="btn btn-primary mt-5" href="/api/calendar/colaboradorduenos" role="button">Cambiar a vista de tabla</a>
     {{else}}
     <a name="" id="" class="btn btn-primary mt-5" href="/api/calendar/duenos" role="button">Cambiar a vista de tabla</a>
     {{/if}}

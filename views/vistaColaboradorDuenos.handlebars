@@ -38,6 +38,8 @@
 
 {{#if (eq privilege 'Inversionistas')}}
     <a name="" id="" class="btn btn-primary mt-5" href="/api/cabanas/ownercalendar" role="button">Cambiar a vista de calendario</a>
+{{else if (eq privilege 'Colaborador dueño')}}
+    <a name="" id="" class="btn btn-primary mt-5" href="/api/cabanas/ownercalendar" role="button">Cambiar a vista de calendario</a>
 {{/if}}
 
 <!-- Modals -->

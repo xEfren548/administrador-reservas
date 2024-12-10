@@ -463,6 +463,7 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
             // Filter the rooms that belong to the owner
             habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
+            console.log("Dueño id: ", duenoId);
             // Extract the IDs and names of the rooms
             const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
             const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));

@@ -944,8 +944,6 @@ async function renderCalendarPerChaletOwner(req, res, next) {
             return res.status(404).send('No rooms found');
         }
 
-        
-
         const mDuenoId = new mongoose.Types.ObjectId(duenoId);
 
         // // Filter the rooms that belong to the owner
@@ -954,6 +952,14 @@ async function renderCalendarPerChaletOwner(req, res, next) {
             habitacionesDueno = habitacionesExistentes.resources.filter(habitacion =>
                 habitacion.others.investors.some(investor => investor.equals(mDuenoId))
             ); 
+        } else if (privilege === "Colaborador dueño") {
+            const user = await Usuario.findById(duenoId).lean();
+            if (!user) {
+                return res.status(404).send('User not found');
+            }
+            habitacionesDueno = habitacionesExistentes.resources.filter(habitacion =>
+                habitacion.others.owner.equals(user.administrator)
+            );
         } else {
             habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
 
