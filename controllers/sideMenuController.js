@@ -33,7 +33,7 @@ async function generateSideMenu(req, res, next) {
                 { 'Encuestas': [] },
                 { 'Logs': ["/logs", "fas fa-cogs"] },
                 { 'Calendarios': [] },
-                { 'Reportes' : ["/api/reportes", "fas fa-sheet-plastic"] },
+                { 'Reportes' : [] },
             ],
             'Vendedor': [
                 // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
@@ -219,6 +219,30 @@ async function generateSideMenu(req, res, next) {
                                             style="margin-left: 8px;">Calendario inversionistas</span>
                                     </a>
 
+                                </li>
+                            </ul>
+                        </li>`;
+                } else if (key === "Reportes") {
+                    sideMenuContent +=
+                        `<li class="nav-item py-2 py-sm-0">
+                            <a href="#submenu6" data-bs-toggle="collapse" class="nav-link px-4 align-middle " title="Reportes">
+                                <i class="fas fa-chart-line"></i><span
+                                    class="fs-5 ms-3 d-none d-sm-inline">Reportes
+                                </span></a>
+                            <ul class="collapse nav flex-column ms-1" id="submenu6" data-bs-parent="#menu">
+                                <li class="w-100">
+                                    <a href="/api/reportes" class="nav-link px-5" title="Reservas">
+                                        <i class="fas fa-chart-line"></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Reservas</span>
+                                    </a>
+                                </li>
+                            </ul>
+                            <ul class="collapse nav flex-column ms-1" id="submenu6" data-bs-parent="#menu">
+                                <li class="w-100">
+                                    <a href="/api/pagos" class="nav-link px-5" title="Pagos">
+                                        <i class="fas fa-money-bill-wave"></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Pagos</span>
+                                    </a>
                                 </li>
                             </ul>
                         </li>`;
