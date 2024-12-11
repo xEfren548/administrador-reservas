@@ -1,0 +1,180 @@
+<div class="row flex-column justify-content-center mt-3 " style="width: 95%;">
+    <h1 class="mt-3">Registro de pagos</h1>
+    <div class="row mb-3">
+        <div class="col-md-2">
+            <label for="startDate" class="form-label">Fecha Inicio:</label>
+            <input type="date" class="form-control" id="startDate">
+        </div>
+        <div class="col-md-2">
+            <label for="endDate" class="form-label">Fecha Fin:</label>
+            <input type="date" class="form-control" id="endDate">
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button id="clearDates" class="btn btn-secondary"><span><i class="fa fa-eraser"
+                        aria-hidden="true"></i></span></button>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-dark table-hover text-center" id="tablaUtilidades">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Habitación</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Importe</th>
+                    <th scope="col">Método pago</th>
+                    <th scope="col">Código operación</th>
+                    <th scope="col">ID Reserva</th>
+                    <th scope="col">Notas</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                {{#if pagos.length}}
+                {{#each pagos}}
+                <tr>
+                    <td>{{this.chalet}}</td>
+                    <td>{{this.fecha}}</td>
+                    <td>${{this.importe}}</td>
+                    <td>{{this.metodoPago}}</td>
+                    <td>{{this.codigoOperacion}}</td>
+                    <td>{{this.reservacionId}}</td>
+                    <td>{{this.notas}}</td>
+                </tr>
+                {{/each}}
+                {{else}}
+                <tr>
+                    <td colspan="7">No se encontraron pagos</td>
+                </tr>
+                {{/if}}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2"><b>Total</b></td>
+                    <td id="totalMonto"></td>
+                    <td colspan="4"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var table = document.getElementById("tablaUtilidades");
+        if (table) {
+            var dataTable = new DataTable(table, {
+                "ordering": false,
+                "paging": true, // Habilita la paginación
+                "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
+                "pageLength": 10, // Establece la longitud de página inicial
+                "dom": 'Bfrtip', // Añade los botones a la interfaz
+                "search": {
+                    "smart": true
+                },
+                "buttons": [
+                    {
+                        extend: 'csvHtml5',
+                        text: 'Exportar a CSV',
+                        footer: true,
+                        title: function () {
+                            var minDate = document.getElementById('startDate').value;
+                            var maxDate = document.getElementById('endDate').value;
+                            let mensaje = ""
+                            if (minDate && maxDate) {
+                                mensaje = `Reporte de pagos del ${moment(minDate).format('DD-MM-YYYY')} al ${moment(maxDate).format('DD-MM-YYYY')}`;
+                            } else if (minDate) {
+                                mensaje = `Reporte de pagos desde ${moment(minDate).format('DD-MM-YYYY')}`;
+                            } else if (maxDate) {
+                                mensaje = `Reporte de pagos hasta el ${moment(maxDate).format('DD-MM-YYYY')}`;
+                            } else {
+                                mensaje = `Reporte de pagos ${moment().format('DD-MM-YYYY')}`;
+                            }
+                            return mensaje;
+                        },
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        text: 'Exportar a PDF',
+                        title: function () {
+                            var minDate = document.getElementById('startDate').value;
+                            var maxDate = document.getElementById('endDate').value;
+                            let mensaje = ""
+                            if (minDate && maxDate) {
+                                mensaje = `Reporte de pagos del ${moment(minDate).format('DD-MM-YYYY')} al ${moment(maxDate).format('DD-MM-YYYY')}`;
+                            } else if (minDate) {
+                                mensaje = `Reporte de pagos desde ${moment(minDate).format('DD-MM-YYYY')}`;
+                            } else if (maxDate) {
+                                mensaje = `Reporte de pagos hasta el ${moment(maxDate).format('DD-MM-YYYY')}`;
+                            } else {
+                                mensaje = 'Reporte de pagos';
+                            }
+                            return mensaje;
+                        },
+
+                    }
+                ],
+                "initComplete": function () {
+                // Aplica las clases a los botones después de la inicialización
+                    var buttons = document.querySelectorAll('.dt-button');
+                    buttons.forEach(function (button) {
+                        button.classList.add('btn', 'btn-info');
+                    });
+
+                    
+                },
+                "drawCallback": function () {
+                    // Calculate and update the total monto
+                    var api = this.api();
+                    var total = api.column(2, { search: 'applied' }).data().reduce(function (a, b) {
+                        return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
+                    }, 0);
+                    document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
+                }
+            });
+
+            DataTable.ext.search.push(function(settings, data, dataIndex) {
+                var minDate = moment(document.getElementById('startDate').value, "YYYY-MM-DD").startOf('day');
+                var maxDate = moment(document.getElementById('endDate').value, "YYYY-MM-DD").endOf('day');
+                var targetDate = moment(data[2], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
+
+                if ((isNaN(minDate) && isNaN(maxDate)) ||
+                    (isNaN(minDate) && targetDate <= maxDate) ||
+                    (minDate <= targetDate && isNaN(maxDate)) ||
+                    (minDate <= targetDate && targetDate <= maxDate)) {
+                    return true;
+                }
+                return false;
+            });
+
+            document.getElementById('startDate').addEventListener('change', function() {
+                dataTable.draw();
+            });
+
+            document.getElementById('endDate').addEventListener('change', function() {
+                dataTable.draw();
+            });
+
+            document.getElementById('clearDates').addEventListener('click', function() {
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
+                dataTable.draw();
+            });
+        }
+    });
+</script>

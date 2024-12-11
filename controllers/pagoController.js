@@ -5,6 +5,7 @@ const utilidadesController = require('../controllers/utilidadesController');
 const Utilidades = require('../models/Utilidades');
 const Habitacion = require('../models/Habitacion');
 const Documento = require('../models/Evento');
+const moment = require('moment');
 
 async function obtenerPagos(idReservacion) {
     try {
@@ -315,6 +316,42 @@ async function altaComisionReturnC(req, res) {
     }
 }
 
+async function renderPagos(req, res) {
+    try {
+        const pagos = await Pago.find().lean();
+        const habitacionesExistentes = await Habitacion.findOne().lean();
+        const reservasExistentes = await Documento.findOne().lean();
+        const reservas = reservasExistentes.events
+
+        console.log(habitacionesExistentes.resources)
+
+        const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({
+            id: habitacion._id.toString(),
+            name: habitacion.propertyDetails?.name || 'Nombre no disponible', // Validar y asignar un valor predeterminado
+        }));
+        // console.log(pagos)
+        const pagosFormateados = pagos.map(pago => {
+            const reserva = reservas.find(reserva => reserva._id.toString() === pago.reservacionId?.toString());
+            const cabaña = reserva 
+            ? nombreCabañas.find(cabaña => cabaña.id === reserva.resourceId?.toString())
+            : null;
+            
+            return{
+                ...pago,
+                fecha: moment.utc(pago.fechaPago).format('DD/MM/YYYY'),
+                chalet: cabaña ? cabaña.name : 'N/A',
+                
+            }
+            
+        })
+        // console.log(pagosFormateados)
+        pagosFormateados.sort((a, b) => moment(b.fechaPago, 'DD-MM-YYYY').valueOf() - moment(a.fechaPago, 'DD-MM-YYYY').valueOf());
+        res.render('vistaPagos', { pagos: pagosFormateados });
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send(error.message);
+    }
+}
 
 module.exports = {
     obtenerPagos,
@@ -322,6 +359,6 @@ module.exports = {
     registrarPago,
     editarPago,
     eliminarPago,
-    liquidarReservaDueno
-
+    liquidarReservaDueno,
+    renderPagos
 }
