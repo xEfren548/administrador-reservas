@@ -110,13 +110,15 @@
 
                     {{/if}}
                 </tbody>
-                {{!-- <tfoot>
+                <tfoot>
                     <tr>
-                        <td colspan="3"></td>
+                        <td colspan="9"><b>Total</b></td>
                         <td id="totalMonto"></td>
-                        <td colspan="9"></td>
+                        <td></td>
+                        <td></td>
+                        <td id="totalMonto2"></td>
                     </tr>
-                </tfoot> --}}
+                </tfoot>
             </table>
         </div>
     </div>
@@ -144,6 +146,22 @@
                     {
                         extend: 'csvHtml5',
                         text: 'Exportar a CSV',
+                        footer: true,
+                        title: function () {
+                            var minDate = document.getElementById('startDate').value;
+                            var maxDate = document.getElementById('endDate').value;
+                            let mensaje = ""
+                            if (minDate && maxDate) {
+                                mensaje = `Reporte del ${moment(minDate).format('DD-MM-YYYY')} al ${moment(maxDate).format('DD-MM-YYYY')}`;
+                            } else if (minDate) {
+                                mensaje = `Reporte desde ${moment(minDate).format('DD-MM-YYYY')}`;
+                            } else if (maxDate) {
+                                mensaje = `Reporte hasta el ${moment(maxDate).format('DD-MM-YYYY')}`;
+                            } else {
+                                mensaje = `Reporte ${moment().format('DD-MM-YYYY')}`;
+                            }
+                            return mensaje;
+                        },
 
                     },
                     {
@@ -239,6 +257,20 @@
                                 });
                         });
                 **/
+                },
+                "drawCallback": function () {
+                    // Calculate and update the total monto
+                    var api = this.api();
+                    var total = api.column(9, { search: 'applied' }).data().reduce(function (a, b) {
+                        return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
+                    }, 0);
+                    var total2 = api.column(12, { search: 'applied' }).data().reduce(function (a, b) {
+                            // Verificar que `b` sea un número válido antes de sumar
+                            var valor = parseFloat(b.replace(/[^\d.-]/g, ''));
+                            return a + (isNaN(valor) ? 0 : valor); // Sumar solo si el valor es numérico
+                        }, 0);
+                    document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
+                    document.getElementById('totalMonto2').textContent = `$${total2.toFixed(2)}`;
                 }
             });
 

@@ -1011,7 +1011,7 @@ async function altaComisionReturn(req, res) {
 
     } catch (error) {
         console.log(error.message);
-        // res.status(200).send('Something went wrong while creating utility.');
+        res.status(200).send('Something went wrong while creating utility.');
     }
 }
 
