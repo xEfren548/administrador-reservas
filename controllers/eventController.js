@@ -1123,7 +1123,7 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
         const departureDay = departureDateObj.toISOString().split('T')[0];
 
         return (
-            eventArrivalDay <= departureDay && // 14 dic <= 17 dic
+            eventArrivalDay < departureDay && // 14 dic <= 17 dic
             eventDepartureDay > arrivalDay // 15 dic >= 15 dic
         );
     });

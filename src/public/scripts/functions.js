@@ -144,6 +144,9 @@ document.addEventListener("DOMContentLoaded", function () {
             comisionesReserva = document.getElementById('habitacion_total').value.trim() - precioMinimoPermitido; // 3250 - 3000
             console.log(comisionesReserva)
             const tipoReserva = document.getElementById('tipo-reserva-select').value.trim();
+            if (tipoReserva !== "reserva" && tipoReserva !== "por-depo") {
+                throw new Error("El tipo de reserva debe ser 'reserva' o 'por-depo'");
+            }
             const isDeposit = tipoReserva === 'por-depo' ? true : false;
 
             console.log("Por depo?: ", isDeposit)

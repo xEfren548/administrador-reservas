@@ -17,7 +17,6 @@ const clientSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        default: null
     },
     identificationType: {
         type: String,
