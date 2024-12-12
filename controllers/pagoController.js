@@ -55,7 +55,7 @@ async function registrarPago(req, res) {
         await pago.save();
 
         if (metodoPago === "Recibio dueño"){
-            await utilidadesController.altaComisionReturn({
+            await altaComisionReturnC({
                 monto: -importe ,
                 concepto: `Comisión negativa por Recepción de pago ${chalet.propertyDetails.name}`,
                 fecha: new Date(fechaPago),
@@ -118,7 +118,7 @@ async function editarPago(req, res) {
                     return res.status(500).json({ mensaje: 'Hubo un error al eliminar la utilidad.' });
                 }
 
-                await utilidadesController.altaComisionReturn({
+                await altaComisionReturnC({
                     monto: -importe,
                     concepto: `Comisión negativa por Recepción de pago`,
                     fecha: new Date(fechaPago),
