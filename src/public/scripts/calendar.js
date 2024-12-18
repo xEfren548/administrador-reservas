@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             } else if (clientPayments >= info.event.extendedProps.total) {
                 colorRectanguloTop = 'bg-success'
             } else {
-                colorRectanguloTop = 'bg-info'
+                colorRectanguloTop = '#ff8333'
             }
 
             if (madeCheckIn) {
