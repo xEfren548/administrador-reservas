@@ -1098,20 +1098,15 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
         throw new Error('No se encontraron eventos');
     }
 
-    const eventos = eventosExistentes.events;
-
     // Filter reservations with overlapping dates using JS utilities
-    const overlappingReservations = eventos.filter((event) => {
+    const overlappingReservations = eventosExistentes.events.filter((event) => {
         // Exclude the current event if `eventId` is provided
-        if (eventId && event._id.toString() === eventId) {
-            return false;
-        }
-
+        if (eventId && event._id.toString() === eventId) return false;
+        
         // Ensure the event is for the given resource and not cancelled or no-show
         if (
-            !event.resourceId.equals(newResourceId) ||
-            event.status === 'cancelled' ||
-            event.status === 'no-show'
+            !event.resourceId.equals(newResourceId) || 
+            ["cancelled", "no-show"].includes(event.status)
         ) {
             return false;
         }
