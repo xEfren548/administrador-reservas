@@ -186,8 +186,14 @@
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.log(errorData)
-                const errors = errorData.message;
+                let errors;
+                if (errorData.error && Array.isArray(errorData.error) && errorData.error[0]?.message) {
+                    errors = errorData.error[0].message; // Obtiene el primer mensaje en el array
+                } else if (errorData.message) {
+                    errors = errorData.message; // Fallback a un mensaje directo
+                } else {
+                    errors = "An unknown error occurred"; // Mensaje por defecto
+                }
                 throw new Error(errors);
             }
 
@@ -212,11 +218,12 @@
             });
 
         } catch (error) {
+            let errorMsg = error.message 
             console.error('Ha ocurrido un error: ', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: `Ha ocurrido un error al crear la reserva: ${error.message}`,
+                text: `Ha ocurrido un error al crear la reserva: ${errorMsg}`,
                 showCancelButton: false,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
@@ -239,6 +246,7 @@
         const options = tipologiaHabitacionInput.querySelectorAll('option');
 
         const verificarDisponibilidadElement = document.getElementById('verificar-disponibilidad');
+        tipologiaHabitacionInput.disabled = true;
 
         const dataBsIds = [];
 
@@ -302,6 +310,7 @@
             });
         } finally {
             verificarDisponibilidadElement.style.display = 'none';
+            tipologiaHabitacionInput.disabled = false;
         }
 
 

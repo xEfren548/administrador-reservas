@@ -871,7 +871,8 @@ async function createOwnerReservation(req, res, next) {
         res.status(200).json({ success: true, reservationId: documento.events[documento.events.length - 1]._id });
     } catch (err) {
         console.log(err);
-        return next(err);
+        res.status(500).send({ message: err.message });
+        // return next(err);
     }
 }
 
