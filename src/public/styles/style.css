@@ -815,6 +815,10 @@ ul.rb li .timestamp {
     height: 100%;
 }
 
+.background-orange {
+    background-color: #fd7e14 !important;
+}
+
 .event-details {
     position: relative;
     z-index: 2;
