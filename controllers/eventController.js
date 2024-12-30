@@ -560,6 +560,11 @@ async function createReservation(req, res, next) {
             }
         }
 
+        const isAvailable = await checkAvailability(mongooseChaletId, arrivalDate, departureDate);
+        if (!isAvailable) {
+            throw new BadRequestError('La habitación no está disponible en esas fechas');
+        }
+
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
         if (!costosVendedor) {throw new NotFoundError('Costos vendedor not found');}
 
