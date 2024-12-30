@@ -245,7 +245,7 @@ async function editarUsuario(req, res, next) {
     if (adminname) { updateFields.adminname = adminname; }
     if (color) { updateFields.color = color; }
     if (investorType){
-        if (investorType !== 'Asimilado' && investorType !== 'RESICO Fisico' && investorType !== 'PF con AE y PM'){
+        if (investorType !== 'Asimilado' && investorType !== 'RESICO Fisico' && investorType !== 'PF con AE y PM' && investorType !== 'Efectivo') {
             return next(new BadRequestError("Invalid investor type"));
         }
         updateFields.investorType = investorType;
