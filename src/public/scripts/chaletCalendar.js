@@ -133,11 +133,29 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             eventDrop: async function (info) {
                 const event = info.event;
+                const newEventStart = info.event.start;
+                const eventDateStart = new Date(newEventStart);
+                idReserva = event.id;
+    
+                const newEventEnd = info.event.end;
+                const eventDateEnd = new Date(newEventEnd);
+                const comisionVendedor = info.event.extendedProps.comisionVendedor;
+                const totalViejo = info.event.extendedProps.total;
+                const resourceId = (info.newResource && info.newResource.id) || info.el.fcSeg.eventRange.def.resourceIds[0];
+
+                const hoverableEventElement = document.querySelector(".fc-hoverable-event");
+                if (hoverableEventElement) {
+                    hoverableEventElement.remove();
+                }
+                const nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
+                let diferencia = nuevoTotal - totalViejo; // 2650 - 3250 
+                
+                const mensaje = `Esta acción cambiará las fechas de la reserva y el nuevo total sería de $${nuevoTotal} (Diferencia de $${diferencia})`
 
                 const confirmacion = await Swal.fire({
                     icon: 'warning',
                     title: '¿Estás seguro?',
-                    text: 'Esta acción cambiará las fechas de la reserva.',
+                    text: mensaje,
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#3085d6',
@@ -146,28 +164,54 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
                 if (confirmacion.isConfirmed) {
+                    const disponible = await availableDate(resourceId, eventDateStart, eventDateEnd, idReserva);
+
+                    if (!disponible) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Fechas no disponibles. Intenta con otras fechas.'
+                        });
+                        info.revert();
+                        return;
+                    }
+
+                    const eventData = {
+                        id: info.event.id,
+                        allDay: info.event.allDay,
+                        title: info.event.title,
+                        start: eventDateStart,
+                        end: eventDateEnd,
+                        extendedProps: {
+                            ...info.event.extendedProps,
+                            nuevoTotal: nuevoTotal
+                        }
+                    };
+
+                    const newResource = info.newResource ? { id: info.newResource.id } : null;
+
                     try {
                         const response = await fetch(`/api/eventos/${event.id}/modificar`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify(info)
+                            body: JSON.stringify({ event: eventData, newResource: newResource })
                         });
-
-                        if (!response.ok) {
-                            throw new Error('Error al actualizar fechas');
-                        }
-
                         const data = await response.json();
-                        console.log('Respuesta del servidor: ', data);
 
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Fechas actualizadas',
-                            showConfirmButton: false,
-                            timer: 2500
-                        });
+                        if (response.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Fechas  y precios actualizados',
+                                showConfirmButton: true,
+                                // timer: 2500
+                            }).then((result) => {
+                                window.location.reload();
+                            })
+                        } else {
+                            throw new Error(data.message || 'Error al actualizar fechas');
+                        }
                     } catch (error) {
                         console.error('Error al actualizar fechas: ', error);
                         Swal.fire({
@@ -176,10 +220,14 @@ document.addEventListener('DOMContentLoaded', function () {
                             showConfirmButton: false,
                             timer: 2500
                         });
+                        info.revert();
                     }
+                } else {
+                    info.revert();
+                    return;
                 }
 
-                document.querySelector(".fc-hoverable-event").remove();
+                // document.querySelector(".fc-hoverable-event").remove();
             },
             eventDidMount: function (info) {
                 info.el.addEventListener('contextmenu', function (event) {
@@ -968,3 +1016,235 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 });
+
+async function availableDate(resourceId, arrivalDate, departureDate, idReserva) {
+    console.log('desde show available')
+    console.log(arrivalDate);
+    console.log(departureDate);
+    const arrivalValue = new Date(`${arrivalDate}T00:00:00`);
+    const departureValue = new Date(`${departureDate}T00:00:00`);
+    // const tipologiaHabitacionInput = document.querySelector('#tipologia_habitacion');
+    // const options = tipologiaHabitacionInput.querySelectorAll('option');
+
+    // const verificarDisponibilidadElement = document.getElementById('verificar-disponibilidad');
+
+    // console.log(arrivalValue)
+    // console.log(departureValue)
+
+    try {
+        if (!isNaN(arrivalDate) && !isNaN(departureDate) && departureDate >= arrivalDate) {
+
+            console.log(arrivalDate)
+            console.log(departureDate)
+
+            // verificarDisponibilidadElement.style.display = 'block';
+
+            const arrivalYear = arrivalDate.getFullYear();
+            const arrivalMonth = (arrivalDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+            const arrivalDay = arrivalDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+            const arrivalDateSend = `${arrivalYear}-${arrivalMonth}-${arrivalDay}`;
+
+            const departureYear = departureDate.getFullYear();
+            const departureMonth = (departureDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+            const departureDay = departureDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+            const departureDateSend = `${departureYear}-${departureMonth}-${departureDay}`;
+
+            console.log(arrivalDateSend)
+            console.log(departureDateSend)
+
+
+            // const results = [];
+            const response = await fetch(`/api/check-availability/?resourceId=${resourceId}&arrivalDate=${arrivalDateSend}&departureDate=${departureDateSend}&eventId=${idReserva}`);
+            const result = await response.json();
+            console.log(result)
+            console.log(result.available)
+            if (!result.available) {
+                console.log('Cabaña no disponible');
+                return false;
+                // throw new Error('La cabaña no está disponible en las nuevas fechas. Intenta de nuevo con otras fechas.')
+            }
+
+            return true;
+        }
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: "Error en la solicitud: " + error.message,
+            confirmButtonText: 'Aceptar'
+        });
+    } finally {
+        // verificarDisponibilidadElement.style.display = 'none';
+        console.log('finalizado');
+    }
+
+
+}
+
+async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisionVendedor) {
+    console.log('obtener total ');
+    // const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
+    // const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
+    const arrivalYear = arrivalDate.getFullYear();
+    const arrivalMonth = (arrivalDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+    const arrivalDay = arrivalDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+    const arrivalDateSend = `${arrivalYear}-${arrivalMonth}-${arrivalDay}`;
+
+    const departureYear = departureDate.getFullYear();
+    const departureMonth = (departureDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+    const departureDay = departureDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+    const departureDateSend = `${departureYear}-${departureMonth}-${departureDay}`;
+
+    console.log("arrival send: ", arrivalDateSend)
+    console.log("departure send", departureDateSend)
+
+    if (arrivalDateSend && departureDateSend && resourceId) {
+        // Aquí puedes ejecutar la acción deseada
+        console.log("Los tres elementos tienen un valor. Ejecutar acción...");
+        const fechas = obtenerRangoFechas(arrivalDateSend, departureDateSend)
+        const nNights = calculateNightDifference(arrivalDateSend, departureDateSend)
+        const habitacionId = resourceId
+
+        console.log("fechas: " + fechas)
+        console.log("Nights: " + nNights)
+
+        const resultados = []
+
+        try {
+
+            for (const fecha of fechas) {
+                const year = fecha.getFullYear();
+                const month = (fecha.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+                const day = fecha.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+                const formatedDate = `${year}-${month}-${day}`;
+
+                const response = await fetch(`/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}`);
+
+                // Verificar el estado de la respuesta
+                if (!response.ok) {
+                    throw new Error('Error en la solicitud fetch: ' + response.statusText);
+                }
+
+                // Convertir la respuesta a JSON
+                const data = await response.json();
+
+                // Agregar el resultado al array de resultados
+                resultados.push(data);
+
+            }
+            console.log(resultados)
+            let totalPrecios = 0
+            let totalCostoBase = 0
+
+
+
+            resultados.forEach(resultado => {
+
+
+
+                if (nNights > 1) {
+                    if (resultado.precio_base_2noches) {
+                        totalPrecios += resultado.precio_base_2noches
+                        totalCostoBase += resultado.costo_base_2noches
+                    } else {
+                        console.log('no hay precios disponibles')
+                    }
+                } else {
+                    if (resultado.precio_modificado) {
+                        totalPrecios += resultado.precio_modificado
+                        totalCostoBase += resultado.costo_base
+
+                    } else {
+                        console.log('No hay precios disponibles')
+                    }
+                }
+            })
+
+            console.log("Total precios: ", totalPrecios)
+
+            // Asignar comisiones
+            if (isNaN(comisionVendedor) || comisionVendedor == null) {
+                comisionVendedor = 0
+            }
+            // totalPrecios += comisionVendedor // Precio maximo permitido
+
+            // console.log("Total precios con comisiones: ", totalPrecios)
+            const comisionUsuarios = await obtenerComisiones(nNights, habitacionId);
+            let precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
+            console.log("Precio minimo permitido: ", precioMinimoPermitido)
+            precioMinimoPermitido += comisionVendedor;
+            console.log("Precio total de la reserva", precioMinimoPermitido);
+            // totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
+            // console.log("Total precios con comisiones: ", totalPrecios)
+            return precioMinimoPermitido
+
+            // preciosTotalesGlobal = totalPrecios // Monto maximo en variable global
+
+            // totalCostoBaseInput.value = totalCostoBase
+
+            // console.log('Precios totales global: ', preciosTotalesGlobal)
+
+
+        } catch (error) {
+            console.error('Ha ocurrido un error: ', error.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: "Error en la solicitud: " + error.message,
+                confirmButtonText: 'Aceptar'
+            })
+
+        }
+
+    }
+
+}
+
+function obtenerRangoFechas(arrivalDate, departureDate) {
+    const fechaInicio = new Date(`${arrivalDate}T00:00:00`); // Agregar la hora en formato UTC
+    const fechaFin = new Date(`${departureDate}T00:00:00`); // Agregar la hora en formato UTC
+
+    const fechas = [];
+    let fechaActual = new Date(fechaInicio);
+
+    while (fechaActual < fechaFin) {
+        fechas.push(new Date(fechaActual));
+        fechaActual.setDate(fechaActual.getDate() + 1);
+    }
+    return fechas;
+}
+
+function calculateNightDifference(arrivalDate, departureDate) {
+    console.log('Desde calcular noches')
+    const arrivalValue = new Date(arrivalDate);
+    const departureValue = new Date(departureDate);
+    let nightsInput;
+
+    // Verifica si las fechas son válidas
+    if (!isNaN(arrivalValue) && !isNaN(departureValue) && departureValue >= arrivalValue) {
+        const timeDifference = departureValue.getTime() - arrivalValue.getTime();
+        const nightDifference = Math.ceil(timeDifference / (1000 * 3600 * 24)); // Calcula la diferencia en días
+
+        nightsInput = nightDifference
+    } else {
+        nightsInput = 0
+    }
+
+    return nightsInput;
+}
+
+async function obtenerComisiones(nNights, habitacionId) {
+    try {
+        const response = await fetch(`/api/utilidades?nnights=${nNights}&habitacionid=${habitacionId}`);
+        console.log(response);
+        const data = await response.json();
+        console.log(data);
+        const minComission = data.minComission
+        const finalComission = data.finalComission
+        const comisiones = { minComission: minComission, finalComission: finalComission }
+        return comisiones
+
+    } catch (error) {
+        console.log(error.message);
+    }
+}
