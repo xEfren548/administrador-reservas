@@ -1010,6 +1010,8 @@ async function modificarEvento(req, res) {
         let newEndDate = event.end;
         let newTotal = event.extendedProps.nuevoTotal
 
+        console.log("new total: ", newTotal)
+
         // Buscar el evento existente por su ID
         const eventosExistentes = await Documento.findOne();
 

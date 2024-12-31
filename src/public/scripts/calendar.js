@@ -215,14 +215,24 @@ document.addEventListener('DOMContentLoaded', async function () {
             document.querySelector(".fc-hoverable-event").remove();
         },
         eventDrop: async function (info) {
+            const { DateTime } = luxon;
+
             const event = info.event;
             console.log(info);
             idReserva = event.id;
             const newEventStart = info.event.start;
             const eventDateStart = new Date(newEventStart);
+            // const eventDateStart = moment.tz(newEventStart, "America/Mexico_City").toDate();
+
 
             const newEventEnd = info.event.end;
-            const eventDateEnd = new Date(newEventEnd);
+            console.log(newEventEnd)
+            // const eventDateEnd = new Date(newEventEnd);
+            // const eventDateEnd = convertToTimeZone(newEventEnd, 'America/Mexico_City');
+            const eventDateEnd = DateTime.fromISO(newEventEnd, { zone: 'utc' })
+            .setZone('America/Mexico_City')
+            .toJSDate();
+            console.log("Event end: ", eventDateEnd);
             const comisionVendedor = info.event.extendedProps.comisionVendedor;
             const totalViejo = info.event.extendedProps.total;
 
@@ -777,6 +787,8 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
                 const day = fecha.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
                 const formatedDate = `${year}-${month}-${day}`;
 
+                console.log("Fecha a buscar precio: ", formatedDate)
+
                 const response = await fetch(`/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}`);
 
                 // Verificar el estado de la respuesta
@@ -831,7 +843,7 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
             const comisionUsuarios = await obtenerComisiones(nNights, habitacionId);
             let precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
             console.log("Precio minimo permitido: ", precioMinimoPermitido)
-            precioMinimoPermitido += comisionVendedor;
+            // precioMinimoPermitido += comisionVendedor;
             console.log("Precio total de la reserva", precioMinimoPermitido);
             // totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
             // console.log("Total precios con comisiones: ", totalPrecios)
