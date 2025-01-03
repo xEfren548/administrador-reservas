@@ -818,7 +818,8 @@ async function createOwnerReservation(req, res, next) {
             status: 'reserva de dueño',
             url: `https://${process.env.URL}/api/eventos/${chalet._id}`,
             createdBy: createdBy,
-            clienteProvisional: clienteProvisional
+            clienteProvisional: clienteProvisional,
+            total: 0
         };
 
 
@@ -976,6 +977,14 @@ async function eliminarEvento(req, res) {
         // Save the updated room list to the database
         await eventosExistentes.save();
 
+        const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
+
+        if (comisionesReserva.length > 0) {
+            for (const comision of comisionesReserva) {
+                await utilidadesController.eliminarComisionReturn(comision._id);
+            }
+        }
+
         // Log
         const logBody = {
             fecha: Date.now(),
@@ -1023,6 +1032,10 @@ async function modificarEvento(req, res) {
             return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
         } else {
             console.log('evento encontrado: ', evento);
+        }
+
+        if (evento.status === "reserva de dueño"){
+            newTotal = 0
         }
 
 
@@ -1382,6 +1395,17 @@ async function moveToPlayground(req, res) {
             } else {
                 throw new Error("No se puede marcar como no show si el 50% no ha sido pagado.");
             }
+        }
+
+        if (evento.status === "reserva de dueño" && status === "cancelled") {
+            const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
+            console.log("Entra a reserva de dueño cancelar")
+            if (comisionesReserva.length > 0) {
+                for (const comision of comisionesReserva) {
+                    await utilidadesController.eliminarComisionReturn(comision._id);
+                }
+            }
+    
         }
 
         evento.status = status;

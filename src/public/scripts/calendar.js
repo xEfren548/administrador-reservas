@@ -220,6 +220,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const event = info.event;
             console.log(info);
             idReserva = event.id;
+            const eventStatus = info.event.extendedProps.status;
             const newEventStart = info.event.start;
             const eventDateStart = new Date(newEventStart);
             // const eventDateStart = moment.tz(newEventStart, "America/Mexico_City").toDate();
@@ -242,8 +243,18 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (hoverableEventElement) {
                 hoverableEventElement.remove();
             }
-            const nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
-            let diferencia = nuevoTotal - totalViejo; // 2650 - 3250 
+
+            let nuevoTotal;
+            let diferencia;
+
+            if (eventStatus !== "reserva de dueño") {
+                nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
+                diferencia = nuevoTotal - totalViejo; // 2650 - 3250 
+
+            } else {
+                nuevoTotal = 0;
+                diferencia = 0
+            }
             console.log(diferencia)
 
             const mensaje = `Esta acción cambiará las fechas de la reserva y el nuevo total sería de $${nuevoTotal} (Diferencia de $${diferencia})`
