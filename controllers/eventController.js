@@ -542,7 +542,8 @@ async function createReservation(req, res, next) {
 
         const fechaAjustada = new Date(arrivalDate);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
-        console.log(fechaAjustada);
+        const departureDateAjustada = new Date(departureDate);
+        departureDateAjustada.setUTCHours(6);
 
 
 
@@ -560,10 +561,10 @@ async function createReservation(req, res, next) {
             }
         }
 
-        const isAvailable = await checkAvailability(mongooseChaletId, arrivalDate, departureDate);
-        if (!isAvailable) {
-            throw new BadRequestError('La habitación no está disponible en esas fechas');
-        }
+        // const isAvailable = await checkAvailability(mongooseChaletId, fechaAjustada, departureDateAjustada);
+        // if (!isAvailable) {
+        //     throw new BadRequestError('La habitación no está disponible en esas fechas');
+        // }
 
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
         if (!costosVendedor) {throw new NotFoundError('Costos vendedor not found');}
@@ -662,8 +663,10 @@ async function createReservation(req, res, next) {
         evento.url = url;
         await documento2.save();
 
-        const descripcionLimpieza = 'Limpieza para la habitación ' + chaletName;
+        const descripcionLimpieza = 'Limpieza ' + chaletName;
         const fechaLimpieza = new Date(departureDate)
+        const checkInDate = new Date(arrivalDate)
+        const checkOutDate = new Date(departureDate)
         fechaLimpieza.setDate(fechaLimpieza.getDate() + 1)
         const statusLimpieza = 'Pendiente'
 
@@ -674,6 +677,8 @@ async function createReservation(req, res, next) {
             id_reserva: idReserva,
             descripcion: descripcionLimpieza,
             fecha: fechaLimpieza,
+            checkInDate: checkInDate,
+            checkOutDate: checkOutDate,
             status: statusLimpieza,
             idHabitacion: evento.resourceId
         })
@@ -1102,6 +1107,8 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
     const newResourceId = new mongoose.Types.ObjectId(resourceId);
     const arrivalDateObj = new Date(`${arrivalDate}T00:00:00`);
     const departureDateObj = new Date(`${departureDate}T00:00:00`);
+
+    console.log("ARRIVAL DATE: ", arrivalDateObj, "DEPARTURE DATE: ", departureDateObj);
 
     const fechasBloqueadas = await BloqueoFechas.find({ habitacionId: newResourceId, type: 'bloqueo', date: { $gte: arrivalDateObj, $lte: departureDateObj } });
     if (fechasBloqueadas.length > 0) {

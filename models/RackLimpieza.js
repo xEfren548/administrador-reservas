@@ -19,6 +19,12 @@ const rackLimpiezaSchema = new Schema({
         type: Date,
         required: true
     },
+    checkIn: {
+        type: Date
+    },
+    checkOut: {
+        type: Date
+    },
     status: {
         type: String,
         required: true

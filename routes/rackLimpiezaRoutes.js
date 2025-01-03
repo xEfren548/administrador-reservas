@@ -29,6 +29,8 @@ router.get('/rackLimpieza', async (req, res) => {
             service._id = service._id.toString();
             service.id_reserva = service.id_reserva.toString();
             service.fecha = moment.utc(service.fecha).format('DD-MM-YYYY');
+            service.fechaLlegada = service.checkIn ?  moment.utc(service.checkIn).format('DD-MM-YYYY'): "-";
+            service.fechaSalida = service.checkOut ? moment.utc(service.checkOut).format('DD-MM-YYYY') : "-";
         });
 
         console.log(services)
