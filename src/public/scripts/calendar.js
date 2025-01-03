@@ -229,9 +229,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             console.log(newEventEnd)
             // const eventDateEnd = new Date(newEventEnd);
             // const eventDateEnd = convertToTimeZone(newEventEnd, 'America/Mexico_City');
-            const eventDateEnd = DateTime.fromISO(newEventEnd, { zone: 'utc' })
-            .setZone('America/Mexico_City')
-            .toJSDate();
+            const eventDateEnd = new Date(newEventEnd);
             console.log("Event end: ", eventDateEnd);
             const comisionVendedor = info.event.extendedProps.comisionVendedor;
             const totalViejo = info.event.extendedProps.total;
