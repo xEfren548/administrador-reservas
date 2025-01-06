@@ -604,7 +604,8 @@ async function createReservation(req, res, next) {
                 total: total,
                 discount: discount,
                 createdBy: createdBy,
-                comisionVendedor: comisionVendedor
+                comisionVendedor: comisionVendedor,
+                status: 'active'
             };
             message = "Reservación agregada con éxito";
         }
