@@ -920,10 +920,19 @@ async function vistaParaReporte(req, res) {
 
             const habitacion = habitaciones.find(habitacion => habitacion._id.toString() === reserva.resourceId.toString());
             reserva.nombreHabitacion = habitacion ? habitacion.propertyDetails.name : "N/A"
+            reserva.costoLimpieza = habitacion ? habitacion.additionalInfo.extraCleaningCost : "N/A"
 
             const pagosReserva = pagos.filter(pago => pago.reservacionId.toString() === reserva._id.toString())
             const totalPagosReserva = pagosReserva.reduce((total, pago) => total + pago.importe, 0);
             reserva.pagosCliente = totalPagosReserva !== NaN ? totalPagosReserva : "N/A"
+
+            if (Array.isArray(reserva.notes) && reserva.notes.length > 0) {
+                reserva.notes = reserva.notes.map(note => note.texto).join(', ')
+            }
+            
+            if (Array.isArray(reserva.privateNotes) && reserva.privateNotes.length > 0) {
+                reserva.privateNotes = reserva.privateNotes.map(note => note.texto).join(', ')
+            }
 
             const liquidaEfectivo = pagosReserva.filter(pago => pago.metodoPago === "Recibio dueño").reduce((liquidaEfectivo, pago) =>
                 liquidaEfectivo + pago.importe, 0);
@@ -937,6 +946,8 @@ async function vistaParaReporte(req, res) {
                 }
             });
             reserva.nombreCliente = cliente ? (cliente.firstName + " " + cliente.lastName) : (reserva.clienteProvisional || "N/A");
+            reserva.correoCliente = cliente ? cliente.email : "N/A";
+            reserva.telefonoCliente = cliente ? cliente.phone : "N/A";
 
 
         })

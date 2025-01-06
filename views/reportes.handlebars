@@ -65,7 +65,7 @@
             <table class="table table-dark table-hover text-center nowrap" id="tablaUtilidades">
                 <thead class="table-light">
                     <tr>
-                        <th scope="col">Concepto</th>
+                        <th scope="col">ID</th>
                         <th scope="col">Creación de reserva</th>
                         <th scope="col">Agente que reserva</th>
                         <th scope="col">Cabaña</th>
@@ -77,6 +77,11 @@
                         <th scope="col">Depósito de cliente</th>
                         <th scope="col">Liquida en efectivo</th>
                         <th scope="col">Nombre de cliente</th>
+                        <th scope="col">Email de cliente</th>
+                        <th scope="col">Notas internas</th>
+                        <th scope="col">Notas externas</th>
+                        <th scope="col">Teléfono de cliente</th>
+
                         <th scope="col">Monto</th>
 
 
@@ -86,7 +91,7 @@
                     {{#if reservas.length}}
                     {{#each reservas}}
                     <tr>
-                        <td>{{this.concepto}}</td>
+                        <td>{{this._id}}</td>
                         <td>{{this.reservationDate}}</td>
                         <td>{{this.agenteReserva}}</td>
                         <td>{{this.nombreHabitacion}}</td>
@@ -98,6 +103,11 @@
                         <td>${{this.pagosCliente}}</td>
                         <td>${{this.liquidaEfectivo}}</td>
                         <td>{{this.nombreCliente}}</td>
+                        <td>{{this.correoCliente}}</td>
+                        <td>{{this.privateNotes}}</td>
+                        <td>{{this.notes}}</td>
+                        <td>{{this.telefonoCliente}}</td>
+
                         <td>${{this.total}}</td>
 
 
@@ -114,6 +124,8 @@
                     <tr>
                         <td colspan="9"><b>Total</b></td>
                         <td id="totalMonto"></td>
+                        <td></td>
+                        <td></td>
                         <td></td>
                         <td></td>
                         <td id="totalMonto2"></td>
