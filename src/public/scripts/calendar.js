@@ -222,16 +222,21 @@ document.addEventListener('DOMContentLoaded', async function () {
             idReserva = event.id;
             const eventStatus = info.event.extendedProps.status;
             const newEventStart = info.event.start;
+            console.log("Fecha inicio recibida de info: ", newEventStart);
             const eventDateStart = new Date(newEventStart);
+            eventDateStart.setHours(eventDateStart.getHours() + 6);
+            console.log("Event start convertido: ", eventDateStart);
             // const eventDateStart = moment.tz(newEventStart, "America/Mexico_City").toDate();
 
 
             const newEventEnd = info.event.end;
-            console.log(newEventEnd)
+            console.log("Fecha fin recibida de info: ", newEventStart);
+
             // const eventDateEnd = new Date(newEventEnd);
             // const eventDateEnd = convertToTimeZone(newEventEnd, 'America/Mexico_City');
             const eventDateEnd = new Date(newEventEnd);
-            console.log("Event end: ", eventDateEnd);
+            eventDateEnd.setHours(eventDateEnd.getHours() + 6);
+            console.log("Event end convertido: ", eventDateEnd);
             const comisionVendedor = info.event.extendedProps.comisionVendedor;
             const totalViejo = info.event.extendedProps.total;
 
@@ -255,7 +260,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 nuevoTotal = 0;
                 diferencia = 0
             }
-            console.log(diferencia)
 
             const mensaje = `Esta acción cambiará las fechas de la reserva y el nuevo total sería de $${nuevoTotal} (Diferencia de $${diferencia})`
             const confirmacion = await Swal.fire({
@@ -297,7 +301,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 console.log(info)
 
                 const newResource = info.newResource ? { id: info.newResource.id } : null;
-                console.log(newResource);
 
                 try {
                     const response = await fetch(`/api/eventos/${event.id}/modificar`, {
@@ -697,8 +700,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 async function availableDate(resourceId, arrivalDate, departureDate, idReserva) {
     console.log('desde show available')
-    console.log(arrivalDate);
-    console.log(departureDate);
+    console.log("arrivalDate: ", arrivalDate);
+    console.log("departureDate: ", departureDate);
     const arrivalValue = new Date(`${arrivalDate}T00:00:00`);
     const departureValue = new Date(`${departureDate}T00:00:00`);
     // const tipologiaHabitacionInput = document.querySelector('#tipologia_habitacion');
