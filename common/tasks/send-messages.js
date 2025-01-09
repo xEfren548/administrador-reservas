@@ -147,7 +147,7 @@ async function sendReminders() {
     // console.log("--------------------------------------------------------------------------------");
     // console.log("SENDIND REMINDERS");
     var reservations = await Evento.findOne();
-    reservations = reservations.events;
+    reservations = reservations.events || [];
 
     if (reservations) {
         for (const reservation of reservations) {
