@@ -44,7 +44,7 @@ app.set('views', './views');
 console.log(`Env variable: ${process.env.NODE_ENV}`)
 
 const port = process.env.NODE_ENV === 'development' ? 3005 : process.env.PORT || 443; // 3005 for development, HTTPS for production
-const db_url = process.env.DB_URL;
+const db_url = process.env.NODE_ENV === 'development' ? process.env.DEV_DB : process.env.DB_URL;
 
 // Ensures Express correctly handles requests and interprets the necessary headers when using cookie sessions with postman.
 app.set('trust proxy', true);
