@@ -69,6 +69,7 @@
                         <th scope="col">Creación de reserva</th>
                         <th scope="col">Agente que reserva</th>
                         <th scope="col">Cabaña</th>
+                        <th scope="col">Costo limpieza</th>
                         <th scope="col">Admin ligado</th>
                         <th scope="col">Entrada</th>
                         <th scope="col">Salida</th>
@@ -95,6 +96,7 @@
                         <td>{{this.reservationDate}}</td>
                         <td>{{this.agenteReserva}}</td>
                         <td>{{this.nombreHabitacion}}</td>
+                        <td>${{this.costoLimpieza}}</td>
                         <td>{{this.adminLigado}}</td>
                         <td>{{this.arrivalDate}}</td>
                         <td>{{this.departureDate}}</td>
@@ -122,8 +124,10 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="9"><b>Total</b></td>
+                        <td colspan="10"><b>Total</b></td>
                         <td id="totalMonto"></td>
+                        <td></td>
+                        <td></td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -273,10 +277,10 @@
                 "drawCallback": function () {
                     // Calculate and update the total monto
                     var api = this.api();
-                    var total = api.column(9, { search: 'applied' }).data().reduce(function (a, b) {
+                    var total = api.column(10, { search: 'applied' }).data().reduce(function (a, b) {
                         return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
                     }, 0);
-                    var total2 = api.column(12, { search: 'applied' }).data().reduce(function (a, b) {
+                    var total2 = api.column(17, { search: 'applied' }).data().reduce(function (a, b) {
                             // Verificar que `b` sea un número válido antes de sumar
                             var valor = parseFloat(b.replace(/[^\d.-]/g, ''));
                             return a + (isNaN(valor) ? 0 : valor); // Sumar solo si el valor es numérico
@@ -289,7 +293,7 @@
             DataTable.ext.search.push(function (settings, data, dataIndex) {
                 var minDate = moment(document.getElementById('startDate').value, "YYYY-MM-DD").startOf('day');
                 var maxDate = moment(document.getElementById('endDate').value, "YYYY-MM-DD").endOf('day');
-                var targetDate = moment(data[5], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
+                var targetDate = moment(data[6], "DD/MM/YYYY").startOf('day'); // Assuming date is in the 3rd column
 
                 if ((isNaN(minDate) && isNaN(maxDate)) ||
                     (isNaN(minDate) && targetDate <= maxDate) ||
