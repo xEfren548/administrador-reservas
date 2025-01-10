@@ -576,7 +576,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     maxOccupation: document.getElementById('ocupacion_habitacion').value.trim(),
                     total: document.getElementById('habitacion_total').value.trim(),
                     isDeposit: isDeposit,
-                    comisionVendedor: comisionesReserva
+                    comisionVendedor: comisionesReserva,
+                    pax: document.getElementById('numero-personas').value.trim()
 
                 }
             } else {
@@ -590,7 +591,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     pax: document.getElementById('numero-personas').value.trim(),
                     total: document.getElementById('habitacion_total').value.trim(),
                     isDeposit: isDeposit,
-                    comisionVendedor: comisionesReserva
+                    comisionVendedor: comisionesReserva,
+                    pax: document.getElementById('numero-personas').value.trim()
                 }
             }
 
