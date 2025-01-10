@@ -783,7 +783,9 @@ async function createOwnerReservation(req, res, next) {
             const reservaActiva = reservasDeInversionista.find(reserva => new Date(reserva.departureDate) > new Date());
 
             if (reservaActiva) {
-                throw new Error('Ya tienes una reserva activa.')
+                if (reservaActiva.status !== "cancelled"){
+                    throw new Error('Ya tienes una reserva activa.')
+                }
             }
 
             // Verificar la regla de al menos 9 días entre reservas
