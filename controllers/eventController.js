@@ -214,6 +214,7 @@ async function obtenerEventosDeCabana(req, res) {
             let clientName = null;
             let creadaPor = null;
             let precioBaseTotal = null;
+            let montoPendiente = null;
             if (createdBy) {
                 const usuario = await Usuario.findById(createdBy).select('color firstName lastName').exec();
                 if (usuario) {
@@ -240,11 +241,11 @@ async function obtenerEventosDeCabana(req, res) {
                 pagosReserva.forEach(pago => {
                     pagoTotal += pago.importe;
                 })
-                // const totalReserva = evento.total;
+                const totalReserva = evento.total;
                 // let precioBaseTotal = 0
                 precioBaseTotal = evento.nNights > 1 ? habitacion.others.basePrice2nights * evento.nNights : habitacion.others.basePrice * evento.nNights
 
-                // montoPendiente = totalReserva - pagoTotal;
+                montoPendiente = totalReserva - pagoTotal;
                 console.log("Precio base total: ", precioBaseTotal)
             }
 
@@ -253,7 +254,8 @@ async function obtenerEventosDeCabana(req, res) {
                 colorUsuario: colorUsuario,
                 clientName: clientName,
                 creadaPor: creadaPor,
-                precioBaseTotal: precioBaseTotal
+                precioBaseTotal: precioBaseTotal,
+                montoPendiente: montoPendiente
             };
 
         }));

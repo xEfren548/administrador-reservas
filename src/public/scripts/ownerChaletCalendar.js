@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         color: event.colorUsuario,
                         clientName: event.clientName,
                         precioBaseTotal: event.precioBaseTotal,
+                        montoPendiente: event.montoPendiente,
                         allDay: true
                     }));
                     successCallback(events);
@@ -90,13 +91,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const clientName = info.event.extendedProps.clientName;
                 let precioBaseTotal = info.event.extendedProps.precioBaseTotal;
-                let montoPendienteMsg = (precioBaseTotal === null || precioBaseTotal === undefined) ? 'Reserva de dueño/inversionista' : `<div><b>Precio total: $ ${precioBaseTotal}</b></div>`
+                let montoPendiente = info.event.extendedProps.montoPendiente;
+                let precioBaseTotalMsg = (precioBaseTotal === null || precioBaseTotal === undefined) ? 'Reserva de dueño/inversionista' : `<div><b>Precio total: $ ${precioBaseTotal}</b></div>`
+                let montoPendienteMsg = (montoPendiente === null || montoPendiente === undefined) ? 'Reserva de dueño/inversionista' : `<div><b>Monto pendiente: $ ${montoPendiente}</b></div>`
 
+                const userPrivilege = document.querySelector('#privilege').value;
+                let finalMsg = userPrivilege === 'Inversionistas' ? precioBaseTotalMsg : montoPendienteMsg
                 return {
                     html: `
                     <div class="p-1 rounded ${background} bg-gradient ${textColor}" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: "Overpass", sans-serif;">
                         <div>${clientName}</div>
-                        ${montoPendienteMsg}
+                        ${finalMsg}
                     </div>
                     `
                 }
