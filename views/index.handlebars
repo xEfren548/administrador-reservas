@@ -55,37 +55,35 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row d-none" id="container-buscar-cliente">
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="searchClient">Buscar Cliente</label>
-                                <input type="text" id="searchClient" class="form-control"
-                                    placeholder="Buscar cliente...">
-                            </div>
-                        </div>
-                    </div>
                     <div class="row container-alta-cliente d-none">
                         <div class="col-sm-8">
-                            <div class="form-group">
+                            <div class="form-group select-container">
                                 <label for="lblClient">Cliente</label>
-                                <select id="lblClient" name="lblClient" class="form-select form-select-md" required>
-                                    <option value="" selected="true" disabled="true"> Selecciona al cliente para hacer
-                                        su reserva --</option>
+                                <input type="text" class="form-control form-select-search" 
+                                        id="lblClient" 
+                                        autocomplete="off"
+                                        placeholder="Buscar y seleccionar cliente..."
+                                        required>
+                                <div class="select-options">
                                     {{#if clientes}}
-                                    {{#each clientes}}
-                                    <option value="{{this.email}}">{{this.firstName}} {{this.lastName}} ({{this.email}})
-                                    </option>
-                                    {{/each}}
+                                        {{#each clientes}}
+                                            <div class="select-option" data-value="{{this.email}}" data-label="{{this.firstName}} {{this.lastName}} ({{this.email}})">
+                                                {{this.firstName}} {{this.lastName}} ({{this.email}})
+                                            </div>
+                                        {{/each}}
                                     {{else}}
-                                    <option value="0">No se encontraron clientes</option>
+                                        <div class="select-option" data-value="0">No se encontraron clientes</div>
                                     {{/if}}
-                                </select>
+                                </div>
+                                <input type="hidden" name="lblClient" id="lblClientValue">
+
+
                             </div>
                         </div>
-                        <div class="col-sm-3 d-flex align-items-center justify-content-center container-alta-cliente d-none">
-                            <a name="" class="btn btn-info btn-sm m-3" href="#" role="button"
-                                data-bs-toggle="modal" data-bs-target="#clientEntryModal">Alta de Cliente</a>
-                        </div>
+                                <div class="col-sm-3 d-flex align-items-center justify-content-center container-alta-cliente d-none">
+                                    <a name="" class="btn btn-info btn-sm m-3" href="#" role="button"
+                                    data-bs-toggle="modal" data-bs-target="#clientEntryModal">Alta de Cliente</a>
+                                </div>
                     </div>
 
                     <div class="row" id="container-alta-cliente-provisional">
@@ -319,6 +317,7 @@
 <script src="/scripts/calendar.js"></script>
 <script src="/scripts/functions.js"></script>
 <script>
+    /** 
     const searchInput = document.getElementById('searchClient');
     const clientSelect = document.getElementById('lblClient');
 
@@ -333,7 +332,7 @@
             }
         });
     });
-
+*/
     const tipologiaSelect = document.getElementById('tipologia_select');
     const tipologiaHabitacionSelect = document.getElementById('tipologia_habitacion');
     const originalOptions = Array.from(tipologiaHabitacionSelect.options);

@@ -150,6 +150,11 @@ document.addEventListener("DOMContentLoaded", function () {
             const isDeposit = tipoReserva === 'por-depo' ? true : false;
 
             console.log("Por depo?: ", isDeposit)
+            console.log("Email cliente: ", document.getElementById("lblClientValue").value.trim())
+
+            if (document.getElementById("lblClientValue").value.trim() === "" || document.getElementById("lblClientValue").value.trim() === null || document.getElementById("lblClientValue").value.trim() === undefined) {
+                throw new Error("Por favor selecciona un cliente de la lista.");
+            }
 
             let formData = {};
 
@@ -169,7 +174,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             } else {
                 formData = {
-                    clientEmail: document.getElementById("lblClient").value.trim(),
+                    clientEmail: document.getElementById("lblClientValue").value.trim(),
                     arrivalDate: document.getElementById('event_start_date').value.trim(),
                     departureDate: document.getElementById('event_end_date').value.trim(),
                     nNights: document.getElementById("event_nights").value.trim(),
@@ -549,12 +554,18 @@ document.addEventListener("DOMContentLoaded", function () {
                         $('#clientEntryModal').modal('hide');
                         $('#event_entry_modal').modal('show');
                         // Update the clients dropdown
-                        const newOption = document.createElement("option");
-                        newOption.value = dataR.client.email;
-                        newOption.text = dataR.client.firstName + " " + dataR.client.lastName + "(" + dataR.client.email + ")";
-                        newOption.selected = true;
+                        // const newOption = document.createElement("option");
+                        // newOption.value = dataR.client.email;
+                        // newOption.text = dataR.client.firstName + " " + dataR.client.lastName + "(" + dataR.client.email + ")";
+                        // newOption.selected = true;
 
-                        document.getElementById("lblClient").appendChild(newOption);
+                        // document.getElementById("lblClient").appendChild(newOption);
+
+                        window.addNewClientOption({
+                            email: dataR.client.email,
+                            firstName: dataR.client.firstName,
+                            lastName: dataR.client.lastName
+                        });
 
                     }
                 });
@@ -594,7 +605,6 @@ document.addEventListener("DOMContentLoaded", function () {
     tipoReservaSelect.addEventListener('change', function() {
         console.log("Ejecutando...")
         
-        const containerBuscarCliente = document.querySelector('#container-buscar-cliente');
         const containerAltaCliente = document.querySelectorAll('.container-alta-cliente');
         const containerAltaClienteProvisional = document.querySelector('#container-alta-cliente-provisional')
 
@@ -602,17 +612,123 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log(selectedOption)
 
         if (selectedOption.value === "reserva"){
-            containerBuscarCliente.classList.remove('d-none')
             containerAltaCliente.forEach(element => {
                 element.classList.remove('d-none')
             });
             containerAltaClienteProvisional.classList.add('d-none')
         } else {
-            containerBuscarCliente.classList.add('d-none')
             containerAltaCliente.forEach(element => {
                 element.classList.add('d-none')
             });
             containerAltaClienteProvisional.classList.remove('d-none')
+        }
+    });
+
+    const searchInput = document.getElementById('lblClient');
+    const optionsContainer = document.querySelector('.select-options');
+    const hiddenInput = document.getElementById('lblClientValue');
+    let allOptions = Array.from(document.querySelectorAll('.select-option'));
+
+    window.addNewClientOption = function(clientData) {
+        // Create new option element
+        const newOption = document.createElement('div');
+        newOption.className = 'select-option';
+        newOption.dataset.value = clientData.email;
+        newOption.dataset.label = `${clientData.firstName} ${clientData.lastName} (${clientData.email})`;
+        newOption.textContent = `${clientData.firstName} ${clientData.lastName} (${clientData.email})`;
+
+        // Add the new option to the container
+        optionsContainer.appendChild(newOption);
+
+        // Update allOptions array
+        allOptions = Array.from(document.querySelectorAll('.select-option'));
+
+        // Set the new option as selected
+        searchInput.value = newOption.dataset.label;
+        hiddenInput.value = newOption.dataset.value;
+    };
+
+    // Function to filter options
+    function filterOptions(searchText) {
+        const filteredOptions = allOptions.filter(option => {
+            const optionText = option.textContent.toLowerCase();
+            return optionText.includes(searchText.toLowerCase());
+        });
+
+        // Hide all options first
+        allOptions.forEach(option => option.style.display = 'none');
+
+        // Show filtered options
+        filteredOptions.forEach(option => option.style.display = 'block');
+
+        // Show/hide options container based on whether there are results
+        optionsContainer.style.display = filteredOptions.length > 0 ? 'block' : 'none';
+    }
+
+    // Input event handler
+    searchInput.addEventListener('input', (e) => {
+        filterOptions(e.target.value);
+    });
+
+    // Focus event handler
+    searchInput.addEventListener('focus', () => {
+        optionsContainer.style.display = 'block';
+        filterOptions(searchInput.value);
+    });
+
+    // Click handler for options
+    optionsContainer.addEventListener('click', (e) => {
+        const option = e.target.closest('.select-option');
+        if (option) {
+            const value = option.dataset.value;
+            const label = option.dataset.label || option.textContent;
+            
+            searchInput.value = label;
+            hiddenInput.value = value;
+            optionsContainer.style.display = 'none';
+        }
+    });
+
+    // Close options when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.select-container')) {
+            optionsContainer.style.display = 'none';
+        }
+    });
+
+    // Keyboard navigation
+    searchInput.addEventListener('keydown', (e) => {
+        const visibleOptions = Array.from(optionsContainer.querySelectorAll('.select-option')).filter(
+            option => option.style.display !== 'none'
+        );
+        const currentIndex = visibleOptions.findIndex(option => option.classList.contains('selected'));
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                if (currentIndex < visibleOptions.length - 1) {
+                    visibleOptions.forEach(opt => opt.classList.remove('selected'));
+                    visibleOptions[currentIndex + 1].classList.add('selected');
+                }
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                if (currentIndex > 0) {
+                    visibleOptions.forEach(opt => opt.classList.remove('selected'));
+                    visibleOptions[currentIndex - 1].classList.add('selected');
+                }
+                break;
+            case 'Enter':
+                e.preventDefault();
+                const selectedOption = visibleOptions.find(opt => opt.classList.contains('selected'));
+                if (selectedOption) {
+                    const value = selectedOption.dataset.value;
+                    const label = selectedOption.dataset.label || selectedOption.textContent;
+                    searchInput.value = label;
+                    hiddenInput.value = value;
+                    optionsContainer.style.display = 'none';
+                }
+                break;
         }
     });
 

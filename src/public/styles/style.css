@@ -886,3 +886,48 @@ ul.rb li .timestamp {
 	opacity: 1;
 }
 
+/* Select options */
+
+/* Add these styles to your CSS */
+.select-container {
+    position: relative;
+}
+
+.form-select-search {
+    padding-left: 8px;
+    cursor: text;
+}
+
+.select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    color: black;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 0.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    display: none;
+}
+
+.select-option {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.select-option:hover {
+    background-color: #f8f9fa;
+}
+
+.selected {
+    background-color: #e9ecef;
+}
+
+.d-block {
+    display: block !important;
+}
