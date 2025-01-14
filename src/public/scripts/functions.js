@@ -219,10 +219,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     errors.push(errorData.message);
                 } else {
                     errors = errorData.error.map(err => err.message);
-
                 }
                 
-
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
