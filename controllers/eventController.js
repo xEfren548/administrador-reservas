@@ -196,6 +196,7 @@ async function obtenerEventosDeCabana(req, res) {
     const newId = new mongoose.Types.ObjectId(id);
     try {
         const documentos = await Documento.find({ 'events.resourceId': newId });
+        const habitaciones = await Habitacion.findOne();
 
         let eventos = [];
         documentos.forEach(doc => {
@@ -203,13 +204,16 @@ async function obtenerEventosDeCabana(req, res) {
             eventos = eventos.concat(matchingEvents);
         });
 
+        const habitacion = habitaciones.resources.find(habitacion => habitacion._id.equals(newId));
+        if (!habitacion) { throw new Error('No se encontró la habitación'); }
+
         // Fetch colorUsuario for each evento's createdBy
         const eventosWithColorUsuario = await Promise.all(eventos.map(async evento => {
             const createdBy = evento.createdBy;
             let colorUsuario = null; // Default to null if usuario is not found
             let clientName = null;
             let creadaPor = null;
-            let montoPendiente = null;
+            let precioBaseTotal = null;
             if (createdBy) {
                 const usuario = await Usuario.findById(createdBy).select('color firstName lastName').exec();
                 if (usuario) {
@@ -236,9 +240,12 @@ async function obtenerEventosDeCabana(req, res) {
                 pagosReserva.forEach(pago => {
                     pagoTotal += pago.importe;
                 })
-                const totalReserva = evento.total;
-                montoPendiente = totalReserva - pagoTotal;
+                // const totalReserva = evento.total;
+                // let precioBaseTotal = 0
+                precioBaseTotal = evento.nNights > 1 ? habitacion.others.basePrice2nights * evento.nNights : habitacion.others.basePrice * evento.nNights
 
+                // montoPendiente = totalReserva - pagoTotal;
+                console.log("Precio base total: ", precioBaseTotal)
             }
 
             return {
@@ -246,7 +253,7 @@ async function obtenerEventosDeCabana(req, res) {
                 colorUsuario: colorUsuario,
                 clientName: clientName,
                 creadaPor: creadaPor,
-                montoPendiente: montoPendiente
+                precioBaseTotal: precioBaseTotal
             };
 
         }));

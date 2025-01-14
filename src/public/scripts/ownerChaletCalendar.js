@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         status: event.status,
                         color: event.colorUsuario,
                         clientName: event.clientName,
-                        montoPendiente: event.montoPendiente,
+                        precioBaseTotal: event.precioBaseTotal,
                         allDay: true
                     }));
                     successCallback(events);
@@ -89,8 +89,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 const clientName = info.event.extendedProps.clientName;
-                let montoPendiente = info.event.extendedProps.montoPendiente;
-                let montoPendienteMsg = (montoPendiente === null || montoPendiente === undefined) ? 'Reserva de dueño/inversionista' : `<div><b>Monto pendiente: $ ${montoPendiente}</b></div>`
+                let precioBaseTotal = info.event.extendedProps.precioBaseTotal;
+                let montoPendienteMsg = (precioBaseTotal === null || precioBaseTotal === undefined) ? 'Reserva de dueño/inversionista' : `<div><b>Precio total: $ ${precioBaseTotal}</b></div>`
 
                 return {
                     html: `
