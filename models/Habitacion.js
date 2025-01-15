@@ -326,8 +326,8 @@ const preSchema = new mongoose.Schema({
     }
 });
 
-const habitacionesSchema = new mongoose.Schema({
-    resources: [preSchema],
-});
+// const habitacionesSchema = new mongoose.Schema({
+//     resources: [preSchema],
+// });
 
-module.exports = mongoose.model('habitaciones', habitacionesSchema);
+module.exports = mongoose.model('habitaciones', preSchema);

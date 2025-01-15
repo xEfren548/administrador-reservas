@@ -170,8 +170,10 @@ async function generarComisionReserva(req, res) {
 
 
 
-        const chalets = await Habitacion.findOne();
-        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+        // const chalets = await Habitacion.findOne();
+        // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+
+        const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
         if (!chalet) {
             throw new NotFoundError('Chalet does not exist 2');
         }
@@ -556,12 +558,12 @@ async function mostrarUtilidadesPorUsuario(req, res) {
         const loggedUserId = req.session.id;
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
 
-        const habitacionesExistentes = await Habitacion.findOne().lean();
+        const habitacionesExistentes = await Habitacion.find().lean();
         if (!habitacionesExistentes) {
             return res.status(404).send('No rooms found');
         }
 
-        const reservas = await Documento.findOne().lean();
+        const reservas = await Documento.find().lean();
         if (!reservas) {
             return res.status(404).send('No documents found');
         }
@@ -679,12 +681,12 @@ async function mostrarUtilidadesGlobales(req, res) {
         const utilidadesPorMes = Array(12).fill(0); // Inicializa un array con 12 elementos, todos con valor 0
 
 
-        const habitacionesExistentes = await Habitacion.findOne().lean();
+        const habitacionesExistentes = await Habitacion.find().lean();
         if (!habitacionesExistentes) {
             return res.status(404).send('No rooms found');
         }
 
-        const reservas = await Documento.findOne().lean();
+        const reservas = await Documento.find().lean();
         if (!reservas) {
             return res.status(404).send('No documents found');
         }
@@ -906,12 +908,12 @@ async function vistaParaReporte(req, res) {
         const currentYear = moment().year(); // Año actual
 
 
-        const habitacionesExistentes = await Habitacion.findOne().lean();
+        const habitacionesExistentes = await Habitacion.find().lean();
         if (!habitacionesExistentes) {
             return res.status(404).send('No rooms found');
         }
 
-        const reservasExistentes = await Documento.findOne().lean();
+        const reservasExistentes = await Documento.find().lean();
         if (!reservasExistentes) {
             return res.status(404).send('No documents found');
         }

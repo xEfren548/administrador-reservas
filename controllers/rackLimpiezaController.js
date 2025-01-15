@@ -87,14 +87,14 @@ async function createServiceForReservation(req, res, next) {
         const { id_reserva, descripcion, fecha, status, idHabitacion, checkInDate, checkOutDate } = req;
 
 
-        const documento = await Documento.findOne({ 'events._id': id_reserva });
-
-        if (!documento) {
-            return res.status(404).send('Documento not found'); // Si no se encuentra el documento, devolver un error 404
-        }
-
-        const evento = documento.events.find(event => event._id == id_reserva);
-
+        
+        // if (!documento) {
+            //     return res.status(404).send('Documento not found'); // Si no se encuentra el documento, devolver un error 404
+            // }
+            
+            // const evento = documento.events.find(event => event._id == id_reserva);
+            
+        const evento = await Documento.findById(id_reserva).lean();
         if (!evento) {
             return res.status(404).send('Evento not found'); // Si no se encuentra el evento, devolver un error 404
         }
@@ -123,7 +123,7 @@ async function createServiceForReservation(req, res, next) {
         await service.save();
     } catch (error) {
         console.log(error.message);
-        res.status(200).send('Something went wrong while creating service.');
+        return error;
     }
 }
 

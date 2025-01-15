@@ -205,7 +205,7 @@ async function sendThanks() {
             }
 
             // const chalet = allChalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
-            const chalet = Habitacion.findById(reservation.resourceId);
+            const chalet = await Habitacion.findById(reservation.resourceId.toString()).lean();
             if (!chalet) {
                 console.log(`Chalet ${reservation.resourceId} does not exist.`);
                 continue;

@@ -89,8 +89,8 @@ const reservaSchema = new Schema({
     }
 });
 
-const documentSchema = new Schema({
-    events: [reservaSchema]
-});
+// const documentSchema = new Schema({
+//     events: [reservaSchema]
+// });
 
-module.exports = mongoose.model('Documento', documentSchema);
+module.exports = mongoose.model('Documento', reservaSchema);
