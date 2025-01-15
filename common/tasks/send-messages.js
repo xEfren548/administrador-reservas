@@ -176,24 +176,24 @@ async function sendReminders() {
 
 async function sendThanks() {
     // Fetch reservations and their events
-    const eventDocument = await Evento.findOne();
-    if (!eventDocument) {
-        console.log("No reservations found.");
-        return;
-    }
+    let reservations = await Evento.find({ status: { $nin: ["cancelled", "no-show"] } });
+    // if (!eventDocument) {
+    //     console.log("No reservations found.");
+    //     return;
+    // }
     
-    let reservations = eventDocument.events;
+    // let reservations = eventDocument.events;
     if (!reservations || reservations.length === 0) {
         console.log("No events in reservations.");
         return;
     }
 
     // Fetch all chalets once
-    const allChalets = await Habitacion.findOne();
-    if (!allChalets || !allChalets.resources) {
-        console.log("No chalets found.");
-        return;
-    }
+    // const allChalets = await Habitacion.find();
+    // if (!allChalets) {
+    //     console.log("No chalets found.");
+    //     return;
+    // }
 
     // Process each reservation
     for (const reservation of reservations) {
@@ -204,15 +204,16 @@ async function sendThanks() {
                 continue;
             }
 
-            const chalet = allChalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
+            // const chalet = allChalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
+            const chalet = Habitacion.findById(reservation.resourceId);
             if (!chalet) {
                 console.log(`Chalet ${reservation.resourceId} does not exist.`);
                 continue;
             }
 
-            if (reservation.status === "cancelled"){
-                continue;
-            }
+            // if (reservation.status === "cancelled"){
+            //     continue;
+            // }
 
             //console.log("Current date:", new Date());
             //console.log("Reservation date:", typeof reservation.departureDate);
@@ -236,14 +237,13 @@ async function sendThanks() {
 
                 // Mark thanks as sent
                 reservation.thanksSent = true;
+                await reservation.save();
             }
         } catch (error) {
             console.log(`Error processing reservation ${reservation._id}:`, error);
         }
     }
 
-    // Save the updated document
-    await eventDocument.save();
 }
 
 

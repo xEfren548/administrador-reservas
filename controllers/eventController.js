@@ -130,12 +130,13 @@ const submitReservationValidators = [
 async function obtenerEventos(req, res) {
     const { id } = req.params;
     try {
-        const eventos = await Documento.find().lean();
+        const eventos = await Documento.find( { status: { $nin: ["no-show", "cancelled"]}}).lean();
+        console.log(eventos)
         let eventosExistentes = eventos[0].events;
 
         let cleaningDetailsMap = {};
 
-        const idAllChalets = [...new Set(eventosExistentes.map(evento => evento.resourceId.toString()))];
+        const idAllChalets = [...new Set(eventos.map(evento => evento.resourceId.toString()))];
 
         for (let chaletId of idAllChalets) {
             const rackLimpieza = await rackLimpiezaController.getSpecificServicesMongo(chaletId);
@@ -159,7 +160,7 @@ async function obtenerEventos(req, res) {
         // const rackLimpieza = await rackLimpiezaController.getSpecificServicesMongo();
         // console.log(rackLimpieza);
 
-        for (let evento of eventosExistentes) {
+        for (let evento of eventos) {
             let pagos = await pagoController.obtenerPagos(evento._id);
             let pagoTotal = 0
             pagos.forEach(pago => {
@@ -269,14 +270,14 @@ async function obtenerEventosDeCabana(req, res) {
 
 async function obtenerEventoPorId(id) {
     try {
-        const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
+        const evento = await Documento.findById(id); // Buscar el documento que contiene los eventos
 
-        if (!eventosExistentes) {
-            throw new Error('No se encontraron eventos');
-        }
+        // if (!eventosExistentes) {
+        //     throw new Error('No se encontraron eventos');
+        // }
 
         // Buscar el evento por su id
-        const evento = eventosExistentes.events.find(evento => evento.id === id);
+        // const evento = eventosExistentes.events.find(evento => evento.id === id);
 
         if (!evento) {
             throw new Error('El evento no fue encontrado');
@@ -290,14 +291,15 @@ async function obtenerEventoPorId(id) {
 async function obtenerEventoPorIdRoute(req, res) {
     try {
         const { id } = req.params;
-        const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
+        // const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
 
-        if (!eventosExistentes) {
-            throw new Error('No se encontraron eventos');
-        }
+        // if (!eventosExistentes) {
+        //     throw new Error('No se encontraron eventos');
+        // }
 
         // Buscar el evento por su id
-        const evento = eventosExistentes.events.find(evento => evento.id === id);
+        // const evento = eventosExistentes.events.find(evento => evento.id === id);
+        const evento = await Documento.findById(id);
 
         if (!evento) {
             throw new Error('El evento no fue encontrado');
@@ -1127,6 +1129,7 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
         return false;
     }
 
+    // const eventosExistentes = await Documento.findOne();
     const eventosExistentes = await Documento.findOne();
     if (!eventosExistentes) {
         throw new Error('No se encontraron eventos');

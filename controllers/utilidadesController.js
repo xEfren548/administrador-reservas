@@ -1,6 +1,8 @@
 const moment = require('moment');
 const momentTz = require('moment-timezone');
 const mongoose = require('mongoose');
+const NotFoundError = require("../common/error/not-found-error");
+
 
 const usersController = require('./../controllers/usersController');
 const pagoController = require('./../controllers/pagoController');
@@ -33,8 +35,9 @@ async function calcularComisiones(req, res) {
         const habitacionId = req.query.habitacionid;
         console.log("nnights: ",  nNights)
 
-        const chalets = await Habitacion.findOne();
-        const chalet = chalets.resources.find(chalet => chalet._id.toString() === habitacionId.toString());
+        // const chalets = await Habitacion.findOne();
+        // const chalet = chalets.resources.find(chalet => chalet._id.toString() === habitacionId.toString());
+        const chalet = await Habitacion.findById(habitacionId).lean();
         if (!chalet) {
             throw new NotFoundError('Chalet does not exist 2');
         }
@@ -53,13 +56,20 @@ async function calcularComisiones(req, res) {
         let counter = 0
 
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
-
+        
+        if (!user) {
+            throw new NotFoundError('User does not exist');
+        }
+        
+        console.log("USUARIO LOGUEADO: ", user)
         let minComission = 0
         let finalComission = 0
 
         while (true) {
             // console.log(user)
+            console.log("Antes de user privilege admin")
             if (user.privilege === 'Administrador') {
+                console.log("Despues de user privilege admin")
                 counter += 1;
                 // let costos = await Costos.find({ category: "Gerente" });
 
@@ -83,8 +93,9 @@ async function calcularComisiones(req, res) {
             } else {
 
                 counter += 1;
-                console.log(counter)
+                console.log("Antes de user privilege")
                 if (counter >= 2 && user.privilege !== "Administrador") {
+                    console.log("Despues de user privilege")
                     user.privilege = "Gerente"
                 }
                 // let costos = await Costos.findOne({ category: user.privilege })

@@ -14,14 +14,16 @@ async function obtenerHabitaciones(req, res) {
 
 async function obtenerHabitacionPorId(id) {
     try {
-        const habitacionesExistentes = await Habitacion.findOne(); // Buscar el documento que contiene los eventos
+        // const habitacionesExistentes = await Habitacion.findOne(); // Buscar el documento que contiene los eventos
         
-        if (!habitacionesExistentes) {
-            throw new Error('No se encontraron eventos');
-        }
+        // if (!habitacionesExistentes) {
+        //     throw new Error('No se encontraron eventos');
+        // }
 
         // Buscar la habitacion por su id
-        const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === id);
+        // const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === id);
+        const habitacion = await Habitacion.findById(id); // Buscar el documento que contiene los eventos
+
 
         if (!habitacion) {
             throw new Error('Habitacion no encontrada');
