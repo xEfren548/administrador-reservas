@@ -692,8 +692,8 @@ async function mostrarUtilidadesGlobales(req, res) {
         }
 
         // // Extract the IDs and names of the rooms
-        const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name, chaletAdmin: habitacion.others.admin.toString() }));
-        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, departureDate: reserva.departureDate, status: reserva.status, total: reserva.total }));
+        const nombreCabañas = habitacionesExistentes.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name, chaletAdmin: habitacion.others.admin.toString() }));
+        const reservasMap = reservas.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, departureDate: reserva.departureDate, status: reserva.status, total: reserva.total }));
 
         for (let reserva of reservasMap) {
             const pagos = await pagoController.obtenerPagos(reserva.id);
