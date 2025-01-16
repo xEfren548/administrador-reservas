@@ -5,12 +5,12 @@ const Habitacion = require('../models/Habitacion');
 const bloqueoInversionistasController  = require('../controllers/bloqueoInversionistasController');
 
 router.get('/calendario-bloqueofechasinversionistas', async (req, res) => {
-    const habitaciones = await Habitacion.findOne().lean();
+    const habitaciones = await Habitacion.find().lean();
     if (!habitaciones) {
         return res.status(404).send('No rooms found');
     }
 
-    const habitacionesMapeadas = habitaciones.resources.map(habitacion => {
+    const habitacionesMapeadas = habitaciones.map(habitacion => {
         return {
             id: habitacion._id,
             name: habitacion.propertyDetails.name,

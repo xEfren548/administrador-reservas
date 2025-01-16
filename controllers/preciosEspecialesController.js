@@ -97,14 +97,15 @@ async function consultarPreciosPorFecha(req, res) {
         console.log(precio);
 
         if (precio === null) {
-            const habitacionesExistentes = await Habitacion.findOne(); // Buscar el documento que contiene los eventos
+            // const habitacionesExistentes = await Habitacion.findOne(); // Buscar el documento que contiene los eventos
 
-            if (!habitacionesExistentes) {
-                throw new Error('No se encontraron eventos');
-            }
+            // if (!habitacionesExistentes) {
+            //     throw new Error('No se encontraron eventos');
+            // }
 
             // Buscar la habitacion por su id
-            const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === habitacionid);
+            const habitacion = await Habitacion.findById(habitacionid).lean(); 
+            // const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === habitacionid);
 
             if (!habitacion) {
                 throw new Error('Habitacion no encontrada');

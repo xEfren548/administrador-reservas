@@ -15,8 +15,9 @@ const getViewValidators = [
                 throw new BadRequestError('Reservation id does not exist');
             }
 
-            const reservations = await Reservation.findOne();
-            const reservation = reservations.events.find(reservation => reservation._id.toString() === uuid.toString());
+            // const reservations = await Reservation.findOne();
+            // const reservation = reservations.events.find(reservation => reservation._id.toString() === uuid.toString());
+            const reservation = await Reservation.findById(uuid.toString());
             if(!reservation){
                 throw new NotFoundError('Reservation does not exist');
             }
@@ -27,8 +28,9 @@ const getViewValidators = [
                 throw new NotFoundError('Client does not exist');
             }
 
-            const chalets = await Habitacion.findOne();
-            const chalet = chalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
+            // const chalets = await Habitacion.findOne();
+            // const chalet = chalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
+            const chalet = await Habitacion.findById(reservation.resourceId.toString());
             if(!chalet){
                 throw new NotFoundError('Chalet does not exist 1');
             }
@@ -46,8 +48,9 @@ const areTermsAcceptedValidators = [
                 throw new BadRequestError('Reservation id does not exist');
             }
 
-            const reservations = await Reservation.findOne();
-            const reservation = reservations.events.find(reservation => reservation._id.toString() === uuid.toString());
+            // const reservations = await Reservation.findOne();
+            // const reservation = reservations.events.find(reservation => reservation._id.toString() === uuid.toString());
+            const reservation = await Reservation.findById(uuid.toString());
             if(!reservation){
                 throw new NotFoundError('Reservation does not exist');
             }
@@ -57,8 +60,9 @@ const areTermsAcceptedValidators = [
                 throw new NotFoundError('Client does not exist');
             }
 
-            const chalets = await Habitacion.findOne();
-            const chalet = chalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
+            // const chalets = await Habitacion.findOne();
+            // const chalet = chalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
+            const chalet = await Habitacion.findById(reservation.resourceId.toString());
             if(!chalet){
                 throw new NotFoundError('Chalet does not exist');
             }
@@ -83,8 +87,9 @@ async function showInstructionsView(req, res, next) {
     const uuid = req.params.uuid;
 
     try {
-        const reservations = await Reservation.findOne().lean();
-        const reservation = reservations.events.find(reservation => reservation._id.toString() === uuid.toString());
+        // const reservations = await Reservation.findOne().lean();
+        // const reservation = reservations.events.find(reservation => reservation._id.toString() === uuid.toString());
+        const reservation = await Reservation.findById(uuid.toString()).lean();
         if(!reservation){
             throw new NotFoundError('Reservation does not exist');
         }
@@ -95,8 +100,9 @@ async function showInstructionsView(req, res, next) {
             throw new NotFoundError('Client does not exist');
         }
         
-        const chalets = await Habitacion.findOne().lean();
-        const chalet = chalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
+        // const chalets = await Habitacion.findOne().lean();
+        // const chalet = chalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
+        const chalet = await Habitacion.findById(reservation.resourceId.toString()).lean();
         if(!chalet){
             throw new NotFoundError('Chalet does not exist');
         }
@@ -177,8 +183,9 @@ async function areTermsAccepted(req, res, next) {
 
     try {
         console.log("TEEESt 1");
-        const reservations = await Reservation.findOne();
-        const reservation = reservations.events.find(reservation => reservation._id.toString() === uuid.toString());
+        // const reservations = await Reservation.findOne();
+        // const reservation = reservations.events.find(reservation => reservation._id.toString() === uuid.toString());
+        const reservation = await Reservation.findById(uuid.toString()).lean();
         if(!reservation){
             throw new NotFoundError('Reservation does not exist');
         }
@@ -203,14 +210,15 @@ async function acceptTermsAndConditions(req, res, next) {
     const { termsAccepted } = req.body;
 
     try {
-        const reservations = await Reservation.findOne();
-        const reservation = reservations.events.find(reservation => reservation._id.toString() === uuid.toString());
+        // const reservations = await Reservation.find();
+        // const reservation = reservations.find(reservation => reservation._id.toString() === uuid.toString());
+        const reservation = await Reservation.findById(uuid.toString()).lean();
         if(!reservation){
             throw new NotFoundError('Reservation does not exist');
         }
         
         reservation.termsAccepted = termsAccepted;
-        await reservations.save();
+        await reservation.save();
 
         res.status(200).json({ success: true });
     } catch (error) {
@@ -224,20 +232,22 @@ async function realizarCheckIn(req, res){
         const {idReserva} = req.body;
         console.log(req.body)
         console.log(idReserva);
-        const documento = await Reservation.findOne();
+        // const documento = await Reservation.findOne();
 
-        if (!documento) {
-            throw new Error('No se encontraron eventos');
-        }
+        // if (!documento) {
+        //     throw new Error('No se encontraron eventos');
+        // }
 
         // Buscar el evento por su ID dentro del array de eventos
-        const reserva = documento.events.find(evento => evento._id.toString() === idReserva);
+        // const reserva = documento.events.find(evento => evento._id.toString() === idReserva);
+
+        const reserva = await Reservation.findById(idReserva);
         if (!reserva) {
             throw new Error('La reserva no fue encontrada');
         }
 
         reserva.madeCheckIn = true;
-        await documento.save();
+        await reserva.save();
         res.status(200).json({ message: 'Check-in realizado exitosamente' });
 
 

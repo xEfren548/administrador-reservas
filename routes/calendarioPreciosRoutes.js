@@ -111,7 +111,7 @@ router.get('/calendario-precios', async (req, res) => {
 
 
         const allHabitaciones = await Habitacion.find().lean();
-        const habitaciones = allHabitaciones[0].resources;
+        const habitaciones = allHabitaciones;
         
         // Crear un arreglo con las fechas correspondientes a cada día del año
         const daysWithDates = Array.from({ length: getDaysInYear() }, (_, index) => getDateFromDayOfYear(index + 1));

@@ -49,7 +49,7 @@ const userSchema = new Schema({
     },
     reservation: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Documento.events'
+        ref: 'Documento'
     },
     color: {
         type: String,

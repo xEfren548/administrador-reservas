@@ -918,9 +918,9 @@ async function vistaParaReporte(req, res) {
             return res.status(404).send('No documents found');
         }
 
-        const reservas = reservasExistentes.events.filter(reserva => reserva.status !== 'cancelled');
+        const reservas = reservasExistentes.filter(reserva => reserva.status !== 'cancelled');
 
-        const habitaciones = habitacionesExistentes.resources;
+        const habitaciones = habitacionesExistentes;
 
         reservas.forEach(reserva => {
             reserva.reservationDate = momentTz.tz(reserva.reservationDate, "America/Mexico_City").format("DD-MM-YYYY HH:mm")

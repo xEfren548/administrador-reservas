@@ -146,8 +146,8 @@ function sendSurveyToClient(clientInfo, chaletInfo, idReserva){
 async function sendReminders() {
     // console.log("--------------------------------------------------------------------------------");
     // console.log("SENDIND REMINDERS");
-    var reservations = await Evento.findOne();
-    reservations = reservations.events || [];
+    var reservations = await Evento.find();
+    reservations = reservations || [];
 
     if (reservations) {
         for (const reservation of reservations) {
@@ -250,8 +250,8 @@ async function sendThanks() {
 async function cancelReservation() {
     console.log("--------------------------------------------------------------------------------");
     console.log("SENDING CANCELATION");
-    var evento = await Evento.findOne();
-    var reservations = evento.events;
+    var evento = await Evento.find();
+    var reservations = evento;
 
     if (reservations) {
         for (const reservation of reservations) {
@@ -343,9 +343,9 @@ async function cancelReservation() {
                 }
 
             }
+            await reservation.save();
         }
 
-        await evento.save();
     }
 }
 

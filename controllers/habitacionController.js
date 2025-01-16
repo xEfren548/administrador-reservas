@@ -102,15 +102,15 @@ async function editarHabitacion(req, res) {
         const { habitaciones, title, ocupacion_max } = req.body;
 
         // Fetch existing rooms from the database
-        const habitacionesExistentes = await Habitacion.findOne();
+        // const habitacionesExistentes = await Habitacion.findOne();
         
-        if (!habitacionesExistentes) {
-            return res.status(404).json({ mensaje: 'No se encontraron habitaciones' });
-        }
+        // if (!habitacionesExistentes) {
+        //     return res.status(404).json({ mensaje: 'No se encontraron habitaciones' });
+        // }
 
         // Find the room to edit by its ID
-        const habitacionExistente = habitacionesExistentes.resources.find(habitacion => habitacion.id === id);
-
+        // const habitacionExistente = habitacionesExistentes.resources.find(habitacion => habitacion.id === id);
+        const habitacionExistente = await Habitacion.findById(id).lean();
         if (!habitacionExistente) {
             return res.status(404).json({ mensaje: 'La habitación no fue encontrada' });
         }
@@ -127,7 +127,7 @@ async function editarHabitacion(req, res) {
         }
 
         // Save the updated room to the database
-        await habitacionesExistentes.save();
+        await habitacionExistente.save();
 
         console.log('Habitación editada:', habitacionExistente);
         res.status(200).json({ mensaje: 'Habitación editada correctamente', habitacion: habitacionExistente });
@@ -142,22 +142,23 @@ async function eliminarHabitacion(req, res) {
         const id  = req.params.id;
 
         // Fetch existing rooms from the database
-        const habitacionesExistentes = await Habitacion.findOne();
+        // const habitacionesExistentes = await Habitacion.findOne();
         
-        if (!habitacionesExistentes) {
-            return res.status(404).json({ mensaje: 'No se encontraron habitaciones' });
-        }
+        // if (!habitacionesExistentes) {
+        //     return res.status(404).json({ mensaje: 'No se encontraron habitaciones' });
+        // }
 
         // Find the index of the room to delete by its ID
-        const index = habitacionesExistentes.resources.findIndex(habitacion => habitacion.id === id);
+        // const index = habitacionesExistentes.resources.findIndex(habitacion => habitacion.id === id);
 
-        if (index === -1) {
-            return res.status(404).json({ mensaje: 'La habitación no fue encontrada' });
-        }
+        // if (index === -1) {
+        //     return res.status(404).json({ mensaje: 'La habitación no fue encontrada' });
+        // }
 
-        // Remove the room from the array
-        habitacionesExistentes.resources.splice(index, 1);
+        // // Remove the room from the array
+        // habitacionesExistentes.resources.splice(index, 1);
 
+        const habitacionesExistentes = await Habitacion.findByIdAndDelete(id);
         // Save the updated room list to the database
         await habitacionesExistentes.save();
 
