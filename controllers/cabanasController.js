@@ -810,16 +810,13 @@ async function editChalet(req, res, next) {
         console.log(others.investors);
 
         
-        const habitacion = await Habitacion.findOne();
-        let chalets = habitacion.resources;
-
-        const indexToUpdate = chalets.findIndex(c => c._id.toString() === txtChaletId.toString());
-        if (indexToUpdate === -1) throw new NotFoundError("Chalet not found");
-
-        const chaletId = chalets[indexToUpdate]._id; // Keep the original _id
+        const chaletToUpdate = await Habitacion.findById(txtChaletId);
+        if (!chaletToUpdate) {
+            throw new Error("Chalet not found.")
+        }
 
         const updatedChalet = {
-            ...chalets[indexToUpdate], // Keep the original document structure
+            ...chaletToUpdate.toObject(), // Keep the original document structure
             propertyDetails,
             accommodationFeatures,
             additionalInfo,
@@ -843,36 +840,8 @@ async function editChalet(req, res, next) {
             images
         };
 
-        chalets[indexToUpdate] = updatedChalet;
         
-        const updateResult = await Habitacion.updateOne(
-            { "resources._id": chaletId },
-            {
-                $set: {
-                    "resources.$.propertyDetails": propertyDetails,
-                    "resources.$.accommodationFeatures": accommodationFeatures,
-                    "resources.$.additionalInfo": additionalInfo,
-                    "resources.$.accomodationDescription": accomodationDescription,
-                    "resources.$.additionalAccomodationDescription": additionalAccomodationDescription,
-                    "resources.$.touristicRate": touristicRate,
-                    "resources.$.legalNotice": legalNotice,
-                    "resources.$.location": location,
-                    "resources.$.others": {
-                        basePrice: others.basePrice,
-                        basePrice2nights: others.basePrice2nights,
-                        baseCost: others.baseCost,
-                        baseCost2nights: others.baseCost2nights,
-                        arrivalTime: newArrivalTime,
-                        departureTime: newDepartureTime,
-                        admin: admin._id,
-                        janitor: janitor._id,
-                        owner: owner._id,
-                        investors: others.investors
-                    },
-                    "resources.$.images": images
-                }
-            }
-        );
+        const updateResult = await Habitacion.updateOne({ _id: txtChaletId }, { $set: updatedChalet });
         console.log('Update Result:', JSON.stringify(updateResult, null, 2));
         if (!updateResult.modifiedCount) throw new Error("Failed to update chalet");
 
