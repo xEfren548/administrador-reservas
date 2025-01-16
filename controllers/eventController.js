@@ -1310,7 +1310,6 @@ async function moveToPlayground(req, res) {
                         throw new Error('El evento no fue encontrado');
                     }
 
-                    await eventoAeliminar.save();
                     // Find the index of the room to delete by its ID
                     // const index = eventosExistentes.events.findIndex(evento => evento.id.toString() === idReserva.toString());
                             

@@ -160,7 +160,9 @@ async function eliminarHabitacion(req, res) {
 
         const habitacionesExistentes = await Habitacion.findByIdAndDelete(id);
         // Save the updated room list to the database
-        await habitacionesExistentes.save();
+        if (!habitacionesExistentes) {
+            throw new Error("La habitación no fue encontrada");
+        }
 
         console.log('Habitación eliminada con éxito');
         res.status(200).json({ mensaje: 'Habitación eliminada correctamente' });

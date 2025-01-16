@@ -767,6 +767,8 @@ async function showEditChaletsView(req, res, next) {
         }
         console.log("Images downloaded successfully ");
 
+        console.log(chalets[chalets.length - 1]);
+
         res.render('vistaEditarCabana', {
             chalets: chalets,
             admins: admins,

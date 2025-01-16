@@ -152,9 +152,13 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log("Por depo?: ", isDeposit)
             console.log("Email cliente: ", document.getElementById("lblClientValue").value.trim())
 
-            if (document.getElementById("lblClientValue").value.trim() === "" || document.getElementById("lblClientValue").value.trim() === null || document.getElementById("lblClientValue").value.trim() === undefined) {
-                throw new Error("Por favor selecciona un cliente de la lista.");
+            if (!isDeposit){
+                if (document.getElementById("lblClientValue").value.trim() === "" || document.getElementById("lblClientValue").value.trim() === null || document.getElementById("lblClientValue").value.trim() === undefined) {
+                    throw new Error("Por favor selecciona un cliente de la lista.");
+                }
+
             }
+
 
             let formData = {};
 
