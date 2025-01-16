@@ -196,16 +196,19 @@ async function obtenerEventosDeCabana(req, res) {
     const { id } = req.params;
     const newId = new mongoose.Types.ObjectId(id);
     try {
-        const documentos = await Documento.find({ 'events.resourceId': newId });
-        const habitaciones = await Habitacion.findOne();
+        // const documentos = await Documento.find({ 'events.resourceId': newId });
+        // const habitaciones = await Habitacion.findOne();
 
-        let eventos = [];
-        documentos.forEach(doc => {
-            const matchingEvents = doc.events.filter(evento => evento.resourceId.equals(newId));
-            eventos = eventos.concat(matchingEvents);
-        });
+        // let eventos = [];
+        // documentos.forEach(doc => {
+        //     const matchingEvents = doc.events.filter(evento => evento.resourceId.equals(newId));
+        //     eventos = eventos.concat(matchingEvents);
+        // });
 
-        const habitacion = habitaciones.resources.find(habitacion => habitacion._id.equals(newId));
+        const eventos = await Documento.find({ resourceId: newId }).lean();
+
+        // const habitacion = habitaciones.resources.find(habitacion => habitacion._id.equals(newId));
+        const habitacion = await Habitacion.findById(newId).lean();
         if (!habitacion) { throw new Error('No se encontró la habitación'); }
 
         // Fetch colorUsuario for each evento's createdBy
@@ -251,7 +254,7 @@ async function obtenerEventosDeCabana(req, res) {
             }
 
             return {
-                ...evento.toObject(),
+                ...evento,
                 colorUsuario: colorUsuario,
                 clientName: clientName,
                 creadaPor: creadaPor,

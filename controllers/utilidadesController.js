@@ -573,8 +573,8 @@ async function mostrarUtilidadesPorUsuario(req, res) {
 
         utilidades = await Utilidades.find({ idUsuario: loggedUserId }).lean();
 
-        const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name, chaletAdmin: habitacion.others.admin.toString() }));
-        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, departureDate: reserva.departureDate, status: reserva.status }));
+        const nombreCabañas = habitacionesExistentes.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name, chaletAdmin: habitacion.others.admin.toString() }));
+        const reservasMap = reservas.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, departureDate: reserva.departureDate, status: reserva.status }));
 
         const chaletAdminIds = [...new Set(nombreCabañas.map(cabana => cabana.chaletAdmin))];
         const chaletAdminMap = {};
@@ -619,8 +619,8 @@ async function mostrarUtilidadesPorUsuario(req, res) {
                             const idHabitacion = reserva.resourceId;
                             utilidad.idHabitacion = idHabitacion;
                             const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
-                            utilidad.nombreHabitacion = matchId.name;
-                            utilidad.chaletAdmin = chaletAdminMap[matchId.chaletAdmin] || "-";
+                            utilidad.nombreHabitacion = matchId ? matchId.name : "N/A";
+                            utilidad.chaletAdmin = matchId ? chaletAdminMap[matchId.chaletAdmin] : "N/A";
 
                             utilidad.nochesReservadas = reserva.nNights
                             const arrivalCheckOut =  moment.utc(reserva.departureDate, 'DD/MM/YYYY');
@@ -757,8 +757,8 @@ async function mostrarUtilidadesGlobales(req, res) {
                             const idHabitacion = reserva.resourceId;
                             utilidad.idHabitacion = idHabitacion;
                             const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
-                            utilidad.nombreHabitacion = matchId.name;
-                            utilidad.chaletAdmin = chaletAdminMap[matchId.chaletAdmin] || "-";
+                            utilidad.nombreHabitacion = matchId ? matchId.name : "N/A";
+                            utilidad.chaletAdmin = matchId ? chaletAdminMap[matchId.chaletAdmin] : "N/A";
 
                             utilidad.nochesReservadas = reserva.nNights
                             const arrivalCheckOut =  moment.utc(reserva.departureDate, 'DD/MM/YYYY');

@@ -40,14 +40,15 @@ async function obtenerHabitacionPorId(id) {
 async function obtenerHabitacionPorIdRoute(req, res) {
     try {
         const { id } = req.params;
-        const habitacionesExistentes = await Habitacion.findOne(); // Buscar el documento que contiene los eventos
+        // const habitacionesExistentes = await Habitacion.find(); // Buscar el documento que contiene los eventos
         
-        if (!habitacionesExistentes) {
-            throw new Error('No se encontraron eventos');
-        }
+        // if (!habitacionesExistentes) {
+        //     throw new Error('No se encontraron eventos');
+        // }
 
         // Buscar la habitacion por su id
-        const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === id);
+        // const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === id);
+        const habitacion = await Habitacion.findById(id).lean(); // Buscar el documento que contiene los eventos
 
         if (!habitacion) {
             throw new Error('Habitacion no encontrada');
@@ -76,13 +77,16 @@ async function agregarHabitacion(req, res) { // Create
 
 
         // Encuentra el documento existente
-        const habitacionesExistentes = await Habitacion.findOne();
+        // const habitacionesExistentes = await Habitacion.findOne();
 
-        // Agrega el nuevo evento al arreglo de eventos del documento
-        habitacionesExistentes.resources.push(nuevaHabitacion);
 
-        // Guarda el habitacion actualizado
-        await habitacionesExistentes.save();
+        // // Agrega el nuevo evento al arreglo de eventos del documento
+        // habitacionesExistentes.resources.push(nuevaHabitacion);
+        const habitacion = new Habitacion(nuevaHabitacion);
+        await habitacion.save();
+
+        // // Guarda el habitacion actualizado
+        // await habitacionesExistentes.save();
 
         console.log('Nuevo evento agregado:', nuevaHabitacion);
         res.status(201).json({ mensaje: 'Nueva habitacion agregada', habitacion: nuevaHabitacion });
