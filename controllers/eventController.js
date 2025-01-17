@@ -999,7 +999,7 @@ async function editarEvento(req, res) {
 
 
         // Save the updated room to the database
-        await eventosExistentes.save();
+        await evento.save();
 
         const logBody = {
             fecha: Date.now(),
@@ -1560,7 +1560,7 @@ async function eliminarNota(req, res) {
         // Eliminar la nota del array de notas del evento
 
         // Guardar el documento actualizado en la base de datos
-        await documento.save();
+        await evento.save();
 
         const logBody = {
             fecha: Date.now(),
