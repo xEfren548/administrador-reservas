@@ -1434,7 +1434,7 @@ async function moveToPlayground(req, res) {
         }
 
         evento.status = status;
-        const confirmation = await eventosExistentes.save();
+        const confirmation = await evento.save();
         if (!confirmation) {
             throw new Error('No se pudo actualizar el evento');
         }
