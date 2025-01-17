@@ -953,6 +953,7 @@
             <div class="modal-body">
                 <div class="img-container">
                     <div class="row mt-2">
+                    <p class="bg-warning rounded p-2 object-fit-contain text-dark m-3 mr-4" style="width: 95%;">Para poder continuar con la acción, es necesario ingresar los datos del cliente (Correo, teléfono y dirección)</p>
                         <div class="col-sm-12 mb-2">
                             <div class="form-group">
                                 <label for="txtClientNameUpd">Nombre</label>
@@ -968,10 +969,12 @@
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
-                            <div class="form-group">
+                            <div class="form-group input-container-tel">
                                 <label for="txtClientPhoneUpd">Teléfono</label>
-                                <input type="tel" name="txtClientPhoneUpd" id="txtClientPhoneUpd" class="form-control"
+                                <input type="text" name="txtClientPhoneUpd" id="txtClientPhoneUpd" class="form-control"
                                     placeholder="Teléfono">
+                                <div class="character-count" id="count1">0/10</div>
+                                
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2">
@@ -2389,6 +2392,16 @@
         btnUpdateClient.addEventListener("click", async (event) => {
             event.preventDefault();
 
+            if (document.getElementById("txtClientPhoneUpd").value.trim().length > 10) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'El número de teléfono debe tener 10 dígitos.',
+                    confirmButtonText: 'Aceptar'
+                })
+                return;
+            }
+
             const clientId = document.querySelector('#cliente-id').value;
             const data = {
                 firstName: document.getElementById("txtClientNameUpd").value.trim(),
@@ -2448,5 +2461,28 @@
             }
         });
     }
+
+    function updateCharacterCount(inputElement, countElement, max) {
+            const update = () => {
+                let value = inputElement.value;
+                
+                // Allow only numbers
+                value = value.replace(/[^0-9]/g, '');
+                inputElement.value = value;
+
+                const length = value.length;
+                countElement.textContent = `${length}/${max}`;
+                countElement.classList.toggle('exceeded', length > max);
+            };
+
+            inputElement.addEventListener('input', update);
+            update();
+        }
+
+        updateCharacterCount(
+            document.getElementById('txtClientPhoneUpd'),
+            document.getElementById('count1'),
+            10
+        );
 
 </script>
