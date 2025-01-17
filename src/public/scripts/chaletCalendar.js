@@ -563,8 +563,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const tipoReserva = document.getElementById('tipo-reserva-select').value.trim();
             const isDeposit = tipoReserva === 'por-depo' ? true : false;
 
-            if (document.getElementById("lblClientValue").value.trim() === "" || document.getElementById("lblClientValue").value.trim() === null || document.getElementById("lblClientValue").value.trim() === undefined) {
-                throw new Error("Por favor selecciona un cliente de la lista.");
+            if (!isDeposit){
+                if (document.getElementById("lblClientValue").value.trim() === "" || document.getElementById("lblClientValue").value.trim() === null || document.getElementById("lblClientValue").value.trim() === undefined) {
+                    throw new Error("Por favor selecciona un cliente de la lista.");
+                }
+
             }
 
             let formData = {};
