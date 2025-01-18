@@ -598,7 +598,7 @@ async function createReservation(req, res, next) {
     
         if (overlappingReservation) {
             return res.status(400).send({
-                message: `The chalet is already reserved between ${overlappingReservation.arrivalDate.toISOString()} and ${overlappingReservation.departureDate.toISOString()}.`,
+                message: `La habitación ya está reservada entre ${overlappingReservation.arrivalDate.toISOString()} y ${overlappingReservation.departureDate.toISOString()}.`,
             });
         }
 
