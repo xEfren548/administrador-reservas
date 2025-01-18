@@ -19,6 +19,7 @@ const userSchema = new Schema({
     phone: {
         type: String,
         unique: true,
+        sparse: true,
         validate: {
             validator: function(v) {
                 const regex = /^\d{10}$/;
@@ -48,7 +49,7 @@ const userSchema = new Schema({
     },
     reservation: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Documento.events'
+        ref: 'Documento'
     },
     color: {
         type: String,

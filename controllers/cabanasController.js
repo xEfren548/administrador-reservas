@@ -41,8 +41,8 @@ const createChaletValidators = [
         .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s0-9']+$/).withMessage("Invalid property name format")
         .isLength({ max: 255 }).withMessage("Name must be less than 255 characters")
         .custom(async (value, { req }) => {
-            const chalets = await Habitacion.findOne();
-            const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
+            const chalet = await Habitacion.findOne({"propertyDetails.name": value}).lean();
+            // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
             if (chalet) {
                 throw new NotFoundError('Chalet name already taken');
             }
@@ -368,8 +368,8 @@ async function showChaletsData(req, res, next) {
 
 async function showChaletsView(req, res, next) {
     try {
-        var chalets = await Habitacion.findOne().lean();
-        chalets = chalets.resources;
+        var chalets = await Habitacion.find().lean();
+        // chalets = chalets.resources;
 
         const mapChalets = chalets.map(chalet => {
             return {
@@ -481,12 +481,15 @@ async function createChalet(req, res, next) {
     };
 
     try {
-        const chalets = await Habitacion.findOne();
-        chalets.resources.push(chaletToAdd);
-        await chalets.save();
+        // const chalets = await Habitacion.findOne();
+        // chalets.resources.push(chaletToAdd);
+        // await chalets.save();
+
+        const newChalet = new Habitacion(chaletToAdd);
+        await newChalet.save();
 
         console.log("Cabaña agregada con éxito");
-        req.session.chaletAdded = chalets.resources[chalets.resources.length - 1].propertyDetails.name;
+        req.session.chaletAdded = newChalet.propertyDetails.name;
         const logBody = {
             fecha: Date.now(),
             idUsuario: req.session.id,
@@ -510,16 +513,19 @@ async function uploadChaletFiles(req, res, next) {
     const client = new ftp.Client();
 
     try {
-        const chalets = await Habitacion.findOne();
+        // const chalets = await Habitacion.findOne();
+        
         var chalet = "";
         console.log(req.session)
         if (req.session.chaletAdded) {
             console.log("entra")
             //console.log(req.session.chaletAdded)
-            chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
+            chalet = await Habitacion.findOne({ "propertyDetails.name": req.session.chaletAdded }).lean();
+            // chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
             //console.log(chalets)
         } else if (req.session.chaletUpdated) {
-            chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
+            chalet = await Habitacion.findOne({ "propertyDetails.name": req.session.chaletUpdated }).lean();
+            // chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
             console.log("Entra")
         }
         //console.log(chalet)
@@ -543,7 +549,7 @@ async function uploadChaletFiles(req, res, next) {
             console.log(`Archivo '${remoteFileName}' subido con éxito`);
             //console.log(chalet.images)
             chalet.images.push(remoteFileName);
-            await chalets.save();
+            await chalet.save();
 
             fs.unlink(localFilePath, (err) => {
                 if (err) {
@@ -571,14 +577,16 @@ async function uploadChaletPdf(req, res, next) {
     const client = new ftp.Client();
 
     try {
-        const chalets = await Habitacion.findOne();
+        // const chalets = await Habitacion.find();
         var chalet = "";
         console.log(req.session)
         if (req.session.chaletAdded) {
-            chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
+            chalet = await Habitacion.findOne({ "propertyDetails.name": req.session.chaletAdded }).lean();
+            // chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
             //console.log(chalets)
         } else if (req.session.chaletUpdated) {
-            chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
+            // chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
+            chalet = await Habitacion.findOne({ "propertyDetails.name": req.session.chaletUpdated }).lean();
         }
         //console.log(chalet)
         if (!chalet) {
@@ -603,7 +611,7 @@ async function uploadChaletPdf(req, res, next) {
             //console.log(chalet.images)
             chalet.files = [];
             chalet.files.push(remoteFileName);
-            await chalets.save();
+            await chalet.save();
 
             fs.unlink(localFilePath, (err) => {
                 if (err) {
@@ -694,8 +702,8 @@ function getImageFileName(imagePath) {
 
 async function showEditChaletsView(req, res, next) {
     try {
-        var chalets = await Habitacion.findOne().lean();
-        chalets = chalets.resources;
+        var chalets = await Habitacion.find().lean();
+        // chalets = chalets.resources;
         for (const chalet of chalets) {
             const admin = await Usuario.findById(chalet.others.admin);
             //console.log("ADMIIIN : ", admin);
@@ -759,6 +767,8 @@ async function showEditChaletsView(req, res, next) {
         }
         console.log("Images downloaded successfully ");
 
+        console.log(chalets[chalets.length - 1]);
+
         res.render('vistaEditarCabana', {
             chalets: chalets,
             admins: admins,
@@ -802,16 +812,13 @@ async function editChalet(req, res, next) {
         console.log(others.investors);
 
         
-        const habitacion = await Habitacion.findOne();
-        let chalets = habitacion.resources;
-
-        const indexToUpdate = chalets.findIndex(c => c._id.toString() === txtChaletId.toString());
-        if (indexToUpdate === -1) throw new NotFoundError("Chalet not found");
-
-        const chaletId = chalets[indexToUpdate]._id; // Keep the original _id
+        const chaletToUpdate = await Habitacion.findById(txtChaletId);
+        if (!chaletToUpdate) {
+            throw new Error("Chalet not found.")
+        }
 
         const updatedChalet = {
-            ...chalets[indexToUpdate], // Keep the original document structure
+            ...chaletToUpdate.toObject(), // Keep the original document structure
             propertyDetails,
             accommodationFeatures,
             additionalInfo,
@@ -835,36 +842,8 @@ async function editChalet(req, res, next) {
             images
         };
 
-        chalets[indexToUpdate] = updatedChalet;
         
-        const updateResult = await Habitacion.updateOne(
-            { "resources._id": chaletId },
-            {
-                $set: {
-                    "resources.$.propertyDetails": propertyDetails,
-                    "resources.$.accommodationFeatures": accommodationFeatures,
-                    "resources.$.additionalInfo": additionalInfo,
-                    "resources.$.accomodationDescription": accomodationDescription,
-                    "resources.$.additionalAccomodationDescription": additionalAccomodationDescription,
-                    "resources.$.touristicRate": touristicRate,
-                    "resources.$.legalNotice": legalNotice,
-                    "resources.$.location": location,
-                    "resources.$.others": {
-                        basePrice: others.basePrice,
-                        basePrice2nights: others.basePrice2nights,
-                        baseCost: others.baseCost,
-                        baseCost2nights: others.baseCost2nights,
-                        arrivalTime: newArrivalTime,
-                        departureTime: newDepartureTime,
-                        admin: admin._id,
-                        janitor: janitor._id,
-                        owner: owner._id,
-                        investors: others.investors
-                    },
-                    "resources.$.images": images
-                }
-            }
-        );
+        const updateResult = await Habitacion.updateOne({ _id: txtChaletId }, { $set: updatedChalet });
         console.log('Update Result:', JSON.stringify(updateResult, null, 2));
         if (!updateResult.modifiedCount) throw new Error("Failed to update chalet");
 
@@ -895,7 +874,7 @@ async function editChalet(req, res, next) {
 
 async function renderCalendarPerChalet(req, res, next) {
     try {
-        const habitaciones = await Habitacion.find();
+        const habitaciones = await Habitacion.find().lean();
         if (!habitaciones) {
             throw new NotFoundError("No room found");
         }
@@ -903,7 +882,7 @@ async function renderCalendarPerChalet(req, res, next) {
         // console.log(data);
 
 
-        const chalets = data[0].resources.map(chalet => ({
+        const chalets = data.map(chalet => ({
             name: chalet.propertyDetails.name,
             basePrice: chalet.others.basePrice,
             pax: chalet.propertyDetails.maxOccupancy,
@@ -939,7 +918,7 @@ async function renderCalendarPerChaletOwner(req, res, next) {
         const duenoId = req.session.id;
 
         // Find the existing rooms   
-        const habitacionesExistentes = await Habitacion.findOne().lean();
+        const habitacionesExistentes = await Habitacion.find().lean();
         if (!habitacionesExistentes) {
             return res.status(404).send('No rooms found');
         }
@@ -949,7 +928,7 @@ async function renderCalendarPerChaletOwner(req, res, next) {
         // // Filter the rooms that belong to the owner
         let habitacionesDueno;
         if (privilege === "Inversionistas") {
-            habitacionesDueno = habitacionesExistentes.resources.filter(habitacion =>
+            habitacionesDueno = habitacionesExistentes.filter(habitacion =>
                 habitacion.others.investors.some(investor => investor.equals(mDuenoId))
             ); 
         } else if (privilege === "Colaborador dueño") {
@@ -957,11 +936,11 @@ async function renderCalendarPerChaletOwner(req, res, next) {
             if (!user) {
                 return res.status(404).send('User not found');
             }
-            habitacionesDueno = habitacionesExistentes.resources.filter(habitacion =>
+            habitacionesDueno = habitacionesExistentes.filter(habitacion =>
                 habitacion.others.owner.equals(user.administrator)
             );
         } else {
-            habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
+            habitacionesDueno = habitacionesExistentes.filter(habitacion => habitacion.others.owner.toString() === duenoId);
 
         }
         // // Extract the IDs and names of the rooms

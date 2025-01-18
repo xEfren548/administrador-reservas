@@ -42,7 +42,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                         return response.json()
                     })
                     .then(function (data) {
-                        let resources = data[0].resources.map(function (event) {
+                        console.log(data)
+                        let resources = data.map(function (event) {
                             return {
                                 id: event._id,
                                 habitaciones: event.propertyDetails.accomodationType,
@@ -64,8 +65,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                     })
                     .then(function (data) {
                         // console.log(data);
-                        let events = data[0].events
-                            .filter(event => event.status !== 'cancelled')
+                        let events = data
+                            // .filter(event => (event.status !== 'cancelled') && (event.status !== 'no-show'))
                             .map(function (event) {
 
                                 return {

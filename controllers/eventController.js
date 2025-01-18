@@ -48,8 +48,8 @@ const createReservationValidators = [
         .notEmpty().withMessage('Chalet name is required')
         .isLength({ max: 255 }).withMessage("Chalet name must be less than 255 characters")
         .custom(async (value, { req }) => {
-            const chalets = await Habitacion.findOne();
-            const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
+            const chalet = await Habitacion.findOne( {"propertyDetails.name": value} );
+            // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
             if (!chalet) {
                 throw new NotFoundError('Chalet does not exist');
             }
@@ -104,8 +104,10 @@ const createOwnersReservationValidators = [
             .notEmpty().withMessage('Chalet name is required')
             .isLength({ max: 255 }).withMessage("Chalet name must be less than 255 characters")
             .custom(async (value, { req }) => {
-                const chalets = await Habitacion.findOne();
-                const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
+                const chalet = await Habitacion.findOne( {"propertyDetails.name": value} );
+
+                // const chalets = await Habitacion.findOne();
+                // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
                 if (!chalet) {
                     throw new NotFoundError('Chalet does not exist');
                 }
@@ -130,12 +132,13 @@ const submitReservationValidators = [
 async function obtenerEventos(req, res) {
     const { id } = req.params;
     try {
-        const eventos = await Documento.find().lean();
+        const eventos = await Documento.find( { status: { $nin: ["no-show", "cancelled"]}}).lean();
+        console.log(eventos)
         let eventosExistentes = eventos[0].events;
 
         let cleaningDetailsMap = {};
 
-        const idAllChalets = [...new Set(eventosExistentes.map(evento => evento.resourceId.toString()))];
+        const idAllChalets = [...new Set(eventos.map(evento => evento.resourceId.toString()))];
 
         for (let chaletId of idAllChalets) {
             const rackLimpieza = await rackLimpiezaController.getSpecificServicesMongo(chaletId);
@@ -159,7 +162,7 @@ async function obtenerEventos(req, res) {
         // const rackLimpieza = await rackLimpiezaController.getSpecificServicesMongo();
         // console.log(rackLimpieza);
 
-        for (let evento of eventosExistentes) {
+        for (let evento of eventos) {
             let pagos = await pagoController.obtenerPagos(evento._id);
             let pagoTotal = 0
             pagos.forEach(pago => {
@@ -195,16 +198,19 @@ async function obtenerEventosDeCabana(req, res) {
     const { id } = req.params;
     const newId = new mongoose.Types.ObjectId(id);
     try {
-        const documentos = await Documento.find({ 'events.resourceId': newId });
-        const habitaciones = await Habitacion.findOne();
+        // const documentos = await Documento.find({ 'events.resourceId': newId });
+        // const habitaciones = await Habitacion.findOne();
 
-        let eventos = [];
-        documentos.forEach(doc => {
-            const matchingEvents = doc.events.filter(evento => evento.resourceId.equals(newId));
-            eventos = eventos.concat(matchingEvents);
-        });
+        // let eventos = [];
+        // documentos.forEach(doc => {
+        //     const matchingEvents = doc.events.filter(evento => evento.resourceId.equals(newId));
+        //     eventos = eventos.concat(matchingEvents);
+        // });
 
-        const habitacion = habitaciones.resources.find(habitacion => habitacion._id.equals(newId));
+        const eventos = await Documento.find({ resourceId: newId }).lean();
+
+        // const habitacion = habitaciones.resources.find(habitacion => habitacion._id.equals(newId));
+        const habitacion = await Habitacion.findById(newId).lean();
         if (!habitacion) { throw new Error('No se encontró la habitación'); }
 
         // Fetch colorUsuario for each evento's createdBy
@@ -250,7 +256,7 @@ async function obtenerEventosDeCabana(req, res) {
             }
 
             return {
-                ...evento.toObject(),
+                ...evento,
                 colorUsuario: colorUsuario,
                 clientName: clientName,
                 creadaPor: creadaPor,
@@ -269,14 +275,14 @@ async function obtenerEventosDeCabana(req, res) {
 
 async function obtenerEventoPorId(id) {
     try {
-        const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
+        const evento = await Documento.findById(id); // Buscar el documento que contiene los eventos
 
-        if (!eventosExistentes) {
-            throw new Error('No se encontraron eventos');
-        }
+        // if (!eventosExistentes) {
+        //     throw new Error('No se encontraron eventos');
+        // }
 
         // Buscar el evento por su id
-        const evento = eventosExistentes.events.find(evento => evento.id === id);
+        // const evento = eventosExistentes.events.find(evento => evento.id === id);
 
         if (!evento) {
             throw new Error('El evento no fue encontrado');
@@ -290,14 +296,15 @@ async function obtenerEventoPorId(id) {
 async function obtenerEventoPorIdRoute(req, res) {
     try {
         const { id } = req.params;
-        const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
+        // const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
 
-        if (!eventosExistentes) {
-            throw new Error('No se encontraron eventos');
-        }
+        // if (!eventosExistentes) {
+        //     throw new Error('No se encontraron eventos');
+        // }
 
         // Buscar el evento por su id
-        const evento = eventosExistentes.events.find(evento => evento.id === id);
+        // const evento = eventosExistentes.events.find(evento => evento.id === id);
+        const evento = await Documento.findById(id);
 
         if (!evento) {
             throw new Error('El evento no fue encontrado');
@@ -311,16 +318,19 @@ async function obtenerEventoPorIdRoute(req, res) {
 async function reservasDeDuenos(req, res, next) {
     try {
         // Get the owner's ID from the session
-        const duenoId = req.session.id;
+        const duenoId = new mongoose.Types.ObjectId(req.session.id); // req.session.id;
 
-        // Find the existing rooms
-        const habitacionesExistentes = await Habitacion.findOne().lean();
-        if (!habitacionesExistentes) {
-            return res.status(404).send('No rooms found');
-        }
+        // // Find the existing rooms
+        // const habitacionesExistentes = await Habitacion.findOne().lean();
+        // if (!habitacionesExistentes) {
+        //     return res.status(404).send('No rooms found');
+        // }
 
         // Filter the rooms that belong to the owner
-        const habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
+        // const habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
+        const habitacionesDueno = await Habitacion.find({ "others.owner": duenoId }).lean();
+        console.log("Habitaciones Dueno: ")
+        console.log(habitacionesDueno)
         // Extract the IDs and names of the rooms
         const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
         const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
@@ -332,13 +342,13 @@ async function reservasDeDuenos(req, res, next) {
         });
 
         // Find documents containing events
-        const documentos = await Documento.findOne().lean();
+        const documentos = await Documento.find().lean();
         if (!documentos) {
             return res.status(404).send('No documents found');
         }
 
         // Filter events that correspond to the owner's rooms and add the room name to each event
-        const eventosFiltradosOrdenadosConPagos = await Promise.all(documentos.events
+        const eventosFiltradosOrdenadosConPagos = await Promise.all(documentos
             .filter(evento => cabañaIds.includes(evento.resourceId.toString()) && evento.status != "cancelled")
             .map(async evento => {
                 // Obtener los pagos para este evento
@@ -419,12 +429,12 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
         if (privilege === "Inversionistas") {
             const investor = await Usuario.findById(req.session.id);
-            const habitacionesExistentes = await Habitacion.findOne().lean();
+            const habitacionesExistentes = await Habitacion.find().lean();
             if (!habitacionesExistentes) {
                 return res.status(404).send('No rooms found');
             }
 
-            habitacionesDueno = habitacionesExistentes.resources.filter(habitacion =>
+            habitacionesDueno = habitacionesExistentes.filter(habitacion =>
             (Array.isArray(habitacion.others.investors) &&
                 habitacion.others.investors.some(investorId => investorId.toString() === investor._id.toString()))
             );
@@ -439,12 +449,12 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
             });
 
             // Find documents containing events
-            const documentos = await Documento.findOne().lean();
+            const documentos = await Documento.find().lean();
             if (!documentos) {
                 return res.status(404).send('No documents found');
             }
 
-            eventosFiltradosOrdenadosConPagos = await Promise.all(documentos.events
+            eventosFiltradosOrdenadosConPagos = await Promise.all(documentos
                 .filter(evento => cabañaIds.includes(evento.resourceId.toString()))
                 .map(async evento => {
                     // Retornar el evento con los pagos y las fechas formateadas
@@ -465,13 +475,13 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
             const duenoId = user.administrator;
 
             // Find the existing rooms
-            const habitacionesExistentes = await Habitacion.findOne().lean();
+            const habitacionesExistentes = await Habitacion.find().lean();
             if (!habitacionesExistentes) {
                 return res.status(404).send('No rooms found');
             }
 
             // Filter the rooms that belong to the owner
-            habitacionesDueno = habitacionesExistentes.resources.filter(habitacion => habitacion.others.owner.toString() === duenoId);
+            habitacionesDueno = habitacionesExistentes.filter(habitacion => habitacion.others.owner.toString() === duenoId);
             console.log("Dueño id: ", duenoId);
             // Extract the IDs and names of the rooms
             const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
@@ -484,7 +494,7 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
             });
 
             // Find documents containing events
-            const documentos = await Documento.findOne().lean();
+            const documentos = await Documento.find().lean();
             if (!documentos) {
                 return res.status(404).send('No documents found');
             }
@@ -492,7 +502,7 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
 
             // Filter events that correspond to the owner's rooms and add the room name to each event
-            eventosFiltradosOrdenadosConPagos = await Promise.all(documentos.events
+            eventosFiltradosOrdenadosConPagos = await Promise.all(documentos
                 .filter(evento => cabañaIds.includes(evento.resourceId.toString()))
                 .map(async evento => {
                     // Retornar el evento con los pagos y las fechas formateadas
@@ -554,15 +564,44 @@ async function createReservation(req, res, next) {
         const departureDateAjustada = new Date(departureDate);
         departureDateAjustada.setUTCHours(6);
 
+        const arrivalDateObj = new Date(arrivalDate);
+        const departureDateObj = new Date(departureDate);
+        
+        // Set specific times
+        arrivalDateObj.setUTCHours(17, 30, 0, 0); // 17:30:00 UTC
+        departureDateObj.setUTCHours(14, 30, 0, 0); // 14:30:00 UTC
+        
+        // Convert back to ISO strings
+        const arrivalDateISO = arrivalDateObj.toISOString();
+        const departureDateISO = departureDateObj.toISOString();
+
+        console.log("Updated arrivalDateISO:", arrivalDateISO);
+        console.log("Updated departureDateISO:", departureDateISO);
 
 
-        const chalets = await Habitacion.findOne();
-        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+
+        const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
+        console.log("chalet name: ", chaletName)
+        // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
         if (!chalet) {
             throw new NotFoundError('Chalet does not exist 2');
         }
 
         const mongooseChaletId = new mongoose.Types.ObjectId(chalet._id);
+        const overlappingReservation = await Documento.findOne({
+            resourceId: mongooseChaletId,
+            $and: [
+                { arrivalDate: { $lt: departureDateISO } }, // Start date overlaps or is before the departure date
+                { departureDate: { $gt: arrivalDateISO } }, // End date overlaps or is after the arrival date
+            ],
+        });
+    
+        if (overlappingReservation) {
+            return res.status(400).send({
+                message: `La habitación ya está reservada entre ${overlappingReservation.arrivalDate.toISOString()} y ${overlappingReservation.departureDate.toISOString()}.`,
+            });
+        }
+
         const fechasBloqueadas = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId });
         if (fechasBloqueadas) {
             if (nNights < fechasBloqueadas.min) {
@@ -659,19 +698,24 @@ async function createReservation(req, res, next) {
             message = `Reservación agregada con éxito. Realice su pago antes de ${format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es })} o su reserva será cancelada`;
         }
 
-        const documento = await Documento.findOne();
-        documento.events.push(reservationToAdd);
-        await documento.save();
+        // const documento = await Documento.findOne();
+        // documento.events.push(reservationToAdd);
+        // await documento.save();
+
+        const documentoToAdd = new Documento(reservationToAdd);
+        await documentoToAdd.save();
 
         // Guardar la reserva actualizada en la base de datos
-        const documento2 = await Documento.findOne()
+        // const documento2 = await Documento.findOne()
 
-        const idReserva = documento.events[documento.events.length - 1]._id.toString();
+        // const idReserva = documento.events[documento.events.length - 1]._id.toString();
+        const idReserva = documentoToAdd._id.toString();
         const url = `https://${process.env.URL}/api/eventos/${idReserva}`;
-        const evento = documento2.events.find(habitacion => habitacion.id === idReserva);
+        console.log("url: ", url)
+        // const evento = await Documento.findById(idReserva);
 
-        evento.url = url;
-        await documento2.save();
+        documentoToAdd.url = url;
+        await documentoToAdd.save();
 
         const descripcionLimpieza = 'Limpieza ' + chaletName;
         const fechaLimpieza = new Date(departureDate)
@@ -680,8 +724,6 @@ async function createReservation(req, res, next) {
         fechaLimpieza.setDate(fechaLimpieza.getDate() + 1)
         const statusLimpieza = 'Pendiente'
 
-        console.log("EVENTO: ")
-        console.log(evento)
 
         await rackLimpiezaController.createServiceForReservation({
             id_reserva: idReserva,
@@ -690,7 +732,7 @@ async function createReservation(req, res, next) {
             checkInDate: checkInDate,
             checkOutDate: checkOutDate,
             status: statusLimpieza,
-            idHabitacion: evento.resourceId
+            idHabitacion: documentoToAdd.resourceId
         })
         
         
@@ -731,7 +773,7 @@ async function createReservation(req, res, next) {
 
 
 
-        res.status(200).json({ success: true, reservationId: documento.events[documento.events.length - 1]._id, message });
+        res.status(200).json({ success: true, reservationId: idReserva, message });
     } catch (err) {
         console.log(err);
         res.status(400).send({ message: err.message });
@@ -743,8 +785,9 @@ async function sendIntructionsToWhatsapp(req, res){
 
         const {idReserva} = req.body;
     
-        const allReservations = await Documento.findOne();
-        const reservation = allReservations.events.find(evento => evento._id.toString() === idReserva);
+        // const allReservations = await Documento.findOne();
+        // const reservation = allReservations.events.find(evento => evento._id.toString() === idReserva);
+        const reservation = await Documento.findById(idReserva);
     
         if (!reservation) {throw new NotFoundError('Reserva no encontrada.')}
 
@@ -752,11 +795,14 @@ async function sendIntructionsToWhatsapp(req, res){
         if (!client) {throw new NotFoundError('Cliente no encontrado.')}
 
 
-        const chaletId = reservation.resourceId;
+        const chaletId = new mongoose.Types.ObjectId(reservation.resourceId); //reservation.resourceId;
 
-        const chalets = await Habitacion.findOne();
-        const chalet = chalets.resources.find(chalet => chalet._id.toString() === chaletId.toString());
+        const chalet = await Habitacion.findById(chaletId).lean();
         if (!chalet) {throw new NotFoundError('Chalet no encontrado.')}
+
+        // const chalets = await Habitacion.findOne();
+        // const chalet = chalets.resources.find(chalet => chalet._id.toString() === chaletId.toString());
+        // if (!chalet) {throw new NotFoundError('Chalet no encontrado.')}
 
     
         
@@ -777,16 +823,18 @@ async function createOwnerReservation(req, res, next) {
         const investorId = req.session.id
         console.log(req.session)
 
-        const chalets = await Habitacion.findOne();
-        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+        const chalet = await Habitacion.findOne( {"propertyDetails.name": chaletName} );
+
+        // const chalets = await Habitacion.findOne();
+        // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
         if (!chalet) {
             throw new NotFoundError('Chalet does not exist 2');
         }
 
         if (privilege === "Inversionistas") {
             // Definicion de reglas de inversionistas
-            const documento = await Documento.findOne();
-            const reservasDeInversionista = documento.events.filter(reserva => reserva.createdBy.toString() === investorId.toString());
+            const documento = await Documento.find();
+            const reservasDeInversionista = documento.filter(reserva => reserva.createdBy.toString() === investorId.toString());
             reservasDeInversionista.sort((a, b) => new Date(a.departureDate) - new Date(b.departureDate));
 
             const reservaActiva = reservasDeInversionista.find(reserva => new Date(reserva.departureDate) > new Date());
@@ -840,22 +888,23 @@ async function createOwnerReservation(req, res, next) {
         };
 
 
+        const newReservation = new Documento(reservationToAdd);
+        await newReservation.save();
 
 
-
-        const documento = await Documento.findOne();
-        documento.events.push(reservationToAdd);
-        await documento.save();
+        // const documento = await Documento.findOne();
+        // documento.events.push(reservationToAdd);
+        // await documento.save();
 
         // Guardar la reserva actualizada en la base de datos
-        const documento2 = await Documento.findOne()
+        // const documento2 = await Documento.findOne()
 
-        const idReserva = documento.events[documento.events.length - 1]._id.toString();
+        const idReserva = newReservation._id.toString();
         const url = `https://${process.env.URL}/api/eventos/${idReserva}`;
-        const evento = documento2.events.find(habitacion => habitacion.id === idReserva);
+        // const evento = documento2.events.find(habitacion => habitacion.id === idReserva);
 
-        evento.url = url;
-        await documento2.save();
+        newReservation.url = url;
+        await newReservation.save();
 
         await utilidadesController.altaComisionReturn({
             monto: 0,
@@ -891,7 +940,7 @@ async function createOwnerReservation(req, res, next) {
         await logController.createBackendLog(logBody);
 
 
-        res.status(200).json({ success: true, reservationId: documento.events[documento.events.length - 1]._id });
+        res.status(200).json({ success: true, reservationId: idReserva });
     } catch (err) {
         console.log(err);
         res.status(500).send({ message: err.message });
@@ -905,14 +954,15 @@ async function editarEvento(req, res) {
         const { resourceId, nNights, arrivalDate, departureDate, url, total } = req.body;
 
         // Fetch existing rooms from the database
-        const eventosExistentes = await Documento.findOne();
+        // const eventosExistentes = await Documento.findOne();
 
-        if (!eventosExistentes) {
-            return res.status(404).json({ mensaje: 'No se encontraron habitaciones' });
-        }
+        // if (!eventosExistentes) {
+        //     return res.status(404).json({ mensaje: 'No se encontraron habitaciones' });
+        // }
 
         // Find the room to edit by its ID
-        const evento = eventosExistentes.events.find(habitacion => habitacion.id === id);
+        const evento = await Documento.findById(id).lean();
+        // const evento = eventosExistentes.events.find(habitacion => habitacion.id === id);
 
         if (!evento) {
             return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
@@ -949,7 +999,7 @@ async function editarEvento(req, res) {
 
 
         // Save the updated room to the database
-        await eventosExistentes.save();
+        await evento.save();
 
         const logBody = {
             fecha: Date.now(),
@@ -973,26 +1023,31 @@ async function editarEvento(req, res) {
 async function eliminarEvento(req, res) {
     try {
         const id = req.params.id;
-        const eventosExistentes = await Documento.findOne();
+        const eventoAeliminar = await Documento.findByIdAndDelete(id);
 
-
-
-        if (!eventosExistentes) {
-            return res.status(404).json({ mensaje: 'No se encontraron eventos' });
-        }
-
-        // Find the index of the room to delete by its ID
-        const index = eventosExistentes.events.findIndex(evento => evento.id === id);
-
-        if (index === -1) {
+        if (!eventoAeliminar) {
             return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
         }
+        // const eventosExistentes = await Documento.findOne();
 
-        // Remove the room from the array
-        eventosExistentes.events.splice(index, 1);
 
-        // Save the updated room list to the database
-        await eventosExistentes.save();
+
+        // if (!eventosExistentes) {
+        //     return res.status(404).json({ mensaje: 'No se encontraron eventos' });
+        // }
+
+        // // Find the index of the room to delete by its ID
+        // const index = eventosExistentes.events.findIndex(evento => evento.id === id);
+
+        // if (index === -1) {
+        //     return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
+        // }
+
+        // // Remove the room from the array
+        // eventosExistentes.events.splice(index, 1);
+
+        // // Save the updated room list to the database
+        // await eventosExistentes.save();
 
         const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
 
@@ -1039,10 +1094,9 @@ async function modificarEvento(req, res) {
         console.log("new total: ", newTotal)
 
         // Buscar el evento existente por su ID
-        const eventosExistentes = await Documento.findOne();
-
-
-        const evento = eventosExistentes.events.find(evento => evento.id === eventId);
+        // const eventosExistentes = await Documento.findOne();
+        // const evento = eventosExistentes.events.find(evento => evento.id === eventId);
+        const evento = await Documento.findById(eventId).lean();
 
 
         if (!evento) {
@@ -1070,7 +1124,7 @@ async function modificarEvento(req, res) {
         }
 
         // Guardar el evento actualizado en la base de datos
-        await eventosExistentes.save();
+        await evento.save();
 
         console.log('Evento modificado:', evento);
 
@@ -1120,95 +1174,40 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
     const arrivalDateObj = new Date(`${arrivalDate}T00:00:00`);
     const departureDateObj = new Date(`${departureDate}T00:00:00`);
 
-    console.log("ARRIVAL DATE: ", arrivalDateObj, "DEPARTURE DATE: ", departureDateObj);
+    const arrivalDateISO = new Date(`${arrivalDate}T11:30:00`).toISOString();
+    const departureDateISO = new Date(`${departureDate}T08:30:00`).toISOString();
 
-    const fechasBloqueadas = await BloqueoFechas.find({ habitacionId: newResourceId, type: 'bloqueo', date: { $gte: arrivalDateObj, $lte: departureDateObj } });
-    if (fechasBloqueadas.length > 0) {
+    console.log("ARRIVAL DATE: ", arrivalDateISO, "DEPARTURE DATE: ", departureDateISO);
+
+    // Check for blocked dates directly in MongoDB
+    const isBlocked = await BloqueoFechas.exists({
+        habitacionId: newResourceId,
+        type: 'bloqueo',
+        date: { $gte: arrivalDateISO, $lte: departureDateISO },
+    });
+
+    if (isBlocked) {
         return false;
     }
 
-    const eventosExistentes = await Documento.findOne();
-    if (!eventosExistentes) {
-        throw new Error('No se encontraron eventos');
-    }
-
-    // Filter reservations with overlapping dates using JS utilities
-    const overlappingReservations = eventosExistentes.events.filter((event) => {
-        // Exclude the current event if `eventId` is provided
-        if (eventId && event._id.toString() === eventId) return false;
-        
-        // Ensure the event is for the given resource and not cancelled or no-show
-        if (
-            !event.resourceId.equals(newResourceId) || 
-            ["cancelled", "no-show"].includes(event.status)
-        ) {
-            return false;
-        }
-
-        // Convert event dates to Date objects (ignore time)
-        // const eventArrivalDate = new Date(event.arrivalDate);
-        const eventArrivalDate = moment.utc(event.arrivalDate).toDate();
-        // const eventDepartureDate = new Date(event.departureDate);
-        const eventDepartureDate = moment.utc(event.departureDate).toDate();
-
-        // Compare only the dates (not hours)
-        const eventArrivalDay = eventArrivalDate.toISOString().split('T')[0];
-        const eventDepartureDay = eventDepartureDate.toISOString().split('T')[0];
-        const arrivalDay = arrivalDateObj.toISOString().split('T')[0];
-        const departureDay = departureDateObj.toISOString().split('T')[0];
-
-        return (
-            eventArrivalDay < departureDay && // 14 dic <= 17 dic
-            eventDepartureDay > arrivalDay // 15 dic >= 15 dic
-        );
+    // Query events with overlapping dates in MongoDB
+    const overlappingEvents = await Documento.find({
+        resourceId: newResourceId,
+        status: { $nin: ["cancelled", "no-show"] },
+        $or: [
+            { arrivalDate: { $lt: departureDateISO }, departureDate: { $gt: arrivalDateISO } },
+        ],
     });
 
-    // console.log(`Checking overlaps for Resource ID: ${newResourceId}`);
-    // console.log(`Arrival Date: ${arrivalDateObj}`);
-    // console.log(`Departure Date: ${departureDateObj}`);
+    console.log("OVERLAPPING EVENTS: ")
+    console.log(overlappingEvents)
 
-    // const matchConditions = {
-    //     'events.resourceId': newResourceId,
-    //     'events.status': { $nin: ['cancelled', 'no-show'] },
-    //     $and: [
-    //         { 'events.arrivalDate': { $lte: departureDateObj } },
-    //         { 'events.departureDate': { $gte: arrivalDateObj } }
-    //     ]
-    // };
+    // Exclude the current event (if `eventId` is provided)
+    const validEvents = overlappingEvents.filter((event) => !eventId || event._id.toString() !== eventId);
 
-    // if (eventId) {
-    //     matchConditions['events._id'] = { $ne: new mongoose.Types.ObjectId(eventId) };
-    // }
-
-    // const overlappingReservations = await Documento.aggregate([
-    //     { $unwind: '$events' },
-    //     { $match: matchConditions }
-    // ]);
-
-    // const overlappingReservations = await Documento.aggregate([
-    //     { $unwind: '$events' },
-    //     {
-    //         $match: {
-    //             'events.resourceId': newResourceId,
-    //             'events.status': { $ne: 'cancelled' } // Excluir eventos cancelados
-
-    //         }
-    //     },
-    //     {
-    //         $match: {
-    //             $and: [
-    //                 { 'events.arrivalDate': { $lte: departureDateObj } },
-    //                 { 'events.departureDate': { $gte: arrivalDateObj } }
-    //             ]
-    //         }
-    //     }
-    // ]);
-    // console.log(resourceId)
-    // console.log('Overlapping Reservations:', overlappingReservations);
-    // console.log('Overlapping Reservations Length:', overlappingReservations.length);
-
-    return overlappingReservations.length === 0;
-};
+    // Availability is true if there are no valid overlapping events
+    return validEvents.length === 0;
+}
 
 async function moveToPlayground(req, res) {
     const { idReserva, status } = req.body;
@@ -1216,11 +1215,13 @@ async function moveToPlayground(req, res) {
     console.log(idReserva)
 
     try {
-        const eventosExistentes = await Documento.findOne();
-        const evento = eventosExistentes.events.find(evento => evento._id.toString() === idReserva);
+        const evento = await Documento.findById(idReserva);
+        const chalet = await Habitacion.findById(evento.resourceId);
+        // const eventosExistentes = await Documento.findOne();
+        // const evento = eventosExistentes.events.find(evento => evento._id.toString() === idReserva);
 
-        const chalets = await Habitacion.findOne();
-        const chalet = chalets.resources.find(chalet => chalet._id.toString() === evento.resourceId.toString());
+        // const chalets = await Habitacion.findOne();
+        // const chalet = chalets.resources.find(chalet => chalet._id.toString() === evento.resourceId.toString());
         if (!chalet) {
             throw new NotFoundError('Chalet does not exist');
         }
@@ -1304,18 +1305,23 @@ async function moveToPlayground(req, res) {
                         }
                     }
                     
-                    // Find the index of the room to delete by its ID
-                    const index = eventosExistentes.events.findIndex(evento => evento.id.toString() === idReserva.toString());
-                            
-                    if (index === -1) {
-                        return res.status(404).json({ message: 'El evento no fue encontrado' });
+                    const eventoAeliminar = await Documento.findByIdAndDelete(idReserva);
+                    if (!eventoAeliminar) {
+                        throw new Error('El evento no fue encontrado');
                     }
+
+                    // Find the index of the room to delete by its ID
+                    // const index = eventosExistentes.events.findIndex(evento => evento.id.toString() === idReserva.toString());
+                            
+                    // if (index === -1) {
+                    //     return res.status(404).json({ message: 'El evento no fue encontrado' });
+                    // }
                 
-                    // Remove the room from the array
-                    eventosExistentes.events.splice(index, 1);
+                    // // Remove the room from the array
+                    // eventosExistentes.events.splice(index, 1);
                 
-                    // Save the updated room list to the database
-                    await eventosExistentes.save();
+                    // // Save the updated room list to the database
+                    // await eventosExistentes.save();
                     console.log("Reserva cancelada de la base de datos.")
                     return res.status(200).json({ message: 'Reserva cancelada' });
 
@@ -1428,7 +1434,7 @@ async function moveToPlayground(req, res) {
         }
 
         evento.status = status;
-        const confirmation = await eventosExistentes.save();
+        const confirmation = await evento.save();
         if (!confirmation) {
             throw new Error('No se pudo actualizar el evento');
         }
@@ -1461,14 +1467,15 @@ async function crearNota(req, res) {
     const { texto, tipoNota } = req.body;
 
     try {
-        const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
+        // const eventosExistentes = await Documento.findOne(); // Buscar el documento que contiene los eventos
 
-        if (!eventosExistentes) {
-            throw new Error('No se encontraron eventos');
-        }
+        // if (!eventosExistentes) {
+        //     throw new Error('No se encontraron eventos');
+        // }
 
         // Buscar el evento por su id
-        const evento = eventosExistentes.events.find(evento => evento._id.toString() === idReserva);
+        // const evento = eventosExistentes.events.find(evento => evento._id.toString() === idReserva);
+        const evento = await Documento.findById(idReserva);
 
         if (!evento) {
             throw new Error('El evento no fue encontrado');
@@ -1485,7 +1492,7 @@ async function crearNota(req, res) {
         }
 
 
-        await eventosExistentes.save();
+        await evento.save();
         const logBody = {
             fecha: Date.now(),
             idUsuario: req.session.id,
@@ -1513,14 +1520,16 @@ async function eliminarNota(req, res) {
 
     try {
         // Buscar el documento que contiene los eventos
-        const documento = await Documento.findOne();
+        // const documento = await Documento.findOne();
 
-        if (!documento) {
-            throw new Error('No se encontraron eventos');
-        }
+        // if (!documento) {
+        //     throw new Error('No se encontraron eventos');
+        // }
 
         // Buscar el evento por su ID dentro del array de eventos
-        const evento = documento.events.find(evento => evento._id.toString() === idReserva);
+        // const evento = documento.events.find(evento => evento._id.toString() === idReserva);
+
+        const evento = await Documento.findById(idReserva);
 
 
         if (!evento) {
@@ -1551,7 +1560,7 @@ async function eliminarNota(req, res) {
         // Eliminar la nota del array de notas del evento
 
         // Guardar el documento actualizado en la base de datos
-        await documento.save();
+        await evento.save();
 
         const logBody = {
             fecha: Date.now(),

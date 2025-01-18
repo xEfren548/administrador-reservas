@@ -9,11 +9,13 @@ const Cliente = require('../../models/Cliente');
 async function sendEmail(email, reservationId) {
     try {
 
-        const allReservations = await Evento.findOne();
-        const allChalets = await Habitacion.findOne();
+        // const allReservations = await Evento.findOne();
+        // const allChalets = await Habitacion.findOne();
     
-        const reservation = allReservations.events.find(reservation => reservation._id.toString() === reservationId.toString());
-        const chalet = allChalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
+        // const reservation = allReservations.events.find(reservation => reservation._id.toString() === reservationId.toString());
+        const reservation = await Evento.findById(reservationId).lean();
+        const chalet = await Habitacion.findById(reservation.resourceId).lean();
+        // const chalet = allChalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
         const client = await Cliente.findById(reservation.client.toString());
         const arrivalTime = moment(chalet.others.arrivalTime).tz("America/Mexico_City").format("HH:mm");
         const departureTime = moment(chalet.others.departureTime).tz("America/Mexico_City").format("HH:mm");

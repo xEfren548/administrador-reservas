@@ -14,14 +14,16 @@ async function obtenerHabitaciones(req, res) {
 
 async function obtenerHabitacionPorId(id) {
     try {
-        const habitacionesExistentes = await Habitacion.findOne(); // Buscar el documento que contiene los eventos
+        // const habitacionesExistentes = await Habitacion.findOne(); // Buscar el documento que contiene los eventos
         
-        if (!habitacionesExistentes) {
-            throw new Error('No se encontraron eventos');
-        }
+        // if (!habitacionesExistentes) {
+        //     throw new Error('No se encontraron eventos');
+        // }
 
         // Buscar la habitacion por su id
-        const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === id);
+        // const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === id);
+        const habitacion = await Habitacion.findById(id).lean(); // Buscar el documento que contiene los eventos
+
 
         if (!habitacion) {
             throw new Error('Habitacion no encontrada');
@@ -38,14 +40,15 @@ async function obtenerHabitacionPorId(id) {
 async function obtenerHabitacionPorIdRoute(req, res) {
     try {
         const { id } = req.params;
-        const habitacionesExistentes = await Habitacion.findOne(); // Buscar el documento que contiene los eventos
+        // const habitacionesExistentes = await Habitacion.find(); // Buscar el documento que contiene los eventos
         
-        if (!habitacionesExistentes) {
-            throw new Error('No se encontraron eventos');
-        }
+        // if (!habitacionesExistentes) {
+        //     throw new Error('No se encontraron eventos');
+        // }
 
         // Buscar la habitacion por su id
-        const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === id);
+        // const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === id);
+        const habitacion = await Habitacion.findById(id).lean(); // Buscar el documento que contiene los eventos
 
         if (!habitacion) {
             throw new Error('Habitacion no encontrada');
@@ -74,13 +77,16 @@ async function agregarHabitacion(req, res) { // Create
 
 
         // Encuentra el documento existente
-        const habitacionesExistentes = await Habitacion.findOne();
+        // const habitacionesExistentes = await Habitacion.findOne();
 
-        // Agrega el nuevo evento al arreglo de eventos del documento
-        habitacionesExistentes.resources.push(nuevaHabitacion);
 
-        // Guarda el habitacion actualizado
-        await habitacionesExistentes.save();
+        // // Agrega el nuevo evento al arreglo de eventos del documento
+        // habitacionesExistentes.resources.push(nuevaHabitacion);
+        const habitacion = new Habitacion(nuevaHabitacion);
+        await habitacion.save();
+
+        // // Guarda el habitacion actualizado
+        // await habitacionesExistentes.save();
 
         console.log('Nuevo evento agregado:', nuevaHabitacion);
         res.status(201).json({ mensaje: 'Nueva habitacion agregada', habitacion: nuevaHabitacion });
@@ -96,15 +102,15 @@ async function editarHabitacion(req, res) {
         const { habitaciones, title, ocupacion_max } = req.body;
 
         // Fetch existing rooms from the database
-        const habitacionesExistentes = await Habitacion.findOne();
+        // const habitacionesExistentes = await Habitacion.findOne();
         
-        if (!habitacionesExistentes) {
-            return res.status(404).json({ mensaje: 'No se encontraron habitaciones' });
-        }
+        // if (!habitacionesExistentes) {
+        //     return res.status(404).json({ mensaje: 'No se encontraron habitaciones' });
+        // }
 
         // Find the room to edit by its ID
-        const habitacionExistente = habitacionesExistentes.resources.find(habitacion => habitacion.id === id);
-
+        // const habitacionExistente = habitacionesExistentes.resources.find(habitacion => habitacion.id === id);
+        const habitacionExistente = await Habitacion.findById(id).lean();
         if (!habitacionExistente) {
             return res.status(404).json({ mensaje: 'La habitación no fue encontrada' });
         }
@@ -121,7 +127,7 @@ async function editarHabitacion(req, res) {
         }
 
         // Save the updated room to the database
-        await habitacionesExistentes.save();
+        await habitacionExistente.save();
 
         console.log('Habitación editada:', habitacionExistente);
         res.status(200).json({ mensaje: 'Habitación editada correctamente', habitacion: habitacionExistente });
@@ -136,24 +142,27 @@ async function eliminarHabitacion(req, res) {
         const id  = req.params.id;
 
         // Fetch existing rooms from the database
-        const habitacionesExistentes = await Habitacion.findOne();
+        // const habitacionesExistentes = await Habitacion.findOne();
         
-        if (!habitacionesExistentes) {
-            return res.status(404).json({ mensaje: 'No se encontraron habitaciones' });
-        }
+        // if (!habitacionesExistentes) {
+        //     return res.status(404).json({ mensaje: 'No se encontraron habitaciones' });
+        // }
 
         // Find the index of the room to delete by its ID
-        const index = habitacionesExistentes.resources.findIndex(habitacion => habitacion.id === id);
+        // const index = habitacionesExistentes.resources.findIndex(habitacion => habitacion.id === id);
 
-        if (index === -1) {
-            return res.status(404).json({ mensaje: 'La habitación no fue encontrada' });
-        }
+        // if (index === -1) {
+        //     return res.status(404).json({ mensaje: 'La habitación no fue encontrada' });
+        // }
 
-        // Remove the room from the array
-        habitacionesExistentes.resources.splice(index, 1);
+        // // Remove the room from the array
+        // habitacionesExistentes.resources.splice(index, 1);
 
+        const habitacionesExistentes = await Habitacion.findByIdAndDelete(id);
         // Save the updated room list to the database
-        await habitacionesExistentes.save();
+        if (!habitacionesExistentes) {
+            throw new Error("La habitación no fue encontrada");
+        }
 
         console.log('Habitación eliminada con éxito');
         res.status(200).json({ mensaje: 'Habitación eliminada correctamente' });

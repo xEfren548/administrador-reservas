@@ -6,12 +6,12 @@ const BloqueoFechas = require('../models/BloqueoFechas');
 const bloqueoFechasController  = require('../controllers/bloqueoFechasController');
 
 router.get('/calendario-bloqueofechas', async (req, res) => {
-    const habitaciones = await Habitacion.findOne().lean();
+    const habitaciones = await Habitacion.find().lean();
     if (!habitaciones) {
         return res.status(404).send('No rooms found');
     }
 
-    const habitacionesMapeadas = habitaciones.resources.map(habitacion => {
+    const habitacionesMapeadas = habitaciones.map(habitacion => {
         return {
             id: habitacion._id,
             name: habitacion.propertyDetails.name,

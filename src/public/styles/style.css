@@ -931,3 +931,14 @@ ul.rb li .timestamp {
 .d-block {
     display: block !important;
 }
+
+.input-container-tel {
+    margin-bottom: 16px;
+}
+.character-count {
+    font-size: 12px;
+    color: #888;
+}
+.character-count.exceeded {
+    color: red;
+}

@@ -34,13 +34,15 @@ async function registrarPago(req, res) {
             return res.status(403).json({ mensaje: 'No tienes permiso para registrar un pago.' });
         }
 
-        const allReservations = await Documento.findOne();
-        const reservacion = allReservations.events.find(event => event._id.toString() === reservacionId);
+        // const allReservations = await Documento.findOne();
+        // const reservacion = allReservations.events.find(event => event._id.toString() === reservacionId);
+        const reservacion = await Documento.findById(reservacionId).lean();
 
         const chaletId = reservacion.resourceId;
 
-        const allChalets = await Habitacion.findOne();
-        const chalet = allChalets.resources.find(chalet => chalet._id.toString() === chaletId.toString());
+        // const allChalets = await Habitacion.findOne();
+        // const chalet = allChalets.resources.find(chalet => chalet._id.toString() === chaletId.toString());
+        const chalet = await Habitacion.findById(chaletId).lean();
         const chaletOwner = chalet.others.owner;
 
         console.log("chalet id: ", chaletId);
@@ -237,8 +239,10 @@ async function liquidarReservaDueno(req, res, next){
             return res.status(403).json({ mensaje: 'No tienes permiso para liquidar un pago.' });
         }
 
-        const reservas = await Documento.find().lean();
-        const reservacion = reservas[0].events.find(event => event._id.toString() === reservacionId.toString());
+        // const reservas = await Documento.find().lean();
+        // const reservacion = reservas[0].events.find(event => event._id.toString() === reservacionId.toString());
+
+        const reservacion = await Documento.findById(reservacionId).lean();
 
         if (!reservacion) {
             return res.status(404).json({ mensaje: 'Reservación no encontrada.' });
@@ -319,13 +323,12 @@ async function altaComisionReturnC(req, res) {
 async function renderPagos(req, res) {
     try {
         const pagos = await Pago.find().lean();
-        const habitacionesExistentes = await Habitacion.findOne().lean();
-        const reservasExistentes = await Documento.findOne().lean();
-        const reservas = reservasExistentes.events
+        const habitacionesExistentes = await Habitacion.find().lean();
+        const reservasExistentes = await Documento.find().lean();
+        const reservas = reservasExistentes
 
-        console.log(habitacionesExistentes.resources)
 
-        const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({
+        const nombreCabañas = habitacionesExistentes.map(habitacion => ({
             id: habitacion._id.toString(),
             name: habitacion.propertyDetails?.name || 'Nombre no disponible', // Validar y asignar un valor predeterminado
         }));

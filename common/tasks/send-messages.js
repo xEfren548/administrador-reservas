@@ -146,8 +146,8 @@ function sendSurveyToClient(clientInfo, chaletInfo, idReserva){
 async function sendReminders() {
     // console.log("--------------------------------------------------------------------------------");
     // console.log("SENDIND REMINDERS");
-    var reservations = await Evento.findOne();
-    reservations = reservations.events || [];
+    var reservations = await Evento.find();
+    reservations = reservations || [];
 
     if (reservations) {
         for (const reservation of reservations) {
@@ -176,24 +176,24 @@ async function sendReminders() {
 
 async function sendThanks() {
     // Fetch reservations and their events
-    const eventDocument = await Evento.findOne();
-    if (!eventDocument) {
-        console.log("No reservations found.");
-        return;
-    }
+    let reservations = await Evento.find({ status: { $nin: ["cancelled", "no-show"] } });
+    // if (!eventDocument) {
+    //     console.log("No reservations found.");
+    //     return;
+    // }
     
-    let reservations = eventDocument.events;
+    // let reservations = eventDocument.events;
     if (!reservations || reservations.length === 0) {
         console.log("No events in reservations.");
         return;
     }
 
     // Fetch all chalets once
-    const allChalets = await Habitacion.findOne();
-    if (!allChalets || !allChalets.resources) {
-        console.log("No chalets found.");
-        return;
-    }
+    // const allChalets = await Habitacion.find();
+    // if (!allChalets) {
+    //     console.log("No chalets found.");
+    //     return;
+    // }
 
     // Process each reservation
     for (const reservation of reservations) {
@@ -204,15 +204,16 @@ async function sendThanks() {
                 continue;
             }
 
-            const chalet = allChalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
+            // const chalet = allChalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
+            const chalet = await Habitacion.findById(reservation.resourceId.toString()).lean();
             if (!chalet) {
                 console.log(`Chalet ${reservation.resourceId} does not exist.`);
                 continue;
             }
 
-            if (reservation.status === "cancelled"){
-                continue;
-            }
+            // if (reservation.status === "cancelled"){
+            //     continue;
+            // }
 
             //console.log("Current date:", new Date());
             //console.log("Reservation date:", typeof reservation.departureDate);
@@ -236,22 +237,21 @@ async function sendThanks() {
 
                 // Mark thanks as sent
                 reservation.thanksSent = true;
+                await reservation.save();
             }
         } catch (error) {
             console.log(`Error processing reservation ${reservation._id}:`, error);
         }
     }
 
-    // Save the updated document
-    await eventDocument.save();
 }
 
 
 async function cancelReservation() {
     console.log("--------------------------------------------------------------------------------");
     console.log("SENDING CANCELATION");
-    var evento = await Evento.findOne();
-    var reservations = evento.events;
+    var evento = await Evento.find();
+    var reservations = evento;
 
     if (reservations) {
         for (const reservation of reservations) {
@@ -343,9 +343,9 @@ async function cancelReservation() {
                 }
 
             }
+            await reservation.save();
         }
 
-        await evento.save();
     }
 }
 

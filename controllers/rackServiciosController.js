@@ -50,13 +50,15 @@ async function createRackService(req, res, next) {
             return res.status(400).send('Servicio requerido'); // Si no se encuentra el documento, devolver un error 404
         }
 
-        const documento = await Documento.findOne({ 'events._id': id_reserva });
+        // const documento = await Documento.findOne({ 'events._id': id_reserva });
 
-        if (!documento) {
-            return res.status(404).send('Documento not found'); // Si no se encuentra el documento, devolver un error 404
-        }
+        // if (!documento) {
+        //     return res.status(404).send('Documento not found'); // Si no se encuentra el documento, devolver un error 404
+        // }
 
-        const evento = documento.events.find(event => event._id == id_reserva);
+        // const evento = documento.events.find(event => event._id == id_reserva);
+
+        const evento = await Documento.findById(id_reserva).lean();
 
         if (!evento) {
             return res.status(404).send('Evento not found'); // Si no se encuentra el evento, devolver un error 404

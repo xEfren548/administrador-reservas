@@ -116,8 +116,9 @@ async function answerSurvey(req, res, next) {
             throw new BadRequestError("Missing reservation id");
         }
 
-        const reservations = await Evento.findOne();
-        const reservation = reservations.events.find(reservation => reservation._id.toString() === reservationId.toString());
+        // const reservations = await Evento.findOne();
+        // const reservation = reservations.events.find(reservation => reservation._id.toString() === reservationId.toString());
+        const reservation = await Evento.findById(reservationId).lean();
         if(!reservation){ throw new NotFoundError("Current client has no reservation. Calling FVI") }
 
         console.log("Reservación asociada: ", reservation);
@@ -139,7 +140,7 @@ async function answerSurvey(req, res, next) {
         }
 
         reservation.surveySubmited = true;
-        await reservations.save();
+        await reservation.save();
 
         res.status(200).json({ success: true, message: "Encuesta enviada con éxito" });
     } catch (err) {
@@ -154,8 +155,9 @@ async function showClientResponses(req, res, next){
         const clientSurveyResponses = await RespuestasUsuario.findById(id).lean();
         if(!clientSurveyResponses){ throw new NotFoundError("Survey does not exist") }
 
-        var reservation = await Evento.findOne();
-        reservation = reservation.events.find(reservation => reservation._id.toString() === clientSurveyResponses.reservation.toString());
+        // var reservation = await Evento.findOne();
+        // reservation = reservation.events.find(reservation => reservation._id.toString() === clientSurveyResponses.reservation.toString());
+        const reservation = await Evento.findById(clientSurveyResponses.reservation).lean();
         if(!reservation){ throw new NotFoundError("Reservation has no client associated to it") }
 
         const client = await Cliente.findById(reservation.client);
@@ -179,8 +181,8 @@ async function showClientsResponses(req, res, next) {
         if (!clientsSurveyResponses) { throw new NotFoundError("Survey does not exist"); }
         console.log("clientsSurveyResponses:", clientsSurveyResponses);
 
-        var reservations = await Evento.findOne().lean();
-        reservations = reservations.events;
+        // var reservations = await Evento.findOne().lean();
+        const reservations = await Evento.find().lean();
         
         const totalP1 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
         const totalP2 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0

@@ -1,6 +1,8 @@
 const moment = require('moment');
 const momentTz = require('moment-timezone');
 const mongoose = require('mongoose');
+const NotFoundError = require("../common/error/not-found-error");
+
 
 const usersController = require('./../controllers/usersController');
 const pagoController = require('./../controllers/pagoController');
@@ -33,8 +35,9 @@ async function calcularComisiones(req, res) {
         const habitacionId = req.query.habitacionid;
         console.log("nnights: ",  nNights)
 
-        const chalets = await Habitacion.findOne();
-        const chalet = chalets.resources.find(chalet => chalet._id.toString() === habitacionId.toString());
+        // const chalets = await Habitacion.findOne();
+        // const chalet = chalets.resources.find(chalet => chalet._id.toString() === habitacionId.toString());
+        const chalet = await Habitacion.findById(habitacionId).lean();
         if (!chalet) {
             throw new NotFoundError('Chalet does not exist 2');
         }
@@ -53,13 +56,20 @@ async function calcularComisiones(req, res) {
         let counter = 0
 
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
-
+        
+        if (!user) {
+            throw new NotFoundError('User does not exist');
+        }
+        
+        console.log("USUARIO LOGUEADO: ", user)
         let minComission = 0
         let finalComission = 0
 
         while (true) {
             // console.log(user)
+            console.log("Antes de user privilege admin")
             if (user.privilege === 'Administrador') {
+                console.log("Despues de user privilege admin")
                 counter += 1;
                 // let costos = await Costos.find({ category: "Gerente" });
 
@@ -83,8 +93,9 @@ async function calcularComisiones(req, res) {
             } else {
 
                 counter += 1;
-                console.log(counter)
+                console.log("Antes de user privilege")
                 if (counter >= 2 && user.privilege !== "Administrador") {
+                    console.log("Despues de user privilege")
                     user.privilege = "Gerente"
                 }
                 // let costos = await Costos.findOne({ category: user.privilege })
@@ -159,8 +170,10 @@ async function generarComisionReserva(req, res) {
 
 
 
-        const chalets = await Habitacion.findOne();
-        const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+        // const chalets = await Habitacion.findOne();
+        // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+
+        const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
         if (!chalet) {
             throw new NotFoundError('Chalet does not exist 2');
         }
@@ -545,12 +558,12 @@ async function mostrarUtilidadesPorUsuario(req, res) {
         const loggedUserId = req.session.id;
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
 
-        const habitacionesExistentes = await Habitacion.findOne().lean();
+        const habitacionesExistentes = await Habitacion.find().lean();
         if (!habitacionesExistentes) {
             return res.status(404).send('No rooms found');
         }
 
-        const reservas = await Documento.findOne().lean();
+        const reservas = await Documento.find().lean();
         if (!reservas) {
             return res.status(404).send('No documents found');
         }
@@ -560,8 +573,8 @@ async function mostrarUtilidadesPorUsuario(req, res) {
 
         utilidades = await Utilidades.find({ idUsuario: loggedUserId }).lean();
 
-        const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name, chaletAdmin: habitacion.others.admin.toString() }));
-        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, departureDate: reserva.departureDate, status: reserva.status }));
+        const nombreCabañas = habitacionesExistentes.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name, chaletAdmin: habitacion.others.admin.toString() }));
+        const reservasMap = reservas.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, departureDate: reserva.departureDate, status: reserva.status }));
 
         const chaletAdminIds = [...new Set(nombreCabañas.map(cabana => cabana.chaletAdmin))];
         const chaletAdminMap = {};
@@ -606,8 +619,8 @@ async function mostrarUtilidadesPorUsuario(req, res) {
                             const idHabitacion = reserva.resourceId;
                             utilidad.idHabitacion = idHabitacion;
                             const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
-                            utilidad.nombreHabitacion = matchId.name;
-                            utilidad.chaletAdmin = chaletAdminMap[matchId.chaletAdmin] || "-";
+                            utilidad.nombreHabitacion = matchId ? matchId.name : "N/A";
+                            utilidad.chaletAdmin = matchId ? chaletAdminMap[matchId.chaletAdmin] : "N/A";
 
                             utilidad.nochesReservadas = reserva.nNights
                             const arrivalCheckOut =  moment.utc(reserva.departureDate, 'DD/MM/YYYY');
@@ -668,19 +681,19 @@ async function mostrarUtilidadesGlobales(req, res) {
         const utilidadesPorMes = Array(12).fill(0); // Inicializa un array con 12 elementos, todos con valor 0
 
 
-        const habitacionesExistentes = await Habitacion.findOne().lean();
+        const habitacionesExistentes = await Habitacion.find().lean();
         if (!habitacionesExistentes) {
             return res.status(404).send('No rooms found');
         }
 
-        const reservas = await Documento.findOne().lean();
+        const reservas = await Documento.find().lean();
         if (!reservas) {
             return res.status(404).send('No documents found');
         }
 
         // // Extract the IDs and names of the rooms
-        const nombreCabañas = habitacionesExistentes.resources.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name, chaletAdmin: habitacion.others.admin.toString() }));
-        const reservasMap = reservas.events.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, departureDate: reserva.departureDate, status: reserva.status, total: reserva.total }));
+        const nombreCabañas = habitacionesExistentes.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name, chaletAdmin: habitacion.others.admin.toString() }));
+        const reservasMap = reservas.map(reserva => ({ id: reserva._id.toString(), resourceId: reserva.resourceId.toString(), nNights: reserva.nNights, departureDate: reserva.departureDate, status: reserva.status, total: reserva.total }));
 
         for (let reserva of reservasMap) {
             const pagos = await pagoController.obtenerPagos(reserva.id);
@@ -744,8 +757,8 @@ async function mostrarUtilidadesGlobales(req, res) {
                             const idHabitacion = reserva.resourceId;
                             utilidad.idHabitacion = idHabitacion;
                             const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
-                            utilidad.nombreHabitacion = matchId.name;
-                            utilidad.chaletAdmin = chaletAdminMap[matchId.chaletAdmin] || "-";
+                            utilidad.nombreHabitacion = matchId ? matchId.name : "N/A";
+                            utilidad.chaletAdmin = matchId ? chaletAdminMap[matchId.chaletAdmin] : "N/A";
 
                             utilidad.nochesReservadas = reserva.nNights
                             const arrivalCheckOut =  moment.utc(reserva.departureDate, 'DD/MM/YYYY');
@@ -895,19 +908,19 @@ async function vistaParaReporte(req, res) {
         const currentYear = moment().year(); // Año actual
 
 
-        const habitacionesExistentes = await Habitacion.findOne().lean();
+        const habitacionesExistentes = await Habitacion.find().lean();
         if (!habitacionesExistentes) {
             return res.status(404).send('No rooms found');
         }
 
-        const reservasExistentes = await Documento.findOne().lean();
+        const reservasExistentes = await Documento.find().lean();
         if (!reservasExistentes) {
             return res.status(404).send('No documents found');
         }
 
-        const reservas = reservasExistentes.events.filter(reserva => reserva.status !== 'cancelled');
+        const reservas = reservasExistentes.filter(reserva => reserva.status !== 'cancelled');
 
-        const habitaciones = habitacionesExistentes.resources;
+        const habitaciones = habitacionesExistentes;
 
         reservas.forEach(reserva => {
             reserva.reservationDate = momentTz.tz(reserva.reservationDate, "America/Mexico_City").format("DD-MM-YYYY HH:mm")

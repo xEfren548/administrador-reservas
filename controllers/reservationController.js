@@ -4,6 +4,8 @@ router = express.Router();
 const Cliente = require('../models/Cliente');
 const Habitacion = require("../models/Habitacion");
 const TipologiasCabana = require('../models/TipologiasCabana');
+const NotFoundError = require("../common/error/not-found-error");
+
 
 const {check} = require("express-validator");
 
@@ -28,20 +30,29 @@ const showReservationsViewValidators = [
 
 async function showReservationsView(req, res, next) {
     try {
-        const habitaciones = await Habitacion.find();
+        const habitaciones = await Habitacion.find().lean();
         if(!habitaciones){
-            throw new NotFoundError("No room found");
+            throw new Error("No room found");
         }
         const data = habitaciones;
-        // console.log(data);
 
-        const chalets = data[0].resources.map(chalet => ({
-            name: chalet.propertyDetails.name,
-            basePrice: chalet.others.basePrice,
-            pax: chalet.propertyDetails.maxOccupancy,
-            tipologia: chalet.propertyDetails.accomodationType,
-            id: chalet._id.toString()
-        }));
+        console.log('First room structure:', JSON.stringify(habitaciones[0], null, 2));
+
+        // console.log(data);
+        const chalets = habitaciones.map(chalet => {
+            return {
+                name: chalet.propertyDetails.name,
+                basePrice: chalet.others.basePrice,
+                pax: chalet.propertyDetails.maxOccupancy,
+                tipologia: chalet.propertyDetails.accomodationType,
+                id: chalet._id?.toString()
+            };
+        })
+
+        // Verify we still have valid chalets after filtering
+        if (!chalets.length) {
+            throw new Error("No valid room data available");
+        }
         // console.log("Estos son los chalets: ", chalets);
 
         const clientes = await Cliente.find({}).lean();

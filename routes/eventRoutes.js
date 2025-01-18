@@ -7,6 +7,7 @@ const pagoController = require('../controllers/pagoController');
 const Service = require('../models/Servicio');
 const Cliente = require('../models/Cliente');
 const RackServicios = require('../models/RackServicios');
+const Evento = require('../models/Evento');
 const Log = require('../models/Log');
 
 const validationRequest = require('../common/middlewares/validation-request');
@@ -34,7 +35,9 @@ router.get('/eventos/:idevento', async (req, res) => {
         const privilege = req.session.privilege;
 
         // Llama a la función del controlador de eventos para obtener los detalles del evento
-        const evento = await eventController.obtenerEventoPorId(idEvento);
+        // const evento = await eventController.obtenerEventoPorId(idEvento);
+        const evento = await Evento.findById(idEvento).lean();
+
         eventoJson = JSON.stringify(evento);
         const eventoObjeto = JSON.parse(eventoJson);
         eventoObjeto.arrivalDate = moment.utc(eventoObjeto.arrivalDate).format('DD/MM/YYYY');
