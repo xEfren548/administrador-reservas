@@ -821,7 +821,6 @@ async function createOwnerReservation(req, res, next) {
     try {
         const privilege = req.session.privilege;
         const investorId = req.session.id
-        console.log(req.session)
 
         const chalet = await Habitacion.findOne( {"propertyDetails.name": chaletName} );
 
@@ -838,6 +837,10 @@ async function createOwnerReservation(req, res, next) {
             reservasDeInversionista.sort((a, b) => new Date(a.departureDate) - new Date(b.departureDate));
 
             const reservaActiva = reservasDeInversionista.find(reserva => new Date(reserva.departureDate) > new Date());
+    
+            arrivalDate.setUTCHours(chalet.others.arrivalTime.getHours());
+            departureDate.setUTCHours(chalet.others.departureTime.getHours());
+    
 
             if (reservaActiva) {
                 if (reservaActiva.status !== "cancelled"){
@@ -853,7 +856,7 @@ async function createOwnerReservation(req, res, next) {
                 const salidaAnterior = new Date(reserva.departureDate);
 
                 if ((nuevaLlegada - salidaAnterior) / (1000 * 60 * 60 * 24) < 9) {
-                    throw new Error("Entre reserva y reserva tienen que pasar al menos 9 días.");
+                    throw new Error("Entre sus reservas tienen que pasar al menos 9 días.");
                 }
             }
 

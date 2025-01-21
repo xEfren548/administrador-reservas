@@ -66,18 +66,13 @@
                     <div class="row mt-2">
                         <div class="col-sm-5">
                             <div class="form-group">
-                                <label for="event_start_date">Fecha llegada</label>
-                                <input type="date" name="event_start_date" id="event_start_date"
-                                    class="form-control onlydatepicker" placeholder="Event start date">
+                                <label for="date_range">Rango de fechas</label>
+                                <input type="text" name="date_range" id="date_range" class="form-control"
+                                    placeholder="Selecciona un rango de fechas">
                             </div>
                         </div>
-                        <div class="col-sm-5">
-                            <div class="form-group">
-                                <label for="event_end_date">Fecha salida</label>
-                                <input type="date" name="event_end_date" id="event_end_date" class="form-control"
-                                    placeholder="Event end date">
-                            </div>
-                        </div>
+                        <input type="hidden" name="event_start_date" id="event_start_date">
+                        <input type="hidden" name="event_end_date" id="event_end_date">
                         <div class="col-sm-2">
                             <div class="form-group">
                                 <label for="event_nights">Noches: </label>
@@ -152,6 +147,26 @@
                 "pageLength": 10 // Establece la longitud de página inicial
             });
         }
+
+        flatpickr("#date_range", {
+        mode: "range",
+        dateFormat: "d-m-Y",
+        //minDate: "today",        
+        onChange: function(selectedDates, dateStr, instance) {
+            if (selectedDates.length === 2) {
+                // Guardar las fechas en los campos ocultos
+                document.getElementById('event_start_date').value = selectedDates[0].toISOString().split('T')[0];
+                document.getElementById('event_end_date').value = selectedDates[1].toISOString().split('T')[0];
+
+                console.log("Initial date: ", $('#event_start_date').val());
+                console.log("Final date: ", $('#event_end_date').val());
+
+                calculateNightDifference()
+                showAvailableChalets()
+            }
+        },
+        
+        });
     });
 
     document.getElementById('save-event-btn').addEventListener('click', async function () {
