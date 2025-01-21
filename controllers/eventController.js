@@ -590,6 +590,7 @@ async function createReservation(req, res, next) {
         const mongooseChaletId = new mongoose.Types.ObjectId(chalet._id);
         const overlappingReservation = await Documento.findOne({
             resourceId: mongooseChaletId,
+            status: { $nin: ["cancelled", "no-show"] },
             $and: [
                 { arrivalDate: { $lt: departureDateISO } }, // Start date overlaps or is before the departure date
                 { departureDate: { $gt: arrivalDateISO } }, // End date overlaps or is after the arrival date
