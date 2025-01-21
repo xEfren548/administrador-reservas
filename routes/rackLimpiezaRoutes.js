@@ -51,6 +51,10 @@ router.get('/rackLimpieza', async (req, res) => {
     }
 });
 
+router.get('/racklimpieza-calendar', async (req, res) => {
+    res.render('rackLimpiezaCalendar');
+});
+
 
 router.get('/api/racklimpieza', rackLimpiezaController.getAllServices)
 router.post('/api/racklimpieza', rackLimpiezaController.createService)
