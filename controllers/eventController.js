@@ -821,6 +821,7 @@ async function createOwnerReservation(req, res, next) {
     try {
         const privilege = req.session.privilege;
         const investorId = req.session.id
+        const mInvestorId = new mongoose.Types.ObjectId(investorId);
 
         const chalet = await Habitacion.findOne( {"propertyDetails.name": chaletName} );
 
@@ -832,8 +833,9 @@ async function createOwnerReservation(req, res, next) {
 
         if (privilege === "Inversionistas") {
             // Definicion de reglas de inversionistas
-            const documento = await Documento.find();
-            const reservasDeInversionista = documento.filter(reserva => reserva.createdBy.toString() === investorId.toString());
+            // const documento = await Documento.find( { createdBy: mInvestorId } );
+            const reservasDeInversionista = await Documento.find({ createdBy: mInvestorId, status: { $nin: ["cancelled", "no-show"] } });
+            // const reservasDeInversionista = documento.filter(reserva => reserva.createdBy.toString() === investorId.toString());
             reservasDeInversionista.sort((a, b) => new Date(a.departureDate) - new Date(b.departureDate));
 
             const reservaActiva = reservasDeInversionista.find(reserva => new Date(reserva.departureDate) > new Date());
