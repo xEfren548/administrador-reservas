@@ -1,5 +1,6 @@
 const RackLimpieza = require('../models/RackLimpieza');
 const Documento = require('../models/Evento');
+const Habitacion = require('../models/Habitacion');
 const habitacionController = require('../controllers/habitacionController');
 const mongoose = require('mongoose');
 
@@ -33,6 +34,34 @@ async function getSpecificServicesMongo(idChalet) {
     } catch (error) {
         console.log(error.message);
         return error.message
+    }
+}
+
+async function dataForRackLimpiezaCalendar(req, res, next) {
+    try {
+        const id = new mongoose.Types.ObjectId(req.session.id);
+
+        const habitaciones = await Habitacion.find({ "others.janitor": id }).lean();
+        if (!habitaciones) {
+            return res.status(404).send('No rooms found');
+        }
+
+        const eventos = await Documento.find({ status: { $nin: ["no-show", "cancelled"] }, resourceId: { $in: habitaciones.map(habitacion => habitacion._id) } }).lean();
+        if (!eventos) {
+            return res.status(404).send('No events found');
+        }
+
+
+        const data = {};
+        data.resources = habitaciones;
+        data.events = eventos;
+
+        console.log(data)
+        
+        res.send(data);
+    } catch (error) {
+        console.log(error.message);
+        res.status(200).send('Something went wrong while retrieving services.' + error.message);
     }
 }
 
@@ -182,5 +211,6 @@ module.exports = {
     createService,
     createServiceForReservation,
     modifyService,
-    deleteService
+    deleteService,
+    dataForRackLimpiezaCalendar
 }

@@ -57,6 +57,7 @@ router.get('/racklimpieza-calendar', async (req, res) => {
 
 
 router.get('/api/racklimpieza', rackLimpiezaController.getAllServices)
+router.get('/api/racklimpieza/calendardata', rackLimpiezaController.dataForRackLimpiezaCalendar)
 router.post('/api/racklimpieza', rackLimpiezaController.createService)
 router.post('/api/racklimpieza/reservations', rackLimpiezaController.createServiceForReservation)
 router.put('/api/racklimpieza/:id', rackLimpiezaController.modifyService);
