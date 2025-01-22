@@ -722,7 +722,7 @@ async function createReservation(req, res, next) {
         const fechaLimpieza = new Date(departureDate)
         const checkInDate = new Date(arrivalDate)
         const checkOutDate = new Date(departureDate)
-        fechaLimpieza.setDate(fechaLimpieza.getDate() + 1)
+        fechaLimpieza.setDate(fechaLimpieza.getDate())
         const statusLimpieza = 'Pendiente'
 
 
