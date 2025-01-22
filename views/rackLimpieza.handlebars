@@ -1,14 +1,9 @@
 <div class="row flex-nowrap justify-content-center mt-3 " style="width: 100%;">
     <div class="col-10">
         <h1>Tabla Rack Limpieza</h1>
-        <a
-            name=""
-            id=""
-            class="btn btn-primary mt-3 mb-3"
-            href="/racklimpieza-calendar"
-            role="button"
-            >Vista de calendario</a
-        >
+        {{#if (eq privilege 'Limpieza')}}
+        <a name="" id="" class="btn btn-primary mt-3 mb-3" href="/racklimpieza-calendar" role="button" >Vista de calendario</a>
+        {{/if}}
         
         <div class="table-responsive">
 

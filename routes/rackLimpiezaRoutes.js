@@ -53,7 +53,8 @@ router.get('/rackLimpieza', async (req, res) => {
         });
 
         res.render('rackLimpieza', {
-            services: services
+            services: services,
+            privilege: req.session.privilege
         });
 
     } catch (error) {
