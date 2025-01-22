@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
         // initialView: 'resourceTimelineMonth',
+        locale: 'es',
         scrollTime: '00:00:00',
         height: 'auto',
         expandRows: true,
@@ -88,20 +89,51 @@ document.addEventListener('DOMContentLoaded', function () {
                     })
             },
             eventContent: function (info) {
-                console.log(info.event.extendedProps);
+                console.log(info.event._def.resourceIds[0]);
                 const color = '#0dcaf0';
+                console.log(resourceMap);
 
-                const resourceTitle = resourceMap[info.event.resourceId] || 'Unknown Resource';
+                const resourceTitle = resourceMap[info.event._def.resourceIds[0]] || 'Unknown Resource';
 
 
                 return {
                     html: `
-                    <div class="p-1 rounded bg-gradient text-black" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: 'Overpass', sans-serif; background-color: ${color} !important;">
-                        <div>${resourceTitle}</div>
-                        <div>${info.event.title}</div>
+                    <div class="mr-5 p-1 w-100 rounded bg-gradient text-black" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: 'Overpass', sans-serif; background-color: ${color} !important;">
+                        <div class="font-weight-bold">${resourceTitle}</div>
+                        <div>Reserva</div>
                     </div>
                     `
                 };
+            },
+            eventMouseEnter: function (mouseEnterInfo) {
+                let el = mouseEnterInfo.el;
+                el.classList.add("relative");
+
+                let newEl = document.createElement("div");
+                let newElStart = new Date(mouseEnterInfo.event.start);
+                newElStart.setUTCHours(newElStart.getUTCHours() + 6);
+                newElStart = newElStart.toISOString().split('T')[0];
+                let newElEnd = new Date(mouseEnterInfo.event.end);
+                newElEnd.setUTCHours(newElEnd.getUTCHours() + 6);
+                newElEnd = newElEnd.toISOString().split('T')[0];
+
+                newEl.innerHTML = `
+                    <div class="fc-hoverable-event" style="position: absolute; top: 100%; left: 0; width: 200px; height: auto; background-color: black; z-index: 100000000 !important; border: 1px solid #e2e8f0; border-radius: 0.375rem; padding: 0.75rem; font-size: 14px; font-family: 'Inter', sans-serif; cursor: pointer;">
+                        <strong>Llegada: ${newElStart}</strong>
+                        <br>
+                        <strong>Salida: ${newElEnd}</strong>
+                    </div>
+                `;
+                document.body.appendChild(newEl);
+
+                const rect = el.getBoundingClientRect();
+                const popupRect = newEl.firstElementChild.getBoundingClientRect();
+                const topPosition = rect.top - popupRect.height;
+                newEl.firstElementChild.style.left = `${rect.left}px`;
+                newEl.firstElementChild.style.top = topPosition < 0 ? `${rect.bottom}px` : `${rect.top - popupRect.height}px`;
+            },
+            eventMouseLeave: function () {
+                document.querySelector(".fc-hoverable-event").remove();
             },
     });
 

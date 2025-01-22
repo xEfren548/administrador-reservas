@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         resourceAreaWidth: '200px', // Adjust as per your layout
         resourceAreaHeight: '100%', // Adjust as per your layout when
         slotMinWidth: 100, // Adjust column width for better layout
+        locale: 'es',
 
 
         headerToolbar: {
