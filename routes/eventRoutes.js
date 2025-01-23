@@ -38,6 +38,11 @@ router.get('/eventos/:idevento', async (req, res) => {
         // const evento = await eventController.obtenerEventoPorId(idEvento);
         const evento = await Evento.findById(idEvento).lean();
 
+        const clientesTodos = await Cliente.find({}).lean();
+        if(!clientesTodos){
+            throw new NotFoundError("No client not found");
+        }
+
         eventoJson = JSON.stringify(evento);
         const eventoObjeto = JSON.parse(eventoJson);
         eventoObjeto.arrivalDate = moment.utc(eventoObjeto.arrivalDate).format('DD/MM/YYYY');
@@ -129,6 +134,7 @@ router.get('/eventos/:idevento', async (req, res) => {
             evento: eventoObjeto,
             habitacion: habitacionObjeto,
             cliente: cliente,
+            clientes: clientesTodos,
             pagos: pagos,
             servicios: servicios,
             rackServicios: rackServicios,

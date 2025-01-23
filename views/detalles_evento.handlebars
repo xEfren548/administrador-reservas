@@ -953,62 +953,98 @@
             <div class="modal-body">
                 <div class="img-container">
                     <div class="row mt-2">
-                    <p class="bg-warning rounded p-2 object-fit-contain text-dark m-3 mr-4" style="width: 95%;">Para poder continuar con la acción, es necesario ingresar los datos del cliente (Correo, teléfono y dirección)</p>
-                        <div class="col-sm-12 mb-2">
-                            <div class="form-group">
-                                <label for="txtClientNameUpd">Nombre</label>
-                                <input type="text" name="txtClientNameUpd" id="txtClientNameUpd"
-                                    class="form-control onlydatepicker" placeholder="Nombre" value="{{cliente.firstName}}">
+                    <p class="bg-warning rounded p-2 object-fit-contain text-dark m-3 mr-4" style="width: 95%;">Para poder continuar con la acción, es necesario ingresar los datos del cliente (Correo, teléfono y dirección) o seleccionar un cliente.</p>
+                    <div class="mb-3 ml-2">
+                        <label for="" class="form-label">Selecciona una opción: </label>
+                        <select class="form-select form-select-md" name="" id="seleccionar-opcion-cliente">
+                            <option selected>Selecciona --</option>
+                            <option value="completar-datos-cliente">Completar datos de cliente</option>
+                            <option value="seleccionar-cliente">Seleccionar un cliente existente</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-sm-8 d-none" id="select-client-container">
+                            <div class="form-group select-container">
+                                <label for="lblClient">Cliente</label>
+                                <input type="text" class="form-control form-select-search" 
+                                        id="lblClient" 
+                                        autocomplete="off"
+                                        placeholder="Buscar y seleccionar cliente..."
+                                        required>
+                                <div class="select-options">
+                                    {{#if clientes}}
+                                        {{#each clientes}}
+                                            <div class="select-option" data-value="{{this.email}}" data-label="{{this.firstName}} {{this.lastName}} ({{this.email}})">
+                                                {{this.firstName}} {{this.lastName}} ({{this.email}})
+                                            </div>
+                                        {{/each}}
+                                    {{else}}
+                                        <div class="select-option" data-value="0">No se encontraron clientes</div>
+                                    {{/if}}
+                                </div>
+                                <input type="hidden" name="lblClient" id="lblClientValue">
+
+
                             </div>
                         </div>
-                        <div class="col-sm-12 mb-2">
-                            <div class="form-group">
-                                <label for="txtClientLastnameUpd">Apellido</label>
-                                <input type="text" name="txtClientLastnameUpd" id="txtClientLastnameUpd"
-                                    class="form-control" placeholder="Apellido" value="{{cliente.lastName}}">
+                        <div class="d-none" id="completar-datos-cliente-container">
+                            <div class="col-sm-12 mb-2">
+                                <div class="form-group">
+                                    <label for="txtClientNameUpd">Nombre</label>
+                                    <input type="text" name="txtClientNameUpd" id="txtClientNameUpd"
+                                        class="form-control onlydatepicker" placeholder="Nombre" value="{{cliente.firstName}}">
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-sm-12 mb-2">
-                            <div class="form-group input-container-tel">
-                                <label for="txtClientPhoneUpd">Teléfono</label>
-                                <input type="text" name="txtClientPhoneUpd" id="txtClientPhoneUpd" class="form-control"
-                                    placeholder="Teléfono">
-                                <div class="character-count" id="count1">0/10</div>
-                                
+                            <div class="col-sm-12 mb-2">
+                                <div class="form-group">
+                                    <label for="txtClientLastnameUpd">Apellido</label>
+                                    <input type="text" name="txtClientLastnameUpd" id="txtClientLastnameUpd"
+                                        class="form-control" placeholder="Apellido" value="{{cliente.lastName}}">
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-sm-12 mb-2">
-                            <div class="form-group">
-                                <label for="txtClientAddressUpd">Dirección</label>
-                                <input type="text" name="txtClientAddressUpd" id="txtClientAddressUpd"
-                                    class="form-control" placeholder="Dirección">
+                            <div class="col-sm-12 mb-2">
+                                <div class="form-group input-container-tel">
+                                    <label for="txtClientPhoneUpd">Teléfono</label>
+                                    <input type="text" name="txtClientPhoneUpd" id="txtClientPhoneUpd" class="form-control"
+                                        placeholder="Teléfono">
+                                    <div class="character-count" id="count1">0/10</div>
+                                    
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-sm-12 mb-2">
-                            <div class="form-group">
-                                <label for="txtClientEmailUpd">Email</label>
-                                <input type="email" name="txtClientEmailUpd" id="txtClientEmailUpd" class="form-control"
-                                    placeholder="Email">
+                            <div class="col-sm-12 mb-2">
+                                <div class="form-group">
+                                    <label for="txtClientAddressUpd">Dirección</label>
+                                    <input type="text" name="txtClientAddressUpd" id="txtClientAddressUpd"
+                                        class="form-control" placeholder="Dirección">
+                                </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-8 mb-2">
-                                <label for="slctClientIdTypeUpd" class="form-label">Tipo de identificación</label>
-                                <select name="slctClientIdTypeUpd" id="slctClientIdTypeUpd" class="form-select form-select-md" required>
-                                    <option value="" selected disabled> Selecciona el tipo de identificación del cliente
-                                    </option>
-                                    <option value="INE">INE</option>
-                                    <option value="Pasaporte">Pasaporte</option>
-                                    <option value="Licencia de conducir">Licencia de conducir</option>
-                                </select>
+                            <div class="col-sm-12 mb-2">
+                                <div class="form-group">
+                                    <label for="txtClientEmailUpd">Email</label>
+                                    <input type="email" name="txtClientEmailUpd" id="txtClientEmailUpd" class="form-control"
+                                        placeholder="Email">
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-sm-12 mb-2">
-                            <div class="form-group">
-                                <label for="txtClientIdNumberUpd">Número de identificación</label>
-                                <input type="text" name="txtClientIdNumberUpd" id="txtClientIdNumberUpd"
-                                    class="form-control" placeholder="Tipo de identificación">
+                            <div class="row">
+                                <div class="col-8 mb-2 ml-2">
+                                    <label for="slctClientIdTypeUpd" class="form-label">Tipo de identificación</label>
+                                    <select name="slctClientIdTypeUpd" id="slctClientIdTypeUpd" class="form-select form-select-md" required>
+                                        <option value="" selected disabled> Selecciona el tipo de identificación del cliente
+                                        </option>
+                                        <option value="INE">INE</option>
+                                        <option value="Pasaporte">Pasaporte</option>
+                                        <option value="Licencia de conducir">Licencia de conducir</option>
+                                    </select>
+                                </div>
                             </div>
+                            <div class="col-sm-12 mb-2">
+                                <div class="form-group">
+                                    <label for="txtClientIdNumberUpd">Número de identificación</label>
+                                    <input type="text" name="txtClientIdNumberUpd" id="txtClientIdNumberUpd"
+                                        class="form-control" placeholder="Tipo de identificación">
+                                </div>
+                            </div>
+
                         </div>
                     </div> <!-- Cierre row -->
                 </div>
@@ -2391,6 +2427,12 @@
     if (btnUpdateClient) {
         btnUpdateClient.addEventListener("click", async (event) => {
             event.preventDefault();
+            
+            const selectClientOption = document.getElementById('seleccionar-opcion-cliente').value;
+
+            
+
+            if ( )
 
             if (document.getElementById("txtClientPhoneUpd").value.trim().length > 10) {
                 Swal.fire({
@@ -2484,5 +2526,150 @@
             document.getElementById('count1'),
             10
         );
+
+    const selectClientOption = document.getElementById('seleccionar-opcion-cliente');
+
+    selectClientOption.addEventListener('change', function() {
+        const selectedOption = this.value;
+        console.log('Opcion seleccionada:', selectedOption);
+
+        const seleccionarClienteContainer = document.getElementById('select-client-container');
+        const completarDatosContainer = document.getElementById('completar-datos-cliente-container');
+
+        switch(selectedOption) {
+            case 'completar-datos-cliente':
+                if (!seleccionarClienteContainer.classList.contains('d-none')) {
+                    seleccionarClienteContainer.classList.add('d-none');
+                }
+                if (completarDatosContainer.classList.contains('d-none')) {
+                    completarDatosContainer.classList.remove('d-none');
+                }
+                break;
+            case 'seleccionar-cliente':
+                if (!completarDatosContainer.classList.contains('d-none')) {
+                    completarDatosContainer.classList.add('d-none');
+                }
+                if (seleccionarClienteContainer.classList.contains('d-none')) {
+                    seleccionarClienteContainer.classList.remove('d-none');
+                }
+                break;
+            default:
+                if (!seleccionarClienteContainer.classList.contains('d-none')) {
+                    seleccionarClienteContainer.classList.add('d-none');
+                }
+                if (!completarDatosContainer.classList.contains('d-none')) {
+                    completarDatosContainer.classList.add('d-none');
+                }
+                break;
+        }   
+    })
+
+    const searchInput = document.getElementById('lblClient');
+    const optionsContainer = document.querySelector('.select-options');
+    const hiddenInput = document.getElementById('lblClientValue');
+    let allOptions = Array.from(document.querySelectorAll('.select-option'));
+
+    window.addNewClientOption = function(clientData) {
+        // Create new option element
+        const newOption = document.createElement('div');
+        newOption.className = 'select-option';
+        newOption.dataset.value = clientData.email;
+        newOption.dataset.label = `${clientData.firstName} ${clientData.lastName} (${clientData.email})`;
+        newOption.textContent = `${clientData.firstName} ${clientData.lastName} (${clientData.email})`;
+
+        // Add the new option to the container
+        optionsContainer.appendChild(newOption);
+
+        // Update allOptions array
+        allOptions = Array.from(document.querySelectorAll('.select-option'));
+
+        // Set the new option as selected
+        searchInput.value = newOption.dataset.label;
+        hiddenInput.value = newOption.dataset.value;
+    };
+
+    // Function to filter options
+    function filterOptions(searchText) {
+        const filteredOptions = allOptions.filter(option => {
+            const optionText = option.textContent.toLowerCase();
+            return optionText.includes(searchText.toLowerCase());
+        });
+
+        // Hide all options first
+        allOptions.forEach(option => option.style.display = 'none');
+
+        // Show filtered options
+        filteredOptions.forEach(option => option.style.display = 'block');
+
+        // Show/hide options container based on whether there are results
+        optionsContainer.style.display = filteredOptions.length > 0 ? 'block' : 'none';
+    }
+
+    // Input event handler
+    searchInput.addEventListener('input', (e) => {
+        filterOptions(e.target.value);
+    });
+
+    // Focus event handler
+    searchInput.addEventListener('focus', () => {
+        optionsContainer.style.display = 'block';
+        filterOptions(searchInput.value);
+    });
+
+    // Click handler for options
+    optionsContainer.addEventListener('click', (e) => {
+        const option = e.target.closest('.select-option');
+        if (option) {
+            const value = option.dataset.value;
+            const label = option.dataset.label || option.textContent;
+            
+            searchInput.value = label;
+            hiddenInput.value = value;
+            optionsContainer.style.display = 'none';
+        }
+    });
+
+    // Close options when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.select-container')) {
+            optionsContainer.style.display = 'none';
+        }
+    });
+
+    // Keyboard navigation
+    searchInput.addEventListener('keydown', (e) => {
+        const visibleOptions = Array.from(optionsContainer.querySelectorAll('.select-option')).filter(
+            option => option.style.display !== 'none'
+        );
+        const currentIndex = visibleOptions.findIndex(option => option.classList.contains('selected'));
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                if (currentIndex < visibleOptions.length - 1) {
+                    visibleOptions.forEach(opt => opt.classList.remove('selected'));
+                    visibleOptions[currentIndex + 1].classList.add('selected');
+                }
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                if (currentIndex > 0) {
+                    visibleOptions.forEach(opt => opt.classList.remove('selected'));
+                    visibleOptions[currentIndex - 1].classList.add('selected');
+                }
+                break;
+            case 'Enter':
+                e.preventDefault();
+                const selectedOption = visibleOptions.find(opt => opt.classList.contains('selected'));
+                if (selectedOption) {
+                    const value = selectedOption.dataset.value;
+                    const label = selectedOption.dataset.label || selectedOption.textContent;
+                    searchInput.value = label;
+                    hiddenInput.value = value;
+                    optionsContainer.style.display = 'none';
+                }
+                break;
+        }
+    });
 
 </script>
