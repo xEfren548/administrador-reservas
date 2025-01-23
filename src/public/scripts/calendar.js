@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'resourceTimelineYear',
         scrollTime: milliseconds,
-        height: 'auto',
+        height: 600,
         expandRows: true,
         navLinks: true, // can click day/week names to navigate views
         editable: true,
@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         resourceAreaHeight: '100%', // Adjust as per your layout when
         slotMinWidth: 100, // Adjust column width for better layout
         locale: 'es',
+        stickyHeadersDates: true,
 
 
         headerToolbar: {

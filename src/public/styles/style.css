@@ -184,9 +184,24 @@ body {
 #calendar {
     background-color: #141418;
     overflow-x: auto;
+    overflow-y: hidden;
+    position: relative;
     /* Arriba | Derecha | Abajo | Izquierda */
     margin: 1em 3em 0 3em;
 
+}
+
+.fc-scroller {
+    max-height: 800px; /* Adjust this value as needed */
+    overflow-y: auto;
+}
+
+.fc-header-toolbar,
+.fc-col-header {
+    position: sticky;
+    top: 0;
+    z-index: 999; /* Ensure it stays above other elements */
+    background-color: #141418; /* Match your calendar background */
 }
 
 thead {
