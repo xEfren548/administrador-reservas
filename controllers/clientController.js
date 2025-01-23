@@ -294,7 +294,7 @@ async function deleteClientById(req, res, next) {
         return next(err);
     }    
 }
-
+        
 module.exports = {
     createClientValidators,
     editClientValidators,
