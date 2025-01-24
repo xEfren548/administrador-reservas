@@ -719,7 +719,7 @@ async function createReservation(req, res, next) {
         await documentoToAdd.save();
 
         const descripcionLimpieza = 'Limpieza ' + chaletName;
-        const fechaLimpieza = new Date(departureDate)
+        const fechaLimpieza = new Date(arrivalDate);
         const checkInDate = new Date(arrivalDate)
         const checkOutDate = new Date(departureDate)
         fechaLimpieza.setDate(fechaLimpieza.getDate())

@@ -20,40 +20,33 @@ router.get('/rackLimpieza', async (req, res) => {
         const unaSemana = moment.tz("America/Mexico_City").add(7, 'days').endOf('day'); // Fin del día dentro de una semana
 
         services = services.filter(service => {
-            const serviceDate = moment.tz(service.fecha, "America/Mexico_City");
+            const serviceDate = service.checkIn ? moment.tz(service.checkIn, "America/Mexico_City") : moment.tz(service.fecha, "America/Mexico_City");
             return serviceDate.isSameOrAfter(fechaHoy) && serviceDate.isBefore(unaSemana);
         });
 
         // Procesar los servicios obtenidos
+        const processedServices = [];
         for (const service of services) {
             service._id = service._id.toString();
             service.id_reserva = service.id_reserva.toString();
             service.fecha = moment.utc(service.fecha).format('DD-MM-YYYY');
-            // service.fechaLlegada = service.checkIn ?  moment.utc(service.checkIn).format('DD-MM-YYYY'): "-";
-            // service.fechaSalida = service.checkOut ? moment.utc(service.checkOut).format('DD-MM-YYYY') : "-";
 
             const reserva = await Documento.findById(service.id_reserva).lean();
             if (reserva) {
                 service.fechaLlegada = moment.utc(reserva.arrivalDate).format('DD-MM-YYYY');
                 service.fechaSalida = moment.utc(reserva.departureDate).format('DD-MM-YYYY');
-                console.log(moment.utc(reserva.arrivalDate).format('DD-MM-YYYY'))
-            } else {
-                service.fechaLlegada = "-";
-                service.fechaSalida = "-";
+                processedServices.push(service);
             }
-            
         }
 
-        console.log(services)
-
-        services.sort((a, b) => {
+        processedServices.sort((a, b) => {
             if (a.status === "Pendiente" && b.status !== "Pendiente") return -1;
             if (a.status !== "Pendiente" && b.status === "Pendiente") return 1;
-            return moment(b.fecha, 'DD-MM-YYYY') - moment(a.fecha, 'DD-MM-YYYY');
+            return moment(b.fechaLlegada, 'DD-MM-YYYY') - moment(a.fechaLlegada, 'DD-MM-YYYY');
         });
 
         res.render('rackLimpieza', {
-            services: services,
+            services: processedServices,
             privilege: req.session.privilege
         });
 
