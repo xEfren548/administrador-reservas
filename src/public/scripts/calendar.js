@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'resourceTimelineYear',
         scrollTime: milliseconds,
-        height: 600,
+        height: "100%",
         expandRows: true,
         navLinks: true, // can click day/week names to navigate views
         editable: true,
@@ -23,10 +23,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         dayMaxEvents: true, // allow "more" link when too many events
         timeZone: 'America/Mexico_City',
         resourceAreaWidth: '200px', // Adjust as per your layout
-        resourceAreaHeight: '100%', // Adjust as per your layout when
         slotMinWidth: 100, // Adjust column width for better layout
         locale: 'es',
-        stickyHeadersDates: true,
 
 
         headerToolbar: {

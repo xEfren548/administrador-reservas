@@ -184,16 +184,32 @@ body {
 #calendar {
     background-color: #141418;
     overflow-x: auto;
-    overflow-y: hidden;
     position: relative;
     /* Arriba | Derecha | Abajo | Izquierda */
     margin: 1em 3em 0 3em;
 
 }
 
-.fc-scroller {
-    max-height: 800px; /* Adjust this value as needed */
-    overflow-y: auto;
+/* Hide scrollbars but allow scrolling */
+#calendar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, and Edge */
+}
+
+#calendar {
+    scrollbar-width: none; /* Firefox */
+}
+
+.fc-resource-area {
+    background-color: #141418 !important; /* Match the black color from the header */
+}
+
+.fc-col-header-cell {
+    background-color: #141418 !important; /* Ensure column headers match the black theme */
+}
+
+.fc-timeline .fc-resource-group {
+    background-color: #141418 !important;
+    color: white; /* Optional: Ensure text contrast */
 }
 
 .fc-header-toolbar,
@@ -228,8 +244,16 @@ td {
     color: white !important;
 }
 
-.fc-scroller {
-    overflow-x: scroll !important;
+/* Only target the specific .fc-scroller inside .fc-scroller-harness */
+.fc-scroller-harness > .fc-scroller:not(.fc-timeline-scrollgrid-scroller) {
+    overflow: scroll !important; /* Hide scrollbars */
+    background-color: #141418 !important; /* Black background */
+    scrollbar-width: none; /* Firefox-specific */
+}
+
+/* Chrome, Edge, Safari: Hide scrollbars */
+.fc-scroller-harness > .fc-scroller:not(.fc-timeline-scrollgrid-scroller)::-webkit-scrollbar {
+    display: none;
 }
 
 .fc-scrollgrid-sync-inner {
