@@ -375,85 +375,89 @@
 
 
         // Saving new user.
-        var btnSaveUser = document.getElementById("btnSaveUser")
+        const btnSaveUser = document.getElementById("btnSaveUser");
+
         if (btnSaveUser) {
             btnSaveUser.addEventListener("click", async (event) => {
                 event.preventDefault();
-                const privilege = document.getElementById("slctUserPrivileges").value.trim();
-                console.log(document.getElementById("userPhoneNmb").value)
-                const data = {
-                    firstName: document.getElementById("txtUserName").value.trim(),
-                    lastName: document.getElementById("txtUserLastname").value.trim(),
-                    email: document.getElementById("txtUserEmail").value.trim(),
-                    phone: document.getElementById("userPhoneNmb").value.trim(),
-                    password: document.getElementById("txtUserPassword").value.trim(),
-                    privilege: privilege,
-                    color: document.getElementById("colaboratorColor").value.trim()
-                };
+                const data = collectFormData();
 
-                if (privilege !== "Inversionistas") {
-                    data.administrator = document.getElementById("slctUserAdmin").value.trim();
-                    data.adminname = $("#slctUserAdmin option:selected").text()
-                } else {
-                    data.investorType = document.getElementById('select-investorType').value
-
-                }
-
-                fetch('/api/usuarios/crear-usuario', {
-                    method: 'POST',
-                    headers: {
-                        // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            response.json().then(errorData => {
-                                let errors = errorData.message;
-
-                                if (errors === undefined) {
-                                    errorData[0].message;
-                                }
-                                
-
-                                console.log(errors)
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: "Error en la solicitud: " + errors + ".",
-                                    confirmButtonText: 'Aceptar'
-                                });
-                            });
-                            throw new Error('Error en la solicitud');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Completado!',
-                            text: data.message + '.',
-                            confirmButtonText: 'Aceptar'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                clearModal(document.getElementById("user_entry_modal"));
-                                $('#user_entry_modal').modal('hide');
-                                location.reload();
-                            }
-                        });
-                    })
-                    .catch(error => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Error al enviar la solicitud: ' + error.toLowerCase() + '.',
-                            confirmButtonText: 'Aceptar'
-                        });
+                try {
+                    const response = await fetch('/api/usuarios/crear-usuario', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
                     });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        handleError(errorData);
+                        return;
+                    }
+
+                    const result = await response.json();
+                    handleSuccess(result);
+                } catch (error) {
+                    handleFetchError(error);
+                }
             });
         }
 
+        function collectFormData() {
+            const privilege = document.getElementById("slctUserPrivileges").value.trim();
+            const data = {
+                firstName: document.getElementById("txtUserName").value.trim(),
+                lastName: document.getElementById("txtUserLastname").value.trim(),
+                email: document.getElementById("txtUserEmail").value.trim(),
+                phone: document.getElementById("userPhoneNmb").value.trim(),
+                password: document.getElementById("txtUserPassword").value.trim(),
+                privilege: privilege,
+                color: document.getElementById("colaboratorColor").value.trim()
+            };
+
+            if (privilege !== "Inversionistas") {
+                data.administrator = document.getElementById("slctUserAdmin").value.trim();
+                data.adminname = $("#slctUserAdmin option:selected").text();
+            } else {
+                data.investorType = document.getElementById('select-investorType').value;
+            }
+
+            return data;
+        }
+
+        function handleError(errorData) {
+            const errors = errorData.message || errorData.error[0].message || 'Unknown error';
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: `Error en la solicitud: ${errors}.`,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+
+        function handleSuccess(data) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Completado!',
+                text: `${data.message}.`,
+                confirmButtonText: 'Aceptar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    clearModal(document.getElementById("user_entry_modal"));
+                    $('#user_entry_modal').modal('hide');
+                    location.reload();
+                }
+            });
+        }
+
+        function handleFetchError(error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: `Error al enviar la solicitud: ${error.message.toLowerCase()}.`,
+                confirmButtonText: 'Aceptar'
+            });
+        }
         function getCombinedMessage(errorInput) {
             if (Array.isArray(errorInput)) {
                 // Si es un array de errores, unimos los mensajes
