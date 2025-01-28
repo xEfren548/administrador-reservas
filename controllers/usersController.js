@@ -10,9 +10,10 @@ const {check} = require("express-validator");
 // No uuid validator has been implemented for functions that take parameters form the URL.
 const createUserValidators = [
     check(['firstName', 'lastName'])
-        .notEmpty().withMessage(`Full name is required`)
-        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s']+$/).withMessage("Invalid full name format")
-        .isLength({ max: 255 }).withMessage("Full name must be less than 255 characters"),
+        .notEmpty().withMessage('Nombre completo es requerido')
+        .matches(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s']+$/)
+        .withMessage('El nombre solo puede contener letras (a-z, A-Z), acentos (áéíóúÁÉÍÓÚ), letras especiales (üÜñÑ), espacios y apóstrofes (\')')
+        .isLength({ max: 255 }).withMessage('El nombre debe tener menos de 255 caracteres'),
     check('email')
         .notEmpty().withMessage('Email is required')
         .isEmail().withMessage('Invalid email format')

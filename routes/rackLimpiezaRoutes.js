@@ -42,7 +42,7 @@ router.get('/rackLimpieza', async (req, res) => {
         processedServices.sort((a, b) => {
             if (a.status === "Pendiente" && b.status !== "Pendiente") return -1;
             if (a.status !== "Pendiente" && b.status === "Pendiente") return 1;
-            return moment(b.fechaLlegada, 'DD-MM-YYYY') - moment(a.fechaLlegada, 'DD-MM-YYYY');
+            return moment(a.fechaLlegada, 'DD-MM-YYYY') - moment(b.fechaLlegada, 'DD-MM-YYYY');
         });
 
         res.render('rackLimpieza', {
