@@ -1,0 +1,64 @@
+<h1 class="text-center my-4">Lista de Roles</h1>
+
+<!-- Botón para abrir el modal -->
+<button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#createRoleModal">
+  Crear Rol
+</button>
+
+<!-- Lista de roles -->
+{{#if roles.length}}
+  <div class="list-group">
+    {{#each roles}}
+      <div class="list-group-item">
+        <h2>{{this.name}}</h2>
+        <p>{{this.description}}</p>
+        <h3>Permisos:</h3>
+        <ul>
+          {{#each this.permissions}}
+            <li>{{this}} ({{lookup ../permissions this}})</li>
+          {{/each}}
+        </ul>
+      </div>
+    {{/each}}
+  </div>
+{{else}}
+  <p class="text-center">No hay roles disponibles.</p>
+{{/if}}
+
+<!-- Modal para crear un rol -->
+<div class="modal fade" id="createRoleModal" tabindex="-1" aria-labelledby="createRoleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createRoleModalLabel">Crear Nuevo Rol</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="/roles" method="POST">
+          <div class="mb-3">
+            <label for="name" class="form-label">Nombre del Rol:</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label">Descripción:</label>
+            <input type="text" class="form-control" id="description" name="description">
+          </div>
+          <div class="mb-3">
+            <h3>Permisos:</h3>
+            <div class="permissions-list">
+              {{#each permissions}}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="permissions" value="{{@key}}" id="perm-{{@key}}">
+                  <label class="form-check-label" for="perm-{{@key}}">
+                    {{this}}
+                  </label>
+                </div>
+              {{/each}}
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Crear Rol</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -11,8 +11,8 @@ const RoleSchema = new mongoose.Schema({
         required: false,
     },
     permissions: [{
-        type: Schema.Types.ObjectId,
-        ref: 'Permission',
+        type: String,
+        required: true
     }],
 });
 
