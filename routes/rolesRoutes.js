@@ -8,5 +8,6 @@ router.get('/roles', (req, res) => {
 });
 
 router.get('/newroles', rolesController.showCreateRoleForm)
+router.post('/newroles', rolesController.createRole)
 
 module.exports = router;

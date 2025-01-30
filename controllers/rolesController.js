@@ -1,30 +1,36 @@
 const Role = require('../models/Roles');
 const permissions = require('../models/permissions');
 
-const showCreateRoleForm = (req, res) => {
-    res.render('createRole', { permissions });
-  };
+const showCreateRoleForm = async (req, res) => {
+    const roles = await Role.find().lean();
+    console.log(roles)
+
+    res.render('createRole', { roles, permissions });
+};
 
 // Crear un nuevo rol
 const createRole = async (req, res) => {
+    const { name, description, permissions: rolePermissions } = req.body;
+
+    console.log('Permisos recibidos:', rolePermissions); // Depuración
+
+    // Validar que los permisos proporcionados existan en el diccionario
+    const invalidPermissions = rolePermissions.filter(
+        (perm) => !permissions[perm] // Verifica si el permiso existe en el diccionario
+    );
+
+    if (invalidPermissions.length > 0) {
+        return res.status(400).json({
+            message: `Permisos no válidos: ${invalidPermissions.join(', ')}`,
+        });
+    }
+
     try {
-        const { name, description, permissions: rolePermissions } = req.body;
-
-        // Validar que los permisos proporcionados existan en la lista fija
-        const invalidPermissions = rolePermissions.filter(
-            (perm) => !Object.values(permissions).includes(perm)
-        );
-
-        if (invalidPermissions.length > 0) {
-            return res.status(400).json({
-                message: `Permisos no válidos: ${invalidPermissions.join(', ')}`,
-            });
-        }
-
         const role = new Role({ name, description, permissions: rolePermissions });
         await role.save();
         res.status(201).json(role);
     } catch (error) {
+        console.error(error);
         res.status(400).json({ message: error.message });
     }
 };

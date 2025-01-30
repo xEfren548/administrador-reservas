@@ -2,63 +2,126 @@
 
 <!-- Botón para abrir el modal -->
 <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#createRoleModal">
-  Crear Rol
+    Crear Rol
 </button>
 
 <!-- Lista de roles -->
 {{#if roles.length}}
-  <div class="list-group">
-    {{#each roles}}
-      <div class="list-group-item">
-        <h2>{{this.name}}</h2>
-        <p>{{this.description}}</p>
-        <h3>Permisos:</h3>
-        <ul>
-          {{#each this.permissions}}
-            <li>{{this}} ({{lookup ../permissions this}})</li>
-          {{/each}}
-        </ul>
-      </div>
-    {{/each}}
-  </div>
+<table id="rolesTable" class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Permisos</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each roles}}
+        <tr>
+            <td>{{this.name}}</td>
+            <td>{{this.description}}</td>
+            <td>
+                <ul>
+                    {{#each this.permissions}}
+                    <li>{{this}} ({{lookup ../permissions this}})</li>
+                    {{/each}}
+                </ul>
+            </td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
 {{else}}
-  <p class="text-center">No hay roles disponibles.</p>
+<p class="text-center">No hay roles disponibles.</p>
 {{/if}}
+
 
 <!-- Modal para crear un rol -->
 <div class="modal fade" id="createRoleModal" tabindex="-1" aria-labelledby="createRoleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="createRoleModalLabel">Crear Nuevo Rol</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form action="/roles" method="POST">
-          <div class="mb-3">
-            <label for="name" class="form-label">Nombre del Rol:</label>
-            <input type="text" class="form-control" id="name" name="name" required>
-          </div>
-          <div class="mb-3">
-            <label for="description" class="form-label">Descripción:</label>
-            <input type="text" class="form-control" id="description" name="description">
-          </div>
-          <div class="mb-3">
-            <h3>Permisos:</h3>
-            <div class="permissions-list">
-              {{#each permissions}}
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" name="permissions" value="{{@key}}" id="perm-{{@key}}">
-                  <label class="form-check-label" for="perm-{{@key}}">
-                    {{this}}
-                  </label>
-                </div>
-              {{/each}}
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createRoleModalLabel">Crear Nuevo Rol</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-          </div>
-          <button type="submit" class="btn btn-primary">Crear Rol</button>
-        </form>
-      </div>
+            <div class="modal-body">
+                <form id="createRoleForm">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nombre del Rol:</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Descripción:</label>
+                        <input type="text" class="form-control" id="description" name="description">
+                    </div>
+                    <div class="mb-3">
+                        <h3>Permisos:</h3>
+                        <div class="permissions-list">
+                            {{#each permissions}}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="permissions" value="{{@key}}"
+                                    id="perm-{{@key}}">
+                                <label class="form-check-label" for="perm-{{@key}}">
+                                    {{this}}
+                                </label>
+                            </div>
+                            {{/each}}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Crear Rol</button>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
+
+<script>
+    document.getElementById('createRoleForm').addEventListener('submit', async (event) => {
+        event.preventDefault(); // Evitar el envío tradicional del formulario
+
+        const formData = new FormData(event.target);
+        const data = {
+            name: formData.get('name'),
+            description: formData.get('description'),
+            permissions: formData.getAll('permissions'),
+        };
+
+        try {
+            const response = await fetch('/newroles', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al crear el rol');
+            }
+
+            const role = await response.json();
+            console.log('Rol creado:', role);
+
+            // Cerrar el modal
+            Swal.fire({
+                icon: 'success',
+                title: '¡Completado!',
+                text: 'Rol creado correctamente.',
+                confirmButtonText: 'Aceptar'
+            })
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createRoleModal'));
+            modal.hide();
+
+            // Recargar la página para mostrar el nuevo rol
+            window.location.reload();
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un problema al crear el rol.',
+                confirmButtonText: 'Aceptar'
+            })
+        }
+    });
+</script>
