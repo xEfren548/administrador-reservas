@@ -61,11 +61,16 @@ const getRoleById = async (req, res) => {
 // Actualizar un rol
 const updateRole = async (req, res) => {
     try {
-        const { name, description, permissions: rolePermissions } = req.body;
+        const { id, name, description, permissions: rolePermissions } = req.body;
+
+        const foundRole = await Role.findById(id);
+        if (!foundRole) {
+            return res.status(404).json({ message: 'Rol no encontrado' });
+        }
 
         // Validar que los permisos proporcionados existan en la lista fija
         const invalidPermissions = rolePermissions.filter(
-            (perm) => !Object.values(permissions).includes(perm)
+            (perm) => !permissions[perm] // Verifica si el permiso existe en el diccionario
         );
 
         if (invalidPermissions.length > 0) {
