@@ -21,11 +21,11 @@
             <td>{{this.name}}</td>
             <td>{{this.description}}</td>
             <td>
-                <ul>
-                    {{#each this.mappedPermissions}}
-                    <li>{{this}}</li>
-                    {{/each}}
-                </ul>
+                <!-- Button to trigger the permissions modal -->
+                <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#permissionsModal"
+                    onclick="showPermissions('{{this.mappedPermissions}}')">
+                    Ver Permisos
+                </button>
             </td>
             <td>
                 <!-- Botones de editar y borrar -->
@@ -40,6 +40,24 @@
         {{/each}}
     </tbody>
 </table>
+
+<!-- Permissions Modal -->
+<div class="modal fade" id="permissionsModal" tabindex="-1" aria-labelledby="permissionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="permissionsModalLabel">Permisos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="permissionsList"></ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <!-- Modal para crear un rol -->
@@ -338,5 +356,27 @@
         permissions.forEach(permission => {
             document.getElementById(`edit-perm-${permission}`).checked = true;
         });
+    }
+
+    function showPermissions(permissions) {
+        // Convert the permissions string back to an array
+        const permissionsArray = permissions.split(',');
+
+        // Get the permissions list element
+        const permissionsList = document.getElementById('permissionsList');
+
+        // Clear any existing permissions
+        permissionsList.innerHTML = '';
+
+        // Add each permission to the list
+        permissionsArray.forEach((permission) => {
+            const li = document.createElement('li');
+            li.textContent = permission;
+            permissionsList.appendChild(li);
+        });
+
+        // Show the modal (if using Bootstrap's built-in modal)
+        const permissionsModal = new bootstrap.Modal(document.getElementById('permissionsModal'));
+        permissionsModal.show();
     }
 </script>
