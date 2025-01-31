@@ -10,5 +10,6 @@ router.get('/roles', (req, res) => {
 router.get('/newroles', rolesController.showCreateRoleForm)
 router.post('/newroles', rolesController.createRole)
 router.put('/roles/:id/edit', rolesController.updateRole)
+router.delete('/roles/:id/delete', rolesController.deleteRole)
 
 module.exports = router;

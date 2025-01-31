@@ -4,15 +4,27 @@ const permissions = require('../models/permissions');
 const showCreateRoleForm = async (req, res) => {
     const roles = await Role.find().lean();
     console.log(roles)
+    console.log(permissions)
 
-    res.render('createRole', { roles, permissions });
+    const rolesWithMappedPermissions = roles.map((role) => ({
+        ...role,
+        mappedPermissions: role.permissions.map((permission) => permissions[permission]),
+    }));
+
+    res.render('createRole', { roles: rolesWithMappedPermissions, permissions });
 };
 
 // Crear un nuevo rol
 const createRole = async (req, res) => {
     const { name, description, permissions: rolePermissions } = req.body;
 
+    const nameUpperCase = name.toUpperCase();
+
     console.log('Permisos recibidos:', rolePermissions); // Depuración
+
+    if (!rolePermissions || rolePermissions.length === 0) {
+        return res.status(400).json({ message: 'Por favor, selecciona al menos un permiso.' });
+    }
 
     // Validar que los permisos proporcionados existan en el diccionario
     const invalidPermissions = rolePermissions.filter(
@@ -26,11 +38,19 @@ const createRole = async (req, res) => {
     }
 
     try {
-        const role = new Role({ name, description, permissions: rolePermissions });
+        const role = new Role({ name: nameUpperCase, description, permissions: rolePermissions });
         await role.save();
         res.status(201).json(role);
     } catch (error) {
         console.error(error);
+        if (error.code === 11000) {
+            const duplicateKey = Object.keys(error.keyPattern)[0]; // Get the duplicate key (e.g., 'name')
+            const duplicateValue = error.keyValue[duplicateKey]; // Get the duplicate value (e.g., 'test3')
+
+            return res.status(400).json({
+                message: `El rol '${duplicateValue}' ya existe. Por favor, elige otro nombre.`,
+            });
+        }
         res.status(400).json({ message: error.message });
     }
 };
@@ -89,6 +109,18 @@ const updateRole = async (req, res) => {
         }
         res.status(200).json(role);
     } catch (error) {
+        console.error(error);
+        if (error.code === 11000) {
+            const duplicateKey = Object.keys(error.keyPattern)[0]; // Get the duplicate key (e.g., 'name')
+            const duplicateValue = error.keyValue[duplicateKey]; // Get the duplicate value (e.g., 'test3')
+
+            return res.status(400).json({
+                message: `El rol '${duplicateValue}' ya existe. Por favor, elige otro nombre.`,
+            });
+        }
+
+        // Handle other errors
+        console.error('Error updating role:', error);
         res.status(400).json({ message: error.message });
     }
 };

@@ -22,22 +22,19 @@
             <td>{{this.description}}</td>
             <td>
                 <ul>
-                    {{#each this.permissions}}
-                    <li>{{this}} ({{lookup ../permissions this}})</li>
+                    {{#each this.mappedPermissions}}
+                    <li>{{this}}</li>
                     {{/each}}
                 </ul>
             </td>
             <td>
                 <!-- Botones de editar y borrar -->
-                <button class="btn btn-warning btn-sm"
-                        data-role-id="{{this._id}}"
-                        data-role-name="{{this.name}}"
-                        data-role-description="{{this.description}}"
-                        data-role-permissions="{{this.permissions}}"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#editRoleModal"
-                        onclick="fillPermissions(this)">Editar</button>
-                <button class="btn btn-danger btn-sm delete-role" data-id="{{this._id}}">Borrar</button>
+                <button class="btn btn-warning btn-sm" data-role-id="{{this._id}}" data-role-name="{{this.name}}"
+                    data-role-description="{{this.description}}" data-role-permissions="{{this.permissions}}"
+                    data-bs-toggle="modal" data-bs-target="#editRoleModal"
+                    onclick="fillPermissions(this)">Editar</button>
+                <button class="btn btn-danger btn-sm delete-role" data-role-id="{{this._id}}"
+                    onclick="deleteRole(this)">Borrar</button>
             </td>
         </tr>
         {{/each}}
@@ -66,14 +63,19 @@
                     </div>
                     <div class="mb-3">
                         <h3>Permisos:</h3>
-                        <div class="permissions-list">
+                        <!-- "Select All" Button -->
+                        <button type="button" class="btn btn-secondary btn-sm mb-2" id="select-all-btn">Seleccionar
+                            todas</button>
+                        <div class="row">
                             {{#each permissions}}
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="permissions" value="{{@key}}"
-                                    id="perm-{{@key}}">
-                                <label class="form-check-label" for="perm-{{@key}}">
-                                    {{this}}
-                                </label>
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input permission-checkbox" type="checkbox"
+                                        name="permissions" value="{{@key}}" id="perm-{{@key}}">
+                                    <label class="form-check-label" for="perm-{{@key}}">
+                                        {{this}}
+                                    </label>
+                                </div>
                             </div>
                             {{/each}}
                         </div>
@@ -108,14 +110,16 @@
                     </div>
                     <div class="mb-3">
                         <h3>Permisos:</h3>
-                        <div class="permissions-list">
+                        <div class="row">
                             {{#each permissions}}
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="permissions" value="{{@key}}"
-                                    id="edit-perm-{{@key}}">
-                                <label class="form-check-label" for="edit-perm-{{@key}}">
-                                    {{this}}
-                                </label>
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="permissions" value="{{@key}}"
+                                        id="edit-perm-{{@key}}">
+                                    <label class="form-check-label" for="edit-perm-{{@key}}">
+                                        {{this}}
+                                    </label>
+                                </div>
                             </div>
                             {{/each}}
                         </div>
@@ -164,7 +168,8 @@
             });
 
             if (!response.ok) {
-                throw new Error('Error al crear el rol');
+                const errorData = await response.json();
+                throw new Error(errorData.message);
             }
 
             const role = await response.json();
@@ -176,18 +181,17 @@
                 title: '¡Completado!',
                 text: 'Rol creado correctamente.',
                 confirmButtonText: 'Aceptar'
-            })
-            const modal = bootstrap.Modal.getInstance(document.getElementById('createRoleModal'));
-            modal.hide();
-
-            // Recargar la página para mostrar el nuevo rol
-            window.location.reload();
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.reload();
+                }
+            });
         } catch (error) {
             console.error('Error:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Hubo un problema al crear el rol.',
+                text: 'Hubo un problema al crear el rol: ' + error.message,
                 confirmButtonText: 'Aceptar'
             })
         }
@@ -197,7 +201,7 @@
         event.preventDefault(); // Evitar el envío tradicional del formulario
 
         const formData = new FormData(event.target);
-        
+
         const roleId = document.getElementById('editRoleId').value;
         const data = {
             id: roleId,
@@ -248,18 +252,84 @@
 
     });
 
+    const selectAllBtn = document.getElementById('select-all-btn');
+    const permissionCheckboxes = document.querySelectorAll('.permission-checkbox');
+
+    let allSelected = false;
+
+    selectAllBtn.addEventListener('click', function () {
+        allSelected = !allSelected; // Toggle the state
+
+        // Update all checkboxes
+        permissionCheckboxes.forEach((checkbox) => {
+            checkbox.checked = allSelected;
+        });
+
+        // Update the button text
+        selectAllBtn.textContent = allSelected ? 'Deseleccionar todas' : 'Seleccionar todas';
+    });
+
+    async function deleteRole(button) {
+        const roleId = button.getAttribute('data-role-id');
+
+        const confirmation = await Swal.fire({
+            icon: 'question',
+            title: 'Eliminar Rol',
+            text: '¿Estás seguro de eliminar este rol?',
+            showCancelButton: true,
+        })
+
+        if (!confirmation.isConfirmed) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/roles/${roleId}/delete`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message);
+            }
+
+            const role = await response.json();
+            console.log('Rol eliminado:', role);
+
+            // Cerrar el modal
+            Swal.fire({
+                icon: 'success',
+                title: '¡Completado!',
+                text: 'Rol eliminado correctamente.',
+                confirmButtonText: 'Aceptar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.reload();
+                }
+            })
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un problema al eliminar el rol: ' + error.message,
+                confirmButtonText: 'Aceptar'
+            })
+        }
+    }
+
     function fillPermissions(button) {
         const roleId = button.getAttribute('data-role-id');
         const roleName = button.getAttribute('data-role-name');
         const roleDescription = button.getAttribute('data-role-description');
         const rolePermissions = button.getAttribute('data-role-permissions');
 
-        
+
         console.log(roleId)
         console.log(roleName)
         console.log(roleDescription)
         console.log(rolePermissions)
-        
+
         document.getElementById('editRoleId').value = roleId;
         document.getElementById('edit-name').value = roleName;
         document.getElementById('edit-description').value = roleDescription;
