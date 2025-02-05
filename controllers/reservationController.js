@@ -39,15 +39,18 @@ async function showReservationsView(req, res, next) {
         const data = habitaciones;
 
         const userRole = req.session.role;
-        const userPermissions = await Roles.findOne({role: userRole}).lean();
+        console.log(req.session)
+
+        const userPermissions = await Roles.findById(userRole);
         if(!userPermissions){
-            throw new Error("No role defined for user");
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
         }
 
-        const mappedPermissions = userPermissions.permissions.map((permission) => permissions[permission]);
-        console.log('User permissions:', mappedPermissions);
+        const permittedRole = "VIEW_MAIN_CALENDAR";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para ver el calendario principal");
+        }
 
-        console.log('First room structure:', JSON.stringify(habitaciones[0], null, 2));
 
         // console.log(data);
         const chalets = habitaciones.map(chalet => {

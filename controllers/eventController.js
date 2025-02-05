@@ -133,7 +133,6 @@ async function obtenerEventos(req, res) {
     const { id } = req.params;
     try {
         const eventos = await Documento.find( { status: { $nin: ["no-show", "cancelled"]}}).lean();
-        console.log(eventos)
         let eventosExistentes = eventos[0].events;
 
         let cleaningDetailsMap = {};
