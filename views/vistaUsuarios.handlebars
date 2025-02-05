@@ -18,6 +18,7 @@
                         <th scope="col">Email</th>
                         <th scope="col">Celular</th>
                         <th scope="col">Privilegio</th>
+                        <th scope="col">Rol</th>
                         <th scope="col">Administrador</th>
                         <th scope="col">Acciones</th>
                     </tr>
@@ -30,12 +31,13 @@
                         <td>{{email}}</td>
                         <td>{{phone}}</td>
                         <td>{{privilege}}</td>
+                        <td>{{roleName}}</td>
                         <td>{{adminname}}</td>
                         <td class="text-center">
                             <button type="button" class="btn btn-primary" data-client-firstName="{{firstName}}"
                                 data-client-lastName="{{lastName}}" data-client-email="{{email}}" data-client-phone="{{phone}}"
                                 data-client-privilege="{{privilege}}" data-client-adminname="{{administrator}}"
-                                data-client-color="{{color}}" {{#if investorType}}
+                                data-client-color="{{color}}" data-client-role="{{role}}" {{#if investorType}}
                                 data-client-investorType="{{investorType}}"
                                 {{/if}} data-bs-toggle="modal"
                                 data-bs-target="#modify-user_entry_modal" onclick="showClientEmail(this)">
@@ -113,7 +115,7 @@
                             <label for="slctUserPrivileges">Privilegio: </label>
                         </div>
                         <div class="row">
-                            <div class="col-8">
+                            <div class="col-8 mb-2">
                                 <select name="slctUserPrivileges" id="slctUserPrivileges"
                                     class="form-select form-select-md" required>
                                     <option value="" selected disabled> Selecciona un privilegio para el usuario--
@@ -128,6 +130,22 @@
 
                                 </select>
 
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <label for="slctUserRolelbl">Rol: </label>
+                        </div>
+                        <div class="row">
+                            <div class="col-8 mb-2">
+                                <select name="slctUserRolelbl" id="slctUserRole"
+                                    class="form-select form-select-md" required>
+                                    <option value="" selected disabled> Selecciona un rol para el usuario--</option>
+                                    {{#each roles}}
+                                    <option value="{{this._id}}">{{this.name}}</option>
+                                    {{/each}}
+                                    
+                                </select>
                             </div>
                         </div>
                         <div class="row mt-2">
@@ -243,7 +261,7 @@
                             <label for="slctUserPrivilegesUpdlbl">Privilegio: </label>
                         </div>
                         <div class="row">
-                            <div class="col-8">
+                            <div class="col-8 mb-2">
                                 <select name="slctUserPrivilegesUpdlbl" id="slctUserPrivilegesUpd"
                                     class="form-select form-select-md" required>
                                     <option value="" selected disabled> Selecciona un privilegio para el usuario--
@@ -256,6 +274,21 @@
                                     <option value="Dueño de cabañas">Dueño de cabañas</option>
                                     <option value="Inversionistas">Inversionistas</option>
                                     <option value="Colaborador dueño">Colaborador de dueño de cabañas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label for="slctUserRoleUpdlbl">Rol: </label>
+                        </div>
+                        <div class="row">
+                            <div class="col-8 mb-2">
+                                <select name="slctUserRoleUpdlbl" id="slctUserRoleUpd"
+                                    class="form-select form-select-md" required>
+                                    <option value="" selected disabled> Selecciona un rol para el usuario--</option>
+                                    {{#each roles}}
+                                    <option value="{{this._id}}">{{this.name}}</option>
+                                    {{/each}}
+                                    
                                 </select>
                             </div>
                         </div>
@@ -412,7 +445,8 @@
                 phone: document.getElementById("userPhoneNmb").value.trim(),
                 password: document.getElementById("txtUserPassword").value.trim(),
                 privilege: privilege,
-                color: document.getElementById("colaboratorColor").value.trim()
+                color: document.getElementById("colaboratorColor").value.trim(),
+                role: document.getElementById("slctUserRole").value
             };
 
             if (privilege !== "Inversionistas") {
@@ -482,7 +516,8 @@
                     password: document.getElementById("txtUserPasswordUpd").value.trim(),
                     phone: document.getElementById("userPhoneNmbUpd").value.trim(),
                     privilege: privilege,
-                    color: document.getElementById("colaboratorColorUpd").value.trim()
+                    color: document.getElementById("colaboratorColorUpd").value.trim(),
+                    role: document.getElementById("slctUserRoleUpd").value
                 };
 
                 if (privilege !== "Inversionistas") {
@@ -717,6 +752,7 @@
         const color = button.getAttribute('data-client-color');
         const investorType = button.getAttribute('data-client-investorType');
         const phone = button.getAttribute('data-client-phone');
+        const role = button.getAttribute('data-client-role');
 
         const owners = {{{ json owners }}};
         const admins = {{{ json admins }}};
@@ -763,6 +799,7 @@
         document.querySelector('#colaboratorColorUpd').value = color;
         document.querySelector('#select-investorTypeUpd').value = investorType;
         document.querySelector('#userPhoneNmbUpd').value = phone.replace("+52", "");
+        document.querySelector('#slctUserRoleUpd').value = role;
 
 
     }

@@ -2,6 +2,8 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const Usuario = require('../models/Usuario');
 const logController = require('../controllers/logController');
+const Roles = require("../models/Roles");
+const permissions = require('../models/permissions');
 const sendPassword = require("../utils/email");
 const NotFoundError = require("../common/error/not-found-error");
 const BadRequestError = require("../common/error/bad-request-error");
@@ -124,6 +126,15 @@ async function showUsersView(req, res, next){
             throw new NotFoundError("No users found");
         }
 
+        for (const user of users) {
+            const roleName = await Roles.findOne({ _id: user.role });
+            if (roleName) {
+                user.roleName = roleName.name;
+            }
+        }
+
+        
+
         const admins = await Usuario.find({"$or": [{"privilege": "Administrador"}, {"privilege": "Vendedor"}]}).lean();
         if (!admins) {
             throw new NotFoundError("No admin found");
@@ -134,12 +145,18 @@ async function showUsersView(req, res, next){
             throw new NotFoundError("No owner found");
         }
 
-        console.log(owners)
+        const roles = await Roles.find({}).lean();
+        if (!roles) {
+            throw new NotFoundError("No roles found");
+        }
 
+        console.log(owners)
+        // /api/usuarios
         res.render('vistaUsuarios', {
             users: users,
             admins: admins,
-            owners: owners
+            owners: owners,
+            roles: roles
         });
     } catch (err) {
         return next(err);
@@ -157,7 +174,7 @@ async function getAllUsersMongo(){
 }
 
 async function createUser(req, res, next) {
-    const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType } = req.body;
+    const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType, role } = req.body;
     const mexPhone = `${phone}`
 
     if (investorType){
@@ -165,8 +182,14 @@ async function createUser(req, res, next) {
             return next(new BadRequestError("Invalid investor type"));
         }
     }
+
+    const rol = await Roles.findById(role);
+    if (!rol) {
+        return next(new NotFoundError("Rol not found"));
+    }
+
     const userToAdd = new Usuario ({
-        firstName, lastName, email, phone: mexPhone, password, privilege, administrator,adminname, color, investorType
+        firstName, lastName, email, phone: mexPhone, password, privilege, administrator,adminname, color, investorType, role
     });
 
     try{    
@@ -226,7 +249,7 @@ async function obtenerUsuarioPorIdMongo(uuid){
 }
 
 async function editarUsuario(req, res, next) {
-    const { firstName, lastName, email, phone, password, privilege, administrator,adminname, color, investorType } = req.body;
+    const { firstName, lastName, email, phone, password, privilege, administrator,adminname, color, investorType, role } = req.body;
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
@@ -250,6 +273,13 @@ async function editarUsuario(req, res, next) {
             return next(new BadRequestError("Invalid investor type"));
         }
         updateFields.investorType = investorType;
+    }
+    if (role) {
+        const rol = await Roles.findById(role);
+        if (!rol) {
+            return next(new NotFoundError("Rol not found"));
+        }
+        updateFields.role = rol._id;
     }
 
     try {

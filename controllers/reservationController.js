@@ -5,6 +5,8 @@ const Cliente = require('../models/Cliente');
 const Habitacion = require("../models/Habitacion");
 const TipologiasCabana = require('../models/TipologiasCabana');
 const NotFoundError = require("../common/error/not-found-error");
+const Roles = require("../models/Roles");
+const permissions = require('../models/permissions');
 
 
 const {check} = require("express-validator");
@@ -27,7 +29,7 @@ const showReservationsViewValidators = [
             return true;
         }),
 ];
-
+// VIEW_MAIN_CALENDAR: 'Ver calendario principal'
 async function showReservationsView(req, res, next) {
     try {
         const habitaciones = await Habitacion.find().lean();
@@ -35,6 +37,15 @@ async function showReservationsView(req, res, next) {
             throw new Error("No room found");
         }
         const data = habitaciones;
+
+        const userRole = req.session.role;
+        const userPermissions = await Roles.findOne({role: userRole}).lean();
+        if(!userPermissions){
+            throw new Error("No role defined for user");
+        }
+
+        const mappedPermissions = userPermissions.permissions.map((permission) => permissions[permission]);
+        console.log('User permissions:', mappedPermissions);
 
         console.log('First room structure:', JSON.stringify(habitaciones[0], null, 2));
 
