@@ -18,7 +18,6 @@ module.exports = {
     CREATE_RESERVATIONS: 'Crear reservaciones',
     DELETE_RESERVATIONS: 'Eliminar reservaciones',
     MODIFY_RESERVATION_STATUS: 'Editar estado de reserva',
-    ADD_SERVICES: 'Alta de servicios adicionales',
     ADD_SERVICES_RESERVATION: 'Alta de servicios adicionales en reserva',
     VIEW_GLOBAL_UTILITIES: 'Ver utilidades globales',
     VIEW_PRICE_CALENDAR: 'Ver calendario de precios',

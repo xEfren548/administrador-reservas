@@ -7,6 +7,7 @@ const habitacionController = require('../controllers/habitacionController');
 const utilidadesController = require('../controllers/utilidadesController');
 const usersController = require('./../controllers/usersController');
 const logController = require('../controllers/logController');
+const Roles = require('../models/Roles');
 
 async function getAllRackServices(req, res, next) {
     try {
@@ -43,6 +44,18 @@ async function getSpecificRackServicesMongo(req, res, next) {
 
 async function createRackService(req, res, next) {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "ADD_SERVICES_RESERVATION";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para añadir servicios en reservas");
+        }
+
         const loggedUserId = req.session.id;
         const { id_reserva, id_servicio, descripcion, fecha, status, costo } = req.body;
 

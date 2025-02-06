@@ -14,6 +14,7 @@ const mongoose = require('mongoose');
 const { format } = require('date-fns');
 const moment = require('moment');
 const { es } = require('date-fns/locale');
+const Roles = require('../models/Roles');
 
 
 const Cliente = require('../models/Cliente');
@@ -536,6 +537,18 @@ async function createReservation(req, res, next) {
     let client = null;
 
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "CREATE_RESERVATIONS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para crear reservas");
+        }
+
         console.log("is depo: ", isDeposit);
         console.log("cliente email: ", clientEmail);
 
@@ -1030,6 +1043,19 @@ async function eliminarEvento(req, res) {
         const id = req.params.id;
         const eventoAeliminar = await Documento.findByIdAndDelete(id);
 
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "CREATE_RESERVATIONS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para crear reservas");
+        }
+
+
         if (!eventoAeliminar) {
             return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
         }
@@ -1082,6 +1108,18 @@ async function eliminarEvento(req, res) {
 
 async function modificarEvento(req, res) {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "MODIFY_RESERVATION_STATUS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para modificar reservas");
+        }
+
         const { event, newResource } = req.body;
 
         console.log('eventoRecibido: ', event);
@@ -1220,6 +1258,18 @@ async function moveToPlayground(req, res) {
     console.log(idReserva)
 
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "MODIFY_RESERVATION_STATUS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para modificar reservas");
+        }
+
         const evento = await Documento.findById(idReserva);
         const chalet = await Habitacion.findById(evento.resourceId);
         // const eventosExistentes = await Documento.findOne();
