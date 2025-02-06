@@ -590,7 +590,7 @@ async function createReservation(req, res, next) {
         const mongooseChaletId = new mongoose.Types.ObjectId(chalet._id);
         const overlappingReservation = await Documento.findOne({
             resourceId: mongooseChaletId,
-            status: { $nin: ["cancelled", "no-show"] },
+            status: { $nin: ["cancelled", "no-show", "playground"] },
             $and: [
                 { arrivalDate: { $lt: departureDateISO } }, // Start date overlaps or is before the departure date
                 { departureDate: { $gt: arrivalDateISO } }, // End date overlaps or is after the arrival date
@@ -1199,7 +1199,7 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
     // Query events with overlapping dates in MongoDB
     const overlappingEvents = await Documento.find({
         resourceId: newResourceId,
-        status: { $nin: ["cancelled", "no-show"] },
+        status: { $nin: ["cancelled", "no-show", "playground"] },
         $or: [
             { arrivalDate: { $lt: departureDateISO }, departureDate: { $gt: arrivalDateISO } },
         ],
