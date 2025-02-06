@@ -119,8 +119,21 @@ const deleteUserValidators = [
         }),
 ];
 
+// VIEW_USERS
 async function showUsersView(req, res, next){
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "VIEW_USERS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para ver los usuarios");
+        }
+
         const users = await Usuario.find({}).lean();
         if (!users) {
             throw new NotFoundError("No users found");
@@ -173,9 +186,22 @@ async function getAllUsersMongo(){
     }
 }
 
+// CREATE_USERS
 async function createUser(req, res, next) {
     const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType, role } = req.body;
     const mexPhone = `${phone}`
+
+    const userRole = req.session.role;
+
+    const userPermissions = await Roles.findById(userRole);
+    if(!userPermissions){
+        return next(new BadRequestError("El usuario no tiene un rol definido, contacte al administrador"));
+    }
+
+    const permittedRole = "CREATE_USERS";
+    if (!userPermissions.permissions.includes(permittedRole)) {
+        return next(new BadRequestError("El usuario no tiene permiso para crear usuarios"));
+    }
 
     if (investorType){
         if (investorType !== 'Asimilado' && investorType !== 'RESICO Fisico' && investorType !== 'PF con AE y PM' && investorType !== 'Efectivo') {
@@ -248,9 +274,23 @@ async function obtenerUsuarioPorIdMongo(uuid){
     }    
 }
 
+// EDIT_USERS
 async function editarUsuario(req, res, next) {
     const { firstName, lastName, email, phone, password, privilege, administrator,adminname, color, investorType, role } = req.body;
     const updateFields = {};
+
+    const userRole = req.session.role;
+
+    const userPermissions = await Roles.findById(userRole);
+    if(!userPermissions){
+        return next(new BadRequestError("El usuario no tiene un rol definido, contacte al administrador"))  ;
+    }
+
+    const permittedRole = "EDIT_USERS";
+    if (!userPermissions.permissions.includes(permittedRole)) {
+        return next(new BadRequestError("El usuario no tiene permiso para editar usuarios"));
+    }
+
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
     if (password) {
@@ -345,10 +385,23 @@ async function editarUsuarioPorId(req, res, next) {
     }
 }
 
+// DELETE_USERS
 async function deleteUser(req, res, next) {
     const { email } = req.body;
 
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "DELETE_USERS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para eliminar usuarios.");
+        }
+
         const userToDelete = await Usuario.findOneAndDelete({ email });
         if (!userToDelete) {
             throw new NotFoundError("Client not found");

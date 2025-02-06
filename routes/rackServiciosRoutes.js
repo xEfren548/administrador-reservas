@@ -2,11 +2,23 @@ const express = require('express');
 const moment = require('moment');
 const router = express.Router();
 const rackServiciosController = require('../controllers/rackServiciosController');
-
+const Roles = require('../models/Roles')
 
 
 router.get('/rackservicios', async (req, res) => {
     try {
+
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "VIEW_RACK_SERVICES";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para ver los servicios");
+        }
 
         let services = await rackServiciosController.getAllRackServicesMongo(req, res); // Pass req and res to the controller function
         services.forEach(service => {

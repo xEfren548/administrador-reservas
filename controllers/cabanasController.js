@@ -12,6 +12,9 @@ const ftp = require('basic-ftp');
 const Usuario = require("../models/Usuario");
 const fs = require('fs');
 
+const Roles = require("../models/Roles");
+const permissions = require('../models/permissions');
+
 const showCreateChaletViewValidators = [
     check()
         .custom(async (value, { req }) => {
@@ -366,8 +369,21 @@ async function showChaletsData(req, res, next) {
     }
 }
 
+// Vista Alta de Cabañas CREATE_CABINS
 async function showChaletsView(req, res, next) {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "CREATE_CABINS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para crear cabañas");
+        }
+
         var chalets = await Habitacion.find().lean();
         // chalets = chalets.resources;
 
@@ -481,6 +497,18 @@ async function createChalet(req, res, next) {
     };
 
     try {
+        
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            return next(new BadRequestError("El usuario no tiene un rol definido, contacte al administrador"))  ;
+        }
+
+        const permittedRole = "CREATE_CABINS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            return next(new BadRequestError("El usuario no tiene permiso para crear cabañas"));
+        }
         // const chalets = await Habitacion.findOne();
         // chalets.resources.push(chaletToAdd);
         // await chalets.save();
@@ -700,8 +728,22 @@ function getImageFileName(imagePath) {
     return imagePath.split('/').pop();
 }
 
+// Vista editar cabañas EDIT_CABINS
 async function showEditChaletsView(req, res, next) {
     try {
+        
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "EDIT_CABINS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para editar cabañas"); 
+        }
+
         var chalets = await Habitacion.find().lean();
         // chalets = chalets.resources;
         for (const chalet of chalets) {
@@ -871,7 +913,7 @@ async function editChalet(req, res, next) {
     }
 }
 
-
+// VIEW_TIME_TREE_CALENDAR
 async function renderCalendarPerChalet(req, res, next) {
     try {
         const habitaciones = await Habitacion.find().lean();
@@ -879,6 +921,18 @@ async function renderCalendarPerChalet(req, res, next) {
             throw new NotFoundError("No room found");
         }
         const data = habitaciones;
+
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "VIEW_TIME_TREE_CALENDAR";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para ver el calendario time tree");
+        }
         // console.log(data);
 
 

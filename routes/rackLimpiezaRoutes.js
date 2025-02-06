@@ -4,9 +4,21 @@ const router = express.Router();
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const RackLimpieza = require('../models/RackLimpieza');
 const Documento = require('../models/Evento');
+const Roles = require('../models/Roles');
 
 router.get('/rackLimpieza', async (req, res) => {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "VIEW_CLEANING";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para ver los servicios de limpieza");
+        }
         const usuarioLogueado = req.session.userId;
         let services; 
 

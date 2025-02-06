@@ -39,7 +39,6 @@ async function showReservationsView(req, res, next) {
         const data = habitaciones;
 
         const userRole = req.session.role;
-        console.log(req.session)
 
         const userPermissions = await Roles.findById(userRole);
         if(!userPermissions){
