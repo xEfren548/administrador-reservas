@@ -91,18 +91,27 @@ async function consultarPreciosPorFecha(req, res) {
 
             // Buscar la habitacion por su id
             // const habitacion = habitacionesExistentes.resources.find(habitacion => habitacion.id === habitacionid);
-            const habitacion = await Habitacion.findById(habitacionid).lean();
+            precio = await PrecioBaseXDia.findOne({ fecha: fechaAjustada, habitacionId: habitacionid });
 
-            if (!habitacion) {
-                throw new Error('Habitacion no encontrada');
+            if (!precio) {
+            
+                
+                const habitacion = await Habitacion.findById(habitacionid).lean();
+                
+                if (!habitacion) {
+                    throw new Error('Habitacion no encontrada');
+                }
+                
+                precio = {
+                    costo_base: habitacion.others.baseCost,
+                    costo_base_2noches: habitacion.others.baseCost2nights,
+                    precio_modificado: habitacion.others.basePrice,
+                    precio_base_2noches: habitacion.others.basePrice2nights
+                }
             }
 
-            precio = {
-                costo_base: habitacion.others.baseCost,
-                costo_base_2noches: habitacion.others.baseCost2nights,
-                precio_modificado: habitacion.others.basePrice,
-                precio_base_2noches: habitacion.others.basePrice2nights
-            }
+            console.log("PRECIO FINAL: ", precio);
+                
         }
         res.send(precio);
     } catch (error) {
