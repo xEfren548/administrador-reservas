@@ -212,13 +212,15 @@ async function acceptTermsAndConditions(req, res, next) {
     try {
         // const reservations = await Reservation.find();
         // const reservation = reservations.find(reservation => reservation._id.toString() === uuid.toString());
-        const reservation = await Reservation.findById(uuid.toString()).lean();
-        if(!reservation){
+        const reservation = await Reservation.findByIdAndUpdate(
+            uuid,
+            { termsAccepted },
+            { new: true, runValidators: true }
+        );
+        
+        if (!reservation) {
             throw new NotFoundError('Reservation does not exist');
         }
-        
-        reservation.termsAccepted = termsAccepted;
-        await reservation.save();
 
         res.status(200).json({ success: true });
     } catch (error) {
