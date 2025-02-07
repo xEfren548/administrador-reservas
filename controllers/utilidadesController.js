@@ -14,6 +14,7 @@ const Servicio = require('./../models/Servicio');
 const Documento = require('./../models/Evento');
 const User = require('./../models/Usuario');
 const Cliente = require('./../models/Cliente');
+const Roles = require('./../models/Roles');
 
 async function obtenerComisionesPorReserva(idReserva) {
     try {
@@ -666,8 +667,22 @@ async function mostrarUtilidadesPorUsuario(req, res) {
     }
 }
 
-async function mostrarUtilidadesGlobales(req, res) {
+async function mostrarUtilidadesGlobales(req, res, next) {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+            return next(new Error("El usuario no tiene un rol definido, contacte al administrador"));
+        }
+
+        const permittedRole = "VIEW_GLOBAL_UTILITIES";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            // throw new Error("El usuario no tiene permiso para ver utilidades globales.");
+            return next(new Error("El usuario no tiene permiso para ver utilidades globales."));
+        }
+
         const loggedUserId = req.session.id;
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
 
@@ -892,7 +907,7 @@ async function mostrarUtilidadesGlobales(req, res) {
 
     } catch (error) {
         console.log(error.message);
-        res.status(200).send('Something went wrong while retrieving services.');
+        res.status(200).send('Something went wrong while retrieving services: ' + error.message);
     }
 }
 async function vistaParaReporte(req, res) {

@@ -2,6 +2,7 @@ const precioBaseController = require('../controllers/precioBaseController')
 const habitacionController = require('../controllers/habitacionController')
 const preciosEspecialesController = require('../controllers/preciosEspecialesController')
 const Habitacion = require('../models/Habitacion')
+const Roles = require('../models/Roles')
 
 const DAYS_IN_YEAR = 365; // Definir DAYS_IN_YEAR a nivel global
 
@@ -99,8 +100,22 @@ function pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, p
 
 
 // INCOMING CHANGE
-router.get('/calendario-precios', async (req, res) => {
+router.get('/calendario-precios', async (req, res, next) => {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+            return next(new Error("El usuario no tiene un rol definido, contacte al administrador"));
+        }
+
+        const permittedRole = "VIEW_PRICE_CALENDAR";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            // throw new Error("El usuario no tiene permiso para ver utilidades globales.");
+            return next(new Error("El usuario no tiene permiso para ver este calendario."));
+        }
+
 
         // const url = `http://${process.env.URL}/api/habitaciones`
         // // Obtener las habitaciones

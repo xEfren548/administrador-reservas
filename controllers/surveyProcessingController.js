@@ -5,6 +5,7 @@ const { check } = require("express-validator");
 const Evento = require('../models/Evento');
 const Cliente = require('../models/Cliente');
 const Encuesta = require('../models/Encuesta');
+const Roles = require('../models/Roles');
 const habitacionController = require('../controllers/habitacionController')
 const eventController = require('../controllers/eventController');
 const moment = require('moment');
@@ -175,6 +176,20 @@ async function showClientResponses(req, res, next){
 
 async function showClientsResponses(req, res, next) {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+            return next(new Error("El usuario no tiene un rol definido, contacte al administrador"));
+        }
+    
+        const permittedRole = "VIEW_SURVEY_ANSWERS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            // throw new Error("El usuario no tiene permiso para ver utilidades globales.");
+            return next(new Error("El usuario no tiene permiso para ver esta página."));
+        }
+    
         var clientsSurveyInfo = [];
 
         const clientsSurveyResponses = await RespuestasUsuario.find().lean();

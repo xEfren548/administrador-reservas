@@ -981,3 +981,46 @@ ul.rb li .timestamp {
 .character-count.exceeded {
     color: red;
 }
+
+/* Estilos para vista de errores */
+
+/* Contenedor del error */
+.error-container {
+    text-align: center;
+    background-color: #000000;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+}
+
+/* Título del error */
+.error-title {
+    font-size: 2.5rem;
+    color: #dc3545;
+    margin-bottom: 1rem;
+}
+
+/* Mensaje de error */
+.error-message {
+    font-size: 1.2rem;
+    color: #6c757d;
+    line-height: 1.6;
+}
+
+/* Botón de regreso (opcional) */
+.back-button {
+    margin-top: 1.5rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    color: #ffffff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+    background-color: #0056b3;
+}
