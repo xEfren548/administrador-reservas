@@ -21,7 +21,7 @@ module.exports = {
     ADD_SERVICES_RESERVATION: 'Alta de servicios adicionales en reserva',
     VIEW_GLOBAL_UTILITIES: 'Ver utilidades globales',
     VIEW_PRICE_CALENDAR: 'Ver calendario de precios',
-    VIEW_BLOCK_CALENDAR: 'Ver calendario de bloqueos',
+    VIEW_BLOCK_CALENDAR: 'Ver/modificar calendario de bloqueos de fechas',
     VIEW_INVESTORS_CALENDAR: 'Ver calendario de bloqueos para inversionistas',
     VIEW_LOGS: "Ver logs",
     VIEW_SURVEY_ANSWERS: "Ver respuestas de encuestas",
