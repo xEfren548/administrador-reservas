@@ -5,6 +5,7 @@ const utilidadesController = require('../controllers/utilidadesController');
 const Utilidades = require('../models/Utilidades');
 const Habitacion = require('../models/Habitacion');
 const Documento = require('../models/Evento');
+const Roles = require('../models/Roles');
 const moment = require('moment');
 
 async function obtenerPagos(idReservacion) {
@@ -26,8 +27,22 @@ async function obtenerPagoPorId(req, res) {
     }
 }
 
-async function registrarPago(req, res) {
+async function registrarPago(req, res, next) {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+            return res.status(403).json({ mensaje: 'El usuario no tiene un rol definido, contacte al administrador' });
+        }
+
+        const permittedRole = "ADD_PAYMENTS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            // throw new Error("El usuario no tiene permiso para ver utilidades globales.");
+            return res.status(403).json({ mensaje: 'El usuario no tiene permiso para agregar pagos.' });
+        }
+
         const { fechaPago, importe, metodoPago, codigoOperacion, reservacionId, notas } = req.body;
 
         if (req.session.privilege !== "Administrador") {
@@ -320,8 +335,22 @@ async function altaComisionReturnC(req, res) {
     }
 }
 
-async function renderPagos(req, res) {
+async function renderPagos(req, res, next) {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+            return next(new Error("El usuario no tiene un rol definido, contacte al administrador"));
+        }
+
+        const permittedRole = "VIEW_PAYMENTS_REPORT";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            // throw new Error("El usuario no tiene permiso para ver utilidades globales.");
+            return next(new Error("El usuario no tiene permiso para ver utilidades globales."));
+        }
+
         const pagos = await Pago.find().lean();
         const habitacionesExistentes = await Habitacion.find().lean();
         const reservasExistentes = await Documento.find().lean();

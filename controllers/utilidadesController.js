@@ -910,9 +910,22 @@ async function mostrarUtilidadesGlobales(req, res, next) {
         res.status(200).send('Something went wrong while retrieving services: ' + error.message);
     }
 }
-async function vistaParaReporte(req, res) {
+async function vistaParaReporte(req, res, next) {
     try {
-        
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+            return next(new Error("El usuario no tiene un rol definido, contacte al administrador"));
+        }
+
+        const permittedRole = "VIEW_RESERVATIONS_REPORT";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            // throw new Error("El usuario no tiene permiso para ver utilidades globales.");
+            return next(new Error("El usuario no tiene permiso para ver esta página."));
+        }
+
         let users = await usersController.getAllUsersMongo();
         const pagos = await Pago.find().lean();
         const clientes = await Cliente.find().lean();

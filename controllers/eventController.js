@@ -1537,9 +1537,23 @@ async function crearNota(req, res) {
         }
 
         if (tipoNota === "Nota privada") {
-            if (!userPrivilege.includes('Administrador') && !userPrivilege.includes('Vendedor')) {
-                throw new Error('No tienes permisos para crear notas privadas');
+            const userRole = req.session.role;
+
+            const userPermissions = await Roles.findById(userRole);
+            if(!userPermissions){
+                // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+                throw new Error("El usuario no tiene un rol definido, contacte al administrador");
             }
+    
+            const permittedRole = "ADD_PRIVATE_NOTES";
+            if (!userPermissions.permissions.includes(permittedRole)) {
+                // throw new Error("El usuario no tiene permiso para ver utilidades globales.");
+                throw new Error("El usuario no tiene permiso para agregar notas privadas.");
+            }
+    
+            // if (!userPrivilege.includes('Administrador') && !userPrivilege.includes('Vendedor')) {
+            //     throw new Error('No tienes permisos para crear notas privadas');
+            // }
             evento.privateNotes.push({ texto });
         } else {
             evento.notes.push({ texto });
