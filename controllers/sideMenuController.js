@@ -173,7 +173,7 @@ async function generateSideMenu(req, res, next) {
                                 <li class="w-100">
                                     <a href="/api/costos/mostrar-costos" class="nav-link px-5" title="Modificar Encuesta">
                                         <i class="fas fa-chart-line "></i><span class="d-none d-sm-inline"
-                                            style="margin-left: 8px;">Utilidades por Reserva</span>
+                                            style="margin-left: 8px;">Comisiones por Reserva</span>
                                     </a>
                                 </li>
                                 <li>

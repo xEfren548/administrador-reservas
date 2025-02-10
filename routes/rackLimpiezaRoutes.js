@@ -6,6 +6,10 @@ const RackLimpieza = require('../models/RackLimpieza');
 const Documento = require('../models/Evento');
 const Roles = require('../models/Roles');
 
+moment.locale('es', {
+    months: 'Enero_Febrero_Marzo_Abril_Mayo_Junio_Julio_Agosto_Septiembre_Octubre_Noviembre_Diciembre'.split('_')
+});
+
 router.get('/rackLimpieza', async (req, res) => {
     try {
         const userRole = req.session.role;
@@ -23,9 +27,9 @@ router.get('/rackLimpieza', async (req, res) => {
         let services; 
 
         if (req.session.privilege === 'Limpieza'){
-            services = await RackLimpieza.find({encargadoLimpieza: usuarioLogueado}).lean();
+            services = await RackLimpieza.find({encargadoLimpieza: usuarioLogueado, status: { $ne: "Completado" }}).lean();
         } else {
-            services = await RackLimpieza.find().lean();
+            services = await RackLimpieza.find({status: { $ne: "Completado" }}).lean();
         }
 
         const fechaHoy = moment.tz("America/Mexico_City").startOf('day')
@@ -45,8 +49,8 @@ router.get('/rackLimpieza', async (req, res) => {
 
             const reserva = await Documento.findById(service.id_reserva).lean();
             if (reserva) {
-                service.fechaLlegada = moment.utc(reserva.arrivalDate).format('DD-MM-YYYY');
-                service.fechaSalida = moment.utc(reserva.departureDate).format('DD-MM-YYYY');
+                service.fechaLlegada = moment.utc(reserva.arrivalDate).format('DD-MMMM-YYYY');
+                service.fechaSalida = moment.utc(reserva.departureDate).format('DD-MMMM-YYYY');
                 processedServices.push(service);
             }
         }
