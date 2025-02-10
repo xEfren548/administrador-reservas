@@ -943,6 +943,25 @@ async function createOwnerReservation(req, res, next) {
                 idUsuario: createdBy.toString(),
                 idReserva: idReserva
             })
+
+            const descripcionLimpieza = 'Limpieza ' + chaletName;
+            const fechaLimpieza = new Date(arrivalDate);
+            const checkInDate = new Date(arrivalDate)
+            const checkOutDate = new Date(departureDate)
+            fechaLimpieza.setDate(fechaLimpieza.getDate())
+            const statusLimpieza = 'Pendiente'
+    
+    
+            await rackLimpiezaController.createServiceForReservation({
+                id_reserva: idReserva,
+                descripcion: descripcionLimpieza,
+                fecha: fechaLimpieza,
+                checkInDate: checkInDate,
+                checkOutDate: checkOutDate,
+                status: statusLimpieza,
+                idHabitacion: reservationToAdd.resourceId
+            })
+            
         }
 
         // Log
