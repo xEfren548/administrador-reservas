@@ -1,5 +1,21 @@
 <div class="row flex-nowrap justify-content-center mt-3 " style="width: 100%;">
-    <div id="calendar"></div>
+    <div class="col-12">
+        <h1>Calendario de Habitaciones</h1>
+        <label for="tipologia_habitacion" class="form-label">Habitación</label>
+        <select name="tipologia_habitacion" id="tipologia_habitacion" class="form-select form-select-md" required>
+            <option value="" selected="true" disabled="true"> Selecciona una cabaña para visualizar su calendario...
+            </option>
+            {{#if chalets}}
+            {{#each chalets}}
+            <option value="{{this.name}}" data-bs-id="{{this.id}}"> {{this.name}} </option>
+            {{/each}}
+            {{else}}
+            <option value="0">No se encontraron cabañas</option>
+            {{/if}}
+        </select>
+
+        <div id="calendar"></div>
+    </div>
 </div>
 
 <script src="scripts/rackLimpiezaCalendar.js"></script>

@@ -4,6 +4,7 @@ const router = express.Router();
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const RackLimpieza = require('../models/RackLimpieza');
 const Documento = require('../models/Evento');
+const Habitacion = require('../models/Habitacion');
 const Roles = require('../models/Roles');
 
 moment.locale('es', {
@@ -73,7 +74,14 @@ router.get('/rackLimpieza', async (req, res) => {
 });
 
 router.get('/racklimpieza-calendar', async (req, res) => {
-    res.render('rackLimpiezaCalendar');
+    const chalets = await Habitacion.find({ "others.janitor": req.session.id }).lean();
+    const mappedChalets = chalets.map(chalet => ({
+        id: chalet._id,
+        name: chalet.propertyDetails.name
+    }))
+    res.render('rackLimpiezaCalendar', {
+        chalets: mappedChalets
+    });
 });
 
 

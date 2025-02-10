@@ -40,8 +40,10 @@ async function getSpecificServicesMongo(idChalet) {
 async function dataForRackLimpiezaCalendar(req, res, next) {
     try {
         const id = new mongoose.Types.ObjectId(req.session.id);
+        const chaletId = req.query.idHabitacion;
+        console.log(chaletId)
         
-        const habitaciones = await Habitacion.find({ "others.janitor": id }).lean();
+        const habitaciones = await Habitacion.find({_id: chaletId}).lean();
         if (!habitaciones) {
             return res.status(404).send('No rooms found');
         }
