@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const Usuario = require('../models/Usuario');
+const Habitacion = require('../models/Habitacion');
 const logController = require('../controllers/logController');
 const Roles = require("../models/Roles");
 const permissions = require('../models/permissions');
@@ -163,13 +164,26 @@ async function showUsersView(req, res, next){
             throw new NotFoundError("No roles found");
         }
 
+        const chalets = await Habitacion.find({}).lean();
+        if (!chalets) {
+            throw new NotFoundError("No chalets found");
+        }
+
+        const mappedChalets = chalets.map(chalet => {
+            return {
+                id: chalet._id.toString(),
+                name: chalet.propertyDetails.name
+            }
+        })
+
         console.log(owners)
         // /api/usuarios
         res.render('vistaUsuarios', {
             users: users,
             admins: admins,
             owners: owners,
-            roles: roles
+            roles: roles,
+            chalets: mappedChalets
         });
     } catch (err) {
         return next(err);

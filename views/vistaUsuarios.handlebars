@@ -189,6 +189,40 @@
                                     value="#563d7c" title="Choose your color">
                             </div>
                         </div>
+
+                        {{!-- Asignacion de cabañas --}}
+                        <div class="row mt-3 ">
+                            <label for="select-assignedchalets" id="labelSelectAsignedChalets" class="">Cabañas asignadas: </label>
+                        </div>
+
+                        <div class="row">
+                            <a name="" id="select-chalets-btn" class="btn btn-info btn-sm m-3 w-50" href="#" role="button"
+                                data-bs-toggle="modal" data-bs-target="#select-chalets_modal">Da click aquí para asignar cabañas</a>
+                        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                         <div class="form-item">
                             <p id="txtInsertUserError" name="errMsg" class="error"></p>
                         </div>
@@ -352,6 +386,63 @@
         </div>
     </form>
 </div>
+
+
+<!-- Modal asignar cabañas -->
+<div
+    class="modal fade"
+    id="select-chalets_modal"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="modalTitleId"
+    aria-hidden="true"
+>
+    <div
+        class="modal-dialog modal-md"
+        role="dialog"
+    >
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitleId">
+                    Asignar cabañas a vendedor
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label for="select-chalets">Cabañas: </label>
+                            {{#each chalets}}
+                            <div class="form-check">
+                                <input class="form-check-input" name="chalet-{{this._id}}" type="checkbox" value="{{this.id}}" id="{{this._id}}"> 
+                                <label class="form-check-label" for="chalet-{{this._id}}"> {{this.name}} </label>
+
+                            </div>
+                            {{/each}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Close
+                </button>
+                <button type="button" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
