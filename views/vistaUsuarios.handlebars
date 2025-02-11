@@ -37,9 +37,11 @@
                             <button type="button" class="btn btn-primary" data-client-firstName="{{firstName}}"
                                 data-client-lastName="{{lastName}}" data-client-email="{{email}}" data-client-phone="{{phone}}"
                                 data-client-privilege="{{privilege}}" data-client-adminname="{{administrator}}"
-                                data-client-color="{{color}}" data-client-role="{{role}}" {{#if investorType}}
-                                data-client-investorType="{{investorType}}"
-                                {{/if}} data-bs-toggle="modal"
+                                data-client-color="{{color}}" data-client-role="{{role}}" data-assigned-chalets="{{assignedChalets}}"
+                                {{#if investorType}}
+                                data-client-investorType="{{investorType}}" 
+                                {{/if}} 
+                                data-bs-toggle="modal"
                                 data-bs-target="#modify-user_entry_modal" onclick="showClientEmail(this)">
                                 <i class="fa fa-pencil" aria-hidden="true"></i>
                             </button>
@@ -191,23 +193,26 @@
                         </div>
 
                         {{!-- Asignacion de cabañas --}}
-                        <div class="row mt-3 ">
-                            <label for="select-assignedchalets" id="labelSelectAsignedChalets" class="">Cabañas asignadas: </label>
+                        <div class="d-none" id="assign-chalets-container">
+
+                            <div class="row mt-3 ">
+                                <label for="select-assignedchalets" id="labelSelectAsignedChalets" class="">Cabañas asignadas: </label>
+                            </div>
+
+                            <div class="row">
+                                <a name="" id="select-chalets-btn" class="btn btn-info btn-sm m-3 w-50" href="#" role="button"
+                                    data-bs-toggle="modal" data-bs-target="#select-chalets_modal">Da click aquí para asignar cabañas</a>
+                            </div>
                         </div>
 
-                        <div class="row">
-                            <a name="" id="select-chalets-btn" class="btn btn-info btn-sm m-3 w-50" href="#" role="button"
-                                data-bs-toggle="modal" data-bs-target="#select-chalets_modal">Da click aquí para asignar cabañas</a>
-                        </div>
 
 
-
-                        <div class="form-item">
-                            <p id="txtInsertUserError" name="errMsg" class="error"></p>
-                        </div>
-                        <div class="modal_footer" style="display: flex; justify-content: right; margin: 10px 0;">
-                            <button type="submit" class="btn btn-primary" id="btnSaveUser">Guardar Usuario</button>
-                        </div>
+                            <div class="form-item">
+                                <p id="txtInsertUserError" name="errMsg" class="error"></p>
+                            </div>
+                            <div class="modal_footer" style="display: flex; justify-content: right; margin: 10px 0;">
+                                <button type="submit" class="btn btn-primary" id="btnSaveUser">Guardar Usuario</button>
+                            </div>
                     </div>
                 </div>
             </div>
@@ -348,6 +353,19 @@
                             <div class="col-3">
                                 <input type="color" class="form-control form-control-color" id="colaboratorColorUpd"
                                     value="#563d7c" title="Choose your color">
+                            </div>
+                        </div>
+
+                        {{!-- Asignacion de cabañas --}}
+                        <div class="d-none" id="edit-assign-chalets-container">
+
+                            <div class="row mt-3 ">
+                                <label for="select-assignedchalets" id="labelSelectAsignedChalets" class="">Cabañas asignadas: </label>
+                            </div>
+
+                            <div class="row">
+                                <a name="" id="select-chalets-btn" class="btn btn-info btn-sm m-3 w-50" href="#" role="button"
+                                    data-bs-toggle="modal" data-bs-target="#select-chalets_modal">Da click aquí para asignar cabañas</a>
                             </div>
                         </div>
                         <div class="form-item">
@@ -770,6 +788,9 @@
         const containerSelectInvestorTypeUpd = document.getElementById('containerSelectInvestorTypeUpd');
         const selectInvestorTypeUpd = document.getElementById('select-investorTypeUpd');
 
+        const assignedChaletsContainer = document.getElementById('assign-chalets-container');
+        const assignedChaletsContainerUpd = document.getElementById('edit-assign-chalets-container');
+
         // Pasar los datos de admins y owners como cadenas JSON
         const owners = {{{ json owners }}};
         const admins = {{{ json admins }}};
@@ -781,6 +802,7 @@
             containerSelectInvestorType.classList.add('d-none');
             relatedLabel.classList.remove('d-none');
             relatedSelectContainer.classList.remove('d-none');
+            assignedChaletsContainer.classList.add('d-none');
 
             relatedLabel.textContent = 'Dueño ligado:';
             updateSelectOptions(owners, 'Seleccione un dueño para el usuario --');
@@ -790,12 +812,17 @@
             relatedLabel.classList.add('d-none');
             relatedSelectContainer.classList.add('d-none');
             // Falta añadir d-none al relatedContainer
+            assignedChaletsContainer.classList.add('d-none');
 
+        } else if (this.value === "Vendedor") {
+            assignedChaletsContainer.classList.remove('d-none');
         } else {
             labelInvestorType.classList.add('d-none');
             containerSelectInvestorType.classList.add('d-none');
             relatedLabel.classList.remove('d-none');
             relatedSelectContainer.classList.remove('d-none');
+
+            assignedChaletsContainer.classList.add('d-none');
 
             relatedLabel.textContent = 'Administrador ligado:';
             updateSelectOptions(admins, 'Seleccione un administrador para el usuario --');
@@ -808,6 +835,7 @@
             containerSelectInvestorTypeUpd.classList.add('d-none');
             relatedLabelUpd.classList.remove('d-none');
             relatedSelectContainerUpd.classList.remove('d-none');
+            assignedChaletsContainerUpd.classList.add('d-none');
 
             relatedLabelUpd.textContent = 'Dueño ligado:';
             updateSelectOptionsUpd(owners, 'Seleccione un dueño para el usuario --');
@@ -817,12 +845,17 @@
             relatedLabelUpd.classList.add('d-none');
             relatedSelectContainerUpd.classList.add('d-none');
             // Falta añadir d-none al relatedContainer
+            assignedChaletsContainerUpd.classList.add('d-none');
 
+        } else if (this.value === "Vendedor") {
+            assignedChaletsContainerUpd.classList.remove('d-none');
         } else {
             labelInvestorTypeUpd.classList.add('d-none');
             containerSelectInvestorTypeUpd.classList.add('d-none');
             relatedLabelUpd.classList.remove('d-none');
             relatedSelectContainerUpd.classList.remove('d-none');
+
+            assignedChaletsContainerUpd.classList.add('d-none');
 
             relatedLabelUpd.textContent = 'Administrador ligado:';
             updateSelectOptionsUpd(admins, 'Seleccione un administrador para el usuario --');
@@ -872,6 +905,10 @@
         const investorType = button.getAttribute('data-client-investorType');
         const phone = button.getAttribute('data-client-phone');
         const role = button.getAttribute('data-client-role');
+        const assignedChalets = button.getAttribute('data-assigned-chalets');
+
+        const assignedChaletsArray = assignedChalets.split(',');
+        console.log(assignedChaletsArray);
 
         const owners = {{{ json owners }}};
         const admins = {{{ json admins }}};
@@ -884,11 +921,15 @@
         const containerSelectInvestorTypeUpd = document.getElementById('containerSelectInvestorTypeUpd');
         const selectInvestorTypeUpd = document.getElementById('select-investorTypeUpd');
 
+        const assignedChaletsContainerUpd = document.getElementById('edit-assign-chalets-container');
+
+
         if (privilege === 'Colaborador dueño') {
             labelInvestorTypeUpd.classList.add('d-none');
             containerSelectInvestorTypeUpd.classList.add('d-none');
             relatedLabelUpd.classList.remove('d-none');
             relatedSelectContainerUpd.classList.remove('d-none');
+            assignedChaletsContainerUpd.classList.add('d-none');
 
             relatedLabelUpd.textContent = 'Dueño ligado:';
             updateSelectOptionsUpd(owners, 'Seleccione un dueño para el usuario --');
@@ -898,12 +939,17 @@
             relatedLabelUpd.classList.add('d-none');
             relatedSelectContainerUpd.classList.add('d-none');
             // Falta añadir d-none al relatedContainer
+            assignedChaletsContainerUpd.classList.add('d-none');
 
+        } else if (privilege === "Vendedor") {
+            assignedChaletsContainerUpd.classList.remove('d-none');
         } else {
             labelInvestorTypeUpd.classList.add('d-none');
             containerSelectInvestorTypeUpd.classList.add('d-none');
             relatedLabelUpd.classList.remove('d-none');
             relatedSelectContainerUpd.classList.remove('d-none');
+
+            assignedChaletsContainerUpd.classList.add('d-none');
 
             relatedLabelUpd.textContent = 'Administrador ligado:';
             updateSelectOptionsUpd(admins, 'Seleccione un administrador para el usuario --');
