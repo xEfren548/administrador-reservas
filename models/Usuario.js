@@ -64,6 +64,10 @@ const userSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Roles',
         required: true
+    },
+    assignedChalets: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'Habitacion'
     }
 });
 
