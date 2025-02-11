@@ -63,7 +63,7 @@
 <!-- Modal Alta usuario -->
 <div class="modal fade" id="user_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <form id="frmNewUser" action="/api/auth/crear-usuario" method="post" class="modal-dialog modal-lg">
+    <form id="frmNewUser" action="/api/auth/crear-usuario" method="post" class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Alta de Usuario</h5>
@@ -199,27 +199,6 @@
                             <a name="" id="select-chalets-btn" class="btn btn-info btn-sm m-3 w-50" href="#" role="button"
                                 data-bs-toggle="modal" data-bs-target="#select-chalets_modal">Da click aquí para asignar cabañas</a>
                         </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -398,7 +377,7 @@
     aria-hidden="true"
 >
     <div
-        class="modal-dialog modal-md"
+        class="modal-dialog modal-dialog-scrollable modal-md"
         role="dialog"
     >
         <div class="modal-content">
@@ -420,7 +399,7 @@
                             <label for="select-chalets">Cabañas: </label>
                             {{#each chalets}}
                             <div class="form-check">
-                                <input class="form-check-input" name="chalet-{{this._id}}" type="checkbox" value="{{this.id}}" id="{{this._id}}"> 
+                                <input class="form-check-input chks-assigned-chalets" name="chalet-{{this._id}}" type="checkbox" value="{{this.id}}" id="{{this._id}}"> 
                                 <label class="form-check-label" for="chalet-{{this._id}}"> {{this.name}} </label>
 
                             </div>
@@ -430,14 +409,56 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <a class="btn btn-primary" data-bs-toggle="modal" href="#user_entry_modal" role="button">Guardar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal editar asignar cabañas -->
+<div
+    class="modal fade"
+    id="select-chalets_modal_edit"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="modalTitleIdEdit"
+    aria-hidden="true"
+>
+    <div
+        class="modal-dialog modal-dialog-scrollable modal-md"
+        role="dialog"
+    >
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitleIdEdit">
+                    Asignar cabañas a vendedor
+                </h5>
                 <button
                     type="button"
-                    class="btn btn-secondary"
+                    class="btn-close"
                     data-bs-dismiss="modal"
-                >
-                    Close
-                </button>
-                <button type="button" class="btn btn-primary">Save</button>
+                    aria-label="Close"
+                ></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label for="select-chalets-edit">Cabañas: </label>
+                            {{#each chalets}}
+                            <div class="form-check">
+                                <input class="form-check-input chks-assigned-chalets-edit" name="chalet-{{this._id}}" type="checkbox" value="{{this.id}}" id="edit-{{this._id}}"> 
+                                <label class="form-check-label" for="chalet-{{this._id}}"> {{this.name}} </label>
+
+                            </div>
+                            {{/each}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-primary" data-bs-toggle="modal" href="#modify-user_entry_modal" role="button">Guardar</a>
             </div>
         </div>
     </div>
@@ -490,13 +511,14 @@
         }
 
         // Clearing user's info when closing modal.
+        /** 
         const modals = document.querySelectorAll('.modal');
         modals.forEach(function (modal) {
             modal.addEventListener('hidden.bs.modal', () => {
                 clearModal(modal);
             });
         });
-
+        */
 
         // Saving new user.
         const btnSaveUser = document.getElementById("btnSaveUser");
@@ -505,6 +527,8 @@
             btnSaveUser.addEventListener("click", async (event) => {
                 event.preventDefault();
                 const data = collectFormData();
+                console.log("After collecting data")
+                console.log(data)
 
                 try {
                     const response = await fetch('/api/usuarios/crear-usuario', {
@@ -540,11 +564,15 @@
                 role: document.getElementById("slctUserRole").value
             };
 
-            if (privilege !== "Inversionistas") {
+            if (privilege === "Inversionistas") {
+                data.investorType = document.getElementById('select-investorType').value;
+            } else {
+                if (privilege === "Vendedor") {
+                    data.assignedChalets = assignedChalets();
+                }
                 data.administrator = document.getElementById("slctUserAdmin").value.trim();
                 data.adminname = $("#slctUserAdmin option:selected").text();
-            } else {
-                data.investorType = document.getElementById('select-investorType').value;
+                
             }
 
             return data;
@@ -971,6 +999,21 @@
                 });
         }
 
+    }
+
+
+    function assignedChalets () {
+        const chaletIds = [];
+        const checkboxes = document.querySelectorAll('.chks-assigned-chalets');
+
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                chaletIds.push(checkbox.value);
+            }
+        })
+
+        console.log(chaletIds)
+        return chaletIds
     }
 
 </script>

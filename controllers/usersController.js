@@ -202,8 +202,10 @@ async function getAllUsersMongo(){
 
 // CREATE_USERS
 async function createUser(req, res, next) {
-    const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType, role } = req.body;
+    const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType, role, assignedChalets } = req.body;
     const mexPhone = `${phone}`
+
+    console.log(assignedChalets)
 
     const userRole = req.session.role;
 
@@ -228,13 +230,14 @@ async function createUser(req, res, next) {
         return next(new NotFoundError("Rol not found"));
     }
 
-    const userToAdd = new Usuario ({
-        firstName, lastName, email, phone: mexPhone, password, privilege, administrator,adminname, color, investorType, role
-    });
-
     try{    
-        sendPassword(userToAdd.email, userToAdd.password, userToAdd.privilege);        
+
+        const userToAdd = new Usuario ({
+            firstName, lastName, email, phone: mexPhone, password, privilege, administrator,adminname, color, investorType, role, assignedChalets
+        });
+
         await userToAdd.save();
+        sendPassword(userToAdd.email, userToAdd.password, userToAdd.privilege);        
         const logBody = {
             fecha: Date.now(),
             idUsuario: req.session.id,
