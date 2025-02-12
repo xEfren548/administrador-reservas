@@ -657,12 +657,13 @@
                     role: document.getElementById("slctUserRoleUpd").value
                 };
 
-                if (privilege !== "Inversionistas") {
+                if (privilege === "Inversionistas") {
+                    data.investorType = document.getElementById('select-investorTypeUpd').value
+                } else if(privilege === "Vendedor") {
+                    data.assignedChalets = assignedEditedChalets();
+                } else {
                     data.administrator = document.getElementById("slctUserAdminUpd").value.trim();
                     data.adminname = $("#slctUserAdminUpd option:selected").text()
-                } else {
-                    data.investorType = document.getElementById('select-investorTypeUpd').value
-
                 }
 
                 fetch('/api/usuarios/editar-usuario', {
@@ -1062,6 +1063,20 @@
     function assignedChalets () {
         const chaletIds = [];
         const checkboxes = document.querySelectorAll('.chks-assigned-chalets');
+
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                chaletIds.push(checkbox.value);
+            }
+        })
+
+        console.log(chaletIds)
+        return chaletIds
+    }
+
+    function assignedEditedChalets () {
+        const chaletIds = [];
+        const checkboxes = document.querySelectorAll('.chks-assigned-chalets-edit');
 
         checkboxes.forEach(checkbox => {
             if (checkbox.checked) {

@@ -205,8 +205,6 @@ async function createUser(req, res, next) {
     const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType, role, assignedChalets } = req.body;
     const mexPhone = `${phone}`
 
-    console.log(assignedChalets)
-
     const userRole = req.session.role;
 
     const userPermissions = await Roles.findById(userRole);
@@ -222,6 +220,12 @@ async function createUser(req, res, next) {
     if (investorType){
         if (investorType !== 'Asimilado' && investorType !== 'RESICO Fisico' && investorType !== 'PF con AE y PM' && investorType !== 'Efectivo') {
             return next(new BadRequestError("Invalid investor type"));
+        }
+    }
+
+    if (privilege === "Vendedor") {
+        if (assignedChalets.length === 0) {
+            return next(new BadRequestError("Debes asignar al menos una cabaña al vendedor"));
         }
     }
 
@@ -293,7 +297,7 @@ async function obtenerUsuarioPorIdMongo(uuid){
 
 // EDIT_USERS
 async function editarUsuario(req, res, next) {
-    const { firstName, lastName, email, phone, password, privilege, administrator,adminname, color, investorType, role } = req.body;
+    const { firstName, lastName, email, phone, password, privilege, administrator,adminname, color, investorType, role, assignedChalets } = req.body;
     const updateFields = {};
 
     const userRole = req.session.role;
@@ -337,6 +341,12 @@ async function editarUsuario(req, res, next) {
             return next(new NotFoundError("Rol not found"));
         }
         updateFields.role = rol._id;
+    }
+
+    console.log(assignedChalets)
+
+    if (assignedChalets) {
+        updateFields.assignedChalets = assignedChalets;
     }
 
     try {
