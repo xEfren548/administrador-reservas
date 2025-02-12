@@ -365,7 +365,7 @@
 
                             <div class="row">
                                 <a name="" id="select-chalets-btn" class="btn btn-info btn-sm m-3 w-50" href="#" role="button"
-                                    data-bs-toggle="modal" data-bs-target="#select-chalets_modal">Da click aquí para asignar cabañas</a>
+                                    data-bs-toggle="modal" data-bs-target="#select-chalets_modal_edit">Da click aquí para asignar cabañas</a>
                             </div>
                         </div>
                         <div class="form-item">
@@ -922,6 +922,17 @@
         const selectInvestorTypeUpd = document.getElementById('select-investorTypeUpd');
 
         const assignedChaletsContainerUpd = document.getElementById('edit-assign-chalets-container');
+
+        const chaletCheckboxes = document.querySelectorAll('.chks-assigned-chalets-edit');
+        chaletCheckboxes.forEach(checkbox => {
+            if (assignedChaletsArray.includes(checkbox.value)) {
+                checkbox.checked = true;
+            } else {
+                checkbox.checked = false;
+            }
+        });
+
+        
 
 
         if (privilege === 'Colaborador dueño') {
