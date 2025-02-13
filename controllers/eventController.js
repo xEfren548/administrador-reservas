@@ -214,7 +214,6 @@ async function obtenerEventosDeCabana(req, res) {
         //     const matchingEvents = doc.events.filter(evento => evento.resourceId.equals(newId));
         //     eventos = eventos.concat(matchingEvents);
         // });
-
         const eventos = await Documento.find({ resourceId: newId }).lean();
 
         // const habitacion = habitaciones.resources.find(habitacion => habitacion._id.equals(newId));
