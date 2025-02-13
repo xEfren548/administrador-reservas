@@ -32,7 +32,15 @@ const showReservationsViewValidators = [
 // VIEW_MAIN_CALENDAR: 'Ver calendario principal'
 async function showReservationsView(req, res, next) {
     try {
-        const habitaciones = await Habitacion.find().lean();
+        const privilege = req.session.privilege;
+        let habitaciones = [];
+        if (privilege === "Vendedor"){
+            const assignedChalets = req.session.assignedChalets;
+            habitaciones = await Habitacion.find({_id: assignedChalets}).lean();
+        } else {
+            habitaciones = await Habitacion.find().lean();
+        }
+        // const habitaciones = await Habitacion.find().lean();
         if(!habitaciones){
             throw new Error("No room found");
         }
