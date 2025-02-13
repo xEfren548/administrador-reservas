@@ -605,6 +605,7 @@
         }
 
         function handleError(errorData) {
+            console.log(errorData)
             const errors = errorData.message || errorData.error[0].message || 'Unknown error';
             Swal.fire({
                 icon: 'error',

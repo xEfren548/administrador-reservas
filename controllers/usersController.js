@@ -254,6 +254,14 @@ async function createUser(req, res, next) {
         res.status(200).json( { success: true, message: "Usuario agregado con éxito"} );
     } catch(err){
         console.log(err);
+        if (err.code === 11000) {
+            const duplicateKey = Object.keys(err.keyPattern)[0]; // Get the duplicate key (e.g., 'name')
+            const duplicateValue = err.keyValue[duplicateKey]; // Get the duplicate value (e.g., 'test3')
+
+            return res.status(400).json({
+                message: `El campo '${duplicateKey}' ya existe. Por favor, elige otro.`,
+            });
+        }
         return next(err);
     }   
 }
