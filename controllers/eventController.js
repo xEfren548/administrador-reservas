@@ -133,8 +133,16 @@ const submitReservationValidators = [
 async function obtenerEventos(req, res) {
     const { id } = req.params;
     try {
-        const eventos = await Documento.find( { status: { $nin: ["no-show", "cancelled"]}}).lean();
-        let eventosExistentes = eventos[0].events;
+        const privilege = req.session.privilege;
+        let eventos = []
+        // const eventos = await Documento.find( { status: { $nin: ["no-show", "cancelled"]}}).lean();
+
+        if (privilege === "Vendedor") {
+            const assignedChalets = req.session.assignedChalets;
+            eventos = await Documento.find({ resourceId: { $in: assignedChalets }, status: { $nin: ["no-show", "cancelled"] } }).lean();
+        } else {
+            eventos = await Documento.find({ status: { $nin: ["no-show", "cancelled"] } }).lean();
+        }
 
         let cleaningDetailsMap = {};
 

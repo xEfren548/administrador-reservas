@@ -72,7 +72,7 @@ async function showReservationsView(req, res, next) {
 
         // Verify we still have valid chalets after filtering
         if (!chalets.length) {
-            throw new Error("No valid room data available");
+            throw new Error("No hay información de cabañas o el usuario no tiene cabañas asignadas");
         }
         // console.log("Estos son los chalets: ", chalets);
 

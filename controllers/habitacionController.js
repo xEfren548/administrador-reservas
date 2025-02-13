@@ -4,7 +4,17 @@ const { nanoid } = require('nanoid');
 
 async function obtenerHabitaciones(req, res) { 
     try {
-        const habitaciones = await Habitacion.find();
+        // const habitaciones = await Habitacion.find();
+        const privilege = req.session.privilege;
+        let habitaciones = [];
+        
+        if (privilege === "Vendedor") {
+            const assignedChalets = req.session.assignedChalets;
+            habitaciones = await Habitacion.find({ _id: assignedChalets }).lean();
+        } else {
+            habitaciones = await Habitacion.find().lean();
+        }
+        
         res.send(habitaciones);
     } catch (error) {
         console.error(error);

@@ -415,6 +415,10 @@
                     <div class="col-12">
                         <div class="form-group">
                             <label for="select-chalets">Cabañas: </label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAllChaletsChk"> 
+                                <label class="form-check-label" for="selectAllChaletsChk"><b>Seleccionar todo</b> </label>
+                            </div>
                             {{#each chalets}}
                             <div class="form-check">
                                 <input class="form-check-input chks-assigned-chalets" name="chalet-{{this._id}}" type="checkbox" value="{{this.id}}" id="{{this._id}}"> 
@@ -464,6 +468,10 @@
                     <div class="col-12">
                         <div class="form-group">
                             <label for="select-chalets-edit">Cabañas: </label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAllChaletsEditChk"> 
+                                <label class="form-check-label" for="selectAllChaletsEditChk"><b>Seleccionar todo</b> </label>
+                            </div>
                             {{#each chalets}}
                             <div class="form-check">
                                 <input class="form-check-input chks-assigned-chalets-edit" name="chalet-{{this._id}}" type="checkbox" value="{{this.id}}" id="edit-{{this._id}}"> 
@@ -1087,5 +1095,23 @@
         console.log(chaletIds)
         return chaletIds
     }
+
+    const selectAllChaletsChk = document.getElementById('selectAllChaletsChk');
+    selectAllChaletsChk.addEventListener('change', () => {
+        const status = selectAllChaletsChk.checked;
+        const checkboxes = document.querySelectorAll('.chks-assigned-chalets');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = status ? true : false;
+        });
+    });
+
+    const selectAllChaletsEditChk = document.getElementById('selectAllChaletsEditChk');
+    selectAllChaletsEditChk.addEventListener('change', () => {
+        const status = selectAllChaletsChk.checked;
+        const checkboxes = document.querySelectorAll('.chks-assigned-chalets-edit');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = status ? true : false;
+        });
+    });
 
 </script>
