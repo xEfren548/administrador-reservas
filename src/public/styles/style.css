@@ -1029,6 +1029,7 @@ ul.rb li .timestamp {
 
 /* Eliminar bordes del modal-body y estructura relacionada */
 #user_entry_modal .modal-body,
+#modify-user_entry_modal .modal-body,
 #select-chalets_modal .modal-body,
 #select-chalets_modal_edit .modal-body {
     border: none !important;
@@ -1037,7 +1038,8 @@ ul.rb li .timestamp {
 }
 
 /* Quitar posibles bordes heredados */
-#user_entry_modal .modal-content, 
+#user_entry_modal .modal-content,
+#modify-user_entry_modal .modal-content,
 #select-chalets_modal .modal-content,
 #select-chalets_modal_edit .modal-content {
     border: 0;
@@ -1047,6 +1049,7 @@ ul.rb li .timestamp {
 
 /* Asegurar que el dialog no tenga bordes */
 #user_entry_modal .modal-dialog,
+#modify-user_entry_modal .modal-dialog,
 #select-chalets_modal .modal-dialog,
 #select-chalets_modal_edit .modal-dialog {
     border: none;
@@ -1055,6 +1058,7 @@ ul.rb li .timestamp {
 
 /* Corrección específica para scroll */
 #user_entry_modal .modal-dialog-scrollable,
+#modify-user_entry_modal .modal-dialog-scrollable,
 #select-chalets_modal .modal-dialog-scrollable,
 #select-chalets_modal_edit .modal-dialog-scrollable {
     border-right: 0 !important;
@@ -1063,6 +1067,7 @@ ul.rb li .timestamp {
 
 /* Si el borde es del scrollbar mismo */
 #user_entry_modal ::-webkit-scrollbar,
+#modify-user_entry_modal ::-webkit-scrollbar,
 #select-chalets_modal ::-webkit-scrollbar,
 #select-chalets_modal_edit ::-webkit-scrollbar {
     width: 6px;
@@ -1070,6 +1075,7 @@ ul.rb li .timestamp {
 }
 
 #user_entry_modal ::-webkit-scrollbar-thumb,
+#modify-user_entry_modal ::-webkit-scrollbar-thumb,
 #select-chalets_modal ::-webkit-scrollbar-thumb,
 #select-chalets_modal_edit ::-webkit-scrollbar-thumb {
     background: #e0e0e0;
