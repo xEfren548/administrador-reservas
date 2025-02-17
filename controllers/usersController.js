@@ -1,7 +1,10 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const Usuario = require('../models/Usuario');
+const Habitacion = require('../models/Habitacion');
 const logController = require('../controllers/logController');
+const Roles = require("../models/Roles");
+const permissions = require('../models/permissions');
 const sendPassword = require("../utils/email");
 const NotFoundError = require("../common/error/not-found-error");
 const BadRequestError = require("../common/error/bad-request-error");
@@ -117,12 +120,34 @@ const deleteUserValidators = [
         }),
 ];
 
+// VIEW_USERS
 async function showUsersView(req, res, next){
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "VIEW_USERS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para ver los usuarios");
+        }
+
         const users = await Usuario.find({}).lean();
         if (!users) {
             throw new NotFoundError("No users found");
         }
+
+        for (const user of users) {
+            const roleName = await Roles.findOne({ _id: user.role });
+            if (roleName) {
+                user.roleName = roleName.name;
+            }
+        }
+
+        
 
         const admins = await Usuario.find({"$or": [{"privilege": "Administrador"}, {"privilege": "Vendedor"}]}).lean();
         if (!admins) {
@@ -134,12 +159,31 @@ async function showUsersView(req, res, next){
             throw new NotFoundError("No owner found");
         }
 
-        console.log(owners)
+        const roles = await Roles.find({}).lean();
+        if (!roles) {
+            throw new NotFoundError("No roles found");
+        }
 
+        const chalets = await Habitacion.find({}).lean();
+        if (!chalets) {
+            throw new NotFoundError("No chalets found");
+        }
+
+        const mappedChalets = chalets.map(chalet => {
+            return {
+                id: chalet._id.toString(),
+                name: chalet.propertyDetails.name
+            }
+        })
+
+        console.log(owners)
+        // /api/usuarios
         res.render('vistaUsuarios', {
             users: users,
             admins: admins,
-            owners: owners
+            owners: owners,
+            roles: roles,
+            chalets: mappedChalets
         });
     } catch (err) {
         return next(err);
@@ -156,22 +200,48 @@ async function getAllUsersMongo(){
     }
 }
 
+// CREATE_USERS
 async function createUser(req, res, next) {
-    const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType } = req.body;
+    const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType, role, assignedChalets } = req.body;
     const mexPhone = `${phone}`
+
+    const userRole = req.session.role;
+
+    const userPermissions = await Roles.findById(userRole);
+    if(!userPermissions){
+        return next(new BadRequestError("El usuario no tiene un rol definido, contacte al administrador"));
+    }
+
+    const permittedRole = "CREATE_USERS";
+    if (!userPermissions.permissions.includes(permittedRole)) {
+        return next(new BadRequestError("El usuario no tiene permiso para crear usuarios"));
+    }
 
     if (investorType){
         if (investorType !== 'Asimilado' && investorType !== 'RESICO Fisico' && investorType !== 'PF con AE y PM' && investorType !== 'Efectivo') {
             return next(new BadRequestError("Invalid investor type"));
         }
     }
-    const userToAdd = new Usuario ({
-        firstName, lastName, email, phone: mexPhone, password, privilege, administrator,adminname, color, investorType
-    });
+
+    if (privilege === "Vendedor") {
+        if (assignedChalets.length === 0) {
+            return next(new BadRequestError("Debes asignar al menos una cabaña al vendedor"));
+        }
+    }
+
+    const rol = await Roles.findById(role);
+    if (!rol) {
+        return next(new NotFoundError("Rol not found"));
+    }
 
     try{    
-        sendPassword(userToAdd.email, userToAdd.password, userToAdd.privilege);        
+
+        const userToAdd = new Usuario ({
+            firstName, lastName, email, phone: mexPhone, password, privilege, administrator,adminname, color, investorType, role, assignedChalets
+        });
+
         await userToAdd.save();
+        sendPassword(userToAdd.email, userToAdd.password, userToAdd.privilege);        
         const logBody = {
             fecha: Date.now(),
             idUsuario: req.session.id,
@@ -184,6 +254,14 @@ async function createUser(req, res, next) {
         res.status(200).json( { success: true, message: "Usuario agregado con éxito"} );
     } catch(err){
         console.log(err);
+        if (err.code === 11000) {
+            const duplicateKey = Object.keys(err.keyPattern)[0]; // Get the duplicate key (e.g., 'name')
+            const duplicateValue = err.keyValue[duplicateKey]; // Get the duplicate value (e.g., 'test3')
+
+            return res.status(400).json({
+                message: `El campo '${duplicateKey}' ya existe. Por favor, elige otro.`,
+            });
+        }
         return next(err);
     }   
 }
@@ -225,9 +303,23 @@ async function obtenerUsuarioPorIdMongo(uuid){
     }    
 }
 
+// EDIT_USERS
 async function editarUsuario(req, res, next) {
-    const { firstName, lastName, email, phone, password, privilege, administrator,adminname, color, investorType } = req.body;
+    const { firstName, lastName, email, phone, password, privilege, administrator,adminname, color, investorType, role, assignedChalets } = req.body;
     const updateFields = {};
+
+    const userRole = req.session.role;
+
+    const userPermissions = await Roles.findById(userRole);
+    if(!userPermissions){
+        return next(new BadRequestError("El usuario no tiene un rol definido, contacte al administrador"))  ;
+    }
+
+    const permittedRole = "EDIT_USERS";
+    if (!userPermissions.permissions.includes(permittedRole)) {
+        return next(new BadRequestError("El usuario no tiene permiso para editar usuarios"));
+    }
+
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
     if (password) {
@@ -250,6 +342,19 @@ async function editarUsuario(req, res, next) {
             return next(new BadRequestError("Invalid investor type"));
         }
         updateFields.investorType = investorType;
+    }
+    if (role) {
+        const rol = await Roles.findById(role);
+        if (!rol) {
+            return next(new NotFoundError("Rol not found"));
+        }
+        updateFields.role = rol._id;
+    }
+
+    console.log(assignedChalets)
+
+    if (assignedChalets) {
+        updateFields.assignedChalets = assignedChalets;
     }
 
     try {
@@ -315,10 +420,23 @@ async function editarUsuarioPorId(req, res, next) {
     }
 }
 
+// DELETE_USERS
 async function deleteUser(req, res, next) {
     const { email } = req.body;
 
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "DELETE_USERS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para eliminar usuarios.");
+        }
+
         const userToDelete = await Usuario.findOneAndDelete({ email });
         if (!userToDelete) {
             throw new NotFoundError("Client not found");

@@ -18,6 +18,7 @@
                         <th scope="col">Email</th>
                         <th scope="col">Celular</th>
                         <th scope="col">Privilegio</th>
+                        <th scope="col">Rol</th>
                         <th scope="col">Administrador</th>
                         <th scope="col">Acciones</th>
                     </tr>
@@ -30,14 +31,17 @@
                         <td>{{email}}</td>
                         <td>{{phone}}</td>
                         <td>{{privilege}}</td>
+                        <td>{{roleName}}</td>
                         <td>{{adminname}}</td>
                         <td class="text-center">
                             <button type="button" class="btn btn-primary" data-client-firstName="{{firstName}}"
                                 data-client-lastName="{{lastName}}" data-client-email="{{email}}" data-client-phone="{{phone}}"
                                 data-client-privilege="{{privilege}}" data-client-adminname="{{administrator}}"
-                                data-client-color="{{color}}" {{#if investorType}}
-                                data-client-investorType="{{investorType}}"
-                                {{/if}} data-bs-toggle="modal"
+                                data-client-color="{{color}}" data-client-role="{{role}}" data-assigned-chalets="{{assignedChalets}}"
+                                {{#if investorType}}
+                                data-client-investorType="{{investorType}}" 
+                                {{/if}} 
+                                data-bs-toggle="modal"
                                 data-bs-target="#modify-user_entry_modal" onclick="showClientEmail(this)">
                                 <i class="fa fa-pencil" aria-hidden="true"></i>
                             </button>
@@ -61,7 +65,7 @@
 <!-- Modal Alta usuario -->
 <div class="modal fade" id="user_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <form id="frmNewUser" action="/api/auth/crear-usuario" method="post" class="modal-dialog modal-lg">
+    <form id="frmNewUser" action="/api/auth/crear-usuario" method="post" class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Alta de Usuario</h5>
@@ -113,7 +117,7 @@
                             <label for="slctUserPrivileges">Privilegio: </label>
                         </div>
                         <div class="row">
-                            <div class="col-8">
+                            <div class="col-8 mb-2">
                                 <select name="slctUserPrivileges" id="slctUserPrivileges"
                                     class="form-select form-select-md" required>
                                     <option value="" selected disabled> Selecciona un privilegio para el usuario--
@@ -128,6 +132,22 @@
 
                                 </select>
 
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <label for="slctUserRolelbl">Rol: </label>
+                        </div>
+                        <div class="row">
+                            <div class="col-8 mb-2">
+                                <select name="slctUserRolelbl" id="slctUserRole"
+                                    class="form-select form-select-md" required>
+                                    <option value="" selected disabled> Selecciona un rol para el usuario--</option>
+                                    {{#each roles}}
+                                    <option value="{{this._id}}">{{this.name}}</option>
+                                    {{/each}}
+                                    
+                                </select>
                             </div>
                         </div>
                         <div class="row mt-2">
@@ -171,12 +191,28 @@
                                     value="#563d7c" title="Choose your color">
                             </div>
                         </div>
-                        <div class="form-item">
-                            <p id="txtInsertUserError" name="errMsg" class="error"></p>
+
+                        {{!-- Asignacion de cabañas --}}
+                        <div class="d-none" id="assign-chalets-container">
+
+                            <div class="row mt-3 ">
+                                <label for="select-assignedchalets" id="labelSelectAsignedChalets" class="">Cabañas asignadas: </label>
+                            </div>
+
+                            <div class="row">
+                                <a name="" id="select-chalets-btn" class="btn btn-info btn-sm m-3 w-50" href="#" role="button"
+                                    data-bs-toggle="modal" data-bs-target="#select-chalets_modal">Da click aquí para asignar cabañas</a>
+                            </div>
                         </div>
-                        <div class="modal_footer" style="display: flex; justify-content: right; margin: 10px 0;">
-                            <button type="submit" class="btn btn-primary" id="btnSaveUser">Guardar Usuario</button>
-                        </div>
+
+
+
+                            <div class="form-item">
+                                <p id="txtInsertUserError" name="errMsg" class="error"></p>
+                            </div>
+                            <div class="modal_footer" style="display: flex; justify-content: right; margin: 10px 0;">
+                                <button type="submit" class="btn btn-primary" id="btnSaveUser">Guardar Usuario</button>
+                            </div>
                     </div>
                 </div>
             </div>
@@ -191,7 +227,7 @@
 {{!-- Modal modificar usuario --}}
 <div class="modal fade" id="modify-user_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <form id="frmUpdateUser" action="/api/usuarios/editar-usuario" method="put" class="modal-dialog modal-lg">
+    <form id="frmUpdateUser" action="/api/usuarios/editar-usuario" method="put" class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel">Modificar Usuario</h5>
@@ -243,7 +279,7 @@
                             <label for="slctUserPrivilegesUpdlbl">Privilegio: </label>
                         </div>
                         <div class="row">
-                            <div class="col-8">
+                            <div class="col-8 mb-2">
                                 <select name="slctUserPrivilegesUpdlbl" id="slctUserPrivilegesUpd"
                                     class="form-select form-select-md" required>
                                     <option value="" selected disabled> Selecciona un privilegio para el usuario--
@@ -256,6 +292,21 @@
                                     <option value="Dueño de cabañas">Dueño de cabañas</option>
                                     <option value="Inversionistas">Inversionistas</option>
                                     <option value="Colaborador dueño">Colaborador de dueño de cabañas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label for="slctUserRoleUpdlbl">Rol: </label>
+                        </div>
+                        <div class="row">
+                            <div class="col-8 mb-2">
+                                <select name="slctUserRoleUpdlbl" id="slctUserRoleUpd"
+                                    class="form-select form-select-md" required>
+                                    <option value="" selected disabled> Selecciona un rol para el usuario--</option>
+                                    {{#each roles}}
+                                    <option value="{{this._id}}">{{this.name}}</option>
+                                    {{/each}}
+                                    
                                 </select>
                             </div>
                         </div>
@@ -304,6 +355,19 @@
                                     value="#563d7c" title="Choose your color">
                             </div>
                         </div>
+
+                        {{!-- Asignacion de cabañas --}}
+                        <div class="d-none" id="edit-assign-chalets-container">
+
+                            <div class="row mt-3 ">
+                                <label for="select-assignedchalets" id="labelSelectAsignedChalets" class="">Cabañas asignadas: </label>
+                            </div>
+
+                            <div class="row">
+                                <a name="" id="select-chalets-btn" class="btn btn-info btn-sm m-3 w-50" href="#" role="button"
+                                    data-bs-toggle="modal" data-bs-target="#select-chalets_modal_edit">Da click aquí para asignar cabañas</a>
+                            </div>
+                        </div>
                         <div class="form-item">
                             <p id="txtUpdUserError" name="errMsg" class="error"></p>
                         </div>
@@ -319,6 +383,113 @@
         </div>
     </form>
 </div>
+
+
+<!-- Modal asignar cabañas -->
+<div
+    class="modal fade"
+    id="select-chalets_modal"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="modalTitleId"
+    aria-hidden="true"
+>
+    <div
+        class="modal-dialog modal-dialog-scrollable modal-md"
+        role="dialog"
+    >
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitleId">
+                    Asignar cabañas a vendedor
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label for="select-chalets">Cabañas: </label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAllChaletsChk"> 
+                                <label class="form-check-label" for="selectAllChaletsChk"><b>Seleccionar todo</b> </label>
+                            </div>
+                            {{#each chalets}}
+                            <div class="form-check">
+                                <input class="form-check-input chks-assigned-chalets" name="chalet-{{this._id}}" type="checkbox" value="{{this.id}}" id="{{this._id}}"> 
+                                <label class="form-check-label" for="chalet-{{this._id}}"> {{this.name}} </label>
+
+                            </div>
+                            {{/each}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-primary" data-bs-toggle="modal" href="#user_entry_modal" role="button">Guardar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal editar asignar cabañas -->
+<div
+    class="modal fade"
+    id="select-chalets_modal_edit"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="modalTitleIdEdit"
+    aria-hidden="true"
+>
+    <div
+        class="modal-dialog modal-dialog-scrollable modal-md"
+        role="dialog"
+    >
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitleIdEdit">
+                    Asignar cabañas a vendedor
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label for="select-chalets-edit">Cabañas: </label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAllChaletsEditChk"> 
+                                <label class="form-check-label" for="selectAllChaletsEditChk"><b>Seleccionar todo</b> </label>
+                            </div>
+                            {{#each chalets}}
+                            <div class="form-check">
+                                <input class="form-check-input chks-assigned-chalets-edit" name="chalet-{{this._id}}" type="checkbox" value="{{this.id}}" id="edit-{{this._id}}"> 
+                                <label class="form-check-label" for="chalet-{{this._id}}"> {{this.name}} </label>
+
+                            </div>
+                            {{/each}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-primary" data-bs-toggle="modal" href="#modify-user_entry_modal" role="button">Guardar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -366,13 +537,14 @@
         }
 
         // Clearing user's info when closing modal.
+        /** 
         const modals = document.querySelectorAll('.modal');
         modals.forEach(function (modal) {
             modal.addEventListener('hidden.bs.modal', () => {
                 clearModal(modal);
             });
         });
-
+        */
 
         // Saving new user.
         const btnSaveUser = document.getElementById("btnSaveUser");
@@ -381,6 +553,8 @@
             btnSaveUser.addEventListener("click", async (event) => {
                 event.preventDefault();
                 const data = collectFormData();
+                console.log("After collecting data")
+                console.log(data)
 
                 try {
                     const response = await fetch('/api/usuarios/crear-usuario', {
@@ -412,20 +586,26 @@
                 phone: document.getElementById("userPhoneNmb").value.trim(),
                 password: document.getElementById("txtUserPassword").value.trim(),
                 privilege: privilege,
-                color: document.getElementById("colaboratorColor").value.trim()
+                color: document.getElementById("colaboratorColor").value.trim(),
+                role: document.getElementById("slctUserRole").value
             };
 
-            if (privilege !== "Inversionistas") {
+            if (privilege === "Inversionistas") {
+                data.investorType = document.getElementById('select-investorType').value;
+            } else {
+                if (privilege === "Vendedor") {
+                    data.assignedChalets = assignedChalets();
+                }
                 data.administrator = document.getElementById("slctUserAdmin").value.trim();
                 data.adminname = $("#slctUserAdmin option:selected").text();
-            } else {
-                data.investorType = document.getElementById('select-investorType').value;
+                
             }
 
             return data;
         }
 
         function handleError(errorData) {
+            console.log(errorData)
             const errors = errorData.message || errorData.error[0].message || 'Unknown error';
             Swal.fire({
                 icon: 'error',
@@ -482,15 +662,17 @@
                     password: document.getElementById("txtUserPasswordUpd").value.trim(),
                     phone: document.getElementById("userPhoneNmbUpd").value.trim(),
                     privilege: privilege,
-                    color: document.getElementById("colaboratorColorUpd").value.trim()
+                    color: document.getElementById("colaboratorColorUpd").value.trim(),
+                    role: document.getElementById("slctUserRoleUpd").value
                 };
 
-                if (privilege !== "Inversionistas") {
+                if (privilege === "Inversionistas") {
+                    data.investorType = document.getElementById('select-investorTypeUpd').value
+                } else if(privilege === "Vendedor") {
+                    data.assignedChalets = assignedEditedChalets();
+                } else {
                     data.administrator = document.getElementById("slctUserAdminUpd").value.trim();
                     data.adminname = $("#slctUserAdminUpd option:selected").text()
-                } else {
-                    data.investorType = document.getElementById('select-investorTypeUpd').value
-
                 }
 
                 fetch('/api/usuarios/editar-usuario', {
@@ -616,6 +798,9 @@
         const containerSelectInvestorTypeUpd = document.getElementById('containerSelectInvestorTypeUpd');
         const selectInvestorTypeUpd = document.getElementById('select-investorTypeUpd');
 
+        const assignedChaletsContainer = document.getElementById('assign-chalets-container');
+        const assignedChaletsContainerUpd = document.getElementById('edit-assign-chalets-container');
+
         // Pasar los datos de admins y owners como cadenas JSON
         const owners = {{{ json owners }}};
         const admins = {{{ json admins }}};
@@ -627,6 +812,7 @@
             containerSelectInvestorType.classList.add('d-none');
             relatedLabel.classList.remove('d-none');
             relatedSelectContainer.classList.remove('d-none');
+            assignedChaletsContainer.classList.add('d-none');
 
             relatedLabel.textContent = 'Dueño ligado:';
             updateSelectOptions(owners, 'Seleccione un dueño para el usuario --');
@@ -636,12 +822,17 @@
             relatedLabel.classList.add('d-none');
             relatedSelectContainer.classList.add('d-none');
             // Falta añadir d-none al relatedContainer
+            assignedChaletsContainer.classList.add('d-none');
 
+        } else if (this.value === "Vendedor") {
+            assignedChaletsContainer.classList.remove('d-none');
         } else {
             labelInvestorType.classList.add('d-none');
             containerSelectInvestorType.classList.add('d-none');
             relatedLabel.classList.remove('d-none');
             relatedSelectContainer.classList.remove('d-none');
+
+            assignedChaletsContainer.classList.add('d-none');
 
             relatedLabel.textContent = 'Administrador ligado:';
             updateSelectOptions(admins, 'Seleccione un administrador para el usuario --');
@@ -654,6 +845,7 @@
             containerSelectInvestorTypeUpd.classList.add('d-none');
             relatedLabelUpd.classList.remove('d-none');
             relatedSelectContainerUpd.classList.remove('d-none');
+            assignedChaletsContainerUpd.classList.add('d-none');
 
             relatedLabelUpd.textContent = 'Dueño ligado:';
             updateSelectOptionsUpd(owners, 'Seleccione un dueño para el usuario --');
@@ -663,12 +855,17 @@
             relatedLabelUpd.classList.add('d-none');
             relatedSelectContainerUpd.classList.add('d-none');
             // Falta añadir d-none al relatedContainer
+            assignedChaletsContainerUpd.classList.add('d-none');
 
+        } else if (this.value === "Vendedor") {
+            assignedChaletsContainerUpd.classList.remove('d-none');
         } else {
             labelInvestorTypeUpd.classList.add('d-none');
             containerSelectInvestorTypeUpd.classList.add('d-none');
             relatedLabelUpd.classList.remove('d-none');
             relatedSelectContainerUpd.classList.remove('d-none');
+
+            assignedChaletsContainerUpd.classList.add('d-none');
 
             relatedLabelUpd.textContent = 'Administrador ligado:';
             updateSelectOptionsUpd(admins, 'Seleccione un administrador para el usuario --');
@@ -717,6 +914,11 @@
         const color = button.getAttribute('data-client-color');
         const investorType = button.getAttribute('data-client-investorType');
         const phone = button.getAttribute('data-client-phone');
+        const role = button.getAttribute('data-client-role');
+        const assignedChalets = button.getAttribute('data-assigned-chalets');
+
+        const assignedChaletsArray = assignedChalets.split(',');
+        console.log(assignedChaletsArray);
 
         const owners = {{{ json owners }}};
         const admins = {{{ json admins }}};
@@ -729,11 +931,26 @@
         const containerSelectInvestorTypeUpd = document.getElementById('containerSelectInvestorTypeUpd');
         const selectInvestorTypeUpd = document.getElementById('select-investorTypeUpd');
 
+        const assignedChaletsContainerUpd = document.getElementById('edit-assign-chalets-container');
+
+        const chaletCheckboxes = document.querySelectorAll('.chks-assigned-chalets-edit');
+        chaletCheckboxes.forEach(checkbox => {
+            if (assignedChaletsArray.includes(checkbox.value)) {
+                checkbox.checked = true;
+            } else {
+                checkbox.checked = false;
+            }
+        });
+
+        
+
+
         if (privilege === 'Colaborador dueño') {
             labelInvestorTypeUpd.classList.add('d-none');
             containerSelectInvestorTypeUpd.classList.add('d-none');
             relatedLabelUpd.classList.remove('d-none');
             relatedSelectContainerUpd.classList.remove('d-none');
+            assignedChaletsContainerUpd.classList.add('d-none');
 
             relatedLabelUpd.textContent = 'Dueño ligado:';
             updateSelectOptionsUpd(owners, 'Seleccione un dueño para el usuario --');
@@ -743,12 +960,17 @@
             relatedLabelUpd.classList.add('d-none');
             relatedSelectContainerUpd.classList.add('d-none');
             // Falta añadir d-none al relatedContainer
+            assignedChaletsContainerUpd.classList.add('d-none');
 
+        } else if (privilege === "Vendedor") {
+            assignedChaletsContainerUpd.classList.remove('d-none');
         } else {
             labelInvestorTypeUpd.classList.add('d-none');
             containerSelectInvestorTypeUpd.classList.add('d-none');
             relatedLabelUpd.classList.remove('d-none');
             relatedSelectContainerUpd.classList.remove('d-none');
+
+            assignedChaletsContainerUpd.classList.add('d-none');
 
             relatedLabelUpd.textContent = 'Administrador ligado:';
             updateSelectOptionsUpd(admins, 'Seleccione un administrador para el usuario --');
@@ -763,6 +985,7 @@
         document.querySelector('#colaboratorColorUpd').value = color;
         document.querySelector('#select-investorTypeUpd').value = investorType;
         document.querySelector('#userPhoneNmbUpd').value = phone.replace("+52", "");
+        document.querySelector('#slctUserRoleUpd').value = role;
 
 
     }
@@ -844,5 +1067,52 @@
         }
 
     }
+
+
+    function assignedChalets () {
+        const chaletIds = [];
+        const checkboxes = document.querySelectorAll('.chks-assigned-chalets');
+
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                chaletIds.push(checkbox.value);
+            }
+        })
+
+        console.log(chaletIds)
+        return chaletIds
+    }
+
+    function assignedEditedChalets () {
+        const chaletIds = [];
+        const checkboxes = document.querySelectorAll('.chks-assigned-chalets-edit');
+
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                chaletIds.push(checkbox.value);
+            }
+        })
+
+        console.log(chaletIds)
+        return chaletIds
+    }
+
+    const selectAllChaletsChk = document.getElementById('selectAllChaletsChk');
+    selectAllChaletsChk.addEventListener('change', () => {
+        const status = selectAllChaletsChk.checked;
+        const checkboxes = document.querySelectorAll('.chks-assigned-chalets');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = status ? true : false;
+        });
+    });
+
+    const selectAllChaletsEditChk = document.getElementById('selectAllChaletsEditChk');
+    selectAllChaletsEditChk.addEventListener('change', () => {
+        const status = selectAllChaletsChk.checked;
+        const checkboxes = document.querySelectorAll('.chks-assigned-chalets-edit');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = status ? true : false;
+        });
+    });
 
 </script>

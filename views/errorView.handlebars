@@ -1,2 +1,6 @@
-<h1>ERROR!</h1>
-{{err}}
+<div class="error-container d-flex align-items-center justify-content-center">
+    <h1 class="error-title">ERROR!</h1>
+    <p class="error-message">{{err}}</p>
+    <!-- Botón de regreso (opcional) -->
+    <button class="back-button" onclick="window.history.back()">Volver atrás</button>
+</div>

@@ -1,4 +1,5 @@
 const Encuesta = require('../models/Encuesta');
+const Roles = require("../models/Roles");
 const BadRequestError = require("../common/error/bad-request-error");
 const NotFoundError = require("../common/error/not-found-error");
 const { check } = require("express-validator");
@@ -81,6 +82,20 @@ const updateFormValidators = [
 
 async function showFormModellingView(req, res, next) {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+            return next(new Error("El usuario no tiene un rol definido, contacte al administrador"));
+        }
+    
+        const permittedRole = "MODIFY_SURVEY";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            // throw new Error("El usuario no tiene permiso para ver utilidades globales.");
+            return next(new Error("El usuario no tiene permiso para ver esta página."));
+        }
+    
         var survey = await Encuesta.findOne().lean();
         
         if(!survey){ res.render('vistaModelarEncuesta'); }

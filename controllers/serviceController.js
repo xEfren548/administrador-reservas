@@ -4,6 +4,7 @@ const Service = require('../models/Servicio');
 const Usuario = require('../models/Usuario');
 const logController = require('../controllers/logController');
 const { check } = require("express-validator");
+const Roles = require('../models/Roles')
 
 // No uuid validator has been implemented for those functions that take parameters form the URL.
 const showServicesValidators = [
@@ -193,6 +194,18 @@ const deleteServiceValidators = [
 
 async function mostrarServicios(req, res, next) { 
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "VIEW_SERVICES";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para ver todos los servicios adicionales");
+        }
+
         const services = await Service.find({});
         if (!services) {
             throw new NotFoundError("No services found");
@@ -242,31 +255,43 @@ async function mostrarServicios(req, res, next) {
 }
 
 async function createService(req, res, next) {
-    const { service, description, supplier, serviceManager,costPrice, basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
-    
-    const supplierToAdd = await Usuario.findOne({email: supplier});
-    if(!supplierToAdd){
-        throw new NotFoundError("Supplier not found");
-    }
-
-    const serviceManagerToAdd = await Usuario.findOne({email: serviceManager});
-    if(!serviceManagerToAdd){
-        throw new NotFoundError("Service manager not found");
-    }
-
-    const serviceToAdd = new Service({
-        service,
-        description,
-        supplier: supplierToAdd._id,
-        serviceManager: serviceManagerToAdd._id,
-        costPrice,
-        basePrice,
-        firstCommission,
-        secondCommission,
-        finalPrice
-    });
-
     try {
+        const { service, description, supplier, serviceManager,costPrice, basePrice, firstCommission, firstUser, secondCommission, secondUser, finalPrice } = req.body;
+    
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "CREATE_SERVICES";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para crear servicios adicionales");
+        }
+
+        const supplierToAdd = await Usuario.findOne({email: supplier});
+        if(!supplierToAdd){
+            throw new NotFoundError("Supplier not found");
+        }
+
+        const serviceManagerToAdd = await Usuario.findOne({email: serviceManager});
+        if(!serviceManagerToAdd){
+            throw new NotFoundError("Service manager not found");
+        }
+
+        const serviceToAdd = new Service({
+            service,
+            description,
+            supplier: supplierToAdd._id,
+            serviceManager: serviceManagerToAdd._id,
+            costPrice,
+            basePrice,
+            firstCommission,
+            secondCommission,
+            finalPrice
+        });
+
         await serviceToAdd.save();
         const logBody = {
             fecha: Date.now(),

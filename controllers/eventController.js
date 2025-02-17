@@ -14,6 +14,7 @@ const mongoose = require('mongoose');
 const { format } = require('date-fns');
 const moment = require('moment');
 const { es } = require('date-fns/locale');
+const Roles = require('../models/Roles');
 
 
 const Cliente = require('../models/Cliente');
@@ -132,9 +133,16 @@ const submitReservationValidators = [
 async function obtenerEventos(req, res) {
     const { id } = req.params;
     try {
-        const eventos = await Documento.find( { status: { $nin: ["no-show", "cancelled"]}}).lean();
-        console.log(eventos)
-        let eventosExistentes = eventos[0].events;
+        const privilege = req.session.privilege;
+        let eventos = []
+        // const eventos = await Documento.find( { status: { $nin: ["no-show", "cancelled"]}}).lean();
+
+        if (privilege === "Vendedor") {
+            const assignedChalets = req.session.assignedChalets;
+            eventos = await Documento.find({ resourceId: { $in: assignedChalets }, status: { $nin: ["no-show", "cancelled"] } }).lean();
+        } else {
+            eventos = await Documento.find({ status: { $nin: ["no-show", "cancelled"] } }).lean();
+        }
 
         let cleaningDetailsMap = {};
 
@@ -206,7 +214,6 @@ async function obtenerEventosDeCabana(req, res) {
         //     const matchingEvents = doc.events.filter(evento => evento.resourceId.equals(newId));
         //     eventos = eventos.concat(matchingEvents);
         // });
-
         const eventos = await Documento.find({ resourceId: newId }).lean();
 
         // const habitacion = habitaciones.resources.find(habitacion => habitacion._id.equals(newId));
@@ -537,6 +544,18 @@ async function createReservation(req, res, next) {
     let client = null;
 
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "CREATE_RESERVATIONS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para crear reservas");
+        }
+
         console.log("is depo: ", isDeposit);
         console.log("cliente email: ", clientEmail);
 
@@ -931,6 +950,25 @@ async function createOwnerReservation(req, res, next) {
                 idUsuario: createdBy.toString(),
                 idReserva: idReserva
             })
+
+            const descripcionLimpieza = 'Limpieza ' + chaletName;
+            const fechaLimpieza = new Date(arrivalDate);
+            const checkInDate = new Date(arrivalDate)
+            const checkOutDate = new Date(departureDate)
+            fechaLimpieza.setDate(fechaLimpieza.getDate())
+            const statusLimpieza = 'Pendiente'
+    
+    
+            await rackLimpiezaController.createServiceForReservation({
+                id_reserva: idReserva,
+                descripcion: descripcionLimpieza,
+                fecha: fechaLimpieza,
+                checkInDate: checkInDate,
+                checkOutDate: checkOutDate,
+                status: statusLimpieza,
+                idHabitacion: reservationToAdd.resourceId
+            })
+            
         }
 
         // Log
@@ -1031,6 +1069,19 @@ async function eliminarEvento(req, res) {
         const id = req.params.id;
         const eventoAeliminar = await Documento.findByIdAndDelete(id);
 
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "CREATE_RESERVATIONS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para crear reservas");
+        }
+
+
         if (!eventoAeliminar) {
             return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
         }
@@ -1083,6 +1134,18 @@ async function eliminarEvento(req, res) {
 
 async function modificarEvento(req, res) {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "MODIFY_RESERVATION_STATUS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para modificar reservas");
+        }
+
         const { event, newResource } = req.body;
 
         console.log('eventoRecibido: ', event);
@@ -1221,6 +1284,18 @@ async function moveToPlayground(req, res) {
     console.log(idReserva)
 
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "MODIFY_RESERVATION_STATUS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para modificar reservas");
+        }
+
         const evento = await Documento.findById(idReserva);
         const chalet = await Habitacion.findById(evento.resourceId);
         // const eventosExistentes = await Documento.findOne();
@@ -1488,9 +1563,23 @@ async function crearNota(req, res) {
         }
 
         if (tipoNota === "Nota privada") {
-            if (!userPrivilege.includes('Administrador') && !userPrivilege.includes('Vendedor')) {
-                throw new Error('No tienes permisos para crear notas privadas');
+            const userRole = req.session.role;
+
+            const userPermissions = await Roles.findById(userRole);
+            if(!userPermissions){
+                // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+                throw new Error("El usuario no tiene un rol definido, contacte al administrador");
             }
+    
+            const permittedRole = "ADD_PRIVATE_NOTES";
+            if (!userPermissions.permissions.includes(permittedRole)) {
+                // throw new Error("El usuario no tiene permiso para ver utilidades globales.");
+                throw new Error("El usuario no tiene permiso para agregar notas privadas.");
+            }
+    
+            // if (!userPrivilege.includes('Administrador') && !userPrivilege.includes('Vendedor')) {
+            //     throw new Error('No tienes permisos para crear notas privadas');
+            // }
             evento.privateNotes.push({ texto });
         } else {
             evento.notes.push({ texto });

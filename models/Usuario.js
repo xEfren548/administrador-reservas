@@ -59,6 +59,15 @@ const userSchema = new Schema({
     },
     profileImageUrl: {
         type: String
+    },
+    role: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Roles',
+        required: true
+    },
+    assignedChalets: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'Habitacion'
     }
 });
 

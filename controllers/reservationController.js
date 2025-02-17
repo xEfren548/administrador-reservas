@@ -5,6 +5,8 @@ const Cliente = require('../models/Cliente');
 const Habitacion = require("../models/Habitacion");
 const TipologiasCabana = require('../models/TipologiasCabana');
 const NotFoundError = require("../common/error/not-found-error");
+const Roles = require("../models/Roles");
+const permissions = require('../models/permissions');
 
 
 const {check} = require("express-validator");
@@ -27,16 +29,35 @@ const showReservationsViewValidators = [
             return true;
         }),
 ];
-
+// VIEW_MAIN_CALENDAR: 'Ver calendario principal'
 async function showReservationsView(req, res, next) {
     try {
-        const habitaciones = await Habitacion.find().lean();
+        const privilege = req.session.privilege;
+        let habitaciones = [];
+        if (privilege === "Vendedor"){
+            const assignedChalets = req.session.assignedChalets;
+            habitaciones = await Habitacion.find({_id: assignedChalets}).lean();
+        } else {
+            habitaciones = await Habitacion.find().lean();
+        }
+        // const habitaciones = await Habitacion.find().lean();
         if(!habitaciones){
             throw new Error("No room found");
         }
         const data = habitaciones;
 
-        console.log('First room structure:', JSON.stringify(habitaciones[0], null, 2));
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "VIEW_MAIN_CALENDAR";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para ver el calendario principal");
+        }
+
 
         // console.log(data);
         const chalets = habitaciones.map(chalet => {
@@ -51,7 +72,7 @@ async function showReservationsView(req, res, next) {
 
         // Verify we still have valid chalets after filtering
         if (!chalets.length) {
-            throw new Error("No valid room data available");
+            throw new Error("No hay información de cabañas o el usuario no tiene cabañas asignadas");
         }
         // console.log("Estos son los chalets: ", chalets);
 

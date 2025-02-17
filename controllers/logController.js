@@ -1,5 +1,6 @@
 const Log = require('../models/Log');
 const Usuario = require('../models/Usuario');
+const Roles = require('../models/Roles');
 // const logController = require('../controllers/logcontroller');
 
 async function showLogs() {
@@ -11,8 +12,22 @@ async function showLogs() {
     }
 }
 
-async function renderLogs(req, res) {
+async function renderLogs(req, res, next) {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+            return next(new Error("El usuario no tiene un rol definido, contacte al administrador"));
+        }
+    
+        const permittedRole = "VIEW_LOGS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            // throw new Error("El usuario no tiene permiso para ver utilidades globales.");
+            return next(new Error("El usuario no tiene permiso para ver esta página."));
+        }
+    
         const logs = await showLogs();
         console.log(logs)
 

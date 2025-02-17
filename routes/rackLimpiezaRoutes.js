@@ -4,16 +4,33 @@ const router = express.Router();
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const RackLimpieza = require('../models/RackLimpieza');
 const Documento = require('../models/Evento');
+const Habitacion = require('../models/Habitacion');
+const Roles = require('../models/Roles');
+
+moment.locale('es', {
+    months: 'Enero_Febrero_Marzo_Abril_Mayo_Junio_Julio_Agosto_Septiembre_Octubre_Noviembre_Diciembre'.split('_')
+});
 
 router.get('/rackLimpieza', async (req, res) => {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "VIEW_CLEANING";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para ver los servicios de limpieza");
+        }
         const usuarioLogueado = req.session.userId;
         let services; 
 
         if (req.session.privilege === 'Limpieza'){
-            services = await RackLimpieza.find({encargadoLimpieza: usuarioLogueado}).lean();
+            services = await RackLimpieza.find({encargadoLimpieza: usuarioLogueado, status: { $ne: "Completado" }}).lean();
         } else {
-            services = await RackLimpieza.find().lean();
+            services = await RackLimpieza.find({status: { $ne: "Completado" }}).lean();
         }
 
         const fechaHoy = moment.tz("America/Mexico_City").startOf('day')
@@ -33,8 +50,8 @@ router.get('/rackLimpieza', async (req, res) => {
 
             const reserva = await Documento.findById(service.id_reserva).lean();
             if (reserva) {
-                service.fechaLlegada = moment.utc(reserva.arrivalDate).format('DD-MM-YYYY');
-                service.fechaSalida = moment.utc(reserva.departureDate).format('DD-MM-YYYY');
+                service.fechaLlegada = moment.utc(reserva.arrivalDate).format('DD-MMMM-YYYY');
+                service.fechaSalida = moment.utc(reserva.departureDate).format('DD-MMMM-YYYY');
                 processedServices.push(service);
             }
         }
@@ -57,7 +74,14 @@ router.get('/rackLimpieza', async (req, res) => {
 });
 
 router.get('/racklimpieza-calendar', async (req, res) => {
-    res.render('rackLimpiezaCalendar');
+    const chalets = await Habitacion.find({ "others.janitor": req.session.id }).lean();
+    const mappedChalets = chalets.map(chalet => ({
+        id: chalet._id,
+        name: chalet.propertyDetails.name
+    }))
+    res.render('rackLimpiezaCalendar', {
+        chalets: mappedChalets
+    });
 });
 
 

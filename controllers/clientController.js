@@ -2,7 +2,9 @@ const BadRequestError = require('../common/error/bad-request-error');
 const NotFoundError = require('../common/error/not-found-error');
 const Cliente = require('../models/Cliente');
 const logController = require('../controllers/logController');
-const {check} = require("express-validator");
+const { check } = require("express-validator");
+const Roles = require("../models/Roles");
+const permissions = require('../models/permissions');
 
 const createClientValidators = [
     check('firstName')
@@ -62,7 +64,7 @@ const editClientValidators = [
     check()
         .custom((value, { req }) => {
             const { firstName, lastName, phone, address, identificationType, identificationNumber } = req.body;
-            if((!firstName && !lastName && !phone && !address && !identificationType && !identificationNumber)){
+            if ((!firstName && !lastName && !phone && !address && !identificationType && !identificationNumber)) {
                 throw new BadRequestError("There should be at least one field to update.")
             }
             return true;
@@ -82,8 +84,19 @@ const deleteClientValidators = [
         }),
 ];
 
-async function showClientsView(req, res, next){
+async function showClientsView(req, res, next) {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if (!userPermissions) {
+            return next(new BadRequestError("El usuario no tiene un rol definido, contacte al administrador"));
+        }
+
+        const permittedRole = "VIEW_CLIENTS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            return next(new BadRequestError("El usuario no tiene permiso para ver clientes"));
+        }
         const clients = await Cliente.find({}).lean();
         res.render('vistaClientes', {
             clients: clients
@@ -93,19 +106,33 @@ async function showClientsView(req, res, next){
     }
 }
 
-async function showClients(req, res, next){
+async function showClients(req, res, next) {
     try {
         const { id } = req.params;
         console.log(id);
-        const clients = await Cliente.find({_id: id});
+        const clients = await Cliente.find({ _id: id });
         res.send(clients);
     } catch (err) {
         return next(err);
     }
 }
 
+// CREATE_CLIENTS
 async function createClient(req, res, next) {
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            // return res.status(500).json({ message: "El usuario no tiene un rol definido, contacte al administrador" });
+            throw new BadRequestError("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "CREATE_CLIENTS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            // return res.status(500).json({ message: "El usuario no tiene permiso para crear clientes" });
+            throw new BadRequestError("El usuario no tiene permiso para crear clientes");
+        }
         const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = req.body;
         if (email !== null) {
             const client = await Cliente.findOne({ email: email });
@@ -134,9 +161,9 @@ async function createClient(req, res, next) {
             acciones: `Cliente agregado por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
         }
-        
+
         await logController.createBackendLog(logBody);
-        res.status(200).json({ success: true, message: "Client successfully created", client: clienteToAdd});
+        res.status(200).json({ success: true, message: "Client successfully created", client: clienteToAdd });
     } catch (err) {
         return next(err);
     }
@@ -163,7 +190,7 @@ async function createClientLocal(firstName, lastName, reqUser) {
             acciones: `Cliente agregado por ${reqUser.firstName} ${reqUser.lastName}`,
             nombreUsuario: `${reqUser.firstName} ${reqUser.lastName}`
         }
-        
+
         await logController.createBackendLog(logBody);
         return clienteToAdd
     } catch (err) {
@@ -172,7 +199,9 @@ async function createClientLocal(firstName, lastName, reqUser) {
     }
 }
 
+// EDIT_CLIENTS
 async function editClient(req, res, next) {
+    
     const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = req.body;
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
@@ -181,8 +210,20 @@ async function editClient(req, res, next) {
     if (address) { updateFields.address = address; }
     if (identificationType) { updateFields.identificationType = identificationType; }
     if (identificationNumber) { updateFields.identificationNumber = identificationNumber; }
-
+    
     try {
+        const userRole = req.session.role;
+    
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new BadRequestError("El usuario no tiene un rol definido, contacte al administrador");
+        }
+    
+        const permittedRole = "EDIT_CLIENTS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new BadRequestError("El usuario no tiene permiso para editar clientes");
+        }
+        
         const clienteToUpdate = await Cliente.findOneAndUpdate({ email }, updateFields, { new: true });
         if (!clienteToUpdate) {
             throw new NotFoundError("Client not found");
@@ -195,19 +236,19 @@ async function editClient(req, res, next) {
             acciones: `Cliente editado por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
         }
-        
+
         await logController.createBackendLog(logBody);
 
         console.log("Cliente editado con éxito");
         res.status(200).json({ success: true, message: "Cliente editado con éxito" });
-    } catch(err) {
+    } catch (err) {
         return next(err);
     }
 }
 
 // Maybe this function is not completely necessary.
 // This function can update user's email (its unique identifier).
-async function editClientById(req, res, next) {   
+async function editClientById(req, res, next) {
     const { uuid } = req.params;
     const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = req.body;
     const updateFields = {};
@@ -224,9 +265,9 @@ async function editClientById(req, res, next) {
         if (email) {
             const existingClient = await Cliente.findOne({ email: email, _id: { $ne: uuid } });
             if (existingClient) {
-                return res.status(400).json({ 
-                    error: [{ message: "El email ya se encuentra asociado a otro cliente" }]     
-                });       
+                return res.status(400).json({
+                    error: [{ message: "El email ya se encuentra asociado a otro cliente" }]
+                });
             }
         }
 
@@ -243,10 +284,10 @@ async function editClientById(req, res, next) {
             acciones: `Cliente editado por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
         }
-        
+
         await logController.createBackendLog(logBody);
         res.status(200).json({ clienteToUpdate });
-    } catch(err) {
+    } catch (err) {
         console.log(err)
         return next(err);
     }
@@ -256,6 +297,18 @@ async function deleteClient(req, res, next) {
     const { email } = req.body;
 
     try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "DELETE_CLIENTS";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso eliminar clientes.");
+        }
+
         const clientToDelete = await Cliente.findOneAndDelete({ email });
         if (!clientToDelete) {
             throw new NotFoundError("Client not found");
@@ -269,12 +322,12 @@ async function deleteClient(req, res, next) {
             acciones: `Cliente eliminado por ${req.session.firstName} ${req.session.lastName}`,
             nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
         }
-        
+
         await logController.createBackendLog(logBody);
         res.status(200).json({ success: true, message: "Cliente eliminado con éxito" });
-    } catch(err) {
+    } catch (err) {
         return next(err);
-    }    
+    }
 }
 
 // Maybe this function is not completely necessary.
@@ -282,7 +335,7 @@ async function deleteClientById(req, res, next) {
     const { uuid } = req.params;
 
     if (!uuid) {
-        return next(new BadRequestError("Missing info in URL"));  
+        return next(new BadRequestError("Missing info in URL"));
     }
 
     try {
@@ -290,11 +343,11 @@ async function deleteClientById(req, res, next) {
 
         console.log("Cliente eliminado con éxito");
         res.status(200).json({ success: true });
-    } catch(err) {
+    } catch (err) {
         return next(err);
-    }    
+    }
 }
-        
+
 module.exports = {
     createClientValidators,
     editClientValidators,
