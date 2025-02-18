@@ -2,6 +2,7 @@ const RackLimpieza = require('../models/RackLimpieza');
 const Documento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const habitacionController = require('../controllers/habitacionController');
+const Usuario = require('../models/Usuario');
 const mongoose = require('mongoose');
 
 async function getAllServices(req, res, next) {
@@ -51,6 +52,17 @@ async function dataForRackLimpiezaCalendar(req, res, next) {
         const eventos = await Documento.find({ status: { $nin: ["no-show", "cancelled"] }, resourceId: { $in: habitaciones.map(habitacion => habitacion._id) } }).lean();
         if (!eventos) {
             return res.status(404).send('No events found');
+        }
+
+        // Enhance each event with user details if createdBy is present
+        for (let evento of eventos) {
+            if (evento.createdBy) {
+                const usuario = await Usuario.findById(evento.createdBy).select('color firstName lastName').exec();
+                if (usuario) {
+                    evento.colorUsuario = usuario.color;
+                    evento.creadaPor = usuario.firstName + ' ' + usuario.lastName;
+                }
+            }
         }
 
 

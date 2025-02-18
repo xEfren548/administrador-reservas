@@ -78,7 +78,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                         clientPayments: event.pagosTotales,
                                         madeCheckIn: event.madeCheckIn,
                                         cleaningDetails: event.cleaningDetails,
-                                        allDay: true
+                                        allDay: true,
+                                        color: event.colorUsuario
                                     }
                                 })
                             console.log(events);
@@ -91,8 +92,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         })
                 },
                 eventContent: function (info) {
-                    console.log(info.event._def.resourceIds[0]);
-                    const color = '#0dcaf0';
+                    console.log(info);
+                    const color = info.backgroundColor || '#0dcaf0';
+
                     console.log(resourceMap);
         
                     const resourceTitle = resourceMap[info.event._def.resourceIds[0]] || 'Unknown Resource';
@@ -100,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
                     return {
                         html: `
-                        <div class="mr-5 p-1 w-100 rounded bg-gradient text-black" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: 'Overpass', sans-serif; background-color: ${color} !important;">
+                        <div class="p-1 rounded bg-gradient text-black" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: 'Overpass', sans-serif; background-color: ${color} !important;">
                             <div class="font-weight-bold">${resourceTitle}</div>
                             <div>Reserva</div>
                         </div>
