@@ -379,4 +379,36 @@
         const permissionsModal = new bootstrap.Modal(document.getElementById('permissionsModal'));
         permissionsModal.show();
     }
+
+    // Función para cerrar el modal y eliminar el backdrop
+    const closePermissionsModal = () => {
+        const modalElement = document.getElementById('permissionsModal');
+        const modal = bootstrap.Modal.getInstance(modalElement);
+
+        if (modal) {
+            modal.hide(); // Cierra el modal
+        }
+
+        // Elimina el backdrop manualmente
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+
+        // Restablece el scroll del body
+        document.body.style.overflow = 'auto';
+    };
+
+    // Asignar eventos a los botones de cerrar
+    document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+        button.addEventListener('click', closePermissionsModal);
+    });
+
+    // Opcional: Cerrar el modal al hacer clic fuera de él
+    document.getElementById('permissionsModal').addEventListener('hidden.bs.modal', () => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+    });
 </script>
