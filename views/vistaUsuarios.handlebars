@@ -1108,7 +1108,8 @@
 
     const selectAllChaletsEditChk = document.getElementById('selectAllChaletsEditChk');
     selectAllChaletsEditChk.addEventListener('change', () => {
-        const status = selectAllChaletsChk.checked;
+        const status = selectAllChaletsEditChk.checked;
+        console.log(status)
         const checkboxes = document.querySelectorAll('.chks-assigned-chalets-edit');
         checkboxes.forEach(checkbox => {
             checkbox.checked = status ? true : false;
