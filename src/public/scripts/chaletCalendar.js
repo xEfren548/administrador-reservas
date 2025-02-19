@@ -941,7 +941,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
 
                 if (!response.ok) {
-                    throw new Error('Error en la solicitud');
+                    const errorData = await response.json(); // Extract the error data
+                    const errorMessage = errorData.error && errorData.error[0] && errorData.error[0].message
+                    throw new Error(errorMessage);
                 }
 
                 const dataR = await response.json();
