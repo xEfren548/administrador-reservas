@@ -7,6 +7,8 @@
 	<div class="bg-dark mb-3">
 		<a name="" id="actualizar-precios-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
 			data-bs-toggle="modal" data-bs-target="#update_prices_modal">Actualizar precios</a>
+		<a name="" id="actualizar-precios--masive-btn" class="btn btn-secondary btn-sm mr-3" href="#" role="button"
+			data-bs-toggle="modal" data-bs-target="#update_masive_prices_modal">Actualización masiva de precios</a>
 		<a name="" id="agregar-precios-xpersona" class="btn btn-secondary btn-sm mr-3" href="#" role="button"
 			data-bs-toggle="modal" data-bs-target="#preciosxpersona_modal">Agregar precios por personas</a>
 		<a name="" id="eliminar-precios-openmodalbtn" class="btn btn-secondary btn-sm " href="#" role="button"
@@ -381,6 +383,58 @@
 			</div> <!--Cierre MODAL BODY -->
 			<div class="modal-footer">
 				<button type="button" class="btn btn-primary" id="update-prices-btn">Actualizar precios</button>
+				<div class="spinner-border" role="status" id="spinner">
+					<span class="visually-hidden">Loading...</span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- End Modal -->
+
+<!-- Modal Actualizar precios masivo -->
+
+<div class="modal fade" id="update_masive_prices_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+	aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="modalLabel">Actualización de precios</h5>
+				<button type="button" class="close" onclick="$('#update_masive_prices_modal').modal('hide');"
+					aria-label="Close">
+					&times;
+
+			</div>
+			<div class="modal-body">
+				<div class="img-container">
+					<div class="row mt-2 mb-2">
+						<div class="col-8">
+							<label for="select-cabana"><b>Selecciona una o más habitaciones para modificar: </b></label>
+							<div class="mb-3">
+								<form id="upload-csv-form">
+									<label for="" class="form-label">Escoger archivo</label>
+									<input
+										type="file"
+										class="form-control"
+										name=""
+										id="csv-file"
+										accept=".csv"
+										aria-describedby="fileHelpId"
+										required
+									/>
+									<div id="fileHelpId" class="form-text">CSV</div>
+
+								</form>
+							</div>
+							
+						</div>
+					</div> <!-- Cierre row -->
+					
+			
+				</div> <!-- Cierre IMG Container -->
+			</div> <!--Cierre MODAL BODY -->
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary" id="update-masive-prices-btn">Actualizar precios</button>
 				<div class="spinner-border" role="status" id="spinner">
 					<span class="visually-hidden">Loading...</span>
 				</div>
@@ -2571,6 +2625,49 @@ document.getElementById('habitacion-select').addEventListener('change', function
 		const formatter = new Intl.DateTimeFormat('es-MX', opciones);
 		return formatter.format(fecha);
 	}
+
+	document.getElementById('update-masive-prices-btn').addEventListener('click', async function (e) {
+        e.preventDefault();
+
+        const fileInput = document.getElementById('csv-file');
+        const file = fileInput.files[0];
+
+        if (!file || file.type !== 'text/csv') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Por favor, selecciona un archivo CSV.',
+            });
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('csvFile', file);
+
+        try {
+            const response = await fetch('/api/upload-csv', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al subir el archivo CSV.');
+            }
+
+            const result = await response.json();
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: result.message,
+            });
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message,
+            });
+        }
+    });
 
 	window.addEventListener("load", () => {
         const preloader = document.querySelector(".pre-loader");
