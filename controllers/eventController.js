@@ -256,7 +256,11 @@ async function obtenerEventosDeCabana(req, res) {
                 })
                 const totalReserva = evento.total;
                 // let precioBaseTotal = 0
-                precioBaseTotal = evento.nNights > 1 ? habitacion.others.basePrice2nights * evento.nNights : habitacion.others.basePrice * evento.nNights
+                if (evento.status === "reserva de dueño") {
+                    precioBaseTotal = 0;
+                } else {
+                    precioBaseTotal = evento.nNights > 1 ? habitacion.others.basePrice2nights * evento.nNights : habitacion.others.basePrice * evento.nNights
+                }
 
                 montoPendiente = totalReserva - pagoTotal;
                 console.log("Precio base total: ", precioBaseTotal)
