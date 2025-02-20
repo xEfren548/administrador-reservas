@@ -57,9 +57,19 @@ router.get('/rackLimpieza', async (req, res) => {
         }
 
         processedServices.sort((a, b) => {
+            // Parsear las fechas
+            const fechaA = moment(a.fechaLlegada, 'DD-MMMM-YYYY', 'es');
+            const fechaB = moment(b.fechaLlegada, 'DD-MMMM-YYYY', 'es');
+        
+            // Depuración: Verificar las fechas parseadas
+            console.log(`Comparando: ${a.fechaLlegada} (${fechaA.format()}) con ${b.fechaLlegada} (${fechaB.format()})`);
+        
+            // Ordenar primero por estado (Pendiente primero)
             if (a.status === "Pendiente" && b.status !== "Pendiente") return -1;
             if (a.status !== "Pendiente" && b.status === "Pendiente") return 1;
-            return moment(a.fechaLlegada, 'DD-MM-YYYY') - moment(b.fechaLlegada, 'DD-MM-YYYY');
+        
+            // Luego ordenar por fecha usando .diff()
+            return fechaA.diff(fechaB);
         });
 
         res.render('rackLimpieza', {
