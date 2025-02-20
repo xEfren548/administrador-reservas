@@ -202,10 +202,11 @@ async function createClientLocal(firstName, lastName, reqUser) {
 // EDIT_CLIENTS
 async function editClient(req, res, next) {
     
-    const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = req.body;
+    const { id, firstName, lastName, phone, address, email, identificationType, identificationNumber } = req.body;
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
+    if (email) { updateFields.email = email; }
     if (phone) { updateFields.phone = phone; }
     if (address) { updateFields.address = address; }
     if (identificationType) { updateFields.identificationType = identificationType; }
@@ -224,7 +225,7 @@ async function editClient(req, res, next) {
             throw new BadRequestError("El usuario no tiene permiso para editar clientes");
         }
         
-        const clienteToUpdate = await Cliente.findOneAndUpdate({ email }, updateFields, { new: true });
+        const clienteToUpdate = await Cliente.findOneAndUpdate({ _id: id }, updateFields, { new: true });
         if (!clienteToUpdate) {
             throw new NotFoundError("Client not found");
         }

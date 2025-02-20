@@ -34,7 +34,7 @@
                         <td>{{identificationType}}</td>
                         <td>{{identificationNumber}}</td>
                         <td class="text-center">
-                            <button type="button" class="btn btn-primary" data-client-email="{{email}}"
+                            <button type="button" class="btn btn-primary" data-client-id="{{_id}}" data-client-email="{{email}}"
                             data-client-firstName="{{firstName}}" data-client-lastName="{{lastName}}"
                             data-client-phone="{{phone}}" data-client-address="{{address}}"
                             data-client-identificationType="{{identificationType}}" data-client-identificationNumber="{{identificationNumber}}"
@@ -157,6 +157,7 @@
                 <div class="img-container">
                     <div class="row mt-2">
                         <div class="col-sm-12 mb-2">
+                                    <input type="text" name="txtClientNameUpd" id="idClienteUpd" hidden>
                             <div class="form-group">
                                 <label for="txtClientNameUpd">Nombre</label>
                                 <input type="text" name="txtClientNameUpd" id="txtClientNameUpd"
@@ -188,7 +189,7 @@
                             <div class="form-group">
                                 <label for="txtClientEmailUpd">Email</label>
                                 <input type="email" name="txtClientEmailUpd" id="txtClientEmailUpd" class="form-control"
-                                    placeholder="Email" disabled>
+                                    placeholder="Email">
                             </div>
                         </div>
                         <div class="row">
@@ -345,6 +346,7 @@
             btnUpdateClient.addEventListener("click", async (event) => {
                 event.preventDefault();
                 const data = {
+                    id: document.getElementById("idClienteUpd").value.trim(),
                     firstName: document.getElementById("txtClientNameUpd").value.trim(),
                     lastName: document.getElementById("txtClientLastnameUpd").value.trim(),
                     phone: document.getElementById("txtClientPhoneUpd").value.trim(),
@@ -465,6 +467,7 @@
     });
 
     function showData(button) {
+        const id = button.getAttribute('data-client-id');
         const firstName = button.getAttribute('data-client-firstName');
         const lastName = button.getAttribute('data-client-lastName');
         const email = button.getAttribute('data-client-email');
@@ -473,7 +476,7 @@
         const identificationNumber = button.getAttribute('data-client-identificationNumber');
         const phone = button.getAttribute('data-client-phone');
 
-
+        document.querySelector('#idClienteUpd').value = id
         document.querySelector('#txtClientNameUpd').value = firstName
         document.querySelector('#txtClientLastnameUpd').value = lastName
         document.querySelector('#txtClientAddressUpd').value = address
