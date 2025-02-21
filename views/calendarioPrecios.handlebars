@@ -416,7 +416,7 @@
 									<input
 										type="file"
 										class="form-control"
-										name=""
+										name="csvFile"
 										id="csv-file"
 										accept=".csv"
 										aria-describedby="fileHelpId"
@@ -2626,48 +2626,76 @@ document.getElementById('habitacion-select').addEventListener('change', function
 		return formatter.format(fecha);
 	}
 
-	document.getElementById('update-masive-prices-btn').addEventListener('click', async function (e) {
-        e.preventDefault();
+	document.getElementById('update-masive-prices-btn').addEventListener('click', async function (e) { 
+		e.preventDefault();
 
-        const fileInput = document.getElementById('csv-file');
-        const file = fileInput.files[0];
+		const fileInput = document.getElementById('csv-file');
+		const file = fileInput.files[0];
+		const spinner = document.getElementById('spinner');
 
-        if (!file || file.type !== 'text/csv') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Por favor, selecciona un archivo CSV.',
-            });
-            return;
-        }
+		// Validar que se haya seleccionado un archivo CSV por extensión
+		if (!file) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: 'Por favor, selecciona un archivo CSV o XLSX v válido.',
+			});
+			return;
+		}
 
-        const formData = new FormData();
-        formData.append('csvFile', file);
+		const fileName = file.name.toLowerCase();
+		if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx')) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: 'El archivo seleccionado no es un CSV o XLSX',
+			});
+			return;
+		}
 
-        try {
-            const response = await fetch('/api/upload-csv', {
-                method: 'POST',
-                body: formData,
-            });
+		// Mostrar el spinner
+		spinner.style.display = 'inline-block';
 
-            if (!response.ok) {
-                throw new Error('Error al subir el archivo CSV.');
-            }
+		const formData = new FormData();
+		formData.append('csvFile', file);
 
-            const result = await response.json();
-            Swal.fire({
-                icon: 'success',
-                title: 'Éxito',
-                text: result.message,
-            });
-        } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.message,
-            });
-        }
-    });
+		try {
+			console.log("Enviando archivo CSV...");
+			const response = await fetch('/api/cargar-precios', {
+				method: 'POST',
+				body: formData,
+			});
+
+			if (!response.ok) {
+				throw new Error('Error al subir el archivo CSV.');
+			}
+
+			const result = await response.json();
+			console.log(result);
+
+			// Mostrar mensaje de éxito
+			Swal.fire({
+				icon: 'success',
+				title: 'Éxito',
+				text: result.message,
+			}).then(() => {
+				// Cerrar el modal después de mostrar el mensaje de éxito
+				$('#update_masive_prices_modal').modal('hide');
+				fileInput.value = ''; // Limpiar el input después de la carga
+			});
+		} catch (error) {
+			console.error('Error:', error);
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: error.message || 'Ocurrió un error al procesar el archivo CSV.',
+			});
+		} finally {
+			// Ocultar el spinner
+			spinner.style.display = 'none';
+		}
+	});
+
 
 	window.addEventListener("load", () => {
         const preloader = document.querySelector(".pre-loader");

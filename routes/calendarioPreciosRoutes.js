@@ -9,6 +9,19 @@ const DAYS_IN_YEAR = 365; // Definir DAYS_IN_YEAR a nivel global
 const express = require('express');
 const moment = require('moment');
 const router = express.Router();
+const multer = require("multer");
+const path = require("path");
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "uploads/");
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname)); // Renombra el archivo con timestamp
+    },
+});
+
+const upload = multer({ dest: "uploads/" });
 
 function getDaysInYear() {
     const currentDate = new Date(); // Get the current date
@@ -105,7 +118,7 @@ router.get('/calendario-precios', async (req, res, next) => {
         const userRole = req.session.role;
 
         const userPermissions = await Roles.findById(userRole);
-        if(!userPermissions){
+        if (!userPermissions) {
             // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
             return next(new Error("El usuario no tiene un rol definido, contacte al administrador"));
         }
@@ -127,7 +140,7 @@ router.get('/calendario-precios', async (req, res, next) => {
 
         const allHabitaciones = await Habitacion.find().lean();
         const habitaciones = allHabitaciones;
-        
+
         // Crear un arreglo con las fechas correspondientes a cada día del año
         const daysWithDates = Array.from({ length: getDaysInYear() }, (_, index) => getDateFromDayOfYear(index + 1));
 
@@ -140,7 +153,7 @@ router.get('/calendario-precios', async (req, res, next) => {
 
         //const pricexday = pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, preciosEspecialesData);
 
-        
+
 
         res.render('calendarioPrecios', {
             habitaciones: habitaciones, // Pasa las habitaciones a la plantilla
@@ -163,6 +176,10 @@ router.get('/api/calendario-precios/:id', precioBaseController.consultarPreciosP
 router.get('/api/consulta-fechas/', precioBaseController.consultarPreciosPorFecha);
 router.delete('/api/calendario-precios', precioBaseController.eliminarRegistroPrecio);
 // router.get('/api/calendario-precios', precioBaseController.obtenerHabitacionesConPrecios)
+router.post('/api/cargar-precios', upload.single("csvFile"), precioBaseController.cargarPreciosCSV);
+// router.post('/api/cargar-precios', (req ,res) => {
+//     res.status(200).json({message: 'Precios cargados correctamente'});
+// });
 
 
 
