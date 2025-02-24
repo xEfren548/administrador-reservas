@@ -418,11 +418,11 @@
 										class="form-control"
 										name="csvFile"
 										id="csv-file"
-										accept=".csv"
+										accept=".xlsx"
 										aria-describedby="fileHelpId"
 										required
 									/>
-									<div id="fileHelpId" class="form-text">CSV</div>
+									<div id="fileHelpId" class="form-text">XLSX</div>
 
 								</form>
 							</div>
@@ -2638,17 +2638,17 @@ document.getElementById('habitacion-select').addEventListener('change', function
 			Swal.fire({
 				icon: 'error',
 				title: 'Error',
-				text: 'Por favor, selecciona un archivo CSV o XLSX v válido.',
+				text: 'Por favor, selecciona un archivo XLSX válido.',
 			});
 			return;
 		}
 
 		const fileName = file.name.toLowerCase();
-		if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx')) {
+		if (!fileName.endsWith('.xlsx')) {
 			Swal.fire({
 				icon: 'error',
 				title: 'Error',
-				text: 'El archivo seleccionado no es un CSV o XLSX',
+				text: 'El archivo seleccionado no es un archivo XLSX',
 			});
 			return;
 		}
