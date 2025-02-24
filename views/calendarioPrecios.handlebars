@@ -7,6 +7,8 @@
 	<div class="bg-dark mb-3">
 		<a name="" id="actualizar-precios-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
 			data-bs-toggle="modal" data-bs-target="#update_prices_modal">Actualizar precios</a>
+		<a name="" id="actualizar-precios--masive-btn" class="btn btn-secondary btn-sm mr-3" href="#" role="button"
+			data-bs-toggle="modal" data-bs-target="#update_masive_prices_modal">Actualización masiva de precios</a>
 		<a name="" id="agregar-precios-xpersona" class="btn btn-secondary btn-sm mr-3" href="#" role="button"
 			data-bs-toggle="modal" data-bs-target="#preciosxpersona_modal">Agregar precios por personas</a>
 		<a name="" id="eliminar-precios-openmodalbtn" class="btn btn-secondary btn-sm " href="#" role="button"
@@ -16,57 +18,57 @@
 
 
 
-	<div class="mb-3">
-		<label for="" class="form-label">Habitacion: </label>
-		<select class="form-select form-select-md" name="habitacion" id="habitacion-select">
-			<option selected>Seleccione una habitación --</option>
-			{{#if habitaciones}}
-			{{#each habitaciones}}
-			<option value="{{this._id}}">{{this.propertyDetails.name}}</option>
-			{{/each}}
-			{{/if}}
-		</select>
-	</div>
+<div class="mb-3">
+	<label for="" class="form-label">Habitacion: </label>
+	<select class="form-select form-select-md" name="habitacion" id="habitacion-select">
+		<option selected>Seleccione una habitación --</option>
+		{{#if habitaciones}}
+		{{#each habitaciones}}
+		<option value="{{this._id}}">{{this.propertyDetails.name}}</option>
+		{{/each}}
+		{{/if}}
+	</select>
+</div>
 
 <div class="table-pricescol min-vh-100 p-4">
-    {{#if habitaciones}}
-    {{#each habitaciones}}
-    <div class="habitacion-contenedor" id="habitacion-{{this._id}}" style="display: none;">
-        <h1>{{this.propertyDetails.name}}</h1> <!-- Título de la habitación -->
-        <div class="ms-auto p-2 bd-highlight">
-            <a name="" id="cn-{{this.propertyDetails.name}}" class="btn btn-primary hoy-btn" href="#" role="button"
-                data-chalet="{{this.propertyDetails.name}}">Hoy</a>
-        </div>
-        <div class="table-responsive">
-            <table border="1" class="table table-{{this.propertyDetails.name}} table-dark text-center table-hover"
-                id="table-{{this.propertyDetails.name}}">
-                <thead class="table-light">
-                    <tr id="header-row-{{this.propertyDetails.name}}">
-                        <th class="sticky-column">Función</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody-{{this.propertyDetails.name}}">
-                    <tr id="costo-base-row-{{this.propertyDetails.name}}">
-                        <td class="sticky-column">Costo Base</td>
-                    </tr>
-                    <tr id="precio-base-row-{{this.propertyDetails.name}}">
-                        <td class="sticky-column">Precio Base</td>
-                    </tr>
-                    <tr id="costo-base2-row-{{this.propertyDetails.name}}">
-                        <td class="sticky-column">Costo Base 2+ noches</td>
-                    </tr>
-                    <tr id="precio-base2nights-row-{{this.propertyDetails.name}}">
-                        <td class="sticky-column">Precio Base 2+ noches</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <br>
-    </div>
-    {{/each}}
-    {{else}}
-    <p>No hay habitaciones</p>
-    {{/if}}
+	{{#if habitaciones}}
+	{{#each habitaciones}}
+	<div class="habitacion-contenedor" id="habitacion-{{this._id}}" style="display: none;">
+		<h1>{{this.propertyDetails.name}}</h1> <!-- Título de la habitación -->
+		<div class="ms-auto p-2 bd-highlight">
+			<a name="" id="cn-{{this.propertyDetails.name}}" class="btn btn-primary hoy-btn" href="#" role="button"
+				data-chalet="{{this.propertyDetails.name}}">Hoy</a>
+		</div>
+		<div class="table-responsive">
+			<table border="1" class="table table-{{this.propertyDetails.name}} table-dark text-center table-hover"
+				id="table-{{this.propertyDetails.name}}">
+				<thead class="table-light">
+					<tr id="header-row-{{this.propertyDetails.name}}">
+						<th class="sticky-column">Función</th>
+					</tr>
+				</thead>
+				<tbody id="tbody-{{this.propertyDetails.name}}">
+					<tr id="costo-base-row-{{this.propertyDetails.name}}">
+						<td class="sticky-column">Costo Base</td>
+					</tr>
+					<tr id="precio-base-row-{{this.propertyDetails.name}}">
+						<td class="sticky-column">Precio Base</td>
+					</tr>
+					<tr id="costo-base2-row-{{this.propertyDetails.name}}">
+						<td class="sticky-column">Costo Base 2+ noches</td>
+					</tr>
+					<tr id="precio-base2nights-row-{{this.propertyDetails.name}}">
+						<td class="sticky-column">Precio Base 2+ noches</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<br>
+	</div>
+	{{/each}}
+	{{else}}
+	<p>No hay habitaciones</p>
+	{{/if}}
 </div>
 
 
@@ -94,21 +96,15 @@
 					<div id="error-modal-persona" class="alert alert-danger" style="display: none;"></div>
 					{{#each habitaciones}}
 					<div class="form-check form-check-inline">
-						<input
-							class="checkboxes-chalets"
-							type="checkbox"
-							id="{{this._id}}"
-							value="{{this._id}}"
-							name="chkb-{{this._id}}"
-							data-precio-base="{{this.others.basePrice}}"
+						<input class="checkboxes-chalets" type="checkbox" id="{{this._id}}" value="{{this._id}}"
+							name="chkb-{{this._id}}" data-precio-base="{{this.others.basePrice}}"
 							data-precio-base2+noches="{{this.others.basePrice2nights}}"
 							data-costo-base="{{this.others.baseCost}}"
-							data-costo-base2+noches="{{this.others.baseCost2nights}}"
-						/>
+							data-costo-base2+noches="{{this.others.baseCost2nights}}" />
 						<label class="form-check-label" for="chkb-{{this._id}}">{{this.propertyDetails.name}}</label>
 					</div>
 					{{/each}}
-					
+
 
 
 					<div class="row">
@@ -390,6 +386,51 @@
 </div>
 <!-- End Modal -->
 
+<!-- Modal Actualizar precios masivo -->
+
+<div class="modal fade" id="update_masive_prices_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+	aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="modalLabel">Actualización de precios</h5>
+				<button type="button" class="close" onclick="$('#update_masive_prices_modal').modal('hide');"
+					aria-label="Close">
+					&times;
+
+			</div>
+			<div class="modal-body">
+				<div class="img-container">
+					<div class="row mt-2 mb-2">
+						<div class="col-8">
+							<label for="select-cabana"><b>Selecciona una o más habitaciones para modificar: </b></label>
+							<div class="mb-3">
+								<form id="upload-csv-form">
+									<label for="" class="form-label">Escoger archivo</label>
+									<input type="file" class="form-control" name="csvFile" id="csv-file" accept=".xlsx"
+										aria-describedby="fileHelpId" required />
+									<div id="fileHelpId" class="form-text">XLSX</div>
+
+								</form>
+							</div>
+
+						</div>
+					</div> <!-- Cierre row -->
+
+
+				</div> <!-- Cierre IMG Container -->
+			</div> <!--Cierre MODAL BODY -->
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary" id="update-masive-prices-btn">Actualizar precios</button>
+				<div class="spinner-border" role="status" id="spinner">
+					<span class="visually-hidden">Loading...</span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- End Modal -->
+
 <!-- Modal Agregar precios x persona -->
 
 <div class="modal fade" id="preciosxpersona_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
@@ -414,22 +455,17 @@
 					</div> <!-- Cierre row -->
 					{{#each habitaciones}}
 					<div class="form-check form-check-inline">
-						<input
-							class="checkboxes-chalets-pp"
-							type="checkbox"
-							id="{{this._id}}"
-							value="{{this._id}}"
-							name="chkb-{{this._id}}"
-							data-pax="{{this.propertyDetails.maxOccupancy}}" 
+						<input class="checkboxes-chalets-pp" type="checkbox" id="{{this._id}}" value="{{this._id}}"
+							name="chkb-{{this._id}}" data-pax="{{this.propertyDetails.maxOccupancy}}"
 							data-precio-base="{{this.others.basePrice}}"
 							data-precio-base2+noches="{{this.others.basePrice2nights}}"
 							data-costo-base="{{this.others.baseCost}}"
-							data-costo-base2+noches="{{this.others.baseCost2nights}}"
-						/>
+							data-costo-base2+noches="{{this.others.baseCost2nights}}" />
 						<label class="form-check-label" for="chkb-{{this._id}}">{{this.propertyDetails.name}}</label>
 					</div>
 					{{/each}}
-					{{!-- <select name="select-cabana" id="select-cabana-persona" class="form-select form-select-md" required>
+					{{!-- <select name="select-cabana" id="select-cabana-persona" class="form-select form-select-md"
+						required>
 						<option value="" selected disabled> Selecciona una cabaña para modificar --
 						</option>
 						{{#if habitaciones}}
@@ -936,236 +972,236 @@
 		</div>
 	</div>
 </div>
-	<!-- End Modal -->
+<!-- End Modal -->
 
-	<script>
-		// Función para mostrar el icono seleccionado al cargar la página
-		function mostrarIconoSeleccionado() {
-			const selects = document.querySelectorAll('.seleccion-precio');
-			selects.forEach(select => {
-				const seleccion = select.value;
-				const iconoSeleccionado = select.parentElement.nextElementSibling.querySelector('#icono-seleccionado');
+<script>
+	// Función para mostrar el icono seleccionado al cargar la página
+	function mostrarIconoSeleccionado() {
+		const selects = document.querySelectorAll('.seleccion-precio');
+		selects.forEach(select => {
+			const seleccion = select.value;
+			const iconoSeleccionado = select.parentElement.nextElementSibling.querySelector('#icono-seleccionado');
 
-				// Dependiendo de la opción seleccionada, mostramos el icono correspondiente
-				switch (seleccion) {
-					case 'precio-fijo':
-						iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
-						break;
-					case 'incrementar-natural':
-					case 'disminuir-natural':
-						iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
-						break;
-					case 'incrementar-porcentual':
-					case 'disminuir-porcentual':
-						iconoSeleccionado.innerHTML = '<i class="fa fa-percent" aria-hidden="true"></i>';
-						break;
-					default:
-						break;
-				}
-			});
-		}
-
-		// Llamar a la función al cargar la página para mostrar el icono seleccionado inicialmente
-		mostrarIconoSeleccionado();
-
-		// Agregar un event listener al campo #accion-precios para actualizar el icono seleccionado cuando cambie la selección
-		document.querySelectorAll('.seleccion-precio').forEach(select => {
-			select.addEventListener('change', function () {
-				mostrarIconoSeleccionado();
-			});
+			// Dependiendo de la opción seleccionada, mostramos el icono correspondiente
+			switch (seleccion) {
+				case 'precio-fijo':
+					iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
+					break;
+				case 'incrementar-natural':
+				case 'disminuir-natural':
+					iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
+					break;
+				case 'incrementar-porcentual':
+				case 'disminuir-porcentual':
+					iconoSeleccionado.innerHTML = '<i class="fa fa-percent" aria-hidden="true"></i>';
+					break;
+				default:
+					break;
+			}
 		});
+	}
 
-		function mostrarIconoSeleccionadoPersona() {
-			const selects = document.querySelectorAll('.seleccion-precio-persona');
-			selects.forEach(select => {
-				const seleccion = select.value;
-				const iconoSeleccionado = select.parentElement.nextElementSibling.querySelector('#icono-seleccionado');
+	// Llamar a la función al cargar la página para mostrar el icono seleccionado inicialmente
+	mostrarIconoSeleccionado();
 
-				// Dependiendo de la opción seleccionada, mostramos el icono correspondiente
-				switch (seleccion) {
-					case 'precio-fijo':
-						iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
-						break;
-					case 'incrementar-natural':
-					case 'disminuir-natural':
-						iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
-						break;
-					case 'incrementar-porcentual':
-					case 'disminuir-porcentual':
-						iconoSeleccionado.innerHTML = '<i class="fa fa-percent" aria-hidden="true"></i>';
-						break;
-					default:
-						break;
-				}
-			});
-		}
-
-		// Llamar a la función al cargar la página para mostrar el icono seleccionado inicialmente
-		mostrarIconoSeleccionadoPersona();
-
-		// Agregar un event listener al campo #accion-precios para actualizar el icono seleccionado cuando cambie la selección
-		document.querySelectorAll('.seleccion-precio-persona').forEach(select => {
-			select.addEventListener('change', function () {
-				mostrarIconoSeleccionadoPersona();
-			});
+	// Agregar un event listener al campo #accion-precios para actualizar el icono seleccionado cuando cambie la selección
+	document.querySelectorAll('.seleccion-precio').forEach(select => {
+		select.addEventListener('change', function () {
+			mostrarIconoSeleccionado();
 		});
+	});
 
-		/** 
+	function mostrarIconoSeleccionadoPersona() {
+		const selects = document.querySelectorAll('.seleccion-precio-persona');
+		selects.forEach(select => {
+			const seleccion = select.value;
+			const iconoSeleccionado = select.parentElement.nextElementSibling.querySelector('#icono-seleccionado');
 
-		document.getElementById('select-cabana').addEventListener('change', function () {
-			const selectElement = document.getElementById('select-cabana');
-			const selectedOption = selectElement.options[selectElement.selectedIndex];
-
-			const precioBase = selectedOption.getAttribute('data-precio-base');
-			document.getElementById('precio-base-input-id').value = precioBase;
-
-			const precioBase2noches = selectedOption.getAttribute('data-precio-base2+noches');
-			document.getElementById('precio-base2+input-id').value = precioBase2noches;
-
-			const costoBase = selectedOption.getAttribute('data-costo-base');
-			document.getElementById('costo-base-input-id').value = costoBase;
-
-			const costoBase2noches = selectedOption.getAttribute('data-costo-base2+noches');
-			document.getElementById('costo-base2+input-id').value = costoBase2noches;
-
+			// Dependiendo de la opción seleccionada, mostramos el icono correspondiente
+			switch (seleccion) {
+				case 'precio-fijo':
+					iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
+					break;
+				case 'incrementar-natural':
+				case 'disminuir-natural':
+					iconoSeleccionado.innerHTML = '<i class="fa fa-dollar" aria-hidden="true"></i>';
+					break;
+				case 'incrementar-porcentual':
+				case 'disminuir-porcentual':
+					iconoSeleccionado.innerHTML = '<i class="fa fa-percent" aria-hidden="true"></i>';
+					break;
+				default:
+					break;
+			}
 		});
-		
-		**/
-		const chaletsCheckboxes = document.querySelectorAll('.checkboxes-chalets-pp');
-		function obtenerMayorPax() {
-		  let mayorPax = 0;
+	}
 
-		  chaletsCheckboxes.forEach(checkbox => {
-		    if (checkbox.checked) {
-		      const paxValue = parseInt(checkbox.getAttribute('data-pax'));
-		      if (paxValue > mayorPax) {
-		        mayorPax = paxValue;
-		      }
-		    }
-		  });
+	// Llamar a la función al cargar la página para mostrar el icono seleccionado inicialmente
+	mostrarIconoSeleccionadoPersona();
 
-		  return mayorPax;
-		}
+	// Agregar un event listener al campo #accion-precios para actualizar el icono seleccionado cuando cambie la selección
+	document.querySelectorAll('.seleccion-precio-persona').forEach(select => {
+		select.addEventListener('change', function () {
+			mostrarIconoSeleccionadoPersona();
+		});
+	});
+
+	/** 
+
+	document.getElementById('select-cabana').addEventListener('change', function () {
+		const selectElement = document.getElementById('select-cabana');
+		const selectedOption = selectElement.options[selectElement.selectedIndex];
+
+		const precioBase = selectedOption.getAttribute('data-precio-base');
+		document.getElementById('precio-base-input-id').value = precioBase;
+
+		const precioBase2noches = selectedOption.getAttribute('data-precio-base2+noches');
+		document.getElementById('precio-base2+input-id').value = precioBase2noches;
+
+		const costoBase = selectedOption.getAttribute('data-costo-base');
+		document.getElementById('costo-base-input-id').value = costoBase;
+
+		const costoBase2noches = selectedOption.getAttribute('data-costo-base2+noches');
+		document.getElementById('costo-base2+input-id').value = costoBase2noches;
+
+	});
+	
+	**/
+	const chaletsCheckboxes = document.querySelectorAll('.checkboxes-chalets-pp');
+	function obtenerMayorPax() {
+		let mayorPax = 0;
 
 		chaletsCheckboxes.forEach(checkbox => {
-  			checkbox.addEventListener('change', () => {
-    			const mayorPax = obtenerMayorPax();
-    			console.log(`El mayor valor de data-pax seleccionado es: ${mayorPax}`);
-    			// Aquí puedes agregar la lógica que necesitas utilizando el mayorPax
-				const numeroPersonasSelect = document.getElementById('numero-personas');
-				numeroPersonasSelect.innerHTML = '<option value="" selected disabled>Selecciona el número de personas --</option>';
-	
-				for (let i = 2; i < mayorPax; i++) {
-					const option = document.createElement('option');
-					option.value = i;
-					option.textContent = i;
-					numeroPersonasSelect.appendChild(option);
+			if (checkbox.checked) {
+				const paxValue = parseInt(checkbox.getAttribute('data-pax'));
+				if (paxValue > mayorPax) {
+					mayorPax = paxValue;
 				}
-  			});
+			}
 		});
-		/** 
-		document.getElementById('select-cabana-persona').addEventListener('change', function () {
+
+		return mayorPax;
+	}
+
+	chaletsCheckboxes.forEach(checkbox => {
+		checkbox.addEventListener('change', () => {
+			const mayorPax = obtenerMayorPax();
+			console.log(`El mayor valor de data-pax seleccionado es: ${mayorPax}`);
+			// Aquí puedes agregar la lógica que necesitas utilizando el mayorPax
 			const numeroPersonasSelect = document.getElementById('numero-personas');
-			const maxOccupancy = selectedOption.getAttribute('data-pax');
 			numeroPersonasSelect.innerHTML = '<option value="" selected disabled>Selecciona el número de personas --</option>';
 
-			for (let i = 2; i < maxOccupancy; i++) {
+			for (let i = 2; i < mayorPax; i++) {
 				const option = document.createElement('option');
 				option.value = i;
 				option.textContent = i;
 				numeroPersonasSelect.appendChild(option);
 			}
-
 		});
-		**/
+	});
+	/** 
+	document.getElementById('select-cabana-persona').addEventListener('change', function () {
+		const numeroPersonasSelect = document.getElementById('numero-personas');
+		const maxOccupancy = selectedOption.getAttribute('data-pax');
+		numeroPersonasSelect.innerHTML = '<option value="" selected disabled>Selecciona el número de personas --</option>';
 
-		const botonFormulario = document.querySelector('#update-prices-btn');
+		for (let i = 2; i < maxOccupancy; i++) {
+			const option = document.createElement('option');
+			option.value = i;
+			option.textContent = i;
+			numeroPersonasSelect.appendChild(option);
+		}
 
-		botonFormulario.addEventListener('click', async function (e) {
-			const chaletsCheckboxes = document.querySelectorAll('.checkboxes-chalets');
-			const checkedChalets = [];
+	});
+	**/
 
-			chaletsCheckboxes.forEach(function(checkbox) {
-				if (checkbox.checked) {
-					checkedChalets.push(checkbox);
-				}
-			})
-			
-			if (checkedChalets.length === 0){
-				Swal.fire({
-					title: 'Error',
-                    text: 'Debes seleccionar al menos una habitacion',
-                    icon: 'error',
-					confirmButtonText: 'Ok'
-				})
-				return;
+	const botonFormulario = document.querySelector('#update-prices-btn');
+
+	botonFormulario.addEventListener('click', async function (e) {
+		const chaletsCheckboxes = document.querySelectorAll('.checkboxes-chalets');
+		const checkedChalets = [];
+
+		chaletsCheckboxes.forEach(function (checkbox) {
+			if (checkbox.checked) {
+				checkedChalets.push(checkbox);
 			}
-			
-			e.preventDefault();
-			const diasSeleccionados = [];
+		})
 
-			// URL para la solicitud fetch (debes reemplazarla con tu propia URL)
-			const url = '/api/calendario-precios';
-			const urlfechas = '/api/consulta-fechas';
+		if (checkedChalets.length === 0) {
+			Swal.fire({
+				title: 'Error',
+				text: 'Debes seleccionar al menos una habitacion',
+				icon: 'error',
+				confirmButtonText: 'Ok'
+			})
+			return;
+		}
 
-			for (const habitacionAmodificar of checkedChalets) {
+		e.preventDefault();
+		const diasSeleccionados = [];
 
-				console.log('click al boton formulario');
-				// Obtener los datos del formulario
-				const fechaInicioString = document.querySelector('#fecha-inicio').value; // Obtener el valor del input de tipo date
-				const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
-				const fechaFinString = document.querySelector('#fecha-fin').value; // Obtener el valor del input de tipo date
-				const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
-				const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-general');
-				checkboxes.forEach(function (checkbox) {
-					if (checkbox.checked) {
-						diasSeleccionados.push(checkbox.value);
+		// URL para la solicitud fetch (debes reemplazarla con tu propia URL)
+		const url = '/api/calendario-precios';
+		const urlfechas = '/api/consulta-fechas';
+
+		for (const habitacionAmodificar of checkedChalets) {
+
+			console.log('click al boton formulario');
+			// Obtener los datos del formulario
+			const fechaInicioString = document.querySelector('#fecha-inicio').value; // Obtener el valor del input de tipo date
+			const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
+			const fechaFinString = document.querySelector('#fecha-fin').value; // Obtener el valor del input de tipo date
+			const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
+			const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-general');
+			checkboxes.forEach(function (checkbox) {
+				if (checkbox.checked) {
+					diasSeleccionados.push(checkbox.value);
+				}
+			});
+
+
+			// Validar que la fecha final sea posterior o igual a la fecha inicial
+			if (fechaInicio === '' || fechaFin === '') {
+				// Mostrar mensaje de error en el modal
+				const errorModal = document.querySelector('#error-modal');
+				errorModal.textContent = 'Por favor, seleccione una fecha de inicio y una fecha de fin.';
+				errorModal.style.display = 'block'; // Mostrar el mensaje de error
+				return; // Detener la ejecución del resto del código
+			}
+
+			// Restablecer el mensaje de error en el modal
+			const errorModal = document.querySelector('#error-modal');
+			errorModal.innerHTML = '';
+			errorModal.classList.remove('show');
+
+
+
+			try {
+				// Obtener el rango de fechas entre fechaInicio y fechaFin
+				const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
+				// Realizar el fetch repetido para cada fecha en el rango
+				document.getElementById('spinner').style.display = 'block';
+				Swal.close();
+				const resultados = await fetchRepetido(url, fechas, habitacionAmodificar);
+				if (resultados.length === 0) {
+					throw new Error('No hay fechas seleccionadas para actualizar.');
+				}
+				document.getElementById('spinner').style.display = 'none';
+				Swal.fire({
+					icon: 'success',
+					title: '¡Completado!',
+					text: 'Precios actualizados correctamente.',
+					confirmButtonText: 'Aceptar'
+				}).then((result) => {
+					// Verificar si el usuario hizo clic en el botón de confirmación
+					if (result.isConfirmed) {
+						// Actualizar la página
+						location.reload();
 					}
 				});
-
-
-				// Validar que la fecha final sea posterior o igual a la fecha inicial
-				if (fechaInicio === '' || fechaFin === '') {
-					// Mostrar mensaje de error en el modal
-					const errorModal = document.querySelector('#error-modal');
-					errorModal.textContent = 'Por favor, seleccione una fecha de inicio y una fecha de fin.';
-					errorModal.style.display = 'block'; // Mostrar el mensaje de error
-					return; // Detener la ejecución del resto del código
-				}
-
-				// Restablecer el mensaje de error en el modal
-				const errorModal = document.querySelector('#error-modal');
-				errorModal.innerHTML = '';
-				errorModal.classList.remove('show');
-
-				
-
-				try {
-					// Obtener el rango de fechas entre fechaInicio y fechaFin
-					const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
-					// Realizar el fetch repetido para cada fecha en el rango
-					document.getElementById('spinner').style.display = 'block';
-					Swal.close();
-					const resultados = await fetchRepetido(url, fechas, habitacionAmodificar);
-					if (resultados.length === 0) {
-						throw new Error('No hay fechas seleccionadas para actualizar.');
-					}
-					document.getElementById('spinner').style.display = 'none';
-					Swal.fire({
-						icon: 'success',
-						title: '¡Completado!',
-						text: 'Precios actualizados correctamente.',
-						confirmButtonText: 'Aceptar'
-					}).then((result) => {
-						// Verificar si el usuario hizo clic en el botón de confirmación
-						if (result.isConfirmed) {
-							// Actualizar la página
-							location.reload();
-						}
-					});
-					// Manejar los resultados obtenidos
-					console.log('Resultados de fetch repetido:', resultados);
-					// Aquí puedes realizar cualquier otra acción con los resultados obtenidos
+				// Manejar los resultados obtenidos
+				console.log('Resultados de fetch repetido:', resultados);
+				// Aquí puedes realizar cualquier otra acción con los resultados obtenidos
 			} catch (error) {
 				console.error('Error al realizar el fetch repetido:', error.message);
 				document.getElementById('spinner').style.display = 'none';
@@ -1176,400 +1212,39 @@
 					confirmButtonText: 'Aceptar'
 				});
 			}
-			
-
-			}
 
 
-				// Función para realizar el fetch repetido para cada fecha en el rango
-				async function fetchRepetido(url, fechas, habitacionAmodificar) {
-					try {
-						const resultados = [];
-						console.log('ejecutando fetch repetido...');
-
-						const idHabitacion = habitacionAmodificar.id;
-						const accionPrecios = document.querySelector('#accion-precios').value;
-
-						const precioBase = habitacionAmodificar.getAttribute('data-precio-base');
-						const precioBase2noches = habitacionAmodificar.getAttribute('data-precio-base2+noches');
-						const costoBase = habitacionAmodificar.getAttribute('data-costo-base');
-						const costoBase2noches = habitacionAmodificar.getAttribute('data-costo-base2+noches');
-
-						const valorAccion = parseInt(document.querySelector('#valor-accion').value);
-						const valorPrecioBase2noches = parseInt(document.querySelector('#valor-preciobase2noches').value);
-						const valorCostoBase = parseInt(document.querySelector('#valor-costobase').value);
-						const valorCostoBase2noches = parseInt(document.querySelector('#valor-costobase2noches').value);
-
-						let precioFinal = 0
-						let precioBaseFinal2noches = 0;
-						let costoBaseFinal = 0;
-						let costoBaseFinal2noches = 0;
-						// Validacion para actualizar el precio natural o precio porcentual
-						const seleccion = document.getElementById('accion-precios').value;
-						const seleccionPrecioBase2noches = document.getElementById('accion-precios-preciobase2+').value;
-						const seleccionCostoBase = document.getElementById('accion-precios-costobase').value
-						const seleccionCostoBase2noches = document.getElementById('accion-precios-costobase2+').value;
-
-						switch (seleccion) {
-							case 'precio-fijo':
-								precioFinal = valorAccion;
-								break;
-							case 'incrementar-natural':
-								precioFinal = parseInt(precioBase) + parseInt(valorAccion);
-								break;
-							case 'disminuir-natural':
-								precioFinal = precioBase - valorAccion;
-								break;
-							case 'incrementar-porcentual':
-								precioFinal = parseInt(precioBase * (valorAccion / 100)) + parseInt(precioBase);
-								break;
-							case 'disminuir-porcentual':
-								let pre = precioBase * (valorAccion / 100)
-								precioFinal = precioBase - pre;
-								break;
-						}
-
-						switch (seleccionPrecioBase2noches) {
-							case 'precio-fijo':
-								precioBaseFinal2noches = valorPrecioBase2noches;
-								break;
-							case 'incrementar-natural':
-								precioBaseFinal2noches = parseInt(precioBase2noches) + parseInt(valorPrecioBase2noches);
-								break;
-							case 'disminuir-natural':
-								precioBaseFinal2noches = precioBase2noches - valorPrecioBase2noches;
-								break;
-							case 'incrementar-porcentual':
-								precioBaseFinal2noches = parseInt(precioBase2noches * (valorPrecioBase2noches / 100)) + parseInt(precioBase2noches);
-								break;
-							case 'disminuir-porcentual':
-								let pre = precioBase2noches * (valorPrecioBase2noches / 100)
-								precioBaseFinal2noches = precioBase2noches - pre;
-								break;
-						}
-
-						switch (seleccionCostoBase) {
-							case 'precio-fijo':
-								costoBaseFinal = valorCostoBase;
-								break;
-							case 'incrementar-natural':
-								costoBaseFinal = parseInt(costoBase) + parseInt(valorCostoBase);
-								break;
-							case 'disminuir-natural':
-								costoBaseFinal = costoBase - valorCostoBase;
-								break;
-							case 'incrementar-porcentual':
-								costoBaseFinal = parseInt(costoBase * (valorCostoBase / 100)) + parseInt(costoBase);
-								break;
-							case 'disminuir-porcentual':
-								let pre = costoBase * (valorCostoBase / 100)
-								costoBaseFinal = costoBase - pre;
-								break;
-						}
-
-						switch (seleccionCostoBase2noches) {
-							case 'precio-fijo':
-								costoBaseFinal2noches = valorCostoBase2noches;
-								break;
-							case 'incrementar-natural':
-								costoBaseFinal2noches = parseInt(costoBase2noches) + parseInt(valorCostoBase2noches);
-								break;
-							case 'disminuir-natural':
-								costoBaseFinal2noches = costoBase2noches - valorCostoBase2noches;
-								break;
-							case 'incrementar-porcentual':
-								costoBaseFinal2noches = parseInt(costoBase2noches * (valorCostoBase2noches / 100)) + parseInt(costoBase2noches);
-								break;
-							case 'disminuir-porcentual':
-								let pre = costoBase2noches * (valorCostoBase2noches / 100)
-								costoBaseFinal2noches = costoBase2noches - pre;
-								break;
-						}
-						
-
-						// Iterar sobre cada fecha en el rango
-						for (const fecha of fechas) {
-							const existeRegistro = await verificarExistenciaRegistro(url, fecha, idHabitacion);
-							var existeprecio;
-							if (existeRegistro) {
-								existeprecio = await consultarprecio(urlfechas, fecha, idHabitacion);
-								await eliminarRegistroExistente(url, fecha, idHabitacion);
-							}
-							console.log('existe precio : ', existeprecio);
-
-							const precioBase = habitacionAmodificar.getAttribute('data-precio-base');
-							const precioBase2noches = habitacionAmodificar.getAttribute('data-precio-base2+noches');
-							const costoBase = habitacionAmodificar.getAttribute('data-costo-base');
-							const costoBase2noches = habitacionAmodificar.getAttribute('data-costo-base2+noches');
-
-							// Solucionar el if para que cuando exista el usuario, se borre el registro y añada el nuevo registro-
-							// Obtener el objeto de datos para enviar en la solicitud fetch
-							if ((valorAccion == 0) && (existeprecio)) {
-								precioFinal = existeprecio.precio_modificado;
-							} else if ((valorAccion == 0)) {
-								precioFinal = precioBase;
-							}
-							if ((valorPrecioBase2noches == 0) && (existeprecio)) {
-								precioBaseFinal2noches = existeprecio.precio_base_2noches;
-							} else if ((valorPrecioBase2noches == 0)) {
-								precioBaseFinal2noches = precioBase2noches;
-							}
-							if ((valorCostoBase == 0) && (existeprecio)) {
-								costoBaseFinal = existeprecio.costo_base;
-							} else if ((valorCostoBase == 0)) {
-								costoBaseFinal = costoBase;
-							}
-							if ((valorCostoBase2noches == 0) && (existeprecio)) {
-								costoBaseFinal2noches = existeprecio.costo_base_2noches;
-							} else if ((valorCostoBase2noches == 0)) {
-								costoBaseFinal2noches = costoBase2noches;
-							}
-							const datosFetch = {
-								precio_modificado: precioFinal,
-								precio_base_2noches: precioBaseFinal2noches,
-								costo_base: costoBaseFinal,
-								costo_base_2noches: costoBaseFinal2noches,
-								fecha: fecha,
-								habitacionId: idHabitacion
-							};
-
-							console.log(JSON.stringify(datosFetch));
-
-							// Realizar la solicitud fetch para la fecha actual con los datos especificados
-							const response = await fetch(url, {
-								method: 'POST',
-								headers: {
-									'Content-Type': 'application/json'
-								},
-								body: JSON.stringify(datosFetch)
-							});
-
-							// Verificar el estado de la respuesta
-							if (!response.ok) {
-								throw new Error('Error en la solicitud fetch: ' + response.statusText);
-							}
-
-							// Convertir la respuesta a JSON
-							const data = await response.json();
-
-							// Agregar el resultado al array de resultados
-							resultados.push(data);
-
-						}
-
-						return resultados;
-					} catch (error) {
-						console.error('Error al realizar el fetch repetido:', error);
-						throw error;
-					}
-				}
+		}
 
 
-				// Función para obtener un rango de fechas entre la fecha de inicio y la fecha de fin
-				function obtenerRangoFechas(fechaInicio, fechaFin) {
-					const fechas = [];
-					let fechaActual = new Date(fechaInicio);
+		// Función para realizar el fetch repetido para cada fecha en el rango
+		async function fetchRepetido(url, fechas, habitacionAmodificar) {
+			try {
+				const resultados = [];
+				console.log('ejecutando fetch repetido...');
 
-					while (fechaActual <= fechaFin) {
-						if (diasSeleccionados.includes(obtenerNombreDia(fechaActual))) {
-							fechas.push(new Date(fechaActual));
-						}
-						fechaActual.setDate(fechaActual.getDate() + 1);
-					}
-					return fechas;
-				}
+				const idHabitacion = habitacionAmodificar.id;
+				const accionPrecios = document.querySelector('#accion-precios').value;
 
-				// Función para obtener un precio en una fecha determinada
-				async function consultarprecio(url, fecha, habitacionId) {
-					try {
-						const formattedDate = formatDate(fecha); // Formatear la fecha para la URL
-						const formattedUrl = `${urlfechas}?fecha=${formattedDate}&habitacionid=${habitacionId}`
-						const response = await fetch(formattedUrl, {
-							method: 'GET'
-						});
-
-						if (!response.ok) {
-							throw new Error('Error al verificar el precio del registro:', response.statusText);
-						}
-
-						const data = await response.json(); // Obtener el JSON de la respuesta
-
-						console.log(data)
-
-						return data; // Devuelve true si el registro existe, false de lo contrario
-					} catch (error) {
-						console.error('Error al verificar la existencia del registro:', error);
-						throw error;
-					}
-				}
-
-				// Función para obtener el nombre del día de la semana
-				function obtenerNombreDia(fecha) {
-					const diasSemana = ['domingo','lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-					return diasSemana[fecha.getDay()];
-				}
-
-				// Función para verificar la existencia de un registro para una fecha y habitación específicas
-				async function verificarExistenciaRegistro(url, fecha, habitacionId) {
-					try {
-						console.log("url verificar: ", url);
-						console.log("fecha: ", fecha);
-						console.log("habitacionId: ", habitacionId);
-						const formattedDate = formatDate(fecha); // Formatear la fecha para la URL
-						const formattedUrl = `${url}?fecha=${formattedDate}&habitacionId=${habitacionId}`
-						const response = await fetch(formattedUrl, {
-							method: 'GET'
-						});
-
-						if (!response.ok) {
-							throw new Error('Error al verificar la existencia del registro:', response.statusText);
-						}
-
-						const data = await response.json(); // Obtener el JSON de la respuesta
-
-						console.log('Data existe registro:', data.existeRegistro); // Imprimir los datos recibidos
-
-						return data.existeRegistro; // Devuelve true si el registro existe, false de lo contrario
-					} catch (error) {
-						console.error('Error al verificar la existencia del registro:', error);
-						throw error;
-					}
-				}
-
-				// Función para eliminar un registro existente para una fecha y habitación específicas
-				async function eliminarRegistroExistente(url, fecha, habitacionId) {
-					try {
-						const formattedDate = formatDate(fecha); // Formatear la fecha para la URL
-						const response = await fetch(`${url}?fecha=${formattedDate}&habitacionId=${habitacionId}`, {
-							method: 'DELETE'
-						});
-
-						if (!response.ok) {
-							throw new Error('Error al eliminar el registro existente:', response.statusText);
-						}
-
-						console.log(`Registro eliminado para la fecha ${formattedDate} y habitación ${habitacionId}`);
-					} catch (error) {
-						console.error('Error al eliminar el registro existente:', error);
-						throw error;
-					}
-				}
-
-				// Función para formatear la fecha en el formato requerido para la URL
-				function formatDate(date) {
-					const year = date.getFullYear();
-					const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
-					const day = date.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
-					return `${year}-${month}-${day}`;
-				}
-
-
-
-			})
-
-							
-			
-
-		const addPreciosBtn = document.querySelector('#add-prices-persona-btn')
-
-		addPreciosBtn.addEventListener('click', async function (e) {
-
-			const chaletsCheckboxes = document.querySelectorAll('.checkboxes-chalets-pp');
-			const checkedChalets = [];
-
-			chaletsCheckboxes.forEach(function(checkbox) {
-				if (checkbox.checked) {
-					checkedChalets.push(checkbox);
-				}
-			})
-
-			console.log(checkedChalets)
-			
-			if (checkedChalets.length === 0){
-				Swal.fire({
-					title: 'Error',
-                    text: 'Debes seleccionar al menos una habitacion',
-                    icon: 'error',
-					confirmButtonText: 'Ok'
-				})
-				return;
-			}
-			
-			e.preventDefault();
-
-			const diasSeleccionados = [];
-
-			for (const habitacionAmodificar of checkedChalets) {
-				const fechaInicioString = document.querySelector('#fecha-inicio-persona').value; // Obtener el valor del input de tipo date
-				const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
-				const fechaFinString = document.querySelector('#fecha-fin-persona').value; // Obtener el valor del input de tipo date
-				const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
-				const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-persona');
-				
-				checkboxes.forEach(function (checkbox) {
-					if (checkbox.checked) {
-						diasSeleccionados.push(checkbox.value);
-					}
-				});
-				
-				console.log("dias seleccionados: ", diasSeleccionados)
-
-				const costoBase = habitacionAmodificar.getAttribute('data-costo-base');
-				const costoBase2noches = habitacionAmodificar.getAttribute('data-costo-base2+noches');
 				const precioBase = habitacionAmodificar.getAttribute('data-precio-base');
 				const precioBase2noches = habitacionAmodificar.getAttribute('data-precio-base2+noches');
+				const costoBase = habitacionAmodificar.getAttribute('data-costo-base');
+				const costoBase2noches = habitacionAmodificar.getAttribute('data-costo-base2+noches');
 
-				const accionPrecios = document.querySelector('#accion-precios-persona').value;
-
-				const valorAccion = parseInt(document.querySelector('#valor-pbase').value);
-				const valorPrecioBase2noches = parseInt(document.querySelector('#valor-pbase2n').value);
-				const valorCostoBase = parseInt(document.querySelector('#valor-cbase').value);
-				const valorCostoBase2noches = parseInt(document.querySelector('#valor-cbase2n').value);
-
-				if (valorCostoBase > valorAccion) {
-					throw new Error('El costo base no puede ser mayor al precio base');
-				} else if (valorCostoBase2noches > valorPrecioBase2noches) {
-					throw new Error('El costo base 2+ noches no puede ser mayor al precio base 2+ noches');
-				} else if (valorAccion === 0) {
-					throw new Error('El precio no puede ser 0');
-				} else if (valorPrecioBase2noches === 0) {
-					throw new Error('El precio base 2+ noches no puede ser 0');
-				} else if (valorCostoBase === 0) {
-					throw new Error('El costo base no puede ser 0')
-				} else if (valorCostoBase2noches === 0) {
-					throw new Error('El costo base 2+ noches no puede ser 0')
-				}
+				const valorAccion = parseInt(document.querySelector('#valor-accion').value);
+				const valorPrecioBase2noches = parseInt(document.querySelector('#valor-preciobase2noches').value);
+				const valorCostoBase = parseInt(document.querySelector('#valor-costobase').value);
+				const valorCostoBase2noches = parseInt(document.querySelector('#valor-costobase2noches').value);
 
 				let precioFinal = 0
 				let precioBaseFinal2noches = 0;
 				let costoBaseFinal = 0;
 				let costoBaseFinal2noches = 0;
-
-				if (fechaInicio === '' || fechaFin === '') {
-					// Mostrar mensaje de error en el modal
-					const errorModal = document.querySelector('#error-modal-persona');
-					errorModal.textContent = 'Por favor, seleccione una fecha de inicio y una fecha de fin.';
-					errorModal.style.display = 'block'; // Mostrar el mensaje de error
-					return; // Detener la ejecución del resto del código
-				}
-
-				// Restablecer el mensaje de error en el modal
-				const errorModal = document.querySelector('#error-modal');
-				errorModal.innerHTML = '';
-				errorModal.classList.remove('show');
-
 				// Validacion para actualizar el precio natural o precio porcentual
-				const seleccion = document.getElementById('accion-precios-persona').value;
-				const seleccionPrecioBase2noches = document.getElementById('accion-precios-preciobase2+-persona').value;
-				const seleccionCostoBase = document.getElementById('accion-precios-costobase-persona').value
-				const seleccionCostoBase2noches = document.getElementById('accion-precios-costobase2+-persona').value;
-
-				console.log("Precios antes del switch: (cbase a pbase)")
-				console.log(costoBase)
-				console.log(costoBase2noches)
-				console.log(precioBase)
-				console.log(precioBase2noches) 
-
+				const seleccion = document.getElementById('accion-precios').value;
+				const seleccionPrecioBase2noches = document.getElementById('accion-precios-preciobase2+').value;
+				const seleccionCostoBase = document.getElementById('accion-precios-costobase').value
+				const seleccionCostoBase2noches = document.getElementById('accion-precios-costobase2+').value;
 
 				switch (seleccion) {
 					case 'precio-fijo':
@@ -1647,63 +1322,424 @@
 						break;
 				}
 
-				console.log("precio base: ", precioFinal)
-				console.log("precio base 2n: ", precioBaseFinal2noches)
-				console.log("costo base: ", costoBaseFinal);
-				console.log("costo base 2n: ", costoBaseFinal2noches)
 
-				// URL para la solicitud fetch (debes reemplazarla con tu propia URL)
-				const url = '/api/precios-especiales';
-				const urlfechas = '/api/consulta-fechas-precioespecial';
-
-
-				const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
-				console.log(fechas)
-				try {
-					// Realizar el fetch repetido para cada fecha en el rango
-					document.getElementById('spinner-agregarprecios').style.display = 'block';
-					Swal.close();
-					const resultados = await fetchRepetido(url, fechas, habitacionAmodificar);
-					if (resultados.length === 0) {
-						throw new Error('No hay fechas seleccionadas para actualizar.');
+				// Iterar sobre cada fecha en el rango
+				for (const fecha of fechas) {
+					const existeRegistro = await verificarExistenciaRegistro(url, fecha, idHabitacion);
+					var existeprecio;
+					if (existeRegistro) {
+						existeprecio = await consultarprecio(urlfechas, fecha, idHabitacion);
+						await eliminarRegistroExistente(url, fecha, idHabitacion);
 					}
-					document.getElementById('spinner-agregarprecios').style.display = 'none';
-					Swal.fire({
-						icon: 'success',
-						title: '¡Completado!',
-						text: 'Precios actualizados correctamente.',
-						confirmButtonText: 'Aceptar'
-					}).then((result) => {
-						// Verificar si el usuario hizo clic en el botón de confirmación
-						if (result.isConfirmed) {
-							// Actualizar la página
-							location.reload();
-						}
+					console.log('existe precio : ', existeprecio);
+
+					const precioBase = habitacionAmodificar.getAttribute('data-precio-base');
+					const precioBase2noches = habitacionAmodificar.getAttribute('data-precio-base2+noches');
+					const costoBase = habitacionAmodificar.getAttribute('data-costo-base');
+					const costoBase2noches = habitacionAmodificar.getAttribute('data-costo-base2+noches');
+
+					// Solucionar el if para que cuando exista el usuario, se borre el registro y añada el nuevo registro-
+					// Obtener el objeto de datos para enviar en la solicitud fetch
+					if ((valorAccion == 0) && (existeprecio)) {
+						precioFinal = existeprecio.precio_modificado;
+					} else if ((valorAccion == 0)) {
+						precioFinal = precioBase;
+					}
+					if ((valorPrecioBase2noches == 0) && (existeprecio)) {
+						precioBaseFinal2noches = existeprecio.precio_base_2noches;
+					} else if ((valorPrecioBase2noches == 0)) {
+						precioBaseFinal2noches = precioBase2noches;
+					}
+					if ((valorCostoBase == 0) && (existeprecio)) {
+						costoBaseFinal = existeprecio.costo_base;
+					} else if ((valorCostoBase == 0)) {
+						costoBaseFinal = costoBase;
+					}
+					if ((valorCostoBase2noches == 0) && (existeprecio)) {
+						costoBaseFinal2noches = existeprecio.costo_base_2noches;
+					} else if ((valorCostoBase2noches == 0)) {
+						costoBaseFinal2noches = costoBase2noches;
+					}
+					const datosFetch = {
+						precio_modificado: precioFinal,
+						precio_base_2noches: precioBaseFinal2noches,
+						costo_base: costoBaseFinal,
+						costo_base_2noches: costoBaseFinal2noches,
+						fecha: fecha,
+						habitacionId: idHabitacion
+					};
+
+					console.log(JSON.stringify(datosFetch));
+
+					// Realizar la solicitud fetch para la fecha actual con los datos especificados
+					const response = await fetch(url, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify(datosFetch)
 					});
 
-					// Manejar los resultados obtenidos
-					console.log('Resultados de fetch repetido:', resultados);
-						// Aquí puedes realizar cualquier otra acción con los resultados obtenidos
-				} catch (error) {
-						console.error('Error al realizar el fetch repetido:', error.message);
-						document.getElementById('spinner-agregarprecios').style.display = 'none';
+					// Verificar el estado de la respuesta
+					if (!response.ok) {
+						throw new Error('Error en la solicitud fetch: ' + response.statusText);
+					}
 
-						Swal.fire({
-							icon: 'error',
-							title: 'Error',
-							text: 'Hubo un problema al actualizar los precios. Por favor, verifica que todos los campos están completos o intenta de nuevo más tarde.',
-							confirmButtonText: 'Aceptar'
-						});
+					// Convertir la respuesta a JSON
+					const data = await response.json();
+
+					// Agregar el resultado al array de resultados
+					resultados.push(data);
+
 				}
 
-				async function fetchRepetido(url, fechas) {
+				return resultados;
+			} catch (error) {
+				console.error('Error al realizar el fetch repetido:', error);
+				throw error;
+			}
+		}
+
+
+		// Función para obtener un rango de fechas entre la fecha de inicio y la fecha de fin
+		function obtenerRangoFechas(fechaInicio, fechaFin) {
+			const fechas = [];
+			let fechaActual = new Date(fechaInicio);
+
+			while (fechaActual <= fechaFin) {
+				if (diasSeleccionados.includes(obtenerNombreDia(fechaActual))) {
+					fechas.push(new Date(fechaActual));
+				}
+				fechaActual.setDate(fechaActual.getDate() + 1);
+			}
+			return fechas;
+		}
+
+		// Función para obtener un precio en una fecha determinada
+		async function consultarprecio(url, fecha, habitacionId) {
+			try {
+				const formattedDate = formatDate(fecha); // Formatear la fecha para la URL
+				const formattedUrl = `${urlfechas}?fecha=${formattedDate}&habitacionid=${habitacionId}`
+				const response = await fetch(formattedUrl, {
+					method: 'GET'
+				});
+
+				if (!response.ok) {
+					throw new Error('Error al verificar el precio del registro:', response.statusText);
+				}
+
+				const data = await response.json(); // Obtener el JSON de la respuesta
+
+				console.log(data)
+
+				return data; // Devuelve true si el registro existe, false de lo contrario
+			} catch (error) {
+				console.error('Error al verificar la existencia del registro:', error);
+				throw error;
+			}
+		}
+
+		// Función para obtener el nombre del día de la semana
+		function obtenerNombreDia(fecha) {
+			const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+			return diasSemana[fecha.getDay()];
+		}
+
+		// Función para verificar la existencia de un registro para una fecha y habitación específicas
+		async function verificarExistenciaRegistro(url, fecha, habitacionId) {
+			try {
+				console.log("url verificar: ", url);
+				console.log("fecha: ", fecha);
+				console.log("habitacionId: ", habitacionId);
+				const formattedDate = formatDate(fecha); // Formatear la fecha para la URL
+				const formattedUrl = `${url}?fecha=${formattedDate}&habitacionId=${habitacionId}`
+				const response = await fetch(formattedUrl, {
+					method: 'GET'
+				});
+
+				if (!response.ok) {
+					throw new Error('Error al verificar la existencia del registro:', response.statusText);
+				}
+
+				const data = await response.json(); // Obtener el JSON de la respuesta
+
+				console.log('Data existe registro:', data.existeRegistro); // Imprimir los datos recibidos
+
+				return data.existeRegistro; // Devuelve true si el registro existe, false de lo contrario
+			} catch (error) {
+				console.error('Error al verificar la existencia del registro:', error);
+				throw error;
+			}
+		}
+
+		// Función para eliminar un registro existente para una fecha y habitación específicas
+		async function eliminarRegistroExistente(url, fecha, habitacionId) {
+			try {
+				const formattedDate = formatDate(fecha); // Formatear la fecha para la URL
+				const response = await fetch(`${url}?fecha=${formattedDate}&habitacionId=${habitacionId}`, {
+					method: 'DELETE'
+				});
+
+				if (!response.ok) {
+					throw new Error('Error al eliminar el registro existente:', response.statusText);
+				}
+
+				console.log(`Registro eliminado para la fecha ${formattedDate} y habitación ${habitacionId}`);
+			} catch (error) {
+				console.error('Error al eliminar el registro existente:', error);
+				throw error;
+			}
+		}
+
+		// Función para formatear la fecha en el formato requerido para la URL
+		function formatDate(date) {
+			const year = date.getFullYear();
+			const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+			const day = date.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+			return `${year}-${month}-${day}`;
+		}
+
+
+
+	})
+
+
+
+
+	const addPreciosBtn = document.querySelector('#add-prices-persona-btn')
+
+	addPreciosBtn.addEventListener('click', async function (e) {
+
+		const chaletsCheckboxes = document.querySelectorAll('.checkboxes-chalets-pp');
+		const checkedChalets = [];
+
+		chaletsCheckboxes.forEach(function (checkbox) {
+			if (checkbox.checked) {
+				checkedChalets.push(checkbox);
+			}
+		})
+
+		console.log(checkedChalets)
+
+		if (checkedChalets.length === 0) {
+			Swal.fire({
+				title: 'Error',
+				text: 'Debes seleccionar al menos una habitacion',
+				icon: 'error',
+				confirmButtonText: 'Ok'
+			})
+			return;
+		}
+
+		e.preventDefault();
+
+		const diasSeleccionados = [];
+
+		for (const habitacionAmodificar of checkedChalets) {
+			const fechaInicioString = document.querySelector('#fecha-inicio-persona').value; // Obtener el valor del input de tipo date
+			const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
+			const fechaFinString = document.querySelector('#fecha-fin-persona').value; // Obtener el valor del input de tipo date
+			const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
+			const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-persona');
+
+			checkboxes.forEach(function (checkbox) {
+				if (checkbox.checked) {
+					diasSeleccionados.push(checkbox.value);
+				}
+			});
+
+			console.log("dias seleccionados: ", diasSeleccionados)
+
+			const costoBase = habitacionAmodificar.getAttribute('data-costo-base');
+			const costoBase2noches = habitacionAmodificar.getAttribute('data-costo-base2+noches');
+			const precioBase = habitacionAmodificar.getAttribute('data-precio-base');
+			const precioBase2noches = habitacionAmodificar.getAttribute('data-precio-base2+noches');
+
+			const accionPrecios = document.querySelector('#accion-precios-persona').value;
+
+			const valorAccion = parseInt(document.querySelector('#valor-pbase').value);
+			const valorPrecioBase2noches = parseInt(document.querySelector('#valor-pbase2n').value);
+			const valorCostoBase = parseInt(document.querySelector('#valor-cbase').value);
+			const valorCostoBase2noches = parseInt(document.querySelector('#valor-cbase2n').value);
+
+			if (valorCostoBase > valorAccion) {
+				throw new Error('El costo base no puede ser mayor al precio base');
+			} else if (valorCostoBase2noches > valorPrecioBase2noches) {
+				throw new Error('El costo base 2+ noches no puede ser mayor al precio base 2+ noches');
+			} else if (valorAccion === 0) {
+				throw new Error('El precio no puede ser 0');
+			} else if (valorPrecioBase2noches === 0) {
+				throw new Error('El precio base 2+ noches no puede ser 0');
+			} else if (valorCostoBase === 0) {
+				throw new Error('El costo base no puede ser 0')
+			} else if (valorCostoBase2noches === 0) {
+				throw new Error('El costo base 2+ noches no puede ser 0')
+			}
+
+			let precioFinal = 0
+			let precioBaseFinal2noches = 0;
+			let costoBaseFinal = 0;
+			let costoBaseFinal2noches = 0;
+
+			if (fechaInicio === '' || fechaFin === '') {
+				// Mostrar mensaje de error en el modal
+				const errorModal = document.querySelector('#error-modal-persona');
+				errorModal.textContent = 'Por favor, seleccione una fecha de inicio y una fecha de fin.';
+				errorModal.style.display = 'block'; // Mostrar el mensaje de error
+				return; // Detener la ejecución del resto del código
+			}
+
+			// Restablecer el mensaje de error en el modal
+			const errorModal = document.querySelector('#error-modal');
+			errorModal.innerHTML = '';
+			errorModal.classList.remove('show');
+
+			// Validacion para actualizar el precio natural o precio porcentual
+			const seleccion = document.getElementById('accion-precios-persona').value;
+			const seleccionPrecioBase2noches = document.getElementById('accion-precios-preciobase2+-persona').value;
+			const seleccionCostoBase = document.getElementById('accion-precios-costobase-persona').value
+			const seleccionCostoBase2noches = document.getElementById('accion-precios-costobase2+-persona').value;
+
+			console.log("Precios antes del switch: (cbase a pbase)")
+			console.log(costoBase)
+			console.log(costoBase2noches)
+			console.log(precioBase)
+			console.log(precioBase2noches)
+
+
+			switch (seleccion) {
+				case 'precio-fijo':
+					precioFinal = valorAccion;
+					break;
+				case 'incrementar-natural':
+					precioFinal = parseInt(precioBase) + parseInt(valorAccion);
+					break;
+				case 'disminuir-natural':
+					precioFinal = precioBase - valorAccion;
+					break;
+				case 'incrementar-porcentual':
+					precioFinal = parseInt(precioBase * (valorAccion / 100)) + parseInt(precioBase);
+					break;
+				case 'disminuir-porcentual':
+					let pre = precioBase * (valorAccion / 100)
+					precioFinal = precioBase - pre;
+					break;
+			}
+
+			switch (seleccionPrecioBase2noches) {
+				case 'precio-fijo':
+					precioBaseFinal2noches = valorPrecioBase2noches;
+					break;
+				case 'incrementar-natural':
+					precioBaseFinal2noches = parseInt(precioBase2noches) + parseInt(valorPrecioBase2noches);
+					break;
+				case 'disminuir-natural':
+					precioBaseFinal2noches = precioBase2noches - valorPrecioBase2noches;
+					break;
+				case 'incrementar-porcentual':
+					precioBaseFinal2noches = parseInt(precioBase2noches * (valorPrecioBase2noches / 100)) + parseInt(precioBase2noches);
+					break;
+				case 'disminuir-porcentual':
+					let pre = precioBase2noches * (valorPrecioBase2noches / 100)
+					precioBaseFinal2noches = precioBase2noches - pre;
+					break;
+			}
+
+			switch (seleccionCostoBase) {
+				case 'precio-fijo':
+					costoBaseFinal = valorCostoBase;
+					break;
+				case 'incrementar-natural':
+					costoBaseFinal = parseInt(costoBase) + parseInt(valorCostoBase);
+					break;
+				case 'disminuir-natural':
+					costoBaseFinal = costoBase - valorCostoBase;
+					break;
+				case 'incrementar-porcentual':
+					costoBaseFinal = parseInt(costoBase * (valorCostoBase / 100)) + parseInt(costoBase);
+					break;
+				case 'disminuir-porcentual':
+					let pre = costoBase * (valorCostoBase / 100)
+					costoBaseFinal = costoBase - pre;
+					break;
+			}
+
+			switch (seleccionCostoBase2noches) {
+				case 'precio-fijo':
+					costoBaseFinal2noches = valorCostoBase2noches;
+					break;
+				case 'incrementar-natural':
+					costoBaseFinal2noches = parseInt(costoBase2noches) + parseInt(valorCostoBase2noches);
+					break;
+				case 'disminuir-natural':
+					costoBaseFinal2noches = costoBase2noches - valorCostoBase2noches;
+					break;
+				case 'incrementar-porcentual':
+					costoBaseFinal2noches = parseInt(costoBase2noches * (valorCostoBase2noches / 100)) + parseInt(costoBase2noches);
+					break;
+				case 'disminuir-porcentual':
+					let pre = costoBase2noches * (valorCostoBase2noches / 100)
+					costoBaseFinal2noches = costoBase2noches - pre;
+					break;
+			}
+
+			console.log("precio base: ", precioFinal)
+			console.log("precio base 2n: ", precioBaseFinal2noches)
+			console.log("costo base: ", costoBaseFinal);
+			console.log("costo base 2n: ", costoBaseFinal2noches)
+
+			// URL para la solicitud fetch (debes reemplazarla con tu propia URL)
+			const url = '/api/precios-especiales';
+			const urlfechas = '/api/consulta-fechas-precioespecial';
+
+
+			const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
+			console.log(fechas)
+			try {
+				// Realizar el fetch repetido para cada fecha en el rango
+				document.getElementById('spinner-agregarprecios').style.display = 'block';
+				Swal.close();
+				const resultados = await fetchRepetido(url, fechas, habitacionAmodificar);
+				if (resultados.length === 0) {
+					throw new Error('No hay fechas seleccionadas para actualizar.');
+				}
+				document.getElementById('spinner-agregarprecios').style.display = 'none';
+				Swal.fire({
+					icon: 'success',
+					title: '¡Completado!',
+					text: 'Precios actualizados correctamente.',
+					confirmButtonText: 'Aceptar'
+				}).then((result) => {
+					// Verificar si el usuario hizo clic en el botón de confirmación
+					if (result.isConfirmed) {
+						// Actualizar la página
+						location.reload();
+					}
+				});
+
+				// Manejar los resultados obtenidos
+				console.log('Resultados de fetch repetido:', resultados);
+				// Aquí puedes realizar cualquier otra acción con los resultados obtenidos
+			} catch (error) {
+				console.error('Error al realizar el fetch repetido:', error.message);
+				document.getElementById('spinner-agregarprecios').style.display = 'none';
+
+				Swal.fire({
+					icon: 'error',
+					title: 'Error',
+					text: 'Hubo un problema al actualizar los precios. Por favor, verifica que todos los campos están completos o intenta de nuevo más tarde.',
+					confirmButtonText: 'Aceptar'
+				});
+			}
+
+			async function fetchRepetido(url, fechas) {
 				try {
 					const resultados = [];
 					console.log('ejecutando fetch repetido...');
 
 					const idHabitacion = habitacionAmodificar.id;
 
-					
+
 
 					const noPersonas = document.querySelector('#numero-personas').value;
 
@@ -1804,7 +1840,7 @@
 					}
 					fechaActual.setDate(fechaActual.getDate() + 1);
 				}
-			
+
 				return fechas;
 			}
 
@@ -1888,479 +1924,479 @@
 				return `${year}-${month}-${day}`;
 			}
 
-			}
+		}
 
 
-			
-
-			
 
 
-			/** 
-		
-			try {
-			  const response = await fetch('/api/agregar-precios-especiales', {
-				method: 'POST',
-				headers: {
-				  'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(body)
-			  })
-		
-			  if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.mensaje);
-			  }
-		
-			  Swal.fire({
-				icon: 'success',
-				title: '¡Completado!',
-				text: 'Precios agregados correctamente.',
-				confirmButtonText: 'Aceptar'
-			  }).then((result) => {
-				if (result.isConfirmed) {
-				  location.reload();
-				}
-			  })
-			} catch (error) {
-			Swal.fire({
-			  icon: 'error',
-			  title: 'Error',
-			  text: 'Hubo un problema al agregar los precios.' + error.message,
-			  confirmButtonText: 'Aceptar'
-			})
+
+
+
+		/** 
+	
+		try {
+		  const response = await fetch('/api/agregar-precios-especiales', {
+			method: 'POST',
+			headers: {
+			  'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(body)
+		  })
+	
+		  if (!response.ok) {
+			const errorData = await response.json();
+			throw new Error(errorData.mensaje);
 		  }
-		  **/
-			//precio_modificado, precio_base_2noches, costo_base, costo_base_2noches, criterio, noPersonas, habitacionId
+	
+		  Swal.fire({
+			icon: 'success',
+			title: '¡Completado!',
+			text: 'Precios agregados correctamente.',
+			confirmButtonText: 'Aceptar'
+		  }).then((result) => {
+			if (result.isConfirmed) {
+			  location.reload();
+			}
+		  })
+		} catch (error) {
+		Swal.fire({
+		  icon: 'error',
+		  title: 'Error',
+		  text: 'Hubo un problema al agregar los precios.' + error.message,
+		  confirmButtonText: 'Aceptar'
+		})
+	  }
+	  **/
+		//precio_modificado, precio_base_2noches, costo_base, costo_base_2noches, criterio, noPersonas, habitacionId
+	});
+	const hoyButtons = document.querySelectorAll('.hoy-btn');
+	const today = new Date();
+	let currentMonth = today.getMonth();
+	let currentYear = today.getFullYear();
+
+
+
+	// Función para determinar si una fecha es viernes, sábado o domingo
+	function esFinDeSemana(fechaStr) {
+		const partesFecha = fechaStr.split(" ");
+		const dia = parseInt(partesFecha[0]);
+		const mes = partesFecha[1];
+		const anio = parseInt(partesFecha[2]);
+
+		// Mapear los nombres de los meses a números (enero = 0, diciembre = 11)
+		const meses = {
+			"ene": 0,
+			"feb": 1,
+			"mar": 2,
+			"abr": 3,
+			"may": 4,
+			"jun": 5,
+			"jul": 6,
+			"ago": 7,
+			"sept": 8,
+			"oct": 9,
+			"nov": 10,
+			"dic": 11
+		};
+
+		const fecha = new Date(anio, meses[mes], dia);
+		console.log(fecha);
+		const diaSemana = fecha.getDay(); // 0 = Domingo, 5 = Viernes, 6 = Sábado
+
+
+		return diaSemana === 5 || diaSemana === 6;
+	}
+
+	function esHoy(fechaStr) {
+		const partesFecha = fechaStr.split(" ");
+		const dia = parseInt(partesFecha[0]);
+		const mes = partesFecha[1];
+		const anio = parseInt(partesFecha[2]);
+
+		// Mapear los nombres de los meses a números (enero = 0, diciembre = 11)
+		const meses = {
+			"ene": 0,
+			"feb": 1,
+			"mar": 2,
+			"abr": 3,
+			"may": 4,
+			"jun": 5,
+			"jul": 6,
+			"ago": 7,
+			"sept": 8,
+			"oct": 9,
+			"nov": 10,
+			"dic": 11
+		};
+
+		const fecha = new Date(anio, meses[mes], dia);
+		const fechaHoy = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+
+		const todayDate = new Date();
+		todayDate.setHours(0, 0, 0, 0); // Eliminar la hora para comparar solo la fecha
+
+		return fechaHoy.getTime() === todayDate.getTime();
+	}
+
+
+	hoyButtons.forEach(button => {
+		button.addEventListener('click', function (event) {
+			event.preventDefault();
+
+			const chaletName = this.getAttribute('data-chalet');
+
+			const currentMonthName = today.toLocaleString('es-ES', { month: 'long' });
+			const currentYear = today.getFullYear();
+
+			const calendarContainer = document.getElementById(`table-${chaletName}`);
+
+			console.log(`Button clicked for ${chaletName}`)
+
+			const ths = calendarContainer.querySelectorAll("th");
+
+			ths.forEach((th, index) => {
+				if (esHoy(th.textContent.trim())) {
+					setTimeout(() => {
+						th.scrollIntoView({ behavior: 'smooth', block: "nearest", inline: "start" });
+					}, 0);
+					return;
+				}
+			});
+			/** 
+	
+			const monthHeaders = calendarContainer.querySelectorAll('.month-header');
+			monthHeaders.forEach(header => {
+				if (header.textContent.trim().toLowerCase() === `${currentMonthName} ${currentYear}`.toLowerCase()) {
+					setTimeout(() => {
+						header.scrollIntoView({ behavior: 'smooth', block: "nearest", inline: "center" });
+					}, 0);
+				}
+			});
+			**/
 		});
-		const hoyButtons = document.querySelectorAll('.hoy-btn');
-		const today = new Date();
-		let currentMonth = today.getMonth();
-		let currentYear = today.getFullYear();
 
+	})
 
+	// ELIMINAR PRECIOS
 
-		// Función para determinar si una fecha es viernes, sábado o domingo
-		function esFinDeSemana(fechaStr) {	
-			const partesFecha = fechaStr.split(" ");
-			const dia = parseInt(partesFecha[0]);
-			const mes = partesFecha[1];
-			const anio = parseInt(partesFecha[2]);
+	$("#select-opcioneliminar").on("change", function (e) {
+		e.preventDefault();
+		let selected = $(this).val();
+		console.log("Selected: ", selected);
 
-			// Mapear los nombres de los meses a números (enero = 0, diciembre = 11)
-			const meses = {
-				"ene": 0,
-				"feb": 1,
-				"mar": 2,
-				"abr": 3,
-				"may": 4,
-				"jun": 5,
-				"jul": 6,
-				"ago": 7,
-				"sept": 8,
-				"oct": 9,
-				"nov": 10,
-				"dic": 11
-			};
-
-			const fecha = new Date(anio, meses[mes], dia);
-			console.log(fecha);
-			const diaSemana = fecha.getDay(); // 0 = Domingo, 5 = Viernes, 6 = Sábado
-
-
-			return diaSemana === 5 || diaSemana === 6;
+		if (selected === "eliminarpreciosespeciales") {
+			$("#div-precioespecial").removeClass("d-none");
+			$("#div-preciogeneral").addClass("d-none");
+		} else if (selected === "eliminarpreciosgenerales") {
+			$("#div-precioespecial").addClass("d-none");
+			$("#div-preciogeneral").removeClass("d-none");
+		} else {
+			$("#div-precioespecial").addClass("d-none");
+			$("#div-preciogeneral").addClass("d-none");
 		}
+	})
 
-		function esHoy(fechaStr) {
-			const partesFecha = fechaStr.split(" ");
-			const dia = parseInt(partesFecha[0]);
-			const mes = partesFecha[1];
-			const anio = parseInt(partesFecha[2]);
+	const checkboxesChalets = document.querySelector('#checkboxes-chalets');
+	console.log(checkboxesChalets)
 
-			// Mapear los nombres de los meses a números (enero = 0, diciembre = 11)
-			const meses = {
-				"ene": 0,
-				"feb": 1,
-				"mar": 2,
-				"abr": 3,
-				"may": 4,
-				"jun": 5,
-				"jul": 6,
-				"ago": 7,
-				"sept": 8,
-				"oct": 9,
-				"nov": 10,
-				"dic": 11
-			};
+	$('#select-cabana-eliminarespeciales').on('change', function (e) {
+		const selectElement = document.getElementById('select-cabana-eliminarespeciales');
+		const numeroPersonasSelect = document.getElementById('numero-personas-eliminarespeciales');
+		const selectedOption = selectElement.options[selectElement.selectedIndex];
+		const maxOccupancy = selectedOption.getAttribute('data-pax');
+		$('#numero-personas-eliminarespeciales').html('<option value="" selected disabled>Selecciona el número de personas ---</option>');
 
-			const fecha = new Date(anio, meses[mes], dia);
-			const fechaHoy = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
-
-			const todayDate = new Date();
-			todayDate.setHours(0, 0, 0, 0); // Eliminar la hora para comparar solo la fecha
-
-			return fechaHoy.getTime() === todayDate.getTime();
+		for (let i = 2; i < maxOccupancy; i++) {
+			const option = document.createElement('option');
+			option.value = i;
+			option.textContent = i;
+			numeroPersonasSelect.appendChild(option);
 		}
+	})
 
+	$('#delete-prices-btn').on('click', async function (e) {
+		e.preventDefault();
+		let selected = $('#select-opcioneliminar').val();
+		console.log(selected)
 
-		hoyButtons.forEach(button => {
-			button.addEventListener('click', function (event) {
-				event.preventDefault();
+		if (selected === "eliminarpreciosespeciales") {
+			const habitacionId = $('#select-cabana-eliminarespeciales').val();
+			const noPersonas = $('#numero-personas-eliminarespeciales').val();
+			const fechaInicioString = document.querySelector('#fecha-inicio-eliminarespeciales').value; // Obtener el valor del input de tipo date
+			const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
+			const fechaFinString = document.querySelector('#fecha-fin-eliminarespeciales').value; // Obtener el valor del input de tipo date
+			const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
 
-				const chaletName = this.getAttribute('data-chalet');
-
-				const currentMonthName = today.toLocaleString('es-ES', { month: 'long' });
-				const currentYear = today.getFullYear();
-
-				const calendarContainer = document.getElementById(`table-${chaletName}`);
-
-				console.log(`Button clicked for ${chaletName}`)
-
-				const ths = calendarContainer.querySelectorAll("th");
-
-				ths.forEach((th, index) => {
-					if (esHoy(th.textContent.trim())) {
-						setTimeout(() => {
-							th.scrollIntoView({ behavior: 'smooth', block: "nearest", inline: "start" });
-						}, 0);
-						return;
-					}
-				});
-				/** 
-		
-				const monthHeaders = calendarContainer.querySelectorAll('.month-header');
-				monthHeaders.forEach(header => {
-					if (header.textContent.trim().toLowerCase() === `${currentMonthName} ${currentYear}`.toLowerCase()) {
-						setTimeout(() => {
-							header.scrollIntoView({ behavior: 'smooth', block: "nearest", inline: "center" });
-						}, 0);
-					}
-				});
-				**/
+			const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-eliminarespeciales');
+			const diasSeleccionados = [];
+			checkboxes.forEach(function (checkbox) {
+				if (checkbox.checked) {
+					diasSeleccionados.push(checkbox.value);
+				}
 			});
 
-		})
 
-		// ELIMINAR PRECIOS
+			const fechas = obtenerRangoFechas(fechaInicio, fechaFin, diasSeleccionados);
 
-		$("#select-opcioneliminar").on("change", function (e) {
-			e.preventDefault();
-			let selected = $(this).val();
-			console.log("Selected: ", selected);
+			try {
+				const resultados = await fetchRepetido(fechas, habitacionId, noPersonas, selected);
+				console.log(resultados);
+				if (resultados.length === 0) {
+					throw new Error('No hay fechas seleccionadas para actualizar.');
+				}
 
-			if (selected === "eliminarpreciosespeciales") {
-				$("#div-precioespecial").removeClass("d-none");
-				$("#div-preciogeneral").addClass("d-none");
-			} else if (selected === "eliminarpreciosgenerales") {
-				$("#div-precioespecial").addClass("d-none");
-				$("#div-preciogeneral").removeClass("d-none");
-			} else {
-				$("#div-precioespecial").addClass("d-none");
-				$("#div-preciogeneral").addClass("d-none");
-			}
-		})
-
-		const checkboxesChalets = document.querySelector('#checkboxes-chalets');
-		console.log(checkboxesChalets)
-
-		$('#select-cabana-eliminarespeciales').on('change', function (e) {
-			const selectElement = document.getElementById('select-cabana-eliminarespeciales');
-			const numeroPersonasSelect = document.getElementById('numero-personas-eliminarespeciales');
-			const selectedOption = selectElement.options[selectElement.selectedIndex];
-			const maxOccupancy = selectedOption.getAttribute('data-pax');
-			$('#numero-personas-eliminarespeciales').html('<option value="" selected disabled>Selecciona el número de personas ---</option>');
-
-			for (let i = 2; i < maxOccupancy; i++) {
-				const option = document.createElement('option');
-				option.value = i;
-				option.textContent = i;
-				numeroPersonasSelect.appendChild(option);
-			}
-		})
-
-		$('#delete-prices-btn').on('click', async function (e) {
-			e.preventDefault();
-			let selected = $('#select-opcioneliminar').val();
-			console.log(selected)
-
-			if (selected === "eliminarpreciosespeciales") {
-				const habitacionId = $('#select-cabana-eliminarespeciales').val();
-				const noPersonas = $('#numero-personas-eliminarespeciales').val();
-				const fechaInicioString = document.querySelector('#fecha-inicio-eliminarespeciales').value; // Obtener el valor del input de tipo date
-				const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
-				const fechaFinString = document.querySelector('#fecha-fin-eliminarespeciales').value; // Obtener el valor del input de tipo date
-				const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
-
-				const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-eliminarespeciales');
-				const diasSeleccionados = [];
-				checkboxes.forEach(function (checkbox) {
-					if (checkbox.checked) {
-						diasSeleccionados.push(checkbox.value);
+				Swal.fire({
+					icon: 'success',
+					title: '¡Completado!',
+					text: 'Precios actualizados correctamente.',
+					confirmButtonText: 'Aceptar'
+				}).then((result) => {
+					// Verificar si el usuario hizo clic en el botón de confirmación
+					if (result.isConfirmed) {
+						// Actualizar la página
+						location.reload();
 					}
 				});
 
-
-				const fechas = obtenerRangoFechas(fechaInicio, fechaFin, diasSeleccionados);
-
-				try {
-					const resultados = await fetchRepetido(fechas, habitacionId, noPersonas, selected);
-					console.log(resultados);
-					if (resultados.length === 0) {
-						throw new Error('No hay fechas seleccionadas para actualizar.');
-					}
-
-					Swal.fire({
-						icon: 'success',
-						title: '¡Completado!',
-						text: 'Precios actualizados correctamente.',
-						confirmButtonText: 'Aceptar'
-					}).then((result) => {
-						// Verificar si el usuario hizo clic en el botón de confirmación
-						if (result.isConfirmed) {
-							// Actualizar la página
-							location.reload();
-						}
-					});
-
-				} catch (e) {
-					Swal.fire({
-						icon: 'error',
-						title: 'Error',
-						text: e.message,
-						confirmButtonText: 'Aceptar'
-					})
-				}
-			} else if (selected === "eliminarpreciosgenerales") {
-				const habitacionId = $('#select-cabana-eliminargenerales').val();
-				const fechaInicioString = document.querySelector('#fecha-inicio-eliminargenerales').value; // Obtener el valor del input de tipo date
-				const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
-				const fechaFinString = document.querySelector('#fecha-fin-eliminargenerales').value; // Obtener el valor del input de tipo date
-				const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
-
-				const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-eliminargenerales');
-				const diasSeleccionados = [];
-				checkboxes.forEach(function (checkbox) {
-					if (checkbox.checked) {
-						diasSeleccionados.push(checkbox.value);
-					}
-				});
-				const fechas = obtenerRangoFechas(fechaInicio, fechaFin, diasSeleccionados);
-
-				try {
-					const resultados = await fetchRepetido(fechas, habitacionId, 0, selected);
-					console.log(resultados);
-					if (resultados.length === 0) {
-						throw new Error('No hay fechas seleccionadas para actualizar.');
-					}
-
-					// Verificar si todos los objetos en el array están vacíos
-					const allEmpty = resultados.every(obj => Object.keys(obj).length === 0);
-
-					if (allEmpty) {
-						throw new Error('No se encontraron fechas para eliminar.');
-					}
-
-					Swal.fire({
-						icon: 'success',
-						title: '¡Completado!',
-						text: 'Precios actualizados correctamente.',
-						confirmButtonText: 'Aceptar'
-					}).then((result) => {
-						// Verificar si el usuario hizo clic en el botón de confirmación
-						if (result.isConfirmed) {
-							// Actualizar la página
-							location.reload();
-						}
-					});
-
-				} catch (e) {
-					Swal.fire({
-						icon: 'error',
-						title: 'Error',
-						text: e.message,
-						confirmButtonText: 'Aceptar'
-					})
-				}
-
-			} else {
+			} catch (e) {
 				Swal.fire({
 					icon: 'error',
 					title: 'Error',
-					text: 'Debe seleccionar un tipo de precio a eliminar.',
+					text: e.message,
 					confirmButtonText: 'Aceptar'
 				})
-				return;
 			}
+		} else if (selected === "eliminarpreciosgenerales") {
+			const habitacionId = $('#select-cabana-eliminargenerales').val();
+			const fechaInicioString = document.querySelector('#fecha-inicio-eliminargenerales').value; // Obtener el valor del input de tipo date
+			const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
+			const fechaFinString = document.querySelector('#fecha-fin-eliminargenerales').value; // Obtener el valor del input de tipo date
+			const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
 
-		});
-
-		// Funciones eliminar precios -------------------------------------------------------------------------
-
-		function obtenerRangoFechas(fechaInicio, fechaFin, diasSeleccionados) {
-			const fechas = [];
-			let fechaActual = new Date(fechaInicio);
-
-
-			while (fechaActual <= fechaFin) {
-				if (diasSeleccionados.includes(obtenerNombreDia(fechaActual))) {
-					fechas.push(new Date(fechaActual.getTime())); // Create a new Date instance
-					console.log(fechaActual); // This will now log unique dates
-				} else {
-					console.log(fechaActual, "No esta incluida"); // This will now log
+			const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-eliminargenerales');
+			const diasSeleccionados = [];
+			checkboxes.forEach(function (checkbox) {
+				if (checkbox.checked) {
+					diasSeleccionados.push(checkbox.value);
 				}
-				fechaActual.setDate(fechaActual.getDate() + 1);
-			}
+			});
+			const fechas = obtenerRangoFechas(fechaInicio, fechaFin, diasSeleccionados);
 
-			console.log(fechas);
-			return fechas;
-		}
-
-
-		function obtenerNombreDia(fecha) {
-			const diasSemana = ['domingo','lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-			return diasSemana[fecha.getDay()];
-		}
-
-		function formatDate(date) {
-			const year = date.getFullYear();
-			const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
-			const day = date.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
-			return `${year}-${month}-${day}`;
-		}
-
-		async function fetchRepetido(fechas, idHabitacion, noPersonas, referencia) {
 			try {
-				const resultados = [];
-
-				let url = ''
-
-				for (const fecha of fechas) {
-					const formattedDate = formatDate(fecha); // Formatear la fecha para la URL
-
-					if (referencia === "eliminarpreciosgenerales") {
-						url = `/api/calendario-precios?fecha=${formattedDate}&habitacionId=${idHabitacion}`
-					} else if (referencia === "eliminarpreciosespeciales") {
-						url = `/api/precios-especiales?fecha=${formattedDate}&habitacionId=${idHabitacion}&noPersonas=${noPersonas}`
-					} else {
-						throw new Error("No se ha seleccionado un tipo de precio a eliminar.");
-					}
-
-
-					try {
-						const response = await $.ajax({
-							url: url,
-							type: "DELETE",
-							dataType: "json"
-						});
-
-						console.log("Deleted: ", response);
-						resultados.push(response);
-					} catch (jqXHR) {
-						console.error("Error al eliminar", jqXHR.statusText, jqXHR.responseJSON?.message || jqXHR.statusText);
-						throw new Error(jqXHR.responseJSON?.message || jqXHR.statusText);
-					}
-
-				}
+				const resultados = await fetchRepetido(fechas, habitacionId, 0, selected);
 				console.log(resultados);
-				return resultados;
-			} catch (error) {
-				console.error('Error al realizar el fetch repetido:', error);
-				throw error;
+				if (resultados.length === 0) {
+					throw new Error('No hay fechas seleccionadas para actualizar.');
+				}
+
+				// Verificar si todos los objetos en el array están vacíos
+				const allEmpty = resultados.every(obj => Object.keys(obj).length === 0);
+
+				if (allEmpty) {
+					throw new Error('No se encontraron fechas para eliminar.');
+				}
+
+				Swal.fire({
+					icon: 'success',
+					title: '¡Completado!',
+					text: 'Precios actualizados correctamente.',
+					confirmButtonText: 'Aceptar'
+				}).then((result) => {
+					// Verificar si el usuario hizo clic en el botón de confirmación
+					if (result.isConfirmed) {
+						// Actualizar la página
+						location.reload();
+					}
+				});
+
+			} catch (e) {
+				Swal.fire({
+					icon: 'error',
+					title: 'Error',
+					text: e.message,
+					confirmButtonText: 'Aceptar'
+				})
 			}
+
+		} else {
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: 'Debe seleccionar un tipo de precio a eliminar.',
+				confirmButtonText: 'Aceptar'
+			})
+			return;
 		}
-    
-	const habitaciones = {{{json habitaciones}}};
-	const preciosHabitaciones = {{{json preciosHabitaciones}}}
-	const preciosEspeciales = {{{json preciosEspeciales}}}
+
+	});
+
+	// Funciones eliminar precios -------------------------------------------------------------------------
+
+	function obtenerRangoFechas(fechaInicio, fechaFin, diasSeleccionados) {
+		const fechas = [];
+		let fechaActual = new Date(fechaInicio);
+
+
+		while (fechaActual <= fechaFin) {
+			if (diasSeleccionados.includes(obtenerNombreDia(fechaActual))) {
+				fechas.push(new Date(fechaActual.getTime())); // Create a new Date instance
+				console.log(fechaActual); // This will now log unique dates
+			} else {
+				console.log(fechaActual, "No esta incluida"); // This will now log
+			}
+			fechaActual.setDate(fechaActual.getDate() + 1);
+		}
+
+		console.log(fechas);
+		return fechas;
+	}
+
+
+	function obtenerNombreDia(fecha) {
+		const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+		return diasSemana[fecha.getDay()];
+	}
+
+	function formatDate(date) {
+		const year = date.getFullYear();
+		const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+		const day = date.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+		return `${year}-${month}-${day}`;
+	}
+
+	async function fetchRepetido(fechas, idHabitacion, noPersonas, referencia) {
+		try {
+			const resultados = [];
+
+			let url = ''
+
+			for (const fecha of fechas) {
+				const formattedDate = formatDate(fecha); // Formatear la fecha para la URL
+
+				if (referencia === "eliminarpreciosgenerales") {
+					url = `/api/calendario-precios?fecha=${formattedDate}&habitacionId=${idHabitacion}`
+				} else if (referencia === "eliminarpreciosespeciales") {
+					url = `/api/precios-especiales?fecha=${formattedDate}&habitacionId=${idHabitacion}&noPersonas=${noPersonas}`
+				} else {
+					throw new Error("No se ha seleccionado un tipo de precio a eliminar.");
+				}
+
+
+				try {
+					const response = await $.ajax({
+						url: url,
+						type: "DELETE",
+						dataType: "json"
+					});
+
+					console.log("Deleted: ", response);
+					resultados.push(response);
+				} catch (jqXHR) {
+					console.error("Error al eliminar", jqXHR.statusText, jqXHR.responseJSON?.message || jqXHR.statusText);
+					throw new Error(jqXHR.responseJSON?.message || jqXHR.statusText);
+				}
+
+			}
+			console.log(resultados);
+			return resultados;
+		} catch (error) {
+			console.error('Error al realizar el fetch repetido:', error);
+			throw error;
+		}
+	}
+
+	const habitaciones = {{{ json habitaciones }}};
+	const preciosHabitaciones = {{{ json preciosHabitaciones }}}
+	const preciosEspeciales = {{{ json preciosEspeciales }}}
 
 
 	// NUEVA TABLA DE CALENDARIO DE PRECIOS
-document.addEventListener('DOMContentLoaded', function() {
-    const selectHabitacion = document.getElementById('habitacion-select');
-    const habitacionContainers = document.querySelectorAll('.habitacion-contenedor');
+	document.addEventListener('DOMContentLoaded', function () {
+		const selectHabitacion = document.getElementById('habitacion-select');
+		const habitacionContainers = document.querySelectorAll('.habitacion-contenedor');
 
-    // Oculta todos los contenedores de habitaciones al cargar la página
-    habitacionContainers.forEach(container => {
-        container.style.display = 'none';
-    });
+		// Oculta todos los contenedores de habitaciones al cargar la página
+		habitacionContainers.forEach(container => {
+			container.style.display = 'none';
+		});
 
-    // Evento cuando se cambia la selección de habitación
-    selectHabitacion.addEventListener('change', function() {
-        const selectedHabitacionId = selectHabitacion.value;
+		// Evento cuando se cambia la selección de habitación
+		selectHabitacion.addEventListener('change', function () {
+			const selectedHabitacionId = selectHabitacion.value;
 
-        // Oculta todos los contenedores de habitaciones
-        habitacionContainers.forEach(container => {
-            container.style.display = 'none';
-        });
+			// Oculta todos los contenedores de habitaciones
+			habitacionContainers.forEach(container => {
+				container.style.display = 'none';
+			});
 
-        // Si se seleccionó una habitación, mostrar el contenedor correspondiente
-        if (selectedHabitacionId) {
-            const selectedHabitacionContainer = document.getElementById(`habitacion-${selectedHabitacionId}`);
-            if (selectedHabitacionContainer) {
-                selectedHabitacionContainer.style.display = 'flex';
-				selectedHabitacionContainer.style.flexDirection = 'column';
-            }
-        }
+			// Si se seleccionó una habitación, mostrar el contenedor correspondiente
+			if (selectedHabitacionId) {
+				const selectedHabitacionContainer = document.getElementById(`habitacion-${selectedHabitacionId}`);
+				if (selectedHabitacionContainer) {
+					selectedHabitacionContainer.style.display = 'flex';
+					selectedHabitacionContainer.style.flexDirection = 'column';
+				}
+			}
 
-    });
-});
+		});
+	});
 
-document.getElementById('habitacion-select').addEventListener('change', function() {
-    const selectedRoomId = this.value;
-    if (selectedRoomId !== "Seleccione una habitación --") {
-        // Filtrar los datos de la habitación seleccionada
-        const selectedRoom = habitaciones.find(habitacion => habitacion._id === selectedRoomId);
-        
-        if (selectedRoom) {
-            // Llamar a la función para cargar las fechas y precios solo de la habitación seleccionada
-            cargarDatosHabitacion(selectedRoom);
-        }
-    }
-});
+	document.getElementById('habitacion-select').addEventListener('change', function () {
+		const selectedRoomId = this.value;
+		if (selectedRoomId !== "Seleccione una habitación --") {
+			// Filtrar los datos de la habitación seleccionada
+			const selectedRoom = habitaciones.find(habitacion => habitacion._id === selectedRoomId);
+
+			if (selectedRoom) {
+				// Llamar a la función para cargar las fechas y precios solo de la habitación seleccionada
+				cargarDatosHabitacion(selectedRoom);
+			}
+		}
+	});
 
 
 	function cargarDatosHabitacion(habitacion) {
-		try{
-    	const roomName = habitacion.propertyDetails.name;
-    	const roomId = habitacion._id;
+		try {
+			const roomName = habitacion.propertyDetails.name;
+			const roomId = habitacion._id;
 
-    	const costoBase = habitacion.others.baseCost;
-    	const costoBase2 = habitacion.others.baseCost2nights;
-    	const precioBase = habitacion.others.basePrice;
-    	const precioBase2nights = habitacion.others.basePrice2nights;
+			const costoBase = habitacion.others.baseCost;
+			const costoBase2 = habitacion.others.baseCost2nights;
+			const precioBase = habitacion.others.basePrice;
+			const precioBase2nights = habitacion.others.basePrice2nights;
 
-    	const headerRow = document.getElementById(`header-row-${roomName}`);
+			const headerRow = document.getElementById(`header-row-${roomName}`);
 
 
-    	// Generar las fechas desde 1 año antes hasta 2 años después
-    	const startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-    	const endDate = new Date(today.getFullYear() + 2, today.getMonth(), today.getDate());
+			// Generar las fechas desde 1 año antes hasta 2 años después
+			const startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+			const endDate = new Date(today.getFullYear() + 2, today.getMonth(), today.getDate());
 
-    	let currentDate = startDate;
+			let currentDate = startDate;
 
-    	const costoBaseRow = document.getElementById(`costo-base-row-${roomName}`);
-    	const precioBaseRow = document.getElementById(`precio-base-row-${roomName}`);
-    	const costoBase2Row = document.getElementById(`costo-base2-row-${roomName}`);
-    	const precioBase2nightsRow = document.getElementById(`precio-base2nights-row-${roomName}`);
+			const costoBaseRow = document.getElementById(`costo-base-row-${roomName}`);
+			const precioBaseRow = document.getElementById(`precio-base-row-${roomName}`);
+			const costoBase2Row = document.getElementById(`costo-base2-row-${roomName}`);
+			const precioBase2nightsRow = document.getElementById(`precio-base2nights-row-${roomName}`);
 
-		const tbodyTable = document.getElementById(`tbody-${roomName}`);
-		const costoBaseEspecialRow = document.getElementById(`costobase-especialesrow-${roomName}`);
-		const precioBaseEspecialRow = document.getElementById(`preciobase-especialesrow-${roomName}`);
-		const costoBase2EspecialRow = document.getElementById(`costobase2-especialesrow-${roomName}`);
-		const precioBase2EspecialRow = document.getElementById(`preciobase2-especialesrow-${roomName}`);
-    	
-    	const preciosPorHabitacion = preciosHabitaciones.filter(precio => precio.habitacionId === roomId);
-    	preciosPorHabitacion.forEach(precio => {
-    	    precio.fecha = convertirFechaMexicoCity(precio.fecha);
-    	});
+			const tbodyTable = document.getElementById(`tbody-${roomName}`);
+			const costoBaseEspecialRow = document.getElementById(`costobase-especialesrow-${roomName}`);
+			const precioBaseEspecialRow = document.getElementById(`preciobase-especialesrow-${roomName}`);
+			const costoBase2EspecialRow = document.getElementById(`costobase2-especialesrow-${roomName}`);
+			const precioBase2EspecialRow = document.getElementById(`preciobase2-especialesrow-${roomName}`);
 
-		const preciosEspecialesPorHabitacion = preciosEspeciales.filter(precio => precio.habitacionId === roomId)
+			const preciosPorHabitacion = preciosHabitaciones.filter(precio => precio.habitacionId === roomId);
+			preciosPorHabitacion.forEach(precio => {
+				precio.fecha = convertirFechaMexicoCity(precio.fecha);
+			});
+
+			const preciosEspecialesPorHabitacion = preciosEspeciales.filter(precio => precio.habitacionId === roomId)
 			preciosEspecialesPorHabitacion.map(precio => {
 				precio.fecha = convertirFechaMexicoCity(precio.fecha)
-		})
+			})
 
-		let preciosEspecialesPorPersonas = {};
-			if (preciosEspecialesPorHabitacion.length > 0) { 
+			let preciosEspecialesPorPersonas = {};
+			if (preciosEspecialesPorHabitacion.length > 0) {
 				// Group by habitacionId first, then by noPersonas for each habitacion
 				preciosEspecialesPorPersonas = preciosEspecialesPorHabitacion.reduce((result, item) => {
 					const { habitacionId, noPersonas } = item;
@@ -2384,176 +2420,176 @@ document.getElementById('habitacion-select').addEventListener('change', function
 				if (Object.keys(preciosEspecialesPorPersonas[roomId]).length > 0) {
 					for (const key in preciosEspecialesPorPersonas[roomId]) {
 						const rowTexto = document.createElement("tr")
-							rowTexto.id = `row-especiales-${roomName}`
-							const textoTh = document.createElement('th');
-							const textoPersonas = `Precios especiales para ${key} personas`;
-							textoTh.classList.add("sticky-column");
-							textoTh.textContent = textoPersonas;
+						rowTexto.id = `row-especiales-${roomName}`
+						const textoTh = document.createElement('th');
+						const textoPersonas = `Precios especiales para ${key} personas`;
+						textoTh.classList.add("sticky-column");
+						textoTh.textContent = textoPersonas;
 
-							const rowCostoBase = document.createElement("tr");
-							rowCostoBase.id = `costo-base-especialestd-${roomName}-${key}pax`
-							const tdCostoBase = document.createElement("td");
-							tdCostoBase.textContent = "Precio Base"
-							tdCostoBase.classList.add("sticky-column");
-							rowCostoBase.appendChild(tdCostoBase);
+						const rowCostoBase = document.createElement("tr");
+						rowCostoBase.id = `costo-base-especialestd-${roomName}-${key}pax`
+						const tdCostoBase = document.createElement("td");
+						tdCostoBase.textContent = "Precio Base"
+						tdCostoBase.classList.add("sticky-column");
+						rowCostoBase.appendChild(tdCostoBase);
 
-							const rowPrecioBase = document.createElement("tr");
-							const tdPrecioBase = document.createElement("td");
-							tdPrecioBase.textContent = "Costo Base"
-							tdPrecioBase.classList.add("sticky-column");
-							rowPrecioBase.id = `precio-base-especialestd-${roomName}-${key}pax`
-							rowPrecioBase.appendChild(tdPrecioBase);
+						const rowPrecioBase = document.createElement("tr");
+						const tdPrecioBase = document.createElement("td");
+						tdPrecioBase.textContent = "Costo Base"
+						tdPrecioBase.classList.add("sticky-column");
+						rowPrecioBase.id = `precio-base-especialestd-${roomName}-${key}pax`
+						rowPrecioBase.appendChild(tdPrecioBase);
 
-							const rowCostoBase2 = document.createElement("tr");
-							const tdCostoBase2 = document.createElement("td");
-							tdCostoBase2.textContent = "Costo Base 2 Noches"
-							tdCostoBase2.classList.add("sticky-column");
-							rowCostoBase2.id = `costo-base2-especialestd-${roomName}-${key}pax`
-							rowCostoBase2.appendChild(tdCostoBase2);
+						const rowCostoBase2 = document.createElement("tr");
+						const tdCostoBase2 = document.createElement("td");
+						tdCostoBase2.textContent = "Costo Base 2 Noches"
+						tdCostoBase2.classList.add("sticky-column");
+						rowCostoBase2.id = `costo-base2-especialestd-${roomName}-${key}pax`
+						rowCostoBase2.appendChild(tdCostoBase2);
 
-							const rowPrecioBase2 = document.createElement("tr");
-							const tdPrecioBase2 = document.createElement("td");
-							tdPrecioBase2.textContent = "Precio Base 2 Noches"
-							tdPrecioBase2.classList.add("sticky-column");
-							rowPrecioBase2.id = `precio-base2-especialestd-${roomName}-${key}pax`
-							rowPrecioBase2.appendChild(tdPrecioBase2)
+						const rowPrecioBase2 = document.createElement("tr");
+						const tdPrecioBase2 = document.createElement("td");
+						tdPrecioBase2.textContent = "Precio Base 2 Noches"
+						tdPrecioBase2.classList.add("sticky-column");
+						rowPrecioBase2.id = `precio-base2-especialestd-${roomName}-${key}pax`
+						rowPrecioBase2.appendChild(tdPrecioBase2)
 
-							rowTexto.appendChild(textoTh);
-							tbodyTable.appendChild(rowTexto);
-							tbodyTable.appendChild(rowCostoBase);
-							tbodyTable.appendChild(rowPrecioBase);
-							tbodyTable.appendChild(rowCostoBase2);
-							tbodyTable.appendChild(rowPrecioBase2);
+						rowTexto.appendChild(textoTh);
+						tbodyTable.appendChild(rowTexto);
+						tbodyTable.appendChild(rowCostoBase);
+						tbodyTable.appendChild(rowPrecioBase);
+						tbodyTable.appendChild(rowCostoBase2);
+						tbodyTable.appendChild(rowPrecioBase2);
 					}
 				}
 
 			}
 
-    	// Insertar las fechas y precios de la habitación seleccionada
-    	while (currentDate <= endDate) {
-			const dayOfWeek = currentDate.getDay();
-			const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
-    	    // Crear un th para cada día
-    	    const th = document.createElement('th');
-    	    th.id = generateId(currentDate);  
-    	    const options = { day: 'numeric', month: 'short', year: 'numeric' };
-    	    th.textContent = currentDate.toLocaleDateString('es-ES', options);
+			// Insertar las fechas y precios de la habitación seleccionada
+			while (currentDate <= endDate) {
+				const dayOfWeek = currentDate.getDay();
+				const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
+				// Crear un th para cada día
+				const th = document.createElement('th');
+				th.id = generateId(currentDate);
+				const options = { day: 'numeric', month: 'short', year: 'numeric' };
+				th.textContent = currentDate.toLocaleDateString('es-ES', options);
 
-    	    headerRow.appendChild(th);
+				headerRow.appendChild(th);
 
-    	    // Crear celdas correspondientes para cada precio
-    	    const costoBaseTd = document.createElement('td');
-    	    const precioBaseTd = document.createElement('td');
-    	    const costoBase2Td = document.createElement('td');
-    	    const precioBase2nightsTd = document.createElement('td');
+				// Crear celdas correspondientes para cada precio
+				const costoBaseTd = document.createElement('td');
+				const precioBaseTd = document.createElement('td');
+				const costoBase2Td = document.createElement('td');
+				const precioBase2nightsTd = document.createElement('td');
 
-    	    const currentDateMx = convertirFechaMexicoCity(currentDate);
+				const currentDateMx = convertirFechaMexicoCity(currentDate);
 
-			if (isWeekend){
-				costoBaseTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
-				precioBaseTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
-				costoBase2Td.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
-				precioBase2nightsTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
-			}
-
-
-    	    const precioEncontrado = preciosPorHabitacion.find(precio => precio.fecha === currentDateMx);
-    	    if (precioEncontrado) {
-    	        costoBaseTd.textContent = precioEncontrado.costo_base;
-    	        costoBaseRow.appendChild(costoBaseTd);
-
-    	        precioBaseTd.textContent = precioEncontrado.precio_modificado;
-    	        precioBaseRow.appendChild(precioBaseTd);
-
-    	        costoBase2Td.textContent = precioEncontrado.costo_base_2noches;
-    	        costoBase2Row.appendChild(costoBase2Td);
-
-    	        precioBase2nightsTd.textContent = precioEncontrado.precio_base_2noches;
-    	        precioBase2nightsRow.appendChild(precioBase2nightsTd);
-    	    } else {
-    	        costoBaseTd.textContent = costoBase;
-    	        costoBaseRow.appendChild(costoBaseTd);
-	
-    	        precioBaseTd.textContent = precioBase;
-    	        precioBaseRow.appendChild(precioBaseTd);
-
-    	        costoBase2Td.textContent = costoBase2;
-    	        costoBase2Row.appendChild(costoBase2Td);
-	
-    	        precioBase2nightsTd.textContent = precioBase2nights;
-    	        precioBase2nightsRow.appendChild(precioBase2nightsTd);
-    	    }
-
-			if (preciosEspecialesPorHabitacion.length > 0) { 
-				for (const personas in preciosEspecialesPorPersonas[roomId]) {
-					const precioData = preciosEspecialesPorPersonas[roomId][personas];
-					const rowCostoBase = document.getElementById(`costo-base-especialestd-${roomName}-${personas}pax`);
-					const rowPrecioBase = document.getElementById(`precio-base-especialestd-${roomName}-${personas}pax`);
-					const rowCostoBase2 = document.getElementById(`costo-base2-especialestd-${roomName}-${personas}pax`);
-					const rowPrecioBase2 = document.getElementById(`precio-base2-especialestd-${roomName}-${personas}pax`);
-					
-					const costoBaseEspecialTd = document.createElement("td");
-					const precioBaseEspecialTd = document.createElement("td");
-					const costoBase2EspecialTd = document.createElement("td");
-					const precioBase2EspecialTd = document.createElement("td");
-
-					if (isWeekend){
-						costoBaseEspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
-						precioBaseEspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
-						costoBase2EspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
-						precioBase2EspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
-					}
+				if (isWeekend) {
+					costoBaseTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+					precioBaseTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+					costoBase2Td.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+					precioBase2nightsTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+				}
 
 
-					const precioEspecialPorPersonaEncontrado = precioData.find(precio => precio.fecha === currentDateMx)
-					if (precioEspecialPorPersonaEncontrado) {
-						// Dates match, use special prices
-						costoBaseEspecialTd.textContent = precioEspecialPorPersonaEncontrado.precio_modificado;
-						precioBaseEspecialTd.textContent = precioEspecialPorPersonaEncontrado.precio_base_2noches;
-						costoBase2EspecialTd.textContent = precioEspecialPorPersonaEncontrado.costo_base_2noches;
-						precioBase2EspecialTd.textContent = precioEspecialPorPersonaEncontrado.costo_base_2noches;
-					} else {
-						// Use default or found prices if they don't match
-						if (precioEncontrado) {
-							costoBaseEspecialTd.textContent = precioEncontrado.costo_base;
-							precioBaseEspecialTd.textContent = precioEncontrado.precio_modificado;
-							costoBase2EspecialTd.textContent = precioEncontrado.costo_base_2noches;
-							precioBase2EspecialTd.textContent = precioEncontrado.precio_base_2noches;
-						} else {
-							// Default prices for non-special dates
-							costoBaseEspecialTd.textContent = costoBase;
-							precioBaseEspecialTd.textContent = precioBase;
-							costoBase2EspecialTd.textContent = costoBase2;
-							precioBase2EspecialTd.textContent = precioBase2nights;
+				const precioEncontrado = preciosPorHabitacion.find(precio => precio.fecha === currentDateMx);
+				if (precioEncontrado) {
+					costoBaseTd.textContent = precioEncontrado.costo_base;
+					costoBaseRow.appendChild(costoBaseTd);
+
+					precioBaseTd.textContent = precioEncontrado.precio_modificado;
+					precioBaseRow.appendChild(precioBaseTd);
+
+					costoBase2Td.textContent = precioEncontrado.costo_base_2noches;
+					costoBase2Row.appendChild(costoBase2Td);
+
+					precioBase2nightsTd.textContent = precioEncontrado.precio_base_2noches;
+					precioBase2nightsRow.appendChild(precioBase2nightsTd);
+				} else {
+					costoBaseTd.textContent = costoBase;
+					costoBaseRow.appendChild(costoBaseTd);
+
+					precioBaseTd.textContent = precioBase;
+					precioBaseRow.appendChild(precioBaseTd);
+
+					costoBase2Td.textContent = costoBase2;
+					costoBase2Row.appendChild(costoBase2Td);
+
+					precioBase2nightsTd.textContent = precioBase2nights;
+					precioBase2nightsRow.appendChild(precioBase2nightsTd);
+				}
+
+				if (preciosEspecialesPorHabitacion.length > 0) {
+					for (const personas in preciosEspecialesPorPersonas[roomId]) {
+						const precioData = preciosEspecialesPorPersonas[roomId][personas];
+						const rowCostoBase = document.getElementById(`costo-base-especialestd-${roomName}-${personas}pax`);
+						const rowPrecioBase = document.getElementById(`precio-base-especialestd-${roomName}-${personas}pax`);
+						const rowCostoBase2 = document.getElementById(`costo-base2-especialestd-${roomName}-${personas}pax`);
+						const rowPrecioBase2 = document.getElementById(`precio-base2-especialestd-${roomName}-${personas}pax`);
+
+						const costoBaseEspecialTd = document.createElement("td");
+						const precioBaseEspecialTd = document.createElement("td");
+						const costoBase2EspecialTd = document.createElement("td");
+						const precioBase2EspecialTd = document.createElement("td");
+
+						if (isWeekend) {
+							costoBaseEspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+							precioBaseEspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+							costoBase2EspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+							precioBase2EspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
 						}
-					}
-					// Append the cells to the respective rows
-					rowCostoBase.appendChild(costoBaseEspecialTd);
-					rowPrecioBase.appendChild(precioBaseEspecialTd);
-					rowCostoBase2.appendChild(costoBase2EspecialTd);
-					rowPrecioBase2.appendChild(precioBase2EspecialTd);
-				}
-					
-			}
 
-    	    currentDate.setDate(currentDate.getDate() + 1);
-    		}
+
+						const precioEspecialPorPersonaEncontrado = precioData.find(precio => precio.fecha === currentDateMx)
+						if (precioEspecialPorPersonaEncontrado) {
+							// Dates match, use special prices
+							costoBaseEspecialTd.textContent = precioEspecialPorPersonaEncontrado.precio_modificado;
+							precioBaseEspecialTd.textContent = precioEspecialPorPersonaEncontrado.precio_base_2noches;
+							costoBase2EspecialTd.textContent = precioEspecialPorPersonaEncontrado.costo_base_2noches;
+							precioBase2EspecialTd.textContent = precioEspecialPorPersonaEncontrado.costo_base_2noches;
+						} else {
+							// Use default or found prices if they don't match
+							if (precioEncontrado) {
+								costoBaseEspecialTd.textContent = precioEncontrado.costo_base;
+								precioBaseEspecialTd.textContent = precioEncontrado.precio_modificado;
+								costoBase2EspecialTd.textContent = precioEncontrado.costo_base_2noches;
+								precioBase2EspecialTd.textContent = precioEncontrado.precio_base_2noches;
+							} else {
+								// Default prices for non-special dates
+								costoBaseEspecialTd.textContent = costoBase;
+								precioBaseEspecialTd.textContent = precioBase;
+								costoBase2EspecialTd.textContent = costoBase2;
+								precioBase2EspecialTd.textContent = precioBase2nights;
+							}
+						}
+						// Append the cells to the respective rows
+						rowCostoBase.appendChild(costoBaseEspecialTd);
+						rowPrecioBase.appendChild(precioBaseEspecialTd);
+						rowCostoBase2.appendChild(costoBase2EspecialTd);
+						rowPrecioBase2.appendChild(precioBase2EspecialTd);
+					}
+
+				}
+
+				currentDate.setDate(currentDate.getDate() + 1);
+			}
 		} catch (error) {
 			Swal.fire({
 				title: 'Error',
-                text: 'Ocurrió un error al cargar los precios de la habitación',
-                icon: 'error',
-                confirmButtonText: 'Aceptar'
+				text: 'Ocurrió un error al cargar los precios de la habitación',
+				icon: 'error',
+				confirmButtonText: 'Aceptar'
 			})
 			console.error('Error al cargar los precios de la habitación:', error);
 			return;
-		} 
-		
+		}
+
 	}
-    // Función para generar el identificador de cada fecha
-    function generateId(date) {
-        return `date-${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
-    }
+	// Función para generar el identificador de cada fecha
+	function generateId(date) {
+		return `date-${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+	}
 
 
 	function convertirFechaMexicoCity(fechaISO) {
@@ -2567,22 +2603,116 @@ document.getElementById('habitacion-select').addEventListener('change', function
 			minute: '2-digit',
 			second: '2-digit',
 		};
-	
+
 		const formatter = new Intl.DateTimeFormat('es-MX', opciones);
 		return formatter.format(fecha);
 	}
 
+	document.getElementById('update-masive-prices-btn').addEventListener('click', async function (e) {
+		e.preventDefault();
+
+		const fileInput = document.getElementById('csv-file');
+		const file = fileInput.files[0];
+		const spinner = document.getElementById('spinner');
+
+		// Validar que se haya seleccionado un archivo CSV por extensión
+		if (!file) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: 'Por favor, selecciona un archivo XLSX válido.',
+			});
+			return;
+		}
+
+		const fileName = file.name.toLowerCase();
+		if (!fileName.endsWith('.xlsx')) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: 'El archivo seleccionado no es un archivo XLSX',
+			});
+			return;
+		}
+
+		// Mostrar el spinner
+		Swal.fire({
+			title: 'Cargando precios...',
+			allowOutsideClick: false,
+			didOpen: () => {
+				Swal.showLoading();
+			}
+		});
+
+		const formData = new FormData();
+		formData.append('csvFile', file);
+
+		try {
+			console.log("Enviando archivo CSV...");
+			const response = await fetch('/api/cargar-precios', {
+				method: 'POST',
+				body: formData,
+			});
+
+			if (!response.ok) {
+				throw new Error('Error al subir el archivo CSV.');
+			}
+
+			const result = await response.json();
+			console.log(result);
+
+			Swal.close();
+
+			// 📌 Si hay errores en la respuesta, los mostramos en una alerta detallada
+			if (result.errores && result.errores.length > 0) {
+				Swal.fire({
+					icon: 'warning',
+					title: 'Proceso completado con errores',
+					html: `
+                    <p>Se procesaron ${result.registrosExitosos} registros exitosamente.</p>
+                    <p><b>Errores detectados:</b></p>
+                    <ul style="text-align: left; max-height: 200px; overflow-y: auto;">
+                        ${result.errores.map(err => `<li>${err}</li>`).join('')}
+                    </ul>
+                `,
+					width: '600px',
+				});
+			} else {
+				// 📌 Si no hay errores, mostramos el mensaje de éxito
+				Swal.fire({
+					icon: 'success',
+					title: 'Éxito',
+					text: result.message,
+				}).then(() => {
+					$('#update_masive_prices_modal').modal('hide');
+					fileInput.value = ''; // Limpiar el input después de la carga
+					window.location.reload();
+				});
+			}
+
+		} catch (error) {
+			Swal.close();
+			console.error('Error:', error);
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: error.message || 'Ocurrió un error al procesar el archivo CSV.',
+			});
+		}
+	});
+
+
 	window.addEventListener("load", () => {
-        const preloader = document.querySelector(".pre-loader");
-        preloader.classList.add("loader--hidden");
-        preloader.addEventListener("transitionend", () => {
-            if (preloader) {
-                preloader.style.display = "none"; // Hide instead of removing
-            }
-        });
-    });
+		const preloader = document.querySelector(".pre-loader");
+		preloader.classList.add("loader--hidden");
+		preloader.addEventListener("transitionend", () => {
+			if (preloader) {
+				preloader.style.display = "none"; // Hide instead of removing
+			}
+		});
+	});
 
 
 
 
-	</script>
+</script>
