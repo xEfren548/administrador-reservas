@@ -227,6 +227,7 @@ async function cargarPreciosCSV(req, res) {
                 // 🔹 Insertar o actualizar precios para cada día en el rango de fechas
                 let currentDate = new Date(fechaInicio);
                 while (currentDate <= fechaFin) {
+                    currentDate.setUTCHours(6);
                     await PrecioBaseXDia.findOneAndUpdate(
                         { habitacionId, fecha: currentDate }, // Filtro de búsqueda
                         {

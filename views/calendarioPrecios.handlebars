@@ -2676,6 +2676,10 @@
                     </ul>
                 `,
 					width: '600px',
+				}).then(() => {
+					$('#update_masive_prices_modal').modal('hide');
+					fileInput.value = ''; // Limpiar el input después de la carga
+					window.location.reload();
 				});
 			} else {
 				// 📌 Si no hay errores, mostramos el mensaje de éxito
