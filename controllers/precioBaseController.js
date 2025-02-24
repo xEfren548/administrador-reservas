@@ -182,14 +182,24 @@ async function cargarPreciosCSV(req, res) {
         const rows = xlsx.utils.sheet_to_json(sheet); // Convertimos a JSON
 
         const preciosGuardados = [];
+        const errores = [];
 
-        for (const row of rows) {
+        for (const [index, row] of rows.entries()) {
             try {
                 const habitacionId = row.id_habitacion;
+                if (!mongoose.Types.ObjectId.isValid(habitacionId)) {
+                    throw new Error(`Fila ${index + 2}: ID de habitación inválido.`);
+                
+                }
                 const habitacion = await Habitacion.findById(habitacionId);
 
                 if (!habitacion) {
-                    throw new Error('Habitacion no encontrada');
+                    throw new Error(`Fila ${index + 2}: Habitación no encontrada.`);
+                }
+
+                // 📌 Validar y convertir fechas
+                if (isNaN(row.fecha_inicio) || isNaN(row.fecha_fin)) {
+                    throw new Error(`Fila ${index + 2}: Fechas inválidas.`);
                 }
 
                 const fechaInicio = excelDateToJSDate(row.fecha_inicio);
@@ -201,8 +211,7 @@ async function cargarPreciosCSV(req, res) {
                 const precioBase2Noches = parseFloat(row["precio_base_2noches"]);
 
                 if (isNaN(costoBase) || isNaN(precioBase) || isNaN(costoBase2Noches) || isNaN(precioBase2Noches)) {
-                    console.log(`Datos inválidos: ${JSON.stringify(row)}`);
-                    continue;
+                    throw new Error(`Fila ${index + 2}: Uno o más precios son inválidos.`);
                 }
 
                 console.log("Fila después de conversión:", {
@@ -218,7 +227,6 @@ async function cargarPreciosCSV(req, res) {
                 // 🔹 Insertar o actualizar precios para cada día en el rango de fechas
                 let currentDate = new Date(fechaInicio);
                 while (currentDate <= fechaFin) {
-                    console.log(currentDate);
                     await PrecioBaseXDia.findOneAndUpdate(
                         { habitacionId, fecha: currentDate }, // Filtro de búsqueda
                         {
@@ -232,101 +240,38 @@ async function cargarPreciosCSV(req, res) {
                         { upsert: true, new: true } // Si no existe, lo crea
                     );
 
-                    preciosGuardados.push({
-                        habitacionId,
-                        fecha: new Date(currentDate),
-                        precio_modificado: precioBase,
-                        precio_base_2noches: precioBase2Noches,
-                        costo_base: costoBase,
-                        costo_base_2noches: costoBase2Noches
-                    });
+
 
                     currentDate.setDate(currentDate.getDate() + 1);
+                    
                 }
 
+                preciosGuardados.push({
+                    habitacionId,
+                    fechaInicio,
+                    fechaFin
+                });
+
             } catch (error) {
+                errores.push(error.message);
                 console.error("Error al procesar la fila:", error);
             }
         }
 
         fs.unlinkSync(filePath);
 
+        console.log("Precios guardados:", preciosGuardados);
+
         res.json({
-            message: "Precios actualizados correctamente",
-            preciosGuardados,
+            message: "Proceso finalizado",
+            registrosExitosos: preciosGuardados.length,
+            errores
         });
 
 
-        //     fs.createReadStream(filePath)
-        //         .pipe(csvParser())
-        //         .on("data", async (row) => {
-        //             // try {
-        //             //     console.log("Fila recibida:", row);
-        //             //     // 🔹 Convertir ID de la habitación a ObjectId
-        //             //     const habitacionId = new mongoose.Types.ObjectId(row["id_habitacion"]) || row["id_habitacion"];
-        //             //     console.log(row)
-        //             //     console.log("Id recibido: ", row["id_habitacion"]);
-        //             //     console.log("Habitacion Id: ", habitacionId);
-
-        //             //     // 🔹 Convertir fechas de DD/MM/YYYY a Date
-        //             //     const fechaInicio = new Date(row["fecha_inicio"].split("/").reverse().join("-"));
-        //             //     const fechaFin = new Date(row["fecha_fin"].split("/").reverse().join("-"));
-
-        //             //     // 🔹 Convertir valores numéricos
-        //             //     const costoBase = parseFloat(row["costo_base"]);
-        //             //     const costoBase2Noches = parseFloat(row["costo_base_2noches"]);
-        //             //     const precioBase = parseFloat(row["precio_base"]);
-        //             //     const precioBase2Noches = parseFloat(row["precio_base_2noches"]);
-
-        //             //     if (isNaN(costoBase) || isNaN(precioBase)) {
-        //             //         console.log(`Datos inválidos: ${JSON.stringify(row)}`);
-        //             //         return;
-        //             //     }
-
-        //             //     // 🔹 Insertar o actualizar precios para cada día en el rango de fechas
-        //             //     let currentDate = new Date(fechaInicio);
-        //             //     while (currentDate <= fechaFin) {
-        //             //         // Verificar si ya existe un registro para esta habitación en esta fecha
-        //             //         const updated = await PrecioBaseXDia.findOneAndUpdate(
-        //             //             { habitacionId, fecha: currentDate }, // Filtro de búsqueda
-        //             //             {
-        //             //                 $set: {
-        //             //                     precio_modificado: precioBase,
-        //             //                     precio_base_2noches: precioBase2Noches,
-        //             //                     costo_base: costoBase,
-        //             //                     costo_base_2noches: costoBase2Noches,
-        //             //                 },
-        //             //             },
-        //             //             { upsert: true, new: true } // Si no existe, lo crea
-        //             //         );
-
-        //             //         if (updated) {
-        //             //             console.log("Registro actualizado:", updated);
-        //             //         }
-
-        //             //         preciosGuardados.push({
-        //             //             habitacionId,
-        //             //             fecha: new Date(currentDate),
-        //             //             precio_modificado: precioBase,
-        //             //         });
-
-        //             //         // Avanzar al siguiente día
-        //             //         currentDate.setDate(currentDate.getDate() + 1);
-        //             //     }
-        //             // } catch (error) {
-        //             //     console.error("Error al procesar fila:", error);
-        //             // }
-        //         })
-        //         .on("end", () => {
-        //             fs.unlinkSync(filePath); // Eliminar archivo después de procesarlo
-        //             res.json({
-        //                 message: "Precios actualizados correctamente",
-        //                 preciosGuardados,
-        //             });
-        //         });
     } catch (error) {
         console.error("Error en el servidor:", error);
-        res.status(500).json({ message: "Error en el servidor" });
+        res.status(500).json({ message: "Error en el servidor: " + error.message || "Error desconocido" });
     }
 }
 
