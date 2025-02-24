@@ -226,7 +226,10 @@ async function cargarPreciosCSV(req, res) {
 
                 // 🔹 Insertar o actualizar precios para cada día en el rango de fechas
                 let currentDate = new Date(fechaInicio);
-                while (currentDate <= fechaFin) {
+                let endDate = new Date(fechaFin);
+                endDate.setUTCHours(6, 0, 0, 0); // 
+
+                while (currentDate <= endDate) {
                     currentDate.setUTCHours(6);
                     await PrecioBaseXDia.findOneAndUpdate(
                         { habitacionId, fecha: currentDate }, // Filtro de búsqueda
@@ -241,9 +244,10 @@ async function cargarPreciosCSV(req, res) {
                         { upsert: true, new: true } // Si no existe, lo crea
                     );
 
-
+                    console.log("Precio guardado para el día:", currentDate);
 
                     currentDate.setDate(currentDate.getDate() + 1);
+                    
                     
                 }
 
