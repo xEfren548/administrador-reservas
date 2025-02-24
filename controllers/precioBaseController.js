@@ -181,7 +181,6 @@ async function cargarPreciosCSV(req, res) {
             .on("data", async (row) => {
                 try {
                     console.log("Fila recibida:", row);
-
                     // 🔹 Convertir ID de la habitación a ObjectId
                     const habitacionId = new mongoose.Types.ObjectId(row["id_habitacion"]) || row["id_habitacion"];
                     console.log(row)
