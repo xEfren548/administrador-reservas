@@ -1,0 +1,145 @@
+<div class="bg-black text-white">
+    <div class="min-h-screen flex flex-col items-center p-4">
+        <h1 class="text-3xl font-bold text-center mb-8">Cotizador de Cabañas</h1>
+
+        <!-- Contenedor del buscador -->
+        <div class="w-auto max-w-6xl bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
+            <form class="flex flex-col md:flex-row gap-4">
+                <!-- Campo: Destino -->
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-400">Categorias</label>
+                    {{!-- <input type="text" placeholder="Buscar destinos"
+                        class="mt-1 block w-96 p-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-500" />
+                    --}}
+                    <select name="" id=""
+                        class="mt-1 block w-96 p-2 bg-gray-800 border border-gray-700 rounded-md text-white">
+                        <option value="all">Mostrar todo</option>
+                        {{#each tipologias}}
+                        <option value="{{this.tipologia}}">{{this.tipologia}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+
+                <!-- Campo: Fecha de llegada -->
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-400">Fechas</label>
+                    <input type="text" id="fecha-llegada" placeholder="Seleccionar fechas"
+                        class="mt-1 block w-72 p-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-current flatpickr-input" />
+                </div>
+
+                <!-- Campo: Fecha de salida -->
+                <input type="hidden" id="fecha-salida">
+
+
+                <!-- Campo: Huéspedes -->
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-400">Huéspedes</label>
+                    <div class="p-2 bg-gray-800 border border-gray-700 rounded-md text-white">
+                        <!-- Título y descripción -->
+                        {{!-- <div class="text-sm">Huéspedes</div> --}}
+
+                        <!-- Contador de huéspedes -->
+                        <div class="flex items-center justify-between w-32 h-auto">
+                            <!-- Botón para disminuir -->
+                            <button id="decrementar"
+                                class="p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
+                                aria-label="Disminuir número de huéspedes">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
+                                    fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+
+                            <!-- Número de huéspedes -->
+                            <span id="numero-huespedes" class="text-lg">1</span>
+
+                            <!-- Botón para aumentar -->
+                            <button id="incrementar"
+                                class="p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
+                                aria-label="Aumentar número de huéspedes">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
+                                    fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botón de búsqueda -->
+                <div class="flex items-end">
+                    <button type="submit"
+                        class="w-full md:w-auto p-3 text-white rounded-md transition-colors flex items-center justify-center bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 shadow-lg hover:shadow-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+<script>
+    // Configuración de Flatpickr
+    const fechaInput = document.getElementById("fecha-llegada");
+
+    flatpickr("#fecha-llegada", {
+        mode: "range", // Selección de rango de fechas
+        dateFormat: "d/m/Y", // Formato de fecha: dd/mm/aaaa
+        locale: "es", // Idioma español
+        minDate: "today", // Fecha mínima: hoy
+        disableMobile: true, // Evita el comportamiento nativo en móviles
+        onChange: function (selectedDates, dateStr, instance) {
+            if (selectedDates.length === 2) {
+                // Formatear las fechas usando formatDate
+                const fechaLlegada = instance.formatDate(selectedDates[0], "d/m/Y");
+                const fechaSalida = instance.formatDate(selectedDates[1], "d/m/Y");
+
+                // Actualizar el valor del campo de entrada manualmente
+                fechaInput.value = `${fechaLlegada} a ${fechaSalida}`;
+
+                console.log("Fecha de llegada:", fechaLlegada);
+                console.log("Fecha de salida:", fechaSalida);
+            }
+        },
+    });
+
+    // Variables
+    const numeroHuespedes = document.getElementById("numero-huespedes");
+    const botonDecrementar = document.getElementById("decrementar");
+    const botonIncrementar = document.getElementById("incrementar");
+
+    let contador = 1; // Valor inicial
+
+    // Función para actualizar el contador
+    const actualizarContador = () => {
+        numeroHuespedes.textContent = contador;
+    };
+
+    // Evento para disminuir el número de huéspedes
+    botonDecrementar.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (contador > 1) {
+            contador--;
+            actualizarContador();
+        }
+    });
+
+    // Evento para aumentar el número de huéspedes
+    botonIncrementar.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (contador < 20) { // Límite máximo de 10 huéspedes
+            contador++;
+            actualizarContador();
+        }
+    });
+</script>

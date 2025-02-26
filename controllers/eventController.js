@@ -2,6 +2,7 @@ const Documento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const Usuario = require('../models/Usuario');
 const Costos = require('./../models/Costos');
+const Tipologias = require('./../models/TipologiasCabana');
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const logController = require('../controllers/logController');
 const utilidadesController = require('../controllers/utilidadesController');
@@ -1702,6 +1703,19 @@ async function sendReservationMail(req, res) {
     }
 }
 
+async function cotizadorView(req, res) {
+    try {
+        const tipologias = await Tipologias.find().lean();
+
+        res.render('cotizador', {
+            tipologias
+        });
+    } catch (error) {
+        console.error('Error al enviar el correo:', error);
+        res.status(500).json({ message: 'Error al renderizar la pagina' });
+    }
+}
+
 module.exports = {
     createReservationValidators,
     createOwnersReservationValidators,
@@ -1723,6 +1737,7 @@ module.exports = {
     reservasDeDuenos,
     reservasDeDuenosParaColaborador,
     cifrarMensaje,
-    sendReservationMail
+    sendReservationMail,
+    cotizadorView
 };
 

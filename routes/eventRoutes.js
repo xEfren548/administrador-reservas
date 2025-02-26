@@ -16,6 +16,7 @@ const validationRequest = require('../common/middlewares/validation-request');
 router.get('/eventos', eventController.obtenerEventos);
 router.get('/eventos/chalet/:id', eventController.obtenerEventosDeCabana);
 router.get('/eventos/route/:id', eventController.obtenerEventoPorIdRoute);
+router.get('/cotizar', eventController.cotizadorView);
 
 router.post('/eventos', eventController.createReservationValidators, validationRequest, eventController.createReservation);
 router.post('/notas/:id', eventController.crearNota);
