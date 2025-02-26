@@ -7,17 +7,44 @@
             <form class="flex flex-col md:flex-row gap-4">
                 <!-- Campo: Destino -->
                 <div class="flex-1">
-                    <label class="block text-sm font-medium text-gray-400">Categorias</label>
-                    {{!-- <input type="text" placeholder="Buscar destinos"
-                        class="mt-1 block w-96 p-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-500" />
-                    --}}
-                    <select name="" id=""
-                        class="mt-1 block w-96 p-2 bg-gray-800 border border-gray-700 rounded-md text-white">
-                        <option value="all">Mostrar todo</option>
-                        {{#each tipologias}}
-                        <option value="{{this.tipologia}}">{{this.tipologia}}</option>
-                        {{/each}}
-                    </select>
+                    <label class="block text-sm font-medium text-gray-400">Categorías</label>
+                    <!-- Contenedor del dropdown -->
+                    <div class="relative mt-1">
+                        <!-- Botón para abrir/cerrar el dropdown -->
+                        <button id="dropdown-button"
+                            class="w-96 p-2 bg-gray-800 border border-gray-700 rounded-md text-white text-left flex items-center justify-between">
+                            <span>Seleccionar categorías</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown con checkboxes -->
+                        <div id="dropdown-content"
+                            class="absolute z-10 mt-2 w-96 bg-gray-800 border border-gray-700 rounded-md shadow-lg hidden">
+                            <div class="p-2">
+                                <!-- Checkbox para "Mostrar todo" -->
+                                <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded-md">
+                                    <input type="checkbox" name="categorias" value="all"
+                                        class="form-checkbox text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                                        checked />
+                                    <span>Mostrar todo</span>
+                                </label>
+
+                                <!-- Checkboxes para cada categoría -->
+                                {{#each tipologias}}
+                                <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded-md">
+                                    <input type="checkbox" name="categorias" value="{{this.tipologia}}"
+                                        class="form-checkbox text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" />
+                                    <span>{{this.tipologia}}</span>
+                                </label>
+                                {{/each}}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Campo: Fecha de llegada -->
@@ -141,5 +168,64 @@
             contador++;
             actualizarContador();
         }
+    });
+
+    // FUNCIONES PARA CATEGORIAS DESPLEGABLES
+
+    // Obtener elementos del DOM
+    const dropdownButton = document.getElementById("dropdown-button");
+    const dropdownContent = document.getElementById("dropdown-content");
+
+    // Abrir/cerrar el dropdown al hacer clic en el botón
+    dropdownButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        dropdownContent.classList.toggle("hidden");
+    });
+
+    // Cerrar el dropdown al hacer clic fuera de él
+    document.addEventListener("click", (event) => {
+        e.preventDefault();
+        if (!dropdownButton.contains(event.target)) {
+            dropdownContent.classList.add("hidden");
+        }
+    });
+
+    // Obtener todos los checkboxes de categorías
+    const checkboxes = document.querySelectorAll('input[name="categorias"]');
+
+    // Función para manejar el filtrado
+    const filtrarCategorias = () => {
+        // Obtener las categorías seleccionadas
+        const categoriasSeleccionadas = Array.from(checkboxes)
+            .filter((checkbox) => checkbox.checked)
+            .map((checkbox) => checkbox.value);
+
+        // Si "Mostrar todo" está seleccionado, deseleccionar las demás categorías
+        if (categoriasSeleccionadas.includes("all")) {
+            checkboxes.forEach((checkbox) => {
+                if (checkbox.value !== "all") checkbox.checked = false;
+            });
+        } else {
+            // Si se selecciona alguna categoría, deseleccionar "Mostrar todo"
+            const checkboxMostrarTodo = document.querySelector('input[value="all"]');
+            checkboxMostrarTodo.checked = false;
+        }
+
+        // Actualizar el texto del botón
+        const textoBoton =
+            categoriasSeleccionadas.length > 0
+                ? categoriasSeleccionadas.join(", ")
+                : "Seleccionar categorías";
+        dropdownButton.querySelector("span").textContent = textoBoton;
+
+        // Aquí puedes implementar la lógica para filtrar los elementos en la interfaz
+        console.log("Categorías seleccionadas:", categoriasSeleccionadas);
+        // Ejemplo: Filtrar una lista de elementos en la página
+        // filtrarElementos(categoriasSeleccionadas);
+    };
+
+    // Agregar evento a los checkboxes
+    checkboxes.forEach((checkbox) => {
+        checkbox.addEventListener("change", filtrarCategorias);
     });
 </script>

@@ -1716,6 +1716,10 @@ async function cotizadorView(req, res) {
     }
 }
 
+async function cotizadorChaletsyPrecios(req, res) {
+    
+}
+
 module.exports = {
     createReservationValidators,
     createOwnersReservationValidators,
