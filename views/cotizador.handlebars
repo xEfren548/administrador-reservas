@@ -5,28 +5,22 @@
         <!-- Contenedor del buscador -->
         <div class="w-auto max-w-6xl bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
             <form class="flex flex-col md:flex-row gap-4">
-                <!-- Campo: Destino -->
+                <!-- Campo: Categorías (dropdown con checkboxes) -->
                 <div class="flex-1">
                     <label class="block text-sm font-medium text-gray-400">Categorías</label>
-                    <!-- Contenedor del dropdown -->
                     <div class="relative mt-1">
                         <!-- Botón para abrir/cerrar el dropdown -->
                         <button id="dropdown-button"
                             class="w-96 p-2 bg-gray-800 border border-gray-700 rounded-md text-white text-left flex items-center justify-between">
                             <span>Seleccionar categorías</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
-                                fill="currentColor">
-                                <path fill-rule="evenodd"
-                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                    clip-rule="evenodd" />
-                            </svg>
+                            <svg class="h-5 w-5">...</svg>
                         </button>
 
                         <!-- Dropdown con checkboxes -->
                         <div id="dropdown-content"
                             class="absolute z-10 mt-2 w-96 bg-gray-800 border border-gray-700 rounded-md shadow-lg hidden">
                             <div class="p-2">
-                                <!-- Checkbox para "Mostrar todo" -->
+                                <!-- Checkbox "Mostrar todo" -->
                                 <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded-md">
                                     <input type="checkbox" name="categorias" value="all"
                                         class="form-checkbox text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
@@ -34,7 +28,7 @@
                                     <span>Mostrar todo</span>
                                 </label>
 
-                                <!-- Checkboxes para cada categoría -->
+                                <!-- Checkboxes de categorías -->
                                 {{#each tipologias}}
                                 <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded-md">
                                     <input type="checkbox" name="categorias" value="{{this.tipologia}}"
@@ -171,27 +165,35 @@
     });
 
     // FUNCIONES PARA CATEGORIAS DESPLEGABLES
-
     // Obtener elementos del DOM
     const dropdownButton = document.getElementById("dropdown-button");
     const dropdownContent = document.getElementById("dropdown-content");
+    const checkboxes = document.querySelectorAll('input[name="categorias"]');
 
-    // Abrir/cerrar el dropdown al hacer clic en el botón
+    // Abrir/cerrar dropdown
     dropdownButton.addEventListener("click", (e) => {
         e.preventDefault();
         dropdownContent.classList.toggle("hidden");
     });
 
-    // Cerrar el dropdown al hacer clic fuera de él
+    // Cerrar dropdown solo si el clic es fuera del dropdown
     document.addEventListener("click", (event) => {
-        e.preventDefault();
-        if (!dropdownButton.contains(event.target)) {
+        event.preventDefault();
+        const isClickInsideDropdown =
+            dropdownButton.contains(event.target) ||
+            dropdownContent.contains(event.target);
+
+        if (!isClickInsideDropdown) {
             dropdownContent.classList.add("hidden");
         }
     });
 
-    // Obtener todos los checkboxes de categorías
-    const checkboxes = document.querySelectorAll('input[name="categorias"]');
+    // Evitar que los checkboxes cierren el dropdown
+    checkboxes.forEach((checkbox) => {
+        checkbox.addEventListener("click", (event) => {
+            event.stopPropagation(); // Detiene la propagación del evento
+        });
+    });
 
     // Función para manejar el filtrado
     const filtrarCategorias = () => {
@@ -200,13 +202,18 @@
             .filter((checkbox) => checkbox.checked)
             .map((checkbox) => checkbox.value);
 
-        // Si "Mostrar todo" está seleccionado, deseleccionar las demás categorías
-        if (categoriasSeleccionadas.includes("all")) {
-            checkboxes.forEach((checkbox) => {
-                if (checkbox.value !== "all") checkbox.checked = false;
-            });
-        } else {
-            // Si se selecciona alguna categoría, deseleccionar "Mostrar todo"
+        // Si "Mostrar todo" está seleccionado y se selecciona otra categoría
+        if (categoriasSeleccionadas.includes("all") && categoriasSeleccionadas.length > 1) {
+            // Deseleccionar "Mostrar todo"
+            const checkboxMostrarTodo = document.querySelector('input[value="all"]');
+            checkboxMostrarTodo.checked = false;
+
+            // Eliminar "all" de las categorías seleccionadas
+            categoriasSeleccionadas.splice(categoriasSeleccionadas.indexOf("all"), 1);
+        }
+
+        // Si se selecciona alguna categoría, deseleccionar "Mostrar todo"
+        if (categoriasSeleccionadas.length > 0 && !categoriasSeleccionadas.includes("all")) {
             const checkboxMostrarTodo = document.querySelector('input[value="all"]');
             checkboxMostrarTodo.checked = false;
         }
