@@ -46,14 +46,14 @@ function sendTemplateMsg(clientInfo, template, params, buttons = []) {
             }],
         });
     }
-    
+
 
     const url = 'https://graph.facebook.com/v20.0/' + botId + '/messages';
 
     console.log("COMPONTENS: ******")
     console.log(components);
 
-    
+
     const data = {
         messaging_product: 'whatsapp',
         to: clientInfo.phone,
@@ -91,7 +91,7 @@ function sendReservationConfirmation(clientInfo, chaletInfo, reservationInfo) {
 
     const chaletArrivalHour = moment.tz(chaletInfo.others.arrivalTime, "America/Mexico_City").format("HH:mm");
     const chaletDepartureHour = moment.tz(chaletInfo.others.departureTime, "America/Mexico_City").format("HH:mm");
-    
+
 
     console.log("chaletArrivalHour", chaletArrivalHour)
     console.log("chaletDepartureHour", chaletDepartureHour)
@@ -109,11 +109,11 @@ function sendReservationConfirmation(clientInfo, chaletInfo, reservationInfo) {
     ])
 }
 
-function sendInstructions(clientInfo, chaletInfo, idReserva){
+function sendInstructions(clientInfo, chaletInfo, idReserva) {
     const url = `https://nynhoteles.com.mx/instrucciones/${idReserva}`
     console.log(`Sending instructions`);
     sendTemplateMsg(
-        clientInfo, 
+        clientInfo,
         "instrucciones_de_cliente",
         [clientInfo.firstName, chaletInfo.propertyDetails.name, idReserva],
         [
@@ -123,14 +123,14 @@ function sendInstructions(clientInfo, chaletInfo, idReserva){
             }
         ]
     );
-    
+
 }
-function sendSurveyToClient(clientInfo, chaletInfo, idReserva){
-    
+function sendSurveyToClient(clientInfo, chaletInfo, idReserva) {
+
     console.log(`Sending instructions`);
 
     sendTemplateMsg(
-        clientInfo, 
+        clientInfo,
         "encuesta_de_satisfaccion",
         [chaletInfo.propertyDetails.name, idReserva],
         [
@@ -140,7 +140,7 @@ function sendSurveyToClient(clientInfo, chaletInfo, idReserva){
             }
         ]
     );
-    
+
 }
 
 async function sendReminders() {
@@ -181,7 +181,7 @@ async function sendThanks() {
     //     console.log("No reservations found.");
     //     return;
     // }
-    
+
     // let reservations = eventDocument.events;
     if (!reservations || reservations.length === 0) {
         console.log("No events in reservations.");
@@ -207,7 +207,6 @@ async function sendThanks() {
             // const chalet = allChalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
             const chalet = await Habitacion.findById(reservation.resourceId.toString()).lean();
             if (!chalet) {
-                console.log(`Chalet ${reservation.resourceId} does not exist.`);
                 continue;
             }
 
@@ -217,17 +216,17 @@ async function sendThanks() {
 
             //console.log("Current date:", new Date());
             //console.log("Reservation date:", typeof reservation.departureDate);
-            
+
             const departureDate = new Date(reservation.departureDate);
-            
+
 
             // Check if thanks need to be sent
-            if (new Date() > departureDate && reservation.status !== "cancelled" &&  !reservation.thanksSent) {
+            if (new Date() > departureDate && reservation.status !== "cancelled" && !reservation.thanksSent) {
                 console.log(`Sending thanks for reservation with departure date: ${reservation.departureDate}`);
-                
+
                 // Send the thank-you message
                 sendTemplateMsg(
-                    client, 
+                    client,
                     "encuesta_de_satisfaccion",
                     [chalet.propertyDetails.name, reservation._id.toString()],
                     [
@@ -258,7 +257,6 @@ async function cancelReservation() {
             if (reservation.status === "pending") {
                 const client = await Cliente.findById(reservation.client);
                 if (!client) {
-                    console.log(reservation.client, ': Client does not exist');
                     continue;
                 }
 
@@ -280,7 +278,7 @@ async function cancelReservation() {
                         // console.log(reservation.resourceId, ': Reservation has no payment recorded');
                         // console.log("Current date: ", new Date());
                         // console.log("Cancelation date: ", reservation.paymentCancelation);
-                        
+
                         reservation.status = 'active';
                         console.log('reserva movida a activa')
                         const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(reservation._id);
@@ -303,20 +301,30 @@ async function cancelReservation() {
                             console.log(`Canceling reservation as it is: ${reservation.departureDate} and no payment has been recorded`);
                             reservation.status = "cancelled"
 
-                            const rackLimpieza = await RackLimpieza.findOne({id_reserva: reservation._id});
+                            const rackLimpieza = await RackLimpieza.findOne({ id_reserva: reservation._id });
                             if (rackLimpieza) {
                                 await RackLimpieza.findByIdAndDelete(rackLimpieza._id);
                                 console.log("Rack de limpieza eliminado con éxito");
 
                             }
-                            
+                            const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(reservation._id);
+
+                            for (const comisiones of comisionesReserva) {
+                                const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
+                                if (utilidadEliminada) {
+                                    console.log('Utilidad eliminada correctamente');
+                                } else {
+                                    throw new Error('Error al eliminar comision.');
+                                }
+                            }
+
                             const logBody = {
                                 fecha: Date.now(),
                                 type: 'reservation',
                                 acciones: `Reserva cancelada por falta de pago`,
                                 idReserva: reservation._id
                             }
-                            
+
                             await logController.createBackendLog(logBody);
                         }
                     }
