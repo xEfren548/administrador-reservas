@@ -1717,7 +1717,25 @@ async function cotizadorView(req, res) {
 }
 
 async function cotizadorChaletsyPrecios(req, res) {
-    
+    try {
+        const chalets = await Habitacion.find().limit(3).lean();
+        if (!chalets) {
+            throw new Error('No se encontraron habitaciones');
+        }
+
+        const mappedChalets = chalets.map(chalet => ({
+            id: chalet._id,
+            name: chalet.propertyDetails.name,
+            pax: chalet.propertyDetails.maxOccupation,
+            price: chalet.others.basePrice
+        }));
+
+        res.status(200).json(mappedChalets);
+
+    } catch (error) {
+        console.error('Error al obtener habitaciones y precios:', error);
+        res.status(500).json({ message: 'Error al obtener habitaciones y precios: ' + error.message });
+    }
 }
 
 module.exports = {
@@ -1742,6 +1760,7 @@ module.exports = {
     reservasDeDuenosParaColaborador,
     cifrarMensaje,
     sendReservationMail,
-    cotizadorView
+    cotizadorView,
+    cotizadorChaletsyPrecios
 };
 

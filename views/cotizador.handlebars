@@ -10,7 +10,7 @@
                     <label class="block text-sm font-medium text-gray-400">Categorías</label>
                     <div class="relative mt-1">
                         <!-- Botón para abrir/cerrar el dropdown -->
-                        <button id="dropdown-button"
+                        <button id="dropdown-button" type="button"
                             class="w-96 p-2 bg-gray-800 border border-gray-700 rounded-md text-white text-left flex items-center justify-between">
                             <span>Seleccionar categorías</span>
                             <svg class="h-5 w-5">...</svg>
@@ -30,12 +30,15 @@
 
                                 <!-- Checkboxes de categorías -->
                                 {{#each tipologias}}
-                                <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded-md">
-                                    <input type="checkbox" name="categorias" value="{{this.tipologia}}"
+                                <label for="categoria-{{@index}}"
+                                    class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded-md cursor-pointer">
+                                    <input type="checkbox" id="categoria-{{@index}}" name="categorias"
+                                        value="{{this.tipologia}}"
                                         class="form-checkbox text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" />
                                     <span>{{this.tipologia}}</span>
                                 </label>
                                 {{/each}}
+
                             </div>
                         </div>
                     </div>
@@ -44,11 +47,12 @@
                 <!-- Campo: Fecha de llegada -->
                 <div class="flex-1">
                     <label class="block text-sm font-medium text-gray-400">Fechas</label>
-                    <input type="text" id="fecha-llegada" placeholder="Seleccionar fechas"
+                    <input type="text" id="fecha-input" placeholder="Seleccionar fechas"
                         class="mt-1 block w-72 p-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-current flatpickr-input" />
                 </div>
 
                 <!-- Campo: Fecha de salida -->
+                <input type="hidden" id="fecha-llegada">
                 <input type="hidden" id="fecha-salida">
 
 
@@ -90,9 +94,15 @@
                     </div>
                 </div>
 
+                <div class="flex-1 justify-center items-center text-center ">
+                    <label class="block text-sm font-medium text-gray-400">Mostrar solo disponibles</label>
+                    <input type="checkbox" id="buscar-solo-disponibles"
+                        class="form-checkbox text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" />
+                </div>
+
                 <!-- Botón de búsqueda -->
                 <div class="flex items-end">
-                    <button type="submit"
+                    <button type="submit" id="buscar-chalets-btn"
                         class="w-full md:w-auto p-3 text-white rounded-md transition-colors flex items-center justify-center bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 shadow-lg hover:shadow-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
                             fill="currentColor">
@@ -111,15 +121,18 @@
 <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 <script>
     // Configuración de Flatpickr
-    const fechaInput = document.getElementById("fecha-llegada");
+    const fechaInput = document.getElementById("fecha-input");
 
-    flatpickr("#fecha-llegada", {
+    flatpickr("#fecha-input", {
         mode: "range", // Selección de rango de fechas
         dateFormat: "d/m/Y", // Formato de fecha: dd/mm/aaaa
         locale: "es", // Idioma español
         minDate: "today", // Fecha mínima: hoy
         disableMobile: true, // Evita el comportamiento nativo en móviles
         onChange: function (selectedDates, dateStr, instance) {
+            const fechaLlegadaInput = document.getElementById("fecha-llegada");
+            const fechaSalidaInput = document.getElementById("fecha-salida");
+
             if (selectedDates.length === 2) {
                 // Formatear las fechas usando formatDate
                 const fechaLlegada = instance.formatDate(selectedDates[0], "d/m/Y");
@@ -127,6 +140,10 @@
 
                 // Actualizar el valor del campo de entrada manualmente
                 fechaInput.value = `${fechaLlegada} a ${fechaSalida}`;
+
+                fechaLlegadaInput.value = fechaLlegada;
+                fechaSalidaInput.value = fechaSalida;
+
 
                 console.log("Fecha de llegada:", fechaLlegada);
                 console.log("Fecha de salida:", fechaSalida);
@@ -165,74 +182,69 @@
     });
 
     // FUNCIONES PARA CATEGORIAS DESPLEGABLES
-    // Obtener elementos del DOM
-    const dropdownButton = document.getElementById("dropdown-button");
-    const dropdownContent = document.getElementById("dropdown-content");
-    const checkboxes = document.querySelectorAll('input[name="categorias"]');
+    document.addEventListener("DOMContentLoaded", function () {
+        // Evita que el formulario se recargue
+        document.querySelector("form").addEventListener("submit", function (event) {
+            event.preventDefault();
+        });
 
-    // Abrir/cerrar dropdown
-    dropdownButton.addEventListener("click", (e) => {
-        e.preventDefault();
-        dropdownContent.classList.toggle("hidden");
-    });
+        const dropdownButton = document.getElementById("dropdown-button");
+        const dropdownContent = document.getElementById("dropdown-content");
+        const mostrarTodoCheckbox = document.querySelector('input[name="categorias"][value="all"]');
+        const categoriaCheckboxes = document.querySelectorAll('input[name="categorias"]:not([value="all"])');
 
-    // Cerrar dropdown solo si el clic es fuera del dropdown
-    document.addEventListener("click", (event) => {
-        event.preventDefault();
-        const isClickInsideDropdown =
-            dropdownButton.contains(event.target) ||
-            dropdownContent.contains(event.target);
+        // Mostrar / Ocultar dropdown
+        dropdownButton.addEventListener("click", function (event) {
+            event.stopPropagation();
+            dropdownContent.classList.toggle("hidden");
+        });
 
-        if (!isClickInsideDropdown) {
-            dropdownContent.classList.add("hidden");
-        }
-    });
+        // Cerrar el dropdown si se hace clic fuera
+        document.addEventListener("click", function (event) {
+            if (!dropdownContent.contains(event.target) && !dropdownButton.contains(event.target)) {
+                dropdownContent.classList.add("hidden");
+            }
+        });
 
-    // Evitar que los checkboxes cierren el dropdown
-    checkboxes.forEach((checkbox) => {
-        checkbox.addEventListener("click", (event) => {
-            event.stopPropagation(); // Detiene la propagación del evento
+        // Cuando se selecciona cualquier categoría distinta a "Mostrar todo"
+        categoriaCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener("change", function () {
+                if (this.checked) {
+                    mostrarTodoCheckbox.checked = false; // Deseleccionar "Mostrar todo" si se selecciona otra categoría
+                }     
+            });
+        });
+
+        // Cuando se selecciona "Mostrar todo"
+        mostrarTodoCheckbox.addEventListener("change", function () {
+            if (this.checked) {
+                categoriaCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false; // Deseleccionar todas las categorías si "Mostrar todo" es seleccionado
+                });
+            }
+        });
+
+        // ENVIO DE INFORMACION PARA BUSCAR CABAÑAS DISPONIBLES
+
+        const buscarChaletsBtn = document.getElementById("buscar-chalets-btn");
+
+        buscarChaletsBtn.addEventListener("click", function (event) {
+            event.preventDefault();
+
+            const checkboxesSeleccionados = document.querySelectorAll('input[name="categorias"]:checked');
+            const categoriasSeleccionadas = Array.from(checkboxesSeleccionados).map(checkbox => checkbox.value);
+            const fechaLlegada = document.getElementById("fecha-llegada").value;
+            const fechaSalida = document.getElementById("fecha-salida").value;
+            const huespedes = document.getElementById("numero-huespedes").textContent;
+            const buscarSoloDisponiblesChk = document.getElementById("buscar-solo-disponibles").checked;
+
+            console.log("Categorias seleccionadas:", categoriasSeleccionadas);
+            console.log("Fecha de llegada:", fechaLlegada);
+            console.log("Fecha de salida:", fechaSalida);
+            console.log("Número de húspedes:", huespedes);
+            console.log("Buscar solo disponibles:", buscarSoloDisponiblesChk);
         });
     });
 
-    // Función para manejar el filtrado
-    const filtrarCategorias = () => {
-        // Obtener las categorías seleccionadas
-        const categoriasSeleccionadas = Array.from(checkboxes)
-            .filter((checkbox) => checkbox.checked)
-            .map((checkbox) => checkbox.value);
 
-        // Si "Mostrar todo" está seleccionado y se selecciona otra categoría
-        if (categoriasSeleccionadas.includes("all") && categoriasSeleccionadas.length > 1) {
-            // Deseleccionar "Mostrar todo"
-            const checkboxMostrarTodo = document.querySelector('input[value="all"]');
-            checkboxMostrarTodo.checked = false;
-
-            // Eliminar "all" de las categorías seleccionadas
-            categoriasSeleccionadas.splice(categoriasSeleccionadas.indexOf("all"), 1);
-        }
-
-        // Si se selecciona alguna categoría, deseleccionar "Mostrar todo"
-        if (categoriasSeleccionadas.length > 0 && !categoriasSeleccionadas.includes("all")) {
-            const checkboxMostrarTodo = document.querySelector('input[value="all"]');
-            checkboxMostrarTodo.checked = false;
-        }
-
-        // Actualizar el texto del botón
-        const textoBoton =
-            categoriasSeleccionadas.length > 0
-                ? categoriasSeleccionadas.join(", ")
-                : "Seleccionar categorías";
-        dropdownButton.querySelector("span").textContent = textoBoton;
-
-        // Aquí puedes implementar la lógica para filtrar los elementos en la interfaz
-        console.log("Categorías seleccionadas:", categoriasSeleccionadas);
-        // Ejemplo: Filtrar una lista de elementos en la página
-        // filtrarElementos(categoriasSeleccionadas);
-    };
-
-    // Agregar evento a los checkboxes
-    checkboxes.forEach((checkbox) => {
-        checkbox.addEventListener("change", filtrarCategorias);
-    });
 </script>
