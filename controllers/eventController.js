@@ -1708,6 +1708,7 @@ async function cotizadorView(req, res) {
         const tipologias = await Tipologias.find().lean();
 
         res.render('cotizador', {
+            layout: 'tailwindMain',
             tipologias
         });
     } catch (error) {
