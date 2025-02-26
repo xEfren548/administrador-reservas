@@ -115,7 +115,9 @@
                 </div>
             </form>
         </div>
+        <div id="resultados" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"></div>
     </div>
+
 </div>
 
 <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
@@ -211,7 +213,7 @@
             checkbox.addEventListener("change", function () {
                 if (this.checked) {
                     mostrarTodoCheckbox.checked = false; // Deseleccionar "Mostrar todo" si se selecciona otra categoría
-                }     
+                }
             });
         });
 
@@ -228,7 +230,7 @@
 
         const buscarChaletsBtn = document.getElementById("buscar-chalets-btn");
 
-        buscarChaletsBtn.addEventListener("click", function (event) {
+        buscarChaletsBtn.addEventListener("click", async function (event) {
             event.preventDefault();
 
             const checkboxesSeleccionados = document.querySelectorAll('input[name="categorias"]:checked');
@@ -243,7 +245,72 @@
             console.log("Fecha de salida:", fechaSalida);
             console.log("Número de húspedes:", huespedes);
             console.log("Buscar solo disponibles:", buscarSoloDisponiblesChk);
+
+            const datos = {
+                categorias: categoriasSeleccionadas,
+                fechaLlegada: fechaLlegada,
+                fechaSalida: fechaSalida,
+                huespedes: parseInt(huespedes, 10), // Convertir a número
+                soloDisponibles: buscarSoloDisponiblesChk,
+            };
+
+            console.log("Datos a enviar:", datos);
+
+            try {
+                Swal.fire({
+                    title: 'Cargando...',
+                    text: 'Buscando cabañas disponibles...',
+                    icon: 'info',
+                    showConfirmButton: false
+                })
+                // Enviar los datos al backend usando fetch
+                const respuesta = await fetch("/api/eventos/cotizaciones", {
+                    method: "POST", // Método HTTP
+                    headers: {
+                        "Content-Type": "application/json", // Indicar que el cuerpo es JSON
+                    },
+                    body: JSON.stringify(datos), // Convertir el objeto a JSON
+                });
+
+                // Verificar si la respuesta es exitosa
+                if (!respuesta.ok) {
+                    throw new Error("Error en la solicitud: " + respuesta.statusText);
+                }
+
+                // Obtener la respuesta del backend (si es necesario)
+                const resultado = await respuesta.json();
+                console.log("Respuesta del backend:", resultado);
+
+                Swal.close();
+
+                // Aquí puedes manejar la respuesta del backend (por ejemplo, mostrar las habitaciones disponibles)
+                mostrarResultados(resultado);
+
+            } catch (error) {
+                Swal.close();
+                console.error("Error al enviar los datos:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message,
+                    confirmButtonText: 'Aceptar'
+                })
+            }
         });
+
+        function mostrarResultados(resultado) {
+            // Aquí puedes actualizar la interfaz con los resultados del backend
+            console.log("Resultados recibidos:", resultado);
+            // Ejemplo: Mostrar las habitaciones disponibles en una lista
+            const contenedorResultados = document.getElementById("resultados");
+            contenedorResultados.innerHTML = ""; // Limpiar resultados anteriores
+
+            resultado.forEach((habitacion) => {
+                const elemento = document.createElement("div");
+                elemento.textContent = `Habitación: ${habitacion.name}, Precio: $${habitacion.price}`;
+                contenedorResultados.appendChild(elemento);
+            });
+        }
     });
 
 
