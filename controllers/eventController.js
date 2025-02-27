@@ -1745,9 +1745,12 @@ async function cotizadorChaletsyPrecios(req, res) {
         }
 
         if (soloDisponibles) {
-
-        } else {
-            // precio = await PreciosEspeciales.findOne({ fecha: fechaAjustada, habitacionId: habitacionid, noPersonas: pax });
+            for (const chalet of chalets) {
+                const disponibilidad = await getDisponibilidad(chalet._id, fechaLlegada, fechaSalida);
+                if (!disponibilidad) {
+                    chalets.splice(chalets.indexOf(chalet), 1);
+                }
+            }
         }
 
         const startDate = new Date(convertirFechaES(fechaLlegada));
@@ -1835,7 +1838,39 @@ function convertirFechaES(fecha) {
     return `${anio}-${mes}-${dia}`; // Formato YYYY-MM-DD
 }
 
+async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
+    const newResourceId = new mongoose.Types.ObjectId(chaletId);
+    const startDate = new Date(convertirFechaES(fechaLlegada));
+    const endDate = new Date(convertirFechaES(fechaSalida));
+    // const disponibilidad = await Documento.findOne({ chaletId: chaletId, startDate: startDate, endDate: endDate });
 
+    const arrivalDateObj = new Date(`${startDate}T00:00:00`);
+    const departureDateObj = new Date(`${endDate}T00:00:00`);
+
+    const arrivalDateISO = new Date(`${startDate}T11:30:00`).toISOString();
+    const departureDateISO = new Date(`${endDate}T08:30:00`).toISOString();
+    
+    // Check for blocked dates directly in MongoDB
+    const isBlocked = await BloqueoFechas.exists({
+        habitacionId: newResourceId,
+        type: 'bloqueo',
+        date: { $gte: arrivalDateISO, $lte: departureDateISO },
+    });
+
+    if (isBlocked) {
+        return false;
+    }
+
+    // Query events with overlapping dates in MongoDB
+    const overlappingEvents = await Documento.find({
+        resourceId: newResourceId,
+        status: { $nin: ["cancelled", "no-show", "playground"] },
+        $or: [
+            { arrivalDate: { $lt: departureDateISO }, departureDate: { $gt: arrivalDateISO } },
+        ],
+    });
+    return (overlappingEvents.length > 0) ? false : true; 
+}
 
 module.exports = {
     createReservationValidators,
