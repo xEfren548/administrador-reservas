@@ -1731,10 +1731,12 @@ async function cotizadorChaletsyPrecios(req, res) {
             filtro = {
                 "propertyDetails.accomodationType": { $in: categorias },
                 "propertyDetails.maxOccupancy": { $gte: huespedes },
+                "propertyDetails.minOccupancy": { $lte: huespedes }
             };
         } else { // Si se mostrara todo
             filtro = {
                 "propertyDetails.maxOccupancy": { $gte: huespedes },
+                "propertyDetails.minOccupancy": { $lte: huespedes }
             };
         }
 
@@ -1744,17 +1746,18 @@ async function cotizadorChaletsyPrecios(req, res) {
             throw new Error('No se encontraron habitaciones');
         }
 
+        const startDate = new Date(convertirFechaES(fechaLlegada));
+        const endDate = new Date(convertirFechaES(fechaSalida));
+
         if (soloDisponibles) {
             for (const chalet of chalets) {
-                const disponibilidad = await getDisponibilidad(chalet._id, fechaLlegada, fechaSalida);
+                const disponibilidad = await getDisponibilidad(chalet._id, startDate, endDate);
                 if (!disponibilidad) {
                     chalets.splice(chalets.indexOf(chalet), 1);
                 }
             }
         }
 
-        const startDate = new Date(convertirFechaES(fechaLlegada));
-        const endDate = new Date(convertirFechaES(fechaSalida));
 
         const timeDifference = endDate.getTime() - startDate.getTime();
         const nNights = Math.ceil(timeDifference / (1000 * 3600 * 24)); // Calcula la diferencia en días
@@ -1798,6 +1801,7 @@ async function cotizadorChaletsyPrecios(req, res) {
                     if (nNights > 1) {
                         precioTotal += precio.precio_base_2noches;
                     } else {
+                        console.log("Precio modificado 1: ", precio.precio_modificado);
                         precioTotal += precio.precio_modificado;
                     }
                 } else {
@@ -1806,21 +1810,24 @@ async function cotizadorChaletsyPrecios(req, res) {
                         if (nNights > 1) {
                             precioTotal += precio.precio_base_2noches;
                         } else {
+                            console.log("Precio modificado 2: ", precio.precio_modificado);
                             precioTotal += precio.precio_modificado;
                         }
                     } else {
                         if (nNights > 1) {
                             precioTotal += chalet.precioBase2noches;
                         } else {
-                            precioTotal += chalet.precio_modificado;
+                            console.log("Precio modificado 3: ", chalet.precioBase);
+
+                            precioTotal += chalet.precioBase;
                         }
                     }
 
                 }
-                console.log(currentDate); // Formato YYYY-MM-DD
                 currentDate.setDate(currentDate.getDate() + 1); // Avanzar un día
             }
             chalet.price = precioTotal + comisiones;
+            console.log("Precio Total: ", precioTotal);
             // chalet.price = precioTotal;
         }
 
@@ -1840,28 +1847,35 @@ function convertirFechaES(fecha) {
 
 async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     const newResourceId = new mongoose.Types.ObjectId(chaletId);
-    const startDate = new Date(convertirFechaES(fechaLlegada));
-    const endDate = new Date(convertirFechaES(fechaSalida));
-    // const disponibilidad = await Documento.findOne({ chaletId: chaletId, startDate: startDate, endDate: endDate });
 
-    const arrivalDateObj = new Date(`${startDate}T00:00:00`);
-    const departureDateObj = new Date(`${endDate}T00:00:00`);
+    // Convertir fechas a cadenas en formato YYYY-MM-DD
+    const fechaLlegadaStr = fechaLlegada.toISOString().split('T')[0]; // Extrae solo la fecha (YYYY-MM-DD)
+    const fechaSalidaStr = fechaSalida.toISOString().split('T')[0]; // Extrae solo la fecha (YYYY-MM-DD)
 
-    const arrivalDateISO = new Date(`${startDate}T11:30:00`).toISOString();
-    const departureDateISO = new Date(`${endDate}T08:30:00`).toISOString();
-    
-    // Check for blocked dates directly in MongoDB
+    // Asignar horas fijas y convertir a formato ISO
+    const arrivalDateISO = new Date(`${fechaLlegadaStr}T11:30:00`).toISOString();
+    const departureDateISO = new Date(`${fechaSalidaStr}T08:30:00`).toISOString();
+
+    // Verificar fechas bloqueadas
     const isBlocked = await BloqueoFechas.exists({
         habitacionId: newResourceId,
         type: 'bloqueo',
-        date: { $gte: arrivalDateISO, $lte: departureDateISO },
+        $or: [
+            // Caso 1: La fecha bloqueada está dentro del rango de la reserva
+            { date: { $gte: arrivalDateISO, $lte: departureDateISO } },
+            // Caso 2: La fecha bloqueada coincide exactamente con la fecha de llegada
+            { date: arrivalDateISO },
+            // Caso 3: La fecha bloqueada coincide exactamente con la fecha de salida
+            { date: departureDateISO },
+        ],
     });
 
     if (isBlocked) {
+        console.log("FECHAS BLOQUEADAS ENCONTRADAS");
         return false;
     }
 
-    // Query events with overlapping dates in MongoDB
+    // Verificar eventos superpuestos
     const overlappingEvents = await Documento.find({
         resourceId: newResourceId,
         status: { $nin: ["cancelled", "no-show", "playground"] },
@@ -1869,7 +1883,13 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
             { arrivalDate: { $lt: departureDateISO }, departureDate: { $gt: arrivalDateISO } },
         ],
     });
-    return (overlappingEvents.length > 0) ? false : true; 
+
+    if (overlappingEvents.length > 0) {
+        console.log("EVENTOS SUPERPUESTOS ENCONTRADOS");
+        return false;
+    }
+
+    return true;
 }
 
 module.exports = {
