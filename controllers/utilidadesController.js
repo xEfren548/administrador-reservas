@@ -145,6 +145,111 @@ async function calcularComisiones(req, res) {
     }
 }
 
+async function calcularComisionesInternas(info) {
+    try {
+        const loggedUserId = info.userId;
+        const nNights = info.nNights;
+        console.log("nnights: ",  nNights)
+
+        const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
+        const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
+        const costosAdministrador = await Costos.findOne({ category: "Administrador" }); //
+
+        if (!costosGerente) { throw new Error("No se encontró costos para gerente. Favor de agregar.") }
+        if (!costosVendedor) { throw new Error("No se encontró costos para vendedor. Favor de agregar.") }
+        if (!costosAdministrador) { throw new Error("No se encontró costos para administrador. Favor de agregar.") }
+
+        let counter = 0
+
+        let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
+        
+        if (!user) {
+            throw new NotFoundError('User does not exist');
+        }
+        
+        console.log("USUARIO LOGUEADO: ", user)
+        let minComission = 0
+        let finalComission = 0
+
+        while (true) {
+            // console.log(user)
+            console.log("Antes de user privilege admin")
+            if (user.privilege === 'Administrador') {
+                console.log("Despues de user privilege admin")
+                counter += 1;
+                // let costos = await Costos.find({ category: "Gerente" });
+
+                if (user.administrator.toString() === user._id.toString()) {
+                    if (costosGerente.commission === "Aumento por costo fijo") {
+                        finalComission += costosAdministrador.amount * nNights;
+                        minComission += costosAdministrador.amount * nNights;
+                        console.log('comision master admin: ', costosAdministrador.amount * nNights, user._id.toString());
+                        
+                    }
+                    break;
+                } else {
+                    if (costosVendedor.commission === "Aumento por costo fijo") {
+                        finalComission += costosVendedor.amount * nNights;
+                        minComission += costosVendedor.amount * nNights;
+
+                        console.log('comision admin vendedor: ', costosVendedor.amount * nNights, user._id.toString());
+                        user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                    }
+                }
+            } else {
+
+                counter += 1;
+                console.log("Antes de user privilege")
+                if (counter >= 2 && user.privilege !== "Administrador") {
+                    console.log("Despues de user privilege")
+                    user.privilege = "Gerente"
+                }
+                // let costos = await Costos.findOne({ category: user.privilege })
+
+
+                if (user.privilege === "Vendedor") {
+                    if (costosVendedor.commission === "Aumento por costo fijo") {
+                        finalComission += costosVendedor.amount * nNights;
+
+                        minComission += costosVendedor.amount * nNights;
+
+                        console.log('comision vendedor: ', costosVendedor.amount * nNights, user._id.toString())
+                    }
+                } else if (user.privilege === "Gerente") {
+                    if (costosGerente.commission === "Aumento por costo fijo") {
+                        finalComission += costosGerente.amount * nNights;
+                        minComission += costosGerente.amount * nNights;
+
+                        console.log('comision gerente: ', costosGerente.amount * nNights, user._id.toString())
+                    }
+
+                }
+
+                // if (costos.commission == "Aumento por costo fijo") {
+                //     finalComission += costos.maxAmount;
+                // }
+
+                user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                if (!user) {
+                    res.status(400).send({ message: "user not found" })
+                }
+
+
+            }
+        }
+
+        minComission += 35; // Comision Administracion NyN
+        finalComission += 35; // Comision Administracion NyN
+
+        console.log("min comission", minComission)
+        console.log("max comission", finalComission)
+        return finalComission;
+    } catch (err) {
+        console.log(err.message);
+        return null;
+    }
+}
+
 async function generarComisionReserva(req, res) {
     try {
         const loggedUserId = req.session.id;
@@ -1155,6 +1260,7 @@ async function eliminarComisionServicio(idReserva, idServicio) {
 module.exports = {
     obtenerComisionesPorReserva,
     calcularComisiones,
+    calcularComisionesInternas,
     mostrarUtilidadesPorUsuario,
     mostrarUtilidadesGlobales,
     vistaParaReporte,

@@ -246,6 +246,36 @@
             console.log("Número de húspedes:", huespedes);
             console.log("Buscar solo disponibles:", buscarSoloDisponiblesChk);
 
+            if (categoriasSeleccionadas.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No ha seleccionado ninguna categoría',
+                    text: 'Por favor, seleccione al menos una categoría.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+
+            if (!fechaLlegada || !fechaSalida) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Faltan fechas',
+                    text: 'Por favor, seleccione las fechas de llegada y salida.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+
+            if (!huespedes) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No ha seleccionado el número de húspedes',
+                    text: 'Por favor, seleccione el número de húspedes.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+
             const datos = {
                 categorias: categoriasSeleccionadas,
                 fechaLlegada: fechaLlegada,
@@ -274,7 +304,8 @@
 
                 // Verificar si la respuesta es exitosa
                 if (!respuesta.ok) {
-                    throw new Error("Error en la solicitud: " + respuesta.statusText);
+                    const errorData = await respuesta.json();
+                    throw new Error("Error en la solicitud: " + errorData.message);
                 }
 
                 // Obtener la respuesta del backend (si es necesario)
@@ -298,17 +329,78 @@
             }
         });
 
-        function mostrarResultados(resultado) {
-            // Aquí puedes actualizar la interfaz con los resultados del backend
-            console.log("Resultados recibidos:", resultado);
-            // Ejemplo: Mostrar las habitaciones disponibles en una lista
+        function mostrarResultados(habitaciones) {
             const contenedorResultados = document.getElementById("resultados");
             contenedorResultados.innerHTML = ""; // Limpiar resultados anteriores
 
-            resultado.forEach((habitacion) => {
-                const elemento = document.createElement("div");
-                elemento.textContent = `Habitación: ${habitacion.name}, Precio: $${habitacion.price}`;
-                contenedorResultados.appendChild(elemento);
+            habitaciones.forEach((habitacion) => {
+                const tarjeta = document.createElement("div");
+                tarjeta.classList.add(
+                    "bg-gray-800",
+                    "rounded-lg",
+                    "shadow-lg",
+                    "overflow-hidden"
+                );
+
+                // Imagen de la habitación (puedes usar una imagen real si está disponible)
+                const imagen = document.createElement("img");
+                imagen.src = `https://navarro.integradev.site/navarro/${habitacion.image}`
+                console.log(imagen.src)
+                //imagen.src = "https://www.bosquestapalpa.com.mx/bosquestapalpa/contenido/8a62e2784_blog_.jpg";
+                imagen.alt = habitacion.name;
+                imagen.classList.add("w-full", "h-48", "object-cover");
+
+                const fallbackImage = "https://www.bosquestapalpa.com.mx/bosquestapalpa/contenido/8a62e2784_blog_.jpg";
+
+                imagen.onerror = () => {
+                    console.warn(`La imagen ${imagen.src} no se pudo cargar. Usando imagen de respaldo.`);
+                    imagen.src = fallbackImage;
+                };
+                tarjeta.appendChild(imagen);
+
+                // Contenido de la tarjeta
+                const contenido = document.createElement("div");
+                contenido.classList.add("p-4");
+
+                // Nombre de la habitación
+                const nombre = document.createElement("h3");
+                nombre.classList.add("text-xl", "font-semibold", "text-white");
+                nombre.textContent = habitacion.name;
+                contenido.appendChild(nombre);
+
+                // Precio por noche
+                const precio = document.createElement("p");
+                precio.classList.add("text-white-400", "mt-2", "font-semibold");
+                precio.textContent = `$${habitacion.price} por ${habitacion.nights} noche(s)`;
+                contenido.appendChild(precio);
+
+                // Capacidad máxima
+                const capacidad = document.createElement("p");
+                capacidad.classList.add("text-gray-400");
+                capacidad.textContent = `Máximo ${habitacion.pax} huéspedes`;
+                contenido.appendChild(capacidad);
+
+                // Botón de reservar
+                const botonReservar = document.createElement("button");
+                botonReservar.classList.add(
+                    "mt-4",
+                    "w-full",
+                    "bg-blue-600",
+                    "text-white",
+                    "py-2",
+                    "px-4",
+                    "rounded-md",
+                    "hover:bg-blue-700",
+                    "transition-colors"
+                );
+                botonReservar.textContent = "Reservar";
+                contenido.appendChild(botonReservar);
+
+                // Agregar contenido a la tarjeta
+                tarjeta.appendChild(contenido);
+
+                // Agregar tarjeta al contenedor de resultados
+                contenedorResultados.appendChild(tarjeta);
             });
         }
     });

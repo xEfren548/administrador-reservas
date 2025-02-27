@@ -1,25 +1,27 @@
+const { format } = require('date-fns');
+const { check } = require("express-validator");
+const { es } = require('date-fns/locale');
+const mongoose = require('mongoose');
+const moment = require('moment');
 const Documento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const Usuario = require('../models/Usuario');
 const Costos = require('./../models/Costos');
+const BloqueoFechas = require('../models/BloqueoFechas');
+const BloqueoInversionistas = require('../models/BloqueoInversionistas');
 const Tipologias = require('./../models/TipologiasCabana');
+const Roles = require('../models/Roles');
+const Cliente = require('../models/Cliente');
+const PrecioBaseXDia = require('../models/PrecioBaseXDia');
+const PreciosEspeciales = require('../models/PreciosEspeciales');
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const logController = require('../controllers/logController');
 const utilidadesController = require('../controllers/utilidadesController');
 const clienteController = require('../controllers/clientController');
 const pagoController = require('../controllers/pagoController');
-const BloqueoFechas = require('../models/BloqueoFechas');
-const BloqueoInversionistas = require('../models/BloqueoInversionistas');
 const sendEmail = require('../common/tasks/send-mails');
-const mongoose = require('mongoose');
-const { format } = require('date-fns');
-const moment = require('moment');
-const { es } = require('date-fns/locale');
-const Roles = require('../models/Roles');
 
 
-const Cliente = require('../models/Cliente');
-const { check } = require("express-validator");
 const BadRequestError = require("../common/error/bad-request-error");
 const NotFoundError = require('../common/error/not-found-error');
 const SendMessages = require('../common/tasks/send-messages');
@@ -1721,26 +1723,104 @@ async function cotizadorChaletsyPrecios(req, res) {
     try {
         const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles } = req.body;
         console.log(categorias)
+        console.log(huespedes)
 
         let filtro = {};
 
-        if (!categorias.includes("all")) {
+        if (!categorias.includes("all")) { //Si se seleccionaron categorias
             filtro = {
                 "propertyDetails.accomodationType": { $in: categorias },
+                "propertyDetails.maxOccupancy": { $gte: huespedes },
+            };
+        } else { // Si se mostrara todo
+            filtro = {
+                "propertyDetails.maxOccupancy": { $gte: huespedes },
             };
         }
 
-        const chalets = await Habitacion.find(filtro).limit().lean();
+
+        const chalets = await Habitacion.find(filtro).lean();
         if (!chalets) {
             throw new Error('No se encontraron habitaciones');
         }
 
+        if (soloDisponibles) {
+
+        } else {
+            // precio = await PreciosEspeciales.findOne({ fecha: fechaAjustada, habitacionId: habitacionid, noPersonas: pax });
+        }
+
+        const startDate = new Date(convertirFechaES(fechaLlegada));
+        const endDate = new Date(convertirFechaES(fechaSalida));
+
+        const timeDifference = endDate.getTime() - startDate.getTime();
+        const nNights = Math.ceil(timeDifference / (1000 * 3600 * 24)); // Calcula la diferencia en días
+        console.log("Noches: ", nNights);
+
         const mappedChalets = chalets.map(chalet => ({
+
             id: chalet._id,
             name: chalet.propertyDetails.name,
-            pax: chalet.propertyDetails.maxOccupation,
-            price: chalet.others.basePrice
+            pax: chalet.propertyDetails.maxOccupancy,
+            precioBase: chalet.others.basePrice,
+            precioBase2noches: chalet.others.basePrice2nights,
+            costoBase: chalet.others.baseCost,
+            costoBase2noches: chalet.others.baseCost2nights,
+            image: chalet.images[0],
+            nights: nNights
+
         }));
+
+        const infoComisiones = {
+            userId: req.session.id,
+            nNights: nNights,
+
+        }
+        const comisiones = await utilidadesController.calcularComisionesInternas(infoComisiones);
+        console.log("Comisiones: ", comisiones);
+
+        if (startDate > endDate) {
+            throw new Error("La fecha de llegada debe ser anterior a la fecha de salida");
+        }
+        
+        for (const chalet of mappedChalets) {
+            let precioTotal = 0;
+
+            let currentDate = new Date(startDate);
+
+            while (currentDate <= endDate) {
+                currentDate.setUTCHours(6);
+                precio = await PreciosEspeciales.findOne({ fecha: currentDate, habitacionId: chalet.id, noPersonas: huespedes });
+                if (precio) {
+                    if (nNights > 1) {
+                        precioTotal += precio.precio_base_2noches;
+                    } else {
+                        precioTotal += precio.precio_modificado;
+                    }
+                } else {
+                    precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: chalet.id });
+                    if (precio) {
+                        if (nNights > 1) {
+                            precioTotal += precio.precio_base_2noches;
+                        } else {
+                            precioTotal += precio.precio_modificado;
+                        }
+                    } else {
+                        if (nNights > 1) {
+                            precioTotal += chalet.precioBase2noches;
+                        } else {
+                            precioTotal += chalet.precio_modificado;
+                        }
+                    }
+
+                }
+                console.log(currentDate); // Formato YYYY-MM-DD
+                currentDate.setDate(currentDate.getDate() + 1); // Avanzar un día
+            }
+            chalet.price = precioTotal + comisiones;
+            // chalet.price = precioTotal;
+        }
+
 
         res.status(200).json(mappedChalets);
 
@@ -1749,6 +1829,13 @@ async function cotizadorChaletsyPrecios(req, res) {
         res.status(500).json({ message: 'Error al obtener habitaciones y precios: ' + error.message });
     }
 }
+
+function convertirFechaES(fecha) {
+    const [dia, mes, anio] = fecha.split("/");
+    return `${anio}-${mes}-${dia}`; // Formato YYYY-MM-DD
+}
+
+
 
 module.exports = {
     createReservationValidators,
