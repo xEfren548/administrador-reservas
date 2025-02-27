@@ -49,7 +49,7 @@ const createReservationValidators = [
         .notEmpty().withMessage('Chalet name is required')
         .isLength({ max: 255 }).withMessage("Chalet name must be less than 255 characters")
         .custom(async (value, { req }) => {
-            const chalet = await Habitacion.findOne( {"propertyDetails.name": value} );
+            const chalet = await Habitacion.findOne({ "propertyDetails.name": value });
             // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
             if (!chalet) {
                 throw new NotFoundError('Chalet does not exist');
@@ -105,7 +105,7 @@ const createOwnersReservationValidators = [
             .notEmpty().withMessage('Chalet name is required')
             .isLength({ max: 255 }).withMessage("Chalet name must be less than 255 characters")
             .custom(async (value, { req }) => {
-                const chalet = await Habitacion.findOne( {"propertyDetails.name": value} );
+                const chalet = await Habitacion.findOne({ "propertyDetails.name": value });
 
                 // const chalets = await Habitacion.findOne();
                 // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
@@ -235,20 +235,20 @@ async function obtenerEventosDeCabana(req, res) {
                     creadaPor = usuario.firstName + ' ' + usuario.lastName;
                 }
             }
-            if (evento.client){
+            if (evento.client) {
                 const client = await Cliente.findById(evento.client);
-                if (client){
+                if (client) {
                     clientName = (client.firstName + ' ' + client.lastName).toUpperCase();
                 } else {
                     clientName = "Reserva"
                 }
             } else {
-                if (evento.clienteProvisional){
+                if (evento.clienteProvisional) {
                     clientName = evento.clienteProvisional;
                 }
             }
 
-            if (evento.status !== "reserva dueño"){
+            if (evento.status !== "reserva dueño") {
                 const pagosReserva = await pagoController.obtenerPagos(evento._id);
                 let pagoTotal = 0
                 pagosReserva.forEach(pago => {
@@ -379,12 +379,12 @@ async function reservasDeDuenos(req, res, next) {
                 let total = subtotal - preTotal;
 
                 let montoPendiente = total - pagoTotal;
-                
+
 
                 let vendedor = null;
                 const usuarioQueReserva = await Usuario.findById(evento.createdBy);
-                if (usuarioQueReserva){
-                    if (usuarioQueReserva.privilege !== "Inversionistas" && usuarioQueReserva.privilege !== "Dueño de cabañas" && usuarioQueReserva.privilege !== "Colaborador dueño"){
+                if (usuarioQueReserva) {
+                    if (usuarioQueReserva.privilege !== "Inversionistas" && usuarioQueReserva.privilege !== "Dueño de cabañas" && usuarioQueReserva.privilege !== "Colaborador dueño") {
                         vendedor = usuarioQueReserva.firstName + ' ' + usuarioQueReserva.lastName
 
                     }
@@ -392,10 +392,10 @@ async function reservasDeDuenos(req, res, next) {
 
                 let cliente = null;
                 const clienteFound = await Cliente.findById(evento.client)
-                if (clienteFound){
+                if (clienteFound) {
                     cliente = (clienteFound.firstName + ' ' + clienteFound.lastName).toUpperCase();
                 } else {
-                    if (evento.clienteProvisional){
+                    if (evento.clienteProvisional) {
                         cliente = evento.clienteProvisional;
                     }
                 }
@@ -543,7 +543,7 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
 
 async function createReservation(req, res, next) {
-    const { clientFirstName, clientLastName,clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit } = req.body;
+    const { clientFirstName, clientLastName, clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit } = req.body;
     let newCliente = null;
     let client = null;
 
@@ -551,7 +551,7 @@ async function createReservation(req, res, next) {
         const userRole = req.session.role;
 
         const userPermissions = await Roles.findById(userRole);
-        if(!userPermissions){
+        if (!userPermissions) {
             throw new Error("El usuario no tiene un rol definido, contacte al administrador");
         }
 
@@ -572,11 +572,11 @@ async function createReservation(req, res, next) {
             newCliente = await clienteController.createClientLocal(clientFirstName, clientLastName, req.session)
             console.log("No cliente")
             console.log(newCliente)
-            if (!newCliente){
+            if (!newCliente) {
                 throw new NotFoundError('Client does not exist');
             }
             client = newCliente;
-            
+
         }
 
         console.log("client: ");
@@ -589,11 +589,11 @@ async function createReservation(req, res, next) {
 
         const arrivalDateObj = new Date(arrivalDate);
         const departureDateObj = new Date(departureDate);
-        
+
         // Set specific times
         arrivalDateObj.setUTCHours(17, 30, 0, 0); // 17:30:00 UTC
         departureDateObj.setUTCHours(14, 30, 0, 0); // 14:30:00 UTC
-        
+
         // Convert back to ISO strings
         const arrivalDateISO = arrivalDateObj.toISOString();
         const departureDateISO = departureDateObj.toISOString();
@@ -619,7 +619,7 @@ async function createReservation(req, res, next) {
                 { departureDate: { $gt: arrivalDateISO } }, // End date overlaps or is after the arrival date
             ],
         });
-    
+
         if (overlappingReservation) {
             return res.status(400).send({
                 message: `La habitación ya está reservada entre ${overlappingReservation.arrivalDate.toISOString()} y ${overlappingReservation.departureDate.toISOString()}.`,
@@ -639,11 +639,11 @@ async function createReservation(req, res, next) {
         // }
 
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
-        if (!costosVendedor) {throw new NotFoundError('Costos vendedor not found');}
+        if (!costosVendedor) { throw new NotFoundError('Costos vendedor not found'); }
 
         const comisionVendedor = costosVendedor.amount * nNights;
 
-        console.log ("Arrival date before: ")
+        console.log("Arrival date before: ")
         console.log(arrivalDate)
 
         console.log("Departure date before: ")
@@ -652,7 +652,7 @@ async function createReservation(req, res, next) {
         arrivalDate.setHours(arrivalDate.getHours() + chalet.others.arrivalTime.getHours());
         departureDate.setHours(departureDate.getHours() + chalet.others.departureTime.getHours());
 
-        console.log ("Arrival date after: ")
+        console.log("Arrival date after: ")
         console.log(arrivalDate)
 
         console.log("Departure date after: ")
@@ -758,15 +758,15 @@ async function createReservation(req, res, next) {
             status: statusLimpieza,
             idHabitacion: documentoToAdd.resourceId
         })
-        
-        
-        if (client.phone){
+
+
+        if (client.phone) {
             SendMessages.sendReservationConfirmation(client, chalet, reservationToAdd);
             console.log("SendMessages.sendReminders");
             SendMessages.sendInstructions(client, chalet, idReserva)
         }
 
-        if (client.email){
+        if (client.email) {
             sendEmail(client.email, idReserva);
         }
 
@@ -774,15 +774,15 @@ async function createReservation(req, res, next) {
 
         const agenteQueReserva = await Usuario.findById(createdBy);
         if (agenteQueReserva) {
-            if (agenteQueReserva.phone){
+            if (agenteQueReserva.phone) {
                 SendMessages.sendReservationConfirmation(agenteQueReserva, chalet, reservationToAdd);
                 console.log("Mensaje enviado al agente.")
             }
-            if (agenteQueReserva.email){
+            if (agenteQueReserva.email) {
                 sendEmail(agenteQueReserva.email, idReserva);
             }
         }
-        
+
         // Log
         const logBody = {
             fecha: Date.now(),
@@ -804,38 +804,38 @@ async function createReservation(req, res, next) {
     }
 }
 
-async function sendIntructionsToWhatsapp(req, res){
+async function sendIntructionsToWhatsapp(req, res) {
     try {
 
-        const {idReserva} = req.body;
-    
+        const { idReserva } = req.body;
+
         // const allReservations = await Documento.findOne();
         // const reservation = allReservations.events.find(evento => evento._id.toString() === idReserva);
         const reservation = await Documento.findById(idReserva);
-    
-        if (!reservation) {throw new NotFoundError('Reserva no encontrada.')}
+
+        if (!reservation) { throw new NotFoundError('Reserva no encontrada.') }
 
         const client = await Cliente.findById(reservation.client);
-        if (!client) {throw new NotFoundError('Cliente no encontrado.')}
+        if (!client) { throw new NotFoundError('Cliente no encontrado.') }
 
 
         const chaletId = new mongoose.Types.ObjectId(reservation.resourceId); //reservation.resourceId;
 
         const chalet = await Habitacion.findById(chaletId).lean();
-        if (!chalet) {throw new NotFoundError('Chalet no encontrado.')}
+        if (!chalet) { throw new NotFoundError('Chalet no encontrado.') }
 
         // const chalets = await Habitacion.findOne();
         // const chalet = chalets.resources.find(chalet => chalet._id.toString() === chaletId.toString());
         // if (!chalet) {throw new NotFoundError('Chalet no encontrado.')}
 
-    
-        
-        
+
+
+
         SendMessages.sendInstructions(client, chalet, idReserva)
         SendMessages.sendReservationConfirmation(client, chalet, reservation)
-        res.status(200).send({message: 'Instrucciones enviadas correctamente!'})
-    } catch(error){
-        res.send({message: error.message})
+        res.status(200).send({ message: 'Instrucciones enviadas correctamente!' })
+    } catch (error) {
+        res.send({ message: error.message })
     }
 }
 
@@ -847,7 +847,7 @@ async function createOwnerReservation(req, res, next) {
         const investorId = req.session.id
         const mInvestorId = new mongoose.Types.ObjectId(investorId);
 
-        const chalet = await Habitacion.findOne( {"propertyDetails.name": chaletName} );
+        const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName });
 
         // const chalets = await Habitacion.findOne();
         // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
@@ -863,13 +863,13 @@ async function createOwnerReservation(req, res, next) {
             reservasDeInversionista.sort((a, b) => new Date(a.departureDate) - new Date(b.departureDate));
 
             const reservaActiva = reservasDeInversionista.find(reserva => new Date(reserva.departureDate) > new Date());
-    
+
             arrivalDate.setUTCHours(chalet.others.arrivalTime.getHours());
             departureDate.setUTCHours(chalet.others.departureTime.getHours());
-    
+
 
             if (reservaActiva) {
-                if (reservaActiva.status !== "cancelled"){
+                if (reservaActiva.status !== "cancelled") {
                     throw new Error('Ya tienes una reserva activa.')
                 }
             }
@@ -891,7 +891,7 @@ async function createOwnerReservation(req, res, next) {
             }
             console.log(arrivalDate)
             console.log(departureDate)
-            const fechasBloqueadas = await BloqueoInversionistas.find({date: { $gte: arrivalDate, $lte: departureDate }, habitacionId: chalet._id});
+            const fechasBloqueadas = await BloqueoInversionistas.find({ date: { $gte: arrivalDate, $lte: departureDate }, habitacionId: chalet._id });
             console.log(fechasBloqueadas)
             if (fechasBloqueadas.length > 0) {
                 throw new Error('Fechas bloqueadas para esas fechas, por favor intenta de nuevo con otras.')
@@ -961,8 +961,8 @@ async function createOwnerReservation(req, res, next) {
             const checkOutDate = new Date(departureDate)
             fechaLimpieza.setDate(fechaLimpieza.getDate())
             const statusLimpieza = 'Pendiente'
-    
-    
+
+
             await rackLimpiezaController.createServiceForReservation({
                 id_reserva: idReserva,
                 descripcion: descripcionLimpieza,
@@ -972,7 +972,7 @@ async function createOwnerReservation(req, res, next) {
                 status: statusLimpieza,
                 idHabitacion: reservationToAdd.resourceId
             })
-            
+
         }
 
         // Log
@@ -1076,7 +1076,7 @@ async function eliminarEvento(req, res) {
         const userRole = req.session.role;
 
         const userPermissions = await Roles.findById(userRole);
-        if(!userPermissions){
+        if (!userPermissions) {
             throw new Error("El usuario no tiene un rol definido, contacte al administrador");
         }
 
@@ -1141,7 +1141,7 @@ async function modificarEvento(req, res) {
         const userRole = req.session.role;
 
         const userPermissions = await Roles.findById(userRole);
-        if(!userPermissions){
+        if (!userPermissions) {
             throw new Error("El usuario no tiene un rol definido, contacte al administrador");
         }
 
@@ -1178,7 +1178,7 @@ async function modificarEvento(req, res) {
             console.log('evento encontrado: ', evento);
         }
 
-        if (evento.status === "reserva de dueño"){
+        if (evento.status === "reserva de dueño") {
             newTotal = 0
         }
 
@@ -1247,19 +1247,23 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
     const arrivalDateObj = new Date(`${arrivalDate}T00:00:00`);
     const departureDateObj = new Date(`${departureDate}T00:00:00`);
 
+    // Convertir a formato ISO para comparar con la base de datos
+    const arrivalDateBloqueo = arrivalDateObj.toISOString();
+    const departureDateBloqueo = departureDateObj.toISOString();
+
     const arrivalDateISO = new Date(`${arrivalDate}T11:30:00`).toISOString();
     const departureDateISO = new Date(`${departureDate}T08:30:00`).toISOString();
 
     console.log("ARRIVAL DATE: ", arrivalDateISO, "DEPARTURE DATE: ", departureDateISO);
 
-    // Check for blocked dates directly in MongoDB
     const isBlocked = await BloqueoFechas.exists({
         habitacionId: newResourceId,
         type: 'bloqueo',
-        date: { $gte: arrivalDateISO, $lte: departureDateISO },
+        date: { $gte: arrivalDateBloqueo, $lte: departureDateBloqueo },
     });
 
     if (isBlocked) {
+        console.log("IS BLOCKED: ", isBlocked)
         return false;
     }
 
@@ -1291,7 +1295,7 @@ async function moveToPlayground(req, res) {
         const userRole = req.session.role;
 
         const userPermissions = await Roles.findById(userRole);
-        if(!userPermissions){
+        if (!userPermissions) {
             throw new Error("El usuario no tiene un rol definido, contacte al administrador");
         }
 
@@ -1311,7 +1315,7 @@ async function moveToPlayground(req, res) {
             throw new NotFoundError('Chalet does not exist');
         }
 
-        
+
 
         if (!['active', 'playground', 'cancelled', 'no-show'].includes(status)) {
             return res.status(400).json({ message: 'Invalid status' });
@@ -1364,7 +1368,7 @@ async function moveToPlayground(req, res) {
         }
 
         if (evento.status === 'active' && status === 'cancelled') {
-            if (req.session.privilege !== "Administrador"){
+            if (req.session.privilege !== "Administrador") {
                 throw new Error("Solo los administradores pueden cancelar reservas.")
             }
             const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
@@ -1380,7 +1384,7 @@ async function moveToPlayground(req, res) {
             const pagoDel50 = (montoPendiente <= totalReserva / 2) ? true : false;
 
             if (!pagoDel50) {
-                if (pagoTotal < 1){
+                if (pagoTotal < 1) {
                     for (const comisiones of comisionesReserva) {
                         const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
                         if (utilidadEliminada) {
@@ -1389,7 +1393,7 @@ async function moveToPlayground(req, res) {
                             throw new Error('Error al eliminar comision.');
                         }
                     }
-                    
+
                     const eventoAeliminar = await Documento.findByIdAndDelete(idReserva);
                     if (!eventoAeliminar) {
                         throw new Error('El evento no fue encontrado');
@@ -1397,14 +1401,14 @@ async function moveToPlayground(req, res) {
 
                     // Find the index of the room to delete by its ID
                     // const index = eventosExistentes.events.findIndex(evento => evento.id.toString() === idReserva.toString());
-                            
+
                     // if (index === -1) {
                     //     return res.status(404).json({ message: 'El evento no fue encontrado' });
                     // }
-                
+
                     // // Remove the room from the array
                     // eventosExistentes.events.splice(index, 1);
-                
+
                     // // Save the updated room list to the database
                     // await eventosExistentes.save();
                     console.log("Reserva cancelada de la base de datos.")
@@ -1419,7 +1423,7 @@ async function moveToPlayground(req, res) {
                             throw new Error('Error al eliminar comision.');
                         }
                     }
-                    
+
                     utilidadesController.altaComisionReturn({
                         monto: pagoTotal,
                         concepto: `Reserva cancelada remanente depositado`,
@@ -1436,8 +1440,8 @@ async function moveToPlayground(req, res) {
             }
         }
 
-        if (status === "cancelled"){
-            if (req.session.privilege !== "Administrador"){
+        if (status === "cancelled") {
+            if (req.session.privilege !== "Administrador") {
                 throw new Error("Solo los administradores pueden cancelar reservas.")
             }
         }
@@ -1515,7 +1519,7 @@ async function moveToPlayground(req, res) {
                     await utilidadesController.eliminarComisionReturn(comision._id);
                 }
             }
-    
+
         }
 
         evento.status = status;
@@ -1570,17 +1574,17 @@ async function crearNota(req, res) {
             const userRole = req.session.role;
 
             const userPermissions = await Roles.findById(userRole);
-            if(!userPermissions){
+            if (!userPermissions) {
                 // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
                 throw new Error("El usuario no tiene un rol definido, contacte al administrador");
             }
-    
+
             const permittedRole = "ADD_PRIVATE_NOTES";
             if (!userPermissions.permissions.includes(permittedRole)) {
                 // throw new Error("El usuario no tiene permiso para ver utilidades globales.");
                 throw new Error("El usuario no tiene permiso para agregar notas privadas.");
             }
-    
+
             // if (!userPrivilege.includes('Administrador') && !userPrivilege.includes('Vendedor')) {
             //     throw new Error('No tienes permisos para crear notas privadas');
             // }
