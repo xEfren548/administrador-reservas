@@ -1767,7 +1767,8 @@ async function cotizadorChaletsyPrecios(req, res) {
 
             id: chalet._id,
             name: chalet.propertyDetails.name,
-            pax: chalet.propertyDetails.maxOccupancy,
+            minPax: chalet.propertyDetails.minOccupancy,
+            maxPax: chalet.propertyDetails.maxOccupancy,
             precioBase: chalet.others.basePrice,
             precioBase2noches: chalet.others.basePrice2nights,
             costoBase: chalet.others.baseCost,

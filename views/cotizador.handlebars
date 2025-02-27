@@ -377,7 +377,7 @@
                 // Capacidad máxima
                 const capacidad = document.createElement("p");
                 capacidad.classList.add("text-gray-400");
-                capacidad.textContent = `Máximo ${habitacion.pax} huéspedes`;
+                capacidad.textContent = `${habitacion.minPax}-${habitacion.maxPax} huéspedes`;
                 contenido.appendChild(capacidad);
 
                 // Botón de reservar
