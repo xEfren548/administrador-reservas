@@ -333,6 +333,13 @@
             const contenedorResultados = document.getElementById("resultados");
             contenedorResultados.innerHTML = ""; // Limpiar resultados anteriores
 
+            if (habitaciones.length === 0) {
+                const noResultados = document.createElement("p");
+                noResultados.textContent = "No se encontraron cabañas disponibles.";
+                contenedorResultados.appendChild(noResultados);
+                return;
+            }
+
             habitaciones.forEach((habitacion) => {
                 const tarjeta = document.createElement("div");
                 tarjeta.classList.add(
