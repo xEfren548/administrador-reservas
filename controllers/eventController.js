@@ -1773,10 +1773,14 @@ async function cotizadorChaletsyPrecios(req, res) {
             precioBase2noches: chalet.others.basePrice2nights,
             costoBase: chalet.others.baseCost,
             costoBase2noches: chalet.others.baseCost2nights,
-            image: chalet.images[0],
-            nights: nNights
-
+            image: chalet.images[0]
         }));
+
+        const eventoParaReservar = {
+            nights: nNights,
+            fechaLlegada: fechaLlegada,
+            fechaSalida: fechaSalida
+        }
 
         const infoComisiones = {
             userId: req.session.id,
@@ -1828,12 +1832,13 @@ async function cotizadorChaletsyPrecios(req, res) {
                 currentDate.setDate(currentDate.getDate() + 1); // Avanzar un día
             }
             chalet.price = precioTotal + comisiones;
+            eventoParaReservar.precioTotal = chalet.price;
             console.log("Precio Total: ", precioTotal);
             // chalet.price = precioTotal;
         }
 
 
-        res.status(200).json(mappedChalets);
+        res.status(200).json({ chalets: mappedChalets, evento: eventoParaReservar }); // Enviar los datos de las habitaciones y el eventomappedChalets
 
     } catch (error) {
         console.error('Error al obtener habitaciones y precios:', error);

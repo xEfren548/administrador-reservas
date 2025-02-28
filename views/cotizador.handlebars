@@ -120,6 +120,69 @@
 
 </div>
 
+<!-- Modal -->
+<div id="modal-reserva" class="fixed inset-0 z-50 hidden">
+    <!-- Fondo oscuro -->
+    <div class="fixed inset-0 bg-black bg-opacity-50"></div>
+
+    <!-- Contenedor del modal -->
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-gray-900 text-white rounded-lg shadow-lg w-full max-w-2xl">
+            <!-- Encabezado del modal -->
+            <div class="p-4 border-b border-gray-700">
+                <h2 class="text-xl font-semibold">Reservar Habitación</h2>
+            </div>
+
+            <!-- Cuerpo del modal -->
+            <div class="p-4 space-y-4">
+                <!-- Sección: Tipo de Reserva -->
+                <div class="w-11/12 mx-auto"> <!-- 90% del ancho y centrado -->
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Tipo de Reserva</label>
+                    <div class="relative w-full flex items-center justify-center">
+                        <input type="checkbox" id="toggleReserva" class="sr-only">
+                        <div class="w-full max-w-lg bg-gray-700 rounded-full p-1 flex justify-between items-center">
+                            <span id="label-depo"
+                                class="flex-1 text-center text-white text-sm px-4 py-2 rounded-l-full cursor-pointer transition-all duration-300 bg-gradient-to-r from-purple-500 to-pink-500">
+                                Por depo
+                            </span>
+                            <span id="label-reserva"
+                                class="flex-1 text-center text-white text-sm px-4 py-2 rounded-r-full cursor-pointer transition-all duration-300">
+                                Reserva
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- Sección: Cliente -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-400">Cliente</label>
+                    <input type="text" placeholder="Nombre del cliente"
+                        class="mt-1 block w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-500" />
+                </div>
+
+                <!-- Sección: Información de la Reserva -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-400">Información de la Reserva</label>
+                    <textarea placeholder="Detalles adicionales"
+                        class="mt-1 block w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-500"></textarea>
+                </div>
+            </div>
+
+            <!-- Pie del modal -->
+            <div class="p-4 border-t border-gray-700 flex justify-end space-x-2">
+                <button id="cerrar-modal" class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600">
+                    Cerrar
+                </button>
+                <button id="confirmar-reserva" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    Confirmar Reserva
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 <script>
     // Configuración de Flatpickr
@@ -315,7 +378,7 @@
                 Swal.close();
 
                 // Aquí puedes manejar la respuesta del backend (por ejemplo, mostrar las habitaciones disponibles)
-                mostrarResultados(resultado);
+                mostrarResultados(resultado.chalets, resultado.evento);
 
             } catch (error) {
                 Swal.close();
@@ -329,7 +392,7 @@
             }
         });
 
-        function mostrarResultados(habitaciones) {
+        function mostrarResultados(habitaciones, evento) {
             const contenedorResultados = document.getElementById("resultados");
             contenedorResultados.innerHTML = ""; // Limpiar resultados anteriores
 
@@ -378,7 +441,7 @@
                 // Precio por noche
                 const precio = document.createElement("p");
                 precio.classList.add("text-white-400", "mt-2", "font-semibold");
-                precio.textContent = `$${habitacion.price} por ${habitacion.nights} noche(s)`;
+                precio.textContent = `$${habitacion.price} por ${evento.nights} noche(s)`;
                 contenido.appendChild(precio);
 
                 // Capacidad máxima
@@ -400,6 +463,17 @@
                     "hover:bg-blue-700",
                     "transition-colors"
                 );
+
+                botonReservar.dataset.habitacionId = habitacion.id;
+                botonReservar.dataset.nNights = evento.nights;
+                botonReservar.dataset.precioTotal = evento.precioTotal;
+
+
+                botonReservar.addEventListener("click", () => {
+                    // Aquí puedes realizar la reserva
+                    console.log("Reservar habitación:", habitacion.name);
+                    abrirModal(botonReservar);
+                });
                 botonReservar.textContent = "Reservar";
                 contenido.appendChild(botonReservar);
 
@@ -409,7 +483,85 @@
                 // Agregar tarjeta al contenedor de resultados
                 contenedorResultados.appendChild(tarjeta);
             });
+
+            // MANEJO DE MODAL
+            // Obtener elementos del DOM
+            const modalReserva = document.getElementById("modal-reserva");
+            const cerrarModalBtn = document.getElementById("cerrar-modal");
+            const confirmarReservaBtn = document.getElementById("confirmar-reserva");
+
+            // Función para abrir el modal
+            function abrirModal(boton) {
+                modalReserva.classList.remove("hidden");
+                console.log("Precio total: ", boton.dataset.precioTotal)
+            }
+
+            // Función para cerrar el modal
+            function cerrarModal() {
+                console.log("Cerrar modal");
+                modalReserva.classList.add("hidden");
+            }
+
+            // Evento para abrir el modal al hacer clic en "Reservar"
+
+
+            // Evento para cerrar el modal al hacer clic en "Cerrar"
+            cerrarModalBtn.addEventListener("click", () => {
+                console.log("Cerrar modal");
+                modalReserva.classList.add("hidden");
+            });
+
+            // Evento para cerrar el modal al hacer clic fuera del modal
+            modalReserva.addEventListener("click", (event) => {
+                if (event.target === modalReserva) {
+                    cerrarModal();
+                }
+            });
+
+            // Evento para confirmar la reserva
+            confirmarReservaBtn.addEventListener("click", () => {
+                const tipoReserva = document.querySelector("#modal-reserva select").value;
+                const nombreCliente = document.querySelector("#modal-reserva input[type='text']").value;
+                const detallesReserva = document.querySelector("#modal-reserva textarea").value;
+
+                console.log("Tipo de Reserva:", tipoReserva);
+                console.log("Nombre del Cliente:", nombreCliente);
+                console.log("Detalles de la Reserva:", detallesReserva);
+
+                // Aquí puedes enviar los datos al backend para procesar la reserva
+                alert("Reserva confirmada");
+                cerrarModal();
+            });
         }
+
+        // FUNCIONALIDAD TOGGLE SWITCH
+        const toggleInput = document.getElementById("toggleReserva");
+        const labelDepo = document.getElementById("label-depo");
+        const labelReserva = document.getElementById("label-reserva");
+
+        function toggleReserva() {
+            if (toggleInput.checked) {
+                labelDepo.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+                labelReserva.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+            } else {
+                labelReserva.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+                labelDepo.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+            }
+        }
+
+        // Manejar clics en los labels
+        labelDepo.addEventListener("click", function () {
+            toggleInput.checked = false;
+            toggleReserva();
+        });
+
+        labelReserva.addEventListener("click", function () {
+            toggleInput.checked = true;
+            toggleReserva();
+        });
+
+        // Inicializar estado
+        toggleReserva();
     });
 
 
