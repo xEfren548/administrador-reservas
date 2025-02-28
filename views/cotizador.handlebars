@@ -137,7 +137,8 @@
             <div class="p-4 space-y-4">
                 <!-- Sección: Tipo de Reserva -->
                 <div class="w-11/12 mx-auto"> <!-- 90% del ancho y centrado -->
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Tipo de Reserva</label>
+                    <label class="block text-sm font-medium text-white-400 mb-2 flex items-center justify-center">Tipo
+                        de Reserva</label>
                     <div class="relative w-full flex items-center justify-center">
                         <input type="checkbox" id="toggleReserva" class="sr-only">
                         <div class="w-full max-w-lg bg-gray-700 rounded-full p-1 flex justify-between items-center">
@@ -153,20 +154,104 @@
                     </div>
                 </div>
 
+                <div class="hidden" id="modalClientContainer">
+                    <div class="w-full max-w-lg mx-auto bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
+                        <div class="mb-4">
+                            <label for="lblClient" class="block text-sm font-medium text-gray-400">Cliente</label>
+                            <input type="text" id="lblClient"
+                                class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                autocomplete="off" placeholder="Buscar y seleccionar cliente..." required>
 
+                            <!-- Contenedor de opciones -->
+                            <div class="relative">
+                                <div id="selectOptions"
+                                    class="absolute w-full bg-gray-800 border border-gray-700 rounded-md shadow-lg mt-1 hidden max-h-48 overflow-y-auto">
+                                    {{#if clientes}}
+                                    {{#each clientes}}
+                                    <div class="select-option px-4 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                                        data-value="{{this.email}}"
+                                        data-label="{{this.firstName}} {{this.lastName}} ({{this.email}})">
+                                        {{this.firstName}} {{this.lastName}} ({{this.email}})
+                                    </div>
+                                    {{/each}}
+                                    {{else}}
+                                    <div class="px-4 py-2 text-gray-400">No se encontraron clientes</div>
+                                    {{/if}}
+                                </div>
+                            </div>
 
-                <!-- Sección: Cliente -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-400">Cliente</label>
-                    <input type="text" placeholder="Nombre del cliente"
-                        class="mt-1 block w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-500" />
+                            <input type="hidden" name="lblClient" id="lblClientValue">
+                        </div>
+
+                        <!-- Botón para dar de alta un cliente -->
+                        <div class="flex justify-center">
+                            <button
+                                class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition"
+                                data-bs-toggle="modal" data-bs-target="#clientEntryModal">
+                                Alta de Cliente
+                            </button>
+                        </div>
+                    </div>
                 </div>
+
+                <div id="container-alta-cliente-provisional"
+                    class="w-full max-w-lg mx-auto bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
+                    <h3 class="text-xl font-semibold text-white mb-4 text-center">Cliente</h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Nombre -->
+                        <div>
+                            <label for="nombre-cliente-provisional"
+                                class="block text-sm font-medium text-gray-400">Nombre</label>
+                            <input type="text" id="nombre-cliente-provisional"
+                                class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="Nombre de cliente">
+                        </div>
+
+                        <!-- Apellido -->
+                        <div>
+                            <label for="apellido-cliente-provisional"
+                                class="block text-sm font-medium text-gray-400">Apellido</label>
+                            <input type="text" id="apellido-cliente-provisional"
+                                class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="Apellido de cliente">
+                        </div>
+                    </div>
+                </div>
+
+
 
                 <!-- Sección: Información de la Reserva -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-400">Información de la Reserva</label>
-                    <textarea placeholder="Detalles adicionales"
-                        class="mt-1 block w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-500"></textarea>
+                    <div class="w-full max-w-lg mx-auto bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
+                        <div class="mb-4">
+                            <h3 class="text-xl font-semibold text-white mb-4 text-center">Información de la reserva</h3>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="fecha-llegada-input"
+                                        class="block text-sm font-medium text-gray-400">Check in</label>
+                                    <input type="text" id="fecha-llegada-input"
+                                        class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500">
+                                </div>
+
+                                <div>
+                                    <label for="fecha-salida-input"
+                                        class="block text-sm font-medium text-gray-400">Check out</label>
+                                    <input type="text" id="fecha-salida-input"
+                                        class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500">
+                                </div>
+
+                                <div>
+                                    <label for="huespedes-input"
+                                        class="block text-sm font-medium text-gray-400">Huéspedes</label>
+                                    <input type="number" id="huespedes-input"
+                                        class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-2xl font-bold text-white mb-2 mt-4 text-center">Precio total: <span id="precio-total" class="text-blue-500 font-bold text-2xl"></span></h3>
+
                 </div>
             </div>
 
@@ -490,10 +575,14 @@
             const cerrarModalBtn = document.getElementById("cerrar-modal");
             const confirmarReservaBtn = document.getElementById("confirmar-reserva");
 
+            const precioTotalInput = document.getElementById("precio-total");
+
             // Función para abrir el modal
             function abrirModal(boton) {
                 modalReserva.classList.remove("hidden");
                 console.log("Precio total: ", boton.dataset.precioTotal)
+                precioTotalInput.textContent = `$${boton.dataset.precioTotal}`
+
             }
 
             // Función para cerrar el modal
@@ -539,11 +628,18 @@
         const labelDepo = document.getElementById("label-depo");
         const labelReserva = document.getElementById("label-reserva");
 
+        const clienteReservaContainer = document.getElementById("modalClientContainer");
+        const clienteProvisionalContainer = document.getElementById("container-alta-cliente-provisional");
+
         function toggleReserva() {
             if (toggleInput.checked) {
+                clienteReservaContainer.classList.remove("hidden");
+                clienteProvisionalContainer.classList.add("hidden");
                 labelDepo.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
                 labelReserva.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
             } else {
+                clienteReservaContainer.classList.add("hidden");
+                clienteProvisionalContainer.classList.remove("hidden");
                 labelReserva.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
                 labelDepo.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
             }
