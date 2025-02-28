@@ -38,6 +38,20 @@
             Modificar Estatus
         </button>
     </span>
+
+    <span class="ml-5 p-3">
+        {{#if (eq evento.status "active")}}
+            <span class="badge bg-success p-2 fs-6" >Estatus: Activo</span>
+        {{else if (eq evento.status "cancelled")}}
+            <span class="badge bg-danger p-2 fs-6" >Estatus: Cancelado</span>
+        {{else if (eq evento.status "reserva de dueño")}}
+            <span class="badge bg-info p-2 fs-6">Reserva de dueño o inversionista</span>
+        {{else if (eq evento.status "playground")}}
+            <span class="badge bg-light p-2 fs-6 text-dark">Estatus: Playground</span>
+        {{else if (eq evento.status "pending")}}
+            <span class="badge bg-warning p-2 fs-6">Estatus: Pendiente</span>
+        {{/if}}
+    </span>
     {{!--
     <span data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Reubicar reserva">
         <button type="button" id="btn-reubicar-reserva" class="btn btn-reubicar-reserva"><i class="fa fa-arrows"
