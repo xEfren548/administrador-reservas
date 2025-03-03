@@ -258,9 +258,19 @@
                                             class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
 
                                     </div>
+
+                                    <div>
+                                        <label for="nights-input"
+                                            class="block text-sm font-medium text-gray-400">Noches</label>
+                                        <span id="nights-input"
+                                            class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
+
+                                    </div>
+
+                                    <input type="hidden" id="nombre-habitacion-input">
                                 </div>
 
-                                <h3 class="text-2xl font-bold text-white mb-2 mt-4 text-center">Precio total: <span
+                                <h3 class="text-2xl font-bold text-white mb-4 mt-4 text-center">Precio total: <span
                                         id="precio-total" class="text-blue-500 font-bold text-2xl"></span></h3>
 
                             </div>
@@ -679,6 +689,7 @@
                 botonReservar.dataset.arrivalDate = evento.fechaLlegada;
                 botonReservar.dataset.departureDate = evento.fechaSalida;
                 botonReservar.dataset.huespedes = evento.huespedes;
+                botonReservar.dataset.nombreHabitacion = habitacion.name;
 
 
                 botonReservar.addEventListener("click", () => {
@@ -707,6 +718,8 @@
             const fechaSalidaSpan = document.getElementById("fecha-salida-input");
             const huespedesSpan = document.getElementById("huespedes-input");
             const precioTotalInput = document.getElementById("precio-total");
+            const nNightsInput = document.getElementById("nights-input");
+            const habitacionInput = document.getElementById("nombre-habitacion-input");
 
             // Función para abrir el modal
             function abrirModal(boton) {
@@ -717,6 +730,9 @@
                 fechaLlegadaSpan.textContent = boton.dataset.arrivalDate;
                 fechaSalidaSpan.textContent = boton.dataset.departureDate;
                 huespedesSpan.textContent = boton.dataset.huespedes;
+                nNightsInput.textContent = boton.dataset.nNights;
+                habitacionInput.value = boton.dataset.nombreHabitacion;
+
 
             }
 
@@ -746,14 +762,28 @@
             // Evento para confirmar la reserva
             confirmarReservaBtn.addEventListener("click", () => {
                 const tipoReservaChk = document.getElementById("toggleReserva");
-                const tipoReserva = (!tipoReservaChk.checked) ? "por-depo" : "reserva";
+                const isDeposit = (!tipoReservaChk.checked) ? true : false;
                 const dataReserva = {
-                    tipoReserva: tipoReserva,
-                    cliente: document.getElementById("lblClientValue").value,
-                    fechaLlegada: document.getElementById("fecha-llegada-input").textContent,
-                    fechaSalida: document.getElementById("fecha-salida-input").textContent,
-                    huespedes: document.getElementById("huespedes-input").textContent,
-                    precioTotal: document.getElementById("precio-total").textContent
+                    isDeposit: isDeposit,
+                    clientEmail: document.getElementById("lblClientValue").value,
+                    arrivalDate: document.getElementById("fecha-llegada-input").textContent,
+                    departureDate: document.getElementById("fecha-salida-input").textContent,
+                    pax: document.getElementById("huespedes-input").textContent,
+                    total: document.getElementById("precio-total").textContent,
+                    nNights: document.getElementById("nights-input").textContent,
+                    chaletName: document.getElementById("nombre-habitacion-input").value
+                }
+
+                const dataPorDepo = {
+                    isDeposit: isDeposit,
+                    clientFirstName: document.getElementById('nombre-cliente-provisional').value.trim(),
+                    clientLastName: document.getElementById('apellido-cliente-provisional').value.trim(),
+                    arrivalDate: document.getElementById('fecha-llegada-input').textContent,
+                    departureDate: document.getElementById('fecha-salida-input').textContent,
+                    pax: document.getElementById('huespedes-input').textContent,
+                    total: document.getElementById('precio-total').textContent,
+                    nNights: document.getElementById('nights-input').textContent,
+                    chaletName: document.getElementById('nombre-habitacion-input').value
                 }
 
                 console.log(dataReserva);
