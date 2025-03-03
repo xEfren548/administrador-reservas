@@ -97,7 +97,7 @@
                 <div class="flex-1 justify-center items-center text-center ">
                     <label class="block text-sm font-medium text-gray-400">Mostrar solo disponibles</label>
                     <input type="checkbox" id="buscar-solo-disponibles"
-                        class="form-checkbox text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" />
+                        class="form-checkbox text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" checked/>
                 </div>
 
                 <!-- Botón de búsqueda -->
@@ -232,7 +232,7 @@
                                     <label for="fecha-llegada-input"
                                         class="block text-sm font-medium text-gray-400">Check in</label>
                                     <span id="fecha-llegada-input"
-                                        class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500"></span>
+                                        class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
                                 </div>
 
                                 <div>
@@ -242,14 +242,14 @@
                                         class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500">
                                     --}}
                                     <span id="fecha-salida-input"
-                                        class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 text-center"></span>
+                                        class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center text-center"></span>
                                 </div>
 
                                 <div>
                                     <label for="huespedes-input"
                                         class="block text-sm font-medium text-gray-400">Huéspedes</label>
                                     <span id="huespedes-input"
-                                        class="w-9/12 p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
+                                        class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
 
                                 </div>
                             </div>
@@ -532,7 +532,7 @@
                         // Precio por noche
                         const precio = document.createElement("p");
                         precio.classList.add("text-white-400", "mt-2", "font-semibold");
-                        precio.textContent = `$${habitacion.price} por ${evento.nights} noche(s)`;
+                        precio.textContent = `$${habitacion.totalPrice} por ${evento.nights} noche(s)`;
                         contenido.appendChild(precio);
 
                         // Capacidad máxima
@@ -557,7 +557,7 @@
 
                         botonReservar.dataset.habitacionId = habitacion.id;
                         botonReservar.dataset.nNights = evento.nights;
-                        botonReservar.dataset.precioTotal = evento.precioTotal;
+                        botonReservar.dataset.precioTotal = habitacion.totalPrice;
                         botonReservar.dataset.arrivalDate = evento.fechaLlegada;
                         botonReservar.dataset.departureDate = evento.fechaSalida;
                         botonReservar.dataset.huespedes = evento.huespedes;

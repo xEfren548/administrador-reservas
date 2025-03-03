@@ -1832,8 +1832,8 @@ async function cotizadorChaletsyPrecios(req, res) {
                 }
                 currentDate.setDate(currentDate.getDate() + 1); // Avanzar un día
             }
-            chalet.price = precioTotal + comisiones;
-            eventoParaReservar.precioTotal = chalet.price;
+            chalet.totalPrice = precioTotal + comisiones;
+            // eventoParaReservar.precioTotal = chalet.price;
             console.log("Precio Total: ", precioTotal);
             // chalet.price = precioTotal;
         }
