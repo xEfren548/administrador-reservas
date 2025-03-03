@@ -1172,7 +1172,7 @@ async function modificarEvento(req, res) {
         // Buscar el evento existente por su ID
         // const eventosExistentes = await Documento.findOne();
         // const evento = eventosExistentes.events.find(evento => evento.id === eventId);
-        const evento = await Documento.findById(eventId).lean();
+        const evento = await Documento.findById(eventId);
 
 
         if (!evento) {

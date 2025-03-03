@@ -763,6 +763,7 @@
             confirmarReservaBtn.addEventListener("click", () => {
                 const tipoReservaChk = document.getElementById("toggleReserva");
                 const isDeposit = (!tipoReservaChk.checked) ? true : false;
+
                 const dataReserva = {
                     isDeposit: isDeposit,
                     clientEmail: document.getElementById("lblClientValue").value,
@@ -786,14 +787,32 @@
                     chaletName: document.getElementById('nombre-habitacion-input').value
                 }
 
-                console.log(dataReserva);
-
-
-
+                const data = (isDeposit) ? dataPorDepo : dataReserva;
+                if (isDeposit) {
+                    if (dataPorDepo.clientFirstName == "" || dataPorDepo.clientLastName == "") {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'Es necesario ingresar el nombre y apellido del cliente',
+                            confirmButtonText: 'Aceptar'
+                        })
+                        return;
+                    }
+                } else {
+                    if (dataReserva.clientEmail == "") {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'Es necesario seleccionar un cliente.',
+                            confirmButtonText: 'Aceptar'
+                        })
+                        return;
+                    }
+                }
                 // Aquí puedes enviar los datos al backend para procesar la reserva
                 alert("Reserva confirmada");
                 cerrarModal();
-            });
+            })
         }
 
         // FUNCIONALIDAD TOGGLE SWITCH
