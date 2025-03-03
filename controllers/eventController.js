@@ -1708,10 +1708,12 @@ async function sendReservationMail(req, res) {
 async function cotizadorView(req, res) {
     try {
         const tipologias = await Tipologias.find().lean();
+        const clientes = await Cliente.find().lean();
 
         res.render('cotizador', {
             layout: 'tailwindMain',
-            tipologias
+            tipologias,
+            clientes
         });
     } catch (error) {
         console.error('Error al enviar el correo:', error);

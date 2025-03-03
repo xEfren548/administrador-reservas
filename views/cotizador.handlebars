@@ -97,7 +97,8 @@
                 <div class="flex-1 justify-center items-center text-center ">
                     <label class="block text-sm font-medium text-gray-400">Mostrar solo disponibles</label>
                     <input type="checkbox" id="buscar-solo-disponibles"
-                        class="form-checkbox text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" checked/>
+                        class="form-checkbox text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                        checked />
                 </div>
 
                 <!-- Botón de búsqueda -->
@@ -123,560 +124,660 @@
 <!-- Modal -->
 <div id="modal-reserva" class="fixed inset-0 z-50 hidden">
     <!-- Fondo oscuro -->
-    <div class="fixed inset-0 bg-black bg-opacity-50"></div>
+    <div class="fixed inset-0 bg-black bg-opacity-50">
 
-    <!-- Contenedor del modal -->
-    <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="bg-gray-900 text-white rounded-lg shadow-lg w-full max-w-2xl">
-            <!-- Encabezado del modal -->
-            <div class="p-4 border-b border-gray-700">
-                <h2 class="text-xl font-semibold">Reservar Habitación</h2>
-            </div>
-
-            <!-- Cuerpo del modal -->
-            <div class="p-4 space-y-4">
-                <!-- Sección: Tipo de Reserva -->
-                <div class="w-11/12 mx-auto"> <!-- 90% del ancho y centrado -->
-                    <label class="block text-sm font-medium text-white-400 mb-2 flex items-center justify-center">Tipo
-                        de Reserva</label>
-                    <div class="relative w-full flex items-center justify-center">
-                        <input type="checkbox" id="toggleReserva" class="sr-only">
-                        <div class="w-full max-w-lg bg-gray-700 rounded-full p-1 flex justify-between items-center">
-                            <span id="label-depo"
-                                class="flex-1 text-center text-white text-sm px-4 py-2 rounded-l-full cursor-pointer transition-all duration-300 bg-gradient-to-r from-purple-500 to-pink-500">
-                                Por depo
-                            </span>
-                            <span id="label-reserva"
-                                class="flex-1 text-center text-white text-sm px-4 py-2 rounded-r-full cursor-pointer transition-all duration-300">
-                                Reserva
-                            </span>
-                        </div>
-                    </div>
+        <!-- Contenedor del modal -->
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-gray-900 text-white rounded-lg shadow-lg w-full max-w-2xl">
+                <!-- Encabezado del modal -->
+                <div class="p-4 border-b border-gray-700">
+                    <h2 class="text-xl font-semibold">Reservar Habitación</h2>
                 </div>
 
-                <div class="hidden" id="modalClientContainer">
-                    <div class="w-full max-w-lg mx-auto bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
-                        <div class="mb-4">
-                            <label for="lblClient" class="block text-sm font-medium text-gray-400">Cliente</label>
-                            <input type="text" id="lblClient"
-                                class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
-                                autocomplete="off" placeholder="Buscar y seleccionar cliente..." required>
+                <!-- Cuerpo del modal -->
+                <div class="p-4 space-y-4">
+                    <!-- Sección: Tipo de Reserva -->
+                    <div class="w-11/12 mx-auto"> <!-- 90% del ancho y centrado -->
+                        <label
+                            class="block text-sm font-medium text-white-400 mb-2 flex items-center justify-center">Tipo
+                            de Reserva</label>
+                        <div class="relative w-full flex items-center justify-center">
+                            <input type="checkbox" id="toggleReserva" class="sr-only">
+                            <div class="w-full max-w-lg bg-gray-700 rounded-full p-1 flex justify-between items-center">
+                                <span id="label-depo"
+                                    class="flex-1 text-center text-white text-sm px-4 py-2 rounded-l-full cursor-pointer transition-all duration-300 bg-gradient-to-r from-purple-500 to-pink-500">
+                                    Por depo
+                                </span>
+                                <span id="label-reserva"
+                                    class="flex-1 text-center text-white text-sm px-4 py-2 rounded-r-full cursor-pointer transition-all duration-300">
+                                    Reserva
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
-                            <!-- Contenedor de opciones -->
-                            <div class="relative">
-                                <div id="selectOptions"
-                                    class="absolute w-full bg-gray-800 border border-gray-700 rounded-md shadow-lg mt-1 hidden max-h-48 overflow-y-auto">
-                                    {{#if clientes}}
-                                    {{#each clientes}}
-                                    <div class="select-option px-4 py-2 hover:bg-gray-700 cursor-pointer text-white"
-                                        data-value="{{this.email}}"
-                                        data-label="{{this.firstName}} {{this.lastName}} ({{this.email}})">
-                                        {{this.firstName}} {{this.lastName}} ({{this.email}})
+                    <div class="hidden" id="modalClientContainer">
+                        <div
+                            class="w-full max-w-lg mx-auto bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
+                            <div class="mb-4 select-container">
+                                <label for="lblClient" class="block text-sm font-medium text-gray-400">Cliente</label>
+                                <input type="text" id="lblClient"
+                                    class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                    autocomplete="off" placeholder="Buscar y seleccionar cliente..." required>
+
+                                <!-- Contenedor de opciones -->
+                                <div class="relative">
+                                    <div id="selectOptions"
+                                        class="select-options absolute w-full bg-gray-800 border border-gray-700 rounded-md shadow-lg mt-1 hidden max-h-48 overflow-y-auto">
+                                        {{#if clientes}}
+                                        {{#each clientes}}
+                                        <div class="select-option px-4 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                                            data-value="{{this.email}}"
+                                            data-label="{{this.firstName}} {{this.lastName}} ({{this.email}})">
+                                            {{this.firstName}} {{this.lastName}} ({{this.email}})
+                                        </div>
+                                        {{/each}}
+                                        {{else}}
+                                        <div class="select-optionpx-4 py-2 text-gray-400">No se encontraron clientes
+                                        </div>
+                                        {{/if}}
                                     </div>
-                                    {{/each}}
-                                    {{else}}
-                                    <div class="px-4 py-2 text-gray-400">No se encontraron clientes</div>
-                                    {{/if}}
                                 </div>
+
+                                <input type="hidden" name="lblClient" id="lblClientValue">
                             </div>
 
-                            <input type="hidden" name="lblClient" id="lblClientValue">
+                            <!-- Botón para dar de alta un cliente -->
+                            <div class="flex justify-center">
+                                <button
+                                    class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition"
+                                    data-bs-toggle="modal" data-bs-target="#clientEntryModal">
+                                    Alta de Cliente
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="container-alta-cliente-provisional"
+                        class="w-full max-w-lg mx-auto bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
+                        <h3 class="text-xl font-semibold text-white mb-4 text-center">Cliente</h3>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Nombre -->
+                            <div>
+                                <label for="nombre-cliente-provisional"
+                                    class="block text-sm font-medium text-gray-400">Nombre</label>
+                                <input type="text" id="nombre-cliente-provisional"
+                                    class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Nombre de cliente">
+                            </div>
+
+                            <!-- Apellido -->
+                            <div>
+                                <label for="apellido-cliente-provisional"
+                                    class="block text-sm font-medium text-gray-400">Apellido</label>
+                                <input type="text" id="apellido-cliente-provisional"
+                                    class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Apellido de cliente">
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Sección: Información de la Reserva -->
+                    <div>
+                        <div
+                            class="w-full max-w-lg mx-auto bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
+                            <div class="mb-4">
+                                <h3 class="text-xl font-semibold text-white mb-4 text-center">Información de la reserva
+                                </h3>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="fecha-llegada-input"
+                                            class="block text-sm font-medium text-gray-400">Check in</label>
+                                        <span id="fecha-llegada-input"
+                                            class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
+                                    </div>
+
+                                    <div>
+                                        <label for="fecha-salida-input"
+                                            class="block text-sm font-medium text-gray-400">Check out</label>
+                                        {{!-- <input type="text" id="fecha-salida-input"
+                                            class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500">
+                                        --}}
+                                        <span id="fecha-salida-input"
+                                            class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center text-center"></span>
+                                    </div>
+
+                                    <div>
+                                        <label for="huespedes-input"
+                                            class="block text-sm font-medium text-gray-400">Huéspedes</label>
+                                        <span id="huespedes-input"
+                                            class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
+
+                                    </div>
+                                </div>
+
+                                <h3 class="text-2xl font-bold text-white mb-2 mt-4 text-center">Precio total: <span
+                                        id="precio-total" class="text-blue-500 font-bold text-2xl"></span></h3>
+
+                            </div>
                         </div>
 
-                        <!-- Botón para dar de alta un cliente -->
-                        <div class="flex justify-center">
-                            <button
-                                class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition"
-                                data-bs-toggle="modal" data-bs-target="#clientEntryModal">
-                                Alta de Cliente
+                        <!-- Pie del modal -->
+                        <div class="p-4 border-t border-gray-700 flex justify-end space-x-2">
+                            <button id="cerrar-modal"
+                                class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600">
+                                Cerrar
+                            </button>
+                            <button id="confirmar-reserva"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                Confirmar Reserva
                             </button>
                         </div>
                     </div>
                 </div>
-
-                <div id="container-alta-cliente-provisional"
-                    class="w-full max-w-lg mx-auto bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
-                    <h3 class="text-xl font-semibold text-white mb-4 text-center">Cliente</h3>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <!-- Nombre -->
-                        <div>
-                            <label for="nombre-cliente-provisional"
-                                class="block text-sm font-medium text-gray-400">Nombre</label>
-                            <input type="text" id="nombre-cliente-provisional"
-                                class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
-                                placeholder="Nombre de cliente">
-                        </div>
-
-                        <!-- Apellido -->
-                        <div>
-                            <label for="apellido-cliente-provisional"
-                                class="block text-sm font-medium text-gray-400">Apellido</label>
-                            <input type="text" id="apellido-cliente-provisional"
-                                class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
-                                placeholder="Apellido de cliente">
-                        </div>
-                    </div>
-                </div>
-
-
-
-                <!-- Sección: Información de la Reserva -->
-                <div>
-                    <div class="w-full max-w-lg mx-auto bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
-                        <div class="mb-4">
-                            <h3 class="text-xl font-semibold text-white mb-4 text-center">Información de la reserva</h3>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="fecha-llegada-input"
-                                        class="block text-sm font-medium text-gray-400">Check in</label>
-                                    <span id="fecha-llegada-input"
-                                        class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
-                                </div>
-
-                                <div>
-                                    <label for="fecha-salida-input"
-                                        class="block text-sm font-medium text-gray-400">Check out</label>
-                                    {{!-- <input type="text" id="fecha-salida-input"
-                                        class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500">
-                                    --}}
-                                    <span id="fecha-salida-input"
-                                        class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center text-center"></span>
-                                </div>
-
-                                <div>
-                                    <label for="huespedes-input"
-                                        class="block text-sm font-medium text-gray-400">Huéspedes</label>
-                                    <span id="huespedes-input"
-                                        class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
-
-                                </div>
-                            </div>
-
-                            <h3 class="text-2xl font-bold text-white mb-2 mt-4 text-center">Precio total: <span
-                                    id="precio-total" class="text-blue-500 font-bold text-2xl"></span></h3>
-
-                        </div>
-                    </div>
-
-                    <!-- Pie del modal -->
-                    <div class="p-4 border-t border-gray-700 flex justify-end space-x-2">
-                        <button id="cerrar-modal" class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600">
-                            Cerrar
-                        </button>
-                        <button id="confirmar-reserva"
-                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            Confirmar Reserva
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
-        <script>
-            // Configuración de Flatpickr
-            const fechaInput = document.getElementById("fecha-input");
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+<script>
+    // Configuración de Flatpickr
+    const fechaInput = document.getElementById("fecha-input");
 
-            flatpickr("#fecha-input", {
-                mode: "range", // Selección de rango de fechas
-                dateFormat: "d/m/Y", // Formato de fecha: dd/mm/aaaa
-                locale: "es", // Idioma español
-                minDate: "today", // Fecha mínima: hoy
-                disableMobile: true, // Evita el comportamiento nativo en móviles
-                onChange: function (selectedDates, dateStr, instance) {
-                    const fechaLlegadaInput = document.getElementById("fecha-llegada");
-                    const fechaSalidaInput = document.getElementById("fecha-salida");
+    flatpickr("#fecha-input", {
+        mode: "range", // Selección de rango de fechas
+        dateFormat: "d/m/Y", // Formato de fecha: dd/mm/aaaa
+        locale: "es", // Idioma español
+        minDate: "today", // Fecha mínima: hoy
+        disableMobile: true, // Evita el comportamiento nativo en móviles
+        onChange: function (selectedDates, dateStr, instance) {
+            const fechaLlegadaInput = document.getElementById("fecha-llegada");
+            const fechaSalidaInput = document.getElementById("fecha-salida");
 
-                    if (selectedDates.length === 2) {
-                        // Formatear las fechas usando formatDate
-                        const fechaLlegada = instance.formatDate(selectedDates[0], "d/m/Y");
-                        const fechaSalida = instance.formatDate(selectedDates[1], "d/m/Y");
+            if (selectedDates.length === 2) {
+                // Formatear las fechas usando formatDate
+                const fechaLlegada = instance.formatDate(selectedDates[0], "d/m/Y");
+                const fechaSalida = instance.formatDate(selectedDates[1], "d/m/Y");
 
-                        // Actualizar el valor del campo de entrada manualmente
-                        fechaInput.value = `${fechaLlegada} a ${fechaSalida}`;
+                // Actualizar el valor del campo de entrada manualmente
+                fechaInput.value = `${fechaLlegada} a ${fechaSalida}`;
 
-                        fechaLlegadaInput.value = fechaLlegada;
-                        fechaSalidaInput.value = fechaSalida;
+                fechaLlegadaInput.value = fechaLlegada;
+                fechaSalidaInput.value = fechaSalida;
 
 
-                        console.log("Fecha de llegada:", fechaLlegada);
-                        console.log("Fecha de salida:", fechaSalida);
-                    }
-                },
+                console.log("Fecha de llegada:", fechaLlegada);
+                console.log("Fecha de salida:", fechaSalida);
+            }
+        },
+    });
+
+    // Variables
+    const numeroHuespedes = document.getElementById("numero-huespedes");
+    const botonDecrementar = document.getElementById("decrementar");
+    const botonIncrementar = document.getElementById("incrementar");
+
+    let contador = 1; // Valor inicial
+
+    // Función para actualizar el contador
+    const actualizarContador = () => {
+        numeroHuespedes.textContent = contador;
+    };
+
+    // Evento para disminuir el número de huéspedes
+    botonDecrementar.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (contador > 1) {
+            contador--;
+            actualizarContador();
+        }
+    });
+
+    // Evento para aumentar el número de huéspedes
+    botonIncrementar.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (contador < 20) { // Límite máximo de 10 huéspedes
+            contador++;
+            actualizarContador();
+        }
+    });
+
+    // FUNCIONES PARA CATEGORIAS DESPLEGABLES
+    document.addEventListener("DOMContentLoaded", function () {
+        // Evita que el formulario se recargue
+        document.querySelector("form").addEventListener("submit", function (event) {
+            event.preventDefault();
+        });
+
+        const dropdownButton = document.getElementById("dropdown-button");
+        const dropdownContent = document.getElementById("dropdown-content");
+        const mostrarTodoCheckbox = document.querySelector('input[name="categorias"][value="all"]');
+        const categoriaCheckboxes = document.querySelectorAll('input[name="categorias"]:not([value="all"])');
+
+        // Mostrar / Ocultar dropdown
+        dropdownButton.addEventListener("click", function (event) {
+            event.stopPropagation();
+            dropdownContent.classList.toggle("hidden");
+        });
+
+        // Cerrar el dropdown si se hace clic fuera
+        document.addEventListener("click", function (event) {
+            if (!dropdownContent.contains(event.target) && !dropdownButton.contains(event.target)) {
+                dropdownContent.classList.add("hidden");
+            }
+        });
+
+        // Cuando se selecciona cualquier categoría distinta a "Mostrar todo"
+        categoriaCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener("change", function () {
+                if (this.checked) {
+                    mostrarTodoCheckbox.checked = false; // Deseleccionar "Mostrar todo" si se selecciona otra categoría
+                }
             });
+        });
 
-            // Variables
-            const numeroHuespedes = document.getElementById("numero-huespedes");
-            const botonDecrementar = document.getElementById("decrementar");
-            const botonIncrementar = document.getElementById("incrementar");
+        // Cuando se selecciona "Mostrar todo"
+        mostrarTodoCheckbox.addEventListener("change", function () {
+            if (this.checked) {
+                categoriaCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false; // Deseleccionar todas las categorías si "Mostrar todo" es seleccionado
+                });
+            }
+        });
 
-            let contador = 1; // Valor inicial
+        // ENVIO DE INFORMACION PARA BUSCAR CABAÑAS DISPONIBLES
 
-            // Función para actualizar el contador
-            const actualizarContador = () => {
-                numeroHuespedes.textContent = contador;
+        const buscarChaletsBtn = document.getElementById("buscar-chalets-btn");
+
+        buscarChaletsBtn.addEventListener("click", async function (event) {
+            event.preventDefault();
+
+            const checkboxesSeleccionados = document.querySelectorAll('input[name="categorias"]:checked');
+            const categoriasSeleccionadas = Array.from(checkboxesSeleccionados).map(checkbox => checkbox.value);
+            const fechaLlegada = document.getElementById("fecha-llegada").value;
+            const fechaSalida = document.getElementById("fecha-salida").value;
+            const huespedes = document.getElementById("numero-huespedes").textContent;
+            const buscarSoloDisponiblesChk = document.getElementById("buscar-solo-disponibles").checked;
+
+            console.log("Categorias seleccionadas:", categoriasSeleccionadas);
+            console.log("Fecha de llegada:", fechaLlegada);
+            console.log("Fecha de salida:", fechaSalida);
+            console.log("Número de húspedes:", huespedes);
+            console.log("Buscar solo disponibles:", buscarSoloDisponiblesChk);
+
+            if (categoriasSeleccionadas.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No ha seleccionado ninguna categoría',
+                    text: 'Por favor, seleccione al menos una categoría.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+
+            if (!fechaLlegada || !fechaSalida) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Faltan fechas',
+                    text: 'Por favor, seleccione las fechas de llegada y salida.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+
+            if (!huespedes) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No ha seleccionado el número de húspedes',
+                    text: 'Por favor, seleccione el número de húspedes.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+
+            const datos = {
+                categorias: categoriasSeleccionadas,
+                fechaLlegada: fechaLlegada,
+                fechaSalida: fechaSalida,
+                huespedes: parseInt(huespedes, 10), // Convertir a número
+                soloDisponibles: buscarSoloDisponiblesChk,
             };
 
-            // Evento para disminuir el número de huéspedes
-            botonDecrementar.addEventListener("click", (e) => {
-                e.preventDefault();
-                if (contador > 1) {
-                    contador--;
-                    actualizarContador();
+            console.log("Datos a enviar:", datos);
+
+            try {
+                Swal.fire({
+                    title: 'Cargando...',
+                    text: 'Buscando cabañas disponibles...',
+                    icon: 'info',
+                    showConfirmButton: false
+                })
+                // Enviar los datos al backend usando fetch
+                const respuesta = await fetch("/api/eventos/cotizaciones", {
+                    method: "POST", // Método HTTP
+                    headers: {
+                        "Content-Type": "application/json", // Indicar que el cuerpo es JSON
+                    },
+                    body: JSON.stringify(datos), // Convertir el objeto a JSON
+                });
+
+                // Verificar si la respuesta es exitosa
+                if (!respuesta.ok) {
+                    const errorData = await respuesta.json();
+                    throw new Error("Error en la solicitud: " + errorData.message);
+                }
+
+                // Obtener la respuesta del backend (si es necesario)
+                const resultado = await respuesta.json();
+                console.log("Respuesta del backend:", resultado);
+
+                Swal.close();
+
+                // Aquí puedes manejar la respuesta del backend (por ejemplo, mostrar las habitaciones disponibles)
+                mostrarResultados(resultado.chalets, resultado.evento);
+
+            } catch (error) {
+                Swal.close();
+                console.error("Error al enviar los datos:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message,
+                    confirmButtonText: 'Aceptar'
+                })
+            }
+        });
+
+        function mostrarResultados(habitaciones, evento) {
+            const contenedorResultados = document.getElementById("resultados");
+            contenedorResultados.innerHTML = ""; // Limpiar resultados anteriores
+
+            if (habitaciones.length === 0) {
+                const noResultados = document.createElement("p");
+                noResultados.textContent = "No se encontraron cabañas disponibles.";
+                contenedorResultados.appendChild(noResultados);
+                return;
+            }
+
+            habitaciones.forEach((habitacion) => {
+                const tarjeta = document.createElement("div");
+                tarjeta.classList.add(
+                    "bg-gray-800",
+                    "rounded-lg",
+                    "shadow-lg",
+                    "overflow-hidden"
+                );
+
+                // Imagen de la habitación (puedes usar una imagen real si está disponible)
+                const imagen = document.createElement("img");
+                imagen.src = `https://navarro.integradev.site/navarro/${habitacion.image}`
+                console.log(imagen.src)
+                //imagen.src = "https://www.bosquestapalpa.com.mx/bosquestapalpa/contenido/8a62e2784_blog_.jpg";
+                imagen.alt = habitacion.name;
+                imagen.classList.add("w-full", "h-48", "object-cover");
+
+                const fallbackImage = "https://www.bosquestapalpa.com.mx/bosquestapalpa/contenido/8a62e2784_blog_.jpg";
+
+                imagen.onerror = () => {
+                    console.warn(`La imagen ${imagen.src} no se pudo cargar. Usando imagen de respaldo.`);
+                    imagen.src = fallbackImage;
+                };
+                tarjeta.appendChild(imagen);
+
+                // Contenido de la tarjeta
+                const contenido = document.createElement("div");
+                contenido.classList.add("p-4");
+
+                // Nombre de la habitación
+                const nombre = document.createElement("h3");
+                nombre.classList.add("text-xl", "font-semibold", "text-white");
+                nombre.textContent = habitacion.name;
+                contenido.appendChild(nombre);
+
+                // Precio por noche
+                const precio = document.createElement("p");
+                precio.classList.add("text-white-400", "mt-2", "font-semibold");
+                precio.textContent = `$${habitacion.totalPrice} por ${evento.nights} noche(s)`;
+                contenido.appendChild(precio);
+
+                // Capacidad máxima
+                const capacidad = document.createElement("p");
+                capacidad.classList.add("text-gray-400");
+                capacidad.textContent = `${habitacion.minPax}-${habitacion.maxPax} huéspedes`;
+                contenido.appendChild(capacidad);
+
+                // Botón de reservar
+                let botonReservar = document.createElement("button");
+                botonReservar.classList.add(
+                    "mt-4",
+                    "w-full",
+                    "bg-blue-600",
+                    "text-white",
+                    "py-2",
+                    "px-4",
+                    "rounded-md",
+                    "hover:bg-blue-700",
+                    "transition-colors"
+                );
+
+                botonReservar.dataset.habitacionId = habitacion.id;
+                botonReservar.dataset.nNights = evento.nights;
+                botonReservar.dataset.precioTotal = habitacion.totalPrice;
+                botonReservar.dataset.arrivalDate = evento.fechaLlegada;
+                botonReservar.dataset.departureDate = evento.fechaSalida;
+                botonReservar.dataset.huespedes = evento.huespedes;
+
+
+                botonReservar.addEventListener("click", () => {
+                    // Aquí puedes realizar la reserva
+                    console.log("Reservar habitación:", habitacion.name);
+
+                    abrirModal(botonReservar);
+                });
+                botonReservar.textContent = "Reservar";
+                contenido.appendChild(botonReservar);
+
+                // Agregar contenido a la tarjeta
+                tarjeta.appendChild(contenido);
+
+                // Agregar tarjeta al contenedor de resultados
+                contenedorResultados.appendChild(tarjeta);
+            });
+
+            // MANEJO DE MODAL
+            // Obtener elementos del DOM
+            const modalReserva = document.getElementById("modal-reserva");
+            const cerrarModalBtn = document.getElementById("cerrar-modal");
+            const confirmarReservaBtn = document.getElementById("confirmar-reserva");
+
+            const fechaLlegadaSpan = document.getElementById("fecha-llegada-input");
+            const fechaSalidaSpan = document.getElementById("fecha-salida-input");
+            const huespedesSpan = document.getElementById("huespedes-input");
+            const precioTotalInput = document.getElementById("precio-total");
+
+            // Función para abrir el modal
+            function abrirModal(boton) {
+                console.log(boton);
+                modalReserva.classList.remove("hidden");
+                console.log("Precio total: ", boton.dataset.precioTotal)
+                precioTotalInput.textContent = `$${boton.dataset.precioTotal}`
+                fechaLlegadaSpan.textContent = boton.dataset.arrivalDate;
+                fechaSalidaSpan.textContent = boton.dataset.departureDate;
+                huespedesSpan.textContent = boton.dataset.huespedes;
+
+            }
+
+            // Función para cerrar el modal
+            function cerrarModal() {
+                console.log("Cerrar modal");
+                modalReserva.classList.add("hidden");
+
+            }
+
+            // Evento para abrir el modal al hacer clic en "Reservar"
+
+
+            // Evento para cerrar el modal al hacer clic en "Cerrar"
+            cerrarModalBtn.addEventListener("click", () => {
+                console.log("Cerrar modal");
+                modalReserva.classList.add("hidden");
+            });
+
+            // Evento para cerrar el modal al hacer clic fuera del modal
+            modalReserva.addEventListener("click", (event) => {
+                if (event.target === modalReserva) {
+                    cerrarModal();
                 }
             });
 
-            // Evento para aumentar el número de huéspedes
-            botonIncrementar.addEventListener("click", (e) => {
-                e.preventDefault();
-                if (contador < 20) { // Límite máximo de 10 huéspedes
-                    contador++;
-                    actualizarContador();
-                }
+            // Evento para confirmar la reserva
+            confirmarReservaBtn.addEventListener("click", () => {
+                const tipoReserva = document.querySelector("#modal-reserva select").value;
+                const nombreCliente = document.querySelector("#modal-reserva input[type='text']").value;
+                const detallesReserva = document.querySelector("#modal-reserva textarea").value;
+
+                console.log("Tipo de Reserva:", tipoReserva);
+                console.log("Nombre del Cliente:", nombreCliente);
+                console.log("Detalles de la Reserva:", detallesReserva);
+
+                // Aquí puedes enviar los datos al backend para procesar la reserva
+                alert("Reserva confirmada");
+                cerrarModal();
+            });
+        }
+
+        // FUNCIONALIDAD TOGGLE SWITCH
+        const toggleInput = document.getElementById("toggleReserva");
+        const labelDepo = document.getElementById("label-depo");
+        const labelReserva = document.getElementById("label-reserva");
+
+        const clienteReservaContainer = document.getElementById("modalClientContainer");
+        const clienteProvisionalContainer = document.getElementById("container-alta-cliente-provisional");
+
+        function toggleReserva() {
+            if (toggleInput.checked) {
+                clienteReservaContainer.classList.remove("hidden");
+                clienteProvisionalContainer.classList.add("hidden");
+                labelDepo.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+                labelReserva.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+            } else {
+                clienteReservaContainer.classList.add("hidden");
+                clienteProvisionalContainer.classList.remove("hidden");
+                labelReserva.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+                labelDepo.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+            }
+        }
+
+        // Manejar clics en los labels
+        labelDepo.addEventListener("click", function () {
+            toggleInput.checked = false;
+            toggleReserva();
+        });
+
+        labelReserva.addEventListener("click", function () {
+            toggleInput.checked = true;
+            toggleReserva();
+        });
+
+        // Inicializar estado
+        toggleReserva();
+
+        // FUNCIONES PARA FILTRAR CLIENTES
+        const searchInput = document.getElementById('lblClient');
+        const optionsContainer = document.querySelector('.select-options');
+        const hiddenInput = document.getElementById('lblClientValue');
+        let allOptions = Array.from(document.querySelectorAll('.select-option'));
+
+        function filterOptions(searchText) {
+            console.log("Entrando a filterOptions")
+            const filteredOptions = allOptions.filter(option => {
+                const optionText = option.textContent.toLowerCase();
+                return optionText.includes(searchText.toLowerCase());
             });
 
-            // FUNCIONES PARA CATEGORIAS DESPLEGABLES
-            document.addEventListener("DOMContentLoaded", function () {
-                // Evita que el formulario se recargue
-                document.querySelector("form").addEventListener("submit", function (event) {
-                    event.preventDefault();
-                });
+            // Hide all options first
+            allOptions.forEach(option => option.style.display = 'none');
 
-                const dropdownButton = document.getElementById("dropdown-button");
-                const dropdownContent = document.getElementById("dropdown-content");
-                const mostrarTodoCheckbox = document.querySelector('input[name="categorias"][value="all"]');
-                const categoriaCheckboxes = document.querySelectorAll('input[name="categorias"]:not([value="all"])');
+            // Show filtered options
+            filteredOptions.forEach(option => option.style.display = 'block');
 
-                // Mostrar / Ocultar dropdown
-                dropdownButton.addEventListener("click", function (event) {
-                    event.stopPropagation();
-                    dropdownContent.classList.toggle("hidden");
-                });
+            // Show/hide options container based on whether there are results
+            optionsContainer.style.display = filteredOptions.length > 0 ? 'block' : 'none';
+        }
 
-                // Cerrar el dropdown si se hace clic fuera
-                document.addEventListener("click", function (event) {
-                    if (!dropdownContent.contains(event.target) && !dropdownButton.contains(event.target)) {
-                        dropdownContent.classList.add("hidden");
+        // Input event handler
+        searchInput.addEventListener('input', (e) => {
+            filterOptions(e.target.value);
+        });
+
+        // Focus event handler
+        searchInput.addEventListener('focus', () => {
+            console.log("Focus en searchInput")
+            optionsContainer.style.display = 'block';
+            filterOptions(searchInput.value);
+        });
+
+        // Click handler for options
+        optionsContainer.addEventListener('click', (e) => {
+            const option = e.target.closest('.select-option');
+            if (option) {
+                const value = option.dataset.value;
+                const label = option.dataset.label || option.textContent;
+
+                searchInput.value = label;
+                hiddenInput.value = value;
+                optionsContainer.style.display = 'none';
+            }
+        });
+
+        // Close options when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.select-container') && !e.target.closest('.select-option')) {
+                optionsContainer.style.display = 'none';
+            }
+        });
+
+        // Keyboard navigation
+        searchInput.addEventListener('keydown', (e) => {
+            const visibleOptions = Array.from(optionsContainer.querySelectorAll('.select-option')).filter(
+                option => option.style.display !== 'none'
+            );
+            const currentIndex = visibleOptions.findIndex(option => option.classList.contains('selected'));
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (currentIndex < visibleOptions.length - 1) {
+                        visibleOptions.forEach(opt => opt.classList.remove('selected'));
+                        visibleOptions[currentIndex + 1].classList.add('selected');
                     }
-                });
-
-                // Cuando se selecciona cualquier categoría distinta a "Mostrar todo"
-                categoriaCheckboxes.forEach(checkbox => {
-                    checkbox.addEventListener("change", function () {
-                        if (this.checked) {
-                            mostrarTodoCheckbox.checked = false; // Deseleccionar "Mostrar todo" si se selecciona otra categoría
-                        }
-                    });
-                });
-
-                // Cuando se selecciona "Mostrar todo"
-                mostrarTodoCheckbox.addEventListener("change", function () {
-                    if (this.checked) {
-                        categoriaCheckboxes.forEach(checkbox => {
-                            checkbox.checked = false; // Deseleccionar todas las categorías si "Mostrar todo" es seleccionado
-                        });
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (currentIndex > 0) {
+                        visibleOptions.forEach(opt => opt.classList.remove('selected'));
+                        visibleOptions[currentIndex - 1].classList.add('selected');
                     }
-                });
-
-                // ENVIO DE INFORMACION PARA BUSCAR CABAÑAS DISPONIBLES
-
-                const buscarChaletsBtn = document.getElementById("buscar-chalets-btn");
-
-                buscarChaletsBtn.addEventListener("click", async function (event) {
-                    event.preventDefault();
-
-                    const checkboxesSeleccionados = document.querySelectorAll('input[name="categorias"]:checked');
-                    const categoriasSeleccionadas = Array.from(checkboxesSeleccionados).map(checkbox => checkbox.value);
-                    const fechaLlegada = document.getElementById("fecha-llegada").value;
-                    const fechaSalida = document.getElementById("fecha-salida").value;
-                    const huespedes = document.getElementById("numero-huespedes").textContent;
-                    const buscarSoloDisponiblesChk = document.getElementById("buscar-solo-disponibles").checked;
-
-                    console.log("Categorias seleccionadas:", categoriasSeleccionadas);
-                    console.log("Fecha de llegada:", fechaLlegada);
-                    console.log("Fecha de salida:", fechaSalida);
-                    console.log("Número de húspedes:", huespedes);
-                    console.log("Buscar solo disponibles:", buscarSoloDisponiblesChk);
-
-                    if (categoriasSeleccionadas.length === 0) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'No ha seleccionado ninguna categoría',
-                            text: 'Por favor, seleccione al menos una categoría.',
-                            confirmButtonText: 'Aceptar'
-                        });
-                        return;
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    const selectedOption = visibleOptions.find(opt => opt.classList.contains('selected'));
+                    if (selectedOption) {
+                        const value = selectedOption.dataset.value;
+                        const label = selectedOption.dataset.label || selectedOption.textContent;
+                        searchInput.value = label;
+                        hiddenInput.value = value;
+                        optionsContainer.style.display = 'none';
                     }
-
-                    if (!fechaLlegada || !fechaSalida) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Faltan fechas',
-                            text: 'Por favor, seleccione las fechas de llegada y salida.',
-                            confirmButtonText: 'Aceptar'
-                        });
-                        return;
-                    }
-
-                    if (!huespedes) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'No ha seleccionado el número de húspedes',
-                            text: 'Por favor, seleccione el número de húspedes.',
-                            confirmButtonText: 'Aceptar'
-                        });
-                        return;
-                    }
-
-                    const datos = {
-                        categorias: categoriasSeleccionadas,
-                        fechaLlegada: fechaLlegada,
-                        fechaSalida: fechaSalida,
-                        huespedes: parseInt(huespedes, 10), // Convertir a número
-                        soloDisponibles: buscarSoloDisponiblesChk,
-                    };
-
-                    console.log("Datos a enviar:", datos);
-
-                    try {
-                        Swal.fire({
-                            title: 'Cargando...',
-                            text: 'Buscando cabañas disponibles...',
-                            icon: 'info',
-                            showConfirmButton: false
-                        })
-                        // Enviar los datos al backend usando fetch
-                        const respuesta = await fetch("/api/eventos/cotizaciones", {
-                            method: "POST", // Método HTTP
-                            headers: {
-                                "Content-Type": "application/json", // Indicar que el cuerpo es JSON
-                            },
-                            body: JSON.stringify(datos), // Convertir el objeto a JSON
-                        });
-
-                        // Verificar si la respuesta es exitosa
-                        if (!respuesta.ok) {
-                            const errorData = await respuesta.json();
-                            throw new Error("Error en la solicitud: " + errorData.message);
-                        }
-
-                        // Obtener la respuesta del backend (si es necesario)
-                        const resultado = await respuesta.json();
-                        console.log("Respuesta del backend:", resultado);
-
-                        Swal.close();
-
-                        // Aquí puedes manejar la respuesta del backend (por ejemplo, mostrar las habitaciones disponibles)
-                        mostrarResultados(resultado.chalets, resultado.evento);
-
-                    } catch (error) {
-                        Swal.close();
-                        console.error("Error al enviar los datos:", error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: error.message,
-                            confirmButtonText: 'Aceptar'
-                        })
-                    }
-                });
-
-                function mostrarResultados(habitaciones, evento) {
-                    const contenedorResultados = document.getElementById("resultados");
-                    contenedorResultados.innerHTML = ""; // Limpiar resultados anteriores
-
-                    if (habitaciones.length === 0) {
-                        const noResultados = document.createElement("p");
-                        noResultados.textContent = "No se encontraron cabañas disponibles.";
-                        contenedorResultados.appendChild(noResultados);
-                        return;
-                    }
-
-                    habitaciones.forEach((habitacion) => {
-                        const tarjeta = document.createElement("div");
-                        tarjeta.classList.add(
-                            "bg-gray-800",
-                            "rounded-lg",
-                            "shadow-lg",
-                            "overflow-hidden"
-                        );
-
-                        // Imagen de la habitación (puedes usar una imagen real si está disponible)
-                        const imagen = document.createElement("img");
-                        imagen.src = `https://navarro.integradev.site/navarro/${habitacion.image}`
-                        console.log(imagen.src)
-                        //imagen.src = "https://www.bosquestapalpa.com.mx/bosquestapalpa/contenido/8a62e2784_blog_.jpg";
-                        imagen.alt = habitacion.name;
-                        imagen.classList.add("w-full", "h-48", "object-cover");
-
-                        const fallbackImage = "https://www.bosquestapalpa.com.mx/bosquestapalpa/contenido/8a62e2784_blog_.jpg";
-
-                        imagen.onerror = () => {
-                            console.warn(`La imagen ${imagen.src} no se pudo cargar. Usando imagen de respaldo.`);
-                            imagen.src = fallbackImage;
-                        };
-                        tarjeta.appendChild(imagen);
-
-                        // Contenido de la tarjeta
-                        const contenido = document.createElement("div");
-                        contenido.classList.add("p-4");
-
-                        // Nombre de la habitación
-                        const nombre = document.createElement("h3");
-                        nombre.classList.add("text-xl", "font-semibold", "text-white");
-                        nombre.textContent = habitacion.name;
-                        contenido.appendChild(nombre);
-
-                        // Precio por noche
-                        const precio = document.createElement("p");
-                        precio.classList.add("text-white-400", "mt-2", "font-semibold");
-                        precio.textContent = `$${habitacion.totalPrice} por ${evento.nights} noche(s)`;
-                        contenido.appendChild(precio);
-
-                        // Capacidad máxima
-                        const capacidad = document.createElement("p");
-                        capacidad.classList.add("text-gray-400");
-                        capacidad.textContent = `${habitacion.minPax}-${habitacion.maxPax} huéspedes`;
-                        contenido.appendChild(capacidad);
-
-                        // Botón de reservar
-                        let botonReservar = document.createElement("button");
-                        botonReservar.classList.add(
-                            "mt-4",
-                            "w-full",
-                            "bg-blue-600",
-                            "text-white",
-                            "py-2",
-                            "px-4",
-                            "rounded-md",
-                            "hover:bg-blue-700",
-                            "transition-colors"
-                        );
-
-                        botonReservar.dataset.habitacionId = habitacion.id;
-                        botonReservar.dataset.nNights = evento.nights;
-                        botonReservar.dataset.precioTotal = habitacion.totalPrice;
-                        botonReservar.dataset.arrivalDate = evento.fechaLlegada;
-                        botonReservar.dataset.departureDate = evento.fechaSalida;
-                        botonReservar.dataset.huespedes = evento.huespedes;
+                    break;
+            }
+        });
+    });
 
 
-                        botonReservar.addEventListener("click", () => {
-                            // Aquí puedes realizar la reserva
-                            console.log("Reservar habitación:", habitacion.name);
-                            
-                            abrirModal(botonReservar);
-                        });
-                        botonReservar.textContent = "Reservar";
-                        contenido.appendChild(botonReservar);
-
-                        // Agregar contenido a la tarjeta
-                        tarjeta.appendChild(contenido);
-
-                        // Agregar tarjeta al contenedor de resultados
-                        contenedorResultados.appendChild(tarjeta);
-                    });
-
-                    // MANEJO DE MODAL
-                    // Obtener elementos del DOM
-                    const modalReserva = document.getElementById("modal-reserva");
-                    const cerrarModalBtn = document.getElementById("cerrar-modal");
-                    const confirmarReservaBtn = document.getElementById("confirmar-reserva");
-
-                    const fechaLlegadaSpan = document.getElementById("fecha-llegada-input");
-                    const fechaSalidaSpan = document.getElementById("fecha-salida-input");
-                    const huespedesSpan = document.getElementById("huespedes-input");
-                    const precioTotalInput = document.getElementById("precio-total");
-
-                    // Función para abrir el modal
-                    function abrirModal(boton) {
-                        console.log(boton);
-                        modalReserva.classList.remove("hidden");
-                        console.log("Precio total: ", boton.dataset.precioTotal)
-                        precioTotalInput.textContent = `$${boton.dataset.precioTotal}`
-                        fechaLlegadaSpan.textContent = boton.dataset.arrivalDate;
-                        fechaSalidaSpan.textContent = boton.dataset.departureDate;
-                        huespedesSpan.textContent = boton.dataset.huespedes;
-
-                    }
-
-                    // Función para cerrar el modal
-                    function cerrarModal() {
-                        console.log("Cerrar modal");
-                        modalReserva.classList.add("hidden");
-
-                    }
-
-                    // Evento para abrir el modal al hacer clic en "Reservar"
-
-
-                    // Evento para cerrar el modal al hacer clic en "Cerrar"
-                    cerrarModalBtn.addEventListener("click", () => {
-                        console.log("Cerrar modal");
-                        modalReserva.classList.add("hidden");
-                    });
-
-                    // Evento para cerrar el modal al hacer clic fuera del modal
-                    modalReserva.addEventListener("click", (event) => {
-                        if (event.target === modalReserva) {
-                            cerrarModal();
-                        }
-                    });
-
-                    // Evento para confirmar la reserva
-                    confirmarReservaBtn.addEventListener("click", () => {
-                        const tipoReserva = document.querySelector("#modal-reserva select").value;
-                        const nombreCliente = document.querySelector("#modal-reserva input[type='text']").value;
-                        const detallesReserva = document.querySelector("#modal-reserva textarea").value;
-
-                        console.log("Tipo de Reserva:", tipoReserva);
-                        console.log("Nombre del Cliente:", nombreCliente);
-                        console.log("Detalles de la Reserva:", detallesReserva);
-
-                        // Aquí puedes enviar los datos al backend para procesar la reserva
-                        alert("Reserva confirmada");
-                        cerrarModal();
-                    });
-                }
-
-                // FUNCIONALIDAD TOGGLE SWITCH
-                const toggleInput = document.getElementById("toggleReserva");
-                const labelDepo = document.getElementById("label-depo");
-                const labelReserva = document.getElementById("label-reserva");
-
-                const clienteReservaContainer = document.getElementById("modalClientContainer");
-                const clienteProvisionalContainer = document.getElementById("container-alta-cliente-provisional");
-
-                function toggleReserva() {
-                    if (toggleInput.checked) {
-                        clienteReservaContainer.classList.remove("hidden");
-                        clienteProvisionalContainer.classList.add("hidden");
-                        labelDepo.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
-                        labelReserva.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
-                    } else {
-                        clienteReservaContainer.classList.add("hidden");
-                        clienteProvisionalContainer.classList.remove("hidden");
-                        labelReserva.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
-                        labelDepo.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
-                    }
-                }
-
-                // Manejar clics en los labels
-                labelDepo.addEventListener("click", function () {
-                    toggleInput.checked = false;
-                    toggleReserva();
-                });
-
-                labelReserva.addEventListener("click", function () {
-                    toggleInput.checked = true;
-                    toggleReserva();
-                });
-
-                // Inicializar estado
-                toggleReserva();
-            });
-
-
-        </script>
+</script>
