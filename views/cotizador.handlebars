@@ -191,7 +191,7 @@
                             <div class="flex justify-center">
                                 <button
                                     class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition"
-                                    data-bs-toggle="modal" data-bs-target="#clientEntryModal">
+                                    id="clientEntryModalBtn">
                                     Alta de Cliente
                                 </button>
                             </div>
@@ -279,6 +279,114 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Container -->
+<div id="clientEntryModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Modal Overlay -->
+        <div class="fixed inset-0 transition-opacity bg-black bg-opacity-50" aria-hidden="true"></div>
+
+        <!-- Modal Content -->
+        <div
+            class="inline-block w-full max-w-3xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-gray-800 rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-3xl">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-4 border-b border-gray-700">
+                <h3 class="text-xl font-semibold leading-6 text-white">Alta de cliente</h3>
+                <button type="button" onclick="closeModal()"
+                    class="text-gray-400 hover:text-gray-200 focus:outline-none">
+                    <span class="text-2xl">&times;</span>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="mt-4">
+                <form id="frmCreateClient" action="/api/clientes/crear-cliente" method="post">
+                    <div class="space-y-4">
+                        <!-- Name -->
+                        <div>
+                            <label for="txtClientName" class="block text-sm font-medium text-gray-400">Nombre</label>
+                            <input type="text" name="txtClientName" id="txtClientName"
+                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="Nombre">
+                        </div>
+
+                        <!-- Lastname -->
+                        <div>
+                            <label for="txtClientLastname"
+                                class="block text-sm font-medium text-gray-400">Apellido</label>
+                            <input type="text" name="txtClientLastname" id="txtClientLastname"
+                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="Apellido">
+                        </div>
+
+                        <!-- Phone -->
+                        <div>
+                            <label for="txtClientPhone" class="block text-sm font-medium text-gray-400">Teléfono</label>
+                            <input type="tel" name="txtClientPhone" id="txtClientPhone"
+                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="Teléfono">
+                        </div>
+
+                        <!-- Address -->
+                        <div>
+                            <label for="txtClientAddress"
+                                class="block text-sm font-medium text-gray-400">Dirección</label>
+                            <input type="text" name="txtClientAddress" id="txtClientAddress"
+                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="Dirección">
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label for="txtClientEmail" class="block text-sm font-medium text-gray-400">Email</label>
+                            <input type="text" name="txtClientEmail" id="txtClientEmail"
+                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="Email">
+                        </div>
+
+                        <!-- ID Type -->
+                        <div>
+                            <label for="slctClientIdType" class="block text-sm font-medium text-gray-400">Tipo de
+                                identificación</label>
+                            <select name="slctClientIdType" id="slctClientIdType"
+                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                required>
+                                <option value="" selected disabled>Selecciona el tipo de identificación del cliente
+                                </option>
+                                <option value="INE">INE</option>
+                                <option value="Pasaporte">Pasaporte</option>
+                                <option value="Licencia de conducir">Licencia de conducir</option>
+                            </select>
+                        </div>
+
+                        <!-- ID Number -->
+                        <div>
+                            <label for="txtClientIdNumber" class="block text-sm font-medium text-gray-400">Número de
+                                identificación</label>
+                            <input type="text" name="txtClientIdNumber" id="txtClientIdNumber"
+                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="Número de identificación">
+                        </div>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div class="mt-4">
+                        <p id="txtInsertClientError" class="text-sm text-red-500"></p>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="flex justify-end mt-6 space-x-3">
+                        <button type="button" onclick="closeModal()"
+                            class="px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500">Regresar</button>
+                        <button type="button" id="btnSaveClient"
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">Agregar
+                            Cliente</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -693,6 +801,26 @@
         const hiddenInput = document.getElementById('lblClientValue');
         let allOptions = Array.from(document.querySelectorAll('.select-option'));
 
+        window.addNewClientOption = function (clientData) {
+            // Create new option element
+            const newOption = document.createElement('div');
+            newOption.className = 'select-option px-4 py-2 hover:bg-gray-700 cursor-pointer text-white';
+
+            newOption.dataset.value = clientData.email;
+            newOption.dataset.label = `${clientData.firstName} ${clientData.lastName} (${clientData.email})`;
+            newOption.textContent = `${clientData.firstName} ${clientData.lastName} (${clientData.email})`;
+
+            // Add the new option to the container
+            optionsContainer.appendChild(newOption);
+
+            // Update allOptions array
+            allOptions = Array.from(document.querySelectorAll('.select-option'));
+
+            // Set the new option as selected
+            searchInput.value = newOption.dataset.label;
+            hiddenInput.value = newOption.dataset.value;
+        };
+
         function filterOptions(searchText) {
             console.log("Entrando a filterOptions")
             const filteredOptions = allOptions.filter(option => {
@@ -777,7 +905,94 @@
                     break;
             }
         });
+
+        // Open Modal
+        function openModal() {
+            document.getElementById('clientEntryModal').classList.remove('hidden');
+        }
+
+
+        // Example: Open modal on button click
+        document.getElementById('clientEntryModalBtn').addEventListener('click', openModal);
+
+        // FUNCIONES PARA GUARDAR CLIENTES
+        var btnSaveClient = document.getElementById("btnSaveClient");
+        if (btnSaveClient) {
+            btnSaveClient.addEventListener("click", async (event) => {
+                event.preventDefault();
+
+                const data = {
+                    firstName: document.getElementById("txtClientName").value,
+                    lastName: document.getElementById("txtClientLastname").value,
+                    phone: document.getElementById("txtClientPhone").value,
+                    address: document.getElementById("txtClientAddress").value,
+                    email: document.getElementById("txtClientEmail").value,
+                    identificationType: document.getElementById("slctClientIdType").value,
+                    identificationNumber: document.getElementById("txtClientIdNumber").value
+                };
+
+                try {
+                    const response = await fetch('/api/clientes/crear-cliente', {
+                        method: 'POST',
+                        headers: {
+                            // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+
+                    if (!response.ok) {
+                        const errorData = await response.json(); // Extract the error data
+                        const errorMessage = errorData.error && errorData.error[0] && errorData.error[0].message
+                            ? errorData.error[0].message
+                            : 'Error en la solicitud'; // Fallback if message is not found
+                        throw new Error(errorMessage);
+                    }
+
+                    const dataR = await response.json();
+                    console.log(dataR);
+
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: dataR.message + '.',
+                        confirmButtonText: 'Regresar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            closeModal();
+                            //$('#event_entry_modal').modal('show');
+                            // Update the clients dropdown
+                            // const newOption = document.createElement("option");
+                            // newOption.value = dataR.client.email;
+                            // newOption.text = dataR.client.firstName + " " + dataR.client.lastName + "(" + dataR.client.email + ")";
+                            // newOption.selected = true;
+
+                            // document.getElementById("lblClient").appendChild(newOption);
+
+                            window.addNewClientOption({
+                                email: dataR.client.email,
+                                firstName: dataR.client.firstName,
+                                lastName: dataR.client.lastName
+                            });
+
+                        }
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la solicitud: ' + error.message,
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            });
+        }
     });
 
+    // Close Modal
+    function closeModal() {
+        document.getElementById('clientEntryModal').classList.add('hidden');
+    }
 
 </script>
