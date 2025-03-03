@@ -745,13 +745,20 @@
 
             // Evento para confirmar la reserva
             confirmarReservaBtn.addEventListener("click", () => {
-                const tipoReserva = document.querySelector("#modal-reserva select").value;
-                const nombreCliente = document.querySelector("#modal-reserva input[type='text']").value;
-                const detallesReserva = document.querySelector("#modal-reserva textarea").value;
+                const tipoReservaChk = document.getElementById("toggleReserva");
+                const tipoReserva = (!tipoReservaChk.checked) ? "por-depo" : "reserva";
+                const dataReserva = {
+                    tipoReserva: tipoReserva,
+                    cliente: document.getElementById("lblClientValue").value,
+                    fechaLlegada: document.getElementById("fecha-llegada-input").textContent,
+                    fechaSalida: document.getElementById("fecha-salida-input").textContent,
+                    huespedes: document.getElementById("huespedes-input").textContent,
+                    precioTotal: document.getElementById("precio-total").textContent
+                }
 
-                console.log("Tipo de Reserva:", tipoReserva);
-                console.log("Nombre del Cliente:", nombreCliente);
-                console.log("Detalles de la Reserva:", detallesReserva);
+                console.log(dataReserva);
+
+
 
                 // Aquí puedes enviar los datos al backend para procesar la reserva
                 alert("Reserva confirmada");
