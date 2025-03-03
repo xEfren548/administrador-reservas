@@ -1779,7 +1779,8 @@ async function cotizadorChaletsyPrecios(req, res) {
         const eventoParaReservar = {
             nights: nNights,
             fechaLlegada: fechaLlegada,
-            fechaSalida: fechaSalida
+            fechaSalida: fechaSalida,
+            huespedes: huespedes
         }
 
         const infoComisiones = {

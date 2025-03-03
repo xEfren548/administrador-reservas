@@ -231,434 +231,452 @@
                                 <div>
                                     <label for="fecha-llegada-input"
                                         class="block text-sm font-medium text-gray-400">Check in</label>
-                                    <input type="text" id="fecha-llegada-input"
-                                        class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500">
+                                    <span id="fecha-llegada-input"
+                                        class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500"></span>
                                 </div>
 
                                 <div>
                                     <label for="fecha-salida-input"
                                         class="block text-sm font-medium text-gray-400">Check out</label>
-                                    <input type="text" id="fecha-salida-input"
+                                    {{!-- <input type="text" id="fecha-salida-input"
                                         class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500">
+                                    --}}
+                                    <span id="fecha-salida-input"
+                                        class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 text-center"></span>
                                 </div>
 
                                 <div>
                                     <label for="huespedes-input"
                                         class="block text-sm font-medium text-gray-400">Huéspedes</label>
-                                    <input type="number" id="huespedes-input"
-                                        class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500">
+                                    <span id="huespedes-input"
+                                        class="w-9/12 p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
+
+                                </div>
+                            </div>
+
+                            <h3 class="text-2xl font-bold text-white mb-2 mt-4 text-center">Precio total: <span
+                                    id="precio-total" class="text-blue-500 font-bold text-2xl"></span></h3>
+
                         </div>
                     </div>
-                    
-                    <h3 class="text-2xl font-bold text-white mb-2 mt-4 text-center">Precio total: <span id="precio-total" class="text-blue-500 font-bold text-2xl"></span></h3>
 
+                    <!-- Pie del modal -->
+                    <div class="p-4 border-t border-gray-700 flex justify-end space-x-2">
+                        <button id="cerrar-modal" class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600">
+                            Cerrar
+                        </button>
+                        <button id="confirmar-reserva"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            Confirmar Reserva
+                        </button>
+                    </div>
                 </div>
             </div>
-
-            <!-- Pie del modal -->
-            <div class="p-4 border-t border-gray-700 flex justify-end space-x-2">
-                <button id="cerrar-modal" class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600">
-                    Cerrar
-                </button>
-                <button id="confirmar-reserva" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                    Confirmar Reserva
-                </button>
-            </div>
         </div>
-    </div>
-</div>
 
-<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
-<script>
-    // Configuración de Flatpickr
-    const fechaInput = document.getElementById("fecha-input");
+        <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+        <script>
+            // Configuración de Flatpickr
+            const fechaInput = document.getElementById("fecha-input");
 
-    flatpickr("#fecha-input", {
-        mode: "range", // Selección de rango de fechas
-        dateFormat: "d/m/Y", // Formato de fecha: dd/mm/aaaa
-        locale: "es", // Idioma español
-        minDate: "today", // Fecha mínima: hoy
-        disableMobile: true, // Evita el comportamiento nativo en móviles
-        onChange: function (selectedDates, dateStr, instance) {
-            const fechaLlegadaInput = document.getElementById("fecha-llegada");
-            const fechaSalidaInput = document.getElementById("fecha-salida");
+            flatpickr("#fecha-input", {
+                mode: "range", // Selección de rango de fechas
+                dateFormat: "d/m/Y", // Formato de fecha: dd/mm/aaaa
+                locale: "es", // Idioma español
+                minDate: "today", // Fecha mínima: hoy
+                disableMobile: true, // Evita el comportamiento nativo en móviles
+                onChange: function (selectedDates, dateStr, instance) {
+                    const fechaLlegadaInput = document.getElementById("fecha-llegada");
+                    const fechaSalidaInput = document.getElementById("fecha-salida");
 
-            if (selectedDates.length === 2) {
-                // Formatear las fechas usando formatDate
-                const fechaLlegada = instance.formatDate(selectedDates[0], "d/m/Y");
-                const fechaSalida = instance.formatDate(selectedDates[1], "d/m/Y");
+                    if (selectedDates.length === 2) {
+                        // Formatear las fechas usando formatDate
+                        const fechaLlegada = instance.formatDate(selectedDates[0], "d/m/Y");
+                        const fechaSalida = instance.formatDate(selectedDates[1], "d/m/Y");
 
-                // Actualizar el valor del campo de entrada manualmente
-                fechaInput.value = `${fechaLlegada} a ${fechaSalida}`;
+                        // Actualizar el valor del campo de entrada manualmente
+                        fechaInput.value = `${fechaLlegada} a ${fechaSalida}`;
 
-                fechaLlegadaInput.value = fechaLlegada;
-                fechaSalidaInput.value = fechaSalida;
+                        fechaLlegadaInput.value = fechaLlegada;
+                        fechaSalidaInput.value = fechaSalida;
 
 
-                console.log("Fecha de llegada:", fechaLlegada);
-                console.log("Fecha de salida:", fechaSalida);
-            }
-        },
-    });
-
-    // Variables
-    const numeroHuespedes = document.getElementById("numero-huespedes");
-    const botonDecrementar = document.getElementById("decrementar");
-    const botonIncrementar = document.getElementById("incrementar");
-
-    let contador = 1; // Valor inicial
-
-    // Función para actualizar el contador
-    const actualizarContador = () => {
-        numeroHuespedes.textContent = contador;
-    };
-
-    // Evento para disminuir el número de huéspedes
-    botonDecrementar.addEventListener("click", (e) => {
-        e.preventDefault();
-        if (contador > 1) {
-            contador--;
-            actualizarContador();
-        }
-    });
-
-    // Evento para aumentar el número de huéspedes
-    botonIncrementar.addEventListener("click", (e) => {
-        e.preventDefault();
-        if (contador < 20) { // Límite máximo de 10 huéspedes
-            contador++;
-            actualizarContador();
-        }
-    });
-
-    // FUNCIONES PARA CATEGORIAS DESPLEGABLES
-    document.addEventListener("DOMContentLoaded", function () {
-        // Evita que el formulario se recargue
-        document.querySelector("form").addEventListener("submit", function (event) {
-            event.preventDefault();
-        });
-
-        const dropdownButton = document.getElementById("dropdown-button");
-        const dropdownContent = document.getElementById("dropdown-content");
-        const mostrarTodoCheckbox = document.querySelector('input[name="categorias"][value="all"]');
-        const categoriaCheckboxes = document.querySelectorAll('input[name="categorias"]:not([value="all"])');
-
-        // Mostrar / Ocultar dropdown
-        dropdownButton.addEventListener("click", function (event) {
-            event.stopPropagation();
-            dropdownContent.classList.toggle("hidden");
-        });
-
-        // Cerrar el dropdown si se hace clic fuera
-        document.addEventListener("click", function (event) {
-            if (!dropdownContent.contains(event.target) && !dropdownButton.contains(event.target)) {
-                dropdownContent.classList.add("hidden");
-            }
-        });
-
-        // Cuando se selecciona cualquier categoría distinta a "Mostrar todo"
-        categoriaCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener("change", function () {
-                if (this.checked) {
-                    mostrarTodoCheckbox.checked = false; // Deseleccionar "Mostrar todo" si se selecciona otra categoría
-                }
+                        console.log("Fecha de llegada:", fechaLlegada);
+                        console.log("Fecha de salida:", fechaSalida);
+                    }
+                },
             });
-        });
 
-        // Cuando se selecciona "Mostrar todo"
-        mostrarTodoCheckbox.addEventListener("change", function () {
-            if (this.checked) {
-                categoriaCheckboxes.forEach(checkbox => {
-                    checkbox.checked = false; // Deseleccionar todas las categorías si "Mostrar todo" es seleccionado
-                });
-            }
-        });
+            // Variables
+            const numeroHuespedes = document.getElementById("numero-huespedes");
+            const botonDecrementar = document.getElementById("decrementar");
+            const botonIncrementar = document.getElementById("incrementar");
 
-        // ENVIO DE INFORMACION PARA BUSCAR CABAÑAS DISPONIBLES
+            let contador = 1; // Valor inicial
 
-        const buscarChaletsBtn = document.getElementById("buscar-chalets-btn");
-
-        buscarChaletsBtn.addEventListener("click", async function (event) {
-            event.preventDefault();
-
-            const checkboxesSeleccionados = document.querySelectorAll('input[name="categorias"]:checked');
-            const categoriasSeleccionadas = Array.from(checkboxesSeleccionados).map(checkbox => checkbox.value);
-            const fechaLlegada = document.getElementById("fecha-llegada").value;
-            const fechaSalida = document.getElementById("fecha-salida").value;
-            const huespedes = document.getElementById("numero-huespedes").textContent;
-            const buscarSoloDisponiblesChk = document.getElementById("buscar-solo-disponibles").checked;
-
-            console.log("Categorias seleccionadas:", categoriasSeleccionadas);
-            console.log("Fecha de llegada:", fechaLlegada);
-            console.log("Fecha de salida:", fechaSalida);
-            console.log("Número de húspedes:", huespedes);
-            console.log("Buscar solo disponibles:", buscarSoloDisponiblesChk);
-
-            if (categoriasSeleccionadas.length === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'No ha seleccionado ninguna categoría',
-                    text: 'Por favor, seleccione al menos una categoría.',
-                    confirmButtonText: 'Aceptar'
-                });
-                return;
-            }
-
-            if (!fechaLlegada || !fechaSalida) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Faltan fechas',
-                    text: 'Por favor, seleccione las fechas de llegada y salida.',
-                    confirmButtonText: 'Aceptar'
-                });
-                return;
-            }
-
-            if (!huespedes) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'No ha seleccionado el número de húspedes',
-                    text: 'Por favor, seleccione el número de húspedes.',
-                    confirmButtonText: 'Aceptar'
-                });
-                return;
-            }
-
-            const datos = {
-                categorias: categoriasSeleccionadas,
-                fechaLlegada: fechaLlegada,
-                fechaSalida: fechaSalida,
-                huespedes: parseInt(huespedes, 10), // Convertir a número
-                soloDisponibles: buscarSoloDisponiblesChk,
+            // Función para actualizar el contador
+            const actualizarContador = () => {
+                numeroHuespedes.textContent = contador;
             };
 
-            console.log("Datos a enviar:", datos);
-
-            try {
-                Swal.fire({
-                    title: 'Cargando...',
-                    text: 'Buscando cabañas disponibles...',
-                    icon: 'info',
-                    showConfirmButton: false
-                })
-                // Enviar los datos al backend usando fetch
-                const respuesta = await fetch("/api/eventos/cotizaciones", {
-                    method: "POST", // Método HTTP
-                    headers: {
-                        "Content-Type": "application/json", // Indicar que el cuerpo es JSON
-                    },
-                    body: JSON.stringify(datos), // Convertir el objeto a JSON
-                });
-
-                // Verificar si la respuesta es exitosa
-                if (!respuesta.ok) {
-                    const errorData = await respuesta.json();
-                    throw new Error("Error en la solicitud: " + errorData.message);
-                }
-
-                // Obtener la respuesta del backend (si es necesario)
-                const resultado = await respuesta.json();
-                console.log("Respuesta del backend:", resultado);
-
-                Swal.close();
-
-                // Aquí puedes manejar la respuesta del backend (por ejemplo, mostrar las habitaciones disponibles)
-                mostrarResultados(resultado.chalets, resultado.evento);
-
-            } catch (error) {
-                Swal.close();
-                console.error("Error al enviar los datos:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message,
-                    confirmButtonText: 'Aceptar'
-                })
-            }
-        });
-
-        function mostrarResultados(habitaciones, evento) {
-            const contenedorResultados = document.getElementById("resultados");
-            contenedorResultados.innerHTML = ""; // Limpiar resultados anteriores
-
-            if (habitaciones.length === 0) {
-                const noResultados = document.createElement("p");
-                noResultados.textContent = "No se encontraron cabañas disponibles.";
-                contenedorResultados.appendChild(noResultados);
-                return;
-            }
-
-            habitaciones.forEach((habitacion) => {
-                const tarjeta = document.createElement("div");
-                tarjeta.classList.add(
-                    "bg-gray-800",
-                    "rounded-lg",
-                    "shadow-lg",
-                    "overflow-hidden"
-                );
-
-                // Imagen de la habitación (puedes usar una imagen real si está disponible)
-                const imagen = document.createElement("img");
-                imagen.src = `https://navarro.integradev.site/navarro/${habitacion.image}`
-                console.log(imagen.src)
-                //imagen.src = "https://www.bosquestapalpa.com.mx/bosquestapalpa/contenido/8a62e2784_blog_.jpg";
-                imagen.alt = habitacion.name;
-                imagen.classList.add("w-full", "h-48", "object-cover");
-
-                const fallbackImage = "https://www.bosquestapalpa.com.mx/bosquestapalpa/contenido/8a62e2784_blog_.jpg";
-
-                imagen.onerror = () => {
-                    console.warn(`La imagen ${imagen.src} no se pudo cargar. Usando imagen de respaldo.`);
-                    imagen.src = fallbackImage;
-                };
-                tarjeta.appendChild(imagen);
-
-                // Contenido de la tarjeta
-                const contenido = document.createElement("div");
-                contenido.classList.add("p-4");
-
-                // Nombre de la habitación
-                const nombre = document.createElement("h3");
-                nombre.classList.add("text-xl", "font-semibold", "text-white");
-                nombre.textContent = habitacion.name;
-                contenido.appendChild(nombre);
-
-                // Precio por noche
-                const precio = document.createElement("p");
-                precio.classList.add("text-white-400", "mt-2", "font-semibold");
-                precio.textContent = `$${habitacion.price} por ${evento.nights} noche(s)`;
-                contenido.appendChild(precio);
-
-                // Capacidad máxima
-                const capacidad = document.createElement("p");
-                capacidad.classList.add("text-gray-400");
-                capacidad.textContent = `${habitacion.minPax}-${habitacion.maxPax} huéspedes`;
-                contenido.appendChild(capacidad);
-
-                // Botón de reservar
-                const botonReservar = document.createElement("button");
-                botonReservar.classList.add(
-                    "mt-4",
-                    "w-full",
-                    "bg-blue-600",
-                    "text-white",
-                    "py-2",
-                    "px-4",
-                    "rounded-md",
-                    "hover:bg-blue-700",
-                    "transition-colors"
-                );
-
-                botonReservar.dataset.habitacionId = habitacion.id;
-                botonReservar.dataset.nNights = evento.nights;
-                botonReservar.dataset.precioTotal = evento.precioTotal;
-
-
-                botonReservar.addEventListener("click", () => {
-                    // Aquí puedes realizar la reserva
-                    console.log("Reservar habitación:", habitacion.name);
-                    abrirModal(botonReservar);
-                });
-                botonReservar.textContent = "Reservar";
-                contenido.appendChild(botonReservar);
-
-                // Agregar contenido a la tarjeta
-                tarjeta.appendChild(contenido);
-
-                // Agregar tarjeta al contenedor de resultados
-                contenedorResultados.appendChild(tarjeta);
-            });
-
-            // MANEJO DE MODAL
-            // Obtener elementos del DOM
-            const modalReserva = document.getElementById("modal-reserva");
-            const cerrarModalBtn = document.getElementById("cerrar-modal");
-            const confirmarReservaBtn = document.getElementById("confirmar-reserva");
-
-            const precioTotalInput = document.getElementById("precio-total");
-
-            // Función para abrir el modal
-            function abrirModal(boton) {
-                modalReserva.classList.remove("hidden");
-                console.log("Precio total: ", boton.dataset.precioTotal)
-                precioTotalInput.textContent = `$${boton.dataset.precioTotal}`
-
-            }
-
-            // Función para cerrar el modal
-            function cerrarModal() {
-                console.log("Cerrar modal");
-                modalReserva.classList.add("hidden");
-            }
-
-            // Evento para abrir el modal al hacer clic en "Reservar"
-
-
-            // Evento para cerrar el modal al hacer clic en "Cerrar"
-            cerrarModalBtn.addEventListener("click", () => {
-                console.log("Cerrar modal");
-                modalReserva.classList.add("hidden");
-            });
-
-            // Evento para cerrar el modal al hacer clic fuera del modal
-            modalReserva.addEventListener("click", (event) => {
-                if (event.target === modalReserva) {
-                    cerrarModal();
+            // Evento para disminuir el número de huéspedes
+            botonDecrementar.addEventListener("click", (e) => {
+                e.preventDefault();
+                if (contador > 1) {
+                    contador--;
+                    actualizarContador();
                 }
             });
 
-            // Evento para confirmar la reserva
-            confirmarReservaBtn.addEventListener("click", () => {
-                const tipoReserva = document.querySelector("#modal-reserva select").value;
-                const nombreCliente = document.querySelector("#modal-reserva input[type='text']").value;
-                const detallesReserva = document.querySelector("#modal-reserva textarea").value;
-
-                console.log("Tipo de Reserva:", tipoReserva);
-                console.log("Nombre del Cliente:", nombreCliente);
-                console.log("Detalles de la Reserva:", detallesReserva);
-
-                // Aquí puedes enviar los datos al backend para procesar la reserva
-                alert("Reserva confirmada");
-                cerrarModal();
+            // Evento para aumentar el número de huéspedes
+            botonIncrementar.addEventListener("click", (e) => {
+                e.preventDefault();
+                if (contador < 20) { // Límite máximo de 10 huéspedes
+                    contador++;
+                    actualizarContador();
+                }
             });
-        }
 
-        // FUNCIONALIDAD TOGGLE SWITCH
-        const toggleInput = document.getElementById("toggleReserva");
-        const labelDepo = document.getElementById("label-depo");
-        const labelReserva = document.getElementById("label-reserva");
+            // FUNCIONES PARA CATEGORIAS DESPLEGABLES
+            document.addEventListener("DOMContentLoaded", function () {
+                // Evita que el formulario se recargue
+                document.querySelector("form").addEventListener("submit", function (event) {
+                    event.preventDefault();
+                });
 
-        const clienteReservaContainer = document.getElementById("modalClientContainer");
-        const clienteProvisionalContainer = document.getElementById("container-alta-cliente-provisional");
+                const dropdownButton = document.getElementById("dropdown-button");
+                const dropdownContent = document.getElementById("dropdown-content");
+                const mostrarTodoCheckbox = document.querySelector('input[name="categorias"][value="all"]');
+                const categoriaCheckboxes = document.querySelectorAll('input[name="categorias"]:not([value="all"])');
 
-        function toggleReserva() {
-            if (toggleInput.checked) {
-                clienteReservaContainer.classList.remove("hidden");
-                clienteProvisionalContainer.classList.add("hidden");
-                labelDepo.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
-                labelReserva.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
-            } else {
-                clienteReservaContainer.classList.add("hidden");
-                clienteProvisionalContainer.classList.remove("hidden");
-                labelReserva.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
-                labelDepo.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
-            }
-        }
+                // Mostrar / Ocultar dropdown
+                dropdownButton.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    dropdownContent.classList.toggle("hidden");
+                });
 
-        // Manejar clics en los labels
-        labelDepo.addEventListener("click", function () {
-            toggleInput.checked = false;
-            toggleReserva();
-        });
+                // Cerrar el dropdown si se hace clic fuera
+                document.addEventListener("click", function (event) {
+                    if (!dropdownContent.contains(event.target) && !dropdownButton.contains(event.target)) {
+                        dropdownContent.classList.add("hidden");
+                    }
+                });
 
-        labelReserva.addEventListener("click", function () {
-            toggleInput.checked = true;
-            toggleReserva();
-        });
+                // Cuando se selecciona cualquier categoría distinta a "Mostrar todo"
+                categoriaCheckboxes.forEach(checkbox => {
+                    checkbox.addEventListener("change", function () {
+                        if (this.checked) {
+                            mostrarTodoCheckbox.checked = false; // Deseleccionar "Mostrar todo" si se selecciona otra categoría
+                        }
+                    });
+                });
 
-        // Inicializar estado
-        toggleReserva();
-    });
+                // Cuando se selecciona "Mostrar todo"
+                mostrarTodoCheckbox.addEventListener("change", function () {
+                    if (this.checked) {
+                        categoriaCheckboxes.forEach(checkbox => {
+                            checkbox.checked = false; // Deseleccionar todas las categorías si "Mostrar todo" es seleccionado
+                        });
+                    }
+                });
+
+                // ENVIO DE INFORMACION PARA BUSCAR CABAÑAS DISPONIBLES
+
+                const buscarChaletsBtn = document.getElementById("buscar-chalets-btn");
+
+                buscarChaletsBtn.addEventListener("click", async function (event) {
+                    event.preventDefault();
+
+                    const checkboxesSeleccionados = document.querySelectorAll('input[name="categorias"]:checked');
+                    const categoriasSeleccionadas = Array.from(checkboxesSeleccionados).map(checkbox => checkbox.value);
+                    const fechaLlegada = document.getElementById("fecha-llegada").value;
+                    const fechaSalida = document.getElementById("fecha-salida").value;
+                    const huespedes = document.getElementById("numero-huespedes").textContent;
+                    const buscarSoloDisponiblesChk = document.getElementById("buscar-solo-disponibles").checked;
+
+                    console.log("Categorias seleccionadas:", categoriasSeleccionadas);
+                    console.log("Fecha de llegada:", fechaLlegada);
+                    console.log("Fecha de salida:", fechaSalida);
+                    console.log("Número de húspedes:", huespedes);
+                    console.log("Buscar solo disponibles:", buscarSoloDisponiblesChk);
+
+                    if (categoriasSeleccionadas.length === 0) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No ha seleccionado ninguna categoría',
+                            text: 'Por favor, seleccione al menos una categoría.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                        return;
+                    }
+
+                    if (!fechaLlegada || !fechaSalida) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Faltan fechas',
+                            text: 'Por favor, seleccione las fechas de llegada y salida.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                        return;
+                    }
+
+                    if (!huespedes) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No ha seleccionado el número de húspedes',
+                            text: 'Por favor, seleccione el número de húspedes.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                        return;
+                    }
+
+                    const datos = {
+                        categorias: categoriasSeleccionadas,
+                        fechaLlegada: fechaLlegada,
+                        fechaSalida: fechaSalida,
+                        huespedes: parseInt(huespedes, 10), // Convertir a número
+                        soloDisponibles: buscarSoloDisponiblesChk,
+                    };
+
+                    console.log("Datos a enviar:", datos);
+
+                    try {
+                        Swal.fire({
+                            title: 'Cargando...',
+                            text: 'Buscando cabañas disponibles...',
+                            icon: 'info',
+                            showConfirmButton: false
+                        })
+                        // Enviar los datos al backend usando fetch
+                        const respuesta = await fetch("/api/eventos/cotizaciones", {
+                            method: "POST", // Método HTTP
+                            headers: {
+                                "Content-Type": "application/json", // Indicar que el cuerpo es JSON
+                            },
+                            body: JSON.stringify(datos), // Convertir el objeto a JSON
+                        });
+
+                        // Verificar si la respuesta es exitosa
+                        if (!respuesta.ok) {
+                            const errorData = await respuesta.json();
+                            throw new Error("Error en la solicitud: " + errorData.message);
+                        }
+
+                        // Obtener la respuesta del backend (si es necesario)
+                        const resultado = await respuesta.json();
+                        console.log("Respuesta del backend:", resultado);
+
+                        Swal.close();
+
+                        // Aquí puedes manejar la respuesta del backend (por ejemplo, mostrar las habitaciones disponibles)
+                        mostrarResultados(resultado.chalets, resultado.evento);
+
+                    } catch (error) {
+                        Swal.close();
+                        console.error("Error al enviar los datos:", error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.message,
+                            confirmButtonText: 'Aceptar'
+                        })
+                    }
+                });
+
+                function mostrarResultados(habitaciones, evento) {
+                    const contenedorResultados = document.getElementById("resultados");
+                    contenedorResultados.innerHTML = ""; // Limpiar resultados anteriores
+
+                    if (habitaciones.length === 0) {
+                        const noResultados = document.createElement("p");
+                        noResultados.textContent = "No se encontraron cabañas disponibles.";
+                        contenedorResultados.appendChild(noResultados);
+                        return;
+                    }
+
+                    habitaciones.forEach((habitacion) => {
+                        const tarjeta = document.createElement("div");
+                        tarjeta.classList.add(
+                            "bg-gray-800",
+                            "rounded-lg",
+                            "shadow-lg",
+                            "overflow-hidden"
+                        );
+
+                        // Imagen de la habitación (puedes usar una imagen real si está disponible)
+                        const imagen = document.createElement("img");
+                        imagen.src = `https://navarro.integradev.site/navarro/${habitacion.image}`
+                        console.log(imagen.src)
+                        //imagen.src = "https://www.bosquestapalpa.com.mx/bosquestapalpa/contenido/8a62e2784_blog_.jpg";
+                        imagen.alt = habitacion.name;
+                        imagen.classList.add("w-full", "h-48", "object-cover");
+
+                        const fallbackImage = "https://www.bosquestapalpa.com.mx/bosquestapalpa/contenido/8a62e2784_blog_.jpg";
+
+                        imagen.onerror = () => {
+                            console.warn(`La imagen ${imagen.src} no se pudo cargar. Usando imagen de respaldo.`);
+                            imagen.src = fallbackImage;
+                        };
+                        tarjeta.appendChild(imagen);
+
+                        // Contenido de la tarjeta
+                        const contenido = document.createElement("div");
+                        contenido.classList.add("p-4");
+
+                        // Nombre de la habitación
+                        const nombre = document.createElement("h3");
+                        nombre.classList.add("text-xl", "font-semibold", "text-white");
+                        nombre.textContent = habitacion.name;
+                        contenido.appendChild(nombre);
+
+                        // Precio por noche
+                        const precio = document.createElement("p");
+                        precio.classList.add("text-white-400", "mt-2", "font-semibold");
+                        precio.textContent = `$${habitacion.price} por ${evento.nights} noche(s)`;
+                        contenido.appendChild(precio);
+
+                        // Capacidad máxima
+                        const capacidad = document.createElement("p");
+                        capacidad.classList.add("text-gray-400");
+                        capacidad.textContent = `${habitacion.minPax}-${habitacion.maxPax} huéspedes`;
+                        contenido.appendChild(capacidad);
+
+                        // Botón de reservar
+                        let botonReservar = document.createElement("button");
+                        botonReservar.classList.add(
+                            "mt-4",
+                            "w-full",
+                            "bg-blue-600",
+                            "text-white",
+                            "py-2",
+                            "px-4",
+                            "rounded-md",
+                            "hover:bg-blue-700",
+                            "transition-colors"
+                        );
+
+                        botonReservar.dataset.habitacionId = habitacion.id;
+                        botonReservar.dataset.nNights = evento.nights;
+                        botonReservar.dataset.precioTotal = evento.precioTotal;
+                        botonReservar.dataset.arrivalDate = evento.fechaLlegada;
+                        botonReservar.dataset.departureDate = evento.fechaSalida;
+                        botonReservar.dataset.huespedes = evento.huespedes;
 
 
-</script>
+                        botonReservar.addEventListener("click", () => {
+                            // Aquí puedes realizar la reserva
+                            console.log("Reservar habitación:", habitacion.name);
+                            
+                            abrirModal(botonReservar);
+                        });
+                        botonReservar.textContent = "Reservar";
+                        contenido.appendChild(botonReservar);
+
+                        // Agregar contenido a la tarjeta
+                        tarjeta.appendChild(contenido);
+
+                        // Agregar tarjeta al contenedor de resultados
+                        contenedorResultados.appendChild(tarjeta);
+                    });
+
+                    // MANEJO DE MODAL
+                    // Obtener elementos del DOM
+                    const modalReserva = document.getElementById("modal-reserva");
+                    const cerrarModalBtn = document.getElementById("cerrar-modal");
+                    const confirmarReservaBtn = document.getElementById("confirmar-reserva");
+
+                    const fechaLlegadaSpan = document.getElementById("fecha-llegada-input");
+                    const fechaSalidaSpan = document.getElementById("fecha-salida-input");
+                    const huespedesSpan = document.getElementById("huespedes-input");
+                    const precioTotalInput = document.getElementById("precio-total");
+
+                    // Función para abrir el modal
+                    function abrirModal(boton) {
+                        console.log(boton);
+                        modalReserva.classList.remove("hidden");
+                        console.log("Precio total: ", boton.dataset.precioTotal)
+                        precioTotalInput.textContent = `$${boton.dataset.precioTotal}`
+                        fechaLlegadaSpan.textContent = boton.dataset.arrivalDate;
+                        fechaSalidaSpan.textContent = boton.dataset.departureDate;
+                        huespedesSpan.textContent = boton.dataset.huespedes;
+
+                    }
+
+                    // Función para cerrar el modal
+                    function cerrarModal() {
+                        console.log("Cerrar modal");
+                        modalReserva.classList.add("hidden");
+
+                    }
+
+                    // Evento para abrir el modal al hacer clic en "Reservar"
+
+
+                    // Evento para cerrar el modal al hacer clic en "Cerrar"
+                    cerrarModalBtn.addEventListener("click", () => {
+                        console.log("Cerrar modal");
+                        modalReserva.classList.add("hidden");
+                    });
+
+                    // Evento para cerrar el modal al hacer clic fuera del modal
+                    modalReserva.addEventListener("click", (event) => {
+                        if (event.target === modalReserva) {
+                            cerrarModal();
+                        }
+                    });
+
+                    // Evento para confirmar la reserva
+                    confirmarReservaBtn.addEventListener("click", () => {
+                        const tipoReserva = document.querySelector("#modal-reserva select").value;
+                        const nombreCliente = document.querySelector("#modal-reserva input[type='text']").value;
+                        const detallesReserva = document.querySelector("#modal-reserva textarea").value;
+
+                        console.log("Tipo de Reserva:", tipoReserva);
+                        console.log("Nombre del Cliente:", nombreCliente);
+                        console.log("Detalles de la Reserva:", detallesReserva);
+
+                        // Aquí puedes enviar los datos al backend para procesar la reserva
+                        alert("Reserva confirmada");
+                        cerrarModal();
+                    });
+                }
+
+                // FUNCIONALIDAD TOGGLE SWITCH
+                const toggleInput = document.getElementById("toggleReserva");
+                const labelDepo = document.getElementById("label-depo");
+                const labelReserva = document.getElementById("label-reserva");
+
+                const clienteReservaContainer = document.getElementById("modalClientContainer");
+                const clienteProvisionalContainer = document.getElementById("container-alta-cliente-provisional");
+
+                function toggleReserva() {
+                    if (toggleInput.checked) {
+                        clienteReservaContainer.classList.remove("hidden");
+                        clienteProvisionalContainer.classList.add("hidden");
+                        labelDepo.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+                        labelReserva.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+                    } else {
+                        clienteReservaContainer.classList.add("hidden");
+                        clienteProvisionalContainer.classList.remove("hidden");
+                        labelReserva.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+                        labelDepo.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+                    }
+                }
+
+                // Manejar clics en los labels
+                labelDepo.addEventListener("click", function () {
+                    toggleInput.checked = false;
+                    toggleReserva();
+                });
+
+                labelReserva.addEventListener("click", function () {
+                    toggleInput.checked = true;
+                    toggleReserva();
+                });
+
+                // Inicializar estado
+                toggleReserva();
+            });
+
+
+        </script>
