@@ -268,6 +268,8 @@
                                     </div>
 
                                     <input type="hidden" id="nombre-habitacion-input">
+                                    <input type="hidden" id="min-pax-input">
+                                    <input type="hidden" id="max-pax-input">
                                 </div>
 
                                 <h3 class="text-2xl font-bold text-white mb-4 mt-4 text-center">Precio total: <span
@@ -690,6 +692,8 @@
                 botonReservar.dataset.departureDate = evento.fechaSalida;
                 botonReservar.dataset.huespedes = evento.huespedes;
                 botonReservar.dataset.nombreHabitacion = habitacion.name;
+                botonReservar.dataset.minPax = habitacion.minPax;
+                botonReservar.dataset.maxPax = habitacion.maxPax;
 
 
                 botonReservar.addEventListener("click", () => {
@@ -720,6 +724,8 @@
             const precioTotalInput = document.getElementById("precio-total");
             const nNightsInput = document.getElementById("nights-input");
             const habitacionInput = document.getElementById("nombre-habitacion-input");
+            const minPaxInput = document.getElementById("min-pax-input");
+            const maxPaxInput = document.getElementById("max-pax-input");
 
             // Función para abrir el modal
             function abrirModal(boton) {
@@ -732,6 +738,8 @@
                 huespedesSpan.textContent = boton.dataset.huespedes;
                 nNightsInput.textContent = boton.dataset.nNights;
                 habitacionInput.value = boton.dataset.nombreHabitacion;
+                minPaxInput.value = boton.dataset.minPax;
+                maxPaxInput.value = boton.dataset.maxPax;
 
 
             }
@@ -760,9 +768,14 @@
             });
 
             // Evento para confirmar la reserva
-            confirmarReservaBtn.addEventListener("click", () => {
+            confirmarReservaBtn.addEventListener("click", async () => {
                 const tipoReservaChk = document.getElementById("toggleReserva");
                 const isDeposit = (!tipoReservaChk.checked) ? true : false;
+                let totalEl = document.getElementById("precio-total").textContent;
+                let total = totalEl;
+                if (totalEl.startsWith("$")) {
+                    total = total.slice(1);
+                }
 
                 const dataReserva = {
                     isDeposit: isDeposit,
@@ -770,7 +783,9 @@
                     arrivalDate: document.getElementById("fecha-llegada-input").textContent,
                     departureDate: document.getElementById("fecha-salida-input").textContent,
                     pax: document.getElementById("huespedes-input").textContent,
-                    total: document.getElementById("precio-total").textContent,
+                    minPax: document.getElementById("min-pax-input").value,
+                    maxOccupation: document.getElementById("max-pax-input").value,
+                    total: total,
                     nNights: document.getElementById("nights-input").textContent,
                     chaletName: document.getElementById("nombre-habitacion-input").value
                 }
@@ -782,7 +797,8 @@
                     arrivalDate: document.getElementById('fecha-llegada-input').textContent,
                     departureDate: document.getElementById('fecha-salida-input').textContent,
                     pax: document.getElementById('huespedes-input').textContent,
-                    total: document.getElementById('precio-total').textContent,
+                    maxOccupation: document.getElementById("max-pax-input").value,
+                    total: total,
                     nNights: document.getElementById('nights-input').textContent,
                     chaletName: document.getElementById('nombre-habitacion-input').value
                 }
@@ -809,10 +825,90 @@
                         return;
                     }
                 }
-                // Aquí puedes enviar los datos al backend para procesar la reserva
-                alert("Reserva confirmada");
-                cerrarModal();
-            })
+
+                try {
+                    const confirmation = await Swal.fire({
+                        icon: 'question',
+                        title: 'Confirmar reserva',
+                        text: '¿Estás seguro de realizar la reserva?',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí',
+                        cancelButtonText: 'No'
+                    })
+
+                    if (!confirmation.isConfirmed) {
+                        return;
+                    }
+
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Procesando reserva',
+                        text: 'Por favor, espere...',
+                        showConfirmButton: false
+                    })
+
+                    const response = await fetch('/api/eventos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.log(errorData)
+                        let errors = []
+
+                        if (errorData.message) {
+                            errors.push(errorData.message);
+                        } else {
+                            errors = errorData.error.map(err => err.message);
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Error en la solicitud: " + errors.join(' ') + ".",
+                            confirmButtonText: 'Aceptar'
+                        });
+                        throw new Error(errors);
+                    }
+
+                    const dataR = await response.json();
+                    console.log('Respuesta exitosa del servidor:', dataR);
+
+                    const reservationId = dataR.reservationId;
+
+                    Swal.close()
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Reserva creada',
+                        text: dataR.message,
+                        showCancelButton: false,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = `/api/eventos/${dataR.reservationId}`;
+                        }
+                    });
+                } catch (error) {
+                    console.error(error);
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: `Ha ocurrido un error al crear la reserva: ${error.message}`,
+                        showCancelButton: false,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            });
         }
 
         // FUNCIONALIDAD TOGGLE SWITCH
