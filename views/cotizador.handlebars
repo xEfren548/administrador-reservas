@@ -777,11 +777,18 @@
                     total = total.slice(1);
                 }
 
+                const fechaLlegada = document.getElementById("fecha-llegada-input").textContent
+                const fechaSalida = document.getElementById("fecha-salida-input").textContent
+                console.log(fechaLlegada, fechaSalida)
+                const arrivalDate = moment(fechaLlegada, "DD-MM-YYYY").format("YYYY-MM-DD");
+                const departureDate = moment(fechaSalida, "DD-MM-YYYY").format("YYYY-MM-DD");
+
+
                 const dataReserva = {
                     isDeposit: isDeposit,
                     clientEmail: document.getElementById("lblClientValue").value,
-                    arrivalDate: document.getElementById("fecha-llegada-input").textContent,
-                    departureDate: document.getElementById("fecha-salida-input").textContent,
+                    arrivalDate: arrivalDate,
+                    departureDate: departureDate,
                     pax: document.getElementById("huespedes-input").textContent,
                     minPax: document.getElementById("min-pax-input").value,
                     maxOccupation: document.getElementById("max-pax-input").value,
@@ -794,8 +801,8 @@
                     isDeposit: isDeposit,
                     clientFirstName: document.getElementById('nombre-cliente-provisional').value.trim(),
                     clientLastName: document.getElementById('apellido-cliente-provisional').value.trim(),
-                    arrivalDate: document.getElementById('fecha-llegada-input').textContent,
-                    departureDate: document.getElementById('fecha-salida-input').textContent,
+                    arrivalDate: arrivalDate,
+                    departureDate: departureDate,
                     pax: document.getElementById('huespedes-input').textContent,
                     maxOccupation: document.getElementById("max-pax-input").value,
                     total: total,
@@ -804,6 +811,7 @@
                 }
 
                 const data = (isDeposit) ? dataPorDepo : dataReserva;
+                console.log(data);
                 if (isDeposit) {
                     if (dataPorDepo.clientFirstName == "" || dataPorDepo.clientLastName == "") {
                         Swal.fire({
