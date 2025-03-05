@@ -24,6 +24,7 @@ async function generateSideMenu(req, res, next) {
             "Administrador": [
                 // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
                 { 'Home': ["/", "fs-5 fa fa-house"] },
+                { 'Cotizador': ["/api/cotizar", "fas fa-calculator"] },
                 { 'Usuarios': ["/api/usuarios", "fas fa-users"] },
                 { 'Roles': ["/newroles", "fas fa-users-cog"] },
                 { 'Clientes': ["/api/clientes/mostrar-clientes", "fa fa-user-circle"] },
@@ -38,6 +39,7 @@ async function generateSideMenu(req, res, next) {
             ],
             'Vendedor': [
                 // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
+                { 'Cotizador': ["/api/cotizar", "fas fa-calculator"] },
                 { 'Calendario': ["/", "fs-5 fa fa-calendar"] },
                 { 'Mis Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
             ],
