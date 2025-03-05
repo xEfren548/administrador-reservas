@@ -6,19 +6,19 @@
         <div class="w-auto max-w-6xl bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
             <form class="flex flex-col md:flex-row gap-4">
                 <!-- Campo: Categorías (dropdown con checkboxes) -->
-                <div class="flex-1">
+                <div class="flex-1 relative">
                     <label class="block text-sm font-medium text-gray-400">Categorías</label>
                     <div class="relative mt-1">
                         <!-- Botón para abrir/cerrar el dropdown -->
                         <button id="dropdown-button" type="button"
-                            class="w-96 p-2 bg-gray-800 border border-gray-700 rounded-md text-white text-left flex items-center justify-between">
+                            class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white text-left flex items-center justify-between">
                             <span>Seleccionar categorías</span>
                             <svg class="h-5 w-5">...</svg>
                         </button>
 
                         <!-- Dropdown con checkboxes -->
                         <div id="dropdown-content"
-                            class="absolute z-10 mt-2 w-96 bg-gray-800 border border-gray-700 rounded-md shadow-lg hidden">
+                            class="absolute z-10 mt-2 min-w-[240px] max-w-96 bg-gray-800 border border-gray-700 rounded-md shadow-lg hidden left-0 right-0 overflow-visiblegi">
                             <div class="p-2">
                                 <!-- Checkbox "Mostrar todo" -->
                                 <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded-md">
