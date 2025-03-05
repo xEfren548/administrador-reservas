@@ -2495,16 +2495,34 @@
                     document.getElementById('cliente-phone').value = updatedData.clienteToUpdate.phone;
                     document.getElementById('cliente-address').value = updatedData.clienteToUpdate.address;
 
-                    isClientUpdated = true; 
+                    isClientUpdated = true;
+
+                    const moveToActiveResponse = await fetch(`/api/eventos/move-to-playground`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            idReserva: reservacionId,
+                            status: 'active'
+                        })
+                    });
+
+                    if (!moveToActiveResponse.ok) {
+                        const errorData = await moveToActiveResponse.json();
+                        const errorMessage = errorData.message || "Unknown error";
+                        throw new Error(errorMessage);
+                    }
 
                     Swal.fire({
                         icon: 'success',
                         title: '¡Completado!',
-                        text: "Cliente actualizado con éxito.",
+                        text: "Cliente actualizado con éxito y reserva activada.",
                         confirmButtonText: 'Aceptar'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            $('#modifyClientEntryModal').modal('hide');
+                            //$('#modifyClientEntryModal').modal('hide');
+                            location.reload();
                             
                         }
                     });
@@ -2544,10 +2562,27 @@
                         });
                     }
 
+                    const moveToActiveResponse = await fetch(`/api/eventos/move-to-playground`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            idReserva: reservacionId,
+                            status: 'active'
+                        })
+                    });
+
+                    if (!moveToActiveResponse.ok) {
+                        const errorData = await moveToActiveResponse.json();
+                        const errorMessage = errorData.message || "Unknown error";
+                        throw new Error(errorMessage);
+                    }
+
                     Swal.fire({
                         icon: 'success',
                         title: '¡Completado!',
-                        text: "Cliente asignado con éxito.",
+                        text: "Cliente asignado con éxito y reserva movida a activa.",
                         confirmButtonText: 'Aceptar'
                     }).then((result) => {
                         if (result.isConfirmed) {
