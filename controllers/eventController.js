@@ -1,24 +1,27 @@
+const { format } = require('date-fns');
+const { check } = require("express-validator");
+const { es } = require('date-fns/locale');
+const mongoose = require('mongoose');
+const moment = require('moment');
 const Documento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const Usuario = require('../models/Usuario');
 const Costos = require('./../models/Costos');
+const BloqueoFechas = require('../models/BloqueoFechas');
+const BloqueoInversionistas = require('../models/BloqueoInversionistas');
+const Tipologias = require('./../models/TipologiasCabana');
+const Roles = require('../models/Roles');
+const Cliente = require('../models/Cliente');
+const PrecioBaseXDia = require('../models/PrecioBaseXDia');
+const PreciosEspeciales = require('../models/PreciosEspeciales');
 const rackLimpiezaController = require('../controllers/rackLimpiezaController');
 const logController = require('../controllers/logController');
 const utilidadesController = require('../controllers/utilidadesController');
 const clienteController = require('../controllers/clientController');
 const pagoController = require('../controllers/pagoController');
-const BloqueoFechas = require('../models/BloqueoFechas');
-const BloqueoInversionistas = require('../models/BloqueoInversionistas');
 const sendEmail = require('../common/tasks/send-mails');
-const mongoose = require('mongoose');
-const { format } = require('date-fns');
-const moment = require('moment');
-const { es } = require('date-fns/locale');
-const Roles = require('../models/Roles');
 
 
-const Cliente = require('../models/Cliente');
-const { check } = require("express-validator");
 const BadRequestError = require("../common/error/bad-request-error");
 const NotFoundError = require('../common/error/not-found-error');
 const SendMessages = require('../common/tasks/send-messages');
@@ -1706,6 +1709,210 @@ async function sendReservationMail(req, res) {
     }
 }
 
+async function cotizadorView(req, res) {
+    try {
+        const tipologias = await Tipologias.find().lean();
+        const clientes = await Cliente.find().lean();
+
+        res.render('cotizador', {
+            layout: 'tailwindMain',
+            tipologias,
+            clientes
+        });
+    } catch (error) {
+        console.error('Error al enviar el correo:', error);
+        res.status(500).json({ message: 'Error al renderizar la pagina' });
+    }
+}
+
+async function cotizadorChaletsyPrecios(req, res) {
+    try {
+        const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles } = req.body;
+        console.log(categorias)
+        console.log(huespedes)
+
+        let filtro = {};
+
+        if (!categorias.includes("all")) { //Si se seleccionaron categorias
+            filtro = {
+                "propertyDetails.accomodationType": { $in: categorias },
+                "propertyDetails.maxOccupancy": { $gte: huespedes },
+                "propertyDetails.minOccupancy": { $lte: huespedes }
+            };
+        } else { // Si se mostrara todo
+            filtro = {
+                "propertyDetails.maxOccupancy": { $gte: huespedes },
+                "propertyDetails.minOccupancy": { $lte: huespedes }
+            };
+        }
+
+
+        const chalets = await Habitacion.find(filtro).lean();
+        if (!chalets) {
+            throw new Error('No se encontraron habitaciones');
+        }
+
+        const startDate = new Date(convertirFechaES(fechaLlegada));
+        const endDate = new Date(convertirFechaES(fechaSalida));
+
+        if (soloDisponibles) {
+            for (const chalet of chalets) {
+                const disponibilidad = await getDisponibilidad(chalet._id, startDate, endDate);
+                if (!disponibilidad) {
+                    chalets.splice(chalets.indexOf(chalet), 1);
+                }
+            }
+        }
+
+
+        const timeDifference = endDate.getTime() - startDate.getTime();
+        const nNights = Math.ceil(timeDifference / (1000 * 3600 * 24)); // Calcula la diferencia en días
+        console.log("Noches: ", nNights);
+
+        const mappedChalets = chalets.map(chalet => ({
+
+            id: chalet._id,
+            name: chalet.propertyDetails.name,
+            minPax: chalet.propertyDetails.minOccupancy,
+            maxPax: chalet.propertyDetails.maxOccupancy,
+            precioBase: chalet.others.basePrice,
+            precioBase2noches: chalet.others.basePrice2nights,
+            costoBase: chalet.others.baseCost,
+            costoBase2noches: chalet.others.baseCost2nights,
+            image: chalet.images[0]
+        }));
+
+        const eventoParaReservar = {
+            nights: nNights,
+            fechaLlegada: fechaLlegada,
+            fechaSalida: fechaSalida,
+            huespedes: huespedes
+        }
+
+        const infoComisiones = {
+            userId: req.session.id,
+            nNights: nNights,
+
+        }
+        const comisiones = await utilidadesController.calcularComisionesInternas(infoComisiones);
+        console.log("Comisiones: ", comisiones);
+
+        if (startDate > endDate) {
+            throw new Error("La fecha de llegada debe ser anterior a la fecha de salida");
+        }
+        
+        for (const chalet of mappedChalets) {
+            let precioTotal = 0;
+            let costoBaseTotal = 0;
+
+            let currentDate = new Date(startDate);
+
+            while (currentDate <= endDate) {
+                currentDate.setUTCHours(6);
+                precio = await PreciosEspeciales.findOne({ fecha: currentDate, habitacionId: chalet.id, noPersonas: huespedes });
+                if (precio) {
+                    if (nNights > 1) {
+                        precioTotal += precio.precio_base_2noches;
+                        costoBaseTotal += precio.costo_base_2noches;
+                    } else {
+                        console.log("Precio modificado 1: ", precio.precio_modificado);
+                        precioTotal += precio.precio_modificado;
+                        costoBaseTotal += precio.costo_base;
+                    }
+                } else {
+                    precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: chalet.id });
+                    if (precio) {
+                        if (nNights > 1) {
+                            precioTotal += precio.precio_base_2noches;
+                            costoBaseTotal += precio.costo_base_2noches;
+                        } else {
+                            console.log("Precio modificado 2: ", precio.precio_modificado);
+                            precioTotal += precio.precio_modificado;
+                            costoBaseTotal += precio.costo_base;
+                        }
+                    } else {
+                        if (nNights > 1) {
+                            precioTotal += chalet.precioBase2noches;
+                            costoBaseTotal += chalet.costoBase2noches;
+                        } else {
+                            precioTotal += chalet.precioBase;
+                            costoBaseTotal += chalet.costoBase;
+                        }
+                    }
+
+                }
+                currentDate.setDate(currentDate.getDate() + 1); // Avanzar un día
+            }
+            chalet.totalPriceNoComs = precioTotal;
+            chalet.totalPrice = precioTotal + comisiones;
+            chalet.totalCost = costoBaseTotal;
+            // eventoParaReservar.precioTotal = chalet.price;
+            console.log("Precio Total: ", precioTotal);
+            // chalet.price = precioTotal;
+        }
+
+
+        res.status(200).json({ chalets: mappedChalets, evento: eventoParaReservar }); // Enviar los datos de las habitaciones y el eventomappedChalets
+
+    } catch (error) {
+        console.error('Error al obtener habitaciones y precios:', error);
+        res.status(500).json({ message: 'Error al obtener habitaciones y precios: ' + error.message });
+    }
+}
+
+function convertirFechaES(fecha) {
+    const [dia, mes, anio] = fecha.split("/");
+    return `${anio}-${mes}-${dia}`; // Formato YYYY-MM-DD
+}
+
+async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
+    const newResourceId = new mongoose.Types.ObjectId(chaletId);
+
+    // Convertir fechas a cadenas en formato YYYY-MM-DD
+    const fechaLlegadaStr = fechaLlegada.toISOString().split('T')[0]; // Extrae solo la fecha (YYYY-MM-DD)
+    const fechaSalidaStr = fechaSalida.toISOString().split('T')[0]; // Extrae solo la fecha (YYYY-MM-DD)
+
+    // Asignar horas fijas y convertir a formato ISO
+    const arrivalDateISO = new Date(`${fechaLlegadaStr}T11:30:00`).toISOString();
+    const departureDateISO = new Date(`${fechaSalidaStr}T08:30:00`).toISOString();
+
+    // Verificar fechas bloqueadas
+    const isBlocked = await BloqueoFechas.exists({
+        habitacionId: newResourceId,
+        type: 'bloqueo',
+        $or: [
+            // Caso 1: La fecha bloqueada está dentro del rango de la reserva
+            { date: { $gte: arrivalDateISO, $lte: departureDateISO } },
+            // Caso 2: La fecha bloqueada coincide exactamente con la fecha de llegada
+            { date: arrivalDateISO },
+            // Caso 3: La fecha bloqueada coincide exactamente con la fecha de salida
+            { date: departureDateISO },
+        ],
+    });
+
+    if (isBlocked) {
+        console.log("FECHAS BLOQUEADAS ENCONTRADAS");
+        return false;
+    }
+
+    // Verificar eventos superpuestos
+    const overlappingEvents = await Documento.find({
+        resourceId: newResourceId,
+        status: { $nin: ["cancelled", "no-show", "playground"] },
+        $or: [
+            { arrivalDate: { $lt: departureDateISO }, departureDate: { $gt: arrivalDateISO } },
+        ],
+    });
+
+    if (overlappingEvents.length > 0) {
+        console.log("EVENTOS SUPERPUESTOS ENCONTRADOS");
+        console.log(overlappingEvents);
+        return false;
+    }
+
+    return true;
+}
+
 module.exports = {
     createReservationValidators,
     createOwnersReservationValidators,
@@ -1727,6 +1934,8 @@ module.exports = {
     reservasDeDuenos,
     reservasDeDuenosParaColaborador,
     cifrarMensaje,
-    sendReservationMail
+    sendReservationMail,
+    cotizadorView,
+    cotizadorChaletsyPrecios
 };
 
