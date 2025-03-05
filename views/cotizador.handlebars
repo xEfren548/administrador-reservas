@@ -270,6 +270,9 @@
                                     <input type="hidden" id="nombre-habitacion-input">
                                     <input type="hidden" id="min-pax-input">
                                     <input type="hidden" id="max-pax-input">
+                                    <input type="hidden" id="costo-total-input">
+                                    <input type="hidden" id="precio-total-nocoms-input">
+
                                 </div>
 
                                 <h3 class="text-2xl font-bold text-white mb-4 mt-4 text-center">Precio total: <span
@@ -688,12 +691,14 @@
                 botonReservar.dataset.habitacionId = habitacion.id;
                 botonReservar.dataset.nNights = evento.nights;
                 botonReservar.dataset.precioTotal = habitacion.totalPrice;
+                botonReservar.dataset.costoTotal = habitacion.totalCost;
                 botonReservar.dataset.arrivalDate = evento.fechaLlegada;
                 botonReservar.dataset.departureDate = evento.fechaSalida;
                 botonReservar.dataset.huespedes = evento.huespedes;
                 botonReservar.dataset.nombreHabitacion = habitacion.name;
                 botonReservar.dataset.minPax = habitacion.minPax;
                 botonReservar.dataset.maxPax = habitacion.maxPax;
+                botonReservar.dataset.precioTotalSinComisiones = habitacion.totalPriceNoComs;
 
 
                 botonReservar.addEventListener("click", () => {
@@ -726,6 +731,8 @@
             const habitacionInput = document.getElementById("nombre-habitacion-input");
             const minPaxInput = document.getElementById("min-pax-input");
             const maxPaxInput = document.getElementById("max-pax-input");
+            const costoTotalInput = document.getElementById("costo-total-input");
+            const precioTotalNoComs = document.getElementById("precio-total-nocoms-input");
 
             // Función para abrir el modal
             function abrirModal(boton) {
@@ -740,9 +747,11 @@
                 habitacionInput.value = boton.dataset.nombreHabitacion;
                 minPaxInput.value = boton.dataset.minPax;
                 maxPaxInput.value = boton.dataset.maxPax;
+                costoTotalInput.value = boton.dataset.costoTotal
+                precioTotalNoComs.value = boton.dataset.precioTotalSinComisiones;
+            };
 
 
-            }
 
             // Función para cerrar el modal
             function cerrarModal() {
@@ -780,8 +789,8 @@
                 const fechaLlegada = document.getElementById("fecha-llegada-input").textContent
                 const fechaSalida = document.getElementById("fecha-salida-input").textContent
                 console.log(fechaLlegada, fechaSalida)
-                const arrivalDate = moment(fechaLlegada, "DD-MM-YYYY").format("YYYY-MM-DD");
-                const departureDate = moment(fechaSalida, "DD-MM-YYYY").format("YYYY-MM-DD");
+                const arrivalDate = moment.utc(fechaLlegada, "DD-MM-YYYY").format("YYYY-MM-DD");
+                const departureDate = moment.utc(fechaSalida, "DD-MM-YYYY").format("YYYY-MM-DD");
 
 
                 const dataReserva = {
@@ -852,7 +861,9 @@
                         icon: 'info',
                         title: 'Procesando reserva',
                         text: 'Por favor, espere...',
-                        showConfirmButton: false
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+
                     })
 
                     const response = await fetch('/api/eventos', {
@@ -888,6 +899,44 @@
 
                     const reservationId = dataR.reservationId;
 
+                    const totalCostoBaseInput = document.getElementById('costo-total-input');
+                    const totalSinComisiones = document.getElementById('precio-total-nocoms-input');
+
+                    const comisionBody = {
+                        costoBase: totalCostoBaseInput.value,
+                        totalSinComisiones: totalSinComisiones.value,
+                        precioAsignado: data.total,
+                        chaletName: data.chaletName,
+                        idReserva: reservationId,
+                        arrivalDate: data.arrivalDate,
+                        departureDate: data.departureDate,
+                        nNights: data.nNights
+
+                    }
+
+                    const agregarComisiones = await fetch('/api/utilidades/reserva', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(comisionBody)
+                    })
+
+                    if (!agregarComisiones.ok) {
+                        const additionalErrorData = await agregarComisiones.json();
+                        const additionalErrors = additionalErrorData.error;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Additional Error',
+                            text: "Error en la solicitud adicional: " + additionalErrors[0].message.toLowerCase() + ".",
+                            confirmButtonText: 'Aceptar'
+                        });
+                        throw new Error('Error en la solicitud adicional');
+                    }
+
+                    const additionalData = await agregarComisiones.json();
+                    console.log('Additional data received:', additionalData);
+
                     Swal.close()
 
                     Swal.fire({
@@ -918,7 +967,6 @@
                 }
             });
         }
-
         // FUNCIONALIDAD TOGGLE SWITCH
         const toggleInput = document.getElementById("toggleReserva");
         const labelDepo = document.getElementById("label-depo");

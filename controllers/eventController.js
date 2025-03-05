@@ -1799,6 +1799,7 @@ async function cotizadorChaletsyPrecios(req, res) {
         
         for (const chalet of mappedChalets) {
             let precioTotal = 0;
+            let costoBaseTotal = 0;
 
             let currentDate = new Date(startDate);
 
@@ -1808,33 +1809,39 @@ async function cotizadorChaletsyPrecios(req, res) {
                 if (precio) {
                     if (nNights > 1) {
                         precioTotal += precio.precio_base_2noches;
+                        costoBaseTotal += precio.costo_base_2noches;
                     } else {
                         console.log("Precio modificado 1: ", precio.precio_modificado);
                         precioTotal += precio.precio_modificado;
+                        costoBaseTotal += precio.costo_base;
                     }
                 } else {
                     precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: chalet.id });
                     if (precio) {
                         if (nNights > 1) {
                             precioTotal += precio.precio_base_2noches;
+                            costoBaseTotal += precio.costo_base_2noches;
                         } else {
                             console.log("Precio modificado 2: ", precio.precio_modificado);
                             precioTotal += precio.precio_modificado;
+                            costoBaseTotal += precio.costo_base;
                         }
                     } else {
                         if (nNights > 1) {
                             precioTotal += chalet.precioBase2noches;
+                            costoBaseTotal += chalet.costoBase2noches;
                         } else {
-                            console.log("Precio modificado 3: ", chalet.precioBase);
-
                             precioTotal += chalet.precioBase;
+                            costoBaseTotal += chalet.costoBase;
                         }
                     }
 
                 }
                 currentDate.setDate(currentDate.getDate() + 1); // Avanzar un día
             }
+            chalet.totalPriceNoComs = precioTotal;
             chalet.totalPrice = precioTotal + comisiones;
+            chalet.totalCost = costoBaseTotal;
             // eventoParaReservar.precioTotal = chalet.price;
             console.log("Precio Total: ", precioTotal);
             // chalet.price = precioTotal;
@@ -1895,6 +1902,7 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
 
     if (overlappingEvents.length > 0) {
         console.log("EVENTOS SUPERPUESTOS ENCONTRADOS");
+        console.log(overlappingEvents);
         return false;
     }
 
