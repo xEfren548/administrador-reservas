@@ -1250,19 +1250,23 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
     const arrivalDateObj = new Date(`${arrivalDate}T00:00:00`);
     const departureDateObj = new Date(`${departureDate}T00:00:00`);
 
+    // Convertir a formato ISO para comparar con la base de datos
+    const arrivalDateBloqueo = arrivalDateObj.toISOString();
+    const departureDateBloqueo = departureDateObj.toISOString();
+
     const arrivalDateISO = new Date(`${arrivalDate}T11:30:00`).toISOString();
     const departureDateISO = new Date(`${departureDate}T08:30:00`).toISOString();
 
     console.log("ARRIVAL DATE: ", arrivalDateISO, "DEPARTURE DATE: ", departureDateISO);
 
-    // Check for blocked dates directly in MongoDB
     const isBlocked = await BloqueoFechas.exists({
         habitacionId: newResourceId,
         type: 'bloqueo',
-        date: { $gte: arrivalDateISO, $lte: departureDateISO },
+        date: { $gte: arrivalDateBloqueo, $lte: departureDateBloqueo },
     });
 
     if (isBlocked) {
+        console.log("IS BLOCKED: ", isBlocked)
         return false;
     }
 

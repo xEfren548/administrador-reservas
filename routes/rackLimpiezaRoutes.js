@@ -6,6 +6,7 @@ const RackLimpieza = require('../models/RackLimpieza');
 const Documento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const Roles = require('../models/Roles');
+const Usuario = require('../models/Usuario');
 
 moment.locale('es', {
     months: 'Enero_Febrero_Marzo_Abril_Mayo_Junio_Julio_Agosto_Septiembre_Octubre_Noviembre_Diciembre'.split('_')
@@ -27,10 +28,19 @@ router.get('/rackLimpieza', async (req, res) => {
         const usuarioLogueado = req.session.userId;
         let services; 
 
-        if (req.session.privilege === 'Limpieza'){
-            services = await RackLimpieza.find({encargadoLimpieza: usuarioLogueado, status: { $ne: "Completado" }}).lean();
+        const user = await Usuario.findById(usuarioLogueado);
+        console.log(user)
+
+        // if (req.session.privilege === 'Limpieza'){
+        //     services = await RackLimpieza.find({encargadoLimpieza: usuarioLogueado, status: { $ne: "Completado" }}).lean();
+        // } else {
+        //     services = await RackLimpieza.find({status: { $ne: "Completado" }}).lean();
+        // }
+
+        if (req.session.privilege === 'Limpieza') {
+            services = await RackLimpieza.find({ idHabitacion: usuarioLogueado, status: { $ne: "Completado" } }).lean();
         } else {
-            services = await RackLimpieza.find({status: { $ne: "Completado" }}).lean();
+            services = await RackLimpieza.find({ status: { $ne: "Completado" } }).lean();
         }
 
         const fechaHoy = moment.tz("America/Mexico_City").startOf('day')
