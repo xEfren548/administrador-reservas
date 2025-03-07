@@ -137,9 +137,9 @@ async function obtenerEventos(req, res) {
     const { id } = req.params;
     try {
         const privilege = req.session.privilege;
-        let eventos = []
-        // const eventos = await Documento.find( { status: { $nin: ["no-show", "cancelled"]}}).lean();
+        let eventos = [];
 
+        // Obtener eventos según el privilegio del usuario
         if (privilege === "Vendedor") {
             const assignedChalets = req.session.assignedChalets;
             eventos = await Documento.find({ resourceId: { $in: assignedChalets }, status: { $nin: ["no-show", "cancelled"] } }).lean();
@@ -147,11 +147,15 @@ async function obtenerEventos(req, res) {
             eventos = await Documento.find({ status: { $nin: ["no-show", "cancelled"] } }).lean();
         }
 
+        // Mapa para almacenar detalles de limpieza
         let cleaningDetailsMap = {};
 
+        // Obtener IDs únicos de los chalets
         const idAllChalets = [...new Set(eventos.map(evento => evento.resourceId.toString()))];
 
+        // Procesar cada chalet
         for (let chaletId of idAllChalets) {
+            // Obtener y ordenar detalles de limpieza
             const rackLimpieza = await rackLimpiezaController.getSpecificServicesMongo(chaletId);
             const sortedRackLimpieza = rackLimpieza.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
@@ -165,14 +169,17 @@ async function obtenerEventos(req, res) {
                 };
             }
 
+            // Obtener fechas bloqueadas para el chalet
             const fechasBloqueadas = await BloqueoFechas.find({ habitacionId: chaletId }).lean();
-            
+
+            // Agregar eventos de fechas bloqueadas
             for (const fecha of fechasBloqueadas) {
                 const arrivalDate = new Date(fecha.date);
-                arrivalDate.setUTCHours(15, 0, 0, 0)
+                arrivalDate.setUTCHours(15, 0, 0, 0);
                 const departureDate = new Date(arrivalDate);
                 departureDate.setDate(departureDate.getDate() + 1);
                 departureDate.setUTCHours(12, 0, 0, 0);
+
                 const evento = {
                     _id: new mongoose.Types.ObjectId(),
                     client: "N/A",
@@ -192,31 +199,21 @@ async function obtenerEventos(req, res) {
                     thanksSent: false,
                     colorUsuario: "#ff0000",
                     clientName: "Fecha Bloqueada",
-                }
+                };
                 eventos.push(evento);
             }
-
         }
 
-        console.log(eventos[eventos.length - 1])
-
-
-
-
-        // const rackLimpieza = await rackLimpiezaController.getSpecificServicesMongo();
-        // console.log(rackLimpieza);
-
+        // Procesar cada evento
         for (let evento of eventos) {
-            if (evento.clientName === "Fecha Bloqueada") continue;
-            let pagos = await pagoController.obtenerPagos(evento._id);
-            let pagoTotal = 0
-            pagos.forEach(pago => {
-                pagoTotal += pago.importe;
-            })
+            if (evento.clientName === "Fecha Bloqueada") continue; // Saltar eventos de fechas bloqueadas
+
+            // Calcular el total de pagos
+            const pagos = await pagoController.obtenerPagos(evento._id);
+            const pagoTotal = pagos.reduce((total, pago) => total + pago.importe, 0);
             evento.pagosTotales = pagoTotal;
 
-
-
+            // Obtener nombre del cliente
             const reservationClient = evento.client;
             if (reservationClient) {
                 const client = await Cliente.findById(reservationClient);
@@ -225,15 +222,14 @@ async function obtenerEventos(req, res) {
                 }
             }
 
-            // Agregar cleaningDetails si el resourceId coincide con un ID en cleaningDetailsMap
+            // Agregar detalles de limpieza si el resourceId coincide
             const chaletId = evento.resourceId.toString();
             if (cleaningDetailsMap[chaletId]) {
                 evento.cleaningDetails = cleaningDetailsMap[chaletId];
             }
         }
 
-
-        // console.log(eventos[0])
+        // Enviar respuesta
         res.send(eventos);
     } catch (error) {
         console.log(error);
