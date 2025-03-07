@@ -170,7 +170,7 @@ async function obtenerEventos(req, res) {
             }
 
             // Obtener fechas bloqueadas para el chalet
-            const fechasBloqueadas = await BloqueoFechas.find({ habitacionId: chaletId }).lean();
+            const fechasBloqueadas = await BloqueoFechas.find({ habitacionId: chaletId, type: "bloqueo" }).lean();
 
             // Agregar eventos de fechas bloqueadas
             for (const fecha of fechasBloqueadas) {
@@ -313,7 +313,7 @@ async function obtenerEventosDeCabana(req, res) {
         }));
 
         
-        const fechasBloqueadas = await BloqueoFechas.find({ habitacionId: newId }).lean()
+        const fechasBloqueadas = await BloqueoFechas.find({ habitacionId: newId, type: "bloqueo" }).lean()
         
         for (const fecha of fechasBloqueadas) {
             const arrivalDate = new Date(fecha.date);
