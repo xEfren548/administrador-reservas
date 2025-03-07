@@ -93,6 +93,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 let total = info.event.extendedProps.total
                 let totalMsg = total === undefined ? `<div>Reserva de dueño/inversionista</div>` : `<div><b>Total: $ ${total}</b></div>`
 
+                if ( clientName === "Fecha Bloqueada" ) {
+                    return {
+                        html: `
+                        <div class="p-1 rounded bg-gradient text-black" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: 'Overpass', sans-serif; background-color: ${color} !important;">
+                            <div class="font-weight-bold">${clientName}</div>
+                        </div>
+                        `
+                    }
+                }
+
                 return {
                     html: `
                     <div class="p-1 rounded bg-gradient text-black" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: 'Overpass', sans-serif; background-color: ${color} !important;">

@@ -1,4 +1,4 @@
-const { format } = require('date-fns');
+const { format, setDay } = require('date-fns');
 const { check } = require("express-validator");
 const { es } = require('date-fns/locale');
 const mongoose = require('mongoose');
@@ -280,6 +280,39 @@ async function obtenerEventosDeCabana(req, res) {
 
         }));
 
+        
+        const fechasBloqueadas = await BloqueoFechas.find({ habitacionId: newId }).lean()
+        
+        for (const fecha of fechasBloqueadas) {
+            const arrivalDate = new Date(fecha.date);
+            arrivalDate.setUTCHours(15, 0, 0, 0)
+            const departureDate = new Date(arrivalDate);
+            departureDate.setDate(departureDate.getDate() + 1);
+            departureDate.setUTCHours(12, 0, 0, 0);
+            const evento = {
+                _id: new mongoose.Types.ObjectId(),
+                client: "N/A",
+                resourceId: fecha.habitacionId,
+                arrivalDate: fecha.date,
+                departureDate: departureDate,
+                maxOccupation: 0,
+                pax: 0,
+                nNights: 1,
+                total: 0,
+                termsAccepted: false,
+                madeCheckIn: false,
+                surveySubmitted: false,
+                isDeposit: false,
+                status: "n/a",
+                createdBy: "n/a",
+                thanksSent: false,
+                colorUsuario: "#ff0000",
+                clientName: "Fecha Bloqueada",
+            }
+            eventosWithColorUsuario.push(evento);
+        }
+        
+        console.log(eventosWithColorUsuario)
         res.send(eventosWithColorUsuario);
     } catch (error) {
         console.error(error);
