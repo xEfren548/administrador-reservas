@@ -1056,9 +1056,9 @@ async function vistaParaReporte(req, res, next) {
         const habitaciones = habitacionesExistentes;
 
         reservas.forEach(reserva => {
-            reserva.reservationDate = momentTz.tz(reserva.reservationDate, "America/Mexico_City").format("DD-MM-YYYY HH:mm")
-            reserva.arrivalDate = momentTz.tz(reserva.arrivalDate, "America/Mexico_City").format("DD-MM-YYYY HH:mm")
-            reserva.departureDate = momentTz.tz(reserva.departureDate, "America/Mexico_City").format("DD-MM-YYYY HH:mm")
+            reserva.reservationDate = momentTz.tz(reserva.reservationDate, "America/Mexico_City").format("DD-MM-YYYY")
+            reserva.arrivalDate = momentTz.tz(reserva.arrivalDate, "America/Mexico_City").format("DD-MM-YYYY")
+            reserva.departureDate = momentTz.tz(reserva.departureDate, "America/Mexico_City").format("DD-MM-YYYY")
 
             const creadaPor = users.find(user => user._id.toString() === reserva.createdBy.toString());
             reserva.agenteReserva = creadaPor ? creadaPor.firstName + " " + creadaPor.lastName : "N/A"
@@ -1067,10 +1067,17 @@ async function vistaParaReporte(req, res, next) {
             const habitacion = habitaciones.find(habitacion => habitacion._id.toString() === reserva.resourceId.toString());
             reserva.nombreHabitacion = habitacion ? habitacion.propertyDetails.name : "N/A"
             reserva.costoLimpieza = habitacion ? habitacion.additionalInfo.extraCleaningCost : "N/A"
+            
 
             const pagosReserva = pagos.filter(pago => pago.reservacionId.toString() === reserva._id.toString())
+            const pagosNoLiquidaEfectivoFilter = pagos.filter(pago => pago.metodoPago !== "Recibio dueño")
+            const pagosNoLiquidaEfectivo = pagosNoLiquidaEfectivoFilter.reduce((total, pago) => total + pago.importe, 0);
+
             const totalPagosReserva = pagosReserva.reduce((total, pago) => total + pago.importe, 0);
             reserva.pagosCliente = totalPagosReserva !== NaN ? totalPagosReserva : "N/A"
+            reserva.pagosNoLiquidaEfectivo = pagosNoLiquidaEfectivo !== NaN ? pagosNoLiquidaEfectivo : "N/A"
+
+
 
             if (Array.isArray(reserva.notes) && reserva.notes.length > 0) {
                 reserva.notes = reserva.notes.map(note => note.texto).join(', ')

@@ -83,7 +83,9 @@
                         <th scope="col">Notas externas</th>
                         <th scope="col">Teléfono de cliente</th>
 
-                        <th scope="col">Monto</th>
+
+                        <th scope="col">Total pagado cliente</th>
+                        <th scope="col">Costo Total reserva</th>
 
 
                     </tr>
@@ -110,7 +112,10 @@
                         <td>{{this.notes}}</td>
                         <td>{{this.telefonoCliente}}</td>
 
+
+                        <td>${{this.pagosNoLiquidaEfectivo}}</td>
                         <td>${{this.total}}</td>
+
 
 
                     </tr>
