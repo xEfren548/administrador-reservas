@@ -75,8 +75,6 @@
                         <th scope="col">Salida</th>
                         <th scope="col">Noches</th>
                         <th scope="col">Adultos</th>
-                        <th scope="col">Depósito de cliente</th>
-                        <th scope="col">Liquida en efectivo</th>
                         <th scope="col">Nombre de cliente</th>
                         <th scope="col">Email de cliente</th>
                         <th scope="col">Notas internas</th>
@@ -84,6 +82,8 @@
                         <th scope="col">Teléfono de cliente</th>
 
 
+                        <th scope="col">Depósito de cliente</th>
+                        <th scope="col">Liquida en efectivo</th>
                         <th scope="col">Total pagado cliente</th>
                         <th scope="col">Costo Total reserva</th>
 
@@ -104,8 +104,6 @@
                         <td>{{this.departureDate}}</td>
                         <td>{{this.nNights}}</td>
                         <td>{{this.pax}}</td>
-                        <td>${{this.pagosCliente}}</td>
-                        <td>${{this.liquidaEfectivo}}</td>
                         <td>{{this.nombreCliente}}</td>
                         <td>{{this.correoCliente}}</td>
                         <td>{{this.privateNotes}}</td>
@@ -114,6 +112,8 @@
 
 
                         <td>${{this.pagosNoLiquidaEfectivo}}</td>
+                        <td>${{this.liquidaEfectivo}}</td>
+                        <td>${{this.pagosCliente}}</td>
                         <td>${{this.total}}</td>
 
 
@@ -131,6 +131,7 @@
                     <tr>
                         <td colspan="10"><b>Total</b></td>
                         <td id="totalMonto"></td>
+                        <td></td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -282,15 +283,15 @@
                 "drawCallback": function () {
                     // Calculate and update the total monto
                     var api = this.api();
-                    var total = api.column(10, { search: 'applied' }).data().reduce(function (a, b) {
-                        return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
-                    }, 0);
-                    var total2 = api.column(17, { search: 'applied' }).data().reduce(function (a, b) {
+                    //var total = api.column(10, { search: 'applied' }).data().reduce(function (a, b) {
+                        //return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
+                    //}, 0);
+                    var total2 = api.column(18, { search: 'applied' }).data().reduce(function (a, b) {
                             // Verificar que `b` sea un número válido antes de sumar
                             var valor = parseFloat(b.replace(/[^\d.-]/g, ''));
                             return a + (isNaN(valor) ? 0 : valor); // Sumar solo si el valor es numérico
                         }, 0);
-                    document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
+                    //document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
                     document.getElementById('totalMonto2').textContent = `$${total2.toFixed(2)}`;
                 }
             });

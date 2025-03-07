@@ -1070,7 +1070,7 @@ async function vistaParaReporte(req, res, next) {
             
 
             const pagosReserva = pagos.filter(pago => pago.reservacionId.toString() === reserva._id.toString())
-            const pagosNoLiquidaEfectivoFilter = pagos.filter(pago => pago.metodoPago !== "Recibio dueño")
+            const pagosNoLiquidaEfectivoFilter = pagosReserva.filter(pago => pago.metodoPago !== "Recibio dueño")
             const pagosNoLiquidaEfectivo = pagosNoLiquidaEfectivoFilter.reduce((total, pago) => total + pago.importe, 0);
 
             const totalPagosReserva = pagosReserva.reduce((total, pago) => total + pago.importe, 0);
