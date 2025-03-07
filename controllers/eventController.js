@@ -165,7 +165,40 @@ async function obtenerEventos(req, res) {
                 };
             }
 
+            const fechasBloqueadas = await BloqueoFechas.find({ habitacionId: chaletId }).lean();
+            
+            for (const fecha of fechasBloqueadas) {
+                const arrivalDate = new Date(fecha.date);
+                arrivalDate.setUTCHours(15, 0, 0, 0)
+                const departureDate = new Date(arrivalDate);
+                departureDate.setDate(departureDate.getDate() + 1);
+                departureDate.setUTCHours(12, 0, 0, 0);
+                const evento = {
+                    _id: new mongoose.Types.ObjectId(),
+                    client: "N/A",
+                    resourceId: fecha.habitacionId,
+                    arrivalDate: fecha.date,
+                    departureDate: departureDate,
+                    maxOccupation: 0,
+                    pax: 0,
+                    nNights: 1,
+                    total: 0,
+                    termsAccepted: false,
+                    madeCheckIn: false,
+                    surveySubmitted: false,
+                    isDeposit: false,
+                    status: "n/a",
+                    createdBy: "n/a",
+                    thanksSent: false,
+                    colorUsuario: "#ff0000",
+                    clientName: "Fecha Bloqueada",
+                }
+                eventos.push(evento);
+            }
+
         }
+
+        console.log(eventos[eventos.length - 1])
 
 
 
@@ -174,6 +207,7 @@ async function obtenerEventos(req, res) {
         // console.log(rackLimpieza);
 
         for (let evento of eventos) {
+            if (evento.clientName === "Fecha Bloqueada") continue;
             let pagos = await pagoController.obtenerPagos(evento._id);
             let pagoTotal = 0
             pagos.forEach(pago => {
@@ -197,6 +231,8 @@ async function obtenerEventos(req, res) {
                 evento.cleaningDetails = cleaningDetailsMap[chaletId];
             }
         }
+
+
         // console.log(eventos[0])
         res.send(eventos);
     } catch (error) {
