@@ -59,7 +59,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             },
         events:
             function (info, successCallback, failureCallback) {
-                fetch(urlEventos)
+                console.log(info);
+                fetch(`${urlEventos}?start=${info.startStr}&end=${info.endStr}`)
                     .then(function (response) {
                         return response.json()
                     })
