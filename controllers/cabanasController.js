@@ -1050,6 +1050,25 @@ async function renderCalendarPerChaletOwner(req, res, next) {
     }
 }
 
+async function changeChaletStatus(req, res, next) {
+    try {
+        const { chaletid } = req.query;
+        const { status } = req.body;
+        const chalet = await Habitacion.findById(chaletid);
+        if (!chalet) {
+            throw new NotFoundError("No room found");
+        }
+        if (status !== "Activa" && status !== "Inactiva") {
+            throw new BadRequestError("Estatus inválido");
+        }
+        chalet.isActive = (status === "Activa") ? true : false;
+        await chalet.save();
+        res.status(200).json({ message: "El estatus de la cabaña fue actualizado correctamente" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 module.exports = {
     showCreateChaletViewValidators,
     createChaletValidators,
@@ -1063,5 +1082,6 @@ module.exports = {
     editChalet,
     showChaletsData,
     renderCalendarPerChalet,
-    renderCalendarPerChaletOwner
+    renderCalendarPerChaletOwner,
+    changeChaletStatus
 }

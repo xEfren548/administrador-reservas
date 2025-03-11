@@ -323,6 +323,10 @@ const preSchema = new mongoose.Schema({
     files: {
         type: [String],
         //required: true
+    },
+    isActive: {
+        type: Boolean,
+        default: true
     }
 });
 

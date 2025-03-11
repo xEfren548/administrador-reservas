@@ -12,6 +12,7 @@ router.post('/cabanas/subir-pdf-cabana', uploadPdf,  validationRequest, cabanasC
 
 router.get('/cabanas/editar-cabana', cabanasController.showEditChaletsView);
 router.post('/cabanas/editar-cabana', /*cabanasController.createChaletValidators, validationRequest,*/ cabanasController.editChalet);
+router.put('/cabanas/status', cabanasController.changeChaletStatus);
 router.get('/cabanas/calendar', cabanasController.renderCalendarPerChalet)
 router.get('/cabanas/ownercalendar', cabanasController.renderCalendarPerChaletOwner)
 module.exports = router;
