@@ -361,7 +361,7 @@ const editChaletValidators = [
 
 async function showChaletsData(req, res, next) {
     try {
-        const chalets = await Habitacion.find();
+        const chalets = await Habitacion.find({isActive: true})
         res.send(chalets);
     } catch (error) {
         console.error(error);
@@ -922,9 +922,9 @@ async function renderCalendarPerChalet(req, res, next) {
 
         if (privilege === "Vendedor") {
             const assignedChalets = req.session.assignedChalets;
-            habitaciones = await Habitacion.find({ _id: assignedChalets }).lean();
+            habitaciones = await Habitacion.find({ _id: assignedChalets, isActive: true }).lean();
         } else {
-            habitaciones = await Habitacion.find().lean();
+            habitaciones = await Habitacion.find({ isActive: true }).lean();
         }
         if (!habitaciones) {
             throw new NotFoundError("No hay información de las cabañas o el usuario no tiene cabañas asignadas.");
@@ -981,7 +981,7 @@ async function renderCalendarPerChaletOwner(req, res, next) {
         const duenoId = req.session.id;
 
         // Find the existing rooms   
-        const habitacionesExistentes = await Habitacion.find().lean();
+        const habitacionesExistentes = await Habitacion.find({ isActive: true }).lean();
         if (!habitacionesExistentes) {
             return res.status(404).send('No rooms found');
         }

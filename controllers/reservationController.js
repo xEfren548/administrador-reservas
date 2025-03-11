@@ -36,9 +36,9 @@ async function showReservationsView(req, res, next) {
         let habitaciones = [];
         if (privilege === "Vendedor"){
             const assignedChalets = req.session.assignedChalets;
-            habitaciones = await Habitacion.find({_id: assignedChalets}).lean();
+            habitaciones = await Habitacion.find({_id: assignedChalets, isActive: true}).lean();
         } else {
-            habitaciones = await Habitacion.find().lean();
+            habitaciones = await Habitacion.find( {isActive: true}).lean();
         }
         // const habitaciones = await Habitacion.find().lean();
         if(!habitaciones){

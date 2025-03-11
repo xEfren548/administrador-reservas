@@ -682,6 +682,12 @@ async function createReservation(req, res, next) {
             throw new NotFoundError('Chalet does not exist 2');
         }
 
+        if (chalet.isActive === false) {
+            return res.status(400).send({
+                message: `La habitación ${chaletName} ha sido desactivada.`,
+            });
+        }
+
         const mongooseChaletId = new mongoose.Types.ObjectId(chalet._id);
         const overlappingReservation = await Documento.findOne({
             resourceId: mongooseChaletId,
@@ -1339,6 +1345,11 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
         return false;
     }
 
+    const habitacion = await Habitacion.findById(newResourceId);
+    if (habitacion.isActive === false) {
+        return false;
+    }
+
     // Query events with overlapping dates in MongoDB
     const overlappingEvents = await Documento.find({
         resourceId: newResourceId,
@@ -1806,12 +1817,14 @@ async function cotizadorChaletsyPrecios(req, res) {
             filtro = {
                 "propertyDetails.accomodationType": { $in: categorias },
                 "propertyDetails.maxOccupancy": { $gte: huespedes },
-                "propertyDetails.minOccupancy": { $lte: huespedes }
+                "propertyDetails.minOccupancy": { $lte: huespedes },
+                isActive: true
             };
         } else { // Si se mostrara todo
             filtro = {
                 "propertyDetails.maxOccupancy": { $gte: huespedes },
-                "propertyDetails.minOccupancy": { $lte: huespedes }
+                "propertyDetails.minOccupancy": { $lte: huespedes },
+                isActive: true
             };
         }
 
