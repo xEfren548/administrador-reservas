@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (clientName === "Fecha Bloqueada") {
                 return {
                     html: `
-                    <div class="event-content bg-danger ${textColor}" style="position: relative; cursor: pointer; font-family: 'Overpass', sans-serif;">
+                    <div class="event-content bg-secondary ${textColor}" style="position: relative; cursor: pointer; font-family: 'Overpass', sans-serif;">
                         <div class="event-details text-white text-center">
                             <div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"><b>${clientName}</div></b>
                         </div>
