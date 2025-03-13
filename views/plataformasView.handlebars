@@ -1,0 +1,91 @@
+<h1 class="ml-2 text-white text-xl font-bold">Definición de % de Aumento</h1>
+<div class="bg-gray-900 p-4 rounded-lg mb-4">
+    <button class="bg-blue-500 text-white px-4 py-2 rounded-lg mr-2" data-modal="acciones_modal">Agregar
+        plataforma</button>
+    <button class="bg-gray-700 text-white px-4 py-2 rounded-lg" data-modal="delete-prices-modal">Eliminar
+        plataforma</button>
+</div>
+
+<label class="block text-white mt-4">Habitación:</label>
+<select class="bg-gray-800 text-white p-2 rounded-lg w-full" id="habitacion-select">
+    <option>Seleccione una habitación --</option>
+    {{#each chalets}}
+    <option value="{{this.id}}">{{this.name}}</option>
+    {{/each}}
+</select>
+
+{{#each chalets}}
+<div class="mt-6 hidden" id="calendar-container-{{this.id}}" data-id="{{this.id}}">
+    <div class="overflow-x-auto bg-gray-900 p-4 rounded-lg">
+        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg mb-4"
+            onclick="scrollToToday('{{this.id}}')">Hoy</button>
+        <table class="w-full border border-gray-700 text-white">
+            <thead>
+                <tr class="bg-gray-800">
+                    <th class="border border-gray-700 p-2">Función</th>
+                </tr>
+            </thead>
+            <tbody id="calendar-body-{{this.id}}">
+                <!-- Se llenará con JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+{{/each}}
+
+<script>
+    function generateCalendar(chaletName) {
+        const today = new Date();
+        const daysBefore = 365;
+        const daysAfter = 365;
+        const fechas = [];
+
+        for (let i = -daysBefore; i <= daysAfter; i++) {
+            let date = new Date(today);
+            date.setDate(today.getDate() + i);
+            fechas.push(date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }));
+        }
+
+        let tableHeader = '<tr class="bg-white text-gray-800"><th class="border border-gray-700 p-2">Función</th>';
+        fechas.forEach(fecha => {
+            tableHeader += `<th class="border border-gray-700 p-2">${fecha}</th>`;
+        });
+        tableHeader += '</tr>';
+
+        let tableRows = '';
+        const fields = ['Costo Base', 'Precio Base', 'Costo Base 2+ noches', 'Precio Base 2+ noches'];
+        const dummyPrices = [1800, 2250, 1800, 2250];
+
+        fields.forEach((field, index) => {
+            tableRows += `<tr><td class="border border-gray-700 p-2">${field}</td>`;
+            fechas.forEach(() => {
+                tableRows += `<td class="border border-gray-700 p-2">${dummyPrices[index]}</td>`;
+            });
+            tableRows += '</tr>';
+        });
+
+        document.querySelector(`#calendar-container-${chaletName} thead`).innerHTML = tableHeader;
+        document.querySelector(`#calendar-body-${chaletName}`).innerHTML = tableRows;
+    }
+
+    document.getElementById('habitacion-select').addEventListener('change', function () {
+        const selectedChalet = this.value;
+        document.querySelectorAll('[id^="calendar-container-"]').forEach(container => {
+            container.classList.add('hidden');
+        });
+        if (selectedChalet !== "Seleccione una habitación --") {
+            generateCalendar(selectedChalet);
+            document.getElementById(`calendar-container-${selectedChalet}`).classList.remove('hidden');
+        }
+    });
+
+    function scrollToToday(chaletId) {
+        const today = new Date().toISOString().split('T')[0];
+        const headers = document.querySelectorAll(`#calendar-container-${chaletId} th[data-date]`);
+        headers.forEach(th => {
+            if (th.dataset.date.startsWith(today)) {
+                th.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }
+</script>

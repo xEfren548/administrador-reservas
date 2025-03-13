@@ -34,6 +34,7 @@ const bloqueoFechasRoutes = require('./bloqueoFechasRoutes');
 const bloqueoInversionistasRoutes = require('./bloqueoInversionistasRoutes');
 const rolesRoutes = require('./rolesRoutes');
 const webhookRoutes = require('./webHook');
+const plataformasRoutes = require('./plataformasRoutes');
 
 const authMiddleware = require('../common/middlewares/authMiddleware');
 
@@ -75,6 +76,7 @@ router.use('/', calendarioPrecios);
 router.use('/', logsRoutes);
 router.use('/', bloqueoFechasRoutes);
 router.use('/', bloqueoInversionistasRoutes);
+router.use('/', plataformasRoutes);
 
 // API routes
 router.use('/api', eventRoutes);
