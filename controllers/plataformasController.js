@@ -8,16 +8,19 @@ const renderVistaPlataformas = async (req, res) => {
     const habitaciones = await Habitaciones.find({ isActive: true }).lean();
     const mappedChalets = habitaciones.map(chalet => ({
         id: chalet._id,
-        name: chalet.propertyDetails.name
+        name: chalet.propertyDetails.name,
+        baseCost: chalet.others.baseCost,
+        baseCost2nights: chalet.others.baseCost2nights,
+        basePrice: chalet.others.basePrice,
+        basePrice2nights: chalet.others.basePrice2nights
     }))
 
     const preciosHabitacionesData = await precioBaseController.consultarPrecios();
     //console.log(preciosHabitacionesData);
     const preciosEspecialesData = await preciosEspecialesController.consultarPrecios()
-    console.log(preciosEspecialesData)
     res.render('plataformasView', {
         layout: 'tailwindMain',
-        chalets: mappedChalets,
+        habitaciones: mappedChalets,
         preciosHabitaciones: preciosHabitacionesData,
         preciosEspeciales: preciosEspecialesData
     });

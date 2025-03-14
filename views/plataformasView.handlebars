@@ -9,101 +9,219 @@
 <label class="block text-white mt-4">Habitación:</label>
 <select class="bg-gray-800 text-white p-2 rounded-lg w-full" id="habitacion-select">
     <option>Seleccione una habitación --</option>
-    {{#each chalets}}
+    {{#each habitaciones}}
     <option value="{{this.id}}">{{this.name}}</option>
     {{/each}}
 </select>
 
-{{#each chalets}}
-<div class="mt-6 hidden" id="calendar-container-{{this.id}}" data-id="{{this.id}}">
-    <div class="overflow-x-auto bg-gray-900 p-4 rounded-lg">
-        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg mb-4"
-            onclick="scrollToToday('{{this.id}}')">Hoy</button>
-        <table class="w-full border border-gray-700 text-white">
-            <thead>
-                <tr class="bg-gray-800">
-                    <th class="border border-gray-700 p-2">Función</th>
-                </tr>
-            </thead>
-            <tbody id="calendar-body-{{this.id}}">
-                <!-- Se llenará con JavaScript -->
-            </tbody>
-        </table>
-    </div>
+<div class="table-pricescol min-vh-100 p-4">
+	{{#if habitaciones}}
+	{{#each habitaciones}}
+	<div class="habitacion-contenedor" id="habitacion-{{this.id}}" style="display: none;">
+		<h1>{{this.name}}</h1> <!-- Título de la habitación -->
+		<div class="ms-auto p-2 bd-highlight">
+			<a name="" id="cn-{{this.name}}" class="btn btn-primary hoy-btn" href="#" role="button"
+				data-chalet="{{this.name}}">Hoy</a>
+		</div>
+		<div class="table-responsive">
+			<table border="1" class="table table-{{this.name}} table-dark text-center table-hover"
+				id="table-{{this.name}}">
+				<thead class="table-light">
+					<tr id="header-row-{{this.name}}">
+						<th class="sticky-column">Función</th>
+					</tr>
+				</thead>
+				<tbody id="tbody-{{this.name}}">
+					<tr id="costo-base-row-{{this.name}}">
+						<td class="sticky-column">Costo Base</td>
+					</tr>
+					<tr id="precio-base-row-{{this.name}}">
+						<td class="sticky-column">Precio Base</td>
+					</tr>
+					<tr id="costo-base2-row-{{this.name}}">
+						<td class="sticky-column">Costo Base 2+ noches</td>
+					</tr>
+					<tr id="precio-base2nights-row-{{this.name}}">
+						<td class="sticky-column">Precio Base 2+ noches</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<br>
+	</div>
+	{{/each}}
+	{{else}}
+	<p>No hay habitaciones</p>
+	{{/if}}
 </div>
-{{/each}}
 
 <script>
-    function generateCalendar(chaletName) {
-        const today = new Date();
-        const daysBefore = 365;
-        const daysAfter = 365;
-        const fechas = [];
-
-        for (let i = -daysBefore; i <= daysAfter; i++) {
-            let date = new Date(today);
-            date.setDate(today.getDate() + i);
-            fechas.push(date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }));
-        }
-
-        let tableHeader = '<tr class="bg-white text-gray-800"><th class="border border-gray-700 p-2">Función</th>';
-        fechas.forEach(fecha => {
-            tableHeader += `<th class="border border-gray-700 p-2">${fecha}</th>`;
-        });
-        tableHeader += '</tr>';
-
-        let tableRows = '';
-        const fields = ['Costo Base', 'Precio Base', 'Costo Base 2+ noches', 'Precio Base 2+ noches'];
-        const dummyPrices = [1800, 2250, 1800, 2250];
-
-        fields.forEach((field, index) => {
-            tableRows += `<tr><td class="border border-gray-700 p-2">${field}</td>`;
-            fechas.forEach(() => {
-                tableRows += `<td class="border border-gray-700 p-2">${dummyPrices[index]}</td>`;
-            });
-            tableRows += '</tr>';
-        });
-
-        document.querySelector(`#calendar-container-${chaletName} thead`).innerHTML = tableHeader;
-        document.querySelector(`#calendar-body-${chaletName}`).innerHTML = tableRows;
-    }
-
-    document.getElementById('habitacion-select').addEventListener('change', function () {
-        const selectedChalet = this.value;
-        document.querySelectorAll('[id^="calendar-container-"]').forEach(container => {
-            container.classList.add('hidden');
-        });
-        if (selectedChalet !== "Seleccione una habitación --") {
-            generateCalendar(selectedChalet);
-            document.getElementById(`calendar-container-${selectedChalet}`).classList.remove('hidden');
-        }
-    });
-
-    function scrollToToday(chaletId) {
-        const today = new Date().toISOString().split('T')[0];
-        const headers = document.querySelectorAll(`#calendar-container-${chaletId} th[data-date]`);
-        headers.forEach(th => {
-            if (th.dataset.date.startsWith(today)) {
-                th.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        });
-    }
-
-    // CARGAR DATOS DE CABAÑA (PRECIOS)
-
     const habitaciones = {{{ json habitaciones }}};
 	const preciosHabitaciones = {{{ json preciosHabitaciones }}}
 	const preciosEspeciales = {{{ json preciosEspeciales }}}
 
+    document.addEventListener('DOMContentLoaded', function () {
+		const selectHabitacion = document.getElementById('habitacion-select');
+		const habitacionContainers = document.querySelectorAll('.habitacion-contenedor');
+
+		// Oculta todos los contenedores de habitaciones al cargar la página
+		habitacionContainers.forEach(container => {
+			container.style.display = 'none';
+		});
+
+		// Evento cuando se cambia la selección de habitación
+		selectHabitacion.addEventListener('change', function () {
+			const selectedHabitacionId = selectHabitacion.value;
+
+			// Oculta todos los contenedores de habitaciones
+			habitacionContainers.forEach(container => {
+				container.style.display = 'none';
+			});
+
+			// Si se seleccionó una habitación, mostrar el contenedor correspondiente
+			if (selectedHabitacionId) {
+				const selectedHabitacionContainer = document.getElementById(`habitacion-${selectedHabitacionId}`);
+				if (selectedHabitacionContainer) {
+					selectedHabitacionContainer.style.display = 'flex';
+					selectedHabitacionContainer.style.flexDirection = 'column';
+				}
+			}
+
+		});
+	});
+
+	document.getElementById('habitacion-select').addEventListener('change', function () {
+		const selectedRoomId = this.value;
+		if (selectedRoomId !== "Seleccione una habitación --") {
+			// Filtrar los datos de la habitación seleccionada
+			const selectedRoom = habitaciones.find(habitacion => habitacion.id === selectedRoomId);
+
+			if (selectedRoom) {
+				// Llamar a la función para cargar las fechas y precios solo de la habitación seleccionada
+				cargarDatosHabitacion(selectedRoom);
+			}
+		}
+	});
+    const hoyButtons = document.querySelectorAll('.hoy-btn');
+	const today = new Date();
+	let currentMonth = today.getMonth();
+	let currentYear = today.getFullYear();
+
+
+
+	// Función para determinar si una fecha es viernes, sábado o domingo
+	function esFinDeSemana(fechaStr) {
+		const partesFecha = fechaStr.split(" ");
+		const dia = parseInt(partesFecha[0]);
+		const mes = partesFecha[1];
+		const anio = parseInt(partesFecha[2]);
+
+		// Mapear los nombres de los meses a números (enero = 0, diciembre = 11)
+		const meses = {
+			"ene": 0,
+			"feb": 1,
+			"mar": 2,
+			"abr": 3,
+			"may": 4,
+			"jun": 5,
+			"jul": 6,
+			"ago": 7,
+			"sept": 8,
+			"oct": 9,
+			"nov": 10,
+			"dic": 11
+		};
+
+		const fecha = new Date(anio, meses[mes], dia);
+		console.log(fecha);
+		const diaSemana = fecha.getDay(); // 0 = Domingo, 5 = Viernes, 6 = Sábado
+
+
+		return diaSemana === 5 || diaSemana === 6;
+	}
+
+	function esHoy(fechaStr) {
+		const partesFecha = fechaStr.split(" ");
+		const dia = parseInt(partesFecha[0]);
+		const mes = partesFecha[1];
+		const anio = parseInt(partesFecha[2]);
+
+		// Mapear los nombres de los meses a números (enero = 0, diciembre = 11)
+		const meses = {
+			"ene": 0,
+			"feb": 1,
+			"mar": 2,
+			"abr": 3,
+			"may": 4,
+			"jun": 5,
+			"jul": 6,
+			"ago": 7,
+			"sept": 8,
+			"oct": 9,
+			"nov": 10,
+			"dic": 11
+		};
+
+		const fecha = new Date(anio, meses[mes], dia);
+		const fechaHoy = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+
+		const todayDate = new Date();
+		todayDate.setHours(0, 0, 0, 0); // Eliminar la hora para comparar solo la fecha
+
+		return fechaHoy.getTime() === todayDate.getTime();
+	}
+
+
+	hoyButtons.forEach(button => {
+		button.addEventListener('click', function (event) {
+			event.preventDefault();
+
+			const chaletName = this.getAttribute('data-chalet');
+
+			const currentMonthName = today.toLocaleString('es-ES', { month: 'long' });
+			const currentYear = today.getFullYear();
+
+			const calendarContainer = document.getElementById(`table-${chaletName}`);
+
+			console.log(`Button clicked for ${chaletName}`)
+
+			const ths = calendarContainer.querySelectorAll("th");
+
+			ths.forEach((th, index) => {
+				if (esHoy(th.textContent.trim())) {
+					setTimeout(() => {
+						th.scrollIntoView({ behavior: 'smooth', block: "nearest", inline: "start" });
+					}, 0);
+					return;
+				}
+			});
+			/** 
+	
+			const monthHeaders = calendarContainer.querySelectorAll('.month-header');
+			monthHeaders.forEach(header => {
+				if (header.textContent.trim().toLowerCase() === `${currentMonthName} ${currentYear}`.toLowerCase()) {
+					setTimeout(() => {
+						header.scrollIntoView({ behavior: 'smooth', block: "nearest", inline: "center" });
+					}, 0);
+				}
+			});
+			**/
+		});
+
+	})
+
+
+    // CARGAR DATOS DE CABAÑA (PRECIOS)
+
     function cargarDatosHabitacion(habitacion) {
 		try {
-			const roomName = habitacion.propertyDetails.name;
-			const roomId = habitacion._id;
+			const roomName = habitacion.name;
+			const roomId = habitacion.id;
 
-			const costoBase = habitacion.others.baseCost;
-			const costoBase2 = habitacion.others.baseCost2nights;
-			const precioBase = habitacion.others.basePrice;
-			const precioBase2nights = habitacion.others.basePrice2nights;
+			const costoBase = habitacion.baseCost;
+			const costoBase2 = habitacion.baseCost2nights;
+			const precioBase = habitacion.basePrice;
+			const precioBase2nights = habitacion.basePrice2nights;
 
 			const headerRow = document.getElementById(`header-row-${roomName}`);
 
