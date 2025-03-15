@@ -1,9 +1,7 @@
 <h1 class="ml-2 text-white text-xl font-bold">Definición de % de Aumento</h1>
 <div class="bg-gray-900 p-4 rounded-lg mb-4">
-    <button class="bg-blue-500 text-white px-4 py-2 rounded-lg mr-2" data-modal="acciones_modal">Agregar
-        plataforma</button>
-    <button class="bg-gray-700 text-white px-4 py-2 rounded-lg" data-modal="delete-prices-modal">Eliminar
-        plataforma</button>
+    <button class="bg-blue-500 text-white px-4 py-2 rounded-lg mr-2" onclick="openAddPlatformModal()">Agregar plataforma</button>
+    <button class="bg-gray-700 text-white px-4 py-2 rounded-lg" data-modal="delete-prices-modal">Eliminar plataforma</button>
 </div>
 
 <label class="block text-white mt-4">Habitación:</label>
@@ -55,7 +53,63 @@
 	{{/if}}
 </div>
 
+<!-- Modal -->
+<div id="acciones_modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Fondo oscuro -->
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-900 opacity-75"></div>
+        </div>
+
+        <!-- Contenido del modal -->
+        <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg font-medium leading-6 text-white">Agregar nueva plataforma</h3>
+                <form id="form_plataforma" class="mt-4">
+                    <!-- Campo Nombre -->
+                    <div class="mb-6">
+                        <label for="nombre" class="block text-sm font-medium text-gray-300">Nombre</label>
+                        <input type="text" id="nombre" name="nombre" class="mt-2 block w-full px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg" required>
+                    </div>
+
+                    <!-- Campo Descripción -->
+                    <div class="mb-6">
+                        <label for="descripcion" class="block text-sm font-medium text-gray-300">Descripción</label>
+                        <textarea id="descripcion" name="descripcion" rows="4" class="mt-2 block w-full px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg" required></textarea>
+                    </div>
+
+                    <!-- Campo Porcentaje de Aumento con Input Group Append -->
+                    <div class="mb-6">
+                        <label for="porcentaje_aumento" class="block text-sm font-medium text-gray-300">Porcentaje de Aumento</label>
+                        <div class="mt-2 flex rounded-md shadow-sm">
+                            <input type="number" id="porcentaje_aumento" name="porcentaje_aumento" class="flex-1 px-4 py-3 rounded-l-md bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-lg" min="0" max="100" required>
+                            <span class="inline-flex items-center px-4 py-3 rounded-r-md bg-gray-700 border border-l-0 border-gray-600 text-gray-300 sm:text-lg">%</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="bg-gray-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" onclick="submitForm()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-6 py-3 bg-blue-500 text-lg font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-lg">
+                    Guardar
+                </button>
+                <button type="button" onclick="closeAddPlaformModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-6 py-3 bg-gray-700 text-lg font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-lg">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    function openAddPlatformModal() {
+        document.getElementById('acciones_modal').classList.remove('hidden');
+    }
+
+    // Función para cerrar el modal
+    function closeAddPlaformModal() {
+        document.getElementById('acciones_modal').classList.add('hidden');
+    }
+
     const habitaciones = {{{ json habitaciones }}};
 	const preciosHabitaciones = {{{ json preciosHabitaciones }}}
 	const preciosEspeciales = {{{ json preciosEspeciales }}}
