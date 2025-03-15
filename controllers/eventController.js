@@ -1958,17 +1958,22 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     const arrivalDateISO = new Date(`${fechaLlegadaStr}T11:30:00`).toISOString();
     const departureDateISO = new Date(`${fechaSalidaStr}T08:30:00`).toISOString();
 
+    const arrivalDateBloqueo = new Date(`${fechaLlegadaStr}T00:00:00`).toISOString();
+    const departureDateBloqueo = new Date(`${fechaSalidaStr}T23:59:59`).toISOString();
+
+    console.log("ARRIVAL DATE: ", arrivalDateBloqueo, "DEPARTURE DATE: ", departureDateBloqueo);
+
     // Verificar fechas bloqueadas
     const isBlocked = await BloqueoFechas.exists({
         habitacionId: newResourceId,
         type: 'bloqueo',
         $or: [
             // Caso 1: La fecha bloqueada está dentro del rango de la reserva
-            { date: { $gte: arrivalDateISO, $lte: departureDateISO } },
+            { date: { $gte: arrivalDateBloqueo, $lte: departureDateBloqueo } },
             // Caso 2: La fecha bloqueada coincide exactamente con la fecha de llegada
-            { date: arrivalDateISO },
+            { date: departureDateBloqueo },
             // Caso 3: La fecha bloqueada coincide exactamente con la fecha de salida
-            { date: departureDateISO },
+            { date: departureDateBloqueo },
         ],
     });
 
