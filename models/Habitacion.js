@@ -327,6 +327,10 @@ const preSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: false
+    },
+    activePlatforms: {
+        type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Plataformas'}],
+        default: []
     }
 });
 
