@@ -857,6 +857,24 @@
             </select>
 
     </div>
+
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#platforms">+
+        Plataformas</button>
+    <div id="platforms">
+        <form>
+            <label for="options" class="form-label">Seleccionar plataformas:</label>
+
+            <select class="form-select form-select-md bg-dark" id="select-platforms" name="platformsoptions[]" multiple>
+                {{#if plataformas}}
+                {{#each plataformas}}
+                <option value="{{this._id}}">{{this.nombre}}</option>
+                {{/each}}
+                {{else}}
+                <option value="0">No se encontraron plataformas</option>
+                {{/if}}
+            </select>
+
+    </div>
 </form>
 
 
@@ -918,6 +936,17 @@
             allowClear: true,
 
         });
+
+        $('#select-platforms').select2({
+            maximumSelectionLength: 10,
+            placeholder: "Buscar",
+            allowClear: true,
+
+        });
+
+        
+
+
 
         function getSelectedInvestors() {
             const selectElement = document.getElementById('select-investors');
@@ -999,6 +1028,9 @@
 
                 const selectElement = document.getElementById('select-investors');
                 const selectedInvestors = Array.from(selectElement.selectedOptions).map(option => option.value);
+
+                const selectPlatformsEl = document.getElementById('select-platforms');
+                const selectedPlatforms = Array.from(selectPlatformsEl.selectedOptions).map(option => option.value);
 
                 const data = {
                     propertyDetails: {
@@ -1186,7 +1218,8 @@
                         owner: document.getElementById("chalet-owner-select").value.trim(),
                         investors: selectedInvestors
                     },
-                    files: pdfarrayDB
+                    files: pdfarrayDB,
+                    activePlatforms: selectedPlatforms
                 };
 
                 try {
