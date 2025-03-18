@@ -14,6 +14,7 @@ const fs = require('fs');
 
 const Roles = require("../models/Roles");
 const permissions = require('../models/permissions');
+const Plataformas = require('../models/Plataformas');
 
 const showCreateChaletViewValidators = [
     check()
@@ -801,6 +802,8 @@ async function showEditChaletsView(req, res, next) {
         //console.log("ADMINS: ", admins);
         //console.log("JANITORS: ", janitors);
 
+        const plataformas = await Plataformas.find().lean();
+
         // This could go on login.
         if (req.session.filesRetrieved !== undefined) {
             getChaletFiles(chalets);
@@ -817,7 +820,8 @@ async function showEditChaletsView(req, res, next) {
             janitors: janitors,
             owners: owners,
             tipologias: tipologias,
-            investors: investors
+            investors: investors,
+            plataformas: plataformas
         });
     } catch (error) {
         console.error('Error:', error);
