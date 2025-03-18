@@ -8,14 +8,9 @@ const PlataformaSchema = new mongoose.Schema({
     },
     descripcion: {
         type: String,
-        required: true
     },
     aumentoPorcentaje: {
         type: Number,
-        required: true
-    },
-    activo: {
-        type: Boolean,
         required: true
     }
 });

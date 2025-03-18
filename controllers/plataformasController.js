@@ -15,6 +15,8 @@ const renderVistaPlataformas = async (req, res) => {
         basePrice2nights: chalet.others.basePrice2nights
     }))
 
+    const plataformas = await Plataformas.find().lean();
+
     const preciosHabitacionesData = await precioBaseController.consultarPrecios();
     //console.log(preciosHabitacionesData);
     const preciosEspecialesData = await preciosEspecialesController.consultarPrecios()
@@ -22,7 +24,8 @@ const renderVistaPlataformas = async (req, res) => {
         layout: 'tailwindMain',
         habitaciones: mappedChalets,
         preciosHabitaciones: preciosHabitacionesData,
-        preciosEspeciales: preciosEspecialesData
+        preciosEspeciales: preciosEspecialesData,
+        plataformas
     });
 }
 
