@@ -14,6 +14,7 @@ const fs = require('fs');
 
 const Roles = require("../models/Roles");
 const permissions = require('../models/permissions');
+const Plataformas = require('../models/Plataformas');
 
 const showCreateChaletViewValidators = [
     check()
@@ -424,6 +425,7 @@ async function showChaletsView(req, res, next) {
         const bosqueImperial = await Usuario.findById("66a7c2f2915b94d6630b67f2").lean();
         owners.push(bosqueImperial);
 
+        const plataformas = await Plataformas.find().lean();
 
         res.render('vistaCabanas', {
             chalets: mapChalets,
@@ -431,7 +433,8 @@ async function showChaletsView(req, res, next) {
             janitors: janitors,
             tipologias: tipologias,
             owners: owners,
-            investors: investors
+            investors: investors,
+            plataformas: plataformas
         });
     } catch (error) {
         console.log(error);
@@ -442,7 +445,7 @@ async function showChaletsView(req, res, next) {
 async function createChalet(req, res, next) {
     //console.log(req.body);
 
-    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images, files } = req.body;
+    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images, files, activePlatforms } = req.body;
 
     const admin = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
     if (!admin) {
@@ -457,6 +460,11 @@ async function createChalet(req, res, next) {
     const owner = await Usuario.findOne({ _id: others.owner});
     if (!owner) {
         throw new NotFoundError("Owner not found");
+    }
+
+    const platforms = await Plataformas.find({ _id: { $in: activePlatforms } });
+    if (!platforms) {
+        throw new NotFoundError("Platforms not found");
     }
 
     const arrivalTimeHours = parseInt(others.arrivalTimeHours);
@@ -493,7 +501,8 @@ async function createChalet(req, res, next) {
             investors: others.investors
         },
         images,
-        files
+        files,
+        activePlatforms
     };
 
     try {
@@ -801,6 +810,9 @@ async function showEditChaletsView(req, res, next) {
         //console.log("ADMINS: ", admins);
         //console.log("JANITORS: ", janitors);
 
+        const plataformas = await Plataformas.find().lean();
+        console.log("PLATAFORMAS: ", plataformas);
+
         // This could go on login.
         if (req.session.filesRetrieved !== undefined) {
             getChaletFiles(chalets);
@@ -809,15 +821,14 @@ async function showEditChaletsView(req, res, next) {
         }
         console.log("Images downloaded successfully ");
 
-        console.log(chalets[chalets.length - 1]);
-
         res.render('vistaEditarCabana', {
             chalets: chalets,
             admins: admins,
             janitors: janitors,
             owners: owners,
             tipologias: tipologias,
-            investors: investors
+            investors: investors,
+            plataformas: plataformas
         });
     } catch (error) {
         console.error('Error:', error);
@@ -826,7 +837,7 @@ async function showEditChaletsView(req, res, next) {
 }
 
 async function editChalet(req, res, next) {
-    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images, txtChaletId } = req.body;
+    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images, txtChaletId, activePlatforms } = req.body;
     console.log('Entrando a edit chalet');
 
     try {
@@ -839,6 +850,11 @@ async function editChalet(req, res, next) {
         if (!admin) throw new NotFoundError("Admin not found");
         if (!janitor) throw new NotFoundError("Janitor not found");
         if (!owner) throw new NotFoundError("Owner not found");
+
+        const platforms = await Plataformas.find({ _id: { $in: activePlatforms } });
+        if (!platforms) {
+            throw new NotFoundError("Platforms not found");
+        }
 
         console.log(others.departureTime);
         console.log(others.arrivalTime);
@@ -881,7 +897,8 @@ async function editChalet(req, res, next) {
                 owner: owner._id,
                 investors: others.investors
             },
-            images
+            images,
+            activePlatforms
         };
 
         
