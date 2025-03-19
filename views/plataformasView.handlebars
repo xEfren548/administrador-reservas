@@ -202,6 +202,16 @@
 		if (selectedRoomId !== "Seleccione una habitación --") {
 			// Filtrar los datos de la habitación seleccionada
 			const selectedRoom = habitaciones.find(habitacion => habitacion.id === selectedRoomId);
+			
+			if (!selectedRoom.activePlatforms || selectedRoom.activePlatforms.length === 0) {
+				Swal.fire({
+					title: 'Error',
+					text: 'La habitación seleccionada no tiene plataformas activas.',
+					icon: 'error',
+					confirmButtonText: 'Aceptar'
+				})
+				return;
+			}
 
 			if (selectedRoom) {
 				// Llamar a la función para cargar las fechas y precios solo de la habitación seleccionada
@@ -386,6 +396,7 @@
 
 	function cargarDatosHabitacion(habitacion) {
 		try {
+			console.log("Cargando datos de habitación:", habitacion);
 			const roomName = habitacion.name;
 			const roomId = habitacion.id;
 
@@ -393,6 +404,14 @@
 			const costoBase2 = habitacion.baseCost2nights;
 			const precioBase = habitacion.basePrice;
 			const precioBase2nights = habitacion.basePrice2nights;
+
+			const plataformasHabitacionC = habitacion.activePlatforms;
+			console.log(plataformasHabitacionC)
+
+			if (plataformasHabitacionC.length === 0) {
+				throw new Error('La habitación no tiene plataformas activas.');
+			}
+			
 
 			const headerRow = document.getElementById(`header-row-${roomName}`);
 
@@ -606,7 +625,7 @@
 		} catch (error) {
 			Swal.fire({
 				title: 'Error',
-				text: 'Ocurrió un error al cargar los precios de la habitación',
+				text: error.message,
 				icon: 'error',
 				confirmButtonText: 'Aceptar'
 			})

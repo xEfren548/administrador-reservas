@@ -12,7 +12,8 @@ const renderVistaPlataformas = async (req, res) => {
         baseCost: chalet.others.baseCost,
         baseCost2nights: chalet.others.baseCost2nights,
         basePrice: chalet.others.basePrice,
-        basePrice2nights: chalet.others.basePrice2nights
+        basePrice2nights: chalet.others.basePrice2nights,
+        activePlatforms: chalet.activePlatforms
     }))
 
     const plataformas = await Plataformas.find().lean();
