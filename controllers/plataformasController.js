@@ -13,17 +13,43 @@ const renderVistaPlataformas = async (req, res) => {
         baseCost2nights: chalet.others.baseCost2nights,
         basePrice: chalet.others.basePrice,
         basePrice2nights: chalet.others.basePrice2nights,
-        activePlatforms: chalet.activePlatforms
+        activePlatforms: chalet.activePlatforms || undefined,
     }))
 
     const plataformas = await Plataformas.find().lean();
+
+    const plataformasMap = plataformas.reduce((map, plataforma) => {
+        map[plataforma._id] = {
+            nombre: plataforma.nombre,
+            aumentoPorcentaje: plataforma.aumentoPorcentaje
+        }
+        return map;
+    }, {});
+
+    const habitacionesConNombresDePlataformas = mappedChalets.map(habitacion => {
+        if (habitacion.activePlatforms) {
+            return {
+                ...habitacion,
+                activePlatforms: habitacion.activePlatforms.map(platformId => ({
+                    id: platformId,
+                    name: plataformasMap[platformId] || "Plataforma Desconocida", // Usar el nombre o un valor por defecto,
+                    aumentoPorcentaje: plataformasMap[platformId]?.aumentoPorcentaje || 0
+                }))
+            };
+        } else {
+            return {
+                ...habitacion,
+                activePlatforms: undefined // Si no existe activePlatforms, se establece como undefined
+            };
+        }
+    });
 
     const preciosHabitacionesData = await precioBaseController.consultarPrecios();
     //console.log(preciosHabitacionesData);
     const preciosEspecialesData = await preciosEspecialesController.consultarPrecios()
     res.render('plataformasView', {
         layout: 'tailwindMain',
-        habitaciones: mappedChalets,
+        habitaciones: habitacionesConNombresDePlataformas,
         preciosHabitaciones: preciosHabitacionesData,
         preciosEspeciales: preciosEspecialesData,
         plataformas
