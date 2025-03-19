@@ -59,10 +59,13 @@
 	<div class="habitacion-contenedor" id="habitacion-{{this.id}}" style="display: none;">
 		{{#if this.activePlatforms}}
 		{{#each this.activePlatforms}}
-		<h1 class="text-xl font-medium leading-6 text-white mb-4">{{this.name}}</h1> <!-- Título de la habitación -->
+		<h1 class="text-xl font-medium leading-6 text-white mb-4">
+			{{this.name.nombre}}
+			<span class="text-sm text-gray-300">(Aumento: {{this.aumentoPorcentaje}}%)</span>
+		</h1> <!-- Título de la habitación -->
 		<div class="ms-auto p-2 bd-highlight">
 			<a name="" id="cn-{{this.id}}" class="btn btn-primary hoy-btn" href="#" role="button"
-				data-chalet="{{this.name}}">Hoy</a>
+				data-chalet="{{this.id}}">Hoy</a>
 		</div>
 		<div class="table-responsive">
 			<table border="1" class="table table-{{this.id}} table-dark text-center table-hover"
@@ -299,14 +302,15 @@
 		button.addEventListener('click', function (event) {
 			event.preventDefault();
 
-			const chaletName = this.getAttribute('data-chalet');
+			//const chaletName = this.getAttribute('data-chalet');
+			const platformId = this.getAttribute('data-chalet');
 
 			const currentMonthName = today.toLocaleString('es-ES', { month: 'long' });
 			const currentYear = today.getFullYear();
 
-			const calendarContainer = document.getElementById(`table-${chaletName}`);
+			const calendarContainer = document.getElementById(`table-${platformId}`);
 
-			console.log(`Button clicked for ${chaletName}`)
+			console.log(`Button clicked for ${platformId}`)
 
 			const ths = calendarContainer.querySelectorAll("th");
 
