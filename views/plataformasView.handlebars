@@ -18,6 +18,7 @@
 		</thead>
 		<!-- Cuerpo de la tabla -->
 		<tbody class="divide-y divide-gray-700">
+			{{#if plataformas}}
 			{{#each plataformas}}
 			<tr class="hover:bg-gray-800">
 				<td class="px-6 py-3 text-md text-gray-200">{{this.nombre}}</td>
@@ -40,6 +41,11 @@
 				</td>
 			</tr>
 			{{/each}}
+			{{else}}
+			<tr>
+				<td class="px-6 py-3 text-md text-gray-200 text-center" colspan="4">No hay plataformas disponibles</td>
+			</tr>
+			{{/if}}
 		</tbody>
 	</table>
 </div>
@@ -396,9 +402,51 @@
 		// Aquí puedes redirigir a una página de edición o abrir un modal.
 	}
 
-	function eliminarPlataforma(id) {
+	async function eliminarPlataforma(id) {
 		console.log(`Eliminar plataforma con ID: ${id}`);
-		// Aquí puedes mostrar un modal de confirmación o hacer una solicitud para eliminar.
+
+		try {
+
+			const confirmation = await Swal.fire({
+				icon: 'question',
+				title: 'Confirmar eliminación',
+				text: '¿Estás seguro de eliminar esta plataforma?',
+				showCancelButton: true,
+			})
+
+			if (!confirmation.isConfirmed) {
+				return;
+			}
+
+			const response = await fetch(`/api/plataformas/${id}`, {
+				method: 'DELETE',
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.message);
+			}
+
+			const data = await response.json();
+			console.log(data);
+
+			Swal.fire({
+				icon: 'success',
+				title: '¡Completado!',
+				text: 'Plataforma eliminada correctamente.',
+				confirmButtonText: 'Aceptar'
+			}).then((result) => {
+				window.location.reload();
+			});
+
+		} catch (e) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: e.message,
+				confirmButtonText: 'Aceptar'
+			})
+		}
 	}
 
 
