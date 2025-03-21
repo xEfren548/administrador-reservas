@@ -58,35 +58,34 @@
 	{{#each habitaciones}}
 	<div class="habitacion-contenedor" id="habitacion-{{this.id}}" style="display: none;">
 		{{#if this.activePlatforms}}
-			<pre>{{json this.activePlatforms}}</pre>
 			{{#each this.activePlatforms}}
 			<h1 class="text-xl font-medium leading-6 text-white mb-4">
 				{{this.name.nombre}}
 				<span class="text-sm text-gray-300">(Aumento: {{this.aumentoPorcentaje}}%)</span>
 			</h1> <!-- Título de la habitación -->
 			<div class="ms-auto p-2 bd-highlight">
-				<a name="" id="cn-{{this.id}}" class="btn btn-primary hoy-btn" href="#" role="button"
-					data-chalet="{{this.id}}">Hoy</a>
+				<a name="" id="cn-{{../this.id}}-{{this.name.nombre}}" class="btn btn-primary hoy-btn" href="#" role="button"
+					data-chalet="{{../this.id}}-{{this.name.nombre}}">Hoy</a>
 			</div>
 			<div class="table-responsive">
-				<table border="1" class="table table-{{this.id}} table-dark text-center table-hover"
-					id="table-{{this.id}}">
+				<table border="1" class="table table-{{../this.id}}-{{this.name.nombre}} table-dark text-center table-hover"
+					id="table-{{../this.id}}-{{this.name.nombre}}">
 					<thead class="table-light">
-						<tr id="header-row-{{this.id}}">
+						<tr id="header-row-{{../this.id}}-{{this.name.nombre}}">
 							<th class="sticky-column">Función</th>
 						</tr>
 					</thead>
-					<tbody id="tbody-{{this.id}}">
-						<tr id="costo-base-row-{{this.id}}">
+					<tbody id="tbody-{{../this.id}}-{{this.name.nombre}}">
+						<tr id="costo-base-row-{{../this.id}}-{{this.name.nombre}}">
 							<td class="sticky-column">Costo Base</td>
 						</tr>
-						<tr id="precio-base-row-{{this.id}}">
+						<tr id="precio-base-row-{{../this.id}}-{{this.name.nombre}}">
 							<td class="sticky-column">Precio Base</td>
 						</tr>
-						<tr id="costo-base2-row-{{this.id}}">
+						<tr id="costo-base2-row-{{../this.id}}-{{this.name.nombre}}">
 							<td class="sticky-column">Costo Base 2+ noches</td>
 						</tr>
-						<tr id="precio-base2nights-row-{{this.id}}">
+						<tr id="precio-base2nights-row-{{../this.id}}-{{this.name.nombre}}">
 							<td class="sticky-column">Precio Base 2+ noches</td>
 						</tr>
 					</tbody>
@@ -426,7 +425,9 @@ function cargarDatosHabitacion(habitacion) {
 
         plataformasHabitacionC.forEach(plataforma => {
             const plataformaId = plataforma.id; // Usar el ID de la plataforma
-            const headerRow = document.getElementById(`header-row-${plataformaId}`);
+			const plataformaName = plataforma.name.nombre;
+            //const headerRow = document.getElementById(`header-row-${plataformaId}`);
+			const headerRow = document.getElementById(`header-row-${roomId}-${plataformaName}`);
 
 			const aumentoPorcentaje = plataforma.aumentoPorcentaje;
 
@@ -436,16 +437,16 @@ function cargarDatosHabitacion(habitacion) {
 
             let currentDate = startDate;
 
-            const costoBaseRow = document.getElementById(`costo-base-row-${plataformaId}`);
-            const precioBaseRow = document.getElementById(`precio-base-row-${plataformaId}`);
-            const costoBase2Row = document.getElementById(`costo-base2-row-${plataformaId}`);
-            const precioBase2nightsRow = document.getElementById(`precio-base2nights-row-${plataformaId}`);
+            const costoBaseRow = document.getElementById(`costo-base-row-${roomId}-${plataformaName}`);
+            const precioBaseRow = document.getElementById(`precio-base-row-${roomId}-${plataformaName}`);
+            const costoBase2Row = document.getElementById(`costo-base2-row-${roomId}-${plataformaName}`);
+            const precioBase2nightsRow = document.getElementById(`precio-base2nights-row-${roomId}-${plataformaName}`);
 
-            const tbodyTable = document.getElementById(`tbody-${plataformaId}`);
-            const costoBaseEspecialRow = document.getElementById(`costobase-especialesrow-${plataformaId}`);
-            const precioBaseEspecialRow = document.getElementById(`preciobase-especialesrow-${plataformaId}`);
-            const costoBase2EspecialRow = document.getElementById(`costobase2-especialesrow-${plataformaId}`);
-            const precioBase2EspecialRow = document.getElementById(`preciobase2-especialesrow-${plataformaId}`);
+            const tbodyTable = document.getElementById(`tbody-${roomId}-${plataformaName}`);
+            const costoBaseEspecialRow = document.getElementById(`costobase-especialesrow-${roomId}-${plataformaName}`);
+            const precioBaseEspecialRow = document.getElementById(`preciobase-especialesrow-${roomId}-${plataformaName}`);
+            const costoBase2EspecialRow = document.getElementById(`costobase2-especialesrow-${roomId}-${plataformaName}`);
+            const precioBase2EspecialRow = document.getElementById(`preciobase2-especialesrow-${roomId}-${plataformaName}`);
 
             const preciosPorHabitacion = preciosHabitaciones.filter(precio => precio.habitacionId === roomId);
 			console.log("Precios por habitacion: ", preciosPorHabitacion);
@@ -484,14 +485,14 @@ function cargarDatosHabitacion(habitacion) {
                 if (Object.keys(preciosEspecialesPorPersonas[roomId]).length > 0) {
                     for (const key in preciosEspecialesPorPersonas[roomId]) {
                         const rowTexto = document.createElement("tr");
-                        rowTexto.id = `row-especiales-${plataformaId}-${key}`;
+                        rowTexto.id = `row-especiales-${roomId}-${plataformaName}-${key}`;
                         const textoTh = document.createElement('th');
                         const textoPersonas = `Precios especiales para ${key} personas`;
                         textoTh.classList.add("sticky-column");
                         textoTh.textContent = textoPersonas;
 
                         const rowCostoBase = document.createElement("tr");
-                        rowCostoBase.id = `costo-base-especialestd-${plataformaId}-${key}`;
+                        rowCostoBase.id = `costo-base-especialestd-${roomId}-${plataformaName}-${key}`;
                         const tdCostoBase = document.createElement("td");
                         tdCostoBase.textContent = "Precio Base";
                         tdCostoBase.classList.add("sticky-column");
@@ -501,21 +502,21 @@ function cargarDatosHabitacion(habitacion) {
                         const tdPrecioBase = document.createElement("td");
                         tdPrecioBase.textContent = "Costo Base";
                         tdPrecioBase.classList.add("sticky-column");
-                        rowPrecioBase.id = `precio-base-especialestd-${plataformaId}-${key}`;
+                        rowPrecioBase.id = `precio-base-especialestd-${roomId}-${plataformaName}-${key}`;
                         rowPrecioBase.appendChild(tdPrecioBase);
 
                         const rowCostoBase2 = document.createElement("tr");
                         const tdCostoBase2 = document.createElement("td");
                         tdCostoBase2.textContent = "Costo Base 2 Noches";
                         tdCostoBase2.classList.add("sticky-column");
-                        rowCostoBase2.id = `costo-base2-especialestd-${plataformaId}-${key}`;
+                        rowCostoBase2.id = `costo-base2-especialestd-${roomId}-${plataformaName}-${key}`;
                         rowCostoBase2.appendChild(tdCostoBase2);
 
                         const rowPrecioBase2 = document.createElement("tr");
                         const tdPrecioBase2 = document.createElement("td");
                         tdPrecioBase2.textContent = "Precio Base 2 Noches";
                         tdPrecioBase2.classList.add("sticky-column");
-                        rowPrecioBase2.id = `precio-base2-especialestd-${plataformaId}-${key}`;
+                        rowPrecioBase2.id = `precio-base2-especialestd-${roomId}-${plataformaName}-${key}`;
                         rowPrecioBase2.appendChild(tdPrecioBase2);
 
                         rowTexto.appendChild(textoTh);
@@ -585,10 +586,10 @@ function cargarDatosHabitacion(habitacion) {
                 if (preciosEspecialesPorHabitacion.length > 0) {
                     for (const personas in preciosEspecialesPorPersonas[roomId]) {
                         const precioData = preciosEspecialesPorPersonas[roomId][personas];
-                        const rowCostoBase = document.getElementById(`costo-base-especialestd-${plataformaId}-${personas}`);
-                        const rowPrecioBase = document.getElementById(`precio-base-especialestd-${plataformaId}-${personas}`);
-                        const rowCostoBase2 = document.getElementById(`costo-base2-especialestd-${plataformaId}-${personas}`);
-                        const rowPrecioBase2 = document.getElementById(`precio-base2-especialestd-${plataformaId}-${personas}`);
+                        const rowCostoBase = document.getElementById(`costo-base-especialestd-${roomId}-${plataformaName}-${personas}`);
+                        const rowPrecioBase = document.getElementById(`precio-base-especialestd-${roomId}-${plataformaName}-${personas}`);
+                        const rowCostoBase2 = document.getElementById(`costo-base2-especialestd-${roomId}-${plataformaName}-${personas}`);
+                        const rowPrecioBase2 = document.getElementById(`precio-base2-especialestd-${roomId}-${plataformaName}-${personas}`);
 
                         const costoBaseEspecialTd = document.createElement("td");
                         const precioBaseEspecialTd = document.createElement("td");
