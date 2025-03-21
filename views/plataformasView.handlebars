@@ -109,7 +109,7 @@
 	{{/if}}
 </div>
 
-<!-- Modal -->
+<!-- Modal agregar plataforma -->
 <div id="acciones_modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
 	<div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
 		<!-- Fondo oscuro -->
@@ -140,18 +140,45 @@
 							required></textarea>
 					</div>
 
-					<!-- Campo Porcentaje de Aumento con Input Group Append -->
 					<div class="mb-6">
-						<label for="porcentaje_aumento" class="block text-sm font-medium text-gray-300">Porcentaje de
-							Aumento</label>
-						<div class="mt-2 flex rounded-md shadow-sm">
-							<input type="number" id="porcentaje_aumento" name="porcentaje_aumento"
-								class="flex-1 px-4 py-3 rounded-l-md bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
-								min="0" max="100" required>
-							<span
-								class="inline-flex items-center px-4 py-3 rounded-r-md bg-gray-700 border border-l-0 border-gray-600 text-gray-300 sm:text-lg">%</span>
-						</div>
-					</div>
+                        <label class="block text-sm font-medium text-gray-300">Tipo de Aumento</label>
+                        <div class="mt-2 space-y-2">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="tipo_aumento" value="fijo" checked
+                                    class="form-radio h-4 w-4 text-blue-500 transition duration-150 ease-in-out"
+                                    onchange="toggleAumentoFields()">
+                                <span class="ml-2 text-gray-300">Aumento Fijo</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="tipo_aumento" value="porcentual"
+                                    class="form-radio h-4 w-4 text-blue-500 transition duration-150 ease-in-out"
+                                    onchange="toggleAumentoFields()">
+                                <span class="ml-2 text-gray-300">Aumento Porcentual</span>
+                            </label>
+                        </div>
+                    </div>
+
+					<!-- Campo Aumento Fijo -->
+                    <div id="aumento_fijo_container" class="mb-6">
+                        <label for="aumento_fijo" class="block text-sm font-medium text-gray-300">Aumento Fijo</label>
+                        <div class="mt-2 flex rounded-md shadow-sm">
+                            <input type="number" id="aumento_fijo" name="aumento_fijo"
+                                class="flex-1 px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
+                                min="0" required>
+                            <span class="inline-flex items-center px-4 py-3 rounded-r-md bg-gray-700 border border-l-0 border-gray-600 text-gray-300 sm:text-lg">$</span>
+                        </div>
+                    </div>
+
+					<!-- Campo Aumento Porcentual -->
+                    <div id="aumento_porcentual_container" class="mb-6 hidden">
+                        <label for="aumento_porcentual" class="block text-sm font-medium text-gray-300">Aumento Porcentual</label>
+                        <div class="mt-2 flex rounded-md shadow-sm">
+                            <input type="number" id="aumento_porcentual" name="aumento_porcentual"
+                                class="flex-1 px-4 py-3 rounded-l-md bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
+                                min="0" max="100">
+                            <span class="inline-flex items-center px-4 py-3 rounded-r-md bg-gray-700 border border-l-0 border-gray-600 text-gray-300 sm:text-lg">%</span>
+                        </div>
+                    </div>
 				</form>
 			</div>
 			<div class="bg-gray-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse items-center">
@@ -177,6 +204,23 @@
 	function closeAddPlaformModal() {
 		document.getElementById('acciones_modal').classList.add('hidden');
 	}
+
+	function toggleAumentoFields() {
+        const tipoAumento = document.querySelector('input[name="tipo_aumento"]:checked').value;
+        const aumentoFijoContainer = document.getElementById('aumento_fijo_container');
+        const aumentoPorcentualContainer = document.getElementById('aumento_porcentual_container');
+
+        if (tipoAumento === 'fijo') {
+            aumentoFijoContainer.classList.remove('hidden');
+            aumentoPorcentualContainer.classList.add('hidden');
+        } else {
+            aumentoFijoContainer.classList.add('hidden');
+            aumentoPorcentualContainer.classList.remove('hidden');
+        }
+    }
+
+	document.addEventListener('DOMContentLoaded', toggleAumentoFields);
+
 
 	const habitaciones = {{{ json habitaciones }}};
 	const preciosHabitaciones = {{{ json preciosHabitaciones }}}
@@ -347,16 +391,32 @@
 	async function addNewPlatformBtn() {
 		const platformName = document.getElementById('platform_name').value;
 		const platformDescription = document.getElementById('platform_description').value;
-		const porcentajeAumento = document.getElementById('porcentaje_aumento').value;
+		//const porcentajeAumento = document.getElementById('porcentaje_aumento').value;
+		const tipoAumento = document.querySelector('input[name="tipo_aumento"]:checked').value;
+		const aumentoFijo = tipoAumento === 'fijo' ? document.getElementById('aumento_fijo').value : 0;
+		const aumentoPorcentaje = tipoAumento === 'porcentual' ? document.getElementById('aumento_porcentual').value : 0;
 
 		try {
-			if (!platformName || !porcentajeAumento) {
-				throw new Error('Nombre de plataforma y porcentaje de aumento son obligatorios.');
+			if (!platformName) {
+				throw new Error('Nombre de plataforma es obligatorio.');
 			}
 
-			if (porcentajeAumento < 0 || porcentajeAumento > 100) {
-				throw new Error('El porcentaje de aumento debe estar entre 0 y 100.');
+			if (tipoAumento === 'fijo') {
+				if (!aumentoFijo) {
+					throw new Error('El aumento fijo es obligatorio.');
+				}
+				if (aumentoFijo < 0) {
+					throw new Error('El aumento fijo no puede ser negativo.');
+				}
+			} else if (tipoAumento === 'porcentual') {
+				if (!aumentoPorcentaje) {
+					throw new Error('El aumento porcentual es obligatorio.');
+				}
+				if (aumentoPorcentaje < 0 || aumentoPorcentaje > 100) {
+					throw new Error('El porcentaje de aumento debe estar entre 0 y 100.');
+				}
 			}
+
 
 			const response = await fetch('/api/plataformas', {
 				method: 'POST',
@@ -366,7 +426,8 @@
 				body: JSON.stringify({
 					nombre: platformName,
 					descripcion: platformDescription,
-					aumentoPorcentaje: porcentajeAumento
+					aumentoFijo: aumentoFijo ? parseFloat(aumentoFijo) : null,
+					aumentoPorcentaje: aumentoPorcentaje ? parseFloat(aumentoPorcentaje) : null
 				}),
 			});
 

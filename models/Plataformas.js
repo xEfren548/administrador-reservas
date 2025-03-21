@@ -12,24 +12,10 @@ const PlataformaSchema = new mongoose.Schema({
     aumentoFijo: {
         type: Number,
         default: null, // No es obligatorio
-        validate: {
-            validator: function (value) {
-                // Solo válido si aumentoPorcentual no está definido
-                return this.aumentoPorcentual === null || this.aumentoPorcentual === undefined;
-            },
-            message: "No se puede definir un aumento fijo y un aumento porcentual al mismo tiempo.",
-        },
     },
     aumentoPorcentual: {
         type: Number,
         default: null, // No es obligatorio
-        validate: {
-            validator: function (value) {
-                // Solo válido si aumentoFijo no está definido
-                return this.aumentoFijo === null || this.aumentoFijo === undefined;
-            },
-            message: "No se puede definir un aumento porcentual y un aumento fijo al mismo tiempo.",
-        },
     },
 });
 

@@ -67,16 +67,35 @@ const obtenerPlataformas = async (req, res) => {
 const nuevaPlataforma = async (req, res) => {
     try {
         
-        const { nombre, descripcion, aumentoPorcentaje } = req.body;
+        const { nombre, descripcion, aumentoFijo, aumentoPorcentaje } = req.body;
         if (!nombre) {
             throw new Error('El nombre de la plataforma es requerido');
         }
-        if (!aumentoPorcentaje || aumentoPorcentaje <= 0 || aumentoPorcentaje > 100) {
-            throw new Error('El aumento porcentaje de la plataforma es requerido y debe ser un valor entre 0 y 100');
+        if (aumentoFijo) {
+            if (aumentoFijo < 0) {
+                throw new Error('El aumento fijo de la plataforma no puede ser negativo');
+            }
         }
-        const plataforma = new Plataformas({ nombre, descripcion, aumentoPorcentaje });
-        await plataforma.save();
-        res.status(201).send(plataforma);
+
+        if (aumentoPorcentaje) {
+            if (aumentoPorcentaje < 0 || aumentoPorcentaje > 100) {
+                throw new Error('El aumento porcentaje de la plataforma debe ser un valor entre 0 y 100');
+            }
+        }
+
+        console.log("aumento fijo: ", aumentoFijo, "aumento porcentaje: " ,aumentoPorcentaje);
+
+        let newPlataforma = {}
+
+        if (aumentoFijo) {
+            newPlataforma = new Plataformas({ nombre, descripcion, aumentoFijo });
+        } else if (aumentoPorcentaje) {
+            newPlataforma = new Plataformas({ nombre, descripcion, aumentoPorcentual: aumentoPorcentaje });
+        }
+
+        // const plataforma = new Plataformas({ nombre, descripcion, aumentoPorcentual: aumentoPorcentaje, aumentoFijo });
+        await newPlataforma.save();
+        res.status(201).send(newPlataforma);
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: error.message });
