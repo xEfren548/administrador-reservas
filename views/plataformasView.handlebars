@@ -12,7 +12,7 @@
 			<tr>
 				<th class="px-6 py-3 text-left text-md font-medium text-gray-300 uppercase">Nombre</th>
 				<th class="px-6 py-3 text-left text-md font-medium text-gray-300 uppercase">Descripción</th>
-				<th class="px-6 py-3 text-left text-md font-medium text-gray-300 uppercase">Aumento (%)</th>
+				<th class="px-6 py-3 text-left text-md font-medium text-gray-300 uppercase">Aumento</th>
 				<th class="px-6 py-3 text-left text-md font-medium text-gray-300 uppercase">Acciones</th>
 			</tr>
 		</thead>
@@ -22,8 +22,13 @@
 			{{#each plataformas}}
 			<tr class="hover:bg-gray-800">
 				<td class="px-6 py-3 text-md text-gray-200">{{this.nombre}}</td>
-				<td class="px-6 py-3 text-md text-gray-200">{{this.description}}</td>
-				<td class="px-6 py-3 text-md text-gray-200">{{this.aumentoPorcentaje}}%</td>
+				<td class="px-6 py-3 text-md text-gray-200">{{this.descripcion}}</td>
+				{{!-- <td class="px-6 py-3 text-md text-gray-200">{{this.aumentoPorcentaje}}%</td> --}}
+				{{#if this.aumentoPorcentual}}
+				<td class="px-6 py-3 text-md text-gray-200">{{this.aumentoPorcentual}}<b> %</b></td>
+				{{else}}
+				<td class="px-6 py-3 text-md text-gray-200"><b>$ </b>{{this.aumentoFijo}}</td>
+				{{/if}}
 				<td class="px-4 py-3 text-md text-gray-200 w-60">
 					<button type="button" onclick="editarPlataforma('{{this._id}}')"
 						class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
