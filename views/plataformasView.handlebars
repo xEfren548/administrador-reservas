@@ -58,41 +58,42 @@
 	{{#each habitaciones}}
 	<div class="habitacion-contenedor" id="habitacion-{{this.id}}" style="display: none;">
 		{{#if this.activePlatforms}}
-		{{#each this.activePlatforms}}
-		<h1 class="text-xl font-medium leading-6 text-white mb-4">
-			{{this.name.nombre}}
-			<span class="text-sm text-gray-300">(Aumento: {{this.aumentoPorcentaje}}%)</span>
-		</h1> <!-- Título de la habitación -->
-		<div class="ms-auto p-2 bd-highlight">
-			<a name="" id="cn-{{this.id}}" class="btn btn-primary hoy-btn" href="#" role="button"
-				data-chalet="{{this.id}}">Hoy</a>
-		</div>
-		<div class="table-responsive">
-			<table border="1" class="table table-{{this.id}} table-dark text-center table-hover"
-				id="table-{{this.id}}">
-				<thead class="table-light">
-					<tr id="header-row-{{this.id}}">
-						<th class="sticky-column">Función</th>
-					</tr>
-				</thead>
-				<tbody id="tbody-{{this.id}}">
-					<tr id="costo-base-row-{{this.id}}">
-						<td class="sticky-column">Costo Base</td>
-					</tr>
-					<tr id="precio-base-row-{{this.id}}">
-						<td class="sticky-column">Precio Base</td>
-					</tr>
-					<tr id="costo-base2-row-{{this.id}}">
-						<td class="sticky-column">Costo Base 2+ noches</td>
-					</tr>
-					<tr id="precio-base2nights-row-{{this.id}}">
-						<td class="sticky-column">Precio Base 2+ noches</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		<br>
-		{{/each}}
+			<pre>{{json this.activePlatforms}}</pre>
+			{{#each this.activePlatforms}}
+			<h1 class="text-xl font-medium leading-6 text-white mb-4">
+				{{this.name.nombre}}
+				<span class="text-sm text-gray-300">(Aumento: {{this.aumentoPorcentaje}}%)</span>
+			</h1> <!-- Título de la habitación -->
+			<div class="ms-auto p-2 bd-highlight">
+				<a name="" id="cn-{{this.id}}" class="btn btn-primary hoy-btn" href="#" role="button"
+					data-chalet="{{this.id}}">Hoy</a>
+			</div>
+			<div class="table-responsive">
+				<table border="1" class="table table-{{this.id}} table-dark text-center table-hover"
+					id="table-{{this.id}}">
+					<thead class="table-light">
+						<tr id="header-row-{{this.id}}">
+							<th class="sticky-column">Función</th>
+						</tr>
+					</thead>
+					<tbody id="tbody-{{this.id}}">
+						<tr id="costo-base-row-{{this.id}}">
+							<td class="sticky-column">Costo Base</td>
+						</tr>
+						<tr id="precio-base-row-{{this.id}}">
+							<td class="sticky-column">Precio Base</td>
+						</tr>
+						<tr id="costo-base2-row-{{this.id}}">
+							<td class="sticky-column">Costo Base 2+ noches</td>
+						</tr>
+						<tr id="precio-base2nights-row-{{this.id}}">
+							<td class="sticky-column">Precio Base 2+ noches</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<br>
+			{{/each}}
 		{{else}}
 		<p>No hay plataformas activas para esta habitación</p>
 		{{/if}}
