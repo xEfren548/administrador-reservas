@@ -1830,6 +1830,8 @@ async function cotizadorChaletsyPrecios(req, res) {
 
 
         const chalets = await Habitacion.find(filtro).lean();
+        const chaletIds = chalets.map(chalet => chalet._id);
+        console.log(chaletIds)
         if (!chalets) {
             throw new Error('No se encontraron habitaciones');
         }
@@ -1837,11 +1839,14 @@ async function cotizadorChaletsyPrecios(req, res) {
         const startDate = new Date(convertirFechaES(fechaLlegada));
         const endDate = new Date(convertirFechaES(fechaSalida));
 
+        let availableChalets = chalets;
+
         if (soloDisponibles) {
+            availableChalets = [];
             for (const chalet of chalets) {
                 const disponibilidad = await getDisponibilidad(chalet._id, startDate, endDate);
-                if (!disponibilidad) {
-                    chalets.splice(chalets.indexOf(chalet), 1);
+                if (disponibilidad) {
+                    availableChalets.push(chalet);
                 }
             }
         }
@@ -1849,9 +1854,8 @@ async function cotizadorChaletsyPrecios(req, res) {
 
         const timeDifference = endDate.getTime() - startDate.getTime();
         const nNights = Math.ceil(timeDifference / (1000 * 3600 * 24)); // Calcula la diferencia en días
-        console.log("Noches: ", nNights);
 
-        const mappedChalets = chalets.map(chalet => ({
+        const mappedChalets = availableChalets.map(chalet => ({
 
             id: chalet._id,
             name: chalet.propertyDetails.name,
@@ -1877,7 +1881,6 @@ async function cotizadorChaletsyPrecios(req, res) {
 
         }
         const comisiones = await utilidadesController.calcularComisionesInternas(infoComisiones);
-        console.log("Comisiones: ", comisiones);
 
         if (startDate > endDate) {
             throw new Error("La fecha de llegada debe ser anterior a la fecha de salida");
@@ -1958,17 +1961,22 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     const arrivalDateISO = new Date(`${fechaLlegadaStr}T11:30:00`).toISOString();
     const departureDateISO = new Date(`${fechaSalidaStr}T08:30:00`).toISOString();
 
+    const arrivalDateBloqueo = new Date(`${fechaLlegadaStr}T00:00:00`).toISOString();
+    const departureDateBloqueo = new Date(`${fechaSalidaStr}T23:59:59`).toISOString();
+
+    // console.log("ARRIVAL DATE: ", arrivalDateISO, "DEPARTURE DATE: ", departureDateISO);
+
     // Verificar fechas bloqueadas
     const isBlocked = await BloqueoFechas.exists({
         habitacionId: newResourceId,
         type: 'bloqueo',
         $or: [
             // Caso 1: La fecha bloqueada está dentro del rango de la reserva
-            { date: { $gte: arrivalDateISO, $lte: departureDateISO } },
+            { date: { $gte: arrivalDateBloqueo, $lte: departureDateBloqueo } },
             // Caso 2: La fecha bloqueada coincide exactamente con la fecha de llegada
-            { date: arrivalDateISO },
+            { date: departureDateBloqueo },
             // Caso 3: La fecha bloqueada coincide exactamente con la fecha de salida
-            { date: departureDateISO },
+            { date: departureDateBloqueo },
         ],
     });
 
