@@ -1830,6 +1830,8 @@ async function cotizadorChaletsyPrecios(req, res) {
 
 
         const chalets = await Habitacion.find(filtro).lean();
+        const chaletIds = chalets.map(chalet => chalet._id);
+        console.log(chaletIds)
         if (!chalets) {
             throw new Error('No se encontraron habitaciones');
         }
@@ -1837,11 +1839,16 @@ async function cotizadorChaletsyPrecios(req, res) {
         const startDate = new Date(convertirFechaES(fechaLlegada));
         const endDate = new Date(convertirFechaES(fechaSalida));
 
+        let availableChalets = chalets;
+
         if (soloDisponibles) {
+            availableChalets = [];
+            console.log("BUSCANDO SOLO SI ESTAN DISPONIBLES: ")
             for (const chalet of chalets) {
+                console.log("Antes de entrar a funcion: ", chalet.propertyDetails.name)
                 const disponibilidad = await getDisponibilidad(chalet._id, startDate, endDate);
-                if (!disponibilidad) {
-                    chalets.splice(chalets.indexOf(chalet), 1);
+                if (disponibilidad) {
+                    availableChalets.push(chalet);
                 }
             }
         }
@@ -1851,7 +1858,7 @@ async function cotizadorChaletsyPrecios(req, res) {
         const nNights = Math.ceil(timeDifference / (1000 * 3600 * 24)); // Calcula la diferencia en días
         console.log("Noches: ", nNights);
 
-        const mappedChalets = chalets.map(chalet => ({
+        const mappedChalets = availableChalets.map(chalet => ({
 
             id: chalet._id,
             name: chalet.propertyDetails.name,
@@ -1949,6 +1956,7 @@ function convertirFechaES(fecha) {
 
 async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     const newResourceId = new mongoose.Types.ObjectId(chaletId);
+    console.log("For chalet ", chaletId);
 
     // Convertir fechas a cadenas en formato YYYY-MM-DD
     const fechaLlegadaStr = fechaLlegada.toISOString().split('T')[0]; // Extrae solo la fecha (YYYY-MM-DD)
@@ -1961,7 +1969,7 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     const arrivalDateBloqueo = new Date(`${fechaLlegadaStr}T00:00:00`).toISOString();
     const departureDateBloqueo = new Date(`${fechaSalidaStr}T23:59:59`).toISOString();
 
-    console.log("ARRIVAL DATE: ", arrivalDateBloqueo, "DEPARTURE DATE: ", departureDateBloqueo);
+    console.log("ARRIVAL DATE: ", arrivalDateISO, "DEPARTURE DATE: ", departureDateISO);
 
     // Verificar fechas bloqueadas
     const isBlocked = await BloqueoFechas.exists({
