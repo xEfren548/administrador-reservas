@@ -2003,6 +2003,7 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     return true;
 }
 
+
 module.exports = {
     createReservationValidators,
     createOwnersReservationValidators,
