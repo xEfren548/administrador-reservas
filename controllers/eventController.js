@@ -1843,9 +1843,7 @@ async function cotizadorChaletsyPrecios(req, res) {
 
         if (soloDisponibles) {
             availableChalets = [];
-            console.log("BUSCANDO SOLO SI ESTAN DISPONIBLES: ")
             for (const chalet of chalets) {
-                console.log("Antes de entrar a funcion: ", chalet.propertyDetails.name)
                 const disponibilidad = await getDisponibilidad(chalet._id, startDate, endDate);
                 if (disponibilidad) {
                     availableChalets.push(chalet);
@@ -1856,7 +1854,6 @@ async function cotizadorChaletsyPrecios(req, res) {
 
         const timeDifference = endDate.getTime() - startDate.getTime();
         const nNights = Math.ceil(timeDifference / (1000 * 3600 * 24)); // Calcula la diferencia en días
-        console.log("Noches: ", nNights);
 
         const mappedChalets = availableChalets.map(chalet => ({
 
@@ -1884,7 +1881,6 @@ async function cotizadorChaletsyPrecios(req, res) {
 
         }
         const comisiones = await utilidadesController.calcularComisionesInternas(infoComisiones);
-        console.log("Comisiones: ", comisiones);
 
         if (startDate > endDate) {
             throw new Error("La fecha de llegada debe ser anterior a la fecha de salida");
@@ -1956,7 +1952,6 @@ function convertirFechaES(fecha) {
 
 async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     const newResourceId = new mongoose.Types.ObjectId(chaletId);
-    console.log("For chalet ", chaletId);
 
     // Convertir fechas a cadenas en formato YYYY-MM-DD
     const fechaLlegadaStr = fechaLlegada.toISOString().split('T')[0]; // Extrae solo la fecha (YYYY-MM-DD)
@@ -1969,7 +1964,7 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     const arrivalDateBloqueo = new Date(`${fechaLlegadaStr}T00:00:00`).toISOString();
     const departureDateBloqueo = new Date(`${fechaSalidaStr}T23:59:59`).toISOString();
 
-    console.log("ARRIVAL DATE: ", arrivalDateISO, "DEPARTURE DATE: ", departureDateISO);
+    // console.log("ARRIVAL DATE: ", arrivalDateISO, "DEPARTURE DATE: ", departureDateISO);
 
     // Verificar fechas bloqueadas
     const isBlocked = await BloqueoFechas.exists({
