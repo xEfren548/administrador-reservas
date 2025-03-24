@@ -21,7 +21,8 @@ const renderVistaPlataformas = async (req, res) => {
     const plataformasMap = plataformas.reduce((map, plataforma) => {
         map[plataforma._id] = {
             nombre: plataforma.nombre,
-            aumentoPorcentaje: plataforma.aumentoPorcentaje
+            aumentoPorcentual: plataforma.aumentoPorcentual,
+            aumentoFijo: plataforma.aumentoFijo
         }
         return map;
     }, {});
@@ -33,7 +34,8 @@ const renderVistaPlataformas = async (req, res) => {
                 activePlatforms: habitacion.activePlatforms.map(platformId => ({
                     id: platformId,
                     name: plataformasMap[platformId] || "Plataforma Desconocida", // Usar el nombre o un valor por defecto,
-                    aumentoPorcentaje: plataformasMap[platformId]?.aumentoPorcentaje || 0
+                    aumentoPorcentual: plataformasMap[platformId]?.aumentoPorcentual || 0,
+                    aumentoFijo: plataformasMap[platformId]?.aumentoFijo || 0
                 }))
             };
         } else {
@@ -46,6 +48,10 @@ const renderVistaPlataformas = async (req, res) => {
 
     const preciosHabitacionesData = await precioBaseController.consultarPrecios();
     //console.log(preciosHabitacionesData);
+
+    for (const habitacion of habitacionesConNombresDePlataformas) {
+        console.log(habitacion.activePlatforms);
+    }
     const preciosEspecialesData = await preciosEspecialesController.consultarPrecios()
     res.render('plataformasView', {
         layout: 'tailwindMain',

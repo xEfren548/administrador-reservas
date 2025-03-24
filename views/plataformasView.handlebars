@@ -72,7 +72,9 @@
 			{{#each this.activePlatforms}}
 			<h1 class="text-xl font-medium leading-6 text-white mb-4">
 				{{this.name.nombre}}
-				<span class="text-sm text-gray-300">(Aumento: {{this.aumentoPorcentaje}}%)</span>
+				<span class="text-sm text-gray-300">
+					{{#if this.name.aumentoPorcentual}}(Aumento:  {{this.name.aumentoPorcentual}}%){{else}}(Aumento:  ${{this.name.aumentoFijo}}){{/if}}
+				</span>
 			</h1> <!-- Título de la habitación -->
 			<div class="ms-auto p-2 bd-highlight">
 				<a name="" id="cn-{{../this.id}}-{{this.name.nombre}}" class="btn btn-primary hoy-btn" href="#" role="button"
@@ -540,10 +542,12 @@ function cargarDatosHabitacion(habitacion) {
         plataformasHabitacionC.forEach(plataforma => {
             const plataformaId = plataforma.id; // Usar el ID de la plataforma
 			const plataformaName = plataforma.name.nombre;
+			const aumentoFijo = plataforma.name.aumentoFijo || 0;
+			const aumentoPorcentaje = plataforma.name.aumentoPorcentual;
+
             //const headerRow = document.getElementById(`header-row-${plataformaId}`);
 			const headerRow = document.getElementById(`header-row-${roomId}-${plataformaName}`);
 
-			const aumentoPorcentaje = plataforma.aumentoPorcentaje;
 
             // Generar las fechas desde 1 año antes hasta 2 años después
             const startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
