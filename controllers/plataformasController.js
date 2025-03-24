@@ -136,6 +136,13 @@ const eliminarPlataforma = async (req, res) => {
         if (!plataforma) {
             throw new Error('No se encontró la plataforma con el ID proporcionado');
         }
+
+        const resultadoActualizacion = await Habitaciones.updateMany(
+            { activePlatforms: id },
+            { $pull: { activePlatforms: id } }
+        );
+
+
         res.status(200).send({ message: 'Plataforma eliminada correctamente' });
     } catch (error) {
         console.error(error);
