@@ -676,28 +676,28 @@ function cargarDatosHabitacion(habitacion) {
 
                 const precioEncontrado = preciosPorHabitacion.find(precio => precio.fecha === currentDateMx);
                 if (precioEncontrado) {
-                    costoBaseTd.textContent = (precioEncontrado.costo_base * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    costoBaseTd.textContent = aumentoFijo ? (precioEncontrado.costo_base + aumentoFijo).toFixed(2) : (precioEncontrado.costo_base * (1 + aumentoPorcentaje / 100)).toFixed(2);
                     costoBaseRow.appendChild(costoBaseTd);
 
-                    precioBaseTd.textContent = (precioEncontrado.precio_modificado * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    precioBaseTd.textContent =  aumentoFijo ? (precioEncontrado.precio_modificado + aumentoFijo).toFixed(2) : (precioEncontrado.precio_modificado * (1 + aumentoPorcentaje / 100)).toFixed(2);
                     precioBaseRow.appendChild(precioBaseTd);
 
-                    costoBase2Td.textContent = (precioEncontrado.costo_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    costoBase2Td.textContent = aumentoFijo ? (precioEncontrado.costo_base_2noches + aumentoFijo).toFixed(2) : (precioEncontrado.costo_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
                     costoBase2Row.appendChild(costoBase2Td);
 
-                    precioBase2nightsTd.textContent = (precioEncontrado.precio_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    precioBase2nightsTd.textContent =  aumentoFijo ? (precioEncontrado.precio_base_2noches + aumentoFijo).toFixed(2) : (precioEncontrado.precio_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
                     precioBase2nightsRow.appendChild(precioBase2nightsTd);
                 } else {
-                    costoBaseTd.textContent = (costoBase * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    costoBaseTd.textContent = aumentoFijo ? (costoBase + aumentoFijo).toFixed(2) : (costoBase * (1 + aumentoPorcentaje / 100)).toFixed(2);
                     costoBaseRow.appendChild(costoBaseTd);
 
-                    precioBaseTd.textContent = (precioBase * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    precioBaseTd.textContent =  aumentoFijo ? (precioBase + aumentoFijo).toFixed(2) : (precioBase * (1 + aumentoPorcentaje / 100)).toFixed(2);
                     precioBaseRow.appendChild(precioBaseTd);
 
-                    costoBase2Td.textContent = (costoBase2 * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    costoBase2Td.textContent = aumentoFijo ? (costoBase2 + aumentoFijo).toFixed(2) : (costoBase2 * (1 + aumentoPorcentaje / 100)).toFixed(2);
                     costoBase2Row.appendChild(costoBase2Td);
 
-                    precioBase2nightsTd.textContent = (precioBase2nights * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    precioBase2nightsTd.textContent =  aumentoFijo ? (precioBase2nights + aumentoFijo).toFixed(2) : (precioBase2nights * (1 + aumentoPorcentaje / 100)).toFixed(2);
                     precioBase2nightsRow.appendChild(precioBase2nightsTd);
                 }
 
@@ -724,23 +724,23 @@ function cargarDatosHabitacion(habitacion) {
                         const precioEspecialPorPersonaEncontrado = precioData.find(precio => precio.fecha === currentDateMx);
                         if (precioEspecialPorPersonaEncontrado) {
                             // Dates match, use special prices
-                            costoBaseEspecialTd.textContent = (precioEspecialPorPersonaEncontrado.precio_modificado * (1 + aumentoPorcentaje / 100)).toFixed(2);
-                            precioBaseEspecialTd.textContent = (precioEspecialPorPersonaEncontrado.precio_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
-                            costoBase2EspecialTd.textContent = (precioEspecialPorPersonaEncontrado.costo_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
-                            precioBase2EspecialTd.textContent = (precioEspecialPorPersonaEncontrado.costo_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                            costoBaseEspecialTd.textContent = aumentoFijo ? (precioEspecialPorPersonaEncontrado.costo_base + aumentoFijo).toFixed(2) : (precioEspecialPorPersonaEncontrado.costo_base * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                            precioBaseEspecialTd.textContent =  aumentoFijo ? (precioEspecialPorPersonaEncontrado.precio_modificado + aumentoFijo).toFixed(2) : (precioEspecialPorPersonaEncontrado.precio_modificado * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                            costoBase2EspecialTd.textContent = aumentoFijo ? (precioEspecialPorPersonaEncontrado.costo_base_2noches + aumentoFijo).toFixed(2) : (precioEspecialPorPersonaEncontrado.costo_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                            precioBase2EspecialTd.textContent =  aumentoFijo ? (precioEspecialPorPersonaEncontrado.precio_base_2noches + aumentoFijo).toFixed(2) : (precioEspecialPorPersonaEncontrado.precio_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
                         } else {
                             // Use default or found prices if they don't match
                             if (precioEncontrado) {
-                                costoBaseEspecialTd.textContent = (precioEncontrado.costo_base * (1 + aumentoPorcentaje / 100)).toFixed(2);
-                                precioBaseEspecialTd.textContent = (precioEncontrado.precio_modificado * (1 + aumentoPorcentaje / 100)).toFixed(2);
-                                costoBase2EspecialTd.textContent = (precioEncontrado.costo_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
-                                precioBase2EspecialTd.textContent = (precioEncontrado.precio_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                costoBaseEspecialTd.textContent = aumentoFijo ? (precioEncontrado.costo_base + aumentoFijo).toFixed(2) : (precioEncontrado.costo_base * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                precioBaseEspecialTd.textContent = aumentoFijo ? (precioEncontrado.precio_modificado + aumentoFijo).toFixed(2) : (precioEncontrado.precio_modificado * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                costoBase2EspecialTd.textContent = aumentoFijo ? (precioEncontrado.costo_base_2noches + aumentoFijo).toFixed(2) : (precioEncontrado.costo_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                precioBase2EspecialTd.textContent = aumentoFijo ? (precioEncontrado.precio_base_2noches + aumentoFijo).toFixed(2) : (precioEncontrado.precio_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
                             } else {
                                 // Default prices for non-special dates
-                                costoBaseEspecialTd.textContent = (costoBase * (1 + aumentoPorcentaje / 100)).toFixed(2);
-                                precioBaseEspecialTd.textContent = (precioBase * (1 + aumentoPorcentaje / 100)).toFixed(2);
-                                costoBase2EspecialTd.textContent = (costoBase2 * (1 + aumentoPorcentaje / 100)).toFixed(2);
-                                precioBase2EspecialTd.textContent = (precioBase2nights * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                costoBaseEspecialTd.textContent = aumentoFijo ? (costoBase + aumentoFijo).toFixed(2) : (costoBase * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                precioBaseEspecialTd.textContent =  aumentoFijo ? (precioBase + aumentoFijo).toFixed(2) : (precioBase * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                costoBase2EspecialTd.textContent =  aumentoFijo ? (costoBase2 + aumentoFijo).toFixed(2) : (costoBase2 * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                precioBase2EspecialTd.textContent = aumentoFijo ? (precioBase2nights + aumentoFijo).toFixed(2) : (precioBase2nights * (1 + aumentoPorcentaje / 100)).toFixed(2);
                             }
                         }
                         // Append the cells to the respective rows
