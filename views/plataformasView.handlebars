@@ -1,11 +1,10 @@
-<h1 class="ml-2 text-white text-xl font-bold ml-3">Definición de % de Aumento</h1>
-<div class="bg-gray-900 p-4 rounded-lg mb-4">
-	<button class="bg-blue-500 text-white px-4 py-2 rounded-lg mr-2" onclick="openAddPlatformModal()">Agregar
-		plataforma</button>
-</div>
+<h1 class="mt-12 text-white text-4xl font-bold text-center">Definición de % de Aumento</h1>
 
 <div class="overflow-x-auto">
-	<h1 class="text-xl font-medium leading-6 text-white mb-4">Plataformas disponibles</h1>
+	<h1 class="text-xl font-medium leading-6 text-white mb-4">Plataformas disponibles 
+		<span><button class="bg-blue-500 text-white px-3 py-2 rounded-md ml-2" onclick="openAddPlatformModal()">+</button>
+		</span>
+	</h1>
 	<table class="min-w-full bg-gray-900 border border-gray-700">
 		<!-- Encabezado de la tabla -->
 		<thead class="bg-gray-800">
@@ -692,22 +691,16 @@ function cerrarModalEdicion() {
 		const mensaje = `
 			<div class="text-left">
 				<p class="font-semibold mb-2">Habitaciones asociadas:</p>
-				<div class="overflow-x-auto">
-					${habitacionesConPlataforma.map(habitacion => `
-						<div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-							<h3 class="text-lg font-medium leading-6 text-white">${habitacion.name}</h3>
-						</div>
-					`).join('')}
-				</div>
+					<ul class="list-disc pl-4">
+						${habitacionesConPlataforma.map(habitacion => `<li>${habitacion.name}</li>`).join('')}
+					</ul>
 			</div>
 		`;
 
 		if (habitacionesConPlataforma.length > 0) {
 			console.log("Habitaciones con la plataforma:", habitacionesConPlataforma);
 			Swal.fire({
-				title: "Habitaciones asociadas",
 				html: mensaje,
-				icon: "info",
 				confirmButtonText: "Aceptar",
 				width: "800px"
 			})
