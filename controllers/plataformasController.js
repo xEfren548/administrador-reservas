@@ -49,9 +49,6 @@ const renderVistaPlataformas = async (req, res) => {
     const preciosHabitacionesData = await precioBaseController.consultarPrecios();
     //console.log(preciosHabitacionesData);
 
-    for (const habitacion of habitacionesConNombresDePlataformas) {
-        console.log(habitacion.activePlatforms);
-    }
     const preciosEspecialesData = await preciosEspecialesController.consultarPrecios()
     res.render('plataformasView', {
         layout: 'tailwindMain',
@@ -72,7 +69,7 @@ const obtenerPlataformas = async (req, res) => {
 
 const nuevaPlataforma = async (req, res) => {
     try {
-        
+
         const { nombre, descripcion, aumentoFijo, aumentoPorcentaje } = req.body;
         if (!nombre) {
             throw new Error('El nombre de la plataforma es requerido');
@@ -89,7 +86,7 @@ const nuevaPlataforma = async (req, res) => {
             }
         }
 
-        console.log("aumento fijo: ", aumentoFijo, "aumento porcentaje: " ,aumentoPorcentaje);
+        console.log("aumento fijo: ", aumentoFijo, "aumento porcentaje: ", aumentoPorcentaje);
 
         let newPlataforma = {}
 
@@ -111,11 +108,11 @@ const nuevaPlataforma = async (req, res) => {
 const modificarPlataforma = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, descripcion, aumentoPorcentaje, aumentoFijo } = req.body;
+        const { nombre, descripcion, aumentoPorcentual, aumentoFijo } = req.body;
         if (!id) {
             throw new Error('El ID de la plataforma es requerido');
         }
-        console.log("ID PLATAFORMA: ", id);
+
         if (!nombre) {
             throw new Error('El nombre de la plataforma es requerido');
         }
@@ -124,16 +121,43 @@ const modificarPlataforma = async (req, res) => {
                 throw new Error('El aumento fijo de la plataforma no puede ser negativo');
             }
         }
-        if (aumentoPorcentaje) {
-            if (!aumentoPorcentaje || aumentoPorcentaje <= 0 || aumentoPorcentaje > 100) {
+        if (aumentoPorcentual) {
+            if (!aumentoPorcentual || aumentoPorcentual <= 0 || aumentoPorcentual > 100) {
                 throw new Error('El aumento porcentaje de la plataforma es requerido y debe ser un valor entre 0 y 100');
             }
         }
+
         let plataforma = null;
-        if (aumentoFijo) {
-            plataforma = await Plataformas.findByIdAndUpdate(id, { nombre, descripcion, aumentoFijo }, { new: true });
-        } else if (aumentoPorcentaje) {
-            plataforma = await Plataformas.findByIdAndUpdate(id, { nombre, descripcion, aumentoPorcentual: aumentoPorcentaje }, { new: true });
+        // Usando tu lógica existente de actualización
+        if (aumentoFijo !== undefined && aumentoFijo !== null) {
+            plataforma = await Plataformas.findByIdAndUpdate(
+                id,
+                {
+                    nombre,
+                    descripcion,
+                    aumentoFijo,
+                    aumentoPorcentual: null // Limpiar el otro campo
+                },
+                { new: true }
+            );
+        } else if (aumentoPorcentual !== undefined && aumentoPorcentual !== null) {
+            plataforma = await Plataformas.findByIdAndUpdate(
+                id,
+                {
+                    nombre,
+                    descripcion,
+                    aumentoPorcentual,
+                    aumentoFijo: null // Limpiar el otro campo
+                },
+                { new: true }
+            );
+        } else {
+            // Si no viene ningún aumento, mantener los existentes
+            plataforma = await Plataformas.findByIdAndUpdate(
+                id,
+                { nombre, descripcion },
+                { new: true }
+            );
         }
         // const plataforma = await Plataformas.findByIdAndUpdate(id, { nombre, descripcion, aumentoPorcentaje }, { new: true });
         if (!plataforma) {
@@ -170,7 +194,7 @@ const eliminarPlataforma = async (req, res) => {
 
 
 
-module.exports = { 
+module.exports = {
     renderVistaPlataformas,
     obtenerPlataformas,
     nuevaPlataforma,
