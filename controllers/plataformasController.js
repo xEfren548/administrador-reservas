@@ -111,17 +111,35 @@ const nuevaPlataforma = async (req, res) => {
 const modificarPlataforma = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, descripcion, aumentoPorcentaje } = req.body;
+        const { nombre, descripcion, aumentoPorcentaje, aumentoFijo } = req.body;
+        if (!id) {
+            throw new Error('El ID de la plataforma es requerido');
+        }
+        console.log("ID PLATAFORMA: ", id);
         if (!nombre) {
             throw new Error('El nombre de la plataforma es requerido');
         }
-        if (!aumentoPorcentaje || aumentoPorcentaje <= 0 || aumentoPorcentaje > 100) {
-            throw new Error('El aumento porcentaje de la plataforma es requerido y debe ser un valor entre 0 y 100');
+        if (aumentoFijo) {
+            if (aumentoFijo < 0) {
+                throw new Error('El aumento fijo de la plataforma no puede ser negativo');
+            }
         }
-        const plataforma = await Plataformas.findByIdAndUpdate(id, { nombre, descripcion, aumentoPorcentaje }, { new: true });
+        if (aumentoPorcentaje) {
+            if (!aumentoPorcentaje || aumentoPorcentaje <= 0 || aumentoPorcentaje > 100) {
+                throw new Error('El aumento porcentaje de la plataforma es requerido y debe ser un valor entre 0 y 100');
+            }
+        }
+        let plataforma = null;
+        if (aumentoFijo) {
+            plataforma = await Plataformas.findByIdAndUpdate(id, { nombre, descripcion, aumentoFijo }, { new: true });
+        } else if (aumentoPorcentaje) {
+            plataforma = await Plataformas.findByIdAndUpdate(id, { nombre, descripcion, aumentoPorcentual: aumentoPorcentaje }, { new: true });
+        }
+        // const plataforma = await Plataformas.findByIdAndUpdate(id, { nombre, descripcion, aumentoPorcentaje }, { new: true });
         if (!plataforma) {
             throw new Error('No se encontró la plataforma con el ID proporcionado');
         }
+        console.log(plataforma);
         res.status(200).send(plataforma);
     } catch (error) {
         console.error(error);

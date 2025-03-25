@@ -30,7 +30,8 @@
 				<td class="px-6 py-3 text-md text-gray-200"><b>$ </b>{{this.aumentoFijo}}</td>
 				{{/if}}
 				<td class="px-4 py-3 text-md text-gray-200 w-60">
-					<button type="button" onclick="editarPlataforma('{{this._id}}')"
+					<pre class="text-white">{{json this}}</pre>
+					<button type="button" onclick="editarPlataforma('{{json this}}')"
 						class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
 						<i class="fa fa-pencil" aria-hidden="true" title="Editar Plataforma"></i>
 					</button>
@@ -200,6 +201,89 @@
 			</div>
 		</div>
 	</div>
+</div>
+
+<!-- Modal editar plataforma -->
+<div id="editar_plataforma_modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Fondo oscuro -->
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-900 opacity-75"></div>
+        </div>
+
+        <!-- Contenido del modal -->
+        <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg font-medium leading-6 text-white">Editar plataforma</h3>
+                <form id="form_editar_plataforma" class="mt-4">
+                    <!-- Campo Nombre -->
+                    <div class="mb-6">
+                        <label for="editar_platform_name" class="block text-sm font-medium text-gray-300">Nombre</label>
+                        <input type="text" id="editar_platform_name" name="nombre"
+                            class="mt-2 block w-full px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
+                            required>
+                    </div>
+
+                    <!-- Campo Descripción -->
+                    <div class="mb-6">
+                        <label for="editar_platform_description" class="block text-sm font-medium text-gray-300">Descripción (opcional)</label>
+                        <textarea id="editar_platform_description" name="descripcion" rows="4"
+                            class="mt-2 block w-full px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg"></textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-300">Tipo de Aumento</label>
+                        <div class="mt-2 space-y-2">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="editar_tipo_aumento" value="fijo" checked
+                                    class="form-radio h-4 w-4 text-blue-500 transition duration-150 ease-in-out"
+                                    onchange="toggleEditAumentoFields()">
+                                <span class="ml-2 text-gray-300">Aumento Fijo</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="editar_tipo_aumento" value="porcentual"
+                                    class="form-radio h-4 w-4 text-blue-500 transition duration-150 ease-in-out"
+                                    onchange="toggleEditAumentoFields()">
+                                <span class="ml-2 text-gray-300">Aumento Porcentual</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Campo Aumento Fijo -->
+                    <div id="editar_aumento_fijo_container" class="mb-6">
+                        <label for="editar_aumento_fijo" class="block text-sm font-medium text-gray-300">Aumento Fijo</label>
+                        <div class="mt-2 flex rounded-md shadow-sm">
+                            <input type="number" id="editar_aumento_fijo" name="aumento_fijo"
+                                class="flex-1 px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
+                                min="0" required>
+                            <span class="inline-flex items-center px-4 py-3 rounded-r-md bg-gray-700 border border-l-0 border-gray-600 text-gray-300 sm:text-lg">$</span>
+                        </div>
+                    </div>
+
+                    <!-- Campo Aumento Porcentual -->
+                    <div id="editar_aumento_porcentual_container" class="mb-6 hidden">
+                        <label for="editar_aumento_porcentual" class="block text-sm font-medium text-gray-300">Aumento Porcentual</label>
+                        <div class="mt-2 flex rounded-md shadow-sm">
+                            <input type="number" id="editar_aumento_porcentual" name="aumento_porcentual"
+                                class="flex-1 px-4 py-3 rounded-l-md bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
+                                min="0" max="100">
+                            <span class="inline-flex items-center px-4 py-3 rounded-r-md bg-gray-700 border border-l-0 border-gray-600 text-gray-300 sm:text-lg">%</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="bg-gray-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse items-center">
+                <button type="button" onclick="guardarEdicionPlataforma()"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-500 text-md font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-lg">
+                    Guardar cambios
+                </button>
+                <button type="button" onclick="cerrarModalEdicion()"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-700 text-md font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-lg">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -465,10 +549,92 @@
 		}
 	}
 
-	function editarPlataforma(id) {
-		console.log(`Editar plataforma con ID: ${id}`);
-		// Aquí puedes redirigir a una página de edición o abrir un modal.
+function editarPlataforma(plataformaParam) {
+	const plataforma = JSON.parse(plataformaParam);
+	console.log(plataforma)
+    
+        // 2. Configurar el modal con los datos
+        const modal = document.getElementById('editar_plataforma_modal');
+        const form = document.getElementById('form_editar_plataforma');
+		form.dataset.plataformaId = plataforma._id;
+            
+        // Rellenar los campos del formulario
+        document.getElementById('editar_platform_name').value = plataforma.nombre;
+        document.getElementById('editar_platform_description').value = plataforma.descripcion || '';
+            
+        // Configurar el tipo de aumento
+        if (plataforma.aumentoPorcentual) {
+            document.querySelector('input[name="editar_tipo_aumento"][value="porcentual"]').checked = true;
+            document.getElementById('editar_aumento_porcentual').value = plataforma.aumentoPorcentual;
+            toggleEditAumentoFields(); // Mostrar campo porcentual
+        } else {
+            document.querySelector('input[name="editar_tipo_aumento"][value="fijo"]').checked = true;
+            document.getElementById('editar_aumento_fijo').value = plataforma.aumentoFijo || 0;
+            toggleEditAumentoFields(); // Mostrar campo fijo
+        }
+        // 3. Mostrar el modal
+        modal.classList.remove('hidden');
+}
+
+// Función para alternar entre campos de aumento en el modal de edición
+function toggleEditAumentoFields() {
+    const tipoAumento = document.querySelector('input[name="editar_tipo_aumento"]:checked').value;
+    document.getElementById('editar_aumento_fijo_container').classList.toggle('hidden', tipoAumento !== 'fijo');
+    document.getElementById('editar_aumento_porcentual_container').classList.toggle('hidden', tipoAumento !== 'porcentual');
+}
+
+// Función para guardar los cambios
+async function guardarEdicionPlataforma() {
+    const form = document.getElementById('form_editar_plataforma');
+    const id = form.dataset.plataformaId;
+    
+    const datos = {
+        nombre: document.getElementById('editar_platform_name').value,
+        descripcion: document.getElementById('editar_platform_description').value,
+        tipoAumento: document.querySelector('input[name="editar_tipo_aumento"]:checked').value
+    };
+    
+    if (datos.tipoAumento === 'fijo') {
+        datos.aumentoFijo = parseFloat(document.getElementById('editar_aumento_fijo').value);
+    } else {
+        datos.aumentoPorcentual = parseFloat(document.getElementById('editar_aumento_porcentual').value);
+    }
+
+	const response = await fetch(`/api/plataformas/${id}`, {
+		method: 'PUT',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(datos)
+	})
+
+	if (!response.ok) {
+		const errorData = await response.json();
+		const errorMessage = errorData.message || "Unknown error";
+		return Swal.fire({
+			icon: 'error',
+			title: 'Error',
+			text: "Error en la solicitud: " + errorMessage + ".",
+			confirmButtonText: 'Aceptar'
+		});
 	}
+
+	const data = await response.json();
+	console.log(data);
+
+	Swal.fire({
+		icon: 'success',
+		title: '¡Completado!',
+		text: 'Plataforma actualizada correctamente.',
+		confirmButtonText: 'Aceptar'
+	}).then((result) => {
+		window.location.reload();
+	});
+}
+
+function cerrarModalEdicion() {
+    document.getElementById('editar_plataforma_modal').classList.add('hidden');
+}
 
 	async function eliminarPlataforma(id) {
 		console.log(`Eliminar plataforma con ID: ${id}`);
