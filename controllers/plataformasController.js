@@ -21,7 +21,8 @@ const renderVistaPlataformas = async (req, res) => {
     const plataformasMap = plataformas.reduce((map, plataforma) => {
         map[plataforma._id] = {
             nombre: plataforma.nombre,
-            aumentoPorcentaje: plataforma.aumentoPorcentaje
+            aumentoPorcentual: plataforma.aumentoPorcentual,
+            aumentoFijo: plataforma.aumentoFijo
         }
         return map;
     }, {});
@@ -33,7 +34,8 @@ const renderVistaPlataformas = async (req, res) => {
                 activePlatforms: habitacion.activePlatforms.map(platformId => ({
                     id: platformId,
                     name: plataformasMap[platformId] || "Plataforma Desconocida", // Usar el nombre o un valor por defecto,
-                    aumentoPorcentaje: plataformasMap[platformId]?.aumentoPorcentaje || 0
+                    aumentoPorcentual: plataformasMap[platformId]?.aumentoPorcentual || 0,
+                    aumentoFijo: plataformasMap[platformId]?.aumentoFijo || 0
                 }))
             };
         } else {
@@ -46,6 +48,7 @@ const renderVistaPlataformas = async (req, res) => {
 
     const preciosHabitacionesData = await precioBaseController.consultarPrecios();
     //console.log(preciosHabitacionesData);
+
     const preciosEspecialesData = await preciosEspecialesController.consultarPrecios()
     res.render('plataformasView', {
         layout: 'tailwindMain',
@@ -66,17 +69,36 @@ const obtenerPlataformas = async (req, res) => {
 
 const nuevaPlataforma = async (req, res) => {
     try {
-        
-        const { nombre, descripcion, aumentoPorcentaje } = req.body;
+
+        const { nombre, descripcion, aumentoFijo, aumentoPorcentaje } = req.body;
         if (!nombre) {
             throw new Error('El nombre de la plataforma es requerido');
         }
-        if (!aumentoPorcentaje || aumentoPorcentaje <= 0 || aumentoPorcentaje > 100) {
-            throw new Error('El aumento porcentaje de la plataforma es requerido y debe ser un valor entre 0 y 100');
+        if (aumentoFijo) {
+            if (aumentoFijo < 0) {
+                throw new Error('El aumento fijo de la plataforma no puede ser negativo');
+            }
         }
-        const plataforma = new Plataformas({ nombre, descripcion, aumentoPorcentaje });
-        await plataforma.save();
-        res.status(201).send(plataforma);
+
+        if (aumentoPorcentaje) {
+            if (aumentoPorcentaje < 0 || aumentoPorcentaje > 100) {
+                throw new Error('El aumento porcentaje de la plataforma debe ser un valor entre 0 y 100');
+            }
+        }
+
+        console.log("aumento fijo: ", aumentoFijo, "aumento porcentaje: ", aumentoPorcentaje);
+
+        let newPlataforma = {}
+
+        if (aumentoFijo) {
+            newPlataforma = new Plataformas({ nombre, descripcion, aumentoFijo });
+        } else if (aumentoPorcentaje) {
+            newPlataforma = new Plataformas({ nombre, descripcion, aumentoPorcentual: aumentoPorcentaje });
+        }
+
+        // const plataforma = new Plataformas({ nombre, descripcion, aumentoPorcentual: aumentoPorcentaje, aumentoFijo });
+        await newPlataforma.save();
+        res.status(201).send(newPlataforma);
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: error.message });
@@ -86,17 +108,62 @@ const nuevaPlataforma = async (req, res) => {
 const modificarPlataforma = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, descripcion, aumentoPorcentaje } = req.body;
+        const { nombre, descripcion, aumentoPorcentual, aumentoFijo } = req.body;
+        if (!id) {
+            throw new Error('El ID de la plataforma es requerido');
+        }
+
         if (!nombre) {
             throw new Error('El nombre de la plataforma es requerido');
         }
-        if (!aumentoPorcentaje || aumentoPorcentaje <= 0 || aumentoPorcentaje > 100) {
-            throw new Error('El aumento porcentaje de la plataforma es requerido y debe ser un valor entre 0 y 100');
+        if (aumentoFijo) {
+            if (aumentoFijo < 0) {
+                throw new Error('El aumento fijo de la plataforma no puede ser negativo');
+            }
         }
-        const plataforma = await Plataformas.findByIdAndUpdate(id, { nombre, descripcion, aumentoPorcentaje }, { new: true });
+        if (aumentoPorcentual) {
+            if (!aumentoPorcentual || aumentoPorcentual <= 0 || aumentoPorcentual > 100) {
+                throw new Error('El aumento porcentaje de la plataforma es requerido y debe ser un valor entre 0 y 100');
+            }
+        }
+
+        let plataforma = null;
+        // Usando tu lógica existente de actualización
+        if (aumentoFijo !== undefined && aumentoFijo !== null) {
+            plataforma = await Plataformas.findByIdAndUpdate(
+                id,
+                {
+                    nombre,
+                    descripcion,
+                    aumentoFijo,
+                    aumentoPorcentual: null // Limpiar el otro campo
+                },
+                { new: true }
+            );
+        } else if (aumentoPorcentual !== undefined && aumentoPorcentual !== null) {
+            plataforma = await Plataformas.findByIdAndUpdate(
+                id,
+                {
+                    nombre,
+                    descripcion,
+                    aumentoPorcentual,
+                    aumentoFijo: null // Limpiar el otro campo
+                },
+                { new: true }
+            );
+        } else {
+            // Si no viene ningún aumento, mantener los existentes
+            plataforma = await Plataformas.findByIdAndUpdate(
+                id,
+                { nombre, descripcion },
+                { new: true }
+            );
+        }
+        // const plataforma = await Plataformas.findByIdAndUpdate(id, { nombre, descripcion, aumentoPorcentaje }, { new: true });
         if (!plataforma) {
             throw new Error('No se encontró la plataforma con el ID proporcionado');
         }
+        console.log(plataforma);
         res.status(200).send(plataforma);
     } catch (error) {
         console.error(error);
@@ -111,6 +178,13 @@ const eliminarPlataforma = async (req, res) => {
         if (!plataforma) {
             throw new Error('No se encontró la plataforma con el ID proporcionado');
         }
+
+        const resultadoActualizacion = await Habitaciones.updateMany(
+            { activePlatforms: id },
+            { $pull: { activePlatforms: id } }
+        );
+
+
         res.status(200).send({ message: 'Plataforma eliminada correctamente' });
     } catch (error) {
         console.error(error);
@@ -120,7 +194,7 @@ const eliminarPlataforma = async (req, res) => {
 
 
 
-module.exports = { 
+module.exports = {
     renderVistaPlataformas,
     obtenerPlataformas,
     nuevaPlataforma,
