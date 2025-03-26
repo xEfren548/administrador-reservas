@@ -1,0 +1,15 @@
+/* Add this to your custom CSS */
+.collapse:not(.show) {
+    visibility: visible !important;
+    display: none !important;
+}
+
+.collapse.show {
+    visibility: visible !important;
+    display: block !important;
+}
+
+/* If using flex layout */
+.nav-flex-column.collapse.show {
+    display: flex !important;
+}
