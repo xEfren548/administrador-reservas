@@ -223,6 +223,13 @@ async function generateSideMenu(req, res, next) {
                                     </a>
 
                                 </li>
+                                <li>
+                                    <a href="/plataformas" class="nav-link px-5" title="Plataformas">
+                                        <i class="fas fa-laptop-code"></i></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Plataformas</span>
+                                    </a>
+
+                                </li>
                             </ul>
                         </li>`;
                 } else if (key === "Reportes") {

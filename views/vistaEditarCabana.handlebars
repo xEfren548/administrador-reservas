@@ -14,7 +14,8 @@
     <div class="page-info">
         <h1>Editar alojamiento</h1>
         <label class="form-check form-switch mr-3">
-            <input class="form-check-input switchToggle" type="checkbox" {{#if this.isActive}}checked{{/if}} data-chalet-id="{{this._id}}">
+            <input class="form-check-input switchToggle" type="checkbox" {{#if this.isActive}}checked{{/if}}
+                data-chalet-id="{{this._id}}">
             <span class="switchLabel">{{#if isActive}}Activa{{else}}Inactiva{{/if}}</span>
         </label>
         <button type="button" class="btn btn-danger mr-1" title="Eliminar cabaña" data-chalet-id="{{this._id}}">
@@ -989,6 +990,25 @@
 
                 </div>
             </div>
+    </div>
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#platforms">+
+        Plataformas</button>
+    <div id="platforms">
+        <label for="options-{{this.propertyDetails.name}}" class="form-label">Selecciona las plataformas activas:</label>
+        <form>
+        <div class="row">
+            <div class="col-12">
+                <select class="form-select form-select-md bg-dark select-edit-platforms"
+                    id="select-edit-platforms-{{this.propertyDetails.name}}"
+                    name="platforms-options-{{this.propertyDetails.name}}" multiple style="width: 100%;"
+                    data-platforms='{{json this.activePlatforms}}'>
+                    {{#each ../plataformas}}
+                    <option value="{{this._id}}">{{this.nombre}}</option>
+                    {{/each}}
+                </select>
+    
+            </div>
+        </div>
 
     </div>
 </form>
@@ -1001,7 +1021,7 @@
     document.addEventListener("DOMContentLoaded", function () {
         $('.select-edit-investors').each(function () {
             $(this).select2({
-                placeholder: "Select investors",
+                placeholder: "Selecciona inversionistas",
                 maximumSelectionLength: 10
             });
 
@@ -1012,6 +1032,21 @@
                 $(this).val(investorsData).trigger('change');
             }
         });
+
+        $('.select-edit-platforms').each(function () {
+            $(this).select2({
+                placeholder: "Selecciona las plataformas",
+                maximumSelectionLength: 10
+            });
+
+            // Retrieve and parse the investors data from the data attribute
+            const platformsData = $(this).data('platforms');
+            if (platformsData) {
+                // Set the pre-selected values
+                $(this).val(platformsData).trigger('change');
+            }
+        });
+
         const slctFormSelector = document.getElementById('slctFormSelector');
         slctFormSelector.value = "";
         let filename = ""
@@ -1153,6 +1188,10 @@
                 // Creating JSON for text data.
                 const selectElement = form.querySelector('.select-edit-investors');
                 const selectedInvestors = Array.from(selectElement.selectedOptions).map(option => option.value);
+
+                const selectPlatformsEl = form.querySelector('.select-edit-platforms');
+                const selectedPlatforms = Array.from(selectPlatformsEl.selectedOptions).map(option => option.value);
+
                 console.log(selectedInvestors);
                 const data = {
                     txtChaletId: form.querySelector('#chaletId').value.trim(),
@@ -1339,7 +1378,8 @@
                         owner: form.querySelector("#chalet-owner-select").value.trim(),
                         investors: selectedInvestors
                     },
-                    images: imagesarray
+                    images: imagesarray,
+                    activePlatforms: selectedPlatforms
                 };
                 try {
                     Swal.fire({
@@ -1485,7 +1525,7 @@
     });
 
     document.querySelectorAll(".switchToggle").forEach(switchElement => {
-        switchElement.addEventListener("change", async function() {
+        switchElement.addEventListener("change", async function () {
             const status = this.checked ? "Activa" : "Inactiva";
             console.log("Status: ", status);
             const switchLabel = this.parentNode.querySelector(".switchLabel");
@@ -1518,7 +1558,7 @@
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    console.log(errorData); 
+                    console.log(errorData);
                     const errorMessage = errorData.message || "Error en la solicitud";
                     throw new Error(errorMessage);
                 }

@@ -1,0 +1,980 @@
+<h1 class="mt-12 text-white text-4xl font-bold text-center">Definición de % de Aumento</h1>
+
+<div class="overflow-x-auto mt-3">
+	<h1 class="text-xl font-medium leading-6 text-white mb-4">Plataformas disponibles 
+		<span><button class="bg-blue-500 text-white px-3 py-2 rounded-md ml-2" onclick="openAddPlatformModal()">+</button>
+		</span>
+	</h1>
+	<table class="min-w-full bg-gray-900 border border-gray-700">
+		<!-- Encabezado de la tabla -->
+		<thead class="bg-gray-800">
+			<tr>
+				<th class="px-6 py-3 text-left text-md font-medium text-gray-300 uppercase">Nombre</th>
+				<th class="px-6 py-3 text-left text-md font-medium text-gray-300 uppercase">Descripción</th>
+				<th class="px-6 py-3 text-left text-md font-medium text-gray-300 uppercase">Aumento</th>
+				<th class="px-6 py-3 text-left text-md font-medium text-gray-300 uppercase">Acciones</th>
+			</tr>
+		</thead>
+		<!-- Cuerpo de la tabla -->
+		<tbody class="divide-y divide-gray-700">
+			{{#if plataformas}}
+			{{#each plataformas}}
+			<tr class="hover:bg-gray-800">
+				<td class="px-6 py-3 text-md text-gray-200">{{this.nombre}}</td>
+				<td class="px-6 py-3 text-md text-gray-200">{{this.descripcion}}</td>
+				{{!-- <td class="px-6 py-3 text-md text-gray-200">{{this.aumentoPorcentaje}}%</td> --}}
+				{{#if this.aumentoPorcentual}}
+				<td class="px-6 py-3 text-md text-gray-200">{{this.aumentoPorcentual}}<b> %</b></td>
+				{{else}}
+				<td class="px-6 py-3 text-md text-gray-200"><b>$ </b>{{this.aumentoFijo}}</td>
+				{{/if}}
+				<td class="px-4 py-3 text-md text-gray-200 w-60">
+					<button type="button" onclick="editarPlataforma('{{json this}}')"
+						class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+						<i class="fa fa-pencil" aria-hidden="true" title="Editar Plataforma"></i>
+					</button>
+					<!-- Botón de Eliminar -->
+					<button type="button" onclick="eliminarPlataforma('{{this._id}}')"
+						class="ml-2 inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+						<i class="fa fa-trash" aria-hidden="true" title="Eliminar Plataforma"></i>
+					</button>
+					<button type="button" onclick="verPlataformasHabitacion('{{this._id}}')"
+						class="ml-2 inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+						<i class="fa fa-hotel" aria-hidden="true" title="Ver habitaciones ligadas"></i>
+					</button>
+				</td>
+			</tr>
+			{{/each}}
+			{{else}}
+			<tr>
+				<td class="px-6 py-3 text-md text-gray-200 text-center" colspan="4">No hay plataformas disponibles</td>
+			</tr>
+			{{/if}}
+		</tbody>
+	</table>
+</div>
+
+<h3 class="text-xl font-medium text-white mb-4 leading-6 text-center mt-6">Calendario de precios de plataformas</h3>
+<label class="block text-white mt-4">Habitación:</label>
+<select class="bg-gray-800 text-white p-2 rounded-lg w-full" id="habitacion-select">
+	<option>Seleccione una habitación --</option>
+	{{#each habitaciones}}
+	<option value="{{this.id}}">{{this.name}}</option>
+	{{/each}}
+</select>
+
+<div class="table-pricescol min-vh-100 p-4">
+	{{#if habitaciones}}
+	{{#each habitaciones}}
+	<div class="habitacion-contenedor" id="habitacion-{{this.id}}" style="display: none;">
+		{{#if this.activePlatforms}}
+			{{#each this.activePlatforms}}
+			<h1 class="text-xl font-medium leading-6 text-white mb-4">
+				{{this.name.nombre}}
+				<span class="text-sm text-gray-300">
+					{{#if this.name.aumentoPorcentual}}(Aumento:  {{this.name.aumentoPorcentual}}%){{else}}(Aumento:  ${{this.name.aumentoFijo}}){{/if}}
+				</span>
+			</h1> <!-- Título de la habitación -->
+			<div class="ms-auto p-2 bd-highlight">
+				<a name="" id="cn-{{../this.id}}-{{this.name.nombre}}" class="btn btn-primary hoy-btn" href="#" role="button"
+					data-chalet="{{../this.id}}-{{this.name.nombre}}">Hoy</a>
+			</div>
+			<div class="table-responsive">
+				<table border="1" class="table table-{{../this.id}}-{{this.name.nombre}} table-dark text-center table-hover"
+					id="table-{{../this.id}}-{{this.name.nombre}}">
+					<thead class="table-light">
+						<tr id="header-row-{{../this.id}}-{{this.name.nombre}}">
+							<th class="sticky-column">Función</th>
+						</tr>
+					</thead>
+					<tbody id="tbody-{{../this.id}}-{{this.name.nombre}}">
+						<tr id="costo-base-row-{{../this.id}}-{{this.name.nombre}}">
+							<td class="sticky-column">Costo Base</td>
+						</tr>
+						<tr id="precio-base-row-{{../this.id}}-{{this.name.nombre}}">
+							<td class="sticky-column">Precio Base</td>
+						</tr>
+						<tr id="costo-base2-row-{{../this.id}}-{{this.name.nombre}}">
+							<td class="sticky-column">Costo Base 2+ noches</td>
+						</tr>
+						<tr id="precio-base2nights-row-{{../this.id}}-{{this.name.nombre}}">
+							<td class="sticky-column">Precio Base 2+ noches</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<br>
+			{{/each}}
+		{{else}}
+		<p>No hay plataformas activas para esta habitación</p>
+		{{/if}}
+	</div>
+	{{/each}}
+	{{else}}
+	<p>No hay habitaciones</p>
+	{{/if}}
+</div>
+
+<!-- Modal agregar plataforma -->
+<div id="acciones_modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+	<div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+		<!-- Fondo oscuro -->
+		<div class="fixed inset-0 transition-opacity" aria-hidden="true">
+			<div class="absolute inset-0 bg-gray-900 opacity-75"></div>
+		</div>
+
+		<!-- Contenido del modal -->
+		<div
+			class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+			<div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+				<h3 class="text-lg font-medium leading-6 text-white">Agregar nueva plataforma</h3>
+				<form id="form_plataforma" class="mt-4">
+					<!-- Campo Nombre -->
+					<div class="mb-6">
+						<label for="nombre" class="block text-sm font-medium text-gray-300">Nombre</label>
+						<input type="text" id="platform_name" name="nombre"
+							class="mt-2 block w-full px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
+							required>
+					</div>
+
+					<!-- Campo Descripción -->
+					<div class="mb-6">
+						<label for="descripcion" class="block text-sm font-medium text-gray-300">Descripción
+							(opcional)</label>
+						<textarea id="platform_description" name="descripcion" rows="4"
+							class="mt-2 block w-full px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
+							required></textarea>
+					</div>
+
+					<div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-300">Tipo de Aumento</label>
+                        <div class="mt-2 space-y-2">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="tipo_aumento" value="fijo" checked
+                                    class="form-radio h-4 w-4 text-blue-500 transition duration-150 ease-in-out"
+                                    onchange="toggleAumentoFields()">
+                                <span class="ml-2 text-gray-300">Aumento Fijo</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="tipo_aumento" value="porcentual"
+                                    class="form-radio h-4 w-4 text-blue-500 transition duration-150 ease-in-out"
+                                    onchange="toggleAumentoFields()">
+                                <span class="ml-2 text-gray-300">Aumento Porcentual</span>
+                            </label>
+                        </div>
+                    </div>
+
+					<!-- Campo Aumento Fijo -->
+                    <div id="aumento_fijo_container" class="mb-6">
+                        <label for="aumento_fijo" class="block text-sm font-medium text-gray-300">Aumento Fijo</label>
+                        <div class="mt-2 flex rounded-md shadow-sm">
+                            <input type="number" id="aumento_fijo" name="aumento_fijo"
+                                class="flex-1 px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
+                                min="0" required>
+                            <span class="inline-flex items-center px-4 py-3 rounded-r-md bg-gray-700 border border-l-0 border-gray-600 text-gray-300 sm:text-lg">$</span>
+                        </div>
+                    </div>
+
+					<!-- Campo Aumento Porcentual -->
+                    <div id="aumento_porcentual_container" class="mb-6 hidden">
+                        <label for="aumento_porcentual" class="block text-sm font-medium text-gray-300">Aumento Porcentual</label>
+                        <div class="mt-2 flex rounded-md shadow-sm">
+                            <input type="number" id="aumento_porcentual" name="aumento_porcentual"
+                                class="flex-1 px-4 py-3 rounded-l-md bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
+                                min="0" max="100">
+                            <span class="inline-flex items-center px-4 py-3 rounded-r-md bg-gray-700 border border-l-0 border-gray-600 text-gray-300 sm:text-lg">%</span>
+                        </div>
+                    </div>
+				</form>
+			</div>
+			<div class="bg-gray-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse items-center">
+				<button type="button" onclick="addNewPlatformBtn()"
+					class="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-500 text-md font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-lg">
+					Guardar
+				</button>
+				<button type="button" onclick="closeAddPlaformModal()"
+					class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-700 text-md font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-lg">
+					Cancelar
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal editar plataforma -->
+<div id="editar_plataforma_modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Fondo oscuro -->
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-900 opacity-75"></div>
+        </div>
+
+        <!-- Contenido del modal -->
+        <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg font-medium leading-6 text-white">Editar plataforma</h3>
+                <form id="form_editar_plataforma" class="mt-4">
+                    <!-- Campo Nombre -->
+                    <div class="mb-6">
+                        <label for="editar_platform_name" class="block text-sm font-medium text-gray-300">Nombre</label>
+                        <input type="text" id="editar_platform_name" name="nombre"
+                            class="mt-2 block w-full px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
+                            required>
+                    </div>
+
+                    <!-- Campo Descripción -->
+                    <div class="mb-6">
+                        <label for="editar_platform_description" class="block text-sm font-medium text-gray-300">Descripción (opcional)</label>
+                        <textarea id="editar_platform_description" name="descripcion" rows="4"
+                            class="mt-2 block w-full px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg"></textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-300">Tipo de Aumento</label>
+                        <div class="mt-2 space-y-2">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="editar_tipo_aumento" value="fijo" checked
+                                    class="form-radio h-4 w-4 text-blue-500 transition duration-150 ease-in-out"
+                                    onchange="toggleEditAumentoFields()">
+                                <span class="ml-2 text-gray-300">Aumento Fijo</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="editar_tipo_aumento" value="porcentual"
+                                    class="form-radio h-4 w-4 text-blue-500 transition duration-150 ease-in-out"
+                                    onchange="toggleEditAumentoFields()">
+                                <span class="ml-2 text-gray-300">Aumento Porcentual</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Campo Aumento Fijo -->
+                    <div id="editar_aumento_fijo_container" class="mb-6">
+                        <label for="editar_aumento_fijo" class="block text-sm font-medium text-gray-300">Aumento Fijo</label>
+                        <div class="mt-2 flex rounded-md shadow-sm">
+                            <input type="number" id="editar_aumento_fijo" name="aumento_fijo"
+                                class="flex-1 px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
+                                min="0" required>
+                            <span class="inline-flex items-center px-4 py-3 rounded-r-md bg-gray-700 border border-l-0 border-gray-600 text-gray-300 sm:text-lg">$</span>
+                        </div>
+                    </div>
+
+                    <!-- Campo Aumento Porcentual -->
+                    <div id="editar_aumento_porcentual_container" class="mb-6 hidden">
+                        <label for="editar_aumento_porcentual" class="block text-sm font-medium text-gray-300">Aumento Porcentual</label>
+                        <div class="mt-2 flex rounded-md shadow-sm">
+                            <input type="number" id="editar_aumento_porcentual" name="aumento_porcentual"
+                                class="flex-1 px-4 py-3 rounded-l-md bg-gray-700 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
+                                min="0" max="100">
+                            <span class="inline-flex items-center px-4 py-3 rounded-r-md bg-gray-700 border border-l-0 border-gray-600 text-gray-300 sm:text-lg">%</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="bg-gray-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse items-center">
+                <button type="button" onclick="guardarEdicionPlataforma()"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-500 text-md font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-lg">
+                    Guardar cambios
+                </button>
+                <button type="button" onclick="cerrarModalEdicion()"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-700 text-md font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-lg">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+	function openAddPlatformModal() {
+		document.getElementById('acciones_modal').classList.remove('hidden');
+	}
+
+	// Función para cerrar el modal
+	function closeAddPlaformModal() {
+		document.getElementById('acciones_modal').classList.add('hidden');
+	}
+
+	function toggleAumentoFields() {
+        const tipoAumento = document.querySelector('input[name="tipo_aumento"]:checked').value;
+        const aumentoFijoContainer = document.getElementById('aumento_fijo_container');
+        const aumentoPorcentualContainer = document.getElementById('aumento_porcentual_container');
+
+        if (tipoAumento === 'fijo') {
+            aumentoFijoContainer.classList.remove('hidden');
+            aumentoPorcentualContainer.classList.add('hidden');
+        } else {
+            aumentoFijoContainer.classList.add('hidden');
+            aumentoPorcentualContainer.classList.remove('hidden');
+        }
+    }
+
+	document.addEventListener('DOMContentLoaded', toggleAumentoFields);
+
+
+	const habitaciones = {{{ json habitaciones }}};
+	const preciosHabitaciones = {{{ json preciosHabitaciones }}}
+	const preciosEspeciales = {{{ json preciosEspeciales }}}
+
+	document.addEventListener('DOMContentLoaded', function () {
+		const selectHabitacion = document.getElementById('habitacion-select');
+		const habitacionContainers = document.querySelectorAll('.habitacion-contenedor');
+
+		// Oculta todos los contenedores de habitaciones al cargar la página
+		habitacionContainers.forEach(container => {
+			container.style.display = 'none';
+		});
+
+		// Evento cuando se cambia la selección de habitación
+		selectHabitacion.addEventListener('change', function () {
+			const selectedHabitacionId = selectHabitacion.value;
+
+			// Oculta todos los contenedores de habitaciones
+			habitacionContainers.forEach(container => {
+				container.style.display = 'none';
+			});
+
+			// Si se seleccionó una habitación, mostrar el contenedor correspondiente
+			if (selectedHabitacionId) {
+				const selectedHabitacionContainer = document.getElementById(`habitacion-${selectedHabitacionId}`);
+				if (selectedHabitacionContainer) {
+					selectedHabitacionContainer.style.display = 'flex';
+					selectedHabitacionContainer.style.flexDirection = 'column';
+				}
+			}
+
+		});
+	});
+
+	document.getElementById('habitacion-select').addEventListener('change', function () {
+		const selectedRoomId = this.value;
+		if (selectedRoomId !== "Seleccione una habitación --") {
+			// Filtrar los datos de la habitación seleccionada
+			const selectedRoom = habitaciones.find(habitacion => habitacion.id === selectedRoomId);
+			
+			if (!selectedRoom.activePlatforms || selectedRoom.activePlatforms.length === 0) {
+				Swal.fire({
+					title: 'Error',
+					text: 'La habitación seleccionada no tiene plataformas activas.',
+					icon: 'error',
+					confirmButtonText: 'Aceptar'
+				})
+				return;
+			}
+
+			if (selectedRoom) {
+				// Llamar a la función para cargar las fechas y precios solo de la habitación seleccionada
+				cargarDatosHabitacion(selectedRoom);
+			}
+		}
+	});
+	const hoyButtons = document.querySelectorAll('.hoy-btn');
+	const today = new Date();
+	let currentMonth = today.getMonth();
+	let currentYear = today.getFullYear();
+
+
+
+	// Función para determinar si una fecha es viernes, sábado o domingo
+	function esFinDeSemana(fechaStr) {
+		const partesFecha = fechaStr.split(" ");
+		const dia = parseInt(partesFecha[0]);
+		const mes = partesFecha[1];
+		const anio = parseInt(partesFecha[2]);
+
+		// Mapear los nombres de los meses a números (enero = 0, diciembre = 11)
+		const meses = {
+			"ene": 0,
+			"feb": 1,
+			"mar": 2,
+			"abr": 3,
+			"may": 4,
+			"jun": 5,
+			"jul": 6,
+			"ago": 7,
+			"sept": 8,
+			"oct": 9,
+			"nov": 10,
+			"dic": 11
+		};
+
+		const fecha = new Date(anio, meses[mes], dia);
+		console.log(fecha);
+		const diaSemana = fecha.getDay(); // 0 = Domingo, 5 = Viernes, 6 = Sábado
+
+
+		return diaSemana === 5 || diaSemana === 6;
+	}
+
+	function esHoy(fechaStr) {
+		const partesFecha = fechaStr.split(" ");
+		const dia = parseInt(partesFecha[0]);
+		const mes = partesFecha[1];
+		const anio = parseInt(partesFecha[2]);
+
+		// Mapear los nombres de los meses a números (enero = 0, diciembre = 11)
+		const meses = {
+			"ene": 0,
+			"feb": 1,
+			"mar": 2,
+			"abr": 3,
+			"may": 4,
+			"jun": 5,
+			"jul": 6,
+			"ago": 7,
+			"sept": 8,
+			"oct": 9,
+			"nov": 10,
+			"dic": 11
+		};
+
+		const fecha = new Date(anio, meses[mes], dia);
+		const fechaHoy = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+
+		const todayDate = new Date();
+		todayDate.setHours(0, 0, 0, 0); // Eliminar la hora para comparar solo la fecha
+
+		return fechaHoy.getTime() === todayDate.getTime();
+	}
+
+
+	hoyButtons.forEach(button => {
+		button.addEventListener('click', function (event) {
+			event.preventDefault();
+
+			//const chaletName = this.getAttribute('data-chalet');
+			const platformId = this.getAttribute('data-chalet');
+
+			const currentMonthName = today.toLocaleString('es-ES', { month: 'long' });
+			const currentYear = today.getFullYear();
+
+			const calendarContainer = document.getElementById(`table-${platformId}`);
+
+			console.log(`Button clicked for ${platformId}`)
+
+			const ths = calendarContainer.querySelectorAll("th");
+
+			ths.forEach((th, index) => {
+				if (esHoy(th.textContent.trim())) {
+					setTimeout(() => {
+						th.scrollIntoView({ behavior: 'smooth', block: "nearest", inline: "start" });
+					}, 0);
+					return;
+				}
+			});
+			/** 
+	
+			const monthHeaders = calendarContainer.querySelectorAll('.month-header');
+			monthHeaders.forEach(header => {
+				if (header.textContent.trim().toLowerCase() === `${currentMonthName} ${currentYear}`.toLowerCase()) {
+					setTimeout(() => {
+						header.scrollIntoView({ behavior: 'smooth', block: "nearest", inline: "center" });
+					}, 0);
+				}
+			});
+			**/
+		});
+
+	})
+
+	// Alta de plataformas
+	async function addNewPlatformBtn() {
+		const platformName = document.getElementById('platform_name').value;
+		const platformDescription = document.getElementById('platform_description').value;
+		//const porcentajeAumento = document.getElementById('porcentaje_aumento').value;
+		const tipoAumento = document.querySelector('input[name="tipo_aumento"]:checked').value;
+		const aumentoFijo = tipoAumento === 'fijo' ? document.getElementById('aumento_fijo').value : 0;
+		const aumentoPorcentaje = tipoAumento === 'porcentual' ? document.getElementById('aumento_porcentual').value : 0;
+
+		try {
+			if (!platformName) {
+				throw new Error('Nombre de plataforma es obligatorio.');
+			}
+
+			if (tipoAumento === 'fijo') {
+				if (!aumentoFijo) {
+					throw new Error('El aumento fijo es obligatorio.');
+				}
+				if (aumentoFijo < 0) {
+					throw new Error('El aumento fijo no puede ser negativo.');
+				}
+			} else if (tipoAumento === 'porcentual') {
+				if (!aumentoPorcentaje) {
+					throw new Error('El aumento porcentual es obligatorio.');
+				}
+				if (aumentoPorcentaje < 0 || aumentoPorcentaje > 100) {
+					throw new Error('El porcentaje de aumento debe estar entre 0 y 100.');
+				}
+			}
+
+
+			const response = await fetch('/api/plataformas', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					nombre: platformName,
+					descripcion: platformDescription,
+					aumentoFijo: aumentoFijo ? parseFloat(aumentoFijo) : null,
+					aumentoPorcentaje: aumentoPorcentaje ? parseFloat(aumentoPorcentaje) : null
+				}),
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.message);
+			}
+
+			const data = await response.json();
+			console.log(data);
+
+			Swal.fire({
+				icon: 'success',
+				title: '¡Completado!',
+				text: 'Plataforma agregada correctamente.',
+				confirmButtonText: 'Aceptar'
+			}).then((result) => {
+				window.location.reload();
+			});
+
+		} catch (e) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: e.message,
+				confirmButtonText: 'Aceptar'
+			})
+		}
+	}
+
+function editarPlataforma(plataformaParam) {
+	const plataforma = JSON.parse(plataformaParam);
+	console.log(plataforma)
+    
+        // 2. Configurar el modal con los datos
+        const modal = document.getElementById('editar_plataforma_modal');
+        const form = document.getElementById('form_editar_plataforma');
+		form.dataset.plataformaId = plataforma._id;
+            
+        // Rellenar los campos del formulario
+        document.getElementById('editar_platform_name').value = plataforma.nombre;
+        document.getElementById('editar_platform_description').value = plataforma.descripcion || '';
+            
+        // Configurar el tipo de aumento
+        if (plataforma.aumentoPorcentual) {
+            document.querySelector('input[name="editar_tipo_aumento"][value="porcentual"]').checked = true;
+            document.getElementById('editar_aumento_porcentual').value = plataforma.aumentoPorcentual;
+            toggleEditAumentoFields(); // Mostrar campo porcentual
+        } else {
+            document.querySelector('input[name="editar_tipo_aumento"][value="fijo"]').checked = true;
+            document.getElementById('editar_aumento_fijo').value = plataforma.aumentoFijo || 0;
+            toggleEditAumentoFields(); // Mostrar campo fijo
+        }
+        // 3. Mostrar el modal
+        modal.classList.remove('hidden');
+}
+
+// Función para alternar entre campos de aumento en el modal de edición
+function toggleEditAumentoFields() {
+    const tipoAumento = document.querySelector('input[name="editar_tipo_aumento"]:checked').value;
+    document.getElementById('editar_aumento_fijo_container').classList.toggle('hidden', tipoAumento !== 'fijo');
+    document.getElementById('editar_aumento_porcentual_container').classList.toggle('hidden', tipoAumento !== 'porcentual');
+}
+
+// Función para guardar los cambios
+async function guardarEdicionPlataforma() {
+    const form = document.getElementById('form_editar_plataforma');
+    const id = form.dataset.plataformaId;
+    
+    const datos = {
+        nombre: document.getElementById('editar_platform_name').value,
+        descripcion: document.getElementById('editar_platform_description').value,
+        tipoAumento: document.querySelector('input[name="editar_tipo_aumento"]:checked').value
+    };
+    
+    if (datos.tipoAumento === 'fijo') {
+        datos.aumentoFijo = parseFloat(document.getElementById('editar_aumento_fijo').value);
+    } else {
+        datos.aumentoPorcentual = parseFloat(document.getElementById('editar_aumento_porcentual').value);
+    }
+
+	const response = await fetch(`/api/plataformas/${id}`, {
+		method: 'PUT',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(datos)
+	})
+
+	if (!response.ok) {
+		const errorData = await response.json();
+		const errorMessage = errorData.message || "Unknown error";
+		return Swal.fire({
+			icon: 'error',
+			title: 'Error',
+			text: "Error en la solicitud: " + errorMessage + ".",
+			confirmButtonText: 'Aceptar'
+		});
+	}
+
+	const data = await response.json();
+	console.log(data);
+
+	Swal.fire({
+		icon: 'success',
+		title: '¡Completado!',
+		text: 'Plataforma actualizada correctamente.',
+		confirmButtonText: 'Aceptar'
+	}).then((result) => {
+		window.location.reload();
+	});
+}
+
+function cerrarModalEdicion() {
+    document.getElementById('editar_plataforma_modal').classList.add('hidden');
+}
+
+	async function eliminarPlataforma(id) {
+		console.log(`Eliminar plataforma con ID: ${id}`);
+
+		try {
+
+			const confirmation = await Swal.fire({
+				icon: 'question',
+				title: 'Confirmar eliminación',
+				text: '¿Estás seguro de eliminar esta plataforma?',
+				showCancelButton: true,
+			})
+
+			if (!confirmation.isConfirmed) {
+				return;
+			}
+
+			const response = await fetch(`/api/plataformas/${id}`, {
+				method: 'DELETE',
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.message);
+			}
+
+			const data = await response.json();
+			console.log(data);
+
+			Swal.fire({
+				icon: 'success',
+				title: '¡Completado!',
+				text: 'Plataforma eliminada correctamente.',
+				confirmButtonText: 'Aceptar'
+			}).then((result) => {
+				window.location.reload();
+			});
+
+		} catch (e) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: e.message,
+				confirmButtonText: 'Aceptar'
+			})
+		}
+	}
+
+	function verPlataformasHabitacion(id) {
+		console.log(habitaciones);
+        const habitacionesConPlataforma = habitaciones.filter(habitacion => {
+            return habitacion.activePlatforms && 
+                habitacion.activePlatforms.some(platform => platform.id === id);
+        });
+
+		const mensaje = `
+			<div class="text-left">
+				<p class="font-semibold mb-2">Habitaciones asociadas:</p>
+					<ul class="list-disc pl-4">
+						${habitacionesConPlataforma.map(habitacion => `<li>${habitacion.name}</li>`).join('')}
+					</ul>
+			</div>
+		`;
+
+		if (habitacionesConPlataforma.length > 0) {
+			console.log("Habitaciones con la plataforma:", habitacionesConPlataforma);
+			Swal.fire({
+				html: mensaje,
+				confirmButtonText: "Aceptar",
+				width: "800px"
+			})
+		}
+	}
+
+
+	// CARGAR DATOS DE CABAÑA (PRECIOS)
+
+function cargarDatosHabitacion(habitacion) {
+    try {
+        console.log("Cargando datos de habitación:", habitacion);
+        const roomName = habitacion.name;
+        const roomId = habitacion.id;
+
+        const costoBase = habitacion.baseCost;
+        const costoBase2 = habitacion.baseCost2nights;
+        const precioBase = habitacion.basePrice;
+        const precioBase2nights = habitacion.basePrice2nights;
+
+        const plataformasHabitacionC = habitacion.activePlatforms || []; // Si es undefined, se asigna un array vacío
+        console.log(plataformasHabitacionC);
+
+        // Validar si no hay plataformas activas
+        if (!plataformasHabitacionC || plataformasHabitacionC.length === 0) {
+            throw new Error('La habitación no tiene plataformas activas.');
+        }
+
+        plataformasHabitacionC.forEach(plataforma => {
+            const plataformaId = plataforma.id; // Usar el ID de la plataforma
+			const plataformaName = plataforma.name.nombre;
+			const aumentoFijo = plataforma.name.aumentoFijo || 0;
+			const aumentoPorcentaje = plataforma.name.aumentoPorcentual;
+
+            //const headerRow = document.getElementById(`header-row-${plataformaId}`);
+			const headerRow = document.getElementById(`header-row-${roomId}-${plataformaName}`);
+
+
+            // Generar las fechas desde 1 año antes hasta 2 años después
+            const startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+            const endDate = new Date(today.getFullYear() + 2, today.getMonth(), today.getDate());
+
+            let currentDate = startDate;
+
+            const costoBaseRow = document.getElementById(`costo-base-row-${roomId}-${plataformaName}`);
+            const precioBaseRow = document.getElementById(`precio-base-row-${roomId}-${plataformaName}`);
+            const costoBase2Row = document.getElementById(`costo-base2-row-${roomId}-${plataformaName}`);
+            const precioBase2nightsRow = document.getElementById(`precio-base2nights-row-${roomId}-${plataformaName}`);
+
+            const tbodyTable = document.getElementById(`tbody-${roomId}-${plataformaName}`);
+            const costoBaseEspecialRow = document.getElementById(`costobase-especialesrow-${roomId}-${plataformaName}`);
+            const precioBaseEspecialRow = document.getElementById(`preciobase-especialesrow-${roomId}-${plataformaName}`);
+            const costoBase2EspecialRow = document.getElementById(`costobase2-especialesrow-${roomId}-${plataformaName}`);
+            const precioBase2EspecialRow = document.getElementById(`preciobase2-especialesrow-${roomId}-${plataformaName}`);
+
+            const preciosPorHabitacion = preciosHabitaciones.filter(precio => precio.habitacionId === roomId);
+			console.log("Precios por habitacion: ", preciosPorHabitacion);
+            preciosPorHabitacion.forEach(precio => {
+                precio.fecha = convertirFechaMexicoCity(precio.fecha);
+            });
+
+            const preciosEspecialesPorHabitacion = preciosEspeciales.filter(precio => precio.habitacionId === roomId);
+			console.log("Precios especiales por habitacion: ", preciosEspecialesPorHabitacion);
+            preciosEspecialesPorHabitacion.map(precio => {
+                precio.fecha = convertirFechaMexicoCity(precio.fecha);
+            });
+
+            let preciosEspecialesPorPersonas = {};
+            if (preciosEspecialesPorHabitacion.length > 0) {
+                // Group by habitacionId first, then by noPersonas for each habitacion
+                preciosEspecialesPorPersonas = preciosEspecialesPorHabitacion.reduce((result, item) => {
+                    const { habitacionId, noPersonas } = item;
+
+                    // Initialize the room group if it doesn't exist
+                    if (!result[habitacionId]) {
+                        result[habitacionId] = {};
+                    }
+
+                    // Initialize the noPersonas group within the room if it doesn't exist
+                    if (!result[habitacionId][noPersonas]) {
+                        result[habitacionId][noPersonas] = [];
+                    }
+
+                    // Push the current item into the appropriate group
+                    result[habitacionId][noPersonas].push(item);
+
+                    return result;
+                }, {});
+
+                if (Object.keys(preciosEspecialesPorPersonas[roomId]).length > 0) {
+                    for (const key in preciosEspecialesPorPersonas[roomId]) {
+                        const rowTexto = document.createElement("tr");
+                        rowTexto.id = `row-especiales-${roomId}-${plataformaName}-${key}`;
+                        const textoTh = document.createElement('th');
+                        const textoPersonas = `Precios especiales para ${key} personas`;
+                        textoTh.classList.add("sticky-column");
+                        textoTh.textContent = textoPersonas;
+
+                        const rowCostoBase = document.createElement("tr");
+                        rowCostoBase.id = `costo-base-especialestd-${roomId}-${plataformaName}-${key}`;
+                        const tdCostoBase = document.createElement("td");
+                        tdCostoBase.textContent = "Precio Base";
+                        tdCostoBase.classList.add("sticky-column");
+                        rowCostoBase.appendChild(tdCostoBase);
+
+                        const rowPrecioBase = document.createElement("tr");
+                        const tdPrecioBase = document.createElement("td");
+                        tdPrecioBase.textContent = "Costo Base";
+                        tdPrecioBase.classList.add("sticky-column");
+                        rowPrecioBase.id = `precio-base-especialestd-${roomId}-${plataformaName}-${key}`;
+                        rowPrecioBase.appendChild(tdPrecioBase);
+
+                        const rowCostoBase2 = document.createElement("tr");
+                        const tdCostoBase2 = document.createElement("td");
+                        tdCostoBase2.textContent = "Costo Base 2 Noches";
+                        tdCostoBase2.classList.add("sticky-column");
+                        rowCostoBase2.id = `costo-base2-especialestd-${roomId}-${plataformaName}-${key}`;
+                        rowCostoBase2.appendChild(tdCostoBase2);
+
+                        const rowPrecioBase2 = document.createElement("tr");
+                        const tdPrecioBase2 = document.createElement("td");
+                        tdPrecioBase2.textContent = "Precio Base 2 Noches";
+                        tdPrecioBase2.classList.add("sticky-column");
+                        rowPrecioBase2.id = `precio-base2-especialestd-${roomId}-${plataformaName}-${key}`;
+                        rowPrecioBase2.appendChild(tdPrecioBase2);
+
+                        rowTexto.appendChild(textoTh);
+                        tbodyTable.appendChild(rowTexto);
+                        tbodyTable.appendChild(rowCostoBase);
+                        tbodyTable.appendChild(rowPrecioBase);
+                        tbodyTable.appendChild(rowCostoBase2);
+                        tbodyTable.appendChild(rowPrecioBase2);
+                    }
+                }
+            }
+
+            // Insertar las fechas y precios de la habitación seleccionada
+            while (currentDate <= endDate) {
+                const dayOfWeek = currentDate.getDay();
+                const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
+                // Crear un th para cada día
+                const th = document.createElement('th');
+                th.id = generateId(currentDate);
+                const options = { day: 'numeric', month: 'short', year: 'numeric' };
+                th.textContent = currentDate.toLocaleDateString('es-ES', options);
+
+                headerRow.appendChild(th);
+
+                // Crear celdas correspondientes para cada precio
+                const costoBaseTd = document.createElement('td');
+                const precioBaseTd = document.createElement('td');
+                const costoBase2Td = document.createElement('td');
+                const precioBase2nightsTd = document.createElement('td');
+
+                const currentDateMx = convertirFechaMexicoCity(currentDate);
+
+                if (isWeekend) {
+                    costoBaseTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+                    precioBaseTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+                    costoBase2Td.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+                    precioBase2nightsTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+                }
+
+                const precioEncontrado = preciosPorHabitacion.find(precio => precio.fecha === currentDateMx);
+                if (precioEncontrado) {
+                    costoBaseTd.textContent = aumentoFijo ? (precioEncontrado.costo_base + aumentoFijo).toFixed(2) : (precioEncontrado.costo_base * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    costoBaseRow.appendChild(costoBaseTd);
+
+                    precioBaseTd.textContent =  aumentoFijo ? (precioEncontrado.precio_modificado + aumentoFijo).toFixed(2) : (precioEncontrado.precio_modificado * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    precioBaseRow.appendChild(precioBaseTd);
+
+                    costoBase2Td.textContent = aumentoFijo ? (precioEncontrado.costo_base_2noches + aumentoFijo).toFixed(2) : (precioEncontrado.costo_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    costoBase2Row.appendChild(costoBase2Td);
+
+                    precioBase2nightsTd.textContent =  aumentoFijo ? (precioEncontrado.precio_base_2noches + aumentoFijo).toFixed(2) : (precioEncontrado.precio_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    precioBase2nightsRow.appendChild(precioBase2nightsTd);
+                } else {
+                    costoBaseTd.textContent = aumentoFijo ? (costoBase + aumentoFijo).toFixed(2) : (costoBase * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    costoBaseRow.appendChild(costoBaseTd);
+
+                    precioBaseTd.textContent =  aumentoFijo ? (precioBase + aumentoFijo).toFixed(2) : (precioBase * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    precioBaseRow.appendChild(precioBaseTd);
+
+                    costoBase2Td.textContent = aumentoFijo ? (costoBase2 + aumentoFijo).toFixed(2) : (costoBase2 * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    costoBase2Row.appendChild(costoBase2Td);
+
+                    precioBase2nightsTd.textContent =  aumentoFijo ? (precioBase2nights + aumentoFijo).toFixed(2) : (precioBase2nights * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    precioBase2nightsRow.appendChild(precioBase2nightsTd);
+                }
+
+                if (preciosEspecialesPorHabitacion.length > 0) {
+                    for (const personas in preciosEspecialesPorPersonas[roomId]) {
+                        const precioData = preciosEspecialesPorPersonas[roomId][personas];
+                        const rowCostoBase = document.getElementById(`costo-base-especialestd-${roomId}-${plataformaName}-${personas}`);
+                        const rowPrecioBase = document.getElementById(`precio-base-especialestd-${roomId}-${plataformaName}-${personas}`);
+                        const rowCostoBase2 = document.getElementById(`costo-base2-especialestd-${roomId}-${plataformaName}-${personas}`);
+                        const rowPrecioBase2 = document.getElementById(`precio-base2-especialestd-${roomId}-${plataformaName}-${personas}`);
+
+                        const costoBaseEspecialTd = document.createElement("td");
+                        const precioBaseEspecialTd = document.createElement("td");
+                        const costoBase2EspecialTd = document.createElement("td");
+                        const precioBase2EspecialTd = document.createElement("td");
+
+                        if (isWeekend) {
+                            costoBaseEspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+                            precioBaseEspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+                            costoBase2EspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+                            precioBase2EspecialTd.style.backgroundColor = "rgba(240, 240, 240, 0.1)";
+                        }
+
+                        const precioEspecialPorPersonaEncontrado = precioData.find(precio => precio.fecha === currentDateMx);
+                        if (precioEspecialPorPersonaEncontrado) {
+                            // Dates match, use special prices
+                            costoBaseEspecialTd.textContent = aumentoFijo ? (precioEspecialPorPersonaEncontrado.costo_base + aumentoFijo).toFixed(2) : (precioEspecialPorPersonaEncontrado.costo_base * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                            precioBaseEspecialTd.textContent =  aumentoFijo ? (precioEspecialPorPersonaEncontrado.precio_modificado + aumentoFijo).toFixed(2) : (precioEspecialPorPersonaEncontrado.precio_modificado * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                            costoBase2EspecialTd.textContent = aumentoFijo ? (precioEspecialPorPersonaEncontrado.costo_base_2noches + aumentoFijo).toFixed(2) : (precioEspecialPorPersonaEncontrado.costo_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                            precioBase2EspecialTd.textContent =  aumentoFijo ? (precioEspecialPorPersonaEncontrado.precio_base_2noches + aumentoFijo).toFixed(2) : (precioEspecialPorPersonaEncontrado.precio_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                        } else {
+                            // Use default or found prices if they don't match
+                            if (precioEncontrado) {
+                                costoBaseEspecialTd.textContent = aumentoFijo ? (precioEncontrado.costo_base + aumentoFijo).toFixed(2) : (precioEncontrado.costo_base * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                precioBaseEspecialTd.textContent = aumentoFijo ? (precioEncontrado.precio_modificado + aumentoFijo).toFixed(2) : (precioEncontrado.precio_modificado * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                costoBase2EspecialTd.textContent = aumentoFijo ? (precioEncontrado.costo_base_2noches + aumentoFijo).toFixed(2) : (precioEncontrado.costo_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                precioBase2EspecialTd.textContent = aumentoFijo ? (precioEncontrado.precio_base_2noches + aumentoFijo).toFixed(2) : (precioEncontrado.precio_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                            } else {
+                                // Default prices for non-special dates
+                                costoBaseEspecialTd.textContent = aumentoFijo ? (costoBase + aumentoFijo).toFixed(2) : (costoBase * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                precioBaseEspecialTd.textContent =  aumentoFijo ? (precioBase + aumentoFijo).toFixed(2) : (precioBase * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                costoBase2EspecialTd.textContent =  aumentoFijo ? (costoBase2 + aumentoFijo).toFixed(2) : (costoBase2 * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                                precioBase2EspecialTd.textContent = aumentoFijo ? (precioBase2nights + aumentoFijo).toFixed(2) : (precioBase2nights * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                            }
+                        }
+                        // Append the cells to the respective rows
+                        rowCostoBase.appendChild(costoBaseEspecialTd);
+                        rowPrecioBase.appendChild(precioBaseEspecialTd);
+                        rowCostoBase2.appendChild(costoBase2EspecialTd);
+                        rowPrecioBase2.appendChild(precioBase2EspecialTd);
+                    }
+                }
+
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+        });
+
+    } catch (error) {
+        Swal.fire({
+            title: 'Error',
+            text: error.message,
+            icon: 'error',
+            confirmButtonText: 'Aceptar'
+        });
+        console.error('Error al cargar los precios de la habitación:', error);
+        return;
+    }
+}
+
+	function generateId(date) {
+		return `date-${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+	}
+
+
+	function convertirFechaMexicoCity(fechaISO) {
+		const fecha = new Date(fechaISO);
+		const opciones = {
+			timeZone: 'America/Mexico_City',
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+		};
+
+		const formatter = new Intl.DateTimeFormat('es-MX', opciones);
+		return formatter.format(fecha);
+	}
+</script>
