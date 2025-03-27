@@ -116,14 +116,15 @@ document.addEventListener('DOMContentLoaded', async function () {
             const total = info.event.extendedProps.total
             const totalMsg = total === undefined ? '<div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"> \n </div>' : `<div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"><b>Total: $ ${total}</b></div>`
 
-            if (clientPayments === 0) {
+            if (clientPayments === 0) { // 0% DEL TOTAL
                 colorRectanguloTop = 'bg-danger'
-            } else if (clientPayments >= (info.event.extendedProps.total / 2) && clientPayments < info.event.extendedProps.total) {
-                colorRectanguloTop = 'bg-warning'
-            } else if (clientPayments >= info.event.extendedProps.total) {
-                colorRectanguloTop = 'bg-success'
-            } else {
+                        //3200     > 1 = SI    3200 < 3117 = NO
+            } else if (clientPayments >= 1 && clientPayments < total / 2) { // 1-49% DEL TOTAL
                 colorRectanguloTop = 'background-orange'
+            } else if (clientPayments >= (total / 2) && clientPayments < total) { // 50-99% DEL TOTAL
+                colorRectanguloTop = 'bg-warning'
+            } else if (clientPayments >= total) { // 100% DEL TOTAL
+                colorRectanguloTop = 'bg-success'
             }
 
             if (madeCheckIn) {
