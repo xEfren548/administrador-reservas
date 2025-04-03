@@ -925,6 +925,16 @@ async function createOwnerReservation(req, res, next) {
         const investorId = req.session.id
         const mInvestorId = new mongoose.Types.ObjectId(investorId);
 
+        const arrivalDateObj = new Date(arrivalDate);
+        const departureDateObj = new Date(departureDate);
+
+        // Set specific times
+        arrivalDateObj.setUTCHours(17, 30, 0, 0); // 17:30:00 UTC
+        departureDateObj.setUTCHours(14, 30, 0, 0); // 14:30:00 UTC
+
+        const arrivalDateISO = arrivalDateObj.toISOString();
+        const departureDateISO = departureDateObj.toISOString();
+
         const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName });
 
         // const chalets = await Habitacion.findOne();
@@ -951,6 +961,23 @@ async function createOwnerReservation(req, res, next) {
                     throw new Error('Ya tienes una reserva activa.')
                 }
             }
+
+            const mongooseChaletId = new mongoose.Types.ObjectId(chalet._id);
+            const overlappingReservation = await Documento.findOne({
+                resourceId: mongooseChaletId,
+                status: { $nin: ["cancelled", "no-show", "playground"] },
+                $and: [
+                    { arrivalDate: { $lt: departureDateISO } }, // Start date overlaps or is before the departure date
+                    { departureDate: { $gt: arrivalDateISO } }, // End date overlaps or is after the arrival date
+                ],
+            });
+
+            if (overlappingReservation) {
+                return res.status(400).send({
+                    message: `La habitación ya está reservada entre ${overlappingReservation.arrivalDate.toISOString()} y ${overlappingReservation.departureDate.toISOString()}.`,
+                });
+            }
+    
 
             // Verificar la regla de al menos 9 días entre reservas
             const nuevaLlegada = new Date(arrivalDate);
