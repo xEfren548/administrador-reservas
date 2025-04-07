@@ -1051,7 +1051,8 @@ async function vistaParaReporte(req, res, next) {
             return res.status(404).send('No documents found');
         }
 
-        const reservas = reservasExistentes.filter(reserva => reserva.status !== 'cancelled');
+        // const reservas = reservasExistentes.filter(reserva => reserva.status !== 'cancelled');
+        const reservas = reservasExistentes;
 
         const habitaciones = habitacionesExistentes;
 

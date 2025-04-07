@@ -66,6 +66,7 @@
                 <thead class="table-light">
                     <tr>
                         <th scope="col">ID</th>
+                        <th scope="col">Estatus</th>
                         <th scope="col">Creación de reserva</th>
                         <th scope="col">Agente que reserva</th>
                         <th scope="col">Cabaña</th>
@@ -95,6 +96,18 @@
                     {{#each reservas}}
                     <tr>
                         <td>{{this._id}}</td>
+                        <td>{{#if (eq this.status "active")}}
+                            <span class="badge bg-success p-2 fs-6" >Activo</span>
+                            {{else if (eq this.status "cancelled")}}
+                            <span class="badge bg-danger p-2 fs-6" >Cancelado</span>
+                            {{else if (eq this.status "reserva de dueño")}}
+                            <span class="badge bg-info p-2 fs-6" >Reserva de dueño</span>
+                            {{else if (eq this.status "playground")}}
+                            <span class="badge bg-warning p-2 fs-6" >Playground</span>
+                            {{else}}
+                            <span class="badge bg-warning p-2 fs-6" >Pendiente</span>
+                            {{/if}}
+                        </td>
                         <td>{{this.reservationDate}}</td>
                         <td>{{this.agenteReserva}}</td>
                         <td>{{this.nombreHabitacion}}</td>
@@ -122,7 +135,7 @@
                     {{/each}}
                     {{else}}
                     <tr>
-                        <td colspan="13">No se encontraron reservas</td>
+                        <td colspan="14">No se encontraron reservas</td>
                     </tr>
 
                     {{/if}}
@@ -131,6 +144,7 @@
                     <tr>
                         <td colspan="10"><b>Total</b></td>
                         <td id="totalMonto"></td>
+                        <td></td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -286,7 +300,7 @@
                     //var total = api.column(10, { search: 'applied' }).data().reduce(function (a, b) {
                         //return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
                     //}, 0);
-                    var total2 = api.column(18, { search: 'applied' }).data().reduce(function (a, b) {
+                    var total2 = api.column(19, { search: 'applied' }).data().reduce(function (a, b) {
                             // Verificar que `b` sea un número válido antes de sumar
                             var valor = parseFloat(b.replace(/[^\d.-]/g, ''));
                             return a + (isNaN(valor) ? 0 : valor); // Sumar solo si el valor es numérico
