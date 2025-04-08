@@ -29,17 +29,11 @@
         </div>
         
         <div class="col-12 col-md-12 col-lg-6 col-xl-6 mb-3" style="width: 800px; height: 400px;">
-            <canvas id="user-comparison-chart" class="utCharts"></canvas>
-        </div>
-    </div>
-
-    <div class="row mb-5">
-        <div class="col-12" style="width: 800px; height: 400px;">
             <canvas id="room-comparison-chart" class="utCharts"></canvas>
         </div>
     </div>
 
-    <div class="col-12">
+
 
         <h1 class="mt-3">Utilidades Globales</h1>
         <div class="row mb-3">
@@ -607,11 +601,7 @@
 
 
     let monthlyComparisonChart;
-    let userComparisonChart;
-
-    document.addEventListener("DOMContentLoaded", function() {
-
-    });
+    let roomComparisonChart;
 
     function initComparisonCharts() {
         // Initialize the monthly comparison chart
@@ -676,11 +666,9 @@
                 }
             });
         }
-        
-        // Initialize the user comparison chart
-        const userComparisonCtx = document.getElementById('user-comparison-chart')?.getContext('2d');
-        if (userComparisonCtx) {
-            userComparisonChart = new Chart(userComparisonCtx, {
+        const roomComparisonCtx = document.getElementById('room-comparison-chart')?.getContext('2d');
+        if (roomComparisonCtx) {
+            roomComparisonChart = new Chart(roomComparisonCtx, {
                 type: 'bar',
                 data: {
                     labels: [],
@@ -708,13 +696,20 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: 'Comparativa por Usuario',
+                            text: 'Comparativa por Habitación',
                             color: '#f8f9fa'
                         },
                         legend: {
                             display: true,
                             labels: {
                                 color: '#f8f9fa'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return `${tooltipItem.dataset.label}: $${tooltipItem.raw.toFixed(2)}`;
+                                }
                             }
                         }
                     },
@@ -725,7 +720,10 @@
                                 color: 'rgba(255, 255, 255, 0.1)'
                             },
                             ticks: {
-                                color: '#f8f9fa'
+                                color: '#f8f9fa',
+                                callback: function(value) {
+                                    return '$' + value.toFixed(0);
+                                }
                             }
                         },
                         y: {
@@ -846,7 +844,7 @@
         updateMonthlyComparisonChart(currentData, comparisonData);
         
         // Update user comparison chart
-        updateUserComparisonChart(currentData, comparisonData);
+        updateRoomComparisonChart(currentData, comparisonData);
     }
 
     function updateMonthlyComparisonChart(currentData, comparisonData) {
@@ -890,64 +888,78 @@
         }
     }
 
-    function updateUserComparisonChart(currentData, comparisonData) {
-        // Group data by user for current period
-        const currentUserData = {};
+    function updateRoomComparisonChart(currentData, comparisonData) {
+        // Group data by room for current period
+        const currentRoomData = {};
         currentData.forEach(row => {
-            const usuario = row[9];
+            const habitacion = row[0]; // Assuming room/habitacion is in column 0
+            
+            // Skip N/A rooms if needed
+            if (habitacion === "N/A") return;
+            
             const monto = parseFloat(row[4].replace(/[^\d.-]/g, ''));
             
-            if (!currentUserData[usuario]) {
-                currentUserData[usuario] = 0;
+            if (!currentRoomData[habitacion]) {
+                currentRoomData[habitacion] = 0;
             }
-            currentUserData[usuario] += monto;
+            currentRoomData[habitacion] += monto;
         });
         
-        // Group data by user for comparison period
-        const comparisonUserData = {};
+        // Group data by room for comparison period
+        const comparisonRoomData = {};
         comparisonData.forEach(row => {
-            const usuario = row[9];
+            const habitacion = row[0];
+            
+            // Skip N/A rooms if needed
+            if (habitacion === "N/A") return;
+            
             const monto = parseFloat(row[4].replace(/[^\d.-]/g, ''));
             
-            if (!comparisonUserData[usuario]) {
-                comparisonUserData[usuario] = 0;
+            if (!comparisonRoomData[habitacion]) {
+                comparisonRoomData[habitacion] = 0;
             }
-            comparisonUserData[usuario] += monto;
+            comparisonRoomData[habitacion] += monto;
         });
         
-        // Get all unique users from both periods
-        const allUsers = new Set([
-            ...Object.keys(currentUserData),
-            ...Object.keys(comparisonUserData)
+        // Get all unique rooms from both periods
+        const allRooms = new Set([
+            ...Object.keys(currentRoomData),
+            ...Object.keys(comparisonRoomData)
         ]);
         
         // Convert to arrays for chart
-        const labels = Array.from(allUsers);
-        const currentValues = labels.map(user => currentUserData[user] || 0);
-        const comparisonValues = labels.map(user => comparisonUserData[user] || 0);
+        const labels = Array.from(allRooms);
+        const currentValues = labels.map(room => currentRoomData[room] || 0);
+        const comparisonValues = labels.map(room => comparisonRoomData[room] || 0);
+        
+        // Create combined data for sorting
+        const combinedData = labels.map((room, index) => ({
+            room,
+            current: currentValues[index],
+            comparison: comparisonValues[index],
+            total: currentValues[index] + comparisonValues[index]
+        }));
         
         // Sort by current period values (descending)
-        const sortedIndices = currentValues
-            .map((value, index) => ({ value, index }))
-            .sort((a, b) => b.value - a.value)
-            .map(item => item.index);
+        combinedData.sort((a, b) => b.current - a.current);
         
-        const sortedLabels = sortedIndices.map(index => labels[index]);
-        const sortedCurrentValues = sortedIndices.map(index => currentValues[index]);
-        const sortedComparisonValues = sortedIndices.map(index => comparisonValues[index]);
+        // Extract sorted arrays
+        const sortedLabels = combinedData.map(item => item.room);
+        const sortedCurrentValues = combinedData.map(item => item.current);
+        const sortedComparisonValues = combinedData.map(item => item.comparison);
         
         // Update the chart
-        if (userComparisonChart) {
-            userComparisonChart.data.labels = sortedLabels;
-            userComparisonChart.data.datasets[0].data = sortedCurrentValues;
-            userComparisonChart.data.datasets[1].data = sortedComparisonValues;
+        if (roomComparisonChart) {
+            roomComparisonChart.data.labels = sortedLabels;
+            roomComparisonChart.data.datasets[0].data = sortedCurrentValues;
+            roomComparisonChart.data.datasets[1].data = sortedComparisonValues;
             
             // Set title with date ranges
             const currentDateRange = getDateRangeText('current');
             const compDateRange = getDateRangeText('comparison');
-            userComparisonChart.options.plugins.title.text = `Comparativa por Usuario (${currentDateRange} vs ${compDateRange})`;
+            roomComparisonChart.options.plugins.title.text = `Comparativa por Habitación (${currentDateRange} vs ${compDateRange})`;
             
-            userComparisonChart.update();
+            roomComparisonChart.update();
         }
     }
 
@@ -961,12 +973,12 @@
         }
         
         // Reset user comparison chart
-        if (userComparisonChart) {
-            userComparisonChart.data.labels = [];
-            userComparisonChart.data.datasets[0].data = [];
-            userComparisonChart.data.datasets[1].data = [];
-            userComparisonChart.options.plugins.title.text = 'Comparativa por Usuario';
-            userComparisonChart.update();
+        if (roomComparisonChart) {
+            roomComparisonChart.data.labels = [];
+            roomComparisonChart.data.datasets[0].data = [];
+            roomComparisonChart.data.datasets[1].data = [];
+            roomComparisonChart.options.plugins.title.text = 'Comparativa por Habitación';
+            roomComparisonChart.update();
         }
     }
 
@@ -995,86 +1007,5 @@
         }
     }
 
-    // Add a room comparison chart (similar approach as user comparison)
-    function addRoomComparisonChart() {
-        // Create new canvas for room comparison
-        const container = document.createElement('div');
-        container.className = 'row mb-5';
-        container.innerHTML = `
-            <div class="col-12" style="width: 800px; height: 400px;">
-                <canvas id="room-comparison-chart" class="utCharts"></canvas>
-            </div>
-        `;
-        
-        // Find location to insert the new chart
-        const lastChartRow = document.querySelector('.row.mb-5:last-child');
-        if (lastChartRow && lastChartRow.parentNode) {
-            lastChartRow.parentNode.insertBefore(container, lastChartRow.nextSibling);
-        }
-        
-        // Initialize room comparison chart
-        const roomComparisonCtx = document.getElementById('room-comparison-chart').getContext('2d');
-        roomComparisonChart = new Chart(roomComparisonCtx, {
-            type: 'bar',
-            data: {
-                labels: [],
-                datasets: [
-                    {
-                        label: 'Período actual',
-                        data: [],
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Período comparativo',
-                        data: [],
-                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    }
-                ]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Comparativa por Habitación',
-                        color: '#f8f9fa'
-                    },
-                    legend: {
-                        display: true,
-                        labels: {
-                            color: '#f8f9fa'
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#f8f9fa'
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#f8f9fa'
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Add function to update room comparison chart with the others
-        // This can be called within updateComparisonCharts()
-    }
+    
 </script>
