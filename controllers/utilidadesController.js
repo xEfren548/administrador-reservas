@@ -900,62 +900,6 @@ async function mostrarUtilidadesGlobales(req, res, next) {
             }
         }
 
-
-
-
-        // let userMontos = {}; // Object to store total monto for each user
-        // let utilidadMontos = {}; // Object to store total monto for each user
-
-        // if (Object.keys(utilidades).length > 0) {
-        //     utilidadesPorReserva = utilidades.filter(utilidad => utilidad.concepto.includes("Utilidad"))
-
-        //     for (let utilidad of utilidades) {
-        //         let idUser = utilidad.idUsuario;
-        //         let user = await usersController.obtenerUsuarioPorIdMongo(idUser)
-        //         if (user) {
-        //             utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`
-        //             utilidad.fecha = moment.utc(utilidad.fecha).format('DD/MM/YYYY');
-        //             const utilidadFecha = moment.utc(utilidad.fecha, 'DD/MM/YYYY');
-
-        //             if (utilidadFecha.month() === currentMonth && utilidadFecha.year() === currentYear) {
-        //                 // Asignar nombre del usuario y formatear fecha
-        //                 utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`;
-        //                 utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
-
-        //                 // Sum the monto for each user
-        //                 if (!userMontos[idUser]) {
-        //                     userMontos[idUser] = { monto: 0, nombreUsuario: utilidad.nombreUsuario };
-        //                 }
-        //                 userMontos[idUser].monto += utilidad.monto;
-
-
-        //             }
-        //             if (utilidad.idReserva) {
-        //                 const reserva = reservasMap.find(reservation => reservation.id.toString() === utilidad.idReserva.toString())
-        //                 if (reserva) {
-        //                     const idHabitacion = reserva.resourceId;
-        //                     const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
-        //                     utilidad.nombreHabitacion = matchId.name;
-        //                 } else {
-        //                     utilidad.nombreHabitacion = 'N/A';
-        //                 }
-
-        //             } else {
-        //                 utilidad.nombreHabitacion = "N/A";
-        //             }
-
-
-
-        //         }
-
-        //     }
-
-        //     utilidadesPorMes.forEach((total, index) => {
-        //         const monthName = moment().month(index).format('MMMM');
-        //     });
-        // }
-
-
         if (Object.keys(utilidades).length > 0) {
             utilidadesPorReserva = utilidades.filter(utilidad => utilidad.concepto.includes("Utilidad"))
             utilidadesPorMes.forEach((total, index) => {
@@ -983,10 +927,6 @@ async function mostrarUtilidadesGlobales(req, res, next) {
                     utilidadMontos[utilidad.nombreHabitacion].monto += utilidad.monto;
 
                 }
-
-
-
-
             }
 
             const monthIndex = utilidadFecha.month(); // Obtiene el índice del mes (0-11)
