@@ -22,7 +22,22 @@
         </div>
     </div>
 
+    <h1 class="mt-5">Comparativas</h1>
+    <div class="row mb-5">
+        <div class="col-12 col-md-12 col-lg-6 col-xl-6 mb-3" style="width: 800px; height: 400px;">
+            <canvas id="monthly-comparison-chart" class="utCharts"></canvas>
+        </div>
+        
+        <div class="col-12 col-md-12 col-lg-6 col-xl-6 mb-3" style="width: 800px; height: 400px;">
+            <canvas id="user-comparison-chart" class="utCharts"></canvas>
+        </div>
+    </div>
 
+    <div class="row mb-5">
+        <div class="col-12" style="width: 800px; height: 400px;">
+            <canvas id="room-comparison-chart" class="utCharts"></canvas>
+        </div>
+    </div>
 
     <div class="col-12">
 
@@ -274,6 +289,12 @@
                 dataTable.draw();
             });
         }
+
+        // Initialize the comparison charts
+        initComparisonCharts();
+        
+        // Add comparison date controls to the page
+        addComparisonControls();
 
     });
 
@@ -585,5 +606,475 @@
     }
 
 
+    let monthlyComparisonChart;
+    let userComparisonChart;
 
+    document.addEventListener("DOMContentLoaded", function() {
+
+    });
+
+    function initComparisonCharts() {
+        // Initialize the monthly comparison chart
+        const monthlyComparisonCtx = document.getElementById('monthly-comparison-chart')?.getContext('2d');
+        if (monthlyComparisonCtx) {
+            monthlyComparisonChart = new Chart(monthlyComparisonCtx, {
+                type: 'bar',
+                data: {
+                    labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+                    datasets: [
+                        {
+                            label: 'Período actual',
+                            data: Array(12).fill(0),
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Período comparativo',
+                            data: Array(12).fill(0),
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Comparativa Mensual',
+                            color: '#f8f9fa'
+                        },
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#f8f9fa'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f8f9fa'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f8f9fa'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize the user comparison chart
+        const userComparisonCtx = document.getElementById('user-comparison-chart')?.getContext('2d');
+        if (userComparisonCtx) {
+            userComparisonChart = new Chart(userComparisonCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Período actual',
+                            data: [],
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Período comparativo',
+                            data: [],
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Comparativa por Usuario',
+                            color: '#f8f9fa'
+                        },
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#f8f9fa'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f8f9fa'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f8f9fa'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function addComparisonControls() {
+        // Create controls for comparison date range
+        const controlsContainer = document.createElement('div');
+        controlsContainer.className = 'comparison-controls mb-4';
+        controlsContainer.innerHTML = `
+            <h4>Período de comparación</h4>
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <label for="compStartDate">Fecha inicial:</label>
+                    <input type="date" id="compStartDate" class="form-control">
+                </div>
+                <div class="me-3">
+                    <label for="compEndDate">Fecha final:</label>
+                    <input type="date" id="compEndDate" class="form-control">
+                </div>
+                <div class="mt-4">
+                    <button id="applyComparison" class="btn btn-primary">Aplicar</button>
+                    <button id="clearComparison" class="btn btn-secondary ms-2">Limpiar</button>
+                </div>
+            </div>
+        `;
+        
+        // Insert controls before the comparison charts
+        const firstChartContainer = document.getElementById('monthly-comparison-chart')?.closest('.row');
+        if (firstChartContainer && firstChartContainer.parentNode) {
+            firstChartContainer.parentNode.insertBefore(controlsContainer, firstChartContainer);
+        }
+        
+        // Add event listeners
+        document.getElementById('applyComparison')?.addEventListener('click', function() {
+            loadComparisonData();
+        });
+        
+        document.getElementById('clearComparison')?.addEventListener('click', function() {
+            document.getElementById('compStartDate').value = '';
+            document.getElementById('compEndDate').value = '';
+            resetComparisonCharts();
+        });
+    }
+
+    function loadComparisonData() {
+        const compStartDate = document.getElementById('compStartDate').value;
+        const compEndDate = document.getElementById('compEndDate').value;
+        
+        if (!compStartDate || !compEndDate) {
+            alert('Por favor seleccione fechas de inicio y fin para la comparación');
+            return;
+        }
+        
+        // Get the DataTable API instance
+        const table = document.getElementById("tablaUtilidades");
+        if (!table) return;
+        
+        const dataTable = new DataTable.Api(table);
+        
+        // Store current filter dates
+        const currentStartDate = document.getElementById('startDate').value;
+        const currentEndDate = document.getElementById('endDate').value;
+        
+        // Get data for current period
+        const currentPeriodData = getFilteredData(dataTable, currentStartDate, currentEndDate);
+        
+        // Apply comparison dates temporarily
+        document.getElementById('startDate').value = compStartDate;
+        document.getElementById('endDate').value = compEndDate;
+        
+        // Trigger filtering without redrawing visible table
+        const comparisonPeriodData = getFilteredData(dataTable, compStartDate, compEndDate);
+        
+        // Restore original filter dates
+        document.getElementById('startDate').value = currentStartDate;
+        document.getElementById('endDate').value = currentEndDate;
+        dataTable.draw();
+        
+        // Update comparison charts
+        updateComparisonCharts(currentPeriodData, comparisonPeriodData);
+    }
+
+    function getFilteredData(dataTable, startDate, endDate) {
+        const rows = dataTable.rows().data();
+        const filteredData = [];
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const rowDate = moment(row[6], "DD/MM/YYYY").startOf('day');
+            const minDate = startDate ? moment(startDate, "YYYY-MM-DD").startOf('day') : null;
+            const maxDate = endDate ? moment(endDate, "YYYY-MM-DD").endOf('day') : null;
+            
+            if ((!minDate && !maxDate) ||
+                (!minDate && rowDate <= maxDate) ||
+                (minDate <= rowDate && !maxDate) ||
+                (minDate <= rowDate && rowDate <= maxDate)) {
+                filteredData.push(row);
+            }
+        }
+        
+        return filteredData;
+    }
+
+    function updateComparisonCharts(currentData, comparisonData) {
+        // Update monthly comparison chart
+        updateMonthlyComparisonChart(currentData, comparisonData);
+        
+        // Update user comparison chart
+        updateUserComparisonChart(currentData, comparisonData);
+    }
+
+    function updateMonthlyComparisonChart(currentData, comparisonData) {
+        // Initialize arrays for 12 months
+        const currentMonthlyData = Array(12).fill(0);
+        const comparisonMonthlyData = Array(12).fill(0);
+        
+        // Process current period data
+        currentData.forEach(row => {
+            const date = moment(row[6], "DD/MM/YYYY");
+            const monthIndex = date.month();
+            const amount = parseFloat(row[4].replace(/[^\d.-]/g, ''));
+            
+            if (!isNaN(monthIndex) && !isNaN(amount)) {
+                currentMonthlyData[monthIndex] += amount;
+            }
+        });
+        
+        // Process comparison period data
+        comparisonData.forEach(row => {
+            const date = moment(row[6], "DD/MM/YYYY");
+            const monthIndex = date.month();
+            const amount = parseFloat(row[4].replace(/[^\d.-]/g, ''));
+            
+            if (!isNaN(monthIndex) && !isNaN(amount)) {
+                comparisonMonthlyData[monthIndex] += amount;
+            }
+        });
+        
+        // Update the chart
+        if (monthlyComparisonChart) {
+            monthlyComparisonChart.data.datasets[0].data = currentMonthlyData;
+            monthlyComparisonChart.data.datasets[1].data = comparisonMonthlyData;
+            
+            // Set title with date ranges
+            const currentDateRange = getDateRangeText('current');
+            const compDateRange = getDateRangeText('comparison');
+            monthlyComparisonChart.options.plugins.title.text = `Comparativa Mensual (${currentDateRange} vs ${compDateRange})`;
+            
+            monthlyComparisonChart.update();
+        }
+    }
+
+    function updateUserComparisonChart(currentData, comparisonData) {
+        // Group data by user for current period
+        const currentUserData = {};
+        currentData.forEach(row => {
+            const usuario = row[9];
+            const monto = parseFloat(row[4].replace(/[^\d.-]/g, ''));
+            
+            if (!currentUserData[usuario]) {
+                currentUserData[usuario] = 0;
+            }
+            currentUserData[usuario] += monto;
+        });
+        
+        // Group data by user for comparison period
+        const comparisonUserData = {};
+        comparisonData.forEach(row => {
+            const usuario = row[9];
+            const monto = parseFloat(row[4].replace(/[^\d.-]/g, ''));
+            
+            if (!comparisonUserData[usuario]) {
+                comparisonUserData[usuario] = 0;
+            }
+            comparisonUserData[usuario] += monto;
+        });
+        
+        // Get all unique users from both periods
+        const allUsers = new Set([
+            ...Object.keys(currentUserData),
+            ...Object.keys(comparisonUserData)
+        ]);
+        
+        // Convert to arrays for chart
+        const labels = Array.from(allUsers);
+        const currentValues = labels.map(user => currentUserData[user] || 0);
+        const comparisonValues = labels.map(user => comparisonUserData[user] || 0);
+        
+        // Sort by current period values (descending)
+        const sortedIndices = currentValues
+            .map((value, index) => ({ value, index }))
+            .sort((a, b) => b.value - a.value)
+            .map(item => item.index);
+        
+        const sortedLabels = sortedIndices.map(index => labels[index]);
+        const sortedCurrentValues = sortedIndices.map(index => currentValues[index]);
+        const sortedComparisonValues = sortedIndices.map(index => comparisonValues[index]);
+        
+        // Update the chart
+        if (userComparisonChart) {
+            userComparisonChart.data.labels = sortedLabels;
+            userComparisonChart.data.datasets[0].data = sortedCurrentValues;
+            userComparisonChart.data.datasets[1].data = sortedComparisonValues;
+            
+            // Set title with date ranges
+            const currentDateRange = getDateRangeText('current');
+            const compDateRange = getDateRangeText('comparison');
+            userComparisonChart.options.plugins.title.text = `Comparativa por Usuario (${currentDateRange} vs ${compDateRange})`;
+            
+            userComparisonChart.update();
+        }
+    }
+
+    function resetComparisonCharts() {
+        // Reset monthly comparison chart
+        if (monthlyComparisonChart) {
+            monthlyComparisonChart.data.datasets[0].data = Array(12).fill(0);
+            monthlyComparisonChart.data.datasets[1].data = Array(12).fill(0);
+            monthlyComparisonChart.options.plugins.title.text = 'Comparativa Mensual';
+            monthlyComparisonChart.update();
+        }
+        
+        // Reset user comparison chart
+        if (userComparisonChart) {
+            userComparisonChart.data.labels = [];
+            userComparisonChart.data.datasets[0].data = [];
+            userComparisonChart.data.datasets[1].data = [];
+            userComparisonChart.options.plugins.title.text = 'Comparativa por Usuario';
+            userComparisonChart.update();
+        }
+    }
+
+    function getDateRangeText(type) {
+        let startElement, endElement;
+        
+        if (type === 'current') {
+            startElement = document.getElementById('startDate');
+            endElement = document.getElementById('endDate');
+        } else {
+            startElement = document.getElementById('compStartDate');
+            endElement = document.getElementById('compEndDate');
+        }
+        
+        const startDate = startElement.value;
+        const endDate = endElement.value;
+        
+        if (startDate && endDate) {
+            return `${moment(startDate).format('DD/MM/YY')} - ${moment(endDate).format('DD/MM/YY')}`;
+        } else if (startDate) {
+            return `Desde ${moment(startDate).format('DD/MM/YY')}`;
+        } else if (endDate) {
+            return `Hasta ${moment(endDate).format('DD/MM/YY')}`;
+        } else {
+            return 'Todo el período';
+        }
+    }
+
+    // Add a room comparison chart (similar approach as user comparison)
+    function addRoomComparisonChart() {
+        // Create new canvas for room comparison
+        const container = document.createElement('div');
+        container.className = 'row mb-5';
+        container.innerHTML = `
+            <div class="col-12" style="width: 800px; height: 400px;">
+                <canvas id="room-comparison-chart" class="utCharts"></canvas>
+            </div>
+        `;
+        
+        // Find location to insert the new chart
+        const lastChartRow = document.querySelector('.row.mb-5:last-child');
+        if (lastChartRow && lastChartRow.parentNode) {
+            lastChartRow.parentNode.insertBefore(container, lastChartRow.nextSibling);
+        }
+        
+        // Initialize room comparison chart
+        const roomComparisonCtx = document.getElementById('room-comparison-chart').getContext('2d');
+        roomComparisonChart = new Chart(roomComparisonCtx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Período actual',
+                        data: [],
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Período comparativo',
+                        data: [],
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Comparativa por Habitación',
+                        color: '#f8f9fa'
+                    },
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: '#f8f9fa'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#f8f9fa'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#f8f9fa'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Add function to update room comparison chart with the others
+        // This can be called within updateComparisonCharts()
+    }
 </script>
