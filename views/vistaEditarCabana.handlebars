@@ -1400,6 +1400,7 @@
                         .then(response => {
                             console.log(response);
                             if (!response.ok) {
+                                console.log(response);
                                 throw new Error('Error al editar atributos de la cabaña');
                             }
                             return response.json();
