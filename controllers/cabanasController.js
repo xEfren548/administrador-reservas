@@ -585,8 +585,12 @@ async function uploadChaletFiles(req, res, next) {
             await client.uploadFrom(localFilePath, remoteFileName);
             console.log(`Archivo '${remoteFileName}' subido con éxito`);
             //console.log(chalet.images)
-            chalet.images.push(remoteFileName);
-            await chalet.save();
+
+            await Habitacion.updateOne(
+                { "propertyDetails.name": req.session.chaletAdded || req.session.chaletUpdated },
+                { $push: { images: remoteFileName } }
+            );
+
 
             fs.unlink(localFilePath, (err) => {
                 if (err) {
