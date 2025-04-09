@@ -742,6 +742,128 @@
                 capacidad.textContent = `${habitacion.minPax}-${habitacion.maxPax} huéspedes`;
                 contenido.appendChild(capacidad);
 
+                if (habitacion.accomodationFeatures) {
+                    const featuresContainer = document.createElement("div");
+                    featuresContainer.classList.add("mt-3", "border-t", "border-gray-700", "pt-3");
+                    
+                    const featuresTitle = document.createElement("h4");
+                    featuresTitle.classList.add("text-white", "font-semibold", "mb-2");
+                    featuresTitle.textContent = "Características";
+                    featuresContainer.appendChild(featuresTitle);
+                    
+                    // Función para procesar cada categoría de características
+                    const processFeaturesCategory = (categoryData, categoryName) => {
+                        if (!categoryData || Object.keys(categoryData).length === 0) return null;
+                        
+                        const categoryContainer = document.createElement("div");
+                        categoryContainer.classList.add("mb-2");
+                        
+                        const categoryTitle = document.createElement("h5");
+                        categoryTitle.classList.add("text-gray-300", "text-sm", "font-medium");
+                        categoryTitle.textContent = categoryName;
+                        categoryContainer.appendChild(categoryTitle);
+                        
+                        const featuresList = document.createElement("div");
+                        featuresList.classList.add("grid", "grid-cols-2", "gap-1", "text-sm");
+                        
+                        Object.entries(categoryData).forEach(([feature, value]) => {
+                            if (typeof value === 'boolean') {
+                                const featureItem = document.createElement("div");
+                                featureItem.classList.add("flex", "items-center", "gap-1");
+                                
+                                const icon = document.createElement("span");
+                                icon.classList.add(value ? "text-green-500" : "text-red-500");
+                                icon.textContent = value ? "✓" : "✗";
+                                featureItem.appendChild(icon);
+                                
+                                const featureText = document.createElement("span");
+                                featureText.classList.add("text-gray-400");
+                                // Convertir camelCase a texto con espacios
+                                featureText.textContent = feature
+                                    .replace(/([A-Z])/g, ' $1')
+                                    .replace(/^./, str => str.toUpperCase());
+                                featureItem.appendChild(featureText);
+                                
+                                featuresList.appendChild(featureItem);
+                            } else if (typeof value === 'string' || typeof value === 'number') {
+                                const featureItem = document.createElement("div");
+                                featureItem.classList.add("col-span-2");
+                                
+                                const featureText = document.createElement("span");
+                                featureText.classList.add("text-gray-400");
+                                // Convertir camelCase a texto con espacios
+                                const featureName = feature
+                                    .replace(/([A-Z])/g, ' $1')
+                                    .replace(/^./, str => str.toUpperCase());
+                                featureText.textContent = `${featureName}: ${value}`;
+                                featureItem.appendChild(featureText);
+                                
+                                featuresList.appendChild(featureItem);
+                            }
+                        });
+                        
+                        categoryContainer.appendChild(featuresList);
+                        return categoryContainer;
+                    };
+                    
+                    // Procesar cada categoría de características
+                    const categories = {
+                        'Características generales': habitacion.accomodationFeatures?.generalFeatures,
+                        'Vistas': habitacion.accomodationFeatures?.views,
+                        'Actividades': habitacion.accomodationFeatures?.activities,
+                        'Estacionamiento': habitacion.accomodationFeatures?.parking,
+                        'Cocina': habitacion.accomodationFeatures?.kitchen,
+                        'Habitaciones': habitacion.accomodationFeatures?.restroomFeatures,
+                        'Deportes': habitacion.accomodationFeatures?.sport,
+                        'Sala': habitacion.accomodationFeatures?.livingRoom
+                    };
+                    
+                    // Botón para mostrar/ocultar características
+                    const toggleButton = document.createElement("button");
+                    toggleButton.classList.add(
+                        "w-full", 
+                        "bg-gray-700", 
+                        "text-white",
+                        "py-1", 
+                        "rounded",
+                        "mt-2",
+                        "mb-2",
+                        "flex",
+                        "items-center",
+                        "justify-center",
+                        "hover:bg-gray-600",
+                        "transition-colors"
+                    );
+                    toggleButton.textContent = "Ver características";
+                    toggleButton.innerHTML = `Ver características <span class="ml-1">▼</span>`;
+                    
+                    const featuresDetails = document.createElement("div");
+                    featuresDetails.classList.add("hidden");
+                    
+                    // Agregar categorías al contenedor de detalles
+                    Object.entries(categories).forEach(([categoryName, categoryData]) => {
+                        const categoryElement = processFeaturesCategory(categoryData, categoryName);
+                        if (categoryElement) {
+                            featuresDetails.appendChild(categoryElement);
+                        }
+                    });
+                    
+                    // Evento para mostrar/ocultar características
+                    toggleButton.addEventListener("click", () => {
+                        if (featuresDetails.classList.contains("hidden")) {
+                            featuresDetails.classList.remove("hidden");
+                            toggleButton.innerHTML = `Ocultar características <span class="ml-1">▲</span>`;
+                        } else {
+                            featuresDetails.classList.add("hidden");
+                            toggleButton.innerHTML = `Ver características <span class="ml-1">▼</span>`;
+                        }
+                    });
+                    
+                    featuresContainer.appendChild(toggleButton);
+                    featuresContainer.appendChild(featuresDetails);
+                    contenido.appendChild(featuresContainer);
+                }
+
                 // Botón de reservar
                 let botonReservar = document.createElement("button");
                 botonReservar.classList.add(
