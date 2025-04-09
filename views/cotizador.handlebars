@@ -648,23 +648,23 @@
                     console.log(images);
                     const carousel = document.createElement("div");
                     carousel.classList.add("carousel", "w-full", "h-48", "relative");
-                    
+
                     // Agregar todas las imágenes al carrusel
                     images.forEach((imgSrc, index) => {
                         const slide = document.createElement("div");
                         slide.classList.add("carousel-slide", "absolute", "w-full", "h-full");
                         slide.style.display = index === 0 ? "block" : "none";
-                        
+
                         const img = document.createElement("img");
                         img.src = `https://navarro.integradev.site/navarro/${imgSrc}`;
                         img.alt = `${habitacion.name} - Imagen ${index + 1}`;
                         img.classList.add("w-full", "h-48", "object-cover");
-                        
+
                         img.onerror = () => {
                             console.warn(`La imagen ${img.src} no se pudo cargar. Usando imagen de respaldo.`);
                             img.src = fallbackImage;
                         };
-                        
+
                         slide.appendChild(img);
                         carousel.appendChild(slide);
                     });
@@ -673,30 +673,30 @@
                     const prevBtn = document.createElement("button");
                     prevBtn.innerHTML = "&#10094;";
                     prevBtn.classList.add("carousel-btn", "prev", "absolute", "left-0", "top-1/2", "bg-black", "bg-opacity-50", "text-white", "p-2", "rounded");
-                    
+
                     const nextBtn = document.createElement("button");
                     nextBtn.innerHTML = "&#10095;";
                     nextBtn.classList.add("carousel-btn", "next", "absolute", "right-0", "top-1/2", "bg-black", "bg-opacity-50", "text-white", "p-2", "rounded");
-                    
+
                     carousel.appendChild(prevBtn);
                     carousel.appendChild(nextBtn);
-                    
+
                     // Agregar lógica para navegar por las imágenes
                     let currentIndex = 0;
                     const slides = carousel.querySelectorAll(".carousel-slide");
-                    
+
                     prevBtn.addEventListener("click", () => {
                         slides[currentIndex].style.display = "none";
                         currentIndex = (currentIndex - 1 + slides.length) % slides.length;
                         slides[currentIndex].style.display = "block";
                     });
-                    
+
                     nextBtn.addEventListener("click", () => {
                         slides[currentIndex].style.display = "none";
                         currentIndex = (currentIndex + 1) % slides.length;
                         slides[currentIndex].style.display = "block";
                     });
-                    
+
                     imageContainer.appendChild(carousel);
                 } else {
                     // Si solo hay una imagen, mostrarla directamente
@@ -704,12 +704,12 @@
                     img.src = `https://navarro.integradev.site/navarro/${images[0]}`;
                     img.alt = habitacion.name;
                     img.classList.add("w-full", "h-48", "object-cover");
-                    
+
                     img.onerror = () => {
                         console.warn(`La imagen ${img.src} no se pudo cargar. Usando imagen de respaldo.`);
                         img.src = fallbackImage;
                     };
-                    
+
                     imageContainer.appendChild(img);
                 }
 
@@ -730,52 +730,90 @@
                 nombre.textContent = habitacion.name;
                 contenido.appendChild(nombre);
 
+                // Descripción de la cabaña (nuevo)
+                if (habitacion.accomodationDescription) {
+                    const descripcion = document.createElement("p");
+                    descripcion.classList.add("text-gray-300", "mt-2", "text-sm");
+                    descripcion.textContent = habitacion.accomodationDescription;
+                    contenido.appendChild(descripcion);
+                }
+
                 // Precio por noche
                 const precio = document.createElement("p");
                 precio.classList.add("text-white-400", "mt-2", "font-semibold");
                 precio.textContent = `$${habitacion.totalPrice} por ${evento.nights} noche(s)`;
                 contenido.appendChild(precio);
 
+                // Iconos de características (nuevo)
+                const iconosContainer = document.createElement("div");
+                iconosContainer.classList.add("flex", "flex-wrap", "gap-3", "mt-3", "text-gray-300");
+
+                // Camas
+                const camasItem = document.createElement("div");
+                camasItem.classList.add("flex", "items-center", "gap-1");
+                camasItem.innerHTML = `<i class="fas fa-bed"></i> ${habitacion.nBeds || 0}`;
+                iconosContainer.appendChild(camasItem);
+
+                // Baños
+                const banosItem = document.createElement("div");
+                banosItem.classList.add("flex", "items-center", "gap-1");
+                banosItem.innerHTML = `<i class="fas fa-toilet"></i> ${habitacion.nRestrooms || 0}`;
+                iconosContainer.appendChild(banosItem);
+
+                // Ocupación mínima y máxima
+                const ocupacionItem = document.createElement("div");
+                ocupacionItem.classList.add("flex", "items-center", "gap-1");
+                ocupacionItem.innerHTML = `<i class="fas fa-users"></i> ${habitacion.minOccupancy || habitacion.minPax || 1}-${habitacion.maxOccupancy || habitacion.maxPax || 1} huéspedes`;
+                iconosContainer.appendChild(ocupacionItem);
+
+                contenido.appendChild(iconosContainer);
+
                 // Capacidad máxima
+                /** 
                 const capacidad = document.createElement("p");
                 capacidad.classList.add("text-gray-400");
                 capacidad.textContent = `${habitacion.minPax}-${habitacion.maxPax} huéspedes`;
                 contenido.appendChild(capacidad);
+                */
 
                 if (habitacion.accomodationFeatures) {
                     const featuresContainer = document.createElement("div");
                     featuresContainer.classList.add("mt-3", "border-t", "border-gray-700", "pt-3");
-                    
+
                     const featuresTitle = document.createElement("h4");
                     featuresTitle.classList.add("text-white", "font-semibold", "mb-2");
                     featuresTitle.textContent = "Características";
                     featuresContainer.appendChild(featuresTitle);
-                    
+
                     // Función para procesar cada categoría de características
                     const processFeaturesCategory = (categoryData, categoryName) => {
                         if (!categoryData || Object.keys(categoryData).length === 0) return null;
-                        
+
                         const categoryContainer = document.createElement("div");
                         categoryContainer.classList.add("mb-2");
-                        
+
                         const categoryTitle = document.createElement("h5");
                         categoryTitle.classList.add("text-gray-300", "text-sm", "font-medium");
                         categoryTitle.textContent = categoryName;
                         categoryContainer.appendChild(categoryTitle);
-                        
+
                         const featuresList = document.createElement("div");
                         featuresList.classList.add("grid", "grid-cols-2", "gap-1", "text-sm");
-                        
+
                         Object.entries(categoryData).forEach(([feature, value]) => {
+                            if (feature === 'id' || feature === '_id' || feature.startsWith('_') || feature === 'ID') {
+                                return;
+                            }
+
                             if (typeof value === 'boolean') {
                                 const featureItem = document.createElement("div");
                                 featureItem.classList.add("flex", "items-center", "gap-1");
-                                
+
                                 const icon = document.createElement("span");
                                 icon.classList.add(value ? "text-green-500" : "text-red-500");
                                 icon.textContent = value ? "✓" : "✗";
                                 featureItem.appendChild(icon);
-                                
+
                                 const featureText = document.createElement("span");
                                 featureText.classList.add("text-gray-400");
                                 // Convertir camelCase a texto con espacios
@@ -783,12 +821,12 @@
                                     .replace(/([A-Z])/g, ' $1')
                                     .replace(/^./, str => str.toUpperCase());
                                 featureItem.appendChild(featureText);
-                                
+
                                 featuresList.appendChild(featureItem);
                             } else if (typeof value === 'string' || typeof value === 'number') {
                                 const featureItem = document.createElement("div");
                                 featureItem.classList.add("col-span-2");
-                                
+
                                 const featureText = document.createElement("span");
                                 featureText.classList.add("text-gray-400");
                                 // Convertir camelCase a texto con espacios
@@ -797,15 +835,15 @@
                                     .replace(/^./, str => str.toUpperCase());
                                 featureText.textContent = `${featureName}: ${value}`;
                                 featureItem.appendChild(featureText);
-                                
+
                                 featuresList.appendChild(featureItem);
                             }
                         });
-                        
+
                         categoryContainer.appendChild(featuresList);
                         return categoryContainer;
                     };
-                    
+
                     // Procesar cada categoría de características
                     const categories = {
                         'Características generales': habitacion.accomodationFeatures?.generalFeatures,
@@ -817,14 +855,14 @@
                         'Deportes': habitacion.accomodationFeatures?.sport,
                         'Sala': habitacion.accomodationFeatures?.livingRoom
                     };
-                    
+
                     // Botón para mostrar/ocultar características
                     const toggleButton = document.createElement("button");
                     toggleButton.classList.add(
-                        "w-full", 
-                        "bg-gray-700", 
+                        "w-full",
+                        "bg-gray-700",
                         "text-white",
-                        "py-1", 
+                        "py-1",
                         "rounded",
                         "mt-2",
                         "mb-2",
@@ -836,32 +874,36 @@
                     );
                     toggleButton.textContent = "Ver características";
                     toggleButton.innerHTML = `Ver características <span class="ml-1">▼</span>`;
-                    
+
                     const featuresDetails = document.createElement("div");
                     featuresDetails.classList.add("hidden");
-                    
-                    // Agregar categorías al contenedor de detalles
+
+                    let hasVisibleCategories = false;
+
                     Object.entries(categories).forEach(([categoryName, categoryData]) => {
                         const categoryElement = processFeaturesCategory(categoryData, categoryName);
                         if (categoryElement) {
                             featuresDetails.appendChild(categoryElement);
+                            hasVisibleCategories = true;
                         }
                     });
-                    
-                    // Evento para mostrar/ocultar características
-                    toggleButton.addEventListener("click", () => {
-                        if (featuresDetails.classList.contains("hidden")) {
-                            featuresDetails.classList.remove("hidden");
-                            toggleButton.innerHTML = `Ocultar características <span class="ml-1">▲</span>`;
-                        } else {
-                            featuresDetails.classList.add("hidden");
-                            toggleButton.innerHTML = `Ver características <span class="ml-1">▼</span>`;
-                        }
-                    });
-                    
-                    featuresContainer.appendChild(toggleButton);
-                    featuresContainer.appendChild(featuresDetails);
-                    contenido.appendChild(featuresContainer);
+
+                    if (hasVisibleCategories) {
+                        // Evento para mostrar/ocultar características
+                        toggleButton.addEventListener("click", () => {
+                            if (featuresDetails.classList.contains("hidden")) {
+                                featuresDetails.classList.remove("hidden");
+                                toggleButton.innerHTML = `Ocultar características <span class="ml-1">▲</span>`;
+                            } else {
+                                featuresDetails.classList.add("hidden");
+                                toggleButton.innerHTML = `Ver características <span class="ml-1">▼</span>`;
+                            }
+                        });
+
+                        featuresContainer.appendChild(toggleButton);
+                        featuresContainer.appendChild(featuresDetails);
+                        contenido.appendChild(featuresContainer);
+                    }
                 }
 
                 // Botón de reservar
