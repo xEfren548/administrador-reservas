@@ -637,20 +637,88 @@
                 );
 
                 // Imagen de la habitación (puedes usar una imagen real si está disponible)
-                const imagen = document.createElement("img");
-                imagen.src = `https://navarro.integradev.site/navarro/${habitacion.image}`
-                console.log(imagen.src)
-                //imagen.src = "https://www.bosquestapalpa.com.mx/bosquestapalpa/contenido/8a62e2784_blog_.jpg";
-                imagen.alt = habitacion.name;
-                imagen.classList.add("w-full", "h-48", "object-cover");
+                const imageContainer = document.createElement("div");
+                imageContainer.classList.add("relative", "w-full", "image-slider");
 
+                const images = Array.isArray(habitacion.images) ? habitacion.images : [habitacion.images];
                 const fallbackImage = "https://www.bosquestapalpa.com.mx/bosquestapalpa/contenido/8a62e2784_blog_.jpg";
 
-                imagen.onerror = () => {
-                    console.warn(`La imagen ${imagen.src} no se pudo cargar. Usando imagen de respaldo.`);
-                    imagen.src = fallbackImage;
-                };
-                tarjeta.appendChild(imagen);
+
+                if (images.length > 1) {
+                    console.log(images);
+                    const carousel = document.createElement("div");
+                    carousel.classList.add("carousel", "w-full", "h-48", "relative");
+                    
+                    // Agregar todas las imágenes al carrusel
+                    images.forEach((imgSrc, index) => {
+                        const slide = document.createElement("div");
+                        slide.classList.add("carousel-slide", "absolute", "w-full", "h-full");
+                        slide.style.display = index === 0 ? "block" : "none";
+                        
+                        const img = document.createElement("img");
+                        img.src = `https://navarro.integradev.site/navarro/${imgSrc}`;
+                        img.alt = `${habitacion.name} - Imagen ${index + 1}`;
+                        img.classList.add("w-full", "h-48", "object-cover");
+                        
+                        img.onerror = () => {
+                            console.warn(`La imagen ${img.src} no se pudo cargar. Usando imagen de respaldo.`);
+                            img.src = fallbackImage;
+                        };
+                        
+                        slide.appendChild(img);
+                        carousel.appendChild(slide);
+                    });
+
+                    // Agregar botones de navegación
+                    const prevBtn = document.createElement("button");
+                    prevBtn.innerHTML = "&#10094;";
+                    prevBtn.classList.add("carousel-btn", "prev", "absolute", "left-0", "top-1/2", "bg-black", "bg-opacity-50", "text-white", "p-2", "rounded");
+                    
+                    const nextBtn = document.createElement("button");
+                    nextBtn.innerHTML = "&#10095;";
+                    nextBtn.classList.add("carousel-btn", "next", "absolute", "right-0", "top-1/2", "bg-black", "bg-opacity-50", "text-white", "p-2", "rounded");
+                    
+                    carousel.appendChild(prevBtn);
+                    carousel.appendChild(nextBtn);
+                    
+                    // Agregar lógica para navegar por las imágenes
+                    let currentIndex = 0;
+                    const slides = carousel.querySelectorAll(".carousel-slide");
+                    
+                    prevBtn.addEventListener("click", () => {
+                        slides[currentIndex].style.display = "none";
+                        currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+                        slides[currentIndex].style.display = "block";
+                    });
+                    
+                    nextBtn.addEventListener("click", () => {
+                        slides[currentIndex].style.display = "none";
+                        currentIndex = (currentIndex + 1) % slides.length;
+                        slides[currentIndex].style.display = "block";
+                    });
+                    
+                    imageContainer.appendChild(carousel);
+                } else {
+                    // Si solo hay una imagen, mostrarla directamente
+                    const img = document.createElement("img");
+                    img.src = `https://navarro.integradev.site/navarro/${images[0]}`;
+                    img.alt = habitacion.name;
+                    img.classList.add("w-full", "h-48", "object-cover");
+                    
+                    img.onerror = () => {
+                        console.warn(`La imagen ${img.src} no se pudo cargar. Usando imagen de respaldo.`);
+                        img.src = fallbackImage;
+                    };
+                    
+                    imageContainer.appendChild(img);
+                }
+
+                tarjeta.appendChild(imageContainer);
+
+                // Continúa con el resto del código para mostrar otros detalles de la habitación...
+
+                // Añadir la tarjeta al contenedor de resultados
+                contenedorResultados.appendChild(tarjeta);
 
                 // Contenido de la tarjeta
                 const contenido = document.createElement("div");
@@ -1202,5 +1270,27 @@
     function closeModal() {
         document.getElementById('clientEntryModal').classList.add('hidden');
     }
+
+    function addCarouselStyles() {
+        const style = document.createElement('style');
+        style.textContent = `
+            .image-slider {
+                position: relative;
+                height: 12rem;
+            }
+            .carousel-btn {
+                z-index: 10;
+                transform: translateY(-50%);
+                cursor: pointer;
+            }
+            .carousel-btn:hover {
+                background-color: rgba(0,0,0,0.7);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    document.addEventListener('DOMContentLoaded', addCarouselStyles);
+
 
 </script>

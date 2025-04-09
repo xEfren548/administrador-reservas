@@ -1892,7 +1892,7 @@ async function cotizadorChaletsyPrecios(req, res) {
             precioBase2noches: chalet.others.basePrice2nights,
             costoBase: chalet.others.baseCost,
             costoBase2noches: chalet.others.baseCost2nights,
-            image: chalet.images[0]
+            images: chalet.images
         }));
 
         const eventoParaReservar = {
