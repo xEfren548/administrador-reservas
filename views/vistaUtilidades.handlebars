@@ -12,6 +12,13 @@
 
     </div>
 
+    
+    <h1 class="mt-5">Comparativas</h1>
+    <div class="row mb-5">
+        <div class="col-12 col-md-12 col-lg-12 col-xl-12 mb-3" style="width: 800px; height: 400px;">
+            <canvas id="monthly-comparison-chart" class="utCharts"></canvas>
+        </div>
+    </div>
 
     <div class="col-12">
 
@@ -136,6 +143,7 @@
                         return a + parseFloat(b.replace(/[^\d.-]/g, '')); // Remove any currency symbols before parsing
                     }, 0);
                     document.getElementById('totalMonto').textContent = `$${total.toFixed(2)}`;
+                    updateChart(api);
                 }
             });
 
@@ -171,151 +179,373 @@
                 dataTable.draw();
             });
         }
+
+        initComparisonCharts();
+        addComparisonControls();
     });
 
-    function mostrarInfoServicio(serviceId) {
-        // Use serviceId to perform actions specific to the clicked service
-        console.log("Service ID:", serviceId);
-        const modificarStatusSelect = document.querySelector("#modificar-status");
-        const btnUpdateService = document.querySelector("#btnUpdateService");
-
-
-        btnUpdateService.addEventListener("click", function (e) {
-            e.preventDefault();
-            const status = modificarStatusSelect.value;
-            console.log("Status:", status);
-
-
-
-            try {
-                fetch(`/api/rackservicios/${serviceId}`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        status: status
-                    })
-                })
-
-                if (status == "0") {
-                    throw new Error("Selecciona un status para continuar.");
-                }
-
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Completado!',
-                    text: 'Estatus actualizado correctamente.',
-                    confirmButtonText: 'Aceptar'
-                }).then((result) => {
-                    // Verificar si el usuario hizo clic en el botón de confirmación
-                    if (result.isConfirmed) {
-                        // Actualizar la página
-                        location.reload();
-                    }
-                });
-            } catch (error) {
-                console.error(error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message,
-                    confirmButtonText: 'Aceptar'
-                });
-
-            }
-        });
-    }
 
 
     let utilidadesPorMes = {{json utilidadesPorMes}}
     console.log(utilidadesPorMes)
-    var lineChartData = {
-        labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-        datasets: [{
-            label: "Comisión del mes",
-            tension: 0.4,
-            borderWidth: 4,
-            pointRadius: 5,
-            pointBackgroundColor: "rgba(255, 99, 132, 0.8)",
-            pointBorderColor: "transparent",
-            borderColor: "rgba(255, 99, 132, 0.8)",
-            backgroundColor: "transparent",
-            fill: true,
-            data: utilidadesPorMes,
-            maxBarThickness: 6
-        }],
-    };
-
-    // Opciones para el gráfico de líneas
-    var lineChartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false,
-            }
+    chartInstance = new Chart(document.getElementById("chart-line").getContext("2d"), {
+        type: "line",
+        data: {
+            labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            datasets: [{
+                label: "Comisión del mes",
+                tension: 0.4,
+                borderWidth: 4,
+                pointRadius: 5,
+                pointBackgroundColor: "rgba(255, 99, 132, 0.8)",
+                pointBorderColor: "transparent",
+                borderColor: "rgba(255, 99, 132, 0.8)",
+                backgroundColor: "transparent",
+                fill: true,
+                data: Array(12).fill(0), // Initialize with zeros
+                maxBarThickness: 6
+            }],
         },
-        interaction: {
-            intersect: false,
-            mode: 'index',
-        },
-        scales: {
-            y: {
-                grid: {
-                    drawBorder: false,
-                    display: true,
-                    drawOnChartArea: true,
-                    drawTicks: false,
-                    borderDash: [5, 5],
-                    color: 'rgba(255, 99, 132, 0.2)'
-                },
-                ticks: {
-                    beginAtZero: true,
-                    padding: 10,
-                    font: {
-                        size: 14,
-                        weight: 300,
-                        family: "Roboto",
-                        style: 'normal',
-                        lineHeight: 2
-                    },
-                    color: "#f8f9fa"
-                },
-            },
-            x: {
-                grid: {
-                    drawBorder: false,
-                    display: true,
-                    drawOnChartArea: true,
-                    drawTicks: false,
-                    borderDash: [5, 5],
-                    color: 'rgba(255, 99, 132, 0.2)'
-                },
-                ticks: {
-                    display: true,
-                    color: '#f8f9fa',
-                    padding: 10,
-                    font: {
-                        size: 14,
-                        weight: 300,
-                        family: "Roboto",
-                        style: 'normal',
-                        lineHeight: 2
-                    },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
                 }
             },
-        },
-    };
-
-
-    var ctxLine = document.getElementById("chart-line").getContext("2d");
-    new Chart(ctxLine, {
-        type: "line",
-        data: lineChartData,
-        options: lineChartOptions,
+            interaction: {
+                intersect: false,
+                mode: 'index',
+            },
+            scales: {
+                y: {
+                    grid: {
+                        drawBorder: false,
+                        display: true,
+                        drawOnChartArea: true,
+                        drawTicks: false,
+                        borderDash: [5, 5],
+                        color: 'rgba(255, 99, 132, 0.2)'
+                    },
+                    ticks: {
+                        beginAtZero: true,
+                        padding: 10,
+                        font: {
+                            size: 14,
+                            weight: 300,
+                            family: "Roboto",
+                            style: 'normal',
+                            lineHeight: 2
+                        },
+                        color: "#f8f9fa"
+                    },
+                },
+                x: {
+                    grid: {
+                        drawBorder: false,
+                        display: true,
+                        drawOnChartArea: true,
+                        drawTicks: false,
+                        borderDash: [5, 5],
+                        color: 'rgba(255, 99, 132, 0.2)'
+                    },
+                    ticks: {
+                        display: true,
+                        color: '#f8f9fa',
+                        padding: 10,
+                        font: {
+                            size: 14,
+                            weight: 300,
+                            family: "Roboto",
+                            style: 'normal',
+                            lineHeight: 2
+                        },
+                    }
+                },
+            },
+        }
     });
 
+    function updateChart(api) {
+        console.log("UpdateChart data: ")
+        var monthlyData = Array(12).fill(0); // Initialize array for 12 months
+
+        api.rows({ search: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
+            var data = this.data();
+            var date = moment(data[6], "DD/MM/YYYY"); // Assuming date is in the 4rd column
+            var monthIndex = date.month(); // Get the month index (0-based)
+            var amount = parseFloat(data[4].replace(/[^\d.-]/g, '')); // Parse the amount
+
+
+            if (!isNaN(monthIndex) && !isNaN(amount)) {
+                monthlyData[monthIndex] += amount; // Accumulate amount for each month
+            }
+        });
+
+
+        // Update the chart data and redraw
+        if (chartInstance) {
+            chartInstance.data.datasets[0].data = monthlyData;
+            chartInstance.update();
+        }
+    }
+
+    let monthlyComparisonChart;
+
+    function initComparisonCharts() {
+        // Initialize the monthly comparison chart
+        const monthlyComparisonCtx = document.getElementById('monthly-comparison-chart')?.getContext('2d');
+        if (monthlyComparisonCtx) {
+            monthlyComparisonChart = new Chart(monthlyComparisonCtx, {
+                type: 'bar',
+                data: {
+                    labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+                    datasets: [
+                        {
+                            label: 'Período actual',
+                            data: Array(12).fill(0),
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Período comparativo',
+                            data: Array(12).fill(0),
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Comparativa Mensual',
+                            color: '#f8f9fa'
+                        },
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#f8f9fa'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f8f9fa'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f8f9fa'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function addComparisonControls() {
+        // Create controls for comparison date range
+        const controlsContainer = document.createElement('div');
+        controlsContainer.className = 'comparison-controls mb-4';
+        controlsContainer.innerHTML = `
+            <h4>Período de comparación</h4>
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <label for="compStartDate">Fecha inicial:</label>
+                    <input type="date" id="compStartDate" class="form-control">
+                </div>
+                <div class="me-3">
+                    <label for="compEndDate">Fecha final:</label>
+                    <input type="date" id="compEndDate" class="form-control">
+                </div>
+                <div class="mt-4">
+                    <button id="applyComparison" class="btn btn-primary">Aplicar</button>
+                    <button id="clearComparison" class="btn btn-secondary ms-2">Limpiar</button>
+                </div>
+            </div>
+        `;
+        
+        // Insert controls before the comparison charts
+        const firstChartContainer = document.getElementById('monthly-comparison-chart')?.closest('.row');
+        if (firstChartContainer && firstChartContainer.parentNode) {
+            firstChartContainer.parentNode.insertBefore(controlsContainer, firstChartContainer);
+        }
+        
+        // Add event listeners
+        document.getElementById('applyComparison')?.addEventListener('click', function() {
+            loadComparisonData();
+        });
+        
+        document.getElementById('clearComparison')?.addEventListener('click', function() {
+            document.getElementById('compStartDate').value = '';
+            document.getElementById('compEndDate').value = '';
+            resetComparisonCharts();
+        });
+    }
+
+    function loadComparisonData() {
+        const compStartDate = document.getElementById('compStartDate').value;
+        const compEndDate = document.getElementById('compEndDate').value;
+        
+        if (!compStartDate || !compEndDate) {
+            alert('Por favor seleccione fechas de inicio y fin para la comparación');
+            return;
+        }
+        
+        // Get the DataTable API instance
+        const table = document.getElementById("tablaUtilidades");
+        if (!table) return;
+        
+        const dataTable = new DataTable.Api(table);
+        
+        // Store current filter dates
+        const currentStartDate = document.getElementById('startDate').value;
+        const currentEndDate = document.getElementById('endDate').value;
+        
+        // Get data for current period
+        const currentPeriodData = getFilteredData(dataTable, currentStartDate, currentEndDate);
+        
+        // Apply comparison dates temporarily
+        document.getElementById('startDate').value = compStartDate;
+        document.getElementById('endDate').value = compEndDate;
+        
+        // Trigger filtering without redrawing visible table
+        const comparisonPeriodData = getFilteredData(dataTable, compStartDate, compEndDate);
+        
+        // Restore original filter dates
+        document.getElementById('startDate').value = currentStartDate;
+        document.getElementById('endDate').value = currentEndDate;
+        dataTable.draw();
+        
+        // Update comparison charts
+        updateComparisonCharts(currentPeriodData, comparisonPeriodData);
+    }
+
+    function getFilteredData(dataTable, startDate, endDate) {
+        const rows = dataTable.rows().data();
+        const filteredData = [];
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const rowDate = moment(row[6], "DD/MM/YYYY").startOf('day');
+            const minDate = startDate ? moment(startDate, "YYYY-MM-DD").startOf('day') : null;
+            const maxDate = endDate ? moment(endDate, "YYYY-MM-DD").endOf('day') : null;
+            
+            if ((!minDate && !maxDate) ||
+                (!minDate && rowDate <= maxDate) ||
+                (minDate <= rowDate && !maxDate) ||
+                (minDate <= rowDate && rowDate <= maxDate)) {
+                filteredData.push(row);
+            }
+        }
+        
+        return filteredData;
+    }
+
+    function updateComparisonCharts(currentData, comparisonData) {
+        // Update monthly comparison chart
+        updateMonthlyComparisonChart(currentData, comparisonData);
+        
+    }
+
+    function updateMonthlyComparisonChart(currentData, comparisonData) {
+        // Initialize arrays for 12 months
+        const currentMonthlyData = Array(12).fill(0);
+        const comparisonMonthlyData = Array(12).fill(0);
+        
+        // Process current period data
+        currentData.forEach(row => {
+            const date = moment(row[6], "DD/MM/YYYY");
+            const monthIndex = date.month();
+            const amount = parseFloat(row[4].replace(/[^\d.-]/g, ''));
+            
+            if (!isNaN(monthIndex) && !isNaN(amount)) {
+                currentMonthlyData[monthIndex] += amount;
+            }
+        });
+        
+        // Process comparison period data
+        comparisonData.forEach(row => {
+            const date = moment(row[6], "DD/MM/YYYY");
+            const monthIndex = date.month();
+            const amount = parseFloat(row[4].replace(/[^\d.-]/g, ''));
+            
+            if (!isNaN(monthIndex) && !isNaN(amount)) {
+                comparisonMonthlyData[monthIndex] += amount;
+            }
+        });
+        
+        // Update the chart
+        if (monthlyComparisonChart) {
+            monthlyComparisonChart.data.datasets[0].data = currentMonthlyData;
+            monthlyComparisonChart.data.datasets[1].data = comparisonMonthlyData;
+            
+            // Set title with date ranges
+            const currentDateRange = getDateRangeText('current');
+            const compDateRange = getDateRangeText('comparison');
+            monthlyComparisonChart.options.plugins.title.text = `Comparativa Mensual (${currentDateRange} vs ${compDateRange})`;
+            
+            monthlyComparisonChart.update();
+        }
+    }
+
+    function resetComparisonCharts() {
+        // Reset monthly comparison chart
+        if (monthlyComparisonChart) {
+            monthlyComparisonChart.data.datasets[0].data = Array(12).fill(0);
+            monthlyComparisonChart.data.datasets[1].data = Array(12).fill(0);
+            monthlyComparisonChart.options.plugins.title.text = 'Comparativa Mensual';
+            monthlyComparisonChart.update();
+        }
+        
+        // Reset user comparison chart
+        if (roomComparisonChart) {
+            roomComparisonChart.data.labels = [];
+            roomComparisonChart.data.datasets[0].data = [];
+            roomComparisonChart.data.datasets[1].data = [];
+            roomComparisonChart.options.plugins.title.text = 'Comparativa por Habitación';
+            roomComparisonChart.update();
+        }
+    }
+        function getDateRangeText(type) {
+        let startElement, endElement;
+        
+        if (type === 'current') {
+            startElement = document.getElementById('startDate');
+            endElement = document.getElementById('endDate');
+        } else {
+            startElement = document.getElementById('compStartDate');
+            endElement = document.getElementById('compEndDate');
+        }
+        
+        const startDate = startElement.value;
+        const endDate = endElement.value;
+        
+        if (startDate && endDate) {
+            return `${moment(startDate).format('DD/MM/YY')} - ${moment(endDate).format('DD/MM/YY')}`;
+        } else if (startDate) {
+            return `Desde ${moment(startDate).format('DD/MM/YY')}`;
+        } else if (endDate) {
+            return `Hasta ${moment(endDate).format('DD/MM/YY')}`;
+        } else {
+            return 'Todo el período';
+        }
+    }
     const ctx = document.getElementById('doughnut-chart').getContext('2d');
     const totalEarnings = {{ totalEarnings }};
     const limit = {{ limit }};

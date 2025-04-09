@@ -22,9 +22,20 @@
         </div>
     </div>
 
+    <h1 class="mt-5">Comparativas</h1>
+    <div class="row mb-5">
+        <div class="col-12 col-md-12 col-lg-12 col-xl-12 mb-3" style="width: 800px; height: 400px;">
+            <canvas id="monthly-comparison-chart" class="utCharts"></canvas>
+        </div>
+    </div>
+    <div class="row mb-5">
+
+        <div class="col-12 col-md-12 col-lg-12 col-xl-12 mb-3" style="width: 800px; height: 400px;">
+            <canvas id="room-comparison-chart" class="utCharts"></canvas>
+        </div>
+    </div>
 
 
-    <div class="col-12">
 
         <h1 class="mt-3">Utilidades Globales</h1>
         <div class="row mb-3">
@@ -274,6 +285,12 @@
                 dataTable.draw();
             });
         }
+
+        // Initialize the comparison charts
+        initComparisonCharts();
+        
+        // Add comparison date controls to the page
+        addComparisonControls();
 
     });
 
@@ -585,5 +602,412 @@
     }
 
 
+    let monthlyComparisonChart;
+    let roomComparisonChart;
 
+    function initComparisonCharts() {
+        // Initialize the monthly comparison chart
+        const monthlyComparisonCtx = document.getElementById('monthly-comparison-chart')?.getContext('2d');
+        if (monthlyComparisonCtx) {
+            monthlyComparisonChart = new Chart(monthlyComparisonCtx, {
+                type: 'bar',
+                data: {
+                    labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+                    datasets: [
+                        {
+                            label: 'Período actual',
+                            data: Array(12).fill(0),
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Período comparativo',
+                            data: Array(12).fill(0),
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Comparativa Mensual',
+                            color: '#f8f9fa'
+                        },
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#f8f9fa'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f8f9fa'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f8f9fa'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        const roomComparisonCtx = document.getElementById('room-comparison-chart')?.getContext('2d');
+        if (roomComparisonCtx) {
+            roomComparisonChart = new Chart(roomComparisonCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Período actual',
+                            data: [],
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Período comparativo',
+                            data: [],
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Comparativa por Habitación',
+                            color: '#f8f9fa'
+                        },
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#f8f9fa'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return `${tooltipItem.dataset.label}: $${tooltipItem.raw.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f8f9fa',
+                                callback: function(value) {
+                                    return '$' + value.toFixed(0);
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f8f9fa'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function addComparisonControls() {
+        // Create controls for comparison date range
+        const controlsContainer = document.createElement('div');
+        controlsContainer.className = 'comparison-controls mb-4';
+        controlsContainer.innerHTML = `
+            <h4>Período de comparación</h4>
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <label for="compStartDate">Fecha inicial:</label>
+                    <input type="date" id="compStartDate" class="form-control">
+                </div>
+                <div class="me-3">
+                    <label for="compEndDate">Fecha final:</label>
+                    <input type="date" id="compEndDate" class="form-control">
+                </div>
+                <div class="mt-4">
+                    <button id="applyComparison" class="btn btn-primary">Aplicar</button>
+                    <button id="clearComparison" class="btn btn-secondary ms-2">Limpiar</button>
+                </div>
+            </div>
+        `;
+        
+        // Insert controls before the comparison charts
+        const firstChartContainer = document.getElementById('monthly-comparison-chart')?.closest('.row');
+        if (firstChartContainer && firstChartContainer.parentNode) {
+            firstChartContainer.parentNode.insertBefore(controlsContainer, firstChartContainer);
+        }
+        
+        // Add event listeners
+        document.getElementById('applyComparison')?.addEventListener('click', function() {
+            loadComparisonData();
+        });
+        
+        document.getElementById('clearComparison')?.addEventListener('click', function() {
+            document.getElementById('compStartDate').value = '';
+            document.getElementById('compEndDate').value = '';
+            resetComparisonCharts();
+        });
+    }
+
+    function loadComparisonData() {
+        const compStartDate = document.getElementById('compStartDate').value;
+        const compEndDate = document.getElementById('compEndDate').value;
+        
+        if (!compStartDate || !compEndDate) {
+            alert('Por favor seleccione fechas de inicio y fin para la comparación');
+            return;
+        }
+        
+        // Get the DataTable API instance
+        const table = document.getElementById("tablaUtilidades");
+        if (!table) return;
+        
+        const dataTable = new DataTable.Api(table);
+        
+        // Store current filter dates
+        const currentStartDate = document.getElementById('startDate').value;
+        const currentEndDate = document.getElementById('endDate').value;
+        
+        // Get data for current period
+        const currentPeriodData = getFilteredData(dataTable, currentStartDate, currentEndDate);
+        
+        // Apply comparison dates temporarily
+        document.getElementById('startDate').value = compStartDate;
+        document.getElementById('endDate').value = compEndDate;
+        
+        // Trigger filtering without redrawing visible table
+        const comparisonPeriodData = getFilteredData(dataTable, compStartDate, compEndDate);
+        
+        // Restore original filter dates
+        document.getElementById('startDate').value = currentStartDate;
+        document.getElementById('endDate').value = currentEndDate;
+        dataTable.draw();
+        
+        // Update comparison charts
+        updateComparisonCharts(currentPeriodData, comparisonPeriodData);
+    }
+
+    function getFilteredData(dataTable, startDate, endDate) {
+        const rows = dataTable.rows().data();
+        const filteredData = [];
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const rowDate = moment(row[6], "DD/MM/YYYY").startOf('day');
+            const minDate = startDate ? moment(startDate, "YYYY-MM-DD").startOf('day') : null;
+            const maxDate = endDate ? moment(endDate, "YYYY-MM-DD").endOf('day') : null;
+            
+            if ((!minDate && !maxDate) ||
+                (!minDate && rowDate <= maxDate) ||
+                (minDate <= rowDate && !maxDate) ||
+                (minDate <= rowDate && rowDate <= maxDate)) {
+                filteredData.push(row);
+            }
+        }
+        
+        return filteredData;
+    }
+
+    function updateComparisonCharts(currentData, comparisonData) {
+        // Update monthly comparison chart
+        updateMonthlyComparisonChart(currentData, comparisonData);
+        
+        // Update user comparison chart
+        updateRoomComparisonChart(currentData, comparisonData);
+    }
+
+    function updateMonthlyComparisonChart(currentData, comparisonData) {
+        // Initialize arrays for 12 months
+        const currentMonthlyData = Array(12).fill(0);
+        const comparisonMonthlyData = Array(12).fill(0);
+        
+        // Process current period data
+        currentData.forEach(row => {
+            const date = moment(row[6], "DD/MM/YYYY");
+            const monthIndex = date.month();
+            const amount = parseFloat(row[4].replace(/[^\d.-]/g, ''));
+            
+            if (!isNaN(monthIndex) && !isNaN(amount)) {
+                currentMonthlyData[monthIndex] += amount;
+            }
+        });
+        
+        // Process comparison period data
+        comparisonData.forEach(row => {
+            const date = moment(row[6], "DD/MM/YYYY");
+            const monthIndex = date.month();
+            const amount = parseFloat(row[4].replace(/[^\d.-]/g, ''));
+            
+            if (!isNaN(monthIndex) && !isNaN(amount)) {
+                comparisonMonthlyData[monthIndex] += amount;
+            }
+        });
+        
+        // Update the chart
+        if (monthlyComparisonChart) {
+            monthlyComparisonChart.data.datasets[0].data = currentMonthlyData;
+            monthlyComparisonChart.data.datasets[1].data = comparisonMonthlyData;
+            
+            // Set title with date ranges
+            const currentDateRange = getDateRangeText('current');
+            const compDateRange = getDateRangeText('comparison');
+            monthlyComparisonChart.options.plugins.title.text = `Comparativa Mensual (${currentDateRange} vs ${compDateRange})`;
+            
+            monthlyComparisonChart.update();
+        }
+    }
+
+    function updateRoomComparisonChart(currentData, comparisonData) {
+        // Group data by room for current period
+        const currentRoomData = {};
+        currentData.forEach(row => {
+            const habitacion = row[0]; // Assuming room/habitacion is in column 0
+            
+            // Skip N/A rooms if needed
+            if (habitacion === "N/A") return;
+            
+            const monto = parseFloat(row[4].replace(/[^\d.-]/g, ''));
+            
+            if (!currentRoomData[habitacion]) {
+                currentRoomData[habitacion] = 0;
+            }
+            currentRoomData[habitacion] += monto;
+        });
+        
+        // Group data by room for comparison period
+        const comparisonRoomData = {};
+        comparisonData.forEach(row => {
+            const habitacion = row[0];
+            
+            // Skip N/A rooms if needed
+            if (habitacion === "N/A") return;
+            
+            const monto = parseFloat(row[4].replace(/[^\d.-]/g, ''));
+            
+            if (!comparisonRoomData[habitacion]) {
+                comparisonRoomData[habitacion] = 0;
+            }
+            comparisonRoomData[habitacion] += monto;
+        });
+        
+        // Get all unique rooms from both periods
+        const allRooms = new Set([
+            ...Object.keys(currentRoomData),
+            ...Object.keys(comparisonRoomData)
+        ]);
+        
+        // Convert to arrays for chart
+        const labels = Array.from(allRooms);
+        const currentValues = labels.map(room => currentRoomData[room] || 0);
+        const comparisonValues = labels.map(room => comparisonRoomData[room] || 0);
+        
+        // Create combined data for sorting
+        const combinedData = labels.map((room, index) => ({
+            room,
+            current: currentValues[index],
+            comparison: comparisonValues[index],
+            total: currentValues[index] + comparisonValues[index]
+        }));
+        
+        // Sort by current period values (descending)
+        combinedData.sort((a, b) => b.current - a.current);
+        
+        // Extract sorted arrays
+        const sortedLabels = combinedData.map(item => item.room);
+        const sortedCurrentValues = combinedData.map(item => item.current);
+        const sortedComparisonValues = combinedData.map(item => item.comparison);
+        
+        // Update the chart
+        if (roomComparisonChart) {
+            roomComparisonChart.data.labels = sortedLabels;
+            roomComparisonChart.data.datasets[0].data = sortedCurrentValues;
+            roomComparisonChart.data.datasets[1].data = sortedComparisonValues;
+            
+            // Set title with date ranges
+            const currentDateRange = getDateRangeText('current');
+            const compDateRange = getDateRangeText('comparison');
+            roomComparisonChart.options.plugins.title.text = `Comparativa por Habitación (${currentDateRange} vs ${compDateRange})`;
+            
+            roomComparisonChart.update();
+        }
+    }
+
+    function resetComparisonCharts() {
+        // Reset monthly comparison chart
+        if (monthlyComparisonChart) {
+            monthlyComparisonChart.data.datasets[0].data = Array(12).fill(0);
+            monthlyComparisonChart.data.datasets[1].data = Array(12).fill(0);
+            monthlyComparisonChart.options.plugins.title.text = 'Comparativa Mensual';
+            monthlyComparisonChart.update();
+        }
+        
+        // Reset user comparison chart
+        if (roomComparisonChart) {
+            roomComparisonChart.data.labels = [];
+            roomComparisonChart.data.datasets[0].data = [];
+            roomComparisonChart.data.datasets[1].data = [];
+            roomComparisonChart.options.plugins.title.text = 'Comparativa por Habitación';
+            roomComparisonChart.update();
+        }
+    }
+
+    function getDateRangeText(type) {
+        let startElement, endElement;
+        
+        if (type === 'current') {
+            startElement = document.getElementById('startDate');
+            endElement = document.getElementById('endDate');
+        } else {
+            startElement = document.getElementById('compStartDate');
+            endElement = document.getElementById('compEndDate');
+        }
+        
+        const startDate = startElement.value;
+        const endDate = endElement.value;
+        
+        if (startDate && endDate) {
+            return `${moment(startDate).format('DD/MM/YY')} - ${moment(endDate).format('DD/MM/YY')}`;
+        } else if (startDate) {
+            return `Desde ${moment(startDate).format('DD/MM/YY')}`;
+        } else if (endDate) {
+            return `Hasta ${moment(endDate).format('DD/MM/YY')}`;
+        } else {
+            return 'Todo el período';
+        }
+    }
+
+    
 </script>
