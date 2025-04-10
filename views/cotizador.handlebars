@@ -806,6 +806,9 @@
                             }
 
                             if (typeof value === 'boolean') {
+                                if (!value) {
+                                    return;
+                                }
                                 const featureItem = document.createElement("div");
                                 featureItem.classList.add("flex", "items-center", "gap-1");
 
