@@ -407,7 +407,7 @@
 							<div class="mb-3">
 								<form id="upload-csv-form">
 									<label for="" class="form-label">Escoger archivo</label>
-									<input type="file" class="form-control" name="csvFile" id="csv-file" accept=".xlsx"
+									<input type="file" class="form-control" name="csvFile" id="csv-file" accept=".xlsm"
 										aria-describedby="fileHelpId" required />
 									<div id="fileHelpId" class="form-text">XLSX</div>
 
@@ -2626,11 +2626,11 @@
 		}
 
 		const fileName = file.name.toLowerCase();
-		if (!fileName.endsWith('.xlsx')) {
+		if (!fileName.endsWith('.xlsm')) {
 			Swal.fire({
 				icon: 'error',
 				title: 'Error',
-				text: 'El archivo seleccionado no es un archivo XLSX',
+				text: 'El archivo seleccionado no es un archivo XLSM',
 			});
 			return;
 		}
