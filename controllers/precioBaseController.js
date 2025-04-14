@@ -186,21 +186,24 @@ async function cargarPreciosCSV(req, res) {
 
         for (const [index, row] of rows.entries()) {
             try {
-                const habitacionId = row.id_habitacion;
-                if (!mongoose.Types.ObjectId.isValid(habitacionId)) {
-                    throw new Error(`Fila ${index + 2}: ID de habitación inválido.`);
+                // const habitacionId = row.id_habitacion;
+                const habitacionName = row.Nombre;
+                // if (!mongoose.Types.ObjectId.isValid(habitacionId)) {
+                //     throw new Error(`Fila ${index + 2}: ID de habitación inválido.`);
                 
-                }
-                const habitacion = await Habitacion.findById(habitacionId);
+                // }
+                const habitacion = await Habitacion.findOne({ 'propertyDetails.name': habitacionName });
 
                 if (!habitacion) {
-                    throw new Error(`Fila ${index + 2}: Habitación no encontrada.`);
+                    throw new Error(`Fila ${index + 2}: Habitación ${habitacionName} no encontrada.`);
                 }
 
                 // 📌 Validar y convertir fechas
                 if (isNaN(row.fecha_inicio) || isNaN(row.fecha_fin)) {
                     throw new Error(`Fila ${index + 2}: Fechas inválidas.`);
                 }
+
+                const capacidad = row.Capacidad;
 
                 const fechaInicio = excelDateToJSDate(row.fecha_inicio);
                 const fechaFin = excelDateToJSDate(row.fecha_fin);
@@ -215,7 +218,7 @@ async function cargarPreciosCSV(req, res) {
                 }
 
                 console.log("Fila después de conversión:", {
-                    habitacionId,
+                    habitacionName,
                     fechaInicio,
                     fechaFin,
                     costoBase,
@@ -229,34 +232,63 @@ async function cargarPreciosCSV(req, res) {
                 let endDate = new Date(fechaFin);
                 endDate.setUTCHours(6, 0, 0, 0); // 
 
-                while (currentDate <= endDate) {
-                    currentDate.setUTCHours(6);
-                    await PrecioBaseXDia.findOneAndUpdate(
-                        { habitacionId, fecha: currentDate }, // Filtro de búsqueda
-                        {
-                            $set: {
-                                precio_modificado: precioBase,
-                                precio_base_2noches: precioBase2Noches,
-                                costo_base: costoBase,
-                                costo_base_2noches: costoBase2Noches,
+                if (!capacidad || capacidad <= 0) {
+                    while (currentDate <= endDate) {
+                        currentDate.setUTCHours(6);
+                        await PrecioBaseXDia.findOneAndUpdate(
+                            { habitacionId: habitacion._id, fecha: currentDate }, // Filtro de búsqueda
+                            {
+                                $set: {
+                                    precio_modificado: precioBase,
+                                    precio_base_2noches: precioBase2Noches,
+                                    costo_base: costoBase,
+                                    costo_base_2noches: costoBase2Noches,
+                                },
                             },
-                        },
-                        { upsert: true, new: true } // Si no existe, lo crea
-                    );
-
-                    console.log("Precio guardado para el día:", currentDate);
-
-                    currentDate.setDate(currentDate.getDate() + 1);
+                            { upsert: true, new: true } // Si no existe, lo crea
+                        );
+    
+                        console.log("Precio guardado para el día:", currentDate);
+    
+                        currentDate.setDate(currentDate.getDate() + 1);
+                        
+                        
+                    }
                     
-                    
+                } else {
+                    while (currentDate <= endDate) {
+                        currentDate.setUTCHours(6);
+                        await PreciosEspeciales.findOneAndUpdate(
+                            { habitacionId: habitacion._id, fecha: currentDate, noPersonas: capacidad }, // Filtro de búsqueda
+                            {
+                                $set: {
+                                    precio_modificado: precioBase,
+                                    precio_base_2noches: precioBase2Noches,
+                                    costo_base: costoBase,
+                                    costo_base_2noches: costoBase2Noches,
+                                    criterio: 'personas',
+                                    noPersonas: capacidad,
+                                },
+                            },
+                            { upsert: true, new: true } // Si no existe, lo crea
+                        );
+    
+                        console.log("Precio guardado para el día:", currentDate);
+    
+                        currentDate.setDate(currentDate.getDate() + 1);
+                        
+                        
+                    }
+
                 }
 
+
                 preciosGuardados.push({
-                    habitacionId,
+                    habitacionName,
                     fechaInicio,
                     fechaFin
                 });
-
+            
             } catch (error) {
                 errores.push(error.message);
                 console.error("Error al procesar la fila:", error);
@@ -272,6 +304,7 @@ async function cargarPreciosCSV(req, res) {
             registrosExitosos: preciosGuardados.length,
             errores
         });
+
 
 
     } catch (error) {
