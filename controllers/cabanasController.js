@@ -844,12 +844,17 @@ async function editChalet(req, res, next) {
     const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images, txtChaletId, activePlatforms } = req.body;
     console.log('Entrando a edit chalet');
 
+    console.log(others.admin);
+
+    const adminDbg = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
+
     try {
         const [admin, janitor, owner] = await Promise.all([
-            Usuario.findOne({ email: others.admin, privilege: "Administrador" }),
+            Usuario.findOne({ email: others.admin, $or: [{ privilege: "Administrador" }, { privilege: "Dueño de cabañas" }] }),
             Usuario.findOne({ email: others.janitor, privilege: "Limpieza" }),
             Usuario.findOne({ _id: others.owner})
         ]);
+        
 
         if (!admin) throw new NotFoundError("Admin not found");
         if (!janitor) throw new NotFoundError("Janitor not found");
