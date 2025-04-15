@@ -1501,6 +1501,7 @@
         
         const eventStatus = "{{ evento.status }}";
         if (eventStatus !== "reserva de dueño") {
+            nuevoTotal.nNights = data.nightsInput;
             // Add commissions
             const agregarComisiones = await fetch('/api/utilidades/reserva', {
                 method: 'POST',
@@ -1716,17 +1717,19 @@
         console.log('obtener total ');
         console.log("arrrivalDate: " + arrivalDate);
         console.log("departureDate: " + departureDate);
-        
+
         // const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
         // const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
-        const arrivalYear = arrivalDate.getFullYear();
-        const arrivalMonth = (arrivalDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
-        const arrivalDay = arrivalDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+        const fechaInicio = new Date(`${arrivalDate}T00:00:00`); // Agregar la hora en formato UTC
+        const fechaFin = new Date(`${departureDate}T00:00:00`); // Agregar la hora en formato UTC
+        const arrivalYear = fechaInicio.getFullYear();
+        const arrivalMonth = (fechaInicio.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+        const arrivalDay = fechaInicio.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
         const arrivalDateSend = `${arrivalYear}-${arrivalMonth}-${arrivalDay}`;
 
-        const departureYear = departureDate.getFullYear();
-        const departureMonth = (departureDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
-        const departureDay = departureDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+        const departureYear = fechaFin.getFullYear();
+        const departureMonth = (fechaFin.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+        const departureDay = fechaFin.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
         const departureDateSend = `${departureYear}-${departureMonth}-${departureDay}`;
 
         console.log(arrivalDateSend)
@@ -1793,16 +1796,15 @@
                 console.log("Total precios: ", totalPrecios)
 
                 // Asignar comisiones
-                if (isNaN(comisionVendedor) || comisionVendedor == null) {
-                    comisionVendedor = 0
-                }
+                comisionVendedor = 0
+                
                 // totalPrecios += comisionVendedor // Precio maximo permitido
 
                 // console.log("Total precios con comisiones: ", totalPrecios)
                 const comisionUsuarios = await obtenerComisiones(nNights, habitacionId)
                 let precioMinimoPermitidoSinComision = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
                 console.log("Precio minimo permitido: ", precioMinimoPermitidoSinComision)
-                const precioMinimoPermitido = precioMinimoPermitidoSinComision + comisionVendedor;
+                const precioMinimoPermitido = precioMinimoPermitidoSinComision;
                 console.log("Precio total de la reserva", precioMinimoPermitido);
                 const precioMaximoPermitido = totalPrecios + comisionUsuarios.finalComission // Precio maximo permitido
                 // console.log("Total precios con comisiones: ", totalPrecios)

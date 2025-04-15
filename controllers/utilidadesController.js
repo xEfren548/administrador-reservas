@@ -337,6 +337,7 @@ async function generarComisionReserva(req, res) {
                     break;
                 } else {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
+                        console.log("Comision vendedor: ", comisionVendedor)
                         await altaComisionReturn({
                             monto: comisionVendedor * nNights,
                             concepto: `Comisión por Reservación vendedor ${nNights} noches`,
