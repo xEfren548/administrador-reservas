@@ -1105,71 +1105,120 @@ async function editarEvento(req, res) {
     try {
         const id = req.params.id;
         const { resourceId, nNights, arrivalDate, departureDate, url, total } = req.body;
+        console.log("Procesando solicitud de edición de evento");
 
-        // Fetch existing rooms from the database
-        // const eventosExistentes = await Documento.findOne();
+        const arrivalDateObj = new Date(arrivalDate);
+        const departureDateObj = new Date(departureDate);
 
-        // if (!eventosExistentes) {
-        //     return res.status(404).json({ mensaje: 'No se encontraron habitaciones' });
-        // }
+        // Set specific times
+        arrivalDateObj.setUTCHours(17, 30, 0, 0); // 17:30:00 UTC
+        departureDateObj.setUTCHours(14, 30, 0, 0); // 14:30:00 UTC
 
-        // Find the room to edit by its ID
-        const evento = await Documento.findById(id).lean();
-        // const evento = eventosExistentes.events.find(habitacion => habitacion.id === id);
+        // Convert back to ISO strings
+        const arrivalDateISO = arrivalDateObj.toISOString();
+        const departureDateISO = departureDateObj.toISOString();
+
+        const mongooseChaletId = new mongoose.Types.ObjectId(resourceId);
+        const overlappingReservation = await Documento.findOne({
+            resourceId: mongooseChaletId,
+            status: { $nin: ["cancelled", "no-show", "playground"] },
+            $and: [
+                { arrivalDate: { $lt: departureDateISO } }, // Start date overlaps or is before the departure date
+                { departureDate: { $gt: arrivalDateISO } }, // End date overlaps or is after the arrival date
+            ],
+        });
+
+        if (overlappingReservation) {
+            return res.status(400).send({
+                message: `La habitación ya está reservada entre ${overlappingReservation.arrivalDate.toISOString()} y ${overlappingReservation.departureDate.toISOString()}.`,
+            });
+        }
+
+        // Create an update object with only the fields that are provided
+        const updateFields = {};
+        
+        if (resourceId !== undefined) updateFields.resourceId = resourceId;
+        if (nNights !== undefined) updateFields.nNights = nNights;
+        if (arrivalDate !== undefined) updateFields.arrivalDate = arrivalDate;
+        if (departureDate !== undefined) updateFields.departureDate = departureDate;
+        if (url !== undefined) updateFields.url = url;
+        if (total !== undefined) updateFields.total = total;
+
+        // Update the document in one operation
+        const evento = await Documento.findByIdAndUpdate(
+            id,
+            { $set: updateFields },
+            { new: true } // This returns the updated document
+        );
 
         if (!evento) {
             return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
         }
 
-        // const { resourceId, title, start, end, url, total } = req.body;
-
-
-        // Update only the provided fields
-        if (resourceId !== undefined && resourceId !== null) {
-            evento.resourceId = resourceId;
-        }
-
-        if (nNights !== undefined && nNights !== null) {
-            evento.nNights = nNights;
-        }
-
-        if (arrivalDate !== undefined && arrivalDate !== null) {
-            evento.arrivalDate = arrivalDate;
-        }
-
-        if (departureDate !== undefined && departureDate !== null) {
-            evento.departureDate = departureDate;
-        }
-
-        if (url !== undefined && url !== null) {
-            evento.url = url;
-        }
-
-        if (total !== undefined && total !== null) {
-            evento.total = total;
-        }
-
-
-
-        // Save the updated room to the database
-        await evento.save();
-
+        // Create log entry for the event modification
         const logBody = {
-            fecha: Date.now(),
-            idUsuario: req.session.id,
+            fecha: new Date(),
+            idUsuario: req.session?.id,
             type: 'reservation',
             idReserva: id,
-            acciones: `Reservación modificada por ${req.session.firstName} ${req.session.lastName}`,
-            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
-        }
+            acciones: `Reservación modificada por ${req.session?.firstName || 'Usuario'} ${req.session?.lastName || ''}`,
+            nombreUsuario: `${req.session?.firstName || 'Usuario'} ${req.session?.lastName || ''}`
+        };
 
         await logController.createBackendLog(logBody);
 
-        console.log('evento editado:', evento);
-        res.status(200).json({ mensaje: 'evento editado correctamente', evento });
+        console.log('Evento editado correctamente:', evento._id);
+        res.status(200).json({ mensaje: 'Evento editado correctamente', evento });
     } catch (error) {
         console.error('Error al editar evento:', error);
-        res.status(500).json({ error });
+        res.status(500).json({ error: error.message });
+    }
+}
+
+async function editarEvento(req, res) {
+    try {
+        const id = req.params.id;
+        const { resourceId, nNights, arrivalDate, departureDate, url, total } = req.body;
+        console.log("Procesando solicitud de edición de evento");
+
+        // Create an update object with only the fields that are provided
+        const updateFields = {};
+        
+        if (resourceId !== undefined) updateFields.resourceId = resourceId;
+        if (nNights !== undefined) updateFields.nNights = nNights;
+        if (arrivalDate !== undefined) updateFields.arrivalDate = arrivalDate;
+        if (departureDate !== undefined) updateFields.departureDate = departureDate;
+        if (url !== undefined) updateFields.url = url;
+        if (total !== undefined) updateFields.total = total;
+
+        // Update the document in one operation
+        const evento = await Documento.findByIdAndUpdate(
+            id,
+            { $set: updateFields },
+            { new: true } // This returns the updated document
+        );
+
+        if (!evento) {
+            return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
+        }
+
+        // Create log entry for the event modification
+        const logBody = {
+            fecha: new Date(),
+            idUsuario: req.session?.id,
+            type: 'reservation',
+            idReserva: id,
+            acciones: `Reservación modificada por ${req.session?.firstName || 'Usuario'} ${req.session?.lastName || ''}`,
+            nombreUsuario: `${req.session?.firstName || 'Usuario'} ${req.session?.lastName || ''}`
+        };
+
+        await logController.createBackendLog(logBody);
+
+        console.log('Evento editado correctamente:', evento._id);
+        res.status(200).json({ mensaje: 'Evento editado correctamente', evento });
+    } catch (error) {
+        console.error('Error al editar evento:', error);
+        res.status(500).json({ error: error.message });
     }
 }
 

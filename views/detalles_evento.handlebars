@@ -1363,179 +1363,204 @@
         }
     });
 
+    document.querySelector('#save-event-btn').addEventListener('click', handleReservationUpdate);
 
-    const editReserveBtn = document.querySelector('#save-event-btn')
-    editReserveBtn.addEventListener('click', async function (event) {
+    async function handleReservationUpdate(event) {
         event.preventDefault();
-        const nightsInput = document.querySelector('#edit_nights').value;
-        const arrivalDateInput = document.getElementById('edit_start_date').value
-        const departureDateInput = document.getElementById('edit_end_date').value
-        const eventDateStart = new Date(arrivalDateInput)
-        const eventDateEnd = new Date(departureDateInput)
         
-        const reservacionId = document.querySelector('#reservacion_id').value;
+        try {
+            // Get reservation data
+            const reservationData = getReservationFormData();
+            
+            // Format dates
+            const formattedDates = formatReservationDates(reservationData);
+            
+            // Calculate new total if not owner reservation
+            const nuevoTotal = await calculateNewTotal(reservationData, formattedDates);
+            
+            // Confirm update with user
+            const shouldProceed = await confirmReservationUpdate(reservationData.isReservaDueno, nuevoTotal, reservationData.totalServicios);
+            
+            if (shouldProceed) {
+                // Check availability
+                const isAvailable = await checkDateAvailability(
+                    reservationData.resourceId,
+                    formattedDates.eventDateStart,
+                    formattedDates.eventDateEnd,
+                    reservationData.reservacionId
+                );
+                
+                if (!isAvailable) {
+                    throw new Error('Fechas no disponibles. Intenta con otras fechas.');
+                }
+                
+                // Update reservation
+                await updateReservation(reservationData, formattedDates, nuevoTotal);
+                
+                // Show success message and reload page
+                await showSuccessMessage();
+            }
+        } catch (error) {
+            console.error('Error al actualizar la reserva:', error);
+            await showErrorMessage(error.message);
+        }
+    }
+
+    function getReservationFormData() {
+        const eventStatus = "{{ evento.status }}";
+        const isReservaDueno = eventStatus === "reserva de dueño";
         
-        const comisionVendedor = {{ evento.comisionVendedor }}
-        const resourceId = '{{ evento.resourceId }}'
-        const nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor, nightsInput);
-        console.log(nuevoTotal)
-        nuevoTotal.chaletName = '{{habitacion.propertyDetails.name}}'
-        nuevoTotal.idReserva = reservacionId;
-        nuevoTotal.arrivalDate = eventDateStart
-        nuevoTotal.departureDate = eventDateEnd
-        const totalServicios = parseFloat(document.querySelector('#total-servicios').value);
+        return {
+            eventStatus,
+            isReservaDueno,
+            nightsInput: document.querySelector('#edit_nights').value,
+            arrivalDateInput: document.getElementById('edit_start_date').value,
+            departureDateInput: document.getElementById('edit_end_date').value,
+            reservacionId: document.querySelector('#reservacion_id').value,
+            comisionVendedor: {{ evento.comisionVendedor }},
+            resourceId: '{{ evento.resourceId }}',
+            totalServicios: parseFloat(document.querySelector('#total-servicios').value || 0),
+            chaletName: '{{habitacion.propertyDetails.name}}'
+        };
+    }
 
-    
+    function formatReservationDates(data) {
+        // Keep the same date formatting strategy
+        return {
+            eventDateStart: moment.utc(data.arrivalDateInput).format('YYYY-MM-DD'),
+            eventDateEnd: moment.utc(data.departureDateInput).format('YYYY-MM-DD')
+        };
+    }
 
+    async function calculateNewTotal(data, formattedDates) {
+        const nuevoTotal = data.isReservaDueno 
+            ? {} 
+            : await obtenerNuevoTotal(
+                data.resourceId, 
+                formattedDates.eventDateStart, 
+                formattedDates.eventDateEnd, 
+                data.comisionVendedor, 
+                data.nightsInput
+            );
+        
+        // Add additional properties to the total object
+        nuevoTotal.chaletName = data.chaletName;
+        nuevoTotal.idReserva = data.reservacionId;
+        nuevoTotal.arrivalDate = formattedDates.eventDateStart;
+        nuevoTotal.departureDate = formattedDates.eventDateEnd;
+        
+        return nuevoTotal;
+    }
 
-    try {
-
-        const mensaje = `El nuevo total será de $${nuevoTotal.precioAsignado + totalServicios}`
+    async function confirmReservationUpdate(isOwnerReservation, nuevoTotal, totalServicios) {
+        let mensaje = isOwnerReservation 
+            ? '' 
+            : `El nuevo total será de $${(nuevoTotal.precioAsignado || 0) + totalServicios}`;
+        
         const confirmacion = await Swal.fire({
             title: '¿Está seguro que desea actualizar la reserva?',
             text: mensaje,
             icon: 'warning',
             showCancelButton: true,
-        })
+        });
+        
+        return confirmacion.isConfirmed;
+    }
 
-        if (confirmacion.isConfirmed) {
-
-            const disponible = await availableDate(resourceId, eventDateStart, eventDateEnd);
-            if (!disponible){
-                throw new Error('Fechas no disponibles. Intenta con otras fechas.')
-            }
-
-            const nuevasFechas = {
-                nNights: nightsInput,
-                arrivalDate: arrivalDateInput,
-                departureDate: departureDateInput,
-                total: nuevoTotal.precioAsignado
-            }
-
-            const response = await fetch(`/api/eventos/${reservacionId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(nuevasFechas)
-            });
-
-            if (response.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Completado!',
-                    text: 'Reserva actualizada correctamente.',
-                    confirmButtonText: 'Aceptar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        location.reload();
-                    }
-                });
+    async function checkDateAvailability(resourceId, arrivalDate, departureDate, reservationId) {
+        try {
+            const response = await fetch(`/api/check-availability/?resourceId=${resourceId}&arrivalDate=${arrivalDate}&departureDate=${departureDate}&eventId=${reservationId}`);
+            const result = await response.json();
             
+            return result.available;
+        } catch (error) {
+            console.error('Error al verificar disponibilidad:', error);
+            return false;
+        }
+    }
+
+    async function updateReservation(data, formattedDates, nuevoTotal) {
+        // Prepare data for reservation update
+        const nuevasFechas = {
+            nNights: data.nightsInput,
+            arrivalDate: data.arrivalDateInput,
+            departureDate: data.departureDateInput,
+            total: data.isReservaDueno ? 0 : (nuevoTotal.precioAsignado || 0)
+        };
+        
+        // Update reservation
+        const response = await fetch(`/api/eventos/${data.reservacionId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevasFechas)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error al actualizar la reserva. Por favor, inténtalo de nuevo más tarde.');
+        }
+        
+        const eventStatus = "{{ evento.status }}";
+        if (eventStatus !== "reserva de dueño") {
+            nuevoTotal.nNights = data.nightsInput;
+            // Add commissions
             const agregarComisiones = await fetch('/api/utilidades/reserva', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(nuevoTotal)
-            })
-
+            });
+            
             if (!agregarComisiones.ok) {
                 const additionalErrorData = await agregarComisiones.json();
                 const additionalErrors = additionalErrorData.error;
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Additional Error',
-                    text: "Error en la solicitud adicional: " + additionalErrors[0].message.toLowerCase() + ".",
-                    confirmButtonText: 'Aceptar'
-                });
-                throw new Error('Error en la solicitud adicional');
+                throw new Error("Error en la solicitud adicional: " + additionalErrors[0].message.toLowerCase() + ".");
             }
-
+            
             const additionalData = await agregarComisiones.json();
             console.log('Additional data received:', additionalData);
-
-            } else {
-                throw new Error('Error al actualizar la reserva. Por favor, inténtalo de nuevo más tarde.');
-            }
         }
-
-    } catch (error) {
-        console.error('Error al enviar los datos de la reserva :', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message,
-            confirmButtonText: 'Aceptar'
-        })
+        
+        return response;
     }
 
-    });
-
-    async function availableDate(resourceId, arrivalDate, departureDate) {
-        console.log('desde show available')
-        console.log(arrivalDate);
-        console.log(departureDate);
-        const arrivalValue = new Date(`${arrivalDate}T00:00:00`);
-        const departureValue = new Date(`${departureDate}T00:00:00`);
-        // const tipologiaHabitacionInput = document.querySelector('#tipologia_habitacion');
-        // const options = tipologiaHabitacionInput.querySelectorAll('option');
-
-        // const verificarDisponibilidadElement = document.getElementById('verificar-disponibilidad');
-
-        // console.log(arrivalValue)
-        // console.log(departureValue)
-
-        try {
-            if (!isNaN(arrivalDate) && !isNaN(departureDate) && departureDate >= arrivalDate) {
-
-                console.log(arrivalDate)
-                console.log(departureDate)
-
-                // verificarDisponibilidadElement.style.display = 'block';
-
-                const arrivalYear = arrivalDate.getFullYear();
-                const arrivalMonth = (arrivalDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
-                const arrivalDay = arrivalDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
-                const arrivalDateSend = `${arrivalYear}-${arrivalMonth}-${arrivalDay}`;
-
-                const departureYear = departureDate.getFullYear();
-                const departureMonth = (departureDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
-                const departureDay = departureDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
-                const departureDateSend = `${departureYear}-${departureMonth}-${departureDay}`;
-
-                console.log(arrivalDateSend)
-                console.log(departureDateSend)
-
-                const reservacionId = document.querySelector('#reservacion_id').value;
-
-
-                // const results = [];
-                const response = await fetch(`/api/check-availability/?resourceId=${resourceId}&arrivalDate=${arrivalDateSend}&departureDate=${departureDateSend}&eventId=${reservacionId}`);
-                const result = await response.json();
-                console.log(result)
-                console.log(result.available)
-                if (!result.available) {
-                    console.log('Cabaña no disponible');
-                    return false;
-                    // throw new Error('La cabaña no está disponible en las nuevas fechas. Intenta de nuevo con otras fechas.')
-                }
-
-                return true;
+    async function showSuccessMessage() {
+        return Swal.fire({
+            icon: 'success',
+            title: '¡Completado!',
+            text: 'Reserva actualizada correctamente.',
+            confirmButtonText: 'Aceptar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                location.reload();
             }
+        });
+    }
+
+    async function showErrorMessage(message) {
+        return Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: message || 'Ha ocurrido un error al actualizar la reserva.',
+            confirmButtonText: 'Aceptar'
+        });
+    }
+
+    // Helper function to check date availability (refactored from original code)
+    async function availableDate(resourceId, arrivalDate, departureDate) {
+        try {
+            if (!arrivalDate || !departureDate) {
+                return false;
+            }
+
+            const reservacionId = document.querySelector('#reservacion_id').value;
+            
+            const response = await fetch(`/api/check-availability/?resourceId=${resourceId}&arrivalDate=${arrivalDate}&departureDate=${departureDate}&eventId=${reservacionId}`);
+            const result = await response.json();
+            
+            return result.available;
         } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: "Error en la solicitud: " + error.message,
-                confirmButtonText: 'Aceptar'
-            });
-        } finally {
-            // verificarDisponibilidadElement.style.display = 'none';
-            console.log('finalizado');
+            console.error('Ha ocurrido un error al verificar disponibilidad:', error.message);
+            return false;
         }
-
-
     }
 
     const updateStatusBtn = document.querySelector('#update-status-btn');
@@ -1690,16 +1715,21 @@
 
     async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisionVendedor, nNights) {
         console.log('obtener total ');
+        console.log("arrrivalDate: " + arrivalDate);
+        console.log("departureDate: " + departureDate);
+
         // const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
         // const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
-        const arrivalYear = arrivalDate.getFullYear();
-        const arrivalMonth = (arrivalDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
-        const arrivalDay = arrivalDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+        const fechaInicio = new Date(`${arrivalDate}T00:00:00`); // Agregar la hora en formato UTC
+        const fechaFin = new Date(`${departureDate}T00:00:00`); // Agregar la hora en formato UTC
+        const arrivalYear = fechaInicio.getFullYear();
+        const arrivalMonth = (fechaInicio.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+        const arrivalDay = fechaInicio.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
         const arrivalDateSend = `${arrivalYear}-${arrivalMonth}-${arrivalDay}`;
 
-        const departureYear = departureDate.getFullYear();
-        const departureMonth = (departureDate.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
-        const departureDay = departureDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
+        const departureYear = fechaFin.getFullYear();
+        const departureMonth = (fechaFin.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
+        const departureDay = fechaFin.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
         const departureDateSend = `${departureYear}-${departureMonth}-${departureDay}`;
 
         console.log(arrivalDateSend)
@@ -1766,16 +1796,15 @@
                 console.log("Total precios: ", totalPrecios)
 
                 // Asignar comisiones
-                if (isNaN(comisionVendedor) || comisionVendedor == null) {
-                    comisionVendedor = 0
-                }
+                comisionVendedor = 0
+                
                 // totalPrecios += comisionVendedor // Precio maximo permitido
 
                 // console.log("Total precios con comisiones: ", totalPrecios)
                 const comisionUsuarios = await obtenerComisiones(nNights, habitacionId)
                 let precioMinimoPermitidoSinComision = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
                 console.log("Precio minimo permitido: ", precioMinimoPermitidoSinComision)
-                const precioMinimoPermitido = precioMinimoPermitidoSinComision + comisionVendedor;
+                const precioMinimoPermitido = precioMinimoPermitidoSinComision;
                 console.log("Precio total de la reserva", precioMinimoPermitido);
                 const precioMaximoPermitido = totalPrecios + comisionUsuarios.finalComission // Precio maximo permitido
                 // console.log("Total precios con comisiones: ", totalPrecios)
