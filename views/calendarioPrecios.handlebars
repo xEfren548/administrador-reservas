@@ -403,10 +403,14 @@
 				<div class="img-container">
 					<div class="row mt-2 mb-2">
 						<div class="col-8">
-							<label for="select-cabana"><b>Selecciona una o más habitaciones para modificar: </b></label>
+							<label for="select-cabana"><b>1. Descarga el archivo plantilla: </b></label>
+        					<button id="downloadBtn" class="btn btn-primary ml-2">
+        						<i class="bi bi-download"></i> Descargar archivo
+        					</button>
+							<label for="select-cabana"><b>2. Abrir y llenar el archivo: </b></label>
 							<div class="mb-3">
 								<form id="upload-csv-form">
-									<label for="" class="form-label">Escoger archivo</label>
+									<label for="" class="form-label"><b>3. Subir archivo</b></label>
 									<input type="file" class="form-control" name="csvFile" id="csv-file" accept=".xlsm"
 										aria-describedby="fileHelpId" required />
 									<div id="fileHelpId" class="form-text">XLSX</div>
@@ -2704,6 +2708,23 @@
 			});
 		}
 	});
+
+	document.getElementById('downloadBtn').addEventListener('click', function() {
+        // Ruta al archivo que quieres descargar
+        const filePath = '/files/plantilla_nyn_precios_masivos.xlsm'; // Cambia esto por la ruta real
+            
+        // Crear un enlace temporal
+        const link = document.createElement('a');
+        link.href = filePath;
+        
+	    // Opcional: establecer el atributo download con un nombre de archivo personalizado
+		link.download = 'plantilla_nyn_precios_masivos.xlsm';
+            
+            // Simular click en el enlace
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
 
 
 	window.addEventListener("load", () => {
