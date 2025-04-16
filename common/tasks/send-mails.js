@@ -42,14 +42,30 @@ async function sendEmail(email, reservationId) {
         //     }
         // });
 
+        // const transporter = nodemailer.createTransport({
+        //     host: 'mail.privateemail.com',
+        //     port: 465,
+        //     secure: true,
+        //     auth: {
+        //         user: 'administracion@nynhoteles.com.mx',
+        //         pass: 'Martes.123'
+        //     }
+        // });
+
         const transporter = nodemailer.createTransport({
-            host: 'mail.privateemail.com',
-            port: 465,
-            secure: true,
+            host: 'mail.privateemail.com', // Servidor SMTP de Namecheap
+            port: 587,                    // Puerto para TLS (no SSL)
+            secure: false,                 // `false` para TLS, `true` para SSL (465)
             auth: {
                 user: 'administracion@nynhoteles.com.mx',
                 pass: 'Martes.123'
-            }
+            },
+            tls: {
+                // Opcional: Desactivar validación de certificado (SOLO si es necesario)
+                rejectUnauthorized: true // ⚠️ Usar solo en pruebas
+            },
+            connectionTimeout: 30000,     // 30 segundos de timeout,
+            logger: true
         });
     
         const mailOptions = {
