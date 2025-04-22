@@ -635,25 +635,6 @@ async function createReservation(req, res, next) {
         console.log("is depo: ", isDeposit);
         console.log("cliente email: ", clientEmail);
 
-        if (clientEmail) {
-            client = await Cliente.findOne({ email: clientEmail });
-            console.log("Client initial")
-
-        }
-        if (!client) {
-            newCliente = await clienteController.createClientLocal(clientFirstName, clientLastName, req.session)
-            console.log("No cliente")
-            console.log(newCliente)
-            if (!newCliente) {
-                throw new NotFoundError('Client does not exist');
-            }
-            client = newCliente;
-
-        }
-
-        console.log("client: ");
-        console.log(client);
-
         const fechaAjustada = new Date(arrivalDate);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
         const departureDateAjustada = new Date(departureDate);
@@ -704,10 +685,30 @@ async function createReservation(req, res, next) {
             });
         }
 
-        const fechasBloqueadas = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId });
-        if (fechasBloqueadas) {
-            if (nNights < fechasBloqueadas.min) {
+        const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: {$nin: ['bloqueo', 'capacidad_minima']} });
+        if (fechasBloqueadasPorRestriccion) {
+            if (nNights < fechasBloqueadasPorRestriccion.min) {
                 return res.status(400).send({ message: `La estancia minima es de ${fechasBloqueadas.min} noches` });
+            }
+        }
+
+        let currentDate = new Date(fechaAjustada);
+        currentDate.setUTCHours(6);
+        while (currentDate <= departureDateAjustada) {
+            const fechasBloqueadas = await BloqueoFechas.findOne({ date: currentDate, habitacionId: mongooseChaletId, type: 'bloqueo' });
+            if (fechasBloqueadas) {
+                const formattedDate = currentDate.toISOString().split('T')[0];
+                return res.status(400).send({ message: `La habitacion está bloqueada para la fecha ${formattedDate}` });
+            }
+
+            currentDate.setDate(currentDate.getDate() + 1);
+        
+        }
+
+        const fechasBloqueadasPorCapacidad = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: 'capacidad_minima' });
+        if (fechasBloqueadasPorCapacidad) {
+            if (pax < fechasBloqueadasPorCapacidad.min) {
+                return res.status(400).send({ message: `La capacidad minima es de ${fechasBloqueadasPorCapacidad.min} personas` });
             }
         }
 
@@ -716,6 +717,25 @@ async function createReservation(req, res, next) {
         //     throw new BadRequestError('La habitación no está disponible en esas fechas');
         // }
 
+        if (clientEmail) {
+            client = await Cliente.findOne({ email: clientEmail });
+            console.log("Client initial")
+
+        }
+        if (!client) {
+            newCliente = await clienteController.createClientLocal(clientFirstName, clientLastName, req.session)
+            console.log("No cliente")
+            console.log(newCliente)
+            if (!newCliente) {
+                throw new NotFoundError('Client does not exist');
+            }
+            client = newCliente;
+
+        }
+
+        console.log("client: ");
+        console.log(client);
+        
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
         if (!costosVendedor) { throw new NotFoundError('Costos vendedor not found'); }
 
