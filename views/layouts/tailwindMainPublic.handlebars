@@ -108,7 +108,20 @@
 
 <body>
 
-    {{{body}}}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col min-vh-100 p-4">
+                <!-- Toggler para abrir el offcanvas -->
+                <button class="btn btn-light float-start hidden" data-bs-toggle="offcanvas" data-bs-target="#offcanvas"
+                    role="button">
+                    <i class="fa fa-list" aria-hidden="true"></i>
+                </button>
+                <p> </p>
+                <!-- Contenido de la página -->
+                {{{body}}}
+            </div>
+        </div>
+    </div>
 
     {{!--
     <div class="container-fluid">
