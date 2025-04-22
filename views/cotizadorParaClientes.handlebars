@@ -1099,7 +1099,7 @@
 
                     abrirModal(botonReservar);
                 });
-                botonReservar.textContent = "Reservar";
+                botonReservar.textContent = "Más información";
                 contenido.appendChild(botonReservar);
 
                 // Agregar contenido a la tarjeta
@@ -1129,7 +1129,7 @@
             // Función para abrir el modal
             function abrirModal(boton) {
                 console.log(boton);
-                modalReserva.classList.remove("hidden");
+                //modalReserva.classList.remove("hidden");
                 console.log("Precio total: ", boton.dataset.precioTotal)
                 precioTotalInput.textContent = `$${boton.dataset.precioTotal}`
                 fechaLlegadaSpan.textContent = boton.dataset.arrivalDate;
@@ -1141,6 +1141,26 @@
                 maxPaxInput.value = boton.dataset.maxPax;
                 costoTotalInput.value = boton.dataset.costoTotal
                 precioTotalNoComs.value = boton.dataset.precioTotalSinComisiones;
+
+                let html = `
+                <p>¿Desea solicitar más información sobre la cabaña ${boton.dataset.nombreHabitacion}?</p>
+                <h3 class="text-xl font-semibold text-black mt-4 mb-2">Información de la reserva</h3>
+                <p>Fecha de llegada: ${boton.dataset.arrivalDate}</p>
+                <p>Fecha de salida: ${boton.dataset.departureDate}</p>
+                <p>Huespedes: ${boton.dataset.huespedes}</p>
+                <p class="mb-2">Noches: ${boton.dataset.nNights}</p>
+
+                <b><p>Al confirmar, se redirigirá a Whatsapp para finalizar la reserva</p></b>
+                `
+
+                Swal.fire({
+                    title: 'Confirmar solicitud de información',
+                    html: html,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Confirmar',
+                    cancelButtonText: 'Cancelar',
+                })
             };
 
 
