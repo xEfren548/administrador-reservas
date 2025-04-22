@@ -17,7 +17,7 @@ const bloqueoFechasSchema = new Schema({
     },
     type: {
         type: String,
-        enum: ['bloqueo', 'restriccion']
+        enum: ['bloqueo', 'restriccion', 'capacidad_minima']
     }
 });
 

@@ -59,36 +59,60 @@ async function crearFechaRestringida(req, res){
 }
 
 async function crearFechaBloqueada(req, res){
-    const {date, habitacionId, type} = req.body;
+    const {date, habitacionId, type, min} = req.body;
 
     try {
 
-        if (type !== 'bloqueo') {
+        if (type !== 'bloqueo' && type !== 'capacidad_minima') {
             return res.status(400).send({ message: 'Invalid type value' });
+        }
+
+        if (type === 'capacidad_minima' && isNaN(min) || min <= 0) {
+            return res.status(400).send({ message: 'Invalid min value' });
         }
 
         const fechaFormatted = new Date(date)
         fechaFormatted.setUTCHours(6); // Ajustar la hora a 00:00:00 UTC
         const mongooseHabitacionId = new mongoose.Types.ObjectId(habitacionId);
     
-        const description = `Fecha bloqueada`
+        const description = (type === "bloqueo") ? `Fecha bloqueada` : `Capacidad mínima de ${min} personas.`
     
     
-        const existeFecha = await BloqueoFechas.findOne({date: date, habitacionId: mongooseHabitacionId, type: 'bloqueo'})
+        const existeFecha = await BloqueoFechas.findOne({date: date, habitacionId: mongooseHabitacionId, type: type})
         if (existeFecha){
             // edit the existe fecha to the new description and min
             existeFecha.description = description;
+            if (type === "capacidad_minima") {
+                existeFecha.min = min;
+            }
             await existeFecha.save();
             return res.status(201).send({ message: 'Date modified successfully', date: existeFecha});
     
         }
     
-        const newFechaBloqueada = new BloqueoFechas({
-            date: new Date(date),
-            description,
-            habitacionId: new mongoose.Types.ObjectId(habitacionId),
-            type: 'bloqueo'
-        })
+        let newFechaBloqueada;
+        if (type === "capacidad_minima") {
+            newFechaBloqueada = new BloqueoFechas({
+                date: new Date(date),
+                description,
+                habitacionId: new mongoose.Types.ObjectId(habitacionId),
+                type: 'capacidad_minima',
+                min: min
+            })
+        } else if (type === "bloqueo") {
+            newFechaBloqueada = new BloqueoFechas({
+                date: new Date(date),
+                description,
+                habitacionId: new mongoose.Types.ObjectId(habitacionId),
+                type: 'bloqueo'
+            })
+        } else {
+            newFechaBloqueada = null
+        }
+
+        if (!newFechaBloqueada) {
+            return res.status(400).send({ message: 'Invalid type value' });
+        }
     
         const agregarFecha = await newFechaBloqueada.save();
         if (!agregarFecha){

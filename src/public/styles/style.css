@@ -786,6 +786,11 @@ ul.rb li .timestamp {
     cursor: not-allowed;
 }
 
+.blocked-capacity {
+    background-color: #ff9500 !important; /* orange background */
+    cursor: not-allowed;
+}
+
 /* Indicators */
 
 .color-label {

@@ -95,6 +95,8 @@ function createCalendar(month, year, calendarContainerId, chaletId) {
         if (isRestricted) {
             if (type === "bloqueo"){
                 dayDiv.classList.add('blocked');
+            } else if (type === "capacidad_minima") {
+                dayDiv.classList.add('blocked-capacity');
             } else {
                 dayDiv.classList.add('restricted');
             }
@@ -569,6 +571,170 @@ addBloqueadas2btn.addEventListener('click', async (e) => {
             location.reload();
         }
     });
+    function obtenerRangoFechas(fechaInicio, fechaFin) {
+        const fechas = [];
+        let fechaActual = new Date(fechaInicio);
+
+        console.log(diasSeleccionados)
+        console.log("Holaaaaaaaaa desde obtener rango")
+
+        while (fechaActual <= fechaFin) {
+            if (diasSeleccionados.includes(obtenerNombreDia(fechaActual))) {
+                fechas.push(new Date(fechaActual));
+                console.log("Entra ", new Date(fechaActual) )
+            }
+            fechaActual.setDate(fechaActual.getDate() + 1);
+        }
+        return fechas;
+    }
+
+    function obtenerNombreDia(fecha) {
+        const diasSemana = ['domingo','lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+        return diasSemana[fecha.getDay()];
+    }
+
+
+
+
+    
+})
+const addBloqueadasCapacidadBtn = document.querySelector('#add-bloqueadas-capacidad-btn');
+
+addBloqueadasCapacidadBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    addBloqueadasCapacidadBtn.disabled = true;
+    const chkboxesChalets = document.querySelectorAll('.checkboxes-chalets-block');
+    const checkedChalets = [];
+
+    chkboxesChalets.forEach(function (checkbox) {
+        if (checkbox.checked) {
+            checkedChalets.push(checkbox.value);
+        }
+    });
+
+    if (checkedChalets.length === 0){
+        addBloqueadasCapacidadBtn.disabled = false;
+        Swal.fire({
+            title: 'Error',
+            text: 'Debes seleccionar al menos una habitacion',
+            icon: 'error',
+            confirmButtonText: 'Ok'
+        })
+        return;
+    }
+
+    const fechaInicioString = document.querySelector('#fecha-inicio-block-cap').value; // Obtener el valor del input de tipo date
+    const fechaInicio = new Date(`${fechaInicioString}T00:00:00`); // Agregar la hora en formato UTC
+    
+    const fechaFinString = document.querySelector('#fecha-fin-block-cap').value; // Obtener el valor del input de tipo date
+    const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
+    
+    const diasSeleccionados = [];
+    const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-general-block');
+    checkboxes.forEach(function (checkbox) {
+        if (checkbox.checked) {
+            diasSeleccionados.push(checkbox.value);
+        }
+    });
+    const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
+    console.log(fechaInicio)
+    console.log(fechaFin)   
+    console.log(fechas)
+    
+    for (const habitacionesAmodificar of checkedChalets){
+        
+
+
+        try {
+            const resultados = await fetchRepetido(fechas);
+            console.log(resultados)
+            if (resultados.length === 0) {
+                throw new Error('No hay fechas seleccionadas para actualizar.');
+            }
+    
+            
+    
+        } catch (error) {
+            console.error(error)
+            const addBloqueadasCapacidadBtn = document.querySelector('#add-bloqueadas-2-btn');
+            addBloqueadasCapacidadBtn.disabled = false;
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un problema al actualizar los precios. Por favor, verifica que todos los campos están completos o intenta de nuevo más tarde.',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+
+        
+
+        async function fetchRepetido(fechas) {
+            try {
+                console.log('Holaaaaa')
+    
+                const resultados = [];
+                console.log('ejecutando fetch repetido...');
+    
+                // const {date, description, min, habitacionId} = req.body;
+                const habitacionId = habitacionesAmodificar;
+                const min = document.querySelector('#capacidad-minima-select').value
+    
+                for (const fecha of fechas) {
+    
+                    const jsonBody = {
+                        date: fecha,
+                        habitacionId: habitacionId,
+                        type: 'capacidad_minima',
+                        min: min
+                    }
+    
+                    const response = await fetch('/api/calendario-bloqueorealfechas', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(jsonBody)
+                    })
+    
+                    // Verificar el estado de la respuesta
+                    if (!response.ok) {
+                        throw new Error('Error en la solicitud fetch: ' + response.message);
+                    }
+    
+                    // Convertir la respuesta a JSON
+                    const data = await response.json();
+                    console.log(data);
+    
+                    // Agregar el resultado al array de resultados
+                    resultados.push(data);
+    
+                }
+    
+                return resultados;
+    
+            } catch (e) {
+                console.error(e);
+                throw error;
+            }
+        }
+    
+    }
+
+    Swal.fire({
+        icon: 'success',
+        title: '¡Completado!',
+        text: 'Fechas bloqueadas por capacidad correctamente.',
+        confirmButtonText: 'Aceptar'
+    }).then((result) => {
+        // console.log('Resultados de fetch repetido:', resultados);
+        // Verificar si el usuario hizo clic en el botón de confirmación
+        if (result.isConfirmed) {
+            // Actualizar la página
+            location.reload();
+        }
+    });
+
     function obtenerRangoFechas(fechaInicio, fechaFin) {
         const fechas = [];
         let fechaActual = new Date(fechaInicio);
