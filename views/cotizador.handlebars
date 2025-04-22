@@ -643,16 +643,155 @@
                 const images = Array.isArray(habitacion.images) ? habitacion.images : [habitacion.images];
                 const fallbackImage = "https://www.bosquestapalpa.com.mx/bosquestapalpa/contenido/8a62e2784_blog_.jpg";
 
+                const createImageModal = () => {
+                    // Check if modal already exists
+                    if (document.getElementById('image-modal')) return;
+                    
+                    const modal = document.createElement("div");
+                    modal.id = "image-modal";
+                    modal.classList.add("fixed", "inset-0", "bg-black", "bg-opacity-90", "z-50", "hidden", "flex", "items-center", "justify-center", "flex-col");
+                    
+                    const modalContent = document.createElement("div");
+                    modalContent.classList.add("w-full", "max-w-4xl", "h-full", "max-h-screen", "flex", "flex-col", "items-center", "justify-center", "p-4");
+                    
+                    const closeBtn = document.createElement("button");
+                    closeBtn.innerHTML = "×";
+                    closeBtn.classList.add("absolute", "top-4", "right-6", "text-white", "text-4xl", "hover:text-gray-300", "focus:outline-none");
+                    closeBtn.onclick = () => modal.classList.add("hidden");
+                    
+                    const imageContainer = document.createElement("div");
+                    imageContainer.classList.add("relative", "w-full", "h-4/5", "flex", "items-center", "justify-center");
+                    
+                    const modalImage = document.createElement("img");
+                    modalImage.id = "modal-image";
+                    modalImage.classList.add("max-h-full", "max-w-full", "object-contain");
+                    
+                    const prevBtn = document.createElement("button");
+                    prevBtn.innerHTML = "&#10094;";
+                    prevBtn.id = "modal-prev";
+                    prevBtn.classList.add("absolute", "left-0", "top-1/2", "transform", "-translate-y-1/2", "bg-black", "bg-opacity-50", "text-white", "p-4", "rounded", "hover:bg-opacity-70");
+                    
+                    const nextBtn = document.createElement("button");
+                    nextBtn.innerHTML = "&#10095;";
+                    nextBtn.id = "modal-next";
+                    nextBtn.classList.add("absolute", "right-0", "top-1/2", "transform", "-translate-y-1/2", "bg-black", "bg-opacity-50", "text-white", "p-4", "rounded", "hover:bg-opacity-70");
+                    
+                    const counter = document.createElement("div");
+                    counter.id = "modal-counter";
+                    counter.classList.add("mt-4", "text-white", "text-center");
+                    
+                    imageContainer.appendChild(modalImage);
+                    imageContainer.appendChild(prevBtn);
+                    imageContainer.appendChild(nextBtn);
+                    
+                    modalContent.appendChild(imageContainer);
+                    modalContent.appendChild(counter);
+                    
+                    modal.appendChild(closeBtn);
+                    modal.appendChild(modalContent);
+                    
+                    document.body.appendChild(modal);
+                    
+                    // Close modal when clicking on the backdrop (outside of content)
+                    modal.addEventListener("click", (e) => {
+                        if (e.target === modal) {
+                            modal.classList.add("hidden");
+                        }
+                    });
+                };
+
+                // Create the modal once
+                createImageModal();
+
+                // Function to open the modal with specific images
+                const openImageModal = (imageUrls, startIndex = 0) => {
+                    const modal = document.getElementById('image-modal');
+                    const modalImage = document.getElementById('modal-image');
+                    const counter = document.getElementById('modal-counter');
+                    const prevBtn = document.getElementById('modal-prev');
+                    const nextBtn = document.getElementById('modal-next');
+                    
+                    let currentIndex = startIndex;
+                    
+                    // Update the image and counter
+                    const updateModalImage = () => {
+                        modalImage.src = imageUrls[currentIndex];
+                        counter.textContent = `${currentIndex + 1} / ${imageUrls.length}`;
+                        
+                        // Handle image loading errors
+                        modalImage.onerror = () => {
+                            console.warn(`La imagen modal ${modalImage.src} no se pudo cargar. Usando imagen de respaldo.`);
+                            modalImage.src = fallbackImage;
+                        };
+                    };
+                    
+                    // Set up navigation
+                    prevBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        currentIndex = (currentIndex - 1 + imageUrls.length) % imageUrls.length;
+                        updateModalImage();
+                    };
+                    
+                    nextBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        currentIndex = (currentIndex + 1) % imageUrls.length;
+                        updateModalImage();
+                    };
+                    
+                    // Show/hide navigation buttons based on image count
+                    if (imageUrls.length <= 1) {
+                        prevBtn.classList.add("hidden");
+                        nextBtn.classList.add("hidden");
+                        counter.classList.add("hidden");
+                    } else {
+                        prevBtn.classList.remove("hidden");
+                        nextBtn.classList.remove("hidden");
+                        counter.classList.remove("hidden");
+                    }
+                    
+                    // Set initial image
+                    updateModalImage();
+                    
+                    // Show modal
+                    modal.classList.remove("hidden");
+                    
+                    // Add keyboard navigation
+                    const handleKeydown = (e) => {
+                        if (e.key === "ArrowLeft") {
+                            prevBtn.click();
+                        } else if (e.key === "ArrowRight") {
+                            nextBtn.click();
+                        } else if (e.key === "Escape") {
+                            modal.classList.add("hidden");
+                            document.removeEventListener("keydown", handleKeydown);
+                        }
+                    };
+                    
+                    document.addEventListener("keydown", handleKeydown);
+                    
+                    // Remove event listener when modal is closed
+                    const onModalHidden = () => {
+                        if (modal.classList.contains("hidden")) {
+                            document.removeEventListener("keydown", handleKeydown);
+                            modal.removeEventListener("transitionend", onModalHidden);
+                        }
+                    };
+                    
+                    modal.addEventListener("transitionend", onModalHidden);
+                };
+
 
                 if (images.length > 1) {
-                    console.log(images);
                     const carousel = document.createElement("div");
                     carousel.classList.add("carousel", "w-full", "h-48", "relative");
+
+                    // Prepare full image URLs for modal
+                    const fullImageUrls = images.map(imgSrc => `https://navarro.integradev.site/navarro/${imgSrc}`);
 
                     // Agregar todas las imágenes al carrusel
                     images.forEach((imgSrc, index) => {
                         const slide = document.createElement("div");
-                        slide.classList.add("carousel-slide", "absolute", "w-full", "h-full");
+                        slide.classList.add("carousel-slide", "absolute", "w-full", "h-full", "cursor-pointer");
                         slide.style.display = index === 0 ? "block" : "none";
 
                         const img = document.createElement("img");
@@ -663,7 +802,14 @@
                         img.onerror = () => {
                             console.warn(`La imagen ${img.src} no se pudo cargar. Usando imagen de respaldo.`);
                             img.src = fallbackImage;
+                            // Update fullImageUrls if fallback is used
+                            fullImageUrls[index] = fallbackImage;
                         };
+
+                        // Add click event to open modal
+                        slide.addEventListener("click", () => {
+                            openImageModal(fullImageUrls, index);
+                        });
 
                         slide.appendChild(img);
                         carousel.appendChild(slide);
@@ -672,11 +818,11 @@
                     // Agregar botones de navegación
                     const prevBtn = document.createElement("button");
                     prevBtn.innerHTML = "&#10094;";
-                    prevBtn.classList.add("carousel-btn", "prev", "absolute", "left-0", "top-1/2", "bg-black", "bg-opacity-50", "text-white", "p-2", "rounded");
+                    prevBtn.classList.add("carousel-btn", "prev", "absolute", "left-0", "top-1/2", "bg-black", "bg-opacity-50", "text-white", "p-2", "rounded", "z-10");
 
                     const nextBtn = document.createElement("button");
                     nextBtn.innerHTML = "&#10095;";
-                    nextBtn.classList.add("carousel-btn", "next", "absolute", "right-0", "top-1/2", "bg-black", "bg-opacity-50", "text-white", "p-2", "rounded");
+                    nextBtn.classList.add("carousel-btn", "next", "absolute", "right-0", "top-1/2", "bg-black", "bg-opacity-50", "text-white", "p-2", "rounded", "z-10");
 
                     carousel.appendChild(prevBtn);
                     carousel.appendChild(nextBtn);
@@ -685,13 +831,15 @@
                     let currentIndex = 0;
                     const slides = carousel.querySelectorAll(".carousel-slide");
 
-                    prevBtn.addEventListener("click", () => {
+                    prevBtn.addEventListener("click", (e) => {
+                        e.stopPropagation(); // Prevent opening modal when clicking navigation
                         slides[currentIndex].style.display = "none";
                         currentIndex = (currentIndex - 1 + slides.length) % slides.length;
                         slides[currentIndex].style.display = "block";
                     });
 
-                    nextBtn.addEventListener("click", () => {
+                    nextBtn.addEventListener("click", (e) => {
+                        e.stopPropagation(); // Prevent opening modal when clicking navigation
                         slides[currentIndex].style.display = "none";
                         currentIndex = (currentIndex + 1) % slides.length;
                         slides[currentIndex].style.display = "block";
@@ -703,12 +851,21 @@
                     const img = document.createElement("img");
                     img.src = `https://navarro.integradev.site/navarro/${images[0]}`;
                     img.alt = habitacion.name;
-                    img.classList.add("w-full", "h-48", "object-cover");
+                    img.classList.add("w-full", "h-48", "object-cover", "cursor-pointer");
+
+                    // Prepare full image URL for modal
+                    let fullImageUrl = img.src;
 
                     img.onerror = () => {
                         console.warn(`La imagen ${img.src} no se pudo cargar. Usando imagen de respaldo.`);
                         img.src = fallbackImage;
+                        fullImageUrl = fallbackImage;
                     };
+
+                    // Add click event to open modal
+                    img.addEventListener("click", () => {
+                        openImageModal([fullImageUrl]);
+                    });
 
                     imageContainer.appendChild(img);
                 }
