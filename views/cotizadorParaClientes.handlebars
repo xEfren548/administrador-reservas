@@ -781,7 +781,7 @@
                 };
 
 
-                if (images.length > 1) {    
+                if (images.length > 1) {
                     const carousel = document.createElement("div");
                     carousel.classList.add("carousel", "w-full", "h-48", "relative");
 
@@ -1160,6 +1160,13 @@
                     showCancelButton: true,
                     confirmButtonText: 'Confirmar',
                     cancelButtonText: 'Cancelar',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        console.log(`Enviando información a ${vendedor}`);
+                        const text = `Hola, me gustaria solicitar mas informacion sobre la cabana ${boton.dataset.nombreHabitacion} de la fecha ${boton.dataset.arrivalDate} a ${boton.dataset.departureDate} para ${boton.dataset.huespedes} huespedes.`;
+                        const whaUrl = `https://wa.me/${vendedor}?text=${encodeURIComponent(text)}`;
+                        window.open(whaUrl, '_blank');
+                    }
                 })
             };
 
@@ -1635,6 +1642,49 @@
     }
 
     document.addEventListener('DOMContentLoaded', addCarouselStyles);
+
+    // Función para obtener parámetros de la URL
+    function obtenerParametroURL(nombre) {
+        const url = new URL(window.location.href);
+        return url.searchParams.get(nombre);
+    }
+
+    // Función para validar el número de teléfono mexicano
+    function validarNumeroMX(numero) {
+        // Expresión regular para validar: +52 seguido de exactamente 10 dígitos
+        const regex = /^\d{10}$/;
+        return regex.test(numero);
+    }
+
+    // Obtener el parámetro 'vendedor' de la URL
+    const vendedor = obtenerParametroURL('vendedor');
+    console.log(vendedor)
+
+    // Validar el número
+    if (vendedor) {
+        if (validarNumeroMX(vendedor)) {
+            console.log('Número válido:', vendedor);
+            // Aquí puedes continuar con tu lógica para un número válido
+        } else {
+            console.error('Número inválido. Debe ser +52 seguido de 10 dígitos.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'URL inválida por numero de telefono. Favor de solicitar otro enlace',
+                allowOutsideClick: false,
+                showConfirmButton: false
+            })
+        }
+    } else {
+        console.log('No se encontró el parámetro vendedor en la URL');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Favor de solicitar otro enlace.',
+            allowOutsideClick: false,
+            showConfirmButton: false
+        })
+    }
 
 
 </script>
