@@ -1901,6 +1901,22 @@ async function cotizadorView(req, res) {
     }
 }
 
+async function cotizadorClientesView(req, res) {
+    try {
+        const tipologias = await Tipologias.find().lean();
+        const clientes = await Cliente.find().lean();
+
+        res.render('cotizadorParaClientes', {
+            layout: 'tailwindMainPublic',
+            tipologias,
+            clientes
+        });
+    } catch (error) {
+        console.error('Error al enviar el correo:', error);
+        res.status(500).json({ message: 'Error al renderizar la pagina' });
+    }
+}
+
 async function cotizadorChaletsyPrecios(req, res) {
     try {
         const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles } = req.body;
@@ -2127,6 +2143,7 @@ module.exports = {
     cifrarMensaje,
     sendReservationMail,
     cotizadorView,
+    cotizadorClientesView,
     cotizadorChaletsyPrecios
 };
 
