@@ -356,7 +356,7 @@ $('#delete-prices-btn').on('click', async () => {
 
     const tipoBloqueo = document.querySelector('#select-tipo-bloqueo-eliminar').value
 
-    if (tipoBloqueo !== 'restriccion' && tipoBloqueo !== 'bloqueo'){
+    if (tipoBloqueo !== 'restriccion' && tipoBloqueo !== 'bloqueo' && tipoBloqueo !== 'bloqueo_capacidad') {
         Swal.fire({
             icon: 'error',
             title: 'Error',

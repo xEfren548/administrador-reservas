@@ -144,13 +144,22 @@ async function eliminarFechaBloqueada(req, res){
 
             return res.status(200).json({ message: 'Registro eliminado correctamente' });
 
+        } else if (type === "bloqueo_capacidad") {
+            const resultado = await BloqueoFechas.findOneAndDelete({ date: fechaAjustada, habitacionId: newHabitacionId, type: 'capacidad_minima' });
+
+            if (!resultado) {
+                return res.status(200).json({});
+            }
+
+            return res.status(200).json({ message: 'Registro eliminado correctamente' });
         }
 
         const resultado = await BloqueoFechas.findOneAndDelete({
             date: fechaAjustada,
             habitacionId: newHabitacionId,
-            type: { $ne: 'bloqueo' }
+            type: { $ne: 'bloqueo', $ne: 'capacidad_minima' }
         });
+        
         if (!resultado) {
             return res.status(200).json({});
         }
