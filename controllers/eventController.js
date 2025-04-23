@@ -1918,24 +1918,8 @@ async function cotizadorClientesView(req, res) {
             return { id, estado, municipio, latitud, longitud };
         })
 
-        // console.log(habitacionesConUbicacion);
-
         const ubicacionesAgrupadas = groupLocationsByMunicipality(habitacionesConUbicacion);
         const ubicacionesAgrupadasArray = Object.keys(ubicacionesAgrupadas);
-        
-
-        // const habitacionesConUbicacion = await Promise.all(ubicaciones.map(async habitacion => {
-        //     console.log(habitacion);
-        //     const { municipio, estado } = await getLocationDetails(habitacion.location.latitude, habitacion.location.longitude);
-        //     return {
-        //         ...habitacion,
-        //         ubicacionCompleta: {
-        //             municipio,
-        //             estado
-        //         }
-        //     };
-        // }));
-
 
         res.render('cotizadorParaClientes', {
             layout: 'tailwindMainPublic',
@@ -1985,36 +1969,35 @@ function groupLocationsByMunicipality(locations) {
     return groupedByMunicipality;
 }
 
-async function getLocationDetails(lat, lon) {
-    try {
-        const response = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-        const data = response.data;
-        return {
-            municipio: data.address.village || data.address.town || data.address.city_district,
-            estado: data.address.state
-        };
-    } catch (error) {
-        console.error('Error al obtener detalles de ubicación:', error);
-        return {
-            municipio: 'Desconocido',
-            estado: 'Desconocido'
-        };
-    }
-}
 async function cotizadorChaletsyPrecios(req, res) {
     try {
-        const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles } = req.body;
-        console.log(categorias)
-        console.log(huespedes)
+        const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles, isForClient } = req.body;
 
         let filtro = {};
-
+        
         if (!categorias.includes("all")) { //Si se seleccionaron categorias
-            filtro = {
-                "propertyDetails.accomodationType": { $in: categorias },
-                "propertyDetails.maxOccupancy": { $gte: huespedes },
-                "propertyDetails.minOccupancy": { $lte: huespedes },
-                isActive: true
+            if (isForClient) {
+                if (categorias.length > 1) {
+                    for (let categoria of categorias) {
+                        categorias.push(categoria.toLowerCase());
+                    }
+                } else {
+                    categorias.push(categorias[0].toLowerCase());
+                }
+                console.log(categorias)
+                filtro = {
+                    "location.population": { $in: categorias },
+                    "propertyDetails.maxOccupancy": { $gte: huespedes },
+                    "propertyDetails.minOccupancy": { $lte: huespedes },
+                    isActive: true
+                }
+            } else {
+                filtro = {
+                    "propertyDetails.accomodationType": { $in: categorias },
+                    "propertyDetails.maxOccupancy": { $gte: huespedes },
+                    "propertyDetails.minOccupancy": { $lte: huespedes },
+                    isActive: true
+                }
             };
         } else { // Si se mostrara todo
             filtro = {
@@ -2027,7 +2010,6 @@ async function cotizadorChaletsyPrecios(req, res) {
 
         const chalets = await Habitacion.find(filtro).lean();
         const chaletIds = chalets.map(chalet => chalet._id);
-        console.log(chaletIds)
         if (!chalets) {
             throw new Error('No se encontraron habitaciones');
         }

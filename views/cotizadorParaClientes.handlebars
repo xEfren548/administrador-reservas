@@ -569,6 +569,7 @@
                 fechaSalida: fechaSalida,
                 huespedes: parseInt(huespedes, 10), // Convertir a número
                 soloDisponibles: buscarSoloDisponiblesChk,
+                isForClient: true
             };
 
             console.log("Datos a enviar:", datos);
@@ -899,7 +900,7 @@
                 const precio = document.createElement("p");
                 precio.classList.add("text-white-400", "mt-2", "font-semibold");
                 precio.textContent = `$${habitacion.totalPrice} por ${evento.nights} noche(s)`;
-                contenido.appendChild(precio);
+                //contenido.appendChild(precio);
 
                 // Iconos de características (nuevo)
                 const iconosContainer = document.createElement("div");
@@ -1066,41 +1067,46 @@
                     }
                 }
 
-                // Botón de reservar
-                let botonReservar = document.createElement("button");
-                botonReservar.classList.add(
-                    "mt-4",
-                    "w-full",
-                    "bg-blue-600",
-                    "text-white",
-                    "py-2",
-                    "px-4",
-                    "rounded-md",
-                    "hover:bg-blue-700",
-                    "transition-colors"
-                );
+                const buscarSoloDisponiblesChk = document.getElementById("buscar-solo-disponibles").checked;
+                console.log("Buscar solo disponibles:", buscarSoloDisponiblesChk);
 
-                botonReservar.dataset.habitacionId = habitacion.id;
-                botonReservar.dataset.nNights = evento.nights;
-                botonReservar.dataset.precioTotal = habitacion.totalPrice;
-                botonReservar.dataset.costoTotal = habitacion.totalCost;
-                botonReservar.dataset.arrivalDate = evento.fechaLlegada;
-                botonReservar.dataset.departureDate = evento.fechaSalida;
-                botonReservar.dataset.huespedes = evento.huespedes;
-                botonReservar.dataset.nombreHabitacion = habitacion.name;
-                botonReservar.dataset.minPax = habitacion.minPax;
-                botonReservar.dataset.maxPax = habitacion.maxPax;
-                botonReservar.dataset.precioTotalSinComisiones = habitacion.totalPriceNoComs;
+                if (buscarSoloDisponiblesChk) {
+                    // Botón de reservar
+                    let botonReservar = document.createElement("button");
+                    botonReservar.classList.add(
+                        "mt-4",
+                        "w-full",
+                        "bg-blue-600",
+                        "text-white",
+                        "py-2",
+                        "px-4",
+                        "rounded-md",
+                        "hover:bg-blue-700",
+                        "transition-colors"
+                    );
+                    botonReservar.dataset.habitacionId = habitacion.id;
+                    botonReservar.dataset.nNights = evento.nights;
+                    botonReservar.dataset.precioTotal = habitacion.totalPrice;
+                    botonReservar.dataset.costoTotal = habitacion.totalCost;
+                    botonReservar.dataset.arrivalDate = evento.fechaLlegada;
+                    botonReservar.dataset.departureDate = evento.fechaSalida;
+                    botonReservar.dataset.huespedes = evento.huespedes;
+                    botonReservar.dataset.nombreHabitacion = habitacion.name;
+                    botonReservar.dataset.minPax = habitacion.minPax;
+                    botonReservar.dataset.maxPax = habitacion.maxPax;
+                    botonReservar.dataset.precioTotalSinComisiones = habitacion.totalPriceNoComs;
 
 
-                botonReservar.addEventListener("click", () => {
-                    // Aquí puedes realizar la reserva
-                    console.log("Reservar habitación:", habitacion.name);
+                    botonReservar.addEventListener("click", () => {
+                        // Aquí puedes realizar la reserva
+                        console.log("Reservar habitación:", habitacion.name);
 
-                    abrirModal(botonReservar);
-                });
-                botonReservar.textContent = "Más información";
-                contenido.appendChild(botonReservar);
+                        abrirModal(botonReservar);
+                    });
+                    botonReservar.textContent = "Más información";
+                    contenido.appendChild(botonReservar);
+                }
+
 
                 // Agregar contenido a la tarjeta
                 tarjeta.appendChild(contenido);
