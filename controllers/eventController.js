@@ -1919,11 +1919,15 @@ async function cotizadorClientesView(req, res) {
             return { id, estado, municipio, latitud, longitud };
         })
 
-        console.log(habitacionesConUbicacion);
+        // console.log(habitacionesConUbicacion);
+
+        const ubicacionesAgrupadas = groupLocationsByMunicipality(habitacionesConUbicacion);
+        console.log(ubicacionesAgrupadas);
+        console.log(Object.keys(ubicacionesAgrupadas));
 
         // const habitacionesConUbicacion = await Promise.all(ubicaciones.map(async habitacion => {
         //     console.log(habitacion);
-        //     const { municipio, estado } = await getLocationDetails(habitacion.latitude, habitacion.longitude);
+        //     const { municipio, estado } = await getLocationDetails(habitacion.location.latitude, habitacion.location.longitude);
         //     return {
         //         ...habitacion,
         //         ubicacionCompleta: {
@@ -1933,31 +1937,55 @@ async function cotizadorClientesView(req, res) {
         //     };
         // }));
 
-        // const agrupadas = habitacionesConUbicacion.reduce((acc, habitacion) => {
-        //     const key = `${habitacion.ubicacionCompleta.estado}-${habitacion.ubicacionCompleta.municipio}`;
-        //     if (!acc[key]) {
-        //         acc[key] = {
-        //             estado: habitacion.ubicacionCompleta.estado,
-        //             municipio: habitacion.ubicacionCompleta.municipio,
-        //             habitaciones: []
-        //         };
-        //     }
-        //     acc[key].habitaciones.push(habitacion);
-        //     return acc;
-        // }, {});
 
-        // console.log(Object.values(agrupadas));
+
 
         res.render('cotizadorParaClientes', {
             layout: 'tailwindMainPublic',
             tipologias,
             clientes,
-            ubicaciones
+            ubicaciones: ubicacionesAgrupadas
         });
     } catch (error) {
         console.error('Error al enviar el correo:', error);
         res.status(500).json({ message: 'Error al renderizar la pagina' });
     }
+}
+
+function groupLocationsByMunicipality(locations) {
+    // First, standardize the data
+    const standardizedLocations = locations.map(location => {
+        return {
+            id: location.id,
+            estado: typeof location.estado === 'string' ? location.estado.charAt(0).toUpperCase() + location.estado.slice(1).toLowerCase() : location.estado,
+            municipio: typeof location.municipio === 'string' ? location.municipio.charAt(0).toUpperCase() + location.municipio.slice(1).toLowerCase() : location.municipio,
+            // Convert coordinates to standard decimal format if needed
+            latitud: typeof location.latitud === 'number' && location.latitud > 1000 ? location.latitud / 10000 : location.latitud,
+            longitud: typeof location.longitud === 'number' && Math.abs(location.longitud) > 1000 ? location.longitud / 10000 : location.longitud
+        };
+    });
+
+    // Fix the record with wrong state value (where estado is "Mazamitla")
+    standardizedLocations.forEach(location => {
+        if (location.estado === "Mazamitla") {
+            location.estado = "Jalisco";
+        }
+    });
+
+    // Group by municipio
+    const groupedByMunicipality = {};
+
+    standardizedLocations.forEach(location => {
+        const municipio = location.municipio;
+
+        if (!groupedByMunicipality[municipio]) {
+            groupedByMunicipality[municipio] = [];
+        }
+
+        groupedByMunicipality[municipio].push(location);
+    });
+
+    return groupedByMunicipality;
 }
 
 async function getLocationDetails(lat, lon) {
