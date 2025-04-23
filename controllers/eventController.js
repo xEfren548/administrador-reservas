@@ -1,6 +1,7 @@
 const { format, setDay } = require('date-fns');
 const { check } = require("express-validator");
 const { es } = require('date-fns/locale');
+const axios = require('axios');
 const mongoose = require('mongoose');
 const moment = require('moment');
 const Documento = require('../models/Evento');
@@ -316,9 +317,9 @@ async function obtenerEventosDeCabana(req, res) {
 
         }));
 
-        
+
         const fechasBloqueadas = await BloqueoFechas.find({ habitacionId: newId, type: "bloqueo" }).lean()
-        
+
         for (const fecha of fechasBloqueadas) {
             const arrivalDate = new Date(fecha.date);
             arrivalDate.setUTCHours(15, 0, 0, 0)
@@ -347,7 +348,7 @@ async function obtenerEventosDeCabana(req, res) {
             }
             eventosWithColorUsuario.push(evento);
         }
-        
+
         console.log(eventosWithColorUsuario)
         res.send(eventosWithColorUsuario);
     } catch (error) {
@@ -685,7 +686,7 @@ async function createReservation(req, res, next) {
             });
         }
 
-        const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: {$nin: ['bloqueo', 'capacidad_minima']} });
+        const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: { $nin: ['bloqueo', 'capacidad_minima'] } });
         if (fechasBloqueadasPorRestriccion) {
             if (nNights < fechasBloqueadasPorRestriccion.min) {
                 return res.status(400).send({ message: `La estancia minima es de ${fechasBloqueadas.min} noches` });
@@ -702,7 +703,7 @@ async function createReservation(req, res, next) {
             }
 
             currentDate.setDate(currentDate.getDate() + 1);
-        
+
         }
 
         const fechasBloqueadasPorCapacidad = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: 'capacidad_minima' });
@@ -735,7 +736,7 @@ async function createReservation(req, res, next) {
 
         console.log("client: ");
         console.log(client);
-        
+
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
         if (!costosVendedor) { throw new NotFoundError('Costos vendedor not found'); }
 
@@ -997,7 +998,7 @@ async function createOwnerReservation(req, res, next) {
                     message: `La habitación ya está reservada entre ${overlappingReservation.arrivalDate.toISOString()} y ${overlappingReservation.departureDate.toISOString()}.`,
                 });
             }
-    
+
 
             // Verificar la regla de al menos 9 días entre reservas
             const nuevaLlegada = new Date(arrivalDate);
@@ -1156,7 +1157,7 @@ async function editarEvento(req, res) {
 
         // Create an update object with only the fields that are provided
         const updateFields = {};
-        
+
         if (resourceId !== undefined) updateFields.resourceId = resourceId;
         if (nNights !== undefined) updateFields.nNights = nNights;
         if (arrivalDate !== undefined) updateFields.arrivalDate = arrivalDate;
@@ -1203,7 +1204,7 @@ async function editarEvento(req, res) {
 
         // Create an update object with only the fields that are provided
         const updateFields = {};
-        
+
         if (resourceId !== undefined) updateFields.resourceId = resourceId;
         if (nNights !== undefined) updateFields.nNights = nNights;
         if (arrivalDate !== undefined) updateFields.arrivalDate = arrivalDate;
@@ -1907,8 +1908,45 @@ async function cotizadorClientesView(req, res) {
         const clientes = await Cliente.find().lean();
 
         const ubicaciones = await Habitacion.find({}, 'location').lean();
+        console.log(ubicaciones);
 
-        console.log(ubicaciones)
+        const habitacionesConUbicacion = ubicaciones.map(habitacion => {
+            const id = habitacion._id.toString();
+            const estado = habitacion.location.state;
+            const municipio = habitacion.location.population;
+            const latitud = habitacion.location.latitude;
+            const longitud = habitacion.location.longitude;
+            return { id, estado, municipio, latitud, longitud };
+        })
+
+        console.log(habitacionesConUbicacion);
+
+        // const habitacionesConUbicacion = await Promise.all(ubicaciones.map(async habitacion => {
+        //     console.log(habitacion);
+        //     const { municipio, estado } = await getLocationDetails(habitacion.latitude, habitacion.longitude);
+        //     return {
+        //         ...habitacion,
+        //         ubicacionCompleta: {
+        //             municipio,
+        //             estado
+        //         }
+        //     };
+        // }));
+
+        // const agrupadas = habitacionesConUbicacion.reduce((acc, habitacion) => {
+        //     const key = `${habitacion.ubicacionCompleta.estado}-${habitacion.ubicacionCompleta.municipio}`;
+        //     if (!acc[key]) {
+        //         acc[key] = {
+        //             estado: habitacion.ubicacionCompleta.estado,
+        //             municipio: habitacion.ubicacionCompleta.municipio,
+        //             habitaciones: []
+        //         };
+        //     }
+        //     acc[key].habitaciones.push(habitacion);
+        //     return acc;
+        // }, {});
+
+        // console.log(Object.values(agrupadas));
 
         res.render('cotizadorParaClientes', {
             layout: 'tailwindMainPublic',
@@ -1922,6 +1960,22 @@ async function cotizadorClientesView(req, res) {
     }
 }
 
+async function getLocationDetails(lat, lon) {
+    try {
+        const response = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+        const data = response.data;
+        return {
+            municipio: data.address.village || data.address.town || data.address.city_district,
+            estado: data.address.state
+        };
+    } catch (error) {
+        console.error('Error al obtener detalles de ubicación:', error);
+        return {
+            municipio: 'Desconocido',
+            estado: 'Desconocido'
+        };
+    }
+}
 async function cotizadorChaletsyPrecios(req, res) {
     try {
         const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles } = req.body;
@@ -2006,7 +2060,7 @@ async function cotizadorChaletsyPrecios(req, res) {
         if (startDate > endDate) {
             throw new Error("La fecha de llegada debe ser anterior a la fecha de salida");
         }
-        
+
         for (const chalet of mappedChalets) {
             let precioTotal = 0;
             let costoBaseTotal = 0;

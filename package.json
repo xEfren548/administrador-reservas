@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "add-to-calendar-button": "^2.6.12",
-    "axios": "^1.6.8",
+    "axios": "^1.8.4",
     "basic-ftp": "^5.0.5",
     "bcrypt": "^5.1.1",
     "bootstrap": "^5.3.3",
