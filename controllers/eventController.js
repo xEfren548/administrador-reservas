@@ -1906,10 +1906,15 @@ async function cotizadorClientesView(req, res) {
         const tipologias = await Tipologias.find().lean();
         const clientes = await Cliente.find().lean();
 
+        const ubicaciones = await Habitacion.find({}, 'location').lean();
+
+        console.log(ubicaciones)
+
         res.render('cotizadorParaClientes', {
             layout: 'tailwindMainPublic',
             tipologias,
-            clientes
+            clientes,
+            ubicaciones
         });
     } catch (error) {
         console.error('Error al enviar el correo:', error);
