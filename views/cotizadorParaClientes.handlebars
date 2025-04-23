@@ -29,13 +29,13 @@
                                 </label>
 
                                 <!-- Checkboxes de categorías -->
-                                {{#each tipologias}}
+                                {{#each ubicaciones}}
                                 <label for="categoria-{{@index}}"
                                     class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded-md cursor-pointer">
                                     <input type="checkbox" id="categoria-{{@index}}" name="categorias"
-                                        value="{{this.tipologia}}"
+                                        value="{{this}}"
                                         class="form-checkbox text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" />
-                                    <span>{{this.tipologia}}</span>
+                                    <span>{{this}}</span>
                                 </label>
                                 {{/each}}
 

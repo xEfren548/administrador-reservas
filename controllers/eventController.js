@@ -1908,7 +1908,6 @@ async function cotizadorClientesView(req, res) {
         const clientes = await Cliente.find().lean();
 
         const ubicaciones = await Habitacion.find({}, 'location').lean();
-        console.log(ubicaciones);
 
         const habitacionesConUbicacion = ubicaciones.map(habitacion => {
             const id = habitacion._id.toString();
@@ -1922,8 +1921,8 @@ async function cotizadorClientesView(req, res) {
         // console.log(habitacionesConUbicacion);
 
         const ubicacionesAgrupadas = groupLocationsByMunicipality(habitacionesConUbicacion);
-        console.log(ubicacionesAgrupadas);
-        console.log(Object.keys(ubicacionesAgrupadas));
+        const ubicacionesAgrupadasArray = Object.keys(ubicacionesAgrupadas);
+        
 
         // const habitacionesConUbicacion = await Promise.all(ubicaciones.map(async habitacion => {
         //     console.log(habitacion);
@@ -1938,13 +1937,11 @@ async function cotizadorClientesView(req, res) {
         // }));
 
 
-
-
         res.render('cotizadorParaClientes', {
             layout: 'tailwindMainPublic',
             tipologias,
             clientes,
-            ubicaciones: ubicacionesAgrupadas
+            ubicaciones: ubicacionesAgrupadasArray
         });
     } catch (error) {
         console.error('Error al enviar el correo:', error);
