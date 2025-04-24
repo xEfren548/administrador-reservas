@@ -47,6 +47,10 @@ const userSchema = new Schema({
         type: String,
         enum: ['Asimilado', 'RESICO Fisico', 'PF con AE y PM', 'Efectivo']    
     },
+    investorTickets: {
+        type: Number,
+        required: false
+    },
     reservation: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Documento'
