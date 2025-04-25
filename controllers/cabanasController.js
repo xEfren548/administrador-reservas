@@ -871,6 +871,12 @@ async function editChalet(req, res, next) {
             throw new NotFoundError("Platforms not found");
         }
 
+        const totalTickets = others.investors.reduce((sum, investor) => sum + investor.noTickets, 0);
+        
+        if (totalTickets !== 10) {
+            return next(new BadRequestError("El total de tickets de inversionistas debe ser igual a 10."));  ;
+        }
+
         console.log(others.departureTime);
         console.log(others.arrivalTime);
         const newArrivalTime = new Date();
