@@ -840,23 +840,42 @@
         </div>
     </div>
 
-    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#inversionistas">+
-        Inversionistas</button>
-    <div id="inversionistas">
-        <form>
-            <label for="options" class="form-label">Selecciona hasta 10 inversionistas:</label>
-
-            <select class="form-select form-select-md bg-dark" id="select-investors" name="options[]" multiple>
+<button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#inversionistas">+
+    Inversionistas</button>
+<div id="inversionistas" class="collapse">
+    <div class="investor-form-container">
+        <div class="form-group mb-3">
+            <label for="investor-select" class="form-label">Selecciona un inversionista:</label>
+            <select class="form-select form-select-md bg-light" id="investor-select">
+                <option value="">-- Selecciona un inversionista --</option>
                 {{#if investors}}
                 {{#each investors}}
                 <option value="{{this._id}}">{{this.firstName}} {{this.lastName}}</option>
                 {{/each}}
                 {{else}}
-                <option value="0">No se encontraron inversionistas</option>
+                <option value="0" disabled>No se encontraron inversionistas</option>
                 {{/if}}
             </select>
-
+        </div>
+        
+        <div class="form-group mb-3">
+            <label for="ticket-count" class="form-label">Número de tickets (1-10):</label>
+            <input type="number" class="form-control bg-light" id="ticket-count" min="1" max="10" value="1">
+        </div>
+        
+        <button type="button" class="btn btn-primary mb-3" id="add-investor-btn">Agregar Inversionista</button>
+        
+        <div class="selected-investors-container mt-3">
+            <h5>Inversionistas Seleccionados:</h5>
+            <ul id="selected-investors-list" class="list-group">
+                <!-- Selected investors will appear here -->
+            </ul>
+        </div>
+        
+        <!-- Hidden input to store the final investors data -->
+        <input type="hidden" id="investors-data" name="investors">
     </div>
+</div>
 
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#platforms">+
         Plataformas</button>
@@ -946,7 +965,7 @@
 
         
 
-
+        /**
 
         function getSelectedInvestors() {
             const selectElement = document.getElementById('select-investors');
@@ -956,7 +975,7 @@
             // Do something with the selectedOptions array, like sending it to a server or processing it further
         }
 
-
+        /*/
 
 
         // Upload chalet images.
@@ -1027,10 +1046,17 @@
                 const departureTimeHours = parseInt(departureTime1.split(':')[0]);
 
                 const selectElement = document.getElementById('select-investors');
-                const selectedInvestors = Array.from(selectElement.selectedOptions).map(option => option.value);
+                //const selectedInvestors = Array.from(selectElement.selectedOptions).map(option => option.value);
 
                 const selectPlatformsEl = document.getElementById('select-platforms');
                 const selectedPlatforms = Array.from(selectPlatformsEl.selectedOptions).map(option => option.value);
+
+                const investorsDataInput = document.getElementById('investors-data');
+                const investorsDataJson = investorsDataInput.value.trim();
+
+                const investorsData = JSON.parse(investorsDataJson);
+                console.log(investorsData)
+
 
                 const data = {
                     propertyDetails: {
@@ -1216,7 +1242,7 @@
                         admin: document.getElementById("slctAdmin").value.trim(),
                         janitor: document.getElementById("slctJanitor").value.trim(),
                         owner: document.getElementById("chalet-owner-select").value.trim(),
-                        investors: selectedInvestors
+                        investors: investorsData
                     },
                     files: pdfarrayDB,
                     activePlatforms: selectedPlatforms
@@ -1242,6 +1268,7 @@
                     if (!data.propertyDetails.email || !(validarCorreo(data.propertyDetails.email))) {
                         throw new Error('Ingresa un email válido.');
                     }
+
                     fetch('/api/cabanas/crear-cabana', {
                         method: 'POST',
                         headers: {
@@ -1641,6 +1668,133 @@
 
             // Validar el correo con la expresión regular
             return regexCorreo.test(correo);
+        }
+
+        // Funciones para agregar o editar inversionistas
+        let selectedInvestors = [];
+        
+        // Get references to DOM elements
+        const investorSelect = document.getElementById('investor-select');
+        const ticketCount = document.getElementById('ticket-count');
+        const addInvestorBtn = document.getElementById('add-investor-btn');
+        const selectedInvestorsList = document.getElementById('selected-investors-list');
+        const investorsDataInput = document.getElementById('investors-data');
+        
+        // Load existing investors if any (for edit mode)
+        if (typeof existingInvestors !== 'undefined' && existingInvestors.length > 0) {
+            selectedInvestors = existingInvestors;
+            renderSelectedInvestors();
+        }
+        
+        // Event listener for add investor button
+        addInvestorBtn.addEventListener('click', function() {
+            const investorId = investorSelect.value;
+            const investorName = investorSelect.options[investorSelect.selectedIndex].text;
+            const tickets = parseInt(ticketCount.value);
+            
+            // Validate input
+            if (!investorId || investorId === "0" || investorId === "") {
+                alert('Por favor selecciona un inversionista válido');
+                return;
+            }
+            
+            if (isNaN(tickets) || tickets < 1 || tickets > 10) {
+                alert('El número de tickets debe estar entre 1 y 10');
+                return;
+            }
+            
+            // Check if investor already exists in the selected list
+            const existingIndex = selectedInvestors.findIndex(inv => inv.investor === investorId);
+            if (existingIndex !== -1) {
+                selectedInvestors[existingIndex].noTickets = tickets;
+            } else {
+                // Add new investor
+                selectedInvestors.push({
+                    investor: investorId,
+                    investorName: investorName, // For display purposes only
+                    noTickets: tickets
+                });
+            }
+            
+            // Update the UI and hidden input
+            renderSelectedInvestors();
+            updateInvestorsData();
+            
+            // Reset the form
+            investorSelect.value = "";
+            ticketCount.value = "1";
+        });
+        
+        // Function to render the selected investors list
+        function renderSelectedInvestors() {
+            selectedInvestorsList.innerHTML = '';
+            
+            if (selectedInvestors.length === 0) {
+                selectedInvestorsList.innerHTML = '<li class="list-group-item bg-light">No hay inversionistas seleccionados</li>';
+                return;
+            }
+            
+            selectedInvestors.forEach((inv, index) => {
+                const item = document.createElement('li');
+                item.className = 'list-group-item bg-light d-flex justify-content-between align-items-center';
+                
+                const nameTicketsSpan = document.createElement('span');
+                nameTicketsSpan.textContent = `${inv.investorName} - ${inv.noTickets} ticket(s)`;
+                
+                const buttonsDiv = document.createElement('div');
+                
+                //const editBtn = document.createElement('button');
+                //editBtn.className = 'btn btn-sm btn-warning me-2';
+                //editBtn.textContent = 'Editar';
+                //editBtn.addEventListener('click', () => editInvestor(index));
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'btn btn-sm btn-danger';
+                removeBtn.textContent = 'Eliminar';
+                removeBtn.addEventListener('click', () => removeInvestor(index));
+                
+                //buttonsDiv.appendChild(editBtn);
+                buttonsDiv.appendChild(removeBtn);
+                
+                item.appendChild(nameTicketsSpan);
+                item.appendChild(buttonsDiv);
+                
+                selectedInvestorsList.appendChild(item);
+            });
+        }
+        
+        // Function to edit an investor
+        function editInvestor(index) {
+            const inv = selectedInvestors[index];
+            investorSelect.value = inv.investor;
+            ticketCount.value = inv.noTickets;
+            
+            // Remove the investor from the list
+            selectedInvestors.splice(index, 1);
+            
+            // Update UI and hidden input
+            renderSelectedInvestors();
+            updateInvestorsData();
+        }
+        
+        // Function to remove an investor
+        function removeInvestor(index) {
+            selectedInvestors.splice(index, 1);
+            
+            // Update UI and hidden input
+            renderSelectedInvestors();
+            updateInvestorsData();
+        }
+        
+        // Function to update the hidden input with JSON data
+        function updateInvestorsData() {
+            // Remove the display-only investorName property
+            const dataToSave = selectedInvestors.map(inv => ({
+                investor: inv.investor,
+                noTickets: inv.noTickets
+            }));
+            
+            investorsDataInput.value = JSON.stringify(dataToSave);
         }
     });
 

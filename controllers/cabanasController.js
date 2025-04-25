@@ -444,68 +444,74 @@ async function showChaletsView(req, res, next) {
 
 async function createChalet(req, res, next) {
     //console.log(req.body);
-
+    
     const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images, files, activePlatforms } = req.body;
-
-    const admin = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
-    if (!admin) {
-        throw new NotFoundError("Admin not found");
-    }
-
-    const janitor = await Usuario.findOne({ email: others.janitor, privilege: "Limpieza" });
-    if (!janitor) {
-        throw new NotFoundError("Janitor not found");
-    }
-
-    const owner = await Usuario.findOne({ _id: others.owner});
-    if (!owner) {
-        throw new NotFoundError("Owner not found");
-    }
-
-    const platforms = await Plataformas.find({ _id: { $in: activePlatforms } });
-    if (!platforms) {
-        throw new NotFoundError("Platforms not found");
-    }
-
-    const arrivalTimeHours = parseInt(others.arrivalTimeHours);
-    const arrivalTimeMinutes = parseInt(others.arrivalTimeMinutes);
-    const departureTimeHours = parseInt(others.departureTimeHours);
-    const departureTimeMinutes = parseInt(others.departureTimeMinutes);
-
-    const newArrivalTime = new Date();
-    newArrivalTime.setHours(arrivalTimeHours);
-    newArrivalTime.setMinutes(arrivalTimeMinutes);
-    const newDepartureTime = new Date();
-    newDepartureTime.setHours(departureTimeMinutes);
-    newDepartureTime.setMinutes(departureTimeHours);
-
-    const chaletToAdd = {
-        propertyDetails,
-        accommodationFeatures,
-        additionalInfo,
-        accomodationDescription,
-        additionalAccomodationDescription,
-        touristicRate,
-        legalNotice,
-        location,
-        others: {
-            basePrice: others.basePrice,
-            basePrice2nights: others.basePrice2nights,
-            baseCost: others.baseCost,
-            baseCost2nights: others.baseCost2nights,
-            arrivalTime: newArrivalTime,
-            departureTime: newDepartureTime,
-            admin: admin._id,
-            janitor: janitor._id,
-            owner: owner._id,
-            investors: others.investors
-        },
-        images,
-        files,
-        activePlatforms
-    };
-
+    
     try {
+        const admin = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
+        if (!admin) {
+            return next(new BadRequestError("Admin not found"));
+        }
+
+        const janitor = await Usuario.findOne({ email: others.janitor, privilege: "Limpieza" });
+        if (!janitor) {
+            return next(new BadRequestError("Janitor not found"));  ;
+        }
+
+        const owner = await Usuario.findOne({ _id: others.owner});
+        if (!owner) {
+            return next(new BadRequestError("Owner not found"));  ;
+        }
+
+        const platforms = await Plataformas.find({ _id: { $in: activePlatforms } });
+        if (!platforms) {
+            return next(new BadRequestError("Platforms not found"));  ;
+        }
+
+        const totalTickets = others.investors.reduce((sum, investor) => sum + investor.noTickets, 0);
+        
+        if (totalTickets !== 10) {
+            return next(new BadRequestError("El total de tickets de inversionistas debe ser igual a 10."));  ;
+        }
+
+        const arrivalTimeHours = parseInt(others.arrivalTimeHours);
+        const arrivalTimeMinutes = parseInt(others.arrivalTimeMinutes);
+        const departureTimeHours = parseInt(others.departureTimeHours);
+        const departureTimeMinutes = parseInt(others.departureTimeMinutes);
+
+        const newArrivalTime = new Date();
+        newArrivalTime.setHours(arrivalTimeHours);
+        newArrivalTime.setMinutes(arrivalTimeMinutes);
+        const newDepartureTime = new Date();
+        newDepartureTime.setHours(departureTimeMinutes);
+        newDepartureTime.setMinutes(departureTimeHours);
+
+        const chaletToAdd = {
+            propertyDetails,
+            accommodationFeatures,
+            additionalInfo,
+            accomodationDescription,
+            additionalAccomodationDescription,
+            touristicRate,
+            legalNotice,
+            location,
+            others: {
+                basePrice: others.basePrice,
+                basePrice2nights: others.basePrice2nights,
+                baseCost: others.baseCost,
+                baseCost2nights: others.baseCost2nights,
+                arrivalTime: newArrivalTime,
+                departureTime: newDepartureTime,
+                admin: admin._id,
+                janitor: janitor._id,
+                owner: owner._id,
+                investors: others.investors
+            },
+            images,
+            files,
+            activePlatforms
+        };
+
         
         const userRole = req.session.role;
 
