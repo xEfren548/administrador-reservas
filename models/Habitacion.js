@@ -295,9 +295,10 @@ const othersSchema = new mongoose.Schema({
         required: true,
         ref: 'Usuario'
     },
-    investors: {
-        type: [{type: mongoose.Schema.Types.ObjectId, ref: 'usuarios'}]
-    }
+    investors: [{
+        investor: {type: mongoose.Schema.Types.ObjectId, ref: 'Usuario'},
+        noTickets: {type: Number, default: 1}
+    }]
 });
 
 //--------------------------------------------------
