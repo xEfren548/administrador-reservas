@@ -4,7 +4,6 @@ function ensureAuthenticated(req, res, next) {
         return next();
     } else {
         // Usuario no está autenticado, redirigir a /login
-        console.log(req.url)
         if (req.url === "/api/eventos/cotizaciones"){
             return next();
         }

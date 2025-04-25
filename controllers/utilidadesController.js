@@ -494,26 +494,33 @@ async function generarComisionReserva(req, res) {
         console.log('nuevo costo base: ', nuevoCostoBase)
         let cuantosInversionistas = chaletInvestors.length
         console.log('cuantos inversionistas: ', cuantosInversionistas)
-        let comisionInversionistas = Math.round((nuevoCostoBase / cuantosInversionistas + Number.EPSILON) * 100) / 100;
+        // let comisionInversionistas = Math.round((nuevoCostoBase / cuantosInversionistas + Number.EPSILON) * 100) / 100;
+        let comisionInversionistas = Math.round((nuevoCostoBase / 10 + Number.EPSILON) * 100) / 100;
         console.log('comision inversionistas: ', comisionInversionistas)
 
 
         if (cuantosInversionistas > 0) {
+            let tickets = 0;
+
             for (let investor of chaletInvestors) {
                 let userInvestor = await User.findById(investor._id);
                 if (userInvestor) {
+                    const noTickets = userInvestor.investorTickets
+                    const comision = comisionInversionistas * noTickets
+
+                    tickets += noTickets
                     if (userInvestor.investorType === 'Asimilado'){
                         // Comision normal
                         await altaComisionReturn({
-                            monto: comisionInversionistas,
-                            concepto: `Comisión de inversionista por Reserva de cabaña`,
+                            monto: comision,
+                            concepto: `Comisión de inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
                         })
                         // Comision negativa de IVA (16%)
                         // let comisionNegativaIva = comisionInversionistas * 0.16;
-                        let comisionNegativaIva = Math.round((comisionInversionistas * 0.16 + Number.EPSILON) * 100) / 100;
+                        let comisionNegativaIva = Math.round((comision * 0.16 + Number.EPSILON) * 100) / 100;
 
                         await altaComisionReturn({
                             monto: -comisionNegativaIva,
@@ -524,7 +531,7 @@ async function generarComisionReserva(req, res) {
                         })
                         // Comision negativa de ISR (5%)
                         // let comisionNegativaIsr = comisionInversionistas * 0.05;
-                        let comisionNegativaIsr = Math.round(((comisionInversionistas - comisionNegativaIva) * 0.16 + Number.EPSILON) * 100) / 100;
+                        let comisionNegativaIsr = Math.round(((comision - comisionNegativaIva) * 0.16 + Number.EPSILON) * 100) / 100;
 
                         await altaComisionReturn({
                             monto: -comisionNegativaIsr,
@@ -535,7 +542,7 @@ async function generarComisionReserva(req, res) {
                         })
 
                         // Retencion "Servicios indirectos Bosque imperial"
-                        let comisionNegativaServiciosIndirectos = Math.round(((comisionInversionistas - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
+                        let comisionNegativaServiciosIndirectos = Math.round(((comision - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
 
                         await altaComisionReturn({
                             monto: -comisionNegativaServiciosIndirectos,
@@ -548,19 +555,19 @@ async function generarComisionReserva(req, res) {
                     } else if (userInvestor.investorType === 'RESICO Fisico'){
                         // Comision normal
                         await altaComisionReturn({
-                            monto: comisionInversionistas,
-                            concepto: `Comisión de inversionista por Reserva de cabaña`,
+                            monto: comision,
+                            concepto: `Comisión de inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
                         })
 
                         // Comision negativa de IVA (16%)
-                        // let comisionNegativaIva = comisionInversionistas * 0.16;
-                        let comisionNegativaIva = Math.round((comisionInversionistas * 0.16 + Number.EPSILON) * 100) / 100;
+                        // let comisionNegativaIva = comision * 0.16;
+                        let comisionNegativaIva = Math.round((comision * 0.16 + Number.EPSILON) * 100) / 100;
 
                         // Comision Retencion IVA
-                        let comisionNegativaRetIva = Math.round((comisionInversionistas * 0.1066 + Number.EPSILON) * 100) / 100;
+                        let comisionNegativaRetIva = Math.round((comision * 0.1066 + Number.EPSILON) * 100) / 100;
 
                         await altaComisionReturn({
                             monto: -comisionNegativaRetIva,
@@ -571,7 +578,7 @@ async function generarComisionReserva(req, res) {
                         })
 
                         // Comision Retencion ISR
-                        let comisionNegativaRetIsr = Math.round((comisionInversionistas * 0.0125 + Number.EPSILON) * 100) / 100;
+                        let comisionNegativaRetIsr = Math.round((comision * 0.0125 + Number.EPSILON) * 100) / 100;
                         await altaComisionReturn({
                             monto: -comisionNegativaRetIsr,
                             concepto: `ISR inversionista por Reserva de cabaña`,
@@ -581,7 +588,7 @@ async function generarComisionReserva(req, res) {
                         })
 
                         // Comision Retencion Servicios Indirectos
-                        let comisionServIndirectos = Math.round(((comisionInversionistas - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
+                        let comisionServIndirectos = Math.round(((comision - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
                         await altaComisionReturn({
                             monto: -comisionServIndirectos,
                             concepto: `Servicios Indirectos Bosque Imperial`,
@@ -593,7 +600,7 @@ async function generarComisionReserva(req, res) {
                     } else if(userInvestor.investorType === 'PF con AE y PM') {
                         // Comision normal
                         await altaComisionReturn({
-                            monto: comisionInversionistas,
+                            monto: comision,
                             concepto: `Comisión de inversionista por Reserva de cabaña`,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
@@ -601,10 +608,10 @@ async function generarComisionReserva(req, res) {
                         })
 
                         // IVA
-                        let comisionNegativaIva = Math.round((comisionInversionistas * 0.16 + Number.EPSILON) * 100) / 100;
+                        let comisionNegativaIva = Math.round((comision * 0.16 + Number.EPSILON) * 100) / 100;
 
                         // Comision Retencion Servicios Indirectos
-                        let comisionServIndirectos = Math.round(((comisionInversionistas - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
+                        let comisionServIndirectos = Math.round(((comision - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
                         await altaComisionReturn({
                             monto: -comisionServIndirectos,
                             concepto: `Servicios Indirectos Bosque Imperial`,
@@ -615,19 +622,19 @@ async function generarComisionReserva(req, res) {
                     } else if (userInvestor.investorType === 'Efectivo') {
                         // Comision normal
                         await altaComisionReturn({
-                            monto: comisionInversionistas,
-                            concepto: `Comisión de inversionista por Reserva de cabaña`,
+                            monto: comision,
+                            concepto: `Comisión de inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
                         })
                         // Comision negativa de IVA (16%)
-                        // let comisionNegativaIva = comisionInversionistas * 0.16;
-                        let comisionNegativaIva = Math.round((comisionInversionistas * 0.08 + Number.EPSILON) * 100) / 100;
+                        // let comisionNegativaIva = comision * 0.16;
+                        let comisionNegativaIva = Math.round((comision * 0.08 + Number.EPSILON) * 100) / 100;
 
                         await altaComisionReturn({
                             monto: -comisionNegativaIva,
-                            concepto: `IVA inversionista por Reserva de cabaña`,
+                            concepto: `IVA inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
                             fecha: new Date(arrivalDate),
                             idUsuario: investor._id,
                             idReserva: idReserva
@@ -648,10 +655,6 @@ async function generarComisionReserva(req, res) {
                 idReserva: idReserva
             })
         }
-
-
-
-
 
         res.status(200).json({ success: true, message: "Comision agregada con éxito" })
     } catch (err) {
