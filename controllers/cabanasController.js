@@ -468,9 +468,16 @@ async function createChalet(req, res, next) {
             return next(new BadRequestError("Platforms not found"));  ;
         }
 
-        const totalTickets = others.investors.reduce((sum, investor) => sum + investor.noTickets, 0);
+        let totalTickets = 0;
+        console.log("investors",others.investors);
+        if (others.investors.length === 0) {
+            totalTickets = 0;
+        } else {
+            totalTickets = others.investors.reduce((sum, investor) => sum + investor.noTickets, 0);
+        }
+
         
-        if (totalTickets !== 10) {
+        if (totalTickets !== 0 && totalTickets !== 10) {
             return next(new BadRequestError("El total de tickets de inversionistas debe ser igual a 10."));  ;
         }
 
@@ -871,11 +878,18 @@ async function editChalet(req, res, next) {
             throw new NotFoundError("Platforms not found");
         }
 
-        const totalTickets = others.investors.reduce((sum, investor) => sum + investor.noTickets, 0);
-        
-        if (totalTickets !== 10) {
-            return next(new BadRequestError("El total de tickets de inversionistas debe ser igual a 10."));  ;
+        let totalTickets = 0;
+        console.log("investors",others.investors);
+        if (others.investors.length === 0) {
+            totalTickets = 0;
+        } else {
+            totalTickets = others.investors.reduce((sum, investor) => sum + investor.noTickets, 0);
         }
+
+        
+        if (totalTickets !== 0 && totalTickets !== 10) {
+            return next(new BadRequestError("El total de tickets de inversionistas debe ser igual a 10."));  ;
+        }        
 
         console.log(others.departureTime);
         console.log(others.arrivalTime);

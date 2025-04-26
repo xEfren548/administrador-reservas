@@ -1054,7 +1054,11 @@
                 const investorsDataInput = document.getElementById('investors-data');
                 const investorsDataJson = investorsDataInput.value.trim();
 
-                const investorsData = JSON.parse(investorsDataJson);
+                let investorsData = [];
+                if (investorsDataJson) {
+                    investors = JSON.parse(investorsDataJson);
+                }
+
                 console.log(investorsData)
 
 

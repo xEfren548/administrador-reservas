@@ -1217,7 +1217,10 @@
                 //const investorData = investorsDataInput.getAttribute('data-investors');
 
                 const investorsData = form.querySelector('.investors-data').value;
-                const investors = JSON.parse(investorsData);
+                let investors = [];
+                if (investorsData) {
+                    investors = JSON.parse(investorsData);
+                }
 
                 const selectPlatformsEl = form.querySelector('.select-edit-platforms');
                 const selectedPlatforms = Array.from(selectPlatformsEl.selectedOptions).map(option => option.value);
