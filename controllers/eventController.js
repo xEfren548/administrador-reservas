@@ -706,12 +706,22 @@ async function createReservation(req, res, next) {
 
         }
 
-        const fechasBloqueadasPorCapacidad = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: 'capacidad_minima' });
-        if (fechasBloqueadasPorCapacidad) {
-            if (pax < fechasBloqueadasPorCapacidad.min) {
-                return res.status(400).send({ message: `La capacidad minima es de ${fechasBloqueadasPorCapacidad.min} personas` });
+        currentDate = new Date(fechaAjustada);
+        currentDate.setUTCHours(6);
+
+        while (currentDate <= departureDateAjustada) {
+            const fechasBloqueadasPorCapacidad = await BloqueoFechas.findOne({ date: currentDate, habitacionId: mongooseChaletId, type: 'capacidad_minima' });
+            if (fechasBloqueadasPorCapacidad) {
+                if (pax < fechasBloqueadasPorCapacidad.min) {
+                    return res.status(400).send({ message: `La capacidad minima es de ${fechasBloqueadasPorCapacidad.min} personas` });
+                }
             }
+
+            currentDate.setDate(currentDate.getDate() + 1);
+
         }
+
+
 
         // const isAvailable = await checkAvailability(mongooseChaletId, fechaAjustada, departureDateAjustada);
         // if (!isAvailable) {
