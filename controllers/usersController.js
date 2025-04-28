@@ -202,7 +202,7 @@ async function getAllUsersMongo(){
 
 // CREATE_USERS
 async function createUser(req, res, next) {
-    const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType, role, assignedChalets, noTickets } = req.body;
+    const { firstName, lastName, email, phone, password, privilege, administrator, adminname, color, investorType, role, assignedChalets } = req.body;
     const mexPhone = `${phone}`
 
     const userRole = req.session.role;
@@ -229,12 +229,6 @@ async function createUser(req, res, next) {
         }
     }
 
-    if (noTickets){
-        if (noTickets < 0 || noTickets > 10) {
-            return next(new BadRequestError("Tickets no puede ser negativo ni mayor a 10"));
-        }
-    }
-
     const rol = await Roles.findById(role);
     if (!rol) {
         return next(new NotFoundError("Rol not found"));
@@ -243,7 +237,7 @@ async function createUser(req, res, next) {
     try{    
 
         const userToAdd = new Usuario ({
-            firstName, lastName, email, phone: mexPhone, password, privilege, administrator,adminname, color, investorType, role, assignedChalets, investorTickets: noTickets
+            firstName, lastName, email, phone: mexPhone, password, privilege, administrator,adminname, color, investorType, role, assignedChalets
         });
 
         await userToAdd.save();
@@ -311,7 +305,7 @@ async function obtenerUsuarioPorIdMongo(uuid){
 
 // EDIT_USERS
 async function editarUsuario(req, res, next) {
-    const { firstName, lastName, email, phone, password, privilege, administrator,adminname, color, investorType, role, assignedChalets, noTickets } = req.body;
+    const { firstName, lastName, email, phone, password, privilege, administrator,adminname, color, investorType, role, assignedChalets } = req.body;
     const updateFields = {};
 
     const userRole = req.session.role;
@@ -361,13 +355,6 @@ async function editarUsuario(req, res, next) {
 
     if (assignedChalets) {
         updateFields.assignedChalets = assignedChalets;
-    }
-
-    if (noTickets) {
-        if (noTickets < 0 || noTickets > 10) {
-            return next(new BadRequestError("Tickets no puede ser negativo ni mayor a 10"));
-        }
-        updateFields.noTickets = noTickets;
     }
 
     try {
