@@ -1,7 +1,7 @@
 <div class="calendar-header">
     <div class="bg-dark mb-3">
         <a name="" id="crear-reserva-dueno-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
-            data-bs-toggle="modal" data-bs-target="#event_entry_modal">Crear reserva de dueño</a>
+            data-bs-toggle="modal" data-bs-target="#event_entry_modal">Crear reserva de dueño/inversionista</a>
     </div>
 </div>
 
@@ -28,7 +28,11 @@
                     </tr>
                     {{/each}}
                     {{else}}
-                    <td colspan="3">No se encontraron servicios</td>
+                        <tr>
+                            <td colspan="3">No se encontraron servicios</td>
+                            <td style="display: none;"></td>
+                            <td style="display: none;"></td>
+                        </tr>
                     {{/if}}
                 </tbody>
             </table>
