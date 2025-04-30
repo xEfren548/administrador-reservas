@@ -1044,8 +1044,14 @@ async function renderCalendarPerChaletOwner(req, res, next) {
         let habitacionesDueno;
         if (privilege === "Inversionistas") {
             habitacionesDueno = habitacionesExistentes.filter(habitacion =>
-                habitacion.others.investors.some(investor => investor.equals(mDuenoId))
-            ); 
+                // habitacion.others.investors.some(investor => investor.equals(mDuenoId))
+                habitacion.others.investors.some(investor => investor.toString() === duenoId)
+            );
+            if (habitacionesDueno.length === 0) {
+                return res.render('errorView', {
+                    err: 'No hay cabañas ligadas a este usuario'
+                });
+            }
         } else if (privilege === "Colaborador dueño") {
             const user = await Usuario.findById(duenoId).lean();
             if (!user) {
@@ -1098,6 +1104,7 @@ async function renderCalendarPerChaletOwner(req, res, next) {
         })
 
     } catch (error) {
+        console.log(error)
         res.status(500).send(error);
     }
 }
