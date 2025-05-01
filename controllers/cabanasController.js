@@ -1043,10 +1043,15 @@ async function renderCalendarPerChaletOwner(req, res, next) {
         // // Filter the rooms that belong to the owner
         let habitacionesDueno;
         if (privilege === "Inversionistas") {
-            habitacionesDueno = habitacionesExistentes.filter(habitacion =>
-                // habitacion.others.investors.some(investor => investor.equals(mDuenoId))
-                habitacion.others.investors.some(investor => investor.toString() === duenoId)
-            );
+            habitacionesDueno = habitacionesExistentes.filter(habitacion => {
+                // Check if habitacion and investors array exists
+                if (!habitacion?.others?.investors) return false;
+                
+                // Find if current user is an investor
+                return habitacion.others.investors.some(investor => 
+                    investor?.investor?.toString() === duenoId?.toString()
+                );
+            });
             if (habitacionesDueno.length === 0) {
                 return res.render('errorView', {
                     err: 'No hay cabañas ligadas a este usuario'

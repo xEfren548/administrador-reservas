@@ -513,15 +513,46 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
         if (privilege === "Inversionistas") {
             const investor = await Usuario.findById(req.session.id);
-            const habitacionesExistentes = await Habitacion.find().lean();
-            if (!habitacionesExistentes) {
-                return res.status(404).send('No rooms found');
+            if (!investor) {
+                return res.status(404).send('No investor found');
             }
 
-            habitacionesDueno = habitacionesExistentes.filter(habitacion =>
-            (Array.isArray(habitacion.others.investors) &&
-                habitacion.others.investors.some(investorId => investorId.toString() === investor._id.toString()))
-            );
+            const investorId = investor._id;
+            // const habitacionesExistentes = await Habitacion.find().lean();
+            // if (!habitacionesExistentes) {
+            //     return res.status(404).send('No rooms found');
+            // }
+
+            habitacionesDueno = await Habitacion.find({
+                "others.investors": {
+                    $elemMatch: {
+                        "investor": investorId
+                    }
+                }
+            }).lean();
+
+            if (!habitacionesDueno || habitacionesDueno.length === 0) {
+                return res.status(404).send('No rooms found for this investor');
+            }
+
+            console.log(habitacionesDueno);
+
+            // habitacionesDueno = habitacionesExistentes.filter(habitacion =>
+            // (Array.isArray(habitacion.others.investors) &&
+            //     // habitacion.others.investors.some(investorId => investorId.toString() === investor._id.toString()))
+            //     habitacion.others.investors.find(investors => investors.investor.toString() === duenoId))
+            // );
+
+            // habitacionesDueno = habitacionesExistentes.filter(habitacion => {
+            //     // Check if habitacion and investors array exists
+            //     if (!habitacion?.others?.investors) return false;
+            //     console.log(habitacion.others.investors)
+            //     // Find if current user is an investor
+            //     const investor = habitacion.others.investors.find(investor =>
+            //         // investor?.investor?.toString() === investor._id?.toString()
+            //         investor.investor.toString() === investor._id.toString()
+            //     );
+            // });
 
             const cabañaIds = habitacionesDueno.map(habitacion => habitacion._id.toString());
             const nombreCabañas = habitacionesDueno.map(habitacion => ({ id: habitacion._id.toString(), name: habitacion.propertyDetails.name }));
