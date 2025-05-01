@@ -535,7 +535,6 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
                 return res.status(404).send('No rooms found for this investor');
             }
 
-            console.log(habitacionesDueno);
 
             // habitacionesDueno = habitacionesExistentes.filter(habitacion =>
             // (Array.isArray(habitacion.others.investors) &&
