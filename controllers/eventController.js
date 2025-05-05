@@ -2013,6 +2013,10 @@ async function cotizadorChaletsyPrecios(req, res) {
     try {
         const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles, isForClient } = req.body;
 
+        if (!req.session.token) {
+            return res.status(401).json({ message: 'Por inactividad, es necesario recargar la página para continuar' });
+        }
+
         let filtro = {};
         
         if (!categorias.includes("all")) { //Si se seleccionaron categorias
