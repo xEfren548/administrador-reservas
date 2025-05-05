@@ -784,7 +784,7 @@
 
                 if (images.length > 1) {
                     const carousel = document.createElement("div");
-                    carousel.classList.add("carousel", "w-full", "h-64", "md:h-80", "lg:h-96", "relative");
+                    carousel.classList.add("carousel", "w-full", "h-80","sm:h-72", "md:h-80", "lg:h-96", "relative");
 
                     // Prepare full image URLs for modal
                     const fullImageUrls = images.map(imgSrc => `https://navarro.integradev.site/navarro/${imgSrc}`);
@@ -798,7 +798,7 @@
                         const img = document.createElement("img");
                         img.src = `https://navarro.integradev.site/navarro/${imgSrc}`;
                         img.alt = `${habitacion.name} - Imagen ${index + 1}`;
-                        img.classList.add("w-full", "h-48", "object-cover");
+                        img.classList.add("w-full", "h-full", "object-cover");
 
                         img.onerror = () => {
                             console.warn(`La imagen ${img.src} no se pudo cargar. Usando imagen de respaldo.`);
@@ -852,7 +852,7 @@
                     const img = document.createElement("img");
                     img.src = `https://navarro.integradev.site/navarro/${images[0]}`;
                     img.alt = habitacion.name;
-                    img.classList.add("w-full", "h-full", "object-cover", "cursor-pointer");
+                    img.classList.add("w-full", "h-80", "sm:h-72", "md:h-80", "lg:h-96", "object-cover", "cursor-pointer");
 
                     // Prepare full image URL for modal
                     let fullImageUrl = img.src;
@@ -1642,6 +1642,17 @@
             }
             .carousel-btn:hover {
                 background-color: rgba(0,0,0,0.7);
+            }
+            @media (min-width: 768px) {
+                .image-slider {
+                    height: auto;
+                }
+            }
+            
+            @media (min-width: 1024px) {
+                .image-slider {
+                    height: auto;
+                }
             }
         `;
         document.head.appendChild(style);
