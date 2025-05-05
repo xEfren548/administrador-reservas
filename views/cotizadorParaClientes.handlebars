@@ -784,7 +784,7 @@
 
                 if (images.length > 1) {
                     const carousel = document.createElement("div");
-                    carousel.classList.add("carousel", "w-full", "h-48", "relative");
+                    carousel.classList.add("carousel", "w-full", "h-64", "md:h-80", "lg:h-96", "relative");
 
                     // Prepare full image URLs for modal
                     const fullImageUrls = images.map(imgSrc => `https://navarro.integradev.site/navarro/${imgSrc}`);
@@ -852,7 +852,7 @@
                     const img = document.createElement("img");
                     img.src = `https://navarro.integradev.site/navarro/${images[0]}`;
                     img.alt = habitacion.name;
-                    img.classList.add("w-full", "h-48", "object-cover", "cursor-pointer");
+                    img.classList.add("w-full", "h-full", "object-cover", "cursor-pointer");
 
                     // Prepare full image URL for modal
                     let fullImageUrl = img.src;
@@ -1633,7 +1633,7 @@
         style.textContent = `
             .image-slider {
                 position: relative;
-                height: 12rem;
+                height: auto;
             }
             .carousel-btn {
                 z-index: 10;
