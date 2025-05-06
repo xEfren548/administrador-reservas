@@ -1165,8 +1165,13 @@ async function createOwnerReservation(req, res, next) {
 async function editarEvento(req, res) {
     try {
         const id = req.params.id;
+        const privilege = req.session.privilege;
         const { resourceId, nNights, arrivalDate, departureDate, url, total } = req.body;
         console.log("Procesando solicitud de edición de evento");
+
+        if (privilege !== "Administrador") {
+            return res.status(401).send({ message: 'Solo los administradores pueden realizar esta acción.' });
+        }
 
         const arrivalDateObj = new Date(arrivalDate);
         const departureDateObj = new Date(departureDate);
