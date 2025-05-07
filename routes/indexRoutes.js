@@ -35,6 +35,7 @@ const bloqueoInversionistasRoutes = require('./bloqueoInversionistasRoutes');
 const rolesRoutes = require('./rolesRoutes');
 const webhookRoutes = require('./webHook');
 const plataformasRoutes = require('./plataformasRoutes');
+const aprobacionesRoutes = require('./aprobacionesRoutes');
 
 const authMiddleware = require('../common/middlewares/authMiddleware');
 
@@ -77,6 +78,7 @@ router.use('/', logsRoutes);
 router.use('/', bloqueoFechasRoutes);
 router.use('/', bloqueoInversionistasRoutes);
 router.use('/', plataformasRoutes);
+router.use('/', aprobacionesRoutes);
 
 // API routes
 router.use('/api', eventRoutes);

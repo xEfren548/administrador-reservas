@@ -1,0 +1,550 @@
+<div class="row">
+    <!-- Main Content -->
+    <main class="">
+        <div
+            class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Solicitudes de Cambios de Fecha</h1>
+        </div>
+
+        <!-- Status Filter Tabs -->
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <a class="nav-link active" href="#">Todas <span class="badge rounded-pill bg-secondary">8</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Pendientes <span
+                        class="badge rounded-pill bg-warning text-dark">5</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Aprobadas <span class="badge rounded-pill bg-success">2</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Rechazadas <span class="badge rounded-pill bg-danger">1</span></a>
+            </li>
+        </ul>
+
+        <!-- Requests Table -->
+        <div class="table-responsive">
+            <table class="table table-hover table-striped" id="requests-table">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">#ID</th>
+                        <th scope="col">Vendedor</th>
+                        <th scope="col">Cliente</th>
+                        <th scope="col">Fecha Actual</th>
+                        <th scope="col">Nueva Fecha</th>
+                        <th scope="col">Motivo</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Pending Requests -->
+                    <tr class="status-pending">
+                        <td>CR-1025</td>
+                        <td>Juan Pérez</td>
+                        <td>Distribuidora ABC</td>
+                        <td>08/05/2025</td>
+                        <td>10/05/2025</td>
+                        <td>Cliente no disponible en fecha original</td>
+                        <td><span class="badge bg-warning text-dark">Pendiente</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-success me-1" data-bs-toggle="modal"
+                                data-bs-target="#approveModal" data-id="CR-1025">
+                                <i class="fa fa-check"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger me-1" data-bs-toggle="modal"
+                                data-bs-target="#rejectModal" data-id="CR-1025">
+                                <i class="fa fa-times"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#detailsModal"
+                                data-id="CR-1025">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="status-pending">
+                        <td>CR-1024</td>
+                        <td>María González</td>
+                        <td>Supermercados XYZ</td>
+                        <td>08/05/2025</td>
+                        <td>15/05/2025</td>
+                        <td>Inventario no disponible hasta fecha propuesta</td>
+                        <td><span class="badge bg-warning text-dark">Pendiente</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-success me-1" data-bs-toggle="modal"
+                                data-bs-target="#approveModal" data-id="CR-1024">
+                                <i class="bi bi-check-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger me-1" data-bs-toggle="modal"
+                                data-bs-target="#rejectModal" data-id="CR-1024">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#detailsModal"
+                                data-id="CR-1024">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="status-pending">
+                        <td>CR-1023</td>
+                        <td>Carlos Rodríguez</td>
+                        <td>Restaurantes El Gourmet</td>
+                        <td>07/05/2025</td>
+                        <td>09/05/2025</td>
+                        <td>Problemas logísticos del cliente</td>
+                        <td><span class="badge bg-warning text-dark">Pendiente</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-success me-1" data-bs-toggle="modal"
+                                data-bs-target="#approveModal" data-id="CR-1023">
+                                <i class="bi bi-check-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger me-1" data-bs-toggle="modal"
+                                data-bs-target="#rejectModal" data-id="CR-1023">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#detailsModal"
+                                data-id="CR-1023">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="status-pending">
+                        <td>CR-1022</td>
+                        <td>Ana Martínez</td>
+                        <td>Hoteles Premium</td>
+                        <td>06/05/2025</td>
+                        <td>12/05/2025</td>
+                        <td>Cambio de responsable de compras</td>
+                        <td><span class="badge bg-warning text-dark">Pendiente</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-success me-1" data-bs-toggle="modal"
+                                data-bs-target="#approveModal" data-id="CR-1022">
+                                <i class="bi bi-check-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger me-1" data-bs-toggle="modal"
+                                data-bs-target="#rejectModal" data-id="CR-1022">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#detailsModal"
+                                data-id="CR-1022">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="status-pending">
+                        <td>CR-1021</td>
+                        <td>Luis Sánchez</td>
+                        <td>Farmacias Salud</td>
+                        <td>06/05/2025</td>
+                        <td>07/05/2025</td>
+                        <td>Urgencia del cliente por adelantar entrega</td>
+                        <td><span class="badge bg-warning text-dark">Pendiente</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-success me-1" data-bs-toggle="modal"
+                                data-bs-target="#approveModal" data-id="CR-1021">
+                                <i class="bi bi-check-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger me-1" data-bs-toggle="modal"
+                                data-bs-target="#rejectModal" data-id="CR-1021">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#detailsModal"
+                                data-id="CR-1021">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Approved Requests -->
+                    <tr class="status-approved">
+                        <td>CR-1020</td>
+                        <td>Pedro Gómez</td>
+                        <td>Tiendas Moda Express</td>
+                        <td>05/05/2025</td>
+                        <td>07/05/2025</td>
+                        <td>Evento promocional del cliente</td>
+                        <td><span class="badge bg-success">Aprobada</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#detailsModal"
+                                data-id="CR-1020">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="status-approved">
+                        <td>CR-1019</td>
+                        <td>Laura Torres</td>
+                        <td>Constructora Nueva Era</td>
+                        <td>04/05/2025</td>
+                        <td>09/05/2025</td>
+                        <td>Retraso en proyecto de construcción</td>
+                        <td><span class="badge bg-success">Aprobada</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#detailsModal"
+                                data-id="CR-1019">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Rejected Request -->
+                    <tr class="status-rejected">
+                        <td>CR-1018</td>
+                        <td>Roberto Díaz</td>
+                        <td>Electrónicos Futuro</td>
+                        <td>03/05/2025</td>
+                        <td>10/05/2025</td>
+                        <td>Solicitud fuera del plazo permitido</td>
+                        <td><span class="badge bg-danger">Rechazada</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#detailsModal"
+                                data-id="CR-1018">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<!-- Modals -->
+<!-- Approve Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="approveModalLabel">Aprobar Solicitud</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea aprobar la solicitud de cambio de fecha <strong
+                        id="approveRequestId">CR-1025</strong>?</p>
+                <div class="mb-3">
+                    <label for="approveNotes" class="form-label">Comentarios (opcional):</label>
+                    <textarea class="form-control" id="approveNotes" rows="3"
+                        placeholder="Ingrese cualquier comentario adicional..."></textarea>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="notifyVendor">
+                    <label class="form-check-label" for="notifyVendor">
+                        Notificar al vendedor por correo electrónico
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="confirmApprove">Aprobar Solicitud</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="rejectModalLabel">Rechazar Solicitud</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea rechazar la solicitud de cambio de fecha <strong
+                        id="rejectRequestId">CR-1025</strong>?</p>
+                <div class="mb-3">
+                    <label for="rejectReason" class="form-label">Motivo del rechazo: <span
+                            class="text-danger">*</span></label>
+                    <select class="form-select" id="rejectReason" required>
+                        <option value="">Seleccione un motivo</option>
+                        <option value="1">Fuera del plazo permitido</option>
+                        <option value="2">Fecha no disponible</option>
+                        <option value="3">Conflicto con otras reservas</option>
+                        <option value="4">Información incompleta</option>
+                        <option value="5">Otro</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="rejectNotes" class="form-label">Comentarios adicionales: <span
+                            class="text-danger">*</span></label>
+                    <textarea class="form-control" id="rejectNotes" rows="3"
+                        placeholder="Ingrese detalles sobre el motivo del rechazo..." required></textarea>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="notifyVendorReject" checked>
+                    <label class="form-check-label" for="notifyVendorReject">
+                        Notificar al vendedor por correo electrónico
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmReject">Rechazar Solicitud</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="successToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-success text-white">
+            <i class="bi bi-check-circle me-2"></i>
+            <strong class="me-auto">Acción Exitosa</strong>
+            <small>Ahora</small>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            La solicitud ha sido procesada correctamente.
+        </div>
+    </div>
+
+    <div id="errorToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-danger text-white">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong class="me-auto">Error</strong>
+            <small>Ahora</small>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            Se produjo un error al procesar la solicitud. Intente nuevamente.
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="detailsModalLabel">Detalles de la Solicitud</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Información de la Solicitud</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>ID Solicitud:</span>
+                                <span class="fw-bold">CR-1025</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Fecha de Solicitud:</span>
+                                <span>05/05/2025 09:45 AM</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Estado:</span>
+                                <span class="badge bg-warning text-dark">Pendiente</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Fecha Actual:</span>
+                                <span>08/05/2025</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Nueva Fecha:</span>
+                                <span class="fw-bold">10/05/2025</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Información del Vendedor</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Nombre:</span>
+                                <span>Juan Pérez</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>ID Vendedor:</span>
+                                <span>V-12345</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Email:</span>
+                                <span>juan.perez@empresa.com</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Teléfono:</span>
+                                <span>+123 456 7890</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Región:</span>
+                                <span>Norte</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Información del Cliente</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Nombre:</span>
+                                <span>Distribuidora ABC</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>ID Cliente:</span>
+                                <span>C-5678</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Contacto:</span>
+                                <span>Miguel Ruiz</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Email:</span>
+                                <span>mruiz@distribuidoraabc.com</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Teléfono:</span>
+                                <span>+123 987 6543</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Detalles de la Reserva</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>ID Reserva:</span>
+                                <span>R-8765</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Tipo:</span>
+                                <span>Entrega regular</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Productos:</span>
+                                <span>15 items</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Valor:</span>
+                                <span>$12,500.00</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Dirección:</span>
+                                <span>Av. Principal #123</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold">Motivo de la Solicitud</h6>
+                    <div class="card">
+                        <div class="card-body">
+                            <p class="card-text">Cliente no disponible en fecha original. El gerente de compras de
+                                Distribuidora ABC estará fuera de la ciudad en la fecha programada originalmente y
+                                solicitó posponer la entrega para cuando pueda estar presente y realizar la verificación
+                                de los productos personalmente.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold">Calendario de Reservas</h6>
+                    <div id="calendar" style="height: 250px;"></div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold">Historial de la Solicitud</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fecha/Hora</th>
+                                    <th>Usuario</th>
+                                    <th>Acción</th>
+                                    <th>Comentarios</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>05/05/2025 09:45 AM</td>
+                                    <td>Juan Pérez</td>
+                                    <td>Creación</td>
+                                    <td>Solicitud de cambio de fecha creada</td>
+                                </tr>
+                                <tr>
+                                    <td>05/05/2025 10:30 AM</td>
+                                    <td>Sistema</td>
+                                    <td>Notificación</td>
+                                    <td>Notificación enviada al equipo de administración</td>
+                                </tr>
+                                <tr>
+                                    <td>05/05/2025 11:15 AM</td>
+                                    <td>María López</td>
+                                    <td>Revisión</td>
+                                    <td>Solicitud revisada, en espera de aprobación final</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        var table = document.getElementById("requests-table");
+        if (table) {
+            var dataTable = new DataTable(table, {
+                "order": [], // Puedes especificar aquí el orden inicial de las columnas
+                "paging": true, // Habilita la paginación
+                "lengthMenu": [5, 10, 25, 50], // Define el menú de longitud de página
+                "pageLength": 10, // Establece la longitud de página inicial
+                "dom": 'Bfrtip', // Añade los botones a la interfaz
+                "buttons": [
+                    {
+                        extend: 'csvHtml5',
+                        text: 'Exportar a CSV',
+
+                    }
+                ],
+                "initComplete": function () {
+                    // Aplica las clases a los botones después de la inicialización
+                    var buttons = document.querySelectorAll('.dt-button');
+                    buttons.forEach(function (button) {
+                        button.classList.add('btn', 'btn-info');
+                    });
+                }
+            });
+
+            // Add tab filtering functionality
+            const statusTabs = document.querySelectorAll('.nav-tabs .nav-link');
+
+            statusTabs.forEach(tab => {
+                tab.addEventListener('click', function (event) {
+                    event.preventDefault();
+
+                    // Remove active class from all tabs
+                    statusTabs.forEach(t => t.classList.remove('active'));
+
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+
+                    // Get status from tab text
+                    const tabText = this.textContent.trim().split(' ')[0].toLowerCase();
+
+                    // Apply filter based on tab
+                    if (tabText === 'todas') {
+                        dataTable.search('').draw(); // Show all rows
+                    } else if (tabText === 'pendientes') {
+                        dataTable.search('Pendiente').draw();
+                    } else if (tabText === 'aprobadas') {
+                        dataTable.search('Aprobada').draw();
+                    } else if (tabText === 'rechazadas') {
+                        dataTable.search('Rechazada').draw();
+                    }
+                });
+            });
+        }
+
+
+    })
+</script>
