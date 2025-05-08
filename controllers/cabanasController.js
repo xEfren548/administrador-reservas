@@ -635,12 +635,12 @@ async function uploadChaletPdf(req, res, next) {
         var chalet = "";
         console.log(req.session)
         if (req.session.chaletAdded) {
-            chalet = await Habitacion.findOne({ "propertyDetails.name": req.session.chaletAdded }).lean();
+            chalet = await Habitacion.findOne({ "propertyDetails.name": req.session.chaletAdded });
             // chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
             //console.log(chalets)
         } else if (req.session.chaletUpdated) {
             // chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
-            chalet = await Habitacion.findOne({ "propertyDetails.name": req.session.chaletUpdated }).lean();
+            chalet = await Habitacion.findOne({ "propertyDetails.name": req.session.chaletUpdated });
         }
         //console.log(chalet)
         if (!chalet) {
@@ -685,6 +685,7 @@ async function uploadChaletPdf(req, res, next) {
         res.status(200).json({ success: true, message: "Archivos subidos con éxito" });
     } catch (error) {
         console.log("Error:", error);
+        res.status(500).json({ success: false, message: "Error uploading files", error: error.message });
     } finally {
         await client.close();
     }
