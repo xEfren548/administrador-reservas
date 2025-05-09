@@ -888,14 +888,6 @@
                 nombre.textContent = habitacion.name;
                 contenido.appendChild(nombre);
 
-                // Descripción de la cabaña (nuevo)
-                if (habitacion.accomodationDescription) {
-                    const descripcion = document.createElement("p");
-                    descripcion.classList.add("text-gray-300", "mt-2", "text-sm");
-                    descripcion.textContent = habitacion.accomodationDescription;
-                    contenido.appendChild(descripcion);
-                }
-
                 // Precio por noche
                 const precio = document.createElement("p");
                 precio.classList.add("text-white-400", "mt-2", "font-semibold");
@@ -935,6 +927,7 @@
                 */
 
                 if (habitacion.accomodationFeatures) {
+                                    // Descripción de la cabaña (nuevo)
                     const featuresContainer = document.createElement("div");
                     featuresContainer.classList.add("mt-3", "border-t", "border-gray-700", "pt-3");
 
@@ -1038,6 +1031,13 @@
 
                     const featuresDetails = document.createElement("div");
                     featuresDetails.classList.add("hidden");
+
+                    if (habitacion.accomodationDescription) {
+                        const descripcion = document.createElement("p");
+                        descripcion.classList.add("text-gray-300", "mt-2", "text-sm", "mb-2");
+                        descripcion.textContent = habitacion.accomodationDescription;
+                        featuresDetails.appendChild(descripcion);
+                    }
 
                     let hasVisibleCategories = false;
 
