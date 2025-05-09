@@ -925,6 +925,145 @@
                 contenido.appendChild(capacidad);
                 */
 
+                const featureTranslations = {
+                    // General Features
+                    "satelliteTV": "Televisión por satélite",
+                    "disabledAccessible": "Accesible para discapacitados",
+                    "iron": "Plancha",
+                    "petsAllowed": "Se admiten mascotas",
+                    "allergyFriendlyRooms": "Habitaciones para alérgicos",
+                    "solarium": "Solárium",
+                    "mosquitoNet": "Mosquitera",
+                    "airConditioningInMainRooms": "Aire acondicionado en habitaciones principales",
+                    "connectingRooms": "Habitaciones conectadas",
+                    "airConditioningThroughoutProperty": "Aire acondicionado en toda la propiedad",
+                    "tiledFloorOrMarble": "Suelo de baldosas o mármol",
+                    "fireplace": "Chimenea",
+                    "ironingFacilities": "Plancha",
+                    "hardwoodOrParquetFloors": "Suelos de madera",
+                    "noSmokingAllowed": "Prohibido fumar",
+                    "wardrobe": "Armario",
+                    "carpetedFloor": "Suelo alfombrado",
+                    "expressCheckInCheckOut": "Check-in/check-out express",
+                    "soundproofing": "Insonorización",
+                    "telephone": "Teléfono",
+                    "terrace": "Terraza",
+                    "balcony": "Balcón",
+                    "buffetBreakfast": "Desayuno tipo buffet",
+                    "safeDepositBox": "Caja fuerte",
+                    "wifi": "WiFi",
+                    "breakfastInRoom": "Desayuno en la habitación",
+                    "heating": "Calefacción",
+                    "extraLongBeds": "Camas extralargas",
+                    "roomService": "Servicio de habitaciones",
+                    "fan": "Ventilador",
+                    "dressingRoom": "Vestidor",
+                    "smokers": "Zona de fumadores",
+                    "grill": "Parrilla",
+                        
+                    // Views
+                    "cityView": "Vista a la ciudad",
+                    "mountainView": "Vista a la montaña",
+                    "poolView": "Vista a la piscina",
+                    "landmarkView": "Vista a un monumento",
+                    "gardenView": "Vista al jardín",
+                    "lakeView": "Vista al lago",
+                    "seaView": "Vista al mar",
+                    "patioView": "Vista al patio",
+                    "riverView": "Vista al río",
+                        
+                    // Activities
+                    "turkishBath": "Baño turco",
+                    "gym": "Gimnasio",
+                    "thermalBaths": "Baños termales",
+                    "minigolf": "Minigolf",
+                    "canoeing": "Canoa",
+                    "spa": "Spa",
+                    "casino": "Casino",
+                    "library": "Biblioteca",
+                    "horseRiding": "Montar a caballo",
+                    "cycling": "Ciclismo",
+                    "billiards": "Billar",
+                    "bowling": "Boliche",
+                    "gameRoom": "Sala de juegos",
+                    "barbecueFacilities": "Instalaciones para barbacoa",
+                    "diving": "Buceo",
+                    "fishing": "Pesca",
+                    "jacuzzi": "Jacuzzi",
+                    "heatedPool": "Piscina climatizada",
+                    "sauna": "Sauna",
+                    "karaoke": "Karaoke",
+                    "indoorPool": "Piscina cubierta",
+                    "outdoorPool": "Piscina al aire libre",
+                    "snorkeling": "Snorkel",
+                    "privatePool": "Piscina privada",
+                    "childrensPlayground": "Parque infantil",
+                    "hiking": "Senderismo",
+                    "masseuse": "Masajista",
+                    "golfCourse": "Campo de golf",
+                        
+                    // Parking
+                    "paidParking": "Estacionamiento de pago",
+                    "publicParking": "Estacionamiento público",
+                    "freeParking": "Estacionamiento gratuito",
+                    "privateParking": "Estacionamiento privado",
+                        
+                    // Restroom Features
+                    "bathrobe": "Albornoz",
+                    "bidet": "Bidé",
+                    "freeToiletries": "Artículos de aseo gratuitos",
+                    "additionalToilet": "Aseo adicional",
+                    "sharedToilet": "Aseo compartido",
+                    "bathtub": "Bañera",
+                    "hairdryer": "Secador de pelo",
+                    "additionalBathroom": "Baño adicional",
+                    "slippers": "Zapatillas",
+                    "sharedBathroom": "Baño compartido",
+                    "designerBathroom": "Baño de diseño",
+                    "privateBathroom": "Baño privado",
+                    "shower": "Ducha",
+                        
+                    // Kitchen
+                    "minibar": "Minibar",
+                    "barbecue": "Barbacoa",
+                    "blender": "Licuadora",
+                    "refrigerator": "Refrigerador",
+                    "electricKettle": "Hervidor eléctrico",
+                    "oven": "Horno",
+                    "stove": "Cocina",
+                    "ceramicCooktop": "Placa vitrocerámica",
+                    "teapot": "Tetera",
+                    "coffeeMaker": "Cafetera",
+                    "toaster": "Tostadora",
+                    "washingMachine": "Lavadora",
+                    "dryer": "Secadora",
+                    "dishwasher": "Lavavajillas",
+                    "cookingUtensils": "Utensilios de cocina",
+                    "kitchenArea": "Zona de cocina",
+                    "diningArea": "Zona de comedor",
+                    "fridge": "Nevera",
+                    "microwave": "Microondas",
+                        
+                    // Sport
+                    "paddleTennis": "Pádel",
+                    "basketballCourt": "Cancha de baloncesto",
+                    "darts": "Dardos",
+                    "windsurfing": "Windsurf",
+                    "skiSchool": "Escuela de esquí",
+                    "footballField": "Campo de fútbol",
+                    "skiing": "Esquí",
+                    "pingPong": "Ping-pong",
+                    "squash": "Squash",
+                    "indoorFootballCourt": "Cancha de fútbol cubierta",
+                    "tennisCourt": "Cancha de tenis",
+                        
+                    // Living Room
+                    "doubleSofaBed": "Sofá cama doble",
+                    "individualSofaBed": "Sofá cama individual",
+                    "tv": "Televisión",
+                    "snackBar": "Bar de aperitivos"
+                };
+
                 if (habitacion.accomodationFeatures) {
                     const featuresContainer = document.createElement("div");
                     featuresContainer.classList.add("mt-3", "border-t", "border-gray-700", "pt-3");
@@ -937,6 +1076,19 @@
                     // Función para procesar cada categoría de características
                     const processFeaturesCategory = (categoryData, categoryName) => {
                         if (!categoryData || Object.keys(categoryData).length === 0) return null;
+
+                        let hasActiveFeatues = false;
+                        Object.entries(categoryData).forEach(([key, value]) => {
+                            // Ignorar campos de ID y comprobar si hay al menos un valor true
+                            if (key !== 'id' && key !== '_id' && key !== 'ID' && !key.startsWith('_')) {
+                                if (typeof value === 'boolean' && value === true) {
+                                    hasActiveFeatues = true;
+                                }
+                            }
+                        });
+                        
+                        // Si no hay características activas (true), no mostrar la categoría
+                        if (!hasActiveFeatues) return null;
 
                         const categoryContainer = document.createElement("div");
                         categoryContainer.classList.add("mb-2");
@@ -969,9 +1121,8 @@
                                 const featureText = document.createElement("span");
                                 featureText.classList.add("text-gray-400");
                                 // Convertir camelCase a texto con espacios
-                                featureText.textContent = feature
-                                    .replace(/([A-Z])/g, ' $1')
-                                    .replace(/^./, str => str.toUpperCase());
+                                featureText.textContent = featureTranslations[feature] || 
+                                    feature.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                                 featureItem.appendChild(featureText);
 
                                 featuresList.appendChild(featureItem);
@@ -1032,7 +1183,7 @@
 
                     if (habitacion.accomodationDescription) {
                         const descripcion = document.createElement("p");
-                        descripcion.classList.add("text-gray-300", "mt-2", "text-sm", "mb-2");
+                        descripcion.classList.add("text-gray-300", "mt-2", "text-sm", "mb-4");
                         descripcion.textContent = habitacion.accomodationDescription;
                         featuresDetails.appendChild(descripcion);
                     }
