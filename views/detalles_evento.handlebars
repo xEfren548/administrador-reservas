@@ -1073,6 +1073,76 @@
     </form>
 </div>
 
+<!-- Modal Aprobaciones vendedores -->
+<!-- if you want to close by clicking outside the modal, delete the last endpoint:data-bs-backdrop and data-bs-keyboard -->
+<div class="modal fade" id="vendedorModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
+    role="dialog"aria-labelledby="modalTitleId"aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitleId">
+                    Confirmar solicitud de cambio de fechas
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Estás a punto de solicitar un cambio de fechas para esta reserva</p>
+                <div class="row mt-2">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label for="event_start_date">Fecha llegada actual</label>
+                            <input type="date" name="event_start_date" id="actual_start_date"
+                                class="form-control" placeholder="Event start date">
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label for="event_end_date">Fecha salida actual</label>
+                            <input type="date" name="event_end_date" id="actual_end_date" class="form-control"
+                                placeholder="Event end date">
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label for="event_start_date">Fecha llegada nueva</label>
+                            <input type="date" name="event_start_date" id="new_start_date"
+                                class="form-control" placeholder="Event start date">
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label for="event_end_date">Fecha salida nueva</label>
+                            <input type="date" name="event_end_date" id="new_end_date" class="form-control"
+                                placeholder="Event end date">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Close
+                </button>
+                <button type="button" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Optional: Place to the bottom of scripts -->
+<script>
+    const myModal = new bootstrap.Modal(
+        document.getElementById("modalId"),
+        options,
+    );
+</script>
+
+
 
 <script>
 
@@ -1369,6 +1439,12 @@
         event.preventDefault();
         
         try {
+            const privilegio = '{{evento.privilege}}'
+            if (privilegio === "Vendedor") {
+                openVendedorModal();
+                return;
+            }
+
             // Get reservation data
             const reservationData = getReservationFormData();
             
@@ -1404,6 +1480,11 @@
             console.error('Error al actualizar la reserva:', error);
             await showErrorMessage(error.message);
         }
+    }
+
+    async function openVendedorModal() {
+        const modal = new bootstrap.Modal(document.getElementById('vendedorModal'));
+        modal.show();
     }
 
     function getReservationFormData() {
