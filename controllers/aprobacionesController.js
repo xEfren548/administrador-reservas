@@ -1,4 +1,7 @@
 const Aprobaciones = require('../models/Aprobaciones');
+const Reservas = require('../models/Evento');
+const Clientes = require('../models/Cliente');
+const Usuarios = require('../models/Usuario');
 
 async function showApprovalsView(req, res, next) {
     try {
@@ -99,9 +102,7 @@ async function updateRequestStatus(req, res, next) {
 
         // Find by requestId (CR-XXXX) or MongoDB _id
         let filter = {};
-        if (id.startsWith('CR-')) {
-            filter.requestId = id;
-        } else if (mongoose.Types.ObjectId.isValid(id)) {
+        if (mongoose.Types.ObjectId.isValid(id)) {
             filter._id = id;
         } else {
             return res.status(400).json({
@@ -194,57 +195,54 @@ async function deleteRequest(req, res, next) {
 async function createRequest(req, res, next) {
     try {
         const {
-            sellerId,
-            sellerName,
             clientId,
-            clientName,
             dateChanges,
-            mainReason
+            mainReason,
+            reservationId,
+            newPrice
         } = req.body;
 
+        console.log(req.body);
+
         // Validate required fields
-        if (!sellerId || !sellerName || !clientId || !clientName || !dateChanges || !mainReason) {
-            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        if (!clientId || !dateChanges || !mainReason || !reservationId || !newPrice) {
+            return res.status(400).json({ success: false, message: 'Faltan campos requeridos' });
         }
 
         // Validate dateChanges array
-        if (!Array.isArray(dateChanges) || dateChanges.length === 0) {
+        if (!dateChanges.newArrivalDate || !dateChanges.newDepartureDate) {
             return res.status(400).json({
                 success: false,
-                message: 'dateChanges must be an array with at least one date change'
+                message: 'Las fechas de llegada y salida son requeridas'
             });
         }
 
-        // Validate each date change entry
-        for (const dateChange of dateChanges) {
-            if (!dateChange.originalDate || !dateChange.newDate) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Each date change must have originalDate and newDate'
-                });
-            }
+        // Validate reservationId
+        const reservation = await Reservas.findById(reservationId);
+        if (!reservation) {
+            return res.status(400).json({ success: false, message: 'Reserva no encontrada' });
+        }
 
-            // Convert string dates to Date objects
-            dateChange.originalDate = new Date(dateChange.originalDate);
-            dateChange.newDate = new Date(dateChange.newDate);
+        const cliente = await Clientes.findById(clientId);
+        if (!cliente) {
+            return res.status(400).json({ success: false, message: 'Cliente no encontrado' });
+        }
 
-            // Validate dates
-            if (isNaN(dateChange.originalDate) || isNaN(dateChange.newDate)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid date format'
-                });
-            }
+        const sellerId = req.session.id;
+
+        const seller = await Usuarios.findById(sellerId);
+        if (!seller) {
+            return res.status(400).json({ success: false, message: 'Vendedor no encontrado' });
         }
 
         // Create new request
         const newRequest = new Aprobaciones({
             sellerId,
-            sellerName,
             clientId,
-            clientName,
             dateChanges,
             mainReason,
+            newPrice,
+            reservationId: reservation._id,
             status: 'Pendiente'
         });
 
@@ -261,8 +259,7 @@ async function createRequest(req, res, next) {
         console.error('Error creating date change request:', error);
         res.status(500).json({
             success: false,
-            message: 'Error creating date change request',
-            error: error.message
+            message: error.message
         });
     }
 }

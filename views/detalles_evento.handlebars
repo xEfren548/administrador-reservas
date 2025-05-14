@@ -1475,6 +1475,13 @@
     }
 
     async function openVendedorModal(reservationData, formattedDates, nuevoTotal) {
+        const editModal = document.getElementById('edit_event_modal');
+        
+        // Method 1: Using Bootstrap's Modal instance if it exists
+        const bsModal = bootstrap.Modal.getInstance(editModal);
+        if (bsModal) {
+            bsModal.hide();
+        }
         // Extract previous dates from the form
         console.log("Nuevo total Open vendedor: ")
         // Format dates for display (convert to local format)
@@ -1487,9 +1494,6 @@
         // Get the new dates from the formattedDates
         const newArrivalDate = formattedDates.eventDateStart;
         const newDepartureDate = formattedDates.eventDateEnd;
-        
-        console.log("prev arr date, prev dep date, new arr date, new dep date")
-        console.log(previousArrivalDate, previousDepartureDate, newArrivalDate, newDepartureDate)
         
         const result = await Swal.fire({
             title: 'Solicitud de cambio de fechas',
@@ -1504,19 +1508,44 @@
                     <p>Salida: ${formatDisplayDate(newDepartureDate)}</p>
                     <p><strong>Nuevo precio (pendiente):</strong></p>
                     <p>$${nuevoTotal.precioAsignado}</p>
-                    <p>Esta solicitud será enviada a los administradores para su aprobación.</p>
+                    <p><strong>Motivo:</strong></p>
+                    <textarea id="swal-textarea" 
+                    class=""
+                    placeholder="Indica el motivo por el cual solicitas el cambio de fechas"
+                    rows="4" 
+                    style="width: 90%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                    </textarea>                    
+                    <p class="mt-2" style="color: #777; font-size: 0.9em;">Esta solicitud será enviada a los administradores para su aprobación.</p>
                 </div>
             `,
+
+
+            footer: "Esta solicitud será enviada a los administradores para su aprobación",
             icon: 'info',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
             confirmButtonText: 'Enviar solicitud',
-            cancelButtonText: 'Cancelar'
+            cancelButtonText: 'Cancelar',
+            focusConfirm: false,
+            didOpen: () => {
+            // Focus the textarea when modal opens
+            document.getElementById("swal-textarea").focus();
+        },
+        preConfirm: () => {
+            const reason = document.getElementById("swal-textarea").value.trim();
+            if (!reason) {
+                Swal.showValidationMessage('Por favor indica el motivo para el cambio de fechas');
+                return false;
+            }
+            return reason;
+        }
         });
         
         if (result.isConfirmed) {
             try {
+                const reason = result.value.trim();
+            
                 // Send request to admin for approval
                 await requestDateChangeApproval(
                     reservationData.reservacionId,
@@ -1524,7 +1553,8 @@
                     previousDepartureDate,
                     newArrivalDate,
                     newDepartureDate,
-                    nuevoTotal
+                    nuevoTotal,
+                    reason
                 );
                 
                 // Show success message to vendor
@@ -1550,23 +1580,22 @@
         }
     }
 
-    async function requestDateChangeApproval(reservationId, prevArrivalDate, prevDepartureDate, newArrivalDate, newDepartureDate, totalInfo) {
-        const response = await fetch('/api/reservations/request-date-change', {
+    async function requestDateChangeApproval(reservationId, prevArrivalDate, prevDepartureDate, newArrivalDate, newDepartureDate, totalInfo, reason) {
+        const clientId = document.querySelector('#cliente-id').value;
+        const response = await fetch('/api/aprobaciones', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 reservationId,
-                previousDates: {
-                    arrival: prevArrivalDate,
-                    departure: prevDepartureDate
+                dateChanges: {
+                    newArrivalDate: newArrivalDate,
+                    newDepartureDate: newDepartureDate
                 },
-                newDates: {
-                    arrival: newArrivalDate,
-                    departure: newDepartureDate
-                },
-                totalInfo
+                newPrice: totalInfo.precioAsignado,
+                mainReason: reason,
+                clientId
             })
         });
         

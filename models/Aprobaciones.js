@@ -2,14 +2,6 @@ const mongoose = require('mongoose');
 
 // Define schema for date changes within a request
 const dateChangeSchema = new mongoose.Schema({
-    originalArrivalDate: {
-        type: Date,
-        required: true
-    },
-    originalDepartureDate: {
-        type: Date,
-        required: true
-    },
     newArrivalDate: {
         type: Date,
         required: true
@@ -31,20 +23,21 @@ const dateChangeRequestSchema = new mongoose.Schema({
         ref: 'Usuario',
         required: true
     },
-    sellerName: {
-        type: String,
-        required: true
-    },
     clientId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client',
+        ref: 'Cliente',
         required: true
     },
-    clientName: {
-        type: String,
+    dateChanges: {dateChangeSchema},
+    newPrice: {
+        type: Number,
+        required: true
+    },    
+    reservationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Evento',
         required: true
     },
-    dateChanges: [dateChangeSchema],
     mainReason: {
         type: String,
         required: true
