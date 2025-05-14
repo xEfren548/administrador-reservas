@@ -1241,16 +1241,15 @@ async function editarEvento(req, res) {
     }
 }
 
-async function editarEvento(req, res) {
+async function editarEventoBackend(params) {
     try {
-        const id = req.params.id;
-        const { resourceId, nNights, arrivalDate, departureDate, url, total } = req.body;
+        const id = params.reservationId;
+        const { nNights, arrivalDate, departureDate, newPrice } = params;
         console.log("Procesando solicitud de edición de evento");
 
         // Create an update object with only the fields that are provided
         const updateFields = {};
 
-        if (resourceId !== undefined) updateFields.resourceId = resourceId;
         if (nNights !== undefined) updateFields.nNights = nNights;
         if (arrivalDate !== undefined) updateFields.arrivalDate = arrivalDate;
         if (departureDate !== undefined) updateFields.departureDate = departureDate;
@@ -1281,10 +1280,10 @@ async function editarEvento(req, res) {
         await logController.createBackendLog(logBody);
 
         console.log('Evento editado correctamente:', evento._id);
-        res.status(200).json({ mensaje: 'Evento editado correctamente', evento });
+        return evento;
     } catch (error) {
         console.error('Error al editar evento:', error);
-        res.status(500).json({ error: error.message });
+        return error;
     }
 }
 
@@ -2247,6 +2246,7 @@ module.exports = {
     sendIntructionsToWhatsapp,
     createOwnerReservation,
     editarEvento,
+    editarEventoBackend,
     eliminarEvento,
     checkAvailability,
     moveToPlayground,

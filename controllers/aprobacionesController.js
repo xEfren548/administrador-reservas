@@ -4,6 +4,8 @@ const Aprobaciones = require('../models/Aprobaciones');
 const Reservas = require('../models/Evento');
 const Clientes = require('../models/Cliente');
 const Usuarios = require('../models/Usuario');
+const utilidadesController = require('../controllers/utilidadesController');
+const eventController = require('../controllers/eventController');
 
 async function showApprovalsView(req, res, next) {
     try {
@@ -130,16 +132,22 @@ async function updateRequestStatus(req, res, next) {
             });
         }
 
-        // Find by requestId (CR-XXXX) or MongoDB _id
         let filter = {};
-        if (mongoose.Types.ObjectId.isValid(id)) {
-            filter._id = id;
-        } else {
-            return res.status(400).json({
+        const aprobacion = await Aprobaciones.findById(id);
+        if (!aprobacion) {
+            return res.status(404).json({
                 success: false,
-                message: 'Invalid ID format'
+                message: 'Aprobacion no encontrada'
             });
         }
+
+        const params = {
+            reservationId: aprobacion.reservationId,
+            arrivalDate: aprobacion.dateChanges[0].newArrivalDate,
+            departureDate: aprobacion.dateChanges[0].newDepartureDate,
+            newPrice: aprobacion.newPrice
+        };
+        
 
         // Find and update the request
         const updateData = {
@@ -152,6 +160,7 @@ async function updateRequestStatus(req, res, next) {
         }
 
         if (status === 'Aprobada') {
+            const editarEvento = await eventController.editarEventoBackend(id);
             updateData.approvedBy = approvedBy;
         }
 
