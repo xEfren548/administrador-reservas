@@ -1,3 +1,5 @@
+const moment = require('moment');
+
 const Aprobaciones = require('../models/Aprobaciones');
 const Reservas = require('../models/Evento');
 const Clientes = require('../models/Cliente');
@@ -11,7 +13,35 @@ async function showApprovalsView(req, res, next) {
             throw new Error("El usuario no tiene permiso para ver la pantalla de aprobaciones");
         }
 
-        res.render('aprobacionesView');
+        const aprobaciones = await Aprobaciones.find().sort({ createdAt: -1 }).lean();
+        console.log(aprobaciones);
+
+        for (let aprobacion of aprobaciones) {
+            aprobacion.createdAt = moment(aprobacion.createdAt).format('DD/MM/YYYY');
+            aprobacion.updatedAt = moment(aprobacion.updatedAt).format('DD/MM/YYYY');
+            const vendedor = await Usuarios.findById(aprobacion.sellerId).lean();
+            aprobacion.sellerName = vendedor.firstName + " " + vendedor.lastName;
+            const cliente = await Clientes.findById(aprobacion.clientId).lean();
+            aprobacion.clientName = cliente.firstName + " " + cliente.lastName;
+            const reserva = await Reservas.findById(aprobacion.reservationId).lean();
+            aprobacion.currentPrice = reserva.total;
+            
+            const currentArrivalDate = moment.utc(reserva.arrivalDate).format('DD/MM/YYYY');
+            const currentDepartureDate = moment.utc(reserva.departureDate).format('DD/MM/YYYY');
+            aprobacion.currentDates = currentArrivalDate + " - " + currentDepartureDate;
+
+            const newArrivalDate = moment.utc(aprobacion.dateChanges[0].newArrivalDate).format('DD/MM/YYYY');
+            const newDepartureDate = moment.utc(aprobacion.dateChanges[0].newDepartureDate).format('DD/MM/YYYY');
+            aprobacion.newDates = newArrivalDate + " - " + newDepartureDate;
+
+
+            
+        }
+        
+        console.log(aprobaciones);
+        res.render('aprobacionesView', {
+            requests: aprobaciones
+        });
 
     } catch (error) {
         console.log(error);

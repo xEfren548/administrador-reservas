@@ -28,7 +28,7 @@ const dateChangeRequestSchema = new mongoose.Schema({
         ref: 'Cliente',
         required: true
     },
-    dateChanges: {dateChangeSchema},
+    dateChanges: [dateChangeSchema],
     newPrice: {
         type: Number,
         required: true
