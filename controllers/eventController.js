@@ -1264,7 +1264,7 @@ async function editarEventoBackend(params) {
         );
 
         if (!evento) {
-            return res.status(404).json({ mensaje: 'El evento no fue encontrado' });
+            throw new Error('El evento no fue encontrado');
         }
 
         // Create log entry for the event modification

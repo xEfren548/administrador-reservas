@@ -160,7 +160,17 @@ async function updateRequestStatus(req, res, next) {
         }
 
         if (status === 'Aprobada') {
-            const editarEvento = await eventController.editarEventoBackend(id);
+            const editarEvento = await eventController.editarEventoBackend(params);
+            if (editarEvento.isInstanceOf(Error)) {
+                throw new Error(editarEvento.message);
+            }
+
+            const nuevasComisiones = await comisionController.crearComisionesBackend(params);
+            if (nuevasComisiones.isInstanceOf(Error)) {
+                throw new Error(nuevasComisiones.message);
+            }
+
+
             updateData.approvedBy = approvedBy;
         }
 
