@@ -2015,9 +2015,9 @@ function groupLocationsByMunicipality(locations) {
 
 async function cotizadorChaletsyPrecios(req, res) {
     try {
-        const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles, isForClient } = req.body;
+        const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles, isForClient, noVendedor } = req.body;
 
-        if (!req.session.token) {
+        if (!req.session.token && !isForClient) {
             return res.status(401).json({ message: 'Por inactividad, es necesario recargar la página para continuar' });
         }
 
@@ -2108,9 +2108,15 @@ async function cotizadorChaletsyPrecios(req, res) {
         const infoComisiones = {
             userId: req.session.id,
             nNights: nNights,
+            noVendedor: noVendedor
 
         }
         const comisiones = await utilidadesController.calcularComisionesInternas(infoComisiones);
+
+        if (!comisiones) {
+            throw new Error("No se encontró al usuario");
+        }
+
 
         if (startDate > endDate) {
             throw new Error("La fecha de llegada debe ser anterior a la fecha de salida");
