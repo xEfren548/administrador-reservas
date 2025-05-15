@@ -164,7 +164,23 @@ async function calcularComisionesInternas(info) {
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
         
         if (!user) {
-            throw new NotFoundError('User does not exist');
+            if (info.noVendedor) {
+                const normalizedPhone = info.noVendedor.toString().replace(/^\+52/, '');
+
+                user = await User.findOne({ 
+                    $or: [
+                        { phone: info.noVendedor },
+                        { phone: normalizedPhone },
+                        { phone: `+52${normalizedPhone}` }
+                    ]
+                });
+            
+                if (!user) {
+                    throw new NotFoundError('User does not exist');
+                }
+            } else {
+                throw new NotFoundError('User does not exist');
+            }
         }
         
         console.log("USUARIO LOGUEADO: ", user)

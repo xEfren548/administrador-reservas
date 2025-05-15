@@ -471,7 +471,7 @@
     });
 
     // FUNCIONES PARA CATEGORIAS DESPLEGABLES
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", async function () {
         // Evita que el formulario se recargue
         document.querySelector("form").addEventListener("submit", function (event) {
             event.preventDefault();
@@ -563,13 +563,16 @@
                 return;
             }
 
+            console.log(vendedor)
+
             const datos = {
                 categorias: categoriasSeleccionadas,
                 fechaLlegada: fechaLlegada,
                 fechaSalida: fechaSalida,
                 huespedes: parseInt(huespedes, 10), // Convertir a número
                 soloDisponibles: buscarSoloDisponiblesChk,
-                isForClient: true
+                isForClient: true,
+                noVendedor: vendedor
             };
 
             console.log("Datos a enviar:", datos);
@@ -892,7 +895,7 @@
                 const precio = document.createElement("p");
                 precio.classList.add("text-white-400", "mt-2", "font-semibold");
                 precio.textContent = `$${habitacion.totalPrice} por ${evento.nights} noche(s)`;
-                //contenido.appendChild(precio);
+                contenido.appendChild(precio);
 
                 // Iconos de características (nuevo)
                 const iconosContainer = document.createElement("div");
@@ -1305,6 +1308,7 @@
                 <p>Fecha de salida: ${boton.dataset.departureDate}</p>
                 <p>Huespedes: ${boton.dataset.huespedes}</p>
                 <p class="mb-2">Noches: ${boton.dataset.nNights}</p>
+                <p class="mb-2">Precio total: <b>$${boton.dataset.precioTotal}</b></p>
 
                 <b><p>Al confirmar, se redirigirá a Whatsapp con uno de nuestros agentes para finalizar la reserva</p></b>
                 `
@@ -1319,7 +1323,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         console.log(`Enviando información a ${vendedor}`);
-                        const text = `Hola, me gustaria solicitar mas informacion sobre la cabana ${boton.dataset.nombreHabitacion} de la fecha ${boton.dataset.arrivalDate} a ${boton.dataset.departureDate} para ${boton.dataset.huespedes} huespedes.`;
+                        const text = `Hola, quiero reservar en la cabaña ${boton.dataset.nombreHabitacion} de la fecha ${boton.dataset.arrivalDate} a ${boton.dataset.departureDate} para ${boton.dataset.huespedes} personas. El precio total es de $${boton.dataset.precioTotal}.`;
                         const whaUrl = `https://wa.me/${vendedor}?text=${encodeURIComponent(text)}`;
                         window.open(whaUrl, '_blank');
                     }
@@ -1366,7 +1370,6 @@
                 console.log(fechaLlegada, fechaSalida)
                 const arrivalDate = moment.utc(fechaLlegada, "DD-MM-YYYY").format("YYYY-MM-DD");
                 const departureDate = moment.utc(fechaSalida, "DD-MM-YYYY").format("YYYY-MM-DD");
-
 
                 const dataReserva = {
                     isDeposit: isDeposit,
@@ -1771,6 +1774,49 @@
                 }
             });
         }
+
+        // Función para obtener parámetros de la URL
+        function obtenerParametroURL(nombre) {
+            const url = new URL(window.location.href);
+            return url.searchParams.get(nombre);
+        }
+
+        // Función para validar el número de teléfono mexicano
+        function validarNumeroMX(numero) {
+            // Expresión regular para validar: +52 seguido de exactamente 10 dígitos
+            const regex = /^\d{10}$/;
+            return regex.test(numero);
+        }
+
+        // Obtener el parámetro 'vendedor' de la URL
+        const vendedor = obtenerParametroURL('vendedor');
+        console.log(vendedor)
+
+        // Validar el número
+        if (vendedor) {
+            if (validarNumeroMX(vendedor)) {
+                console.log('Número válido:', vendedor);
+                // Aquí puedes continuar con tu lógica para un número válido
+            } else {
+                console.error('Número inválido. Debe ser +52 seguido de 10 dígitos.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'URL inválida por numero de telefono. Favor de solicitar otro enlace',
+                    allowOutsideClick: false,
+                    showConfirmButton: false
+                })
+            }
+        } else {
+            console.log('No se encontró el parámetro vendedor en la URL');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Favor de solicitar otro enlace.',
+                allowOutsideClick: false,
+                showConfirmButton: false
+            })
+        }
     });
 
     // Close Modal
@@ -1810,48 +1856,7 @@
 
     document.addEventListener('DOMContentLoaded', addCarouselStyles);
 
-    // Función para obtener parámetros de la URL
-    function obtenerParametroURL(nombre) {
-        const url = new URL(window.location.href);
-        return url.searchParams.get(nombre);
-    }
-
-    // Función para validar el número de teléfono mexicano
-    function validarNumeroMX(numero) {
-        // Expresión regular para validar: +52 seguido de exactamente 10 dígitos
-        const regex = /^\d{10}$/;
-        return regex.test(numero);
-    }
-
-    // Obtener el parámetro 'vendedor' de la URL
-    const vendedor = obtenerParametroURL('vendedor');
-    console.log(vendedor)
-
-    // Validar el número
-    if (vendedor) {
-        if (validarNumeroMX(vendedor)) {
-            console.log('Número válido:', vendedor);
-            // Aquí puedes continuar con tu lógica para un número válido
-        } else {
-            console.error('Número inválido. Debe ser +52 seguido de 10 dígitos.');
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'URL inválida por numero de telefono. Favor de solicitar otro enlace',
-                allowOutsideClick: false,
-                showConfirmButton: false
-            })
-        }
-    } else {
-        console.log('No se encontró el parámetro vendedor en la URL');
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Favor de solicitar otro enlace.',
-            allowOutsideClick: false,
-            showConfirmButton: false
-        })
-    }
+    
 
 
 </script>
