@@ -4,6 +4,7 @@ const Aprobaciones = require('../models/Aprobaciones');
 const Reservas = require('../models/Evento');
 const Clientes = require('../models/Cliente');
 const Usuarios = require('../models/Usuario');
+const Habitacion = require('../models/Habitacion');
 const utilidadesController = require('../controllers/utilidadesController');
 const eventController = require('../controllers/eventController');
 
@@ -106,7 +107,10 @@ async function getRequests(req, res, next) {
 async function updateRequestStatus(req, res, next) {
     try {
         const { id } = req.params;
-        const { status, rejectionReason, approvedBy } = req.body;
+        const { status, rejectionReason } = req.body;
+
+        const approvedById = req.session.userId;
+        const approvedBy = await Usuarios.findById(approvedById);
 
         // Validate status
         if (!status || !['Aprobada', 'Rechazada'].includes(status)) {
@@ -140,12 +144,35 @@ async function updateRequestStatus(req, res, next) {
                 message: 'Aprobacion no encontrada'
             });
         }
+        const reservation = await Reservas.findById(aprobacion.reservationId);
+        if (!reservation) {
+            return res.status(404).json({
+                success: false,
+                message: 'Reserva no encontrada'
+            });
+        }
+        const chalet = await Habitacion.findById(reservation.resourceId).lean();
 
+        if (!chalet) {
+            return res.status(404).json({
+                success: false,
+                message: 'Chalet no encontrado'
+            });
+        }
+
+        const nNights = calculateNightDifference(aprobacion.dateChanges[0].newArrivalDate, aprobacion.dateChanges[0].newDepartureDate);
+        console.log("Noches nuevas: " + nNights);
         const params = {
             reservationId: aprobacion.reservationId,
             arrivalDate: aprobacion.dateChanges[0].newArrivalDate,
             departureDate: aprobacion.dateChanges[0].newDepartureDate,
-            newPrice: aprobacion.newPrice
+            newPrice: aprobacion.newPrice,
+            userId: aprobacion.sellerId,
+            idReserva: aprobacion.reservationId,
+            totalSinComisiones: aprobacion.totalWithoutComs,
+            costoBase: aprobacion.baseCost,
+            chaletName: chalet.propertyDetails.name,
+            nNights: nNights
         };
         
 
@@ -160,22 +187,22 @@ async function updateRequestStatus(req, res, next) {
         }
 
         if (status === 'Aprobada') {
-            const editarEvento = await eventController.editarEventoBackend(params);
-            if (editarEvento.isInstanceOf(Error)) {
-                throw new Error(editarEvento.message);
+            const editarEvento = await eventController.editarEventoBackend(params, req.session);
+            if (editarEvento instanceof Error) {
+                throw editarEvento;
             }
 
-            const nuevasComisiones = await comisionController.crearComisionesBackend(params);
-            if (nuevasComisiones.isInstanceOf(Error)) {
-                throw new Error(nuevasComisiones.message);
+            const nuevasComisiones = await utilidadesController.generarComisionReservaBackend(params);
+            if (nuevasComisiones instanceof Error) {
+                throw nuevasComisiones;
             }
 
 
-            updateData.approvedBy = approvedBy;
+            updateData.approvedBy = approvedBy._id;
         }
 
         const updatedRequest = await Aprobaciones.findOneAndUpdate(
-            filter,
+            aprobacion._id,
             updateData,
             { new: true }
         );
@@ -200,6 +227,22 @@ async function updateRequestStatus(req, res, next) {
             message: 'Error updating date change request',
             error: error.message
         });
+    }
+}
+
+function calculateNightDifference(arrivalDate, departureDate) {
+    const arrivalMoment = moment.utc(arrivalDate);
+    const departureMoment = moment.utc(departureDate);
+    // Verifica si las fechas son válidas
+    if (arrivalMoment.isValid() && departureMoment.isValid() && departureMoment.isSameOrAfter(arrivalMoment)) {
+        const arrivalStartOfDay = arrivalMoment.clone().startOf('day');
+        const departureStartOfDay = departureMoment.clone().startOf('day');
+        
+        // Calculate difference in days
+        const nightDifference = departureStartOfDay.diff(arrivalStartOfDay, 'days');
+        return nightDifference
+    } else {
+        return 0
     }
 }
 
@@ -248,13 +291,18 @@ async function createRequest(req, res, next) {
             dateChanges,
             mainReason,
             reservationId,
-            newPrice
+            newPrice,
+            infoPrices
         } = req.body;
 
         console.log(req.body);
 
         // Validate required fields
-        if (!clientId || !dateChanges || !mainReason || !reservationId || !newPrice) {
+        if (!clientId || !mainReason || !reservationId || !newPrice) {
+            return res.status(400).json({ success: false, message: 'Faltan campos requeridos' });
+        }
+
+        if (!infoPrices.totalSinComisiones || !infoPrices.costoBase) {
             return res.status(400).json({ success: false, message: 'Faltan campos requeridos' });
         }
 
@@ -291,6 +339,9 @@ async function createRequest(req, res, next) {
             dateChanges,
             mainReason,
             newPrice,
+            oldPrice: reservation.total,
+            baseCost: infoPrices.costoBase,
+            totalWithoutComs: infoPrices.totalSinComisiones,
             reservationId: reservation._id,
             status: 'Pendiente'
         });

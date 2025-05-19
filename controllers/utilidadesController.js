@@ -677,6 +677,418 @@ async function generarComisionReserva(req, res) {
         res.status(404).send(err.message);
     }
 }
+async function generarComisionReservaBackend(info) {
+    try {
+        const loggedUserId = info.userId;
+        const { costoBase, totalSinComisiones, idReserva, chaletName, arrivalDate, departureDate, nNights } = info;
+        console.log("Desde generar comision reserva")
+        console.log("Costo base: " + costoBase)
+
+        const reservacionId = idReserva
+
+        // Eliminar comisiones previas si es que existian
+        const comisionesReserva = await obtenerComisionesPorReserva(reservacionId);
+
+        if (comisionesReserva) {
+            for (const comisiones of comisionesReserva) {
+                if (!comisiones.concepto.includes('servicio') && !comisiones.concepto.includes('Servicio')) {
+                    const utilidadEliminada = await eliminarComisionReturn(comisiones._id);
+                    if (utilidadEliminada) {
+                        console.log('Utilidad eliminada correctamente');
+                    } else {
+                        throw new Error('Error al eliminar comision.');
+                    }
+                }
+            }
+        }
+
+
+
+
+        // const chalets = await Habitacion.findOne();
+        // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+
+        const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
+        if (!chalet) {
+            throw new NotFoundError('Chalet does not exist 2');
+        }
+
+        let utilidadChalet = totalSinComisiones - costoBase;
+
+        const chaletType = chalet.propertyDetails.accomodationType;
+
+        
+        
+        const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
+        const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
+        const costosAdministrador = await Costos.findOne({ category: "Administrador" }); //
+
+        if (!costosGerente) { throw new NotFoundError('Costos de gerente no existente'); }
+        if (!costosVendedor) { throw new NotFoundError('Costos de vendedor no existente'); }
+        if (!costosAdministrador) { throw new NotFoundError('Costos de administrador no existente'); }
+        
+        let comisionVendedor = costosVendedor.amount;
+
+        const fechaActual = new Date();
+
+        let counter = 0
+
+        let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
+
+        let conceptoAdmin = ''
+
+        while (true) {
+            // console.log(user)
+
+            if (user.privilege === 'Administrador') {
+                counter += 1;
+
+                if (user.administrator.toString() === user._id.toString()) {
+                    if (costosGerente.commission === "Aumento por costo fijo") {
+                        if (counter > 1) {
+                            conceptoAdmin = `Comisión administrador ligado de vendedor por reservación ${nNights} noches`
+
+                        } else {
+                            conceptoAdmin = `Reservación A. vendedor: ${nNights} noches`
+                        }
+                        // finalComission += costosGerente.amount;
+                        // minComission += costosGerente.amount;
+                        await altaComisionReturn({
+                            monto: costosAdministrador.amount * nNights,
+                            concepto: conceptoAdmin,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: user._id.toString(),
+                            idReserva: reservacionId
+                        })
+                    }
+                        
+                    
+                    break;
+                } else {
+                    if (costosVendedor.commission === "Aumento por costo fijo") {
+                        console.log("Comision vendedor: ", comisionVendedor)
+                        await altaComisionReturn({
+                            monto: comisionVendedor * nNights,
+                            concepto: `Comisión por Reservación vendedor ${nNights} noches`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: user._id.toString(),
+                            idReserva: reservacionId
+                        })
+                        user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                    }
+                }
+
+                // let costos = await Costos.find({ category: "Gerente" });
+                // if (costosGerente.commission === "Aumento por costo fijo") {
+                //     if (counter > 1) {
+                //         conceptoAdmin = `Comisión administrador ligado por reservación ${chaletName}`
+
+                //     } else {
+                //         conceptoAdmin = `Reservación ${chaletName}`
+                //     }
+                //     // finalComission += costosGerente.amount;
+                //     // minComission += costosGerente.amount;
+                //     await altaComisionReturn({
+                //         monto: costosAdministrador.amount,
+                //         concepto: conceptoAdmin,
+                //         fecha: fechaActual,
+                //         idUsuario: user._id.toString()
+                //     })
+                // }
+
+                // break;
+            } else {
+
+                counter += 1;
+                if (counter >= 2 && user.privilege !== "Administrador") {
+                    user.privilege = "Gerente"
+                }
+                // let costos = await Costos.findOne({ category: user.privilege })
+
+
+                if (user.privilege === "Vendedor") {
+                    if (costosVendedor.commission === "Aumento por costo fijo") {
+
+                        await altaComisionReturn({
+                            monto: comisionVendedor * nNights,
+                            concepto: `Reservación ${nNights} noches`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: user._id.toString(),
+                            idReserva: reservacionId
+                        })
+
+
+                        // finalComission += costosVendedor.maxAmount;
+                        // minComission += costosVendedor.minAmount;
+
+                        // minComission += costosDuenio.amount;
+                        // finalComission += costosDuenio.amount;
+                    }
+                } else if (user.privilege === "Gerente") {
+                    await altaComisionReturn({
+                        monto: costosGerente.amount * nNights,
+                        concepto: `Reservación ${nNights} noches`,
+                        fecha: new Date(arrivalDate),
+                        idUsuario: user._id.toString(),
+                        idReserva: reservacionId
+                    })
+
+                }
+
+                // if (costos.commission == "Aumento por costo fijo") {
+                //     finalComission += costos.maxAmount;
+                // }
+
+                user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                if (!user) {
+                    res.status(400).send({ message: "user not found" })
+                }
+
+
+            }
+        }
+
+        const chaletAdminId = chalet.others.admin.toString();
+        const chaletJanitor = chalet.others.janitor.toString();
+        const chaletOwner = chalet.others.owner.toString();
+        const chaletInvestors = chalet.others.investors
+        
+        console.log('comision inversionistas')
+        console.log(chaletInvestors)
+        // const idBosqueImperial = '66a7c2f2915b94d6630b67f2'
+        const idAdministracionNyN = '671be608256c4d53c3f5e12f'
+
+        const chaletAdmin = await User.findById(chaletAdminId)
+        if (!chaletAdmin){
+            throw new Error("No chalet admin found.")
+        }
+
+        // Utilidad
+        if (chaletType === "Bosque Imperial"){
+            await altaComisionReturn({
+                monto: utilidadChalet,
+                concepto: `Comisión administrador ligado de Cabaña ${nNights} noches`,
+                fecha: new Date(arrivalDate),
+                idUsuario: chaletAdmin._id.toString(),
+                idReserva: reservacionId
+            })
+
+            let comisionNegativaIva = Math.round((utilidadChalet * 0.16 + Number.EPSILON) * 100) / 100;
+
+            await altaComisionReturn({
+                monto: -comisionNegativaIva,
+                concepto: `Retención IVA ${chaletName} ${nNights} noches`,
+                fecha: new Date(arrivalDate),
+                idUsuario: chaletAdmin._id.toString(),
+                idReserva: reservacionId
+            })
+        } else {
+            await altaComisionReturn({
+                monto: utilidadChalet,
+                concepto: `Comisión administrador ligado de Cabaña ${chaletName} ${nNights} noches`,
+                fecha: new Date(arrivalDate),
+                idUsuario: chaletAdmin._id.toString(),
+                idReserva: reservacionId
+            })
+        }
+
+        // Comisión de limpieza
+        await altaComisionReturn({
+            monto: chalet.additionalInfo.extraCleaningCost,
+            concepto: `Comisión limpieza`,
+            fecha: new Date(arrivalDate),
+            idUsuario: chaletJanitor,
+            idReserva: reservacionId
+        })
+
+        // Comisión de $35 para administracion
+        await altaComisionReturn({
+            monto: 35,
+            concepto: `Costo por uso de sistema NyN`,
+            fecha: new Date(arrivalDate),
+            idUsuario: idAdministracionNyN,
+            idReserva: reservacionId
+        })
+
+        // Comisión de dueño de cabañas (ANTERIOR)
+        // await altaComisionReturn({
+        //     monto: costoBase - chalet.additionalInfo.extraCleaningCost,
+        //     concepto: `Comisión Dueño de cabaña: ${chaletName}`,
+        //     fecha: new Date(departureDate),
+        //     idUsuario: chaletOwner,
+        //     idReserva: idReserva
+        // })
+
+        // Comisión de dueño de cabañas (NUEVA)
+        let nuevoCostoBase = costoBase - chalet.additionalInfo.extraCleaningCost
+        console.log('nuevo costo base: ', nuevoCostoBase)
+        let cuantosInversionistas = chaletInvestors.length
+        console.log('cuantos inversionistas: ', cuantosInversionistas)
+        // let comisionInversionistas = Math.round((nuevoCostoBase / cuantosInversionistas + Number.EPSILON) * 100) / 100;
+        let comisionInversionistas = Math.round((nuevoCostoBase / 10 + Number.EPSILON) * 100) / 100;
+        console.log('comision inversionistas: ', comisionInversionistas)
+
+
+        if (cuantosInversionistas > 0) {
+
+            for (let investor of chaletInvestors) {
+                let userInvestor = await User.findById(investor.investor);
+                if (userInvestor) {
+                    const noTickets = investor.noTickets
+                    const comision = comisionInversionistas * noTickets
+
+                    if (userInvestor.investorType === 'Asimilado'){
+                        // Comision normal
+                        await altaComisionReturn({
+                            monto: comision,
+                            concepto: `Comisión de inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: reservacionId
+                        })
+                        // Comision negativa de IVA (16%)
+                        // let comisionNegativaIva = comisionInversionistas * 0.16;
+                        let comisionNegativaIva = Math.round((comision * 0.16 + Number.EPSILON) * 100) / 100;
+
+                        await altaComisionReturn({
+                            monto: -comisionNegativaIva,
+                            concepto: `IVA inversionista por Reserva de cabaña`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: reservacionId
+                        })
+                        // Comision negativa de ISR (5%)
+                        // let comisionNegativaIsr = comisionInversionistas * 0.05;
+                        let comisionNegativaIsr = Math.round(((comision - comisionNegativaIva) * 0.16 + Number.EPSILON) * 100) / 100;
+
+                        await altaComisionReturn({
+                            monto: -comisionNegativaIsr,
+                            concepto: `ISR inversionista por Reserva de cabaña`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: reservacionId
+                        })
+
+                        // Retencion "Servicios indirectos Bosque imperial"
+                        let comisionNegativaServiciosIndirectos = Math.round(((comision - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
+
+                        await altaComisionReturn({
+                            monto: -comisionNegativaServiciosIndirectos,
+                            concepto: `Servicios Indirectos Bosque Imperial`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: reservacionId
+                        })
+
+                    } else if (userInvestor.investorType === 'RESICO Fisico'){
+                        // Comision normal
+                        await altaComisionReturn({
+                            monto: comision,
+                            concepto: `Comisión de inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: reservacionId
+                        })
+
+                        // Comision negativa de IVA (16%)
+                        // let comisionNegativaIva = comision * 0.16;
+                        let comisionNegativaIva = Math.round((comision * 0.16 + Number.EPSILON) * 100) / 100;
+
+                        // Comision Retencion IVA
+                        let comisionNegativaRetIva = Math.round((comision * 0.1066 + Number.EPSILON) * 100) / 100;
+
+                        await altaComisionReturn({
+                            monto: -comisionNegativaRetIva,
+                            concepto: `Retención IVA inversionista por Reserva de cabaña`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: reservacionId
+                        })
+
+                        // Comision Retencion ISR
+                        let comisionNegativaRetIsr = Math.round((comision * 0.0125 + Number.EPSILON) * 100) / 100;
+                        await altaComisionReturn({
+                            monto: -comisionNegativaRetIsr,
+                            concepto: `ISR inversionista por Reserva de cabaña`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: reservacionId
+                        })
+
+                        // Comision Retencion Servicios Indirectos
+                        let comisionServIndirectos = Math.round(((comision - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
+                        await altaComisionReturn({
+                            monto: -comisionServIndirectos,
+                            concepto: `Servicios Indirectos Bosque Imperial`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: reservacionId
+                        })
+
+                    } else if(userInvestor.investorType === 'PF con AE y PM') {
+                        // Comision normal
+                        await altaComisionReturn({
+                            monto: comision,
+                            concepto: `Comisión de inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: reservacionId
+                        })
+
+                        // IVA
+                        let comisionNegativaIva = Math.round((comision * 0.16 + Number.EPSILON) * 100) / 100;
+
+                        // Comision Retencion Servicios Indirectos
+                        let comisionServIndirectos = Math.round(((comision - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
+                        await altaComisionReturn({
+                            monto: -comisionServIndirectos,
+                            concepto: `Servicios Indirectos Bosque Imperial`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: reservacionId
+                        })
+                    } else if (userInvestor.investorType === 'Efectivo') {
+                        // Comision normal
+                        await altaComisionReturn({
+                            monto: comision,
+                            concepto: `Comisión de inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: reservacionId
+                        })
+                        // Comision negativa de IVA (16%)
+                        // let comisionNegativaIva = comision * 0.16;
+                        let comisionNegativaIva = Math.round((comision * 0.08 + Number.EPSILON) * 100) / 100;
+
+                        await altaComisionReturn({
+                            monto: -comisionNegativaIva,
+                            concepto: `IVA inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: reservacionId
+                        })
+                    }
+
+                }
+
+            }
+
+        } else {
+            // Comisión de dueño de cabañas (ANTERIOR)
+            await altaComisionReturn({
+                monto: costoBase - chalet.additionalInfo.extraCleaningCost,
+                concepto: `Comisión Dueño de cabaña`,
+                fecha: new Date(arrivalDate),
+                idUsuario: chaletOwner,
+                idReserva: reservacionId
+            })
+        }
+
+    } catch (err) {
+        console.log(err)
+        return err;
+    }
+}
 
 async function mostrarUtilidadesPorUsuario(req, res) {
     try {
@@ -1232,6 +1644,7 @@ module.exports = {
     mostrarUtilidadesGlobales,
     vistaParaReporte,
     generarComisionReserva,
+    generarComisionReservaBackend,
     altaComision,
     altaComisionReturn,
     editarComision,

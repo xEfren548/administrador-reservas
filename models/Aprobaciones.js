@@ -32,7 +32,19 @@ const dateChangeRequestSchema = new mongoose.Schema({
     newPrice: {
         type: Number,
         required: true
-    },    
+    },
+    oldPrice: {
+        type: Number,
+        required: true
+    },
+    totalWithoutComs: {
+        type: Number,
+        required: true
+    },
+    baseCost: {
+        type: Number,
+        required: true
+    },
     reservationId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Evento',

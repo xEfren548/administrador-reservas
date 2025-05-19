@@ -1484,6 +1484,7 @@
         }
         // Extract previous dates from the form
         console.log("Nuevo total Open vendedor: ")
+        console.log(nuevoTotal)
         // Format dates for display (convert to local format)
         const formatDisplayDate = (dateStr) => {
             return moment(dateStr).format('DD/MM/YYYY');
@@ -1573,7 +1574,7 @@
                 console.error('Error al enviar solicitud de cambio de fechas:', error);
                 await Swal.fire(
                     'Error',
-                    'Hubo un problema al enviar la solicitud. Por favor, intenta de nuevo.',
+                    error.message || 'Hubo un error al enviar la solicitud de cambio de fechas.',
                     'error'
                 );
             }
@@ -1595,7 +1596,8 @@
                 },
                 newPrice: totalInfo.precioAsignado,
                 mainReason: reason,
-                clientId
+                clientId,
+                infoPrices: totalInfo
             })
         });
         

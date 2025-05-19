@@ -1241,7 +1241,7 @@ async function editarEvento(req, res) {
     }
 }
 
-async function editarEventoBackend(params) {
+async function editarEventoBackend(params, session) {
     try {
         const id = params.reservationId;
         const { nNights, arrivalDate, departureDate, newPrice } = params;
@@ -1253,8 +1253,7 @@ async function editarEventoBackend(params) {
         if (nNights !== undefined) updateFields.nNights = nNights;
         if (arrivalDate !== undefined) updateFields.arrivalDate = arrivalDate;
         if (departureDate !== undefined) updateFields.departureDate = departureDate;
-        if (url !== undefined) updateFields.url = url;
-        if (total !== undefined) updateFields.total = total;
+        if (newPrice !== undefined) updateFields.total = newPrice;
 
         // Update the document in one operation
         const evento = await Documento.findByIdAndUpdate(
@@ -1270,11 +1269,11 @@ async function editarEventoBackend(params) {
         // Create log entry for the event modification
         const logBody = {
             fecha: new Date(),
-            idUsuario: req.session?.id,
+            idUsuario: session?.id,
             type: 'reservation',
             idReserva: id,
-            acciones: `Reservación modificada por ${req.session?.firstName || 'Usuario'} ${req.session?.lastName || ''}`,
-            nombreUsuario: `${req.session?.firstName || 'Usuario'} ${req.session?.lastName || ''}`
+            acciones: `Reservación modificada por ${session?.firstName || 'Usuario'} ${session?.lastName || ''}`,
+            nombreUsuario: `${session?.firstName || 'Usuario'} ${session?.lastName || ''}`
         };
 
         await logController.createBackendLog(logBody);

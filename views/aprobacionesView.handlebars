@@ -28,12 +28,12 @@
             <table class="table table-hover table-striped" id="requests-table">
                 <thead class="table-dark">
                     <tr>
-                        <th scope="col">#ID</th>
+                        <th scope="col">ID Reserva</th>
                         <th scope="col">Vendedor</th>
                         <th scope="col">Cliente</th>
                         <th scope="col">Fechas actuales</th>
                         <th scope="col">Nuevas Fechas</th>
-                        <th scope="col">Precio Actual</th>
+                        <th scope="col">Precio Solicitud</th>
                         <th scope="col">Nuevo Precio</th>
                         <th scope="col">Motivo</th>
                         <th scope="col">Estado</th>
@@ -43,12 +43,12 @@
                 <tbody>
                     {{#each requests}}
                     <tr class="status-{{statusClass}}">
-                        <td>{{_id}}</td>
+                        <td>{{reservationId}}</td>
                         <td>{{sellerName}}</td>
                         <td>{{clientName}}</td>
                         <td>{{currentDates}}</td>
                         <td>{{newDates}}</td>
-                        <td>${{currentPrice}}</td>
+                        <td>${{oldPrice}}</td>
                         <td>${{newPrice}}</td>
                         <td>{{mainReason}}</td>
                         {{#if (eq status "Pendiente") }}
@@ -398,4 +398,58 @@
 
 
     })
+
+    document.getElementById('approveModal').addEventListener('show.bs.modal', function (event) {
+        // Get the button that triggered the modal
+        const button = event.relatedTarget;
+        
+        // Extract the data-id attribute value
+        const dataId = button.getAttribute('data-id');
+        
+        // Store the ID in the modal for later use
+        this.dataset.requestId = dataId;
+        
+        // If you want to display the ID in the modal
+        document.getElementById('approveRequestId').textContent = dataId;
+    });
+
+    document.querySelector('#confirmApprove').addEventListener('click', async function (event) {
+        event.preventDefault();
+        const requestId = document.getElementById('approveModal').dataset.requestId;
+
+        // Aquí puedes agregar la lógica para confirmar la aprobación
+        try {
+            const response = await fetch(`/aprobaciones/${requestId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: "Aprobada" }) 
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Aprobación confirmada',
+                    text: data.message,
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.reload();
+                    }
+                })
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            console.error('Error al confirmar la aprobación:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al confirmar la aprobación: ' + error.message,
+                confirmButtonText: 'Aceptar'
+            })
+        }
+    });
 </script>
