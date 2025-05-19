@@ -99,17 +99,6 @@
             <div class="modal-body">
                 <p>¿Está seguro que desea aprobar la solicitud de cambio de precio <strong
                         id="approveRequestId"></strong>?</p>
-                <div class="mb-3">
-                    <label for="approveNotes" class="form-label">Comentarios (opcional):</label>
-                    <textarea class="form-control" id="approveNotes" rows="3"
-                        placeholder="Ingrese cualquier comentario adicional..."></textarea>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="notifyVendor">
-                    <label class="form-check-label" for="notifyVendor">
-                        Notificar al vendedor por correo electrónico
-                    </label>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -132,29 +121,17 @@
                 <p>¿Está seguro que desea rechazar la solicitud de cambio de precio <strong
                         id="rejectRequestId"></strong>?</p>
                 <div class="mb-3">
-                    <label for="rejectReason" class="form-label">Motivo del rechazo: <span
-                            class="text-danger">*</span></label>
-                    <select class="form-select" id="rejectReason" required>
-                        <option value="">Seleccione un motivo</option>
-                        <option value="1">Precio fuera del rango permitido</option>
-                        <option value="2">Información incompleta</option>
-                        <option value="3">Requiere aprobación de gerencia</option>
-                        <option value="4">Motivo insuficiente</option>
-                        <option value="5">Otro</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="rejectNotes" class="form-label">Comentarios adicionales: <span
+                    <label for="rejectNotes" class="form-label">Motivo del rechazo: <span
                             class="text-danger">*</span></label>
                     <textarea class="form-control" id="rejectNotes" rows="3"
                         placeholder="Ingrese detalles sobre el motivo del rechazo..." required></textarea>
                 </div>
-                <div class="form-check">
+                {{!-- <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="notifyVendorReject" checked>
                     <label class="form-check-label" for="notifyVendorReject">
                         Notificar al vendedor por correo electrónico
                     </label>
-                </div>
+                </div> --}}
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -312,33 +289,6 @@
     </div>
 </div>
 
-<!-- Toast Notifications -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    <div id="successToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header bg-success text-white">
-            <i class="bi bi-check-circle me-2"></i>
-            <strong class="me-auto">Acción Exitosa</strong>
-            <small>Ahora</small>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-            La solicitud ha sido procesada correctamente.
-        </div>
-    </div>
-
-    <div id="errorToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header bg-danger text-white">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            <strong class="me-auto">Error</strong>
-            <small>Ahora</small>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-            Se produjo un error al procesar la solicitud. Intente nuevamente.
-        </div>
-    </div>
-</div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
 
@@ -425,6 +375,61 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ status: "Aprobada" }) 
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Aprobación confirmada',
+                    text: data.message,
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.reload();
+                    }
+                })
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            console.error('Error al confirmar la aprobación:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al confirmar la aprobación: ' + error.message,
+                confirmButtonText: 'Aceptar'
+            })
+        }
+    });
+
+    document.getElementById('rejectModal').addEventListener('show.bs.modal', function (event) {
+        // Get the button that triggered the modal
+        const button = event.relatedTarget;
+        
+        // Extract the data-id attribute value
+        const dataId = button.getAttribute('data-id');
+        
+        // Store the ID in the modal for later use
+        this.dataset.requestId = dataId;
+        
+        // If you want to display the ID in the modal
+        document.getElementById('rejectRequestId').textContent = dataId;
+    });
+
+    document.querySelector('#confirmReject').addEventListener('click', async function (event) {
+        event.preventDefault();
+        const requestId = document.getElementById('rejectModal').dataset.requestId;
+        const motivo = document.getElementById('rejectNotes').value;
+
+        // Aquí puedes agregar la lógica para confirmar la aprobación
+        try {
+            const response = await fetch(`/aprobaciones/${requestId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: "Rechazada", rejectionReason: motivo }) 
             });
 
             const data = await response.json();
