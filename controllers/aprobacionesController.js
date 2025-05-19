@@ -125,6 +125,12 @@ async function updateRequestStatus(req, res, next) {
         const { id } = req.params;
         const { status, rejectionReason } = req.body;
 
+        const privilege = req.session.privilege;
+
+        if (privilege !== "Administrador") {
+            throw new Error("El usuario no tiene permiso para actualizar la solicitud");
+        }
+
         const approvedById = req.session.userId;
         const approvedBy = await Usuarios.findById(approvedById);
 
