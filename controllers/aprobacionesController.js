@@ -52,6 +52,22 @@ async function showApprovalsView(req, res, next) {
     }
 }
 
+async function getRequestById(req, res, next) {
+    try {
+        const { id } = req.params;
+        const request = await Aprobaciones.findById(id).lean();
+
+        if (!request) {
+            return res.status(404).json({ message: 'Solicitud no encontrada' });
+        }
+
+        res.status(200).json({ data: request });
+    } catch (error) {
+        console.error('Error fetching date change request:', error);
+        res.status(500).json({ message: error.message });
+    }
+}
+
 async function getRequests(req, res, next) {
     try {
         const { status, sellerId, clientId, startDate, endDate } = req.query;
@@ -371,5 +387,6 @@ module.exports = {
     updateRequestStatus,
     deleteRequest,
     createRequest,
-    getRequests
+    getRequests,
+    getRequestById
 }
