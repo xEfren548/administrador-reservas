@@ -29,6 +29,7 @@
                 <thead class="table-dark">
                     <tr>
                         <th scope="col">ID Reserva</th>
+                        <th scope="col">Habitacion</th>
                         <th scope="col">Vendedor</th>
                         <th scope="col">Cliente</th>
                         <th scope="col">Fechas actuales</th>
@@ -43,7 +44,12 @@
                 <tbody>
                     {{#each requests}}
                     <tr class="status-{{statusClass}}">
-                        <td>{{reservationId}}</td>
+                        <td class="text-center">  
+                            <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{reservationId}}">
+                                <i class="fa fa-info-circle" aria-hidden="true"></i>
+                            </span>
+                        </td>
+                        <td>{{chaletName}}</td>
                         <td>{{sellerName}}</td>
                         <td>{{clientName}}</td>
                         <td>{{currentDates}}</td>
@@ -246,6 +252,11 @@
                 });
             });
         }
+
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
 
 
     })

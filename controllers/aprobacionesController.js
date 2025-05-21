@@ -27,7 +27,10 @@ async function showApprovalsView(req, res, next) {
             const cliente = await Clientes.findById(aprobacion.clientId).lean();
             aprobacion.clientName = cliente.firstName + " " + cliente.lastName;
             const reserva = await Reservas.findById(aprobacion.reservationId).lean();
-            aprobacion.currentPrice = reserva.total;
+            aprobacion.currentPrice = reserva.total || 0;
+            const habitacion = await Habitacion.findById(reserva.resourceId).lean();
+            aprobacion.chaletName = habitacion.propertyDetails.name || "";
+            
             
             const currentArrivalDate = moment.utc(reserva.arrivalDate).format('DD/MM/YYYY');
             const currentDepartureDate = moment.utc(reserva.departureDate).format('DD/MM/YYYY');
