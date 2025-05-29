@@ -54,7 +54,8 @@ router.use(express.urlencoded({ extended: false }));
 // Enable cookie sessions
 router.use(cookieSession({
     signed: false, // No extra layer of security will be added.
-    secure: false // Can receive both HTTP and HTTPS requests.
+    secure: false, // Can receive both HTTP and HTTPS requests.
+    maxAge: 24 * 60 * 60 * 1000 // 1 day
 }));
 
 // Public routes
