@@ -1,0 +1,8 @@
+<div class="text-center">
+    <h1>Bienvenido</h1>
+    {{#if error}}<div class="alert alert-warning">{{error}}</div>{{/if}}
+    {{#unless session.channelId}}
+    <p>Conecta tu cuenta de Airbnb para comenzar.</p>
+    <a href="/connect" class="btn btn-lg btn-primary">Conectar Airbnb</a>
+    {{/unless}}
+</div>

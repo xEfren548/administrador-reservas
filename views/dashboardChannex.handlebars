@@ -1,0 +1,38 @@
+<h2>Dashboard</h2>
+<div class="row">
+    <div class="col-md-6">
+        <h4>Propiedades locales</h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each propiedades}}
+                <tr>
+                    <td>{{propertyDetails.name}}</td>
+                    <td>
+                        {{#if isMapped}}
+                        <span class="badge bg-success">Mapeada</span>
+                        {{else}}
+                        <form action="/properties/{{_id}}/map" method="POST" class="d-inline">
+                            <button class="btn btn-sm btn-primary">Mapear</button>
+                        </form>
+                        {{/if}}
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-6">
+        <h4>Listings de Airbnb</h4>
+        <ul class="list-group">
+            {{#each chProps.data}}
+            <li class="list-group-item">{{this.attributes.title}} (ID: {{this.id}})</li>
+            {{/each}}
+        </ul>
+    </div>
+</div>
