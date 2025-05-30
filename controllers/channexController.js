@@ -161,11 +161,76 @@ async function mapPropertiesAirbnb(req, res) {
     const { channelId } = req.params;
     const mappingData = req.body; // { property_id, listing_id, price_mapping?, ... }
     try {
+        console.log("channel id: ", channelId)
+        console.log("mapping data: ", mappingData)
         const response = await channex.post(`/api/v1/channels/${channelId}/mappings`, mappingData);
         res.json(response.data);
     } catch (err) {
-        console.error('Error en mapeo:', err.response ? err.response.data : err.message);
+        if (err.response.data.errors) {
+            console.log('Error en mapeo:', err.response.data.errors)
+        } else {
+            console.error('Error en mapeo:', err.response ? err.response.data : err.message);
+
+        }
+        // console.log(err.response)
+        // console.log(err.message)
         res.status(500).json({ error: 'Fallo en la creación de mapeo' });
+    }
+}
+
+async function createChannexProperty(req, res) {
+    const { id } = req.params;
+
+    try {
+        // 1) Obtener la habitación desde Mongo
+        const hab = await Habitacion.findById(id);
+        if (!hab) {
+            return res.status(404).json({ error: 'Habitación no encontrada' });
+        }
+
+        if (hab.isMapped) {
+            return res.status(400).json({ error: 'La habitación ya fue mapeada' });
+        }
+
+        // 2) Armar el payload para Channex
+        const {
+            propertyDetails,
+            accomodationDescription: description,
+            location
+        } = hab;
+
+        const propertyPayload = {
+            property: {
+                title: propertyDetails.name,
+                currency: 'MXN',
+                content: { description },
+                email: propertyDetails.email,
+                phone: propertyDetails.phoneNumber,
+                zip_code: location.postalCode ? location.postalCode.toString() : null,
+                country: 'MX',
+                timezone: 'America/Mexico_City',
+                state: location.state,
+                city: location.population,
+                address: location.address,
+                longitude: location.longitude ? dmsToDecimal(location.longitude) : null,
+                latitude: location.latitude ? dmsToDecimal(location.latitude) : null,
+                group_id: 'b5fcd225-d31f-4588-a828-686f7e2b32a4'
+            }
+        };
+
+        // 3) Enviar a Channex
+        const response = await channex.post('/api/v1/properties', propertyPayload);
+
+        hab.channexPropertyId = response.data.data.id;
+        hab.isMapped = true;
+        await hab.save();
+
+        // 4) Devolver respuesta al cliente
+        return res.json(response.data);
+
+    } catch (err) {
+        console.error('Error mapeando propiedad a Channex:', err.response?.data || err.message);
+        return res.status(500).json({ error: 'Error al mapear propiedad en Channex' });
     }
 }
 
@@ -197,6 +262,7 @@ function dmsToDecimal(dmsStr) {
 
 module.exports = {
     mapProperties,
+    createChannexProperty,
     webhookReceptor,
     airbnbConnection,
     oauthAirbnb,

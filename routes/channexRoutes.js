@@ -5,6 +5,7 @@ const channexController = require('../controllers/channexController');
 //   /api/channex/
 
 router.get('/properties', channexController.mapProperties);
+router.post('/properties/:id/create', channexController.createChannexProperty);
 router.post('/webhooks', channexController.webhookReceptor);
 router.get('/connect/airbnb', channexController.airbnbConnection);
 router.get('/auth/airbnb/callback', channexController.oauthAirbnb);

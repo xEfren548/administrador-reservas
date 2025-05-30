@@ -332,7 +332,9 @@ const preSchema = new mongoose.Schema({
     activePlatforms: {
         type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Plataformas'}],
         default: []
-    }
+    },
+    channexPropertyId: { type: String, default: null },
+    isMapped: { type: Boolean, default: false }
 });
 
 // const habitacionesSchema = new mongoose.Schema({
