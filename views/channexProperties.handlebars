@@ -1,0 +1,71 @@
+<h2>Mis propiedades locales</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>En Channex</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each propiedades}}
+        <tr>
+            <td>{{propertyDetails.name}}</td>
+            <td>
+                {{#if channexPropertyId}}
+                    <span class="badge bg-success">Sí</span>
+                {{else}}
+                    <span class="badge bg-secondary">No</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if channexPropertyId}}
+                    <span class="text-success">Dada de alta</span>
+                {{else}}
+                    <form action="" method="POST" class="d-inline">
+                        <button type="button" class="btn btn-sm btn-primary alta-btn" data-id="{{_id}}">Dar de alta</button>
+                    </form>
+                {{/if}}
+            </td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
+
+<a class="btn btn-primary btn-sm " href="/api/channex/map-properties" role="button"> Mapeo de propiedades</a>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const altaButtons = document.querySelectorAll('.alta-btn');
+        altaButtons.forEach(button => {
+            button.addEventListener('click', async function (event) {
+                event.preventDefault();
+                const propertyId = this.getAttribute('data-id');
+                try {
+                    const response = await fetch(`/api/channex/properties/${propertyId}/create`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Propiedad dada de alta',
+                            text: 'La propiedad fue creada en Channex.',
+                            confirmButtonText: 'Aceptar'
+                        }).then(() => window.location.reload());
+                    } else {
+                        throw new Error(data.error || 'Error al dar de alta');
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message,
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            });
+        });
+    });
+</script>

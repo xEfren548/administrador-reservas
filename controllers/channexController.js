@@ -48,6 +48,80 @@ async function mapProperties(req, res) {
     res.json(mappedHabitaciones);
 }
 
+async function getChannexProperties(channelId) {
+    try {
+        const propiedades = await Habitacion.find().lean();
+        const resp = await channex.get(`/api/v1/channels/${channelId}/action/listings`);
+        // const chProps = resp.data.data.relationships.properties.data.map((prop) => prop.id);
+        // const chProps = resp.data.data.relationships.properties.data;
+        const chProps = resp.data.data.listing_id_dictionary.values;
+        console.log(chProps)
+        // return resp.data;
+        return { propiedades, chProps };
+
+    } catch (err) {
+        console.error('Error al obtener propiedades de Channex:', err.response ? err.response.data : err.message);
+        return err;
+    }
+}
+
+async function showCreatedPropertiesAirbnb(req, res) {
+ // 1. Obtén propiedades locales
+        const propiedades = await Habitacion.find().lean();
+
+        // 2. Llama a Channex para traer las propiedades dadas de alta (opciones)
+        const resp = await channex.get('/api/v1/properties/options');
+        // Ajusta el path según la estructura real del response de tu API Channex
+        const channexOptions = resp.data.data; // [{id, ...}, ...]
+
+        const channexIds = channexOptions.map(opt => opt.id);
+
+        // 3. Marca si existe realmente en Channex
+        const propiedadesMarcadas = propiedades.map(hab => ({
+            ...hab,
+            existeEnChannex: hab.channexPropertyId ? channexIds.includes(hab.channexPropertyId) : false
+        }));
+
+        // 4. Renderiza la vista channexProperties (usa el nombre de archivo .hbs correcto)
+        res.render('channexProperties', { propiedades: propiedadesMarcadas });
+}
+
+async function dashboardChannexFull(req, res) {
+    if (!req.session.channelId) return res.redirect('/api/channex/home?error=Debe+conectar+Airbnb');
+    try {
+        // 1. Todas las locales
+        const propiedades = await Habitacion.find().lean();
+
+        // 2. IDs válidos en Channex (las que están realmente dadas de alta)
+        const respChannex = await channex.get('/api/v1/properties/options');
+        const channexOptions = respChannex.data.data; // [{id, ...}]
+        const channexIds = channexOptions.map(opt => opt.id);
+
+        // 3. Sólo las locales dadas de alta en Channex
+        const propiedadesEnChannex = propiedades.filter(hab => hab.channexPropertyId && channexIds.includes(hab.channexPropertyId))
+            .map(hab => ({
+                ...hab,
+                existeEnChannex: true
+            }));
+
+        // 4. Listings de Airbnb/Channex (action/listings)
+        const respListings = await channex.get(`/api/v1/channels/${req.session.channelId}/action/listings`);
+        const chProps = respListings.data.data.listing_id_dictionary.values; // [{id, title, ...}]
+
+        // 5. Renderiza la vista
+        res.render('dashboardChannexFull', {
+            propiedades: propiedadesEnChannex,
+            chProps
+        });
+
+    } catch (err) {
+        console.error('Error en dashboardChannexFull:', err.response?.data || err.message);
+        return res.redirect('/api/channex/home?error=Error+inesperado+obteniendo+propiedades');
+    }
+}
+
+
+
 async function webhookReceptor(req, res) {
     try {
         console.log(req.body);
@@ -150,7 +224,9 @@ async function oauthAirbnb(req, res) {
         );
 
         // 3) Notificar éxito al usuario
-        return res.send('Airbnb conectado exitosamente');
+        req.session.channelId = channel_id;
+        // return res.send('Airbnb conectado exitosamente');
+        return res.redirect('/api/channex/dashboard');
     } catch (err) {
         console.error('Error guardando OAuth Airbnb:', err.response?.data || err.message);
         return res.status(500).json({ error: 'No se pudo guardar la conexión' });
@@ -262,6 +338,9 @@ function dmsToDecimal(dmsStr) {
 
 module.exports = {
     mapProperties,
+    getChannexProperties,
+    dashboardChannexFull,
+    showCreatedPropertiesAirbnb,
     createChannexProperty,
     webhookReceptor,
     airbnbConnection,

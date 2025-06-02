@@ -1,11 +1,12 @@
 <h2>Dashboard</h2>
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-7">
         <h4>Propiedades locales</h4>
         <table class="table">
             <thead>
                 <tr>
-                    <th>Nombre</th>
+                    <th>Nombre local</th>
+                    <th>Listing Airbnb vinculado</th>
                     <th>Acción</th>
                 </tr>
             </thead>
@@ -13,12 +14,23 @@
                 {{#each propiedades}}
                 <tr>
                     <td>{{propertyDetails.name}}</td>
+                <td>
+                {{#if channexPropertyId}}
+                    {{#each ../chProps}}
+                    {{#if (eq this.id ../channexPropertyId)}}
+                        <span class="text-success fw-bold">{{this.title}}</span>
+                    {{/if}}
+                    {{/each}}
+                {{else}}
+                    <span class="text-muted">Sin enlace</span>
+                {{/if}}
+                </td>
                     <td>
                         {{#if isMapped}}
                         <span class="badge bg-success">Mapeada</span>
                         {{else}}
-                        <form action="/properties/{{_id}}/map" method="POST" class="d-inline">
-                            <button class="btn btn-sm btn-primary">Mapear</button>
+                        <form action="" method="POST" class="d-inline">
+                            <button class="btn btn-sm btn-primary map-btn" data-id="{{_id}}">Mapear</button>
                         </form>
                         {{/if}}
                     </td>
@@ -27,12 +39,57 @@
             </tbody>
         </table>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-5">
         <h4>Listings de Airbnb</h4>
         <ul class="list-group">
-            {{#each chProps.data}}
-            <li class="list-group-item">{{this.attributes.title}} (ID: {{this.id}})</li>
+            {{#each chProps}}
+            <li class="list-group-item">
+                {{this.title}}<br>
+                <small>ID: {{this.id}}</small>
+            </li>
             {{/each}}
         </ul>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const mapButtons = document.querySelectorAll('.map-btn');
+        mapButtons.forEach(button => {
+            button.addEventListener('click', async function (event) {
+                event.preventDefault();
+                const propertyId = this.getAttribute('data-id');
+                try {
+                    const response = await fetch(`/api/channex/channels/${propertyId}/mappings`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ propertyId })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Propiedad mapeada',
+                            text: data.message,
+                            confirmButtonText: 'Aceptar'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.reload();
+                            }
+                        });
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    console.error('Error al mapear la propiedad:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al mapear la propiedad: ' + error.message,
+                        confirmButtonText: 'Aceptar'
+                    })
+                }
+            });
+        });
+    });
+</script>

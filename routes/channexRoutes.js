@@ -4,23 +4,36 @@ const channexController = require('../controllers/channexController');
 
 //   /api/channex/
 
+// Vistas  ----------------
 router.get('/home', (req, res) => {
     res.render('homeChannex', {
-        layout: 'mainChannex',
+        //layout: 'mainChannex',
         error: req.query.error 
     });
 });
+router.get('/dashboard2', channexController.dashboardChannexFull);
 router.get('/properties', channexController.mapProperties);
 router.post('/properties/:id/create', channexController.createChannexProperty);
-
+router.get('/propiedades', channexController.showCreatedPropertiesAirbnb);
 // Dashboard (requiere estar conectado)
 router.get('/dashboard', async (req, res) => {
-    if (!req.session.channelId) return res.redirect('/?error=Debe+conectar+Airbnb');
+    console.log(req.session)
+    if (!req.session.channelId) return res.redirect('/api/channex/home?error=Debe+conectar+Airbnb');
 
-    const propiedades = await Habitacion.find().lean();
-    const chProps = await channexCtrl.getProperties(req.session.channelId);
+    try {
+        // const propiedades = await Habitacion.find().lean();
+        const {propiedades, chProps} = await channexController.getChannexProperties(req.session.channelId);
+    
+        if (propiedades instanceof Error || chProps instanceof Error) {
+            return res.redirect('/api/channex/home?error=Error+obteniendo+propiedades+de+Channex');
+        }
+        res.render('dashboardChannex', { propiedades, chProps });
 
-    res.render('dashboard', { propiedades, chProps });
+    } catch (err) {
+        console.error('Error al obtener propiedades de Channex:', err.response ? err.response.data : err.message);
+        return res.redirect('/api/channex/home?error=Error+inesperado+obteniendo+propiedades');
+
+    }
 });
 
 router.post('/webhooks', channexController.webhookReceptor);
