@@ -109,7 +109,7 @@ async function dashboardChannexFull(req, res) {
         const chProps = respListings.data.data.listing_id_dictionary.values; // [{id, title, ...}]
 
         // 5. Renderiza la vista
-        res.render('dashboardChannexFull', {
+        res.render('dashboardChannex', {
             propiedades: propiedadesEnChannex,
             chProps
         });
