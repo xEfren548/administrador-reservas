@@ -4,6 +4,7 @@
         <tr>
             <th>Nombre</th>
             <th>En Channex</th>
+            <th>Listing Airbnb mapeado</th>
             <th>Acción</th>
         </tr>
     </thead>
@@ -14,8 +15,22 @@
             <td>
                 {{#if channexPropertyId}}
                     <span class="badge bg-success">Sí</span>
+                    <br>
+                    <small>ID: {{channexPropertyId}}</small>
                 {{else}}
                     <span class="badge bg-secondary">No</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if channexPropertyId}}
+                    {{!-- Busca el nombre del listing Airbnb si está mapeado --}}
+                    {{#each ../chProps}}
+                        {{#if (eq this.id ../channexPropertyId)}}
+                            <span class="text-success fw-bold">{{this.title}}</span>
+                        {{/if}}
+                    {{/each}}
+                {{else}}
+                    <span class="text-muted">Sin mapping</span>
                 {{/if}}
             </td>
             <td>

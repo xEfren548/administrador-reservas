@@ -42,4 +42,8 @@ router.get('/auth/airbnb/callback', channexController.oauthAirbnb);
 router.post('/channels/:channelId/mappings', channexController.mapPropertiesAirbnb);
 router.post('/channels/:channelId/activate', channexController.activateChannel);
 
+// Rooms and rates
+router.post('/rooms', channexController.createRoomChannex);
+router.post('/rates', channexController.createRateChannex);
+
 module.exports = router

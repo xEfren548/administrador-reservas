@@ -1,81 +1,91 @@
-<h2>Dashboard Channex</h2>
-<div class="row">
-    <div class="col-md-7">
-        <h4>Propiedades locales en Channex</h4>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Nombre local</th>
-                    <th>ID Channex</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each propiedades}}
-                <tr>
-                    <td>{{propertyDetails.name}}</td>
-                    <td>
-                        {{channexPropertyId}}
-                        {{!-- Puedes buscar el nombre en chProps si ya está mapeada --}}
-                    </td>
-                    <td>
-                        {{#if isMapped}}
-                            <span class="badge bg-success">Mapeada</span>
-                        {{else}}
-                            <form action="" method="POST" class="d-inline">
-                                <button class="btn btn-sm btn-primary map-btn" data-id="{{_id}}">Mapear</button>
-                            </form>
-                        {{/if}}
-                    </td>
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
-    </div>
-    <div class="col-md-5">
-        <h4>Listings de Airbnb</h4>
-        <ul class="list-group">
-            {{#each chProps}}
-            <li class="list-group-item">
-                <span class="fw-bold">{{this.title}}</span>  
-                <small>(ID: {{this.id}})</small>
-            </li>
-            {{/each}}
-        </ul>
-    </div>
-</div>
+<h2>Mis propiedades locales</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>En Channex</th>
+            <th>Listing Airbnb mapeado</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each propiedades}}
+        <tr>
+            <td>{{propertyDetails.name}}</td>
+            <td>
+                {{#if channexPropertyId}}
+                    {{#if existeEnChannex}}
+                        <span class="badge bg-success">Sí</span><br><small>ID: {{channexPropertyId}}</small>
+                    {{else}}
+                        <span class="badge bg-danger">No existe en Channex</span><br><small>ID local: {{channexPropertyId}}</small>
+                    {{/if}}
+                {{else}}
+                    <span class="badge bg-secondary">No</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if nombreListingAirbnb}}
+                    <span class="text-success fw-bold">{{nombreListingAirbnb}}</span>
+                {{else}}
+                    <span class="text-muted">Sin mapping</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if channexPropertyId}}
+                    {{#if existeEnChannex}}
+                        <span class="text-success">Dada de alta</span>
+                    {{else}}
+                        <button type="button" class="btn btn-sm btn-warning alta-btn" data-id="{{_id}}">Dar de alta de nuevo</button>
+                    {{/if}}
+                {{else}}
+                    <button type="button" class="btn btn-sm btn-primary alta-btn" data-id="{{_id}}">Dar de alta</button>
+                {{/if}}
+            </td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
+
+<h4 class="mt-4">Listings de Airbnb en Channex</h4>
+<ul class="list-group">
+    {{#each chProps}}
+    <li class="list-group-item">
+        <span class="fw-bold">{{this.title}}</span>  
+        <small>(ID: {{this.id}})</small>
+    </li>
+    {{/each}}
+</ul>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const mapButtons = document.querySelectorAll('.map-btn');
-        mapButtons.forEach(button => {
+        const altaButtons = document.querySelectorAll('.alta-btn');
+        altaButtons.forEach(button => {
             button.addEventListener('click', async function (event) {
                 event.preventDefault();
                 const propertyId = this.getAttribute('data-id');
                 try {
-                    const response = await fetch(`/api/channex/channels/${propertyId}/mappings`, {
+                    const response = await fetch(`/api/channex/properties/${propertyId}/create`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ propertyId })
+                        headers: { 'Content-Type': 'application/json' }
                     });
                     const data = await response.json();
                     if (response.ok) {
                         Swal.fire({
                             icon: 'success',
-                            title: 'Propiedad mapeada',
-                            text: data.message,
+                            title: 'Propiedad dada de alta',
+                            text: 'La propiedad fue creada en Channex.',
                             confirmButtonText: 'Aceptar'
                         }).then(() => window.location.reload());
                     } else {
-                        throw new Error(data.message);
+                        throw new Error(data.error || 'Error al dar de alta');
                     }
                 } catch (error) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Error al mapear la propiedad: ' + error.message,
+                        text: error.message,
                         confirmButtonText: 'Aceptar'
-                    })
+                    });
                 }
             });
         });
