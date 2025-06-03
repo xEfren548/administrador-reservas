@@ -101,6 +101,10 @@ async function dashboardChannexFull(req, res) {
         const respListings = await channex.get(`/api/v1/channels/${req.session.channelId}/action/listings`);
         const chProps = respListings.data.data.listing_id_dictionary.values; // [{id, title, ...}]
 
+        const respRates = await channex.get('/api/v1/rate_plans');
+        const ratePlans = respRates.data.data; // [{attributes: {title, property_id, room_type_id, ...}, id, ...}]
+
+
         // 4. Marca las propiedades con flags útiles y nombre de listing asociado (si existe)
         const propiedadesMarcadas = propiedades.map(hab => {
             // ¿Existe en Channex realmente?
@@ -112,10 +116,27 @@ async function dashboardChannexFull(req, res) {
                 const listing = chProps.find(p => p.id === hab.channexPropertyId);
                 if (listing) nombreListingAirbnb = listing.title;
             }
+
+            let tarifa = null;
+            if (hab.channexPropertyId) {
+                // Busca una tarifa que apunte a esta propiedad (puedes refinar por room_type_id si lo almacenas)
+                const foundRate = ratePlans.find(
+                    r => r.relationships.property.data.id === hab.channexPropertyId
+                );
+                if (foundRate) {
+                    tarifa = {
+                        id: foundRate.id,
+                        title: foundRate.attributes.title,
+                        currency: foundRate.attributes.currency
+                    };
+                }
+            }
+
             return {
                 ...hab,
                 existeEnChannex,
-                nombreListingAirbnb
+                nombreListingAirbnb,
+                tarifa
             }
         });
 
@@ -337,6 +358,14 @@ async function activateChannel(req, res) {
 
 async function createRoomChannex(req, res) {
     try {
+        const pmsId = req.query.pmsid;
+        console.log(pmsId)
+        const habitacion = await Habitacion.findById(pmsId);
+        if (!habitacion) {
+            return res.status(404).json({ error: 'Habitación no encontrada' });
+        }
+        req.body.room_type.occ_adults = habitacion.propertyDetails.maxOccupancy;
+        req.body.room_type.default_occupancy = habitacion.propertyDetails.maxOccupancy;
         const resp = await channex.post('/api/v1/room_types', req.body);
         console.log(resp.data)
         res.json(resp.data);

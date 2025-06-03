@@ -5,8 +5,8 @@
             <th>Nombre</th>
             <th>En Channex</th>
             <th>Listing Airbnb mapeado</th>
+            <th>Tarifa actual</th>
             <th>Acción</th>
-            <th>Tarifas</th>
         </tr>
     </thead>
     <tbody>
@@ -15,50 +15,54 @@
             <td>{{propertyDetails.name}}</td>
             <td>
                 {{#if channexPropertyId}}
-                {{#if existeEnChannex}}
-                <span class="badge bg-success">Sí</span><br><small>ID: {{channexPropertyId}}</small>
+                    {{#if existeEnChannex}}
+                        <span class="badge bg-success">Sí</span><br><small>ID: {{channexPropertyId}}</small>
+                    {{else}}
+                        <span class="badge bg-danger">No existe en Channex</span><br><small>ID local: {{channexPropertyId}}</small>
+                    {{/if}}
                 {{else}}
-                <span class="badge bg-danger">No existe en Channex</span><br><small>ID local:
-                    {{channexPropertyId}}</small>
-                {{/if}}
-                {{else}}
-                <span class="badge bg-secondary">No</span>
+                    <span class="badge bg-secondary">No</span>
                 {{/if}}
             </td>
             <td>
                 {{#if nombreListingAirbnb}}
-                <span class="text-success fw-bold">{{nombreListingAirbnb}}</span>
+                    <span class="text-success fw-bold">{{nombreListingAirbnb}}</span>
                 {{else}}
-                <span class="text-muted">Sin mapping</span>
+                    <span class="text-muted">Sin mapping</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if tarifa}}
+                    <span class="badge bg-info">{{tarifa.title}} ({{tarifa.currency}})</span>
+                {{else}}
+                    <span class="text-muted">Sin tarifa</span>
                 {{/if}}
             </td>
             <td>
                 {{#if channexPropertyId}}
-                {{#if existeEnChannex}}
-                <span class="text-success">Dada de alta</span>
+                    {{#if existeEnChannex}}
+                        {{#if tarifa}}
+                            <span class="text-success">Tarifa creada</span>
+                        {{else}}
+                            <button type="button" class="btn btn-sm btn-info crear-tarifa-btn"
+                                data-propertyid="{{channexPropertyId}}"
+                                data-propertyname="{{propertyDetails.name}}"
+                                data-pmsid="{{_id}}">
+                                Crear tarifa
+                            </button>
+                        {{/if}}
+                    {{else}}
+                        <button type="button" class="btn btn-sm btn-warning alta-btn" data-id="{{_id}}">Dar de alta de nuevo</button>
+                    {{/if}}
                 {{else}}
-                <button type="button" class="btn btn-sm btn-warning alta-btn" data-id="{{_id}}">Dar de alta de
-                    nuevo</button>
-                {{/if}}
-                {{else}}
-                <button type="button" class="btn btn-sm btn-primary alta-btn" data-id="{{_id}}">Dar de alta</button>
-                {{/if}}
-            </td>
-            <td>
-                {{#if channexPropertyId}}
-                <button type="button" class="btn btn-sm btn-info crear-tarifa-btn"
-                    data-propertyid="{{channexPropertyId}}" data-propertyname="{{propertyDetails.name}}">
-                    Crear tarifa
-                </button>
-                {{else}}
-                <button type="button" class="btn btn-sm btn-secondary" disabled>Debe estar en Channex</button>
+                    <button type="button" class="btn btn-sm btn-primary alta-btn" data-id="{{_id}}">Dar de alta</button>
                 {{/if}}
             </td>
-
         </tr>
         {{/each}}
     </tbody>
 </table>
+
 
 <h4 class="mt-4">Listings de Airbnb en Channex</h4>
 <ul class="list-group">
@@ -81,6 +85,7 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="inputPropertyId" name="property_id">
+                    <input type="hidden" id="inputPmsId" name="pms_id">
                     <div class="mb-3">
                         <label for="roomTitle" class="form-label">Nombre del Room</label>
                         <input type="text" class="form-control" id="roomTitle" name="room_title" required>
@@ -137,6 +142,7 @@
         document.querySelectorAll('.crear-tarifa-btn').forEach(btn => {
             btn.addEventListener('click', function () {
                 document.getElementById('inputPropertyId').value = btn.dataset.propertyid;
+                document.getElementById('inputPmsId').value = btn.dataset.pmsid;
                 document.getElementById('roomTitle').value = "ROOM " + btn.dataset.propertyname.toUpperCase();
                 document.getElementById('rateTitle').value = "RATE " + btn.dataset.propertyname.toUpperCase();
                 document.getElementById('propName').textContent = btn.dataset.propertyname;
@@ -150,10 +156,11 @@
             const property_id = document.getElementById('inputPropertyId').value;
             const room_title = document.getElementById('roomTitle').value;
             const rate_title = document.getElementById('rateTitle').value;
+            const pms_id = document.getElementById('inputPmsId').value;
 
             try {
                 // 1. Crea Room
-                const roomRes = await fetch('/api/channex/rooms', {
+                const roomRes = await fetch(`/api/channex/rooms?pmsid=${pms_id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -161,8 +168,8 @@
                             property_id: property_id,
                             title: room_title,
                             count_of_rooms: 1,
-                            occ_adults: 2,
-                            default_occupancy: 2,
+                            //occ_adults: 2,
+                            //default_occupancy: 2,
                             occ_children: 0,
                             occ_infants: 0
                         }
@@ -172,6 +179,7 @@
                 if (!roomRes.ok) throw new Error(roomData.error || 'Error creando room');
 
                 const room_type_id = roomData.data.id;
+                const default_occupancy = roomData.data.attributes.default_occupancy;
 
                 // 2. Crea Rate
                 const rateRes = await fetch('/api/channex/rates', {
@@ -183,7 +191,7 @@
                             property_id: property_id,
                             room_type_id: room_type_id,
                             parent_rate_plan_id: null,
-                            options: [{ occupancy: 2, is_primary: true }],
+                            options: [{ occupancy: default_occupancy, is_primary: true }],
                             children_fee: "0.00",
                             infant_fee: "0.00",
                             currency: "MXN", // Puedes ajustar la moneda
