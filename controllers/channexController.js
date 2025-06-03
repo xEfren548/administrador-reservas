@@ -337,18 +337,21 @@ async function activateChannel(req, res) {
 
 async function createRoomChannex(req, res) {
     try {
-        const resp = await channex.post('/room_types', req.body);
+        const resp = await channex.post('/api/v1/room_types', req.body);
+        console.log(resp.data)
         res.json(resp.data);
     } catch (err) {
+        console.error('Error al crear habitación en Channex:', err.response ? err.response.data : err.message);
         res.status(500).json({ error: err.response?.data?.error || err.message });
     }
 }
 
 async function createRateChannex(req, res) {
     try {
-        const resp = await channex.post('/rate_plans', req.body);
+        const resp = await channex.post('/api/v1/rate_plans', req.body);
         res.json(resp.data);
     } catch (err) {
+        console.error('Error al crear tarifa en Channex:', err.response ? err.response.data : err.message);
         res.status(500).json({ error: err.response?.data?.error || err.message });
     }
 }
