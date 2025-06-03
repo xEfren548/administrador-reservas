@@ -7,6 +7,7 @@
             <th>Listing Airbnb mapeado</th>
             <th>Tarifa actual</th>
             <th>Acción</th>
+            <th>Mapeo Airbnb</th>
         </tr>
     </thead>
     <tbody>
@@ -16,9 +17,11 @@
             <td>
                 {{#if channexPropertyId}}
                     {{#if existeEnChannex}}
-                        <span class="badge bg-success">Sí</span><br><small>ID: {{channexPropertyId}}</small>
+                        <span class="badge bg-success">Sí</span><br>
+                        <small>ID: {{channexPropertyId}}</small>
                     {{else}}
-                        <span class="badge bg-danger">No existe en Channex</span><br><small>ID local: {{channexPropertyId}}</small>
+                        <span class="badge bg-danger">No existe en Channex</span><br>
+                        <small>ID local: {{channexPropertyId}}</small>
                     {{/if}}
                 {{else}}
                     <span class="badge bg-secondary">No</span>
@@ -58,10 +61,23 @@
                     <button type="button" class="btn btn-sm btn-primary alta-btn" data-id="{{_id}}">Dar de alta</button>
                 {{/if}}
             </td>
+            <td>
+                {{#if tarifa}}
+                    <button type="button" class="btn btn-sm btn-success mapear-airbnb-btn"
+                        data-propertyid="{{channexPropertyId}}"
+                        data-rateid="{{tarifa.id}}"
+                        data-propertyname="{{propertyDetails.name}}">
+                        Mapear con Airbnb
+                    </button>
+                {{else}}
+                    <span class="text-muted">Crea tarifa primero</span>
+                {{/if}}
+            </td>
         </tr>
         {{/each}}
     </tbody>
 </table>
+
 
 
 <h4 class="mt-4">Listings de Airbnb en Channex</h4>
@@ -104,6 +120,39 @@
         </form>
     </div>
 </div>
+
+{{!-- Modal crear mapeo --}}
+
+<div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="mapForm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mapModalLabel">Mapear con Airbnb: <span id="mapPropName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="mapPropertyId" name="property_id">
+                    <input type="hidden" id="mapRateId" name="rate_plan_id">
+                    <div class="mb-3">
+                        <label for="listingSelect" class="form-label">Selecciona listing de Airbnb</label>
+                        <select class="form-select" id="listingSelect" name="listing_id" required>
+                            <option value="">Selecciona...</option>
+                            {{#each chProps}}
+                                <option value="{{this.id}}">{{this.title}} ({{this.id}})</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Mapear</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 
 
 <script>
@@ -209,6 +258,57 @@
                     confirmButtonText: 'Aceptar'
                 }).then(() => window.location.reload());
 
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message,
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        });
+
+        // Abre el modal de mapeo
+        document.querySelectorAll('.mapear-airbnb-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.getElementById('mapPropertyId').value = btn.dataset.propertyid;
+                document.getElementById('mapRateId').value = btn.dataset.rateid;
+                document.getElementById('mapPropName').textContent = btn.dataset.propertyname;
+                // Limpia el select del modal
+                document.getElementById('listingSelect').selectedIndex = 0;
+                new bootstrap.Modal(document.getElementById('mapModal')).show();
+            });
+        });
+
+        // Envía el mapeo
+        document.getElementById('mapForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const property_id = document.getElementById('mapPropertyId').value;
+            const rate_plan_id = document.getElementById('mapRateId').value;
+            const listing_id = document.getElementById('listingSelect').value;
+
+            try {
+                const response = await fetch(`/api/channex/channels/{{channelId}}/mappings`, { // channelId va desde server (req.session o prop oculta)
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        mapping: {
+                            property_id,
+                            listing_id,
+                            rate_plan_id: rate_plan_id
+                        }
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Propiedad mapeada correctamente',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => window.location.reload());
+                } else {
+                    throw new Error(data.error || 'Error en el mapeo');
+                }
             } catch (error) {
                 Swal.fire({
                     icon: 'error',
