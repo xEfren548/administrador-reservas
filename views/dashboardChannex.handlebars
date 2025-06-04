@@ -16,61 +16,60 @@
             <td>{{propertyDetails.name}}</td>
             <td>
                 {{#if channexPropertyId}}
-                    {{#if existeEnChannex}}
-                        <span class="badge bg-success">Sí</span><br>
-                        <small>ID: {{channexPropertyId}}</small>
-                    {{else}}
-                        <span class="badge bg-danger">No existe en Channex</span><br>
-                        <small>ID local: {{channexPropertyId}}</small>
-                    {{/if}}
+                {{#if existeEnChannex}}
+                <span class="badge bg-success">Sí</span><br>
+                <small>ID: {{channexPropertyId}}</small>
                 {{else}}
-                    <span class="badge bg-secondary">No</span>
+                <span class="badge bg-danger">No existe en Channex</span><br>
+                <small>ID local: {{channexPropertyId}}</small>
+                {{/if}}
+                {{else}}
+                <span class="badge bg-secondary">No</span>
                 {{/if}}
             </td>
             <td>
                 {{#if nombreListingAirbnb}}
-                    <span class="text-success fw-bold">{{nombreListingAirbnb}}</span>
+                <span class="text-success fw-bold">{{nombreListingAirbnb}}</span>
                 {{else}}
-                    <span class="text-muted">Sin mapping</span>
+                <span class="text-muted">Sin mapping</span>
                 {{/if}}
             </td>
             <td>
                 {{#if tarifa}}
-                    <span class="badge bg-info">{{tarifa.title}} ({{tarifa.currency}})</span>
+                <span class="badge bg-info">{{tarifa.title}} ({{tarifa.currency}})</span>
                 {{else}}
-                    <span class="text-muted">Sin tarifa</span>
+                <span class="text-muted">Sin tarifa</span>
                 {{/if}}
             </td>
             <td>
                 {{#if channexPropertyId}}
-                    {{#if existeEnChannex}}
-                        {{#if tarifa}}
-                            <span class="text-success">Tarifa creada</span>
-                        {{else}}
-                            <button type="button" class="btn btn-sm btn-info crear-tarifa-btn"
-                                data-propertyid="{{channexPropertyId}}"
-                                data-propertyname="{{propertyDetails.name}}"
-                                data-pmsid="{{_id}}">
-                                Crear tarifa
-                            </button>
-                        {{/if}}
-                    {{else}}
-                        <button type="button" class="btn btn-sm btn-warning alta-btn" data-id="{{_id}}">Dar de alta de nuevo</button>
-                    {{/if}}
+                {{#if existeEnChannex}}
+                {{#if tarifa}}
+                <span class="text-success">Tarifa creada</span>
                 {{else}}
-                    <button type="button" class="btn btn-sm btn-primary alta-btn" data-id="{{_id}}">Dar de alta</button>
+                <button type="button" class="btn btn-sm btn-info crear-tarifa-btn"
+                    data-propertyid="{{channexPropertyId}}" data-propertyname="{{propertyDetails.name}}"
+                    data-pmsid="{{_id}}">
+                    Crear tarifa
+                </button>
+                {{/if}}
+                {{else}}
+                <button type="button" class="btn btn-sm btn-warning alta-btn" data-id="{{_id}}">Dar de alta de
+                    nuevo</button>
+                {{/if}}
+                {{else}}
+                <button type="button" class="btn btn-sm btn-primary alta-btn" data-id="{{_id}}">Dar de alta</button>
                 {{/if}}
             </td>
             <td>
                 {{#if tarifa}}
-                    <button type="button" class="btn btn-sm btn-success mapear-airbnb-btn"
-                        data-propertyid="{{channexPropertyId}}"
-                        data-rateid="{{tarifa.id}}"
-                        data-propertyname="{{propertyDetails.name}}">
-                        Mapear con Airbnb
-                    </button>
+                <button type="button" class="btn btn-sm btn-success mapear-airbnb-btn"
+                    data-propertyid="{{channexPropertyId}}" data-rateid="{{tarifa.id}}"
+                    data-propertyname="{{propertyDetails.name}}">
+                    Mapear con Airbnb
+                </button>
                 {{else}}
-                    <span class="text-muted">Crea tarifa primero</span>
+                <span class="text-muted">Crea tarifa primero</span>
                 {{/if}}
             </td>
         </tr>
@@ -82,13 +81,21 @@
 
 <h4 class="mt-4">Listings de Airbnb en Channex</h4>
 <ul class="list-group">
-    {{#each chProps}}
-    <li class="list-group-item">
-        <span class="fw-bold">{{this.title}}</span>
-        <small>(ID: {{this.id}})</small>
+    {{#each listings}}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+            <span class="fw-bold">{{this.title}}</span>
+            <small class="text-muted">ID: {{this.id}}</small>
+        </div>
+        {{#if this.habitacionNombre}}
+        <span class="badge bg-success">Habitación: {{this.habitacionNombre}}</span>
+        {{else}}
+        <span class="badge bg-secondary">Sin asignar</span>
+        {{/if}}
     </li>
     {{/each}}
 </ul>
+
 
 {{!-- Modal tarifas --}}
 <div class="modal fade" id="tarifaModal" tabindex="-1" aria-labelledby="tarifaModalLabel" aria-hidden="true">
@@ -139,7 +146,7 @@
                         <select class="form-select" id="listingSelect" name="listing_id" required>
                             <option value="">Selecciona...</option>
                             {{#each chProps}}
-                                <option value="{{this.id}}">{{this.title}} ({{this.id}})</option>
+                            <option value="{{this.id}}">{{this.title}} ({{this.id}})</option>
                             {{/each}}
                         </select>
                     </div>

@@ -158,9 +158,27 @@ async function dashboardChannexFull(req, res) {
             };
         });
 
+        console.log(propiedadesMarcadas);
+
+        // 7. Para cada listing, busca la habitación que lo tenga asignado
+        const listingsMarcados = chProps.map(listing => {
+            const habitacionVinculada = propiedadesMarcadas.find(h => h.listingId === listing.id);
+            // Ajusta 'nombreHabitacion' al campo que use tu modelo Habitacion para mostrar el nombre
+            const habitacionNombre = habitacionVinculada
+                ? (habitacionVinculada.nombre || habitacionVinculada._id)
+                : null;
+
+            return {
+                id: listing.id,
+                title: listing.title,
+                habitacionNombre
+            };
+        });
+
         res.render('dashboardChannex', {
             propiedades: propiedadesMarcadas,
-            chProps
+            chProps,
+            listings: listingsMarcados
         });
 
     } catch (err) {
