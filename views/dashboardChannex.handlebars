@@ -288,7 +288,7 @@
             const listing_id = document.getElementById('listingSelect').value;
 
             try {
-                const response = await fetch(`/api/channex/channels/123/mappings`, { // channelId va desde server (req.session o prop oculta)
+                const response = await fetch(`/api/channex/channels/${property_id}/mappings`, { // channelId va desde server (req.session o prop oculta)
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

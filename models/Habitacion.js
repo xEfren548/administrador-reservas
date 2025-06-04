@@ -334,6 +334,7 @@ const preSchema = new mongoose.Schema({
         default: []
     },
     channexPropertyId: { type: String, default: null },
+    airbnbListingId: { type: String, default: null },
     isMapped: { type: Boolean, default: false }
 });
 
