@@ -288,14 +288,15 @@
             const listing_id = document.getElementById('listingSelect').value;
 
             try {
-                const response = await fetch(`/api/channex/channels/{{channelId}}/mappings`, { // channelId va desde server (req.session o prop oculta)
+                const response = await fetch(`/api/channex/channels/123/mappings`, { // channelId va desde server (req.session o prop oculta)
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         mapping: {
-                            property_id,
-                            listing_id,
-                            rate_plan_id: rate_plan_id
+                            rate_plan_id: rate_plan_id,
+                            settings: {
+                                listing_id
+                            }
                         }
                     })
                 });
@@ -307,7 +308,7 @@
                         confirmButtonText: 'Aceptar'
                     }).then(() => window.location.reload());
                 } else {
-                    throw new Error(data.error || 'Error en el mapeo');
+                    throw new Error(data.message || 'Error en el mapeo');
                 }
             } catch (error) {
                 Swal.fire({

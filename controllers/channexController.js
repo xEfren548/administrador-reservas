@@ -267,7 +267,8 @@ async function oauthAirbnb(req, res) {
 }
 
 async function mapPropertiesAirbnb(req, res) {
-    const { channelId } = req.params;
+    // const { channelId } = req.params;
+    const channelId = req.session.channelId
     const mappingData = req.body; // { property_id, listing_id, price_mapping?, ... }
     try {
         console.log("channel id: ", channelId)
@@ -275,15 +276,16 @@ async function mapPropertiesAirbnb(req, res) {
         const response = await channex.post(`/api/v1/channels/${channelId}/mappings`, mappingData);
         res.json(response.data);
     } catch (err) {
-        if (err.response.data.errors) {
-            console.log('Error en mapeo:', err.response.data.errors)
+        if (err.response.data.errors.details.mapping[0]) {
+            console.log('Error en mapeo 1:', err.response.data.errors.details.mapping[0])
+            return res.status(400).json({ message: err.response.data.errors.details.mapping[0] });
         } else {
             console.error('Error en mapeo:', err.response ? err.response.data : err.message);
 
         }
         // console.log(err.response)
         // console.log(err.message)
-        res.status(500).json({ error: 'Fallo en la creación de mapeo' });
+        res.status(500).json({ message: 'Fallo en la creación de mapeo' });
     }
 }
 
