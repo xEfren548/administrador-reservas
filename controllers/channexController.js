@@ -163,6 +163,9 @@ async function dashboardChannexFull(req, res) {
         // 7. Para cada listing, busca la habitación que lo tenga asignado
         const listingsMarcados = chProps.map(listing => {
             const habitacionVinculada = propiedadesMarcadas.find(h => h.listingId === listing.id);
+
+            const flag = Boolean(habitacionVinculada);
+
             // Ajusta 'nombreHabitacion' al campo que use tu modelo Habitacion para mostrar el nombre
             const habitacionNombre = habitacionVinculada
                 ? (habitacionVinculada.propertyDetails.name || habitacionVinculada._id)
@@ -171,7 +174,8 @@ async function dashboardChannexFull(req, res) {
             return {
                 id: listing.id,
                 title: listing.title,
-                habitacionNombre
+                habitacionNombre,
+                listed: flag
             };
         });
 
