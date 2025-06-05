@@ -165,7 +165,7 @@ async function dashboardChannexFull(req, res) {
             const habitacionVinculada = propiedadesMarcadas.find(h => h.listingId === listing.id);
             // Ajusta 'nombreHabitacion' al campo que use tu modelo Habitacion para mostrar el nombre
             const habitacionNombre = habitacionVinculada
-                ? (habitacionVinculada.nombre || habitacionVinculada._id)
+                ? (habitacionVinculada.propertyDetails.name || habitacionVinculada._id)
                 : null;
 
             return {
@@ -321,8 +321,13 @@ async function mapPropertiesAirbnb(req, res) {
     } catch (err) {
 
         if (err.response?.data?.errors?.details) {
-            console.log('Error en mapeo 1:', err.response.data.errors.details)
-            return res.status(400).json({ message: err.response.data.errors.details});
+            console.log('Error en mapeo 1:', err.response.data.errors.details);
+            const details = err.response.data.errors.details;
+            // Convertimos a string, venga como objeto o como otro tipo
+            const msg = (typeof details === 'object')
+                ? JSON.stringify(details)
+                : String(details);
+            return res.status(400).json({ message: msg });
         } else {
             console.error('Error en mapeo:', err.response ? err.response.data : err.message);
 

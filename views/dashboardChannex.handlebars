@@ -318,6 +318,7 @@
                     throw new Error(data.message || 'Error en el mapeo');
                 }
             } catch (error) {
+                console.log(error)
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
