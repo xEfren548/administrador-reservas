@@ -5,8 +5,12 @@ function ensureAuthenticated(req, res, next) {
         "/api/eventos/cotizaciones"
     ];
     const whitelistPrefix = [
-        "/api/channex"
+        
     ];
+    console.log(process.argv[2])
+    if (process.argv[2] === '--api') {
+        whitelistPrefix.push('/api/channex');
+    }
     // 1) Si es ruta exacta permitida
     if (whitelistExact.includes(req.path)) {
         return next();

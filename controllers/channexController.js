@@ -132,7 +132,7 @@ async function dashboardChannexFull(req, res) {
         const ratePlans = respRates.data.data;
 
 
-        // 7. Marca cada propiedad con flags útiles y mapping de listing
+        // 6. Marca cada propiedad con flags útiles y mapping de listing
         const propiedadesMarcadas = propiedades.map(hab => {
             const existeEnChannex = hab.channexPropertyId && channexIds.includes(hab.channexPropertyId);
 
