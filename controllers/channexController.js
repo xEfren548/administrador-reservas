@@ -97,6 +97,12 @@ async function dashboardChannexFull(req, res) {
         const channexOptions = respChannex.data.data;
         const channexIds = channexOptions.map(opt => opt.id);
 
+
+        // 4. Trae listings de Airbnb (todos los disponibles)
+        const respListings = await channex.get(`/api/v1/channels/${req.session.channelId}/action/listings`);
+        const chProps = respListings.data.data.listing_id_dictionary.values;
+        // console.log(chProps)
+
         // 3. Limpia propiedades que ya no existen en Channex
         for (const hab of propiedades) {
             if (hab.channexPropertyId && !channexIds.includes(hab.channexPropertyId)) {
@@ -107,11 +113,19 @@ async function dashboardChannexFull(req, res) {
                 hab.channexPropertyId = undefined;
                 hab.isMapped = undefined;
             }
+            if (hab.airbnbListingId) {
+                const listingObj = chProps.find(l => l.id === hab.airbnbListingId);
+                console.log(listingObj)
+                if (listingObj.synchronization_category === null || !listingObj) {
+                    await Habitacion.updateOne(
+                        { _id: hab._id },
+                        { $unset: { airbnbListingId: "" } }
+                    );
+                    hab.airbnbListingId = undefined;
+                    
+                }
+            }
         }
-
-        // 4. Trae listings de Airbnb (todos los disponibles)
-        const respListings = await channex.get(`/api/v1/channels/${req.session.channelId}/action/listings`);
-        const chProps = respListings.data.data.listing_id_dictionary.values;
 
         // 5. Tarifas (rate plans)
         const respRates = await channex.get('/api/v1/rate_plans');
@@ -158,7 +172,7 @@ async function dashboardChannexFull(req, res) {
             };
         });
 
-        console.log(propiedadesMarcadas);
+        // console.log(propiedadesMarcadas);
 
         // 7. Para cada listing, busca la habitación que lo tenga asignado
         const listingsMarcados = chProps.map(listing => {
