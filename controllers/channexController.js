@@ -97,33 +97,35 @@ async function dashboardChannexFull(req, res) {
         const channexOptions = respChannex.data.data;
         const channexIds = channexOptions.map(opt => opt.id);
 
-
         // 4. Trae listings de Airbnb (todos los disponibles)
         const respListings = await channex.get(`/api/v1/channels/${req.session.channelId}/action/listings`);
         const chProps = respListings.data.data.listing_id_dictionary.values;
-        // console.log(chProps)
-        console.log(propiedades)
+        console.log(channexIds)
 
         // 3. Limpia propiedades que ya no existen en Channex
         for (const hab of propiedades) {
-            if (hab.channexPropertyId && !channexIds.includes(hab.channexPropertyId)) {
+            // Si channels no existe, inicialízalo para evitar errores
+            if (!hab.channels) hab.channels = {};
+
+            // Channex property cleanup
+            if (hab.channels.channexPropertyId && !channexIds.includes(hab.channels.channexPropertyId)) {
                 await Habitacion.updateOne(
                     { _id: hab._id },
-                    { $unset: { channexPropertyId: "", isMapped: "" } }
+                    { $unset: { "channels.channexPropertyId": "", "channels.isMapped": "" }, }
+                    // { $unset: { channexPropertyId: "", isMapped: "" } }
                 );
-                hab.channexPropertyId = undefined;
-                hab.isMapped = undefined;
+                hab.channels.channexPropertyId = undefined;
+                hab.channels.isMapped = undefined;
             }
-            if (hab.airbnbListingId) {
-                const listingObj = chProps.find(l => l.id === hab.airbnbListingId);
-                console.log(listingObj)
-                if (listingObj.synchronization_category === null || !listingObj) {
+            // Airbnb listing cleanup
+            if (hab.channels.airbnbListingId) {
+                const listingObj = chProps.find(l => l.id === hab.channels.airbnbListingId);
+                if (!listingObj || listingObj.synchronization_category === null) {
                     await Habitacion.updateOne(
                         { _id: hab._id },
-                        { $unset: { airbnbListingId: "" } }
+                        { $unset: { "channels.airbnbListingId": "" } }
                     );
-                    hab.airbnbListingId = undefined;
-                    
+                    hab.channels.airbnbListingId = undefined;
                 }
             }
         }
@@ -132,16 +134,18 @@ async function dashboardChannexFull(req, res) {
         const respRates = await channex.get('/api/v1/rate_plans');
         const ratePlans = respRates.data.data;
 
-
         // 6. Marca cada propiedad con flags útiles y mapping de listing
         const propiedadesMarcadas = propiedades.map(hab => {
-            const existeEnChannex = hab.channexPropertyId && channexIds.includes(hab.channexPropertyId);
+            // Si channels no existe, inicialízalo para evitar errores
+            if (!hab.channels) hab.channels = {};
+
+            const existeEnChannex = hab.channels.channexPropertyId && channexIds.includes(hab.channels.channexPropertyId);
 
             // Tarifa
             let tarifa = null;
-            if (hab.channexPropertyId) {
+            if (hab.channels.channexPropertyId) {
                 const foundRate = ratePlans.find(
-                    r => r.relationships.property.data.id === hab.channexPropertyId
+                    r => r.relationships.property.data.id === hab.channels.channexPropertyId
                 );
                 if (foundRate) {
                     tarifa = {
@@ -153,11 +157,9 @@ async function dashboardChannexFull(req, res) {
             }
 
             // Busca si está mapeado a un listing de Airbnb
-            // Si guardas el listingId en Mongo ponlo aquí. Si no, opcionalmente puedes agregar lógica para hacerlo.
-            let listingId = hab.airbnbListingId || null;
+            let listingId = hab.channels.airbnbListingId || null;
             let nombreListingAirbnb = null;
 
-            // Si el property está mapeado, busca por el ID de property si tienes esa relación guardada, o simplemente deja "listingId"
             if (listingId) {
                 const listingObj = chProps.find(l => l.id === listingId);
                 if (listingObj) nombreListingAirbnb = listingObj.title + ' (' + listingObj.id + ')';
@@ -172,8 +174,6 @@ async function dashboardChannexFull(req, res) {
                 nombreListingAirbnb
             };
         });
-
-        // console.log(propiedadesMarcadas);
 
         // 7. Para cada listing, busca la habitación que lo tenga asignado
         const listingsMarcados = chProps.map(listing => {
@@ -194,6 +194,8 @@ async function dashboardChannexFull(req, res) {
             };
         });
 
+        // console.log(propiedadesMarcadas[0])
+        console.log(listingsMarcados)
         res.render('dashboardChannex', {
             propiedades: propiedadesMarcadas,
             chProps,
@@ -205,6 +207,7 @@ async function dashboardChannexFull(req, res) {
         return res.redirect('/api/channex/home?error=Error+inesperado+obteniendo+propiedades');
     }
 }
+
 
 
 
@@ -326,7 +329,7 @@ async function mapPropertiesAirbnb(req, res) {
     const channelIdSession = req.session.channelId
     const mappingData = req.body; // { property_id, listing_id, price_mapping?, ... }
     try {
-        const habitacion = await Habitacion.findOne({ channexPropertyId: propertyId });
+        const habitacion = await Habitacion.findOne({ "channels.channexPropertyId": propertyId });
         if (!habitacion) {
             return res.status(404).json({ message: 'No se encontró una habitacion con ese ID de channex' });
         }
