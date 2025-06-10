@@ -50,7 +50,9 @@ router.post('/availability-rates', async (req, res) => {
     const { pmsId } = req.body
     try {
         const prices = await channexController.updateChannexPrices(pmsId);
-        res.status(200).json({ "message": "Precios actualizados"});
+        const availability = await channexController.updateChannexAvailability(pmsId);
+        res.send(availability);
+        // res.status(200).json({ "message": "Precios actualizados"});
     } catch (err) {
         console.error('Error al actualizar precios en Channex:', err.response ? err.response.data : err.message);
         res.status(500).json({ error: err.response?.data?.error || err.message });
