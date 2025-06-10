@@ -443,7 +443,7 @@ async function createRoomChannex(req, res) {
         }
         req.body.room_type.occ_adults = habitacion.propertyDetails.maxOccupancy;
         req.body.room_type.default_occupancy = habitacion.propertyDetails.maxOccupancy;
-        
+
         const resp = await channex.post('/api/v1/room_types', req.body);
         habitacion.channels.roomListingId = resp.data.data.attributes.id;
         await habitacion.save();
@@ -471,6 +471,37 @@ async function createRateChannex(req, res) {
     }
 }
 
+async function updateChannexPrices(pmsId) {
+    try {
+        const habitacion = await Habitacion.findById(pmsId);
+        if (!habitacion) {
+            return console.error('Habitación no encontrada');
+        }
+        if (!habitacion.channels.roomListingId || !habitacion.channels.rateListingId) {
+            return console.error('Habitación no mapeada');
+        }
+        if (!habitacion.channels.airbnbListingId) {
+            return console.error('Propiedad no mapeada');
+        }
+        const body = {
+            "values": [{
+                "property_id": habitacion.channels.channexPropertyId,
+                "rate_plan_id": habitacion.channels.rateListingId,
+                "date": "2025-01-01",
+                "rate": 2100 * 100
+            }]
+        }
+
+        const resp = await channex.post('/api/v1/restrictions', body);
+        console.log(resp.data);
+        return resp.data;
+
+    } catch (err) {
+        console.error('Error al actualizar precios en Channex:', err.response ? err.response.data : err.message);
+        return null;
+    }
+
+}
 
 
 function dmsToDecimal(dmsStr) {
