@@ -337,7 +337,7 @@ async function mapPropertiesAirbnb(req, res) {
         console.log("mapping data: ", mappingData)
         const response = await channex.post(`/api/v1/channels/${channelIdSession}/mappings`, mappingData);
 
-        habitacion.airbnbListingId = mappingData.mapping.settings.listing_id;
+        habitacion.channels.airbnbListingId = mappingData.mapping.settings.listing_id;
         await habitacion.save();
         res.json(response.data);
     } catch (err) {
