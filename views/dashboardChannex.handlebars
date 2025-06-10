@@ -244,7 +244,7 @@
                 const default_occupancy = roomData.data.attributes.default_occupancy;
 
                 // 2. Crea Rate
-                const rateRes = await fetch('/api/channex/rates', {
+                const rateRes = await fetch(`/api/channex/rates?pmsid=${pms_id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

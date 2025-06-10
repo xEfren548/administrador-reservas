@@ -443,8 +443,10 @@ async function createRoomChannex(req, res) {
         }
         req.body.room_type.occ_adults = habitacion.propertyDetails.maxOccupancy;
         req.body.room_type.default_occupancy = habitacion.propertyDetails.maxOccupancy;
+        
         const resp = await channex.post('/api/v1/room_types', req.body);
-        console.log(resp.data)
+        habitacion.channels.roomListingId = resp.data.data.attributes.id;
+        await habitacion.save();
         res.json(resp.data);
     } catch (err) {
         console.error('Error al crear habitación en Channex:', err.response ? err.response.data : err.message);
@@ -454,7 +456,14 @@ async function createRoomChannex(req, res) {
 
 async function createRateChannex(req, res) {
     try {
+        const pmsId = req.query.pmsid;
+        const habitacion = await Habitacion.findById(pmsId);
+        if (!habitacion) {
+            return res.status(404).json({ error: 'Habitación no encontrada' });
+        }
         const resp = await channex.post('/api/v1/rate_plans', req.body);
+        habitacion.channels.rateListingId = resp.data.data.attributes.id;
+        await habitacion.save();
         res.json(resp.data);
     } catch (err) {
         console.error('Error al crear tarifa en Channex:', err.response ? err.response.data : err.message);
