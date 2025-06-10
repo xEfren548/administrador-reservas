@@ -46,4 +46,15 @@ router.post('/channels/:channelId/activate', channexController.activateChannel);
 router.post('/rooms', channexController.createRoomChannex);
 router.post('/rates', channexController.createRateChannex);
 
+router.post('/availability-rates', async (req, res) => {
+    const { pmsId } = req.body
+    try {
+        const prices = await channexController.updateChannexPrices(pmsId);
+        res.json(prices);
+    } catch (err) {
+        console.error('Error al actualizar precios en Channex:', err.response ? err.response.data : err.message);
+        res.status(500).json({ error: err.response?.data?.error || err.message });
+    }
+})
+
 module.exports = router

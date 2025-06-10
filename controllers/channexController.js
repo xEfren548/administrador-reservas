@@ -2,6 +2,8 @@ const moment = require('moment');
 const axios = require('axios');
 const Habitacion = require('../models/Habitacion');
 const AirbnbChannel = require('../models/AirbnbChannel');
+const PrecioBaseXDia = require('../models/PrecioBaseXDia');
+const Plataformas = require('../models/Plataformas');
 
 // Configuración de Channex API
 const CHANNEX_BASE_URL = process.env.NODE_ENV === 'development' ? process.env.DEV_CHANNEX_API_URL : process.env.CHANNEX_BASE_URL;
@@ -66,24 +68,24 @@ async function getChannexProperties(channelId) {
 }
 
 async function showCreatedPropertiesAirbnb(req, res) {
- // 1. Obtén propiedades locales
-        const propiedades = await Habitacion.find().lean();
+    // 1. Obtén propiedades locales
+    const propiedades = await Habitacion.find().lean();
 
-        // 2. Llama a Channex para traer las propiedades dadas de alta (opciones)
-        const resp = await channex.get('/api/v1/properties/options');
-        // Ajusta el path según la estructura real del response de tu API Channex
-        const channexOptions = resp.data.data; // [{id, ...}, ...]
+    // 2. Llama a Channex para traer las propiedades dadas de alta (opciones)
+    const resp = await channex.get('/api/v1/properties/options');
+    // Ajusta el path según la estructura real del response de tu API Channex
+    const channexOptions = resp.data.data; // [{id, ...}, ...]
 
-        const channexIds = channexOptions.map(opt => opt.id);
+    const channexIds = channexOptions.map(opt => opt.id);
 
-        // 3. Marca si existe realmente en Channex
-        const propiedadesMarcadas = propiedades.map(hab => ({
-            ...hab,
-            existeEnChannex: hab.channexPropertyId ? channexIds.includes(hab.channexPropertyId) : false
-        }));
+    // 3. Marca si existe realmente en Channex
+    const propiedadesMarcadas = propiedades.map(hab => ({
+        ...hab,
+        existeEnChannex: hab.channexPropertyId ? channexIds.includes(hab.channexPropertyId) : false
+    }));
 
-        // 4. Renderiza la vista channexProperties (usa el nombre de archivo .hbs correcto)
-        res.render('channexProperties', { propiedades: propiedadesMarcadas });
+    // 4. Renderiza la vista channexProperties (usa el nombre de archivo .hbs correcto)
+    res.render('channexProperties', { propiedades: propiedadesMarcadas });
 }
 
 async function dashboardChannexFull(req, res) {
@@ -471,6 +473,62 @@ async function createRateChannex(req, res) {
     }
 }
 
+async function getRoomPricePlan(habitacion) {
+    // 1) Traer todos los registros de PrecioBaseXDia para esta habitación
+    const priceRecords = await PrecioBaseXDia
+        .find({ habitacionId: habitacion._id })
+        .sort({ fecha: 1 });
+
+    // 2) Determinar fecha límite (el último registro) o hoy si no hay ninguno
+    const lastDate = priceRecords.length
+        ? new Date(priceRecords[priceRecords.length - 1].fecha)
+        : new Date();
+
+    // Normalizar horas a medianoche
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    lastDate.setHours(0, 0, 0, 0);
+
+    // 3) Cargar las plataformas activas y sus ajustes
+    const plataformas = await Plataformas.find({
+        _id: { $in: habitacion.activePlatforms }
+    });
+
+    // 4) Precio por defecto en caso de no haber registro en PrecioBaseXDia
+    const defaultPrice = habitacion.others.basePrice2nights;
+
+    const result = [];
+
+    // 5) Iterar día a día desde hoy hasta lastDate
+    for (let d = new Date(start); d <= lastDate; d.setDate(d.getDate() + 1)) {
+        const isoDay = d.toISOString().slice(0, 10);
+
+        // Buscar si hay registro en PrecioBaseXDia para este día
+        const rec = priceRecords.find(r =>
+            r.fecha.toISOString().slice(0, 10) === isoDay
+        );
+        const basePrice = rec
+            ? rec.precio_base_2noches
+            : defaultPrice;
+
+        // 6) Para cada plataforma, aplicar su ajuste y añadir al resultado
+        for (const plat of plataformas) {
+            let price = basePrice;
+            if (plat.aumentoFijo != null) {
+                price += plat.aumentoFijo;
+            } else if (plat.aumentoPorcentual != null) {
+                price = Math.round(basePrice * (1 + plat.aumentoPorcentual / 100));
+            }
+            result.push({
+                date: isoDay,
+                platformId: plat._id,
+                price
+            });
+        }
+    }
+    return result;
+}
+
 async function updateChannexPrices(pmsId) {
     try {
         const habitacion = await Habitacion.findById(pmsId);
@@ -483,6 +541,9 @@ async function updateChannexPrices(pmsId) {
         if (!habitacion.channels.airbnbListingId) {
             return console.error('Propiedad no mapeada');
         }
+
+        const data = await getRoomPricePlan(habitacion);
+        return data;
         const body = {
             "values": [{
                 "property_id": habitacion.channels.channexPropertyId,
@@ -529,5 +590,6 @@ module.exports = {
     mapPropertiesAirbnb,
     activateChannel,
     createRoomChannex,
-    createRateChannex
+    createRateChannex,
+    updateChannexPrices
 };
