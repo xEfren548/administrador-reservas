@@ -102,6 +102,7 @@ async function dashboardChannexFull(req, res) {
         const respListings = await channex.get(`/api/v1/channels/${req.session.channelId}/action/listings`);
         const chProps = respListings.data.data.listing_id_dictionary.values;
         // console.log(chProps)
+        console.log(propiedades)
 
         // 3. Limpia propiedades que ya no existen en Channex
         for (const hab of propiedades) {
@@ -366,7 +367,11 @@ async function createChannexProperty(req, res) {
             return res.status(404).json({ error: 'Habitación no encontrada' });
         }
 
-        if (hab.isMapped) {
+        if (!hab.channels) {
+            hab.channels = {};
+        }
+
+        if (hab.channels.isMapped) {
             return res.status(400).json({ error: 'La habitación ya fue mapeada' });
         }
 
@@ -399,8 +404,8 @@ async function createChannexProperty(req, res) {
         // 3) Enviar a Channex
         const response = await channex.post('/api/v1/properties', propertyPayload);
 
-        hab.channexPropertyId = response.data.data.id;
-        hab.isMapped = true;
+        hab.channels.channexPropertyId = response.data.data.id;
+        hab.channels.isMapped = true;
         await hab.save();
 
         // 4) Devolver respuesta al cliente
