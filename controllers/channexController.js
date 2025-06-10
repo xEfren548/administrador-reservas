@@ -4,6 +4,7 @@ const Habitacion = require('../models/Habitacion');
 const AirbnbChannel = require('../models/AirbnbChannel');
 const PrecioBaseXDia = require('../models/PrecioBaseXDia');
 const Plataformas = require('../models/Plataformas');
+const BloqueoFechas = require('../models/BloqueoFechas');
 
 // Configuración de Channex API
 const CHANNEX_BASE_URL = process.env.NODE_ENV === 'development' ? process.env.DEV_CHANNEX_API_URL : process.env.CHANNEX_BASE_URL;
@@ -529,39 +530,96 @@ async function getRoomPricePlan(habitacion) {
     return result;
 }
 
-async function updateChannexPrices(pmsId) {
-    try {
-        const habitacion = await Habitacion.findById(pmsId);
-        if (!habitacion) {
-            return console.error('Habitación no encontrada');
-        }
-        if (!habitacion.channels.roomListingId || !habitacion.channels.rateListingId) {
-            return console.error('Habitación no mapeada');
-        }
-        if (!habitacion.channels.airbnbListingId) {
-            return console.error('Propiedad no mapeada');
+async function updateChannexPrices(habitacionId) {
+    // 0) Validaciones básicas
+    const habitacion = await Habitacion.findById(habitacionId);
+    if (!habitacion) {
+        return res.status(404).json({ error: 'Habitación no encontrada' });
+    }
+    if (!habitacion.channels || !habitacion.channels.channexPropertyId) {
+        throw new Error('La habitación no está mapeada en Channex (falta channels.channexPropertyId)');
+    }
+    const propertyId = habitacion.channels.channexPropertyId;
+    const defaultPrice = habitacion.others.basePrice2nights;
+
+    // 1) Traer todos los registros de PrecioBaseXDia para esta habitación
+    const priceRecords = await PrecioBaseXDia
+        .find({ habitacionId: habitacion._id })
+        .sort({ fecha: 1 });
+
+    // 2) Determinar el rango de fechas: desde hoy hasta el último registro
+    const startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = priceRecords.length
+        ? new Date(priceRecords[priceRecords.length - 1].fecha).setHours(0, 0, 0, 0)
+        : startDate;
+    const lastDate = new Date(endDate);
+
+    // 3) Cargar plataformas activas con su channexRatePlanId y ajustes
+    const plataformas = await Plataformas.find({
+        _id: { $in: habitacion.activePlatforms }
+    });
+    // Cada doc Plataforma debe tener además: .channexRatePlanId, .aumentoFijo, .aumentoPorcentual
+
+    // 4) Construir el array de valores para el payload
+    const values = [];
+
+    for (const plat of plataformas) {
+        // 4.1) Generar lista diaria de { date, price }
+        const daily = [];
+        for (let d = new Date(startDate); d <= lastDate; d.setDate(d.getDate() + 1)) {
+            const iso = d.toISOString().slice(0, 10);
+            const rec = priceRecords.find(r =>
+                r.fecha.toISOString().slice(0, 10) === iso
+            );
+            const base = rec ? rec.precio_base_2noches : defaultPrice;
+            let price = base;
+            if (plat.aumentoFijo != null) {
+                price += plat.aumentoFijo;
+            } else if (plat.aumentoPorcentual != null) {
+                price = Math.round(base * (1 + plat.aumentoPorcentual / 100));
+            }
+            daily.push({ date: iso, price });
         }
 
-        const data = await getRoomPricePlan(habitacion);
-        return data;
-        const body = {
-            "values": [{
-                "property_id": habitacion.channels.channexPropertyId,
-                "rate_plan_id": habitacion.channels.rateListingId,
-                "date": "2025-01-01",
-                "rate": 2100 * 100
-            }]
+        // 4.2) Agrupar en rangos de fechas con la misma tarifa
+        let curr = null;
+        for (const { date, price } of daily) {
+            if (!curr || curr.rate !== price) {
+                if (curr) {
+                    values.push({
+                        property_id: propertyId,
+                        rate_plan_id: habitacion.channels.rateListingId,
+                        date_from: curr.start,
+                        date_to: curr.end,
+                        rate: curr.rate * 100
+                    });
+                }
+                curr = { start: date, end: date, rate: price };
+            } else {
+                curr.end = date;
+            }
         }
-
-        const resp = await channex.post('/api/v1/restrictions', body);
-        console.log(resp.data);
-        return resp.data;
-
-    } catch (err) {
-        console.error('Error al actualizar precios en Channex:', err.response ? err.response.data : err.message);
-        return null;
+        // No olvidar el último grupo
+        if (curr) {
+            values.push({
+                property_id: propertyId,
+                rate_plan_id: habitacion.channels.rateListingId,
+                date_from: curr.start,
+                date_to: curr.end,
+                rate: curr.rate * 100
+            });
+        }
     }
 
+    // 5) Enviar un único payload a Channex
+    const payload = { values };
+    console.log(payload);
+    // return payload;
+    // Reemplaza la ruta por la que corresponda en tu API de Channex
+    const response = await channex.post('/api/v1/restrictions', payload);
+
+    return response.data;
 }
 
 
