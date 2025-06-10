@@ -13,7 +13,8 @@
             try {
                 //const redirect_uri = 'https://0de5-177-249-172-194.ngrok-free.app/api/channex/auth/airbnb/callback&token=123'
                 const redirect_uri = 'http://localhost:3005/api/channex/auth/airbnb/callback&token=123'
-                const response = await fetch(`/api/channex/connect/airbnb?properties=["d1fcdf06-41ad-425e-b7a5-249eead03c39"]&minStayType=Arrival&groupId=b5fcd225-d31f-4588-a828-686f7e2b32a4&redirect_uri=${redirect_uri}`)
+                const channexProperty = 'b918e0f9-c6fd-44d9-9ad5-96bf8eb05ac6'; // Cualquier ID del canal
+                const response = await fetch(`/api/channex/connect/airbnb?properties=["${channexProperty}"]&minStayType=Arrival&groupId=b5fcd225-d31f-4588-a828-686f7e2b32a4&redirect_uri=${redirect_uri}`)
                 const data = await response.json()
                 console.log(data)
                 const url = data.url
