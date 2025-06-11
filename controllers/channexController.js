@@ -58,7 +58,6 @@ async function getChannexProperties(channelId) {
         // const chProps = resp.data.data.relationships.properties.data.map((prop) => prop.id);
         // const chProps = resp.data.data.relationships.properties.data;
         const chProps = resp.data.data.listing_id_dictionary.values;
-        console.log(chProps)
         // return resp.data;
         return { propiedades, chProps };
 
@@ -100,12 +99,11 @@ async function dashboardChannexFull(req, res) {
         const channexOptions = respChannex.data.data;
         const channexIds = channexOptions.map(opt => opt.id);
 
-        // 4. Trae listings de Airbnb (todos los disponibles)
+        // 3. Trae listings de Airbnb (todos los disponibles)
         const respListings = await channex.get(`/api/v1/channels/${req.session.channelId}/action/listings`);
         const chProps = respListings.data.data.listing_id_dictionary.values;
-        console.log(channexIds)
 
-        // 3. Limpia propiedades que ya no existen en Channex
+        // 4. Limpia propiedades que ya no existen en Channex
         for (const hab of propiedades) {
             // Si channels no existe, inicialízalo para evitar errores
             if (!hab.channels) hab.channels = {};
@@ -198,7 +196,6 @@ async function dashboardChannexFull(req, res) {
         });
 
         // console.log(propiedadesMarcadas[0])
-        console.log(listingsMarcados)
         res.render('dashboardChannex', {
             propiedades: propiedadesMarcadas,
             chProps,
@@ -268,8 +265,7 @@ async function airbnbConnection(req, res) {
             token,
             state
         }
-        console.log(CHANNEX_BASE_URL)
-        console.log("params", params)
+
         const response = await channex.get('/api/v1/meta/airbnb/connection_link', {
             params: {
                 properties: propsParam,
@@ -336,8 +332,7 @@ async function mapPropertiesAirbnb(req, res) {
         if (!habitacion) {
             return res.status(404).json({ message: 'No se encontró una habitacion con ese ID de channex' });
         }
-        console.log("channel id: ", channelId)
-        console.log("mapping data: ", mappingData)
+
         const response = await channex.post(`/api/v1/channels/${channelIdSession}/mappings`, mappingData);
 
         habitacion.channels.airbnbListingId = mappingData.mapping.settings.listing_id;
@@ -439,10 +434,17 @@ async function activateChannel(req, res) {
 async function createRoomChannex(req, res) {
     try {
         const pmsId = req.query.pmsid;
-        console.log(pmsId)
         const habitacion = await Habitacion.findById(pmsId);
         if (!habitacion) {
             return res.status(404).json({ error: 'Habitación no encontrada' });
+        }
+
+        const plataformas = await Plataformas.find({
+            _id: { $in: habitacion.activePlatforms }
+        });
+
+        if (!plataformas || plataformas.length === 0) {
+            throw new Error('La habitación no tiene plataformas activas. Activala desde Editar Cabaña');
         }
         req.body.room_type.occ_adults = habitacion.propertyDetails.maxOccupancy;
         req.body.room_type.default_occupancy = habitacion.propertyDetails.maxOccupancy;
@@ -464,70 +466,23 @@ async function createRateChannex(req, res) {
         if (!habitacion) {
             return res.status(404).json({ error: 'Habitación no encontrada' });
         }
+        if (!habitacion.channels || !habitacion.channels.channexPropertyId)
+            throw new Error('La habitación no está creada en Channex');
+
         const resp = await channex.post('/api/v1/rate_plans', req.body);
         habitacion.channels.rateListingId = resp.data.data.attributes.id;
         await habitacion.save();
+
+        const updatePrices = await updateChannexPrices(pmsId);
+        const updateAvailability = await updateChannexAvailability(pmsId);
+        if (!updatePrices || !updateAvailability) {
+            throw new Error('No se pudo actualizar precios o disponibilidad');
+        }
         res.json(resp.data);
     } catch (err) {
         console.error('Error al crear tarifa en Channex:', err.response ? err.response.data : err.message);
         res.status(500).json({ error: err.response?.data?.error || err.message });
     }
-}
-
-async function getRoomPricePlan(habitacion) {
-    // 1) Traer todos los registros de PrecioBaseXDia para esta habitación
-    const priceRecords = await PrecioBaseXDia
-        .find({ habitacionId: habitacion._id })
-        .sort({ fecha: 1 });
-
-    // 2) Determinar fecha límite (el último registro) o hoy si no hay ninguno
-    const lastDate = priceRecords.length
-        ? new Date(priceRecords[priceRecords.length - 1].fecha)
-        : new Date();
-
-    // Normalizar horas a medianoche
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    lastDate.setHours(0, 0, 0, 0);
-
-    // 3) Cargar las plataformas activas y sus ajustes
-    const plataformas = await Plataformas.find({
-        _id: { $in: habitacion.activePlatforms }
-    });
-
-    // 4) Precio por defecto en caso de no haber registro en PrecioBaseXDia
-    const defaultPrice = habitacion.others.basePrice2nights;
-
-    const result = [];
-
-    // 5) Iterar día a día desde hoy hasta lastDate
-    for (let d = new Date(start); d <= lastDate; d.setDate(d.getDate() + 1)) {
-        const isoDay = d.toISOString().slice(0, 10);
-
-        // Buscar si hay registro en PrecioBaseXDia para este día
-        const rec = priceRecords.find(r =>
-            r.fecha.toISOString().slice(0, 10) === isoDay
-        );
-        const basePrice = rec
-            ? rec.precio_base_2noches
-            : defaultPrice;
-
-        // 6) Para cada plataforma, aplicar su ajuste y añadir al resultado
-        for (const plat of plataformas) {
-            let price = basePrice;
-            if (plat.aumentoFijo != null) {
-                price += plat.aumentoFijo;
-            } else if (plat.aumentoPorcentual != null) {
-                price = Math.round(basePrice * (1 + plat.aumentoPorcentual / 100));
-            }
-            result.push({
-                date: isoDay,
-                platformId: plat._id,
-                price
-            });
-        }
-    }
-    return result;
 }
 
 async function updateChannexPrices(habitacionId) {
@@ -550,6 +505,10 @@ async function updateChannexPrices(habitacionId) {
         _id: { $in: habitacion.activePlatforms }
     });
 
+    if (!plataformas || plataformas.length === 0) {
+        throw new Error('La habitación no tiene plataformas activas. Activala desde Editar Cabaña');
+    }
+
     // 3) Traer todos los registros de PrecioBaseXDia
     const priceRecords = await PrecioBaseXDia
         .find({ habitacionId: habitacion._id })
@@ -565,7 +524,7 @@ async function updateChannexPrices(habitacionId) {
             const rec = priceRecords.find(r =>
                 r.fecha.toISOString().slice(0, 10) === iso
             );
-            const base = rec ? rec.precio_base_2nights : defaultPrice;
+            const base = rec ? rec.precio_base_2noches : defaultPrice;
             let price = base;
             if (plat.aumentoFijo != null) {
                 price += plat.aumentoFijo;
