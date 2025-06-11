@@ -30,9 +30,10 @@ router.post('/rates', channexController.createRateChannex);
 router.post('/availability-rates', async (req, res) => {
     const { pmsId } = req.body
     try {
-        const prices = await channexController.updateChannexPrices(pmsId);
-        const availability = await channexController.updateChannexAvailability(pmsId);
-        res.send(availability);
+        const { data: prices, fechaLimite } = await channexController.updateChannexPrices(pmsId);
+        // Ahora sí, pásale la fechaLimite a la disponibilidad
+        const availability = await channexController.updateChannexAvailability(pmsId, fechaLimite);
+        res.send({ prices, availability, fechaLimite });
         // res.status(200).json({ "message": "Precios actualizados"});
     } catch (err) {
         console.error('Error al actualizar precios en Channex:', err.response ? err.response.data : err.message);

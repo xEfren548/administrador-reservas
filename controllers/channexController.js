@@ -550,9 +550,14 @@ async function updateChannexPrices(habitacionId) {
     // 2) Determinar el rango de fechas: desde hoy hasta el último registro
     const startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
-    const endDate = priceRecords.length
-        ? new Date(priceRecords[priceRecords.length - 1].fecha).setHours(0, 0, 0, 0)
-        : startDate;
+    let endDate;
+    if (priceRecords.length) {
+        endDate = new Date(priceRecords[priceRecords.length - 1].fecha);
+        endDate.setHours(0, 0, 0, 0);
+    } else {
+        endDate = new Date(startDate);
+        endDate.setFullYear(endDate.getFullYear() + 2);
+    }
     const lastDate = new Date(endDate);
 
     // 3) Cargar plataformas activas con su channexRatePlanId y ajustes
@@ -618,15 +623,16 @@ async function updateChannexPrices(habitacionId) {
     // Reemplaza la ruta por la que corresponda en tu API de Channex
     const response = await channex.post('/api/v1/restrictions', payload);
 
-    return response.data;
+    return {
+        data: response.data,
+        fechaLimite: lastDate.toISOString().slice(0, 10)
+    }
 }
 
-async function updateChannexAvailability(habitacionId) {
+async function updateChannexAvailability(habitacionId, fechaLimite = null) {
     // 0) Validaciones básicas
     const habitacion = await Habitacion.findById(habitacionId);
-    if (!habitacion) {
-        throw new Error('Habitación no encontrada');
-    }
+    if (!habitacion) throw new Error('Habitación no encontrada');
     if (
         !habitacion.channels ||
         !habitacion.channels.channexPropertyId ||
@@ -639,68 +645,74 @@ async function updateChannexAvailability(habitacionId) {
     const propertyId = habitacion.channels.channexPropertyId;
     const roomTypeId = habitacion.channels.roomListingId;
 
-    // 1) Traer todos los bloqueos para esta habitación, ordenados
+    // 1) Determinar rango de fechas: desde hoy hasta fechaLimite o +2 años
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let endDate;
+    if (fechaLimite) {
+        endDate = new Date(fechaLimite);
+    } else {
+        endDate = new Date(today);
+        endDate.setFullYear(endDate.getFullYear() + 2);
+    }
+    endDate.setHours(0, 0, 0, 0);
+
+    // 2) Traer bloqueos
     let bloqueos = await BloqueoFechas
         .find({ habitacionId: habitacion._id, type: 'bloqueo' })
         .sort({ date: 1 });
 
-    // 2) Filtrar sólo fechas >= hoy
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    bloqueos = bloqueos.filter(b => {
-        const d = new Date(b.date);
-        d.setHours(0,0,0,0);
-        return d >= today;
-    });
+    // 3) Generar un set de fechas bloqueadas
+    const bloqueadas = new Set(
+        bloqueos
+            .map(b => {
+                const d = new Date(b.date);
+                d.setHours(0, 0, 0, 0);
+                return d.toISOString().slice(0, 10);
+            })
+    );
 
-    if (bloqueos.length === 0) {
-        return { values: [] };
-    }
-
-    // 3) Agrupar fechas contiguas (todas >= hoy)
-    const groups = [];
+    // 4) Recorrer el rango de fechas, agrupar bloques de disponibilidad
+    const values = [];
     let curr = null;
-    for (const b of bloqueos) {
-        const iso = b.date.toISOString().slice(0, 10);
 
-        if (!curr) {
-            // inicia un nuevo grupo
-            curr = { start: iso, end: iso };
-        } else {
-            const prev = new Date(curr.end);
-            const todayLoop = new Date(iso);
-            const diffDays = (todayLoop - prev) / (1000 * 60 * 60 * 24);
-
-            if (diffDays === 1) {
-                // día consecutivo, extiende el rango
-                curr.end = iso;
-            } else {
-                groups.push(curr);
-                curr = { start: iso, end: iso };
+    for (let d = new Date(today); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const iso = d.toISOString().slice(0, 10);
+        const disponible = bloqueadas.has(iso) ? 0 : 1;
+        if (!curr || curr.availability !== disponible) {
+            if (curr) {
+                values.push({
+                    property_id: propertyId,
+                    room_type_id: roomTypeId,
+                    date_from: curr.start,
+                    date_to: curr.end,
+                    availability: curr.availability
+                });
             }
+            curr = { start: iso, end: iso, availability: disponible };
+        } else {
+            curr.end = iso;
         }
     }
-    if (curr) groups.push(curr);
-
-    // 4) Construir payload con availability: 0 (no disponible)
-    const values = groups.map(g => ({
-        property_id:  propertyId,
-        room_type_id: roomTypeId,
-        date_from:    g.start,
-        date_to:      g.end,
-        availability: 0   // 0 = no disponible
-    }));
+    if (curr) {
+        values.push({
+            property_id: propertyId,
+            room_type_id: roomTypeId,
+            date_from: curr.start,
+            date_to: curr.end,
+            availability: curr.availability
+        });
+    }
 
     const payload = { values };
 
-    // 5) Enviar un único payload a Channex
-    const response = await channex.post(
-        '/api/v1/availability',
-        payload
-    );
+    // 5) Enviar a Channex
+    const response = await channex.post('/api/v1/availability', payload);
 
     return response.data;
 }
+
 
 
 function dmsToDecimal(dmsStr) {
