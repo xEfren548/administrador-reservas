@@ -220,6 +220,15 @@
             const rate_title = document.getElementById('rateTitle').value;
             const pms_id = document.getElementById('inputPmsId').value;
 
+            Swal.fire({
+                title: "Creando room y rate... Sincronizando precios...",
+                text: "Esto puede tardar, no actualices esta ventana.",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             try {
                 // 1. Crea Room
                 const roomRes = await fetch(`/api/channex/rooms?pmsid=${pms_id}`, {
@@ -265,6 +274,8 @@
                 const rateData = await rateRes.json();
                 if (!rateRes.ok) throw new Error(rateData.error || 'Error creando rate');
 
+                Swal.close();
+
                 Swal.fire({
                     icon: 'success',
                     title: 'Room y tarifa creados correctamente',
@@ -272,6 +283,7 @@
                 }).then(() => window.location.reload());
 
             } catch (error) {
+                Swal.close();
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',

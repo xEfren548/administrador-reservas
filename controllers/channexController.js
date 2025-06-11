@@ -1,6 +1,7 @@
 const moment = require('moment');
 const axios = require('axios');
 const Habitacion = require('../models/Habitacion');
+const Reservas = require('../models/Evento');
 const AirbnbChannel = require('../models/AirbnbChannel');
 const PrecioBaseXDia = require('../models/PrecioBaseXDia');
 const Plataformas = require('../models/Plataformas');
@@ -593,30 +594,56 @@ async function updateChannexAvailability(habitacionId) {
     // 1) Rango: hoy hasta 1 año después
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    // Un día antes, para dar margen
+    const marginDate = new Date(today);
+    marginDate.setDate(marginDate.getDate() - 1);
+
     const endDate = new Date(today);
     endDate.setFullYear(endDate.getFullYear() + 1);
 
-    // 2) Traer bloqueos
+    // 2) Traer bloqueos y reservas
     let bloqueos = await BloqueoFechas
         .find({ habitacionId: habitacion._id, type: 'bloqueo' })
         .sort({ date: 1 });
 
-    // 3) Generar set de fechas bloqueadas
-    const bloqueadas = new Set(
+    const reservas = await Reservas.find({
+        resourceId: habitacion._id,
+        arrivalDate: { $lte: endDate }, // Reservas que terminan antes del fin de rango
+        departureDate: { $gte: marginDate }, // Reservas que empiezan después del margen
+        status: { $nin: ['cancelled', 'no-show'] }
+    });
+    console.log("End date: ", endDate)
+    console.log("Margin date: ", marginDate)
+    console.log("reservas: ", reservas)
+
+    // 4) Generar set de fechas no disponibles (bloqueos + reservas)
+    const noDisponibles = new Set(
         bloqueos.map(b => {
             const d = new Date(b.date);
             d.setHours(0, 0, 0, 0);
             return d.toISOString().slice(0, 10);
         })
     );
+    // Marca todas las fechas de cada reserva como no disponibles
+    for (const reserva of reservas) {
+        let curr = new Date(reserva.arrivalDate);
+        curr.setHours(0, 0, 0, 0);
+        const checkout = new Date(reserva.departureDate);
+        checkout.setHours(0, 0, 0, 0);
+        // Por cada día de la reserva
+        while (curr <= checkout) {
+            noDisponibles.add(curr.toISOString().slice(0, 10));
+            curr.setDate(curr.getDate() + 1);
+        }
+    }
 
     // 4) Recorrer el rango de fechas completo
     const values = [];
     let curr = null;
 
-    for (let d = new Date(today); d <= endDate; d.setDate(d.getDate() + 1)) {
+    for (let d = new Date(marginDate); d <= endDate; d.setDate(d.getDate() + 1)) {
         const iso = d.toISOString().slice(0, 10);
-        const disponible = bloqueadas.has(iso) ? 0 : 1;
+        const disponible = noDisponibles.has(iso) ? 0 : 1;
         if (!curr || curr.availability !== disponible) {
             if (curr) {
                 values.push({
