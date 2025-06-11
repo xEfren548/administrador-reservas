@@ -533,51 +533,39 @@ async function getRoomPricePlan(habitacion) {
 async function updateChannexPrices(habitacionId) {
     // 0) Validaciones básicas
     const habitacion = await Habitacion.findById(habitacionId);
-    if (!habitacion) {
-        return res.status(404).json({ error: 'Habitación no encontrada' });
-    }
-    if (!habitacion.channels || !habitacion.channels.channexPropertyId) {
+    if (!habitacion) throw new Error('Habitación no encontrada');
+    if (!habitacion.channels || !habitacion.channels.channexPropertyId)
         throw new Error('La habitación no está mapeada en Channex (falta channels.channexPropertyId)');
-    }
     const propertyId = habitacion.channels.channexPropertyId;
     const defaultPrice = habitacion.others.basePrice2nights;
 
-    // 1) Traer todos los registros de PrecioBaseXDia para esta habitación
-    const priceRecords = await PrecioBaseXDia
-        .find({ habitacionId: habitacion._id })
-        .sort({ fecha: 1 });
-
-    // 2) Determinar el rango de fechas: desde hoy hasta el último registro
+    // 1) Fechas: desde hoy hasta 1 año después
     const startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
-    let endDate;
-    if (priceRecords.length) {
-        endDate = new Date(priceRecords[priceRecords.length - 1].fecha);
-        endDate.setHours(0, 0, 0, 0);
-    } else {
-        endDate = new Date(startDate);
-        endDate.setFullYear(endDate.getFullYear() + 2);
-    }
-    const lastDate = new Date(endDate);
+    const endDate = new Date(startDate);
+    endDate.setFullYear(endDate.getFullYear() + 1);
 
-    // 3) Cargar plataformas activas con su channexRatePlanId y ajustes
+    // 2) Cargar plataformas activas
     const plataformas = await Plataformas.find({
         _id: { $in: habitacion.activePlatforms }
     });
-    // Cada doc Plataforma debe tener además: .channexRatePlanId, .aumentoFijo, .aumentoPorcentual
+
+    // 3) Traer todos los registros de PrecioBaseXDia
+    const priceRecords = await PrecioBaseXDia
+        .find({ habitacionId: habitacion._id })
+        .sort({ fecha: 1 });
 
     // 4) Construir el array de valores para el payload
     const values = [];
 
     for (const plat of plataformas) {
-        // 4.1) Generar lista diaria de { date, price }
         const daily = [];
-        for (let d = new Date(startDate); d <= lastDate; d.setDate(d.getDate() + 1)) {
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
             const iso = d.toISOString().slice(0, 10);
             const rec = priceRecords.find(r =>
                 r.fecha.toISOString().slice(0, 10) === iso
             );
-            const base = rec ? rec.precio_base_2noches : defaultPrice;
+            const base = rec ? rec.precio_base_2nights : defaultPrice;
             let price = base;
             if (plat.aumentoFijo != null) {
                 price += plat.aumentoFijo;
@@ -587,7 +575,7 @@ async function updateChannexPrices(habitacionId) {
             daily.push({ date: iso, price });
         }
 
-        // 4.2) Agrupar en rangos de fechas con la misma tarifa
+        // Agrupar en rangos de precio igual
         let curr = null;
         for (const { date, price } of daily) {
             if (!curr || curr.rate !== price) {
@@ -605,7 +593,6 @@ async function updateChannexPrices(habitacionId) {
                 curr.end = date;
             }
         }
-        // No olvidar el último grupo
         if (curr) {
             values.push({
                 property_id: propertyId,
@@ -617,19 +604,18 @@ async function updateChannexPrices(habitacionId) {
         }
     }
 
-    // 5) Enviar un único payload a Channex
     const payload = { values };
-    // return payload;
-    // Reemplaza la ruta por la que corresponda en tu API de Channex
     const response = await channex.post('/api/v1/restrictions', payload);
 
+    // Siempre regresa fecha límite usada
     return {
         data: response.data,
-        fechaLimite: lastDate.toISOString().slice(0, 10)
-    }
+        fechaLimite: endDate.toISOString().slice(0, 10)
+    };
 }
 
-async function updateChannexAvailability(habitacionId, fechaLimite = null) {
+
+async function updateChannexAvailability(habitacionId) {
     // 0) Validaciones básicas
     const habitacion = await Habitacion.findById(habitacionId);
     if (!habitacion) throw new Error('Habitación no encontrada');
@@ -645,35 +631,27 @@ async function updateChannexAvailability(habitacionId, fechaLimite = null) {
     const propertyId = habitacion.channels.channexPropertyId;
     const roomTypeId = habitacion.channels.roomListingId;
 
-    // 1) Determinar rango de fechas: desde hoy hasta fechaLimite o +2 años
+    // 1) Rango: hoy hasta 1 año después
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    let endDate;
-    if (fechaLimite) {
-        endDate = new Date(fechaLimite);
-    } else {
-        endDate = new Date(today);
-        endDate.setFullYear(endDate.getFullYear() + 2);
-    }
-    endDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(today);
+    endDate.setFullYear(endDate.getFullYear() + 1);
 
     // 2) Traer bloqueos
     let bloqueos = await BloqueoFechas
         .find({ habitacionId: habitacion._id, type: 'bloqueo' })
         .sort({ date: 1 });
 
-    // 3) Generar un set de fechas bloqueadas
+    // 3) Generar set de fechas bloqueadas
     const bloqueadas = new Set(
-        bloqueos
-            .map(b => {
-                const d = new Date(b.date);
-                d.setHours(0, 0, 0, 0);
-                return d.toISOString().slice(0, 10);
-            })
+        bloqueos.map(b => {
+            const d = new Date(b.date);
+            d.setHours(0, 0, 0, 0);
+            return d.toISOString().slice(0, 10);
+        })
     );
 
-    // 4) Recorrer el rango de fechas, agrupar bloques de disponibilidad
+    // 4) Recorrer el rango de fechas completo
     const values = [];
     let curr = null;
 
@@ -706,12 +684,11 @@ async function updateChannexAvailability(habitacionId, fechaLimite = null) {
     }
 
     const payload = { values };
-
-    // 5) Enviar a Channex
     const response = await channex.post('/api/v1/availability', payload);
 
     return response.data;
 }
+
 
 
 

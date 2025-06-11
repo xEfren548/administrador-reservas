@@ -28,17 +28,18 @@ router.post('/rooms', channexController.createRoomChannex);
 router.post('/rates', channexController.createRateChannex);
 
 router.post('/availability-rates', async (req, res) => {
-    const { pmsId } = req.body
+    const { pmsId } = req.body;
     try {
+        // Obtiene precios y la fecha límite (fin de año, por si la quieres mostrar)
         const { data: prices, fechaLimite } = await channexController.updateChannexPrices(pmsId);
-        // Ahora sí, pásale la fechaLimite a la disponibilidad
-        const availability = await channexController.updateChannexAvailability(pmsId, fechaLimite);
-        res.send({ prices, availability, fechaLimite });
-        // res.status(200).json({ "message": "Precios actualizados"});
+        // La disponibilidad siempre cubrirá ese mismo rango (hoy a 1 año)
+        const availability = await channexController.updateChannexAvailability(pmsId);
+        res.status(200).json({ prices, availability, fechaLimite });
     } catch (err) {
         console.error('Error al actualizar precios en Channex:', err.response ? err.response.data : err.message);
         res.status(500).json({ error: err.response?.data?.error || err.message });
     }
-})
+});
+
 
 module.exports = router
