@@ -36,7 +36,8 @@
             </td>
             <td>
                 {{#if tarifa}}
-                <span class="badge bg-info">{{tarifa.title}} ({{tarifa.currency}})</span>
+                <span class="badge bg-dark">{{tarifa.title}} ({{tarifa.currency}})</span>
+                <button type="button" class="btn btn-sm btn-info editar-tarifa-btn mt-1" data-id="{{_id}}">Sincronizar precios y disponibilidad</button>
                 {{else}}
                 <span class="text-muted">Sin tarifa</span>
                 {{/if}}
@@ -201,6 +202,7 @@
                 }
             });
         });
+
         document.querySelectorAll('.crear-tarifa-btn').forEach(btn => {
             btn.addEventListener('click', function () {
                 document.getElementById('inputPropertyId').value = btn.dataset.propertyid;
@@ -211,6 +213,53 @@
                 new bootstrap.Modal(document.getElementById('tarifaModal')).show();
             });
         });
+
+        document.querySelectorAll('.editar-tarifa-btn').forEach(btn => {
+            btn.addEventListener('click', async function () {
+                try {
+                    const pmsId = this.getAttribute('data-id');
+                    if (!pmsId) {
+                        throw new Error('Id de Habitacion no encontrado');
+                    }
+
+                    Swal.fire({
+                        title: 'Sincronizando tarifas y disponibilidad',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    })
+
+                    const response = await fetch(`/api/channex/availability-rates`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            pmsId: pmsId
+                        })
+                    })
+                    console.log(response)
+                    if (!response.ok) throw new Error(response.error || 'Error al sincronizar tarifas y disponibilidad');
+
+                    Swal.close();
+
+                    Swal.fire({
+                        title: "Tarifas y disponibilidad sincronizadas correctamente",
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => window.location.reload());
+                } catch (error) {
+                    Swal.close();
+                    console.log(error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message,
+                        confirmButtonText: 'Aceptar'
+                    })
+                    return;
+                }
+            });
+        })
 
         // Maneja el submit del formulario
         document.getElementById('tarifaForm').addEventListener('submit', async function (e) {
