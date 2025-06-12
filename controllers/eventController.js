@@ -21,6 +21,7 @@ const utilidadesController = require('../controllers/utilidadesController');
 const clienteController = require('../controllers/clientController');
 const pagoController = require('../controllers/pagoController');
 const sendEmail = require('../common/tasks/send-mails');
+const channexController = require('../controllers/channexController');
 
 
 const BadRequestError = require("../common/error/bad-request-error");
@@ -934,9 +935,19 @@ async function createReservation(req, res, next) {
 
         await logController.createBackendLog(logBody);
 
-
-
         res.status(200).json({ success: true, reservationId: idReserva, message });
+
+        if (chalet.channels.airbnbListingId) {
+            channexController.updateChannexAvailability(chalet._id)
+                .then(() => {
+                    console.log("Disponibilidad actualizada en Channex.");
+                })
+                .catch(err => {
+                    // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                    console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                });
+        }
+
     } catch (err) {
         console.log(err);
         res.status(400).send({ message: err.message });
