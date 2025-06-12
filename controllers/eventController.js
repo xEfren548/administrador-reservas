@@ -1646,6 +1646,16 @@ async function moveToPlayground(req, res) {
                     // // Save the updated room list to the database
                     // await eventosExistentes.save();
                     console.log("Reserva cancelada de la base de datos.")
+                    if (chalet.channels.airbnbListingId) {
+                        channexController.updateChannexAvailability(chalet._id)
+                            .then(() => {
+                                console.log("Disponibilidad actualizada en Channex.");
+                            })
+                            .catch(err => {
+                                // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                                console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                            });
+                    }
                     return res.status(200).json({ message: 'Reserva cancelada' });
 
                 } else {
@@ -1669,6 +1679,17 @@ async function moveToPlayground(req, res) {
                     evento.status = 'cancelled';
                     await evento.save();
                     console.log("Reserva cancelada (cambio de status)")
+
+                    if (chalet.channels.airbnbListingId) {
+                        channexController.updateChannexAvailability(chalet._id)
+                            .then(() => {
+                                console.log("Disponibilidad actualizada en Channex.");
+                            })
+                            .catch(err => {
+                                // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                                console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                            });
+                    }
                     return res.status(200).json({ message: 'Reserva cancelada' });
                 }
             }
