@@ -1,16 +1,22 @@
+const mongoose = require('mongoose');
+const fs = require('fs');
+const xlsx = require("xlsx");
+const csvParser = require('csv-parser');
 const PrecioBaseXDia = require('../models/PrecioBaseXDia');
 const PreciosEspeciales = require('../models/PreciosEspeciales');
 const Habitacion = require('../models/Habitacion');
-const mongoose = require('mongoose');
-const fs = require('fs');
-const csvParser = require('csv-parser');
-const xlsx = require("xlsx");
+const channexController = require('../controllers/channexController');
 
 // Controlador para agregar nuevos datos
 async function agregarNuevoPrecio(req, res) {
     try {
         const { precio_modificado, precio_base_2noches, costo_base, costo_base_2noches, fecha, habitacionId } = req.body;
         const objectHabitacionId = new mongoose.Types.ObjectId(habitacionId);
+        const chalet = await Habitacion.findById(habitacionId);
+
+        if (!chalet) {
+            return res.status(404).json({ mensaje: 'Chalet no encontrado.' });
+        }
 
         const nuevoPrecio = new PrecioBaseXDia({
             precio_modificado,
@@ -22,8 +28,19 @@ async function agregarNuevoPrecio(req, res) {
         });
 
 
+
         await nuevoPrecio.save();
         res.status(201).json({ mensaje: 'Precio base agregado exitosamente.' });
+        if (chalet.channels.airbnbListingId) {
+            channexController.updateChannexPrices(chalet._id)
+                .then(() => {
+                    console.log("Precios actualizados en Channex.");
+                })
+                .catch(err => {
+                    // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                    console.error("Error al actualizar precios en Channex: ", err.message);
+                });
+        }
     } catch (error) {
         console.error(error);
         res.status(500).json({ mensaje: 'Hubo un error al agregar el precio base.' });
@@ -34,7 +51,6 @@ async function agregarNuevoPrecio(req, res) {
 async function eliminarPrecio(req, res) {
     try {
         const { id } = req.params;
-        await PrecioBaseXDia.findByIdAndDelete(id);
         res.status(200).json({ mensaje: 'Precio base eliminado exitosamente.' });
     } catch (error) {
         console.error(error);
@@ -136,6 +152,19 @@ async function eliminarRegistroPrecio(req, res) {
         console.log(resultado);
         if (!resultado) {
             return res.status(200).json({});
+        }
+
+        const chalet = await Habitacion.findById(habitacionId);
+
+        if (chalet.channels.airbnbListingId) {
+            channexController.updateChannexPrices(chalet._id)
+            .then(() => {
+                console.log("Precios actualizados en Channex.");
+            })
+            .catch(err => {
+                // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                console.error("Error al actualizar precios en Channex: ", err.message);
+            });
         }
 
         res.status(200).json({ message: 'Registro eliminado correctamente' });
@@ -288,6 +317,17 @@ async function cargarPreciosCSV(req, res) {
                     fechaInicio,
                     fechaFin
                 });
+
+                if (habitacion.channels.airbnbListingId) {
+                    channexController.updateChannexPrices(habitacion._id)
+                    .then(() => {
+                        console.log("Precios actualizados en Channex.");
+                    })
+                    .catch(err => {
+                        // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                        console.error("Error al actualizar precios en Channex: ", err.message);
+                    });
+                }
             
             } catch (error) {
                 errores.push(error.message);
