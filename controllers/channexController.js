@@ -630,6 +630,8 @@ async function updateChannexAvailability(habitacionId) {
         curr.setHours(0, 0, 0, 0);
         const checkout = new Date(reserva.departureDate);
         checkout.setHours(0, 0, 0, 0);
+        checkout.setDate(checkout.getDate() - 1); // <<--- RESTA 1 día al departureDate
+
         // Por cada día de la reserva
         while (curr <= checkout) {
             noDisponibles.add(curr.toISOString().slice(0, 10));
