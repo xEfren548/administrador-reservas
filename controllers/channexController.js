@@ -217,18 +217,90 @@ async function webhookReceptor(req, res) {
     try {
         console.log(req.body);
         // const event = req.body.data[0];
-        const event = req.body;
-
-        const { id: liveFeedId, attributes } = event;
-        const { event: eventType } = attributes;
+        const body = req.body;
+        const eventType = body.event;
 
         let payload;
-        if (eventType === 'inquiry') {
+        if (eventType === 'booking_new') {
             // Pre-approval por defecto (bloquea instant booking)
-            payload = { resolution: { type: 'preapproval', block_instant_booking: true } };
-        } else if (eventType === 'reservation_request') {
+            // payload = { resolution: { type: 'preapproval', block_instant_booking: true } };
             // Aceptar reserva regularmente
-            payload = { resolution: { accept: 'accept' } };
+
+            const booking_id = body.payload.booking_id;
+            const nNights = body.payload.count_of_nights;
+        
+            console.log("Aceptando reserva regularmente");
+
+            const response = await channex.get(`/api/v1/bookings/${booking_id}`);
+            const data = response.data.data.attributes;
+            console.log(JSON.stringify(data, null, 2));
+
+            const propertyId = data.property_id;
+            const listingId = data.meta.listing_id;
+            const bookingId = data.booking_id;
+            const ota_name = data.ota_name;
+
+            const habitacion = await Habitacion.findOne({ 'channels.airbnbListingId': listingId });
+            if (!habitacion) {
+                console.log(`No se encontró la habitación con el listingId ${listingId} en la base de datos.`);
+            }
+
+            const arrivalDate = data.arrival_date;
+            const departureDate = data.departure_date;
+            const reservationDate = data.inserted_at;
+
+            const customerName = data.customer.name;
+            const customerSurname = data.customer.surname || '';
+            const customerFullName = customerName + ' ' + customerSurname;
+            const customerPhone = data.customer.phone || null;
+            const customerMail = data.customer.email || null;
+
+            const rooms = data.rooms[0];
+            const adults = rooms.occupancy.adults || 0;
+            const children = rooms.occupancy.children || 0;
+            const infants = rooms.occupancyinfants || 0;
+            const totalGuests = adults + children + infants; 
+
+            const nights = nNights;
+            const amount = data.amount;
+
+            const resourceId = habitacion._id;
+            const isDeposit = false;
+            const createdBy = habitacion.others.admin;
+            const maxOccupation = habitacion.propertyDetails.maxOccupancy;
+
+
+            const reservPayload = {
+                resourceId,
+                arrivalDate,
+                departureDate,
+                maxOccupation,
+                pax: totalGuests,
+                nNights: nights,
+                total: amount,
+                isDeposit,
+                createdBy,
+                reservationDate,
+                propertyId,
+                listingId,
+                bookingId,
+                ota_name,
+                customerFullName,
+                customerPhone,
+                customerMail,
+            };
+
+            console.log(reservPayload);
+
+
+        } else if (eventType === 'booking_cancellation') {
+            const channelId = body.payload.channel_id;
+            const propertyId = body.payload.property_id;
+            const bookingId = body.payload.booking_id;
+            
+
+            // Actualizar disponibilidad y cancelar reservacion en PMS
+
         } else if (eventType === 'alteration_request') {
             // Aceptar alteración
             payload = { resolution: { accept: 'accept' } };
@@ -239,7 +311,7 @@ async function webhookReceptor(req, res) {
             return res.status(400).send('Evento no reconocido');
         }
 
-        await channex.post(`/api/v1/live_feed/${liveFeedId}/resolve`, payload);
+        // await channex.post(`/api/v1/live_feed/${liveFeedId}/resolve`, payload);
         res.status(200).send('OK');
     } catch (err) {
         console.error('Webhook error:', err.response ? err.response.data : err.message);
