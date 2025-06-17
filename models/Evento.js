@@ -1,6 +1,14 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+const channelsSchema = new Schema({
+    ota_name: {type: String, required: false},
+    propertyId: {type: String, required: false},
+    listingId: {type: String, required: false},
+    channelId: {type: String, required: false},
+    bookingId: {type: String, required: false}
+})
+
 const reservaSchema = new Schema({
     client: {
         type: mongoose.Schema.Types.ObjectId,
@@ -86,7 +94,8 @@ const reservaSchema = new Schema({
     thanksSent: {
         type: Boolean,
         default: false
-    }
+    },
+    channels: [channelsSchema]
 });
 
 // const documentSchema = new Schema({

@@ -238,6 +238,7 @@ async function webhookReceptor(req, res) {
             const propertyId = data.property_id;
             const listingId = data.meta.listing_id;
             const bookingId = data.booking_id;
+            const channelId = data.channel_id;
             const ota_name = data.ota_name;
 
             const habitacion = await Habitacion.findOne({ 'channels.airbnbListingId': listingId });
@@ -269,6 +270,14 @@ async function webhookReceptor(req, res) {
             const createdBy = habitacion.others.admin;
             const maxOccupation = habitacion.propertyDetails.maxOccupancy;
 
+            const channelInfo = {
+                ota_name,
+                propertyId, 
+                listingId,
+                channelId,
+                bookingId
+            }
+
 
             const reservPayload = {
                 resourceId,
@@ -282,12 +291,10 @@ async function webhookReceptor(req, res) {
                 createdBy,
                 reservationDate,
                 propertyId,
-                listingId,
-                bookingId,
-                ota_name,
                 customerFullName,
                 customerPhone,
                 customerMail,
+                channelInfo
             };
 
             console.log(reservPayload);

@@ -954,6 +954,255 @@ async function createReservation(req, res, next) {
     }
 }
 
+async function createOTAReservation(data) {
+    const { customerFullName, customerMail, resourceId, arrivalDate, departureDate, maxOccupation, pax, nNights, total, isDeposit, createdBy, channelInfo } = data;
+    let newCliente = null;
+    let client = null;
+
+    try {
+        // const userRole = req.session.role;
+
+        // const userPermissions = await Roles.findById(userRole);
+        // if (!userPermissions) {
+        //     throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        // }
+
+        console.log("is depo: ", isDeposit);
+        console.log("cliente email: ", customerMail);
+
+        const fechaAjustada = new Date(arrivalDate);
+        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+        const departureDateAjustada = new Date(departureDate);
+        departureDateAjustada.setUTCHours(6);
+
+        const arrivalDateObj = new Date(arrivalDate);
+        const departureDateObj = new Date(departureDate);
+
+        // Set specific times
+        arrivalDateObj.setUTCHours(17, 30, 0, 0); // 17:30:00 UTC
+        departureDateObj.setUTCHours(14, 30, 0, 0); // 14:30:00 UTC
+
+        // Convert back to ISO strings
+        const arrivalDateISO = arrivalDateObj.toISOString();
+        const departureDateISO = departureDateObj.toISOString();
+
+        console.log("Updated arrivalDateISO:", arrivalDateISO);
+        console.log("Updated departureDateISO:", departureDateISO);
+
+
+
+        const chalet = await Habitacion.findById(resourceId);
+        // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+        if (!chalet) {
+            throw new NotFoundError('Chalet does not exist 2');
+        }
+
+        if (chalet.isActive === false) {
+            return res.status(400).send({
+                message: `La habitación ${chaletName} ha sido desactivada.`,
+            });
+        }
+
+        const mongooseChaletId = new mongoose.Types.ObjectId(chalet._id);
+        const overlappingReservation = await Documento.findOne({
+            resourceId: mongooseChaletId,
+            status: { $nin: ["cancelled", "no-show", "playground"] },
+            $and: [
+                { arrivalDate: { $lt: departureDateISO } }, // Start date overlaps or is before the departure date
+                { departureDate: { $gt: arrivalDateISO } }, // End date overlaps or is after the arrival date
+            ],
+        });
+
+        if (overlappingReservation) {
+            return res.status(400).send({
+                message: `La habitación ya está reservada entre ${overlappingReservation.arrivalDate.toISOString()} y ${overlappingReservation.departureDate.toISOString()}.`,
+            });
+        }
+
+        // const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: { $nin: ['bloqueo', 'capacidad_minima'] } });
+        // if (fechasBloqueadasPorRestriccion) {
+        //     if (nNights < fechasBloqueadasPorRestriccion.min) {
+        //         return res.status(400).send({ message: `La estancia minima es de ${fechasBloqueadas.min} noches` });
+        //     }
+        // }
+
+        // let currentDate = new Date(fechaAjustada);
+        // currentDate.setUTCHours(6);
+        // while (currentDate <= departureDateAjustada) {
+        //     const fechasBloqueadas = await BloqueoFechas.findOne({ date: currentDate, habitacionId: mongooseChaletId, type: 'bloqueo' });
+        //     if (fechasBloqueadas) {
+        //         const formattedDate = currentDate.toISOString().split('T')[0];
+        //         return res.status(400).send({ message: `La habitacion está bloqueada para la fecha ${formattedDate}` });
+        //     }
+
+        //     currentDate.setDate(currentDate.getDate() + 1);
+
+        // }
+
+        // currentDate = new Date(fechaAjustada);
+        // currentDate.setUTCHours(6);
+
+        // while (currentDate <= departureDateAjustada) {
+        //     const fechasBloqueadasPorCapacidad = await BloqueoFechas.findOne({ date: currentDate, habitacionId: mongooseChaletId, type: 'capacidad_minima' });
+        //     if (fechasBloqueadasPorCapacidad) {
+        //         if (pax < fechasBloqueadasPorCapacidad.min) {
+        //             return res.status(400).send({ message: `La capacidad minima es de ${fechasBloqueadasPorCapacidad.min} personas` });
+        //         }
+        //     }
+
+        //     currentDate.setDate(currentDate.getDate() + 1);
+
+        // }
+
+
+
+        // const isAvailable = await checkAvailability(mongooseChaletId, fechaAjustada, departureDateAjustada);
+        // if (!isAvailable) {
+        //     throw new BadRequestError('La habitación no está disponible en esas fechas');
+        // }
+
+
+        // Crear cliente en PMS
+        newCliente = await Cliente.create({ firstName: customerFullName, lastName: channelInfo.ota_name, email: customerEmail, phone: customerPhone });
+        
+        console.log(newCliente)
+        if (!newCliente) {
+            throw new NotFoundError('No se pudo crear el cliente en PMS');
+        }
+        client = newCliente;
+
+        console.log("client: ");
+        console.log(client);
+
+        const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
+        if (!costosVendedor) { throw new NotFoundError('Costos vendedor not found'); }
+
+        const comisionVendedor = costosVendedor.amount * nNights;
+
+        console.log("Arrival date before: ")
+        console.log(arrivalDate)
+
+        console.log("Departure date before: ")
+        console.log(departureDate)
+
+        arrivalDate.setHours(arrivalDate.getHours() + chalet.others.arrivalTime.getHours());
+        departureDate.setHours(departureDate.getHours() + chalet.others.departureTime.getHours());
+
+        console.log("Arrival date after: ")
+        console.log(arrivalDate)
+
+        console.log("Departure date after: ")
+        console.log(departureDate)
+
+        var reservationToAdd;
+        var message;
+
+        reservationToAdd = {
+            client: client._id,
+            resourceId: chalet._id,
+            arrivalDate: arrivalDate,
+            departureDate: departureDate,
+            maxOccupation: maxOccupation,
+            pax: pax,
+            nNights: nNights,
+            url: `https://${process.env.URL}/api/eventos/${chalet._id}`,
+            total: total,
+            discount: discount,
+            createdBy: createdBy,
+            comisionVendedor: comisionVendedor,
+            status: 'active'
+        };
+        message = "Reservación agregada con éxito";
+
+        const documentoToAdd = new Documento(reservationToAdd);
+        await documentoToAdd.save();
+
+        // Guardar la reserva actualizada en la base de datos
+        // const documento2 = await Documento.findOne()
+
+        // const idReserva = documento.events[documento.events.length - 1]._id.toString();
+        const idReserva = documentoToAdd._id.toString();
+        const url = `https://${process.env.URL}/api/eventos/${idReserva}`;
+        console.log("url: ", url)
+        // const evento = await Documento.findById(idReserva);
+
+        documentoToAdd.url = url;
+        await documentoToAdd.save();
+
+        const descripcionLimpieza = 'Limpieza ' + chaletName;
+        const fechaLimpieza = new Date(arrivalDate);
+        const checkInDate = new Date(arrivalDate)
+        const checkOutDate = new Date(departureDate)
+        fechaLimpieza.setDate(fechaLimpieza.getDate())
+        const statusLimpieza = 'Pendiente'
+
+
+        await rackLimpiezaController.createServiceForReservation({
+            id_reserva: idReserva,
+            descripcion: descripcionLimpieza,
+            fecha: fechaLimpieza,
+            checkInDate: checkInDate,
+            checkOutDate: checkOutDate,
+            status: statusLimpieza,
+            idHabitacion: documentoToAdd.resourceId
+        })
+
+
+        if (client.phone) {
+            SendMessages.sendReservationConfirmation(client, chalet, reservationToAdd);
+            console.log("SendMessages.sendReminders");
+            SendMessages.sendInstructions(client, chalet, idReserva)
+        }
+
+        if (client.email) {
+            sendEmail(client.email, idReserva);
+        }
+
+
+
+        const adminLigado = await Usuario.findById(createdBy);
+        if (adminLigado) {
+            if (adminLigado.phone) {
+                SendMessages.sendReservationConfirmation(adminLigado, chalet, reservationToAdd);
+                console.log("Mensaje enviado al agente.")
+            }
+            if (adminLigado.email) {
+                sendEmail(adminLigado.email, idReserva);
+            }
+        }
+
+        // Log
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: req.session.id,
+            type: 'reservation',
+            idReserva: idReserva,
+            acciones: `Reservación creada OTA`,
+            nombreUsuario: `${channelInfo.ota_name}`
+        }
+
+        await logController.createBackendLog(logBody);
+
+        // res.status(200).json({ success: true, reservationId: idReserva, message });
+        return { success: true, reservationId: idReserva, message };
+
+        // if (chalet.channels.airbnbListingId) {
+        //     channexController.updateChannexAvailability(chalet._id)
+        //         .then(() => {
+        //             console.log("Disponibilidad actualizada en Channex.");
+        //         })
+        //         .catch(err => {
+        //             // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+        //             console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+        //         });
+        // }
+
+    } catch (err) {
+        console.log(err);
+        res.status(400).send({ message: err.message });
+    }
+}
+
 async function sendIntructionsToWhatsapp(req, res) {
     try {
 
