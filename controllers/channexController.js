@@ -6,6 +6,7 @@ const AirbnbChannel = require('../models/AirbnbChannel');
 const PrecioBaseXDia = require('../models/PrecioBaseXDia');
 const Plataformas = require('../models/Plataformas');
 const BloqueoFechas = require('../models/BloqueoFechas');
+const utilidadesController = require('../controllers/utilidadesController');
 
 // Configuración de Channex API
 const CHANNEX_BASE_URL = process.env.NODE_ENV === 'development' ? process.env.DEV_CHANNEX_API_URL : process.env.CHANNEX_BASE_URL;
@@ -279,7 +280,7 @@ async function webhookReceptor(req, res) {
             }
 
 
-            const reservPayload = {
+            const reservaPayload = {
                 resourceId,
                 arrivalDate,
                 departureDate,
@@ -296,8 +297,31 @@ async function webhookReceptor(req, res) {
                 customerMail,
                 channelInfo
             };
+            const eventController = require('../controllers/eventController');
+            const reservaPms = await eventController.createOTAReservation(reservaPayload);
 
-            console.log(reservPayload);
+            if (!reservaPms.success){
+                throw new Error(reservaPms.message);
+            }
+
+            const { reserva } = reservaPms;
+
+            const utilidadesInfo = {
+                costoBase: amount,
+                totalSinComisiones: amount,
+                idReserva: reserva._id,
+                chaletName: habitacion.propertyDetails.name,
+                arrivalDate: reserva.arrivalDate,
+                departureDate: reserva.departureDate,
+                nNights: reserva.nNights
+            }
+
+            const crearUtilidades = utilidadesController.generarComisionReservaBackend(utilidadesInfo);
+            if (crearUtilidades instanceof Error) {
+                throw new Error(crearUtilidades.message);
+            }
+
+            res.status(200).send(reserva);
 
 
         } else if (eventType === 'booking_cancellation') {
@@ -319,7 +343,6 @@ async function webhookReceptor(req, res) {
         }
 
         // await channex.post(`/api/v1/live_feed/${liveFeedId}/resolve`, payload);
-        res.status(200).send('OK');
     } catch (err) {
         console.error('Webhook error:', err.response ? err.response.data : err.message);
         res.status(500).send('Error al procesar evento');

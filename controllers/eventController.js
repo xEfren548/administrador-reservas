@@ -4,6 +4,7 @@ const { es } = require('date-fns/locale');
 const axios = require('axios');
 const mongoose = require('mongoose');
 const moment = require('moment');
+const momentTz = require('moment-timezone');
 const Documento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const Usuario = require('../models/Usuario');
@@ -955,7 +956,7 @@ async function createReservation(req, res, next) {
 }
 
 async function createOTAReservation(data) {
-    const { customerFullName, customerMail, resourceId, arrivalDate, departureDate, maxOccupation, pax, nNights, total, isDeposit, createdBy, channelInfo } = data;
+    const { customerFullName, customerMail, customerPhone, resourceId, arrivalDate, departureDate, maxOccupation, pax, nNights, total, isDeposit, createdBy, channelInfo } = data;
     let newCliente = null;
     let client = null;
 
@@ -1014,9 +1015,7 @@ async function createOTAReservation(data) {
         });
 
         if (overlappingReservation) {
-            return res.status(400).send({
-                message: `La habitación ya está reservada entre ${overlappingReservation.arrivalDate.toISOString()} y ${overlappingReservation.departureDate.toISOString()}.`,
-            });
+            throw new Error("La habitación está ocupada en la fecha seleccionada");
         }
 
         // const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: { $nin: ['bloqueo', 'capacidad_minima'] } });
@@ -1063,7 +1062,7 @@ async function createOTAReservation(data) {
 
 
         // Crear cliente en PMS
-        newCliente = await Cliente.create({ firstName: customerFullName, lastName: channelInfo.ota_name, email: customerEmail, phone: customerPhone });
+        newCliente = await Cliente.create({ firstName: customerFullName, lastName: channelInfo.ota_name, email: customerMail, phone: customerPhone });
         
         console.log(newCliente)
         if (!newCliente) {
@@ -1085,14 +1084,44 @@ async function createOTAReservation(data) {
         console.log("Departure date before: ")
         console.log(departureDate)
 
-        arrivalDate.setHours(arrivalDate.getHours() + chalet.others.arrivalTime.getHours());
-        departureDate.setHours(departureDate.getHours() + chalet.others.departureTime.getHours());
+        // arrivalDate.setHours(chalet.others.arrivalTime.getHours());
+        // departureDate.setHours(chalet.others.departureTime.getHours());
+
+        const arrivalHour      = chalet.others.arrivalTime.getHours();
+        const arrivalMinute    = chalet.others.arrivalTime.getMinutes();
+        const departureHour    = chalet.others.departureTime.getHours();
+        const departureMinute  = chalet.others.departureTime.getMinutes();
+
+        console.log("Arrival hour: ")
+        console.log(arrivalHour)
+
+        console.log("Arrival minute: ")
+        console.log(arrivalMinute)
+
+        // 3) Parsear y setear hora en CDMX
+        const arrivalMoment = moment
+            .utc(arrivalDate, 'YYYY-MM-DD')
+            .hour(arrivalHour)
+            .minute(arrivalMinute)
+            .second(0)
+            .millisecond(0);
+
+        const departureMoment = momentTz
+            .utc(departureDate, 'YYYY-MM-DD')
+            .hour(departureHour)
+            .minute(departureMinute)
+            .second(0)
+            .millisecond(0);
+
+        // 4) Convertir a Date
+        const arrivalDateM   = arrivalMoment.toDate();
+        const departureDateM = departureMoment.toDate();
 
         console.log("Arrival date after: ")
-        console.log(arrivalDate)
+        console.log(arrivalDateM)
 
         console.log("Departure date after: ")
-        console.log(departureDate)
+        console.log(departureDateM)
 
         var reservationToAdd;
         var message;
@@ -1100,14 +1129,13 @@ async function createOTAReservation(data) {
         reservationToAdd = {
             client: client._id,
             resourceId: chalet._id,
-            arrivalDate: arrivalDate,
-            departureDate: departureDate,
+            arrivalDate: arrivalDateM,
+            departureDate: departureDateM,
             maxOccupation: maxOccupation,
             pax: pax,
             nNights: nNights,
             url: `https://${process.env.URL}/api/eventos/${chalet._id}`,
             total: total,
-            discount: discount,
             createdBy: createdBy,
             comisionVendedor: comisionVendedor,
             status: 'active'
@@ -1129,10 +1157,11 @@ async function createOTAReservation(data) {
         documentoToAdd.url = url;
         await documentoToAdd.save();
 
+        const chaletName = chalet.propertyDetails.name
         const descripcionLimpieza = 'Limpieza ' + chaletName;
-        const fechaLimpieza = new Date(arrivalDate);
-        const checkInDate = new Date(arrivalDate)
-        const checkOutDate = new Date(departureDate)
+        const fechaLimpieza = new Date(arrivalDateM);
+        const checkInDate = new Date(arrivalDateM)
+        const checkOutDate = new Date(departureDateM)
         fechaLimpieza.setDate(fechaLimpieza.getDate())
         const statusLimpieza = 'Pendiente'
 
@@ -1174,7 +1203,7 @@ async function createOTAReservation(data) {
         // Log
         const logBody = {
             fecha: Date.now(),
-            idUsuario: req.session.id,
+            idUsuario: createdBy,
             type: 'reservation',
             idReserva: idReserva,
             acciones: `Reservación creada OTA`,
@@ -1184,7 +1213,7 @@ async function createOTAReservation(data) {
         await logController.createBackendLog(logBody);
 
         // res.status(200).json({ success: true, reservationId: idReserva, message });
-        return { success: true, reservationId: idReserva, message };
+        return { success: true, reserva: documentoToAdd, message };
 
         // if (chalet.channels.airbnbListingId) {
         //     channexController.updateChannexAvailability(chalet._id)
@@ -1199,7 +1228,7 @@ async function createOTAReservation(data) {
 
     } catch (err) {
         console.log(err);
-        res.status(400).send({ message: err.message });
+        return { success: false, message: err.message };
     }
 }
 
@@ -2529,6 +2558,7 @@ module.exports = {
     obtenerEventoPorId,
     obtenerEventoPorIdRoute,
     createReservation,
+    createOTAReservation,
     sendIntructionsToWhatsapp,
     createOwnerReservation,
     editarEvento,
