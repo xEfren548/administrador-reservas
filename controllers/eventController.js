@@ -968,9 +968,6 @@ async function createOTAReservation(data) {
         //     throw new Error("El usuario no tiene un rol definido, contacte al administrador");
         // }
 
-        console.log("is depo: ", isDeposit);
-        console.log("cliente email: ", customerMail);
-
         const fechaAjustada = new Date(arrivalDate);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
         const departureDateAjustada = new Date(departureDate);
@@ -986,10 +983,6 @@ async function createOTAReservation(data) {
         // Convert back to ISO strings
         const arrivalDateISO = arrivalDateObj.toISOString();
         const departureDateISO = departureDateObj.toISOString();
-
-        console.log("Updated arrivalDateISO:", arrivalDateISO);
-        console.log("Updated departureDateISO:", departureDateISO);
-
 
 
         const chalet = await Habitacion.findById(resourceId);
@@ -1064,25 +1057,15 @@ async function createOTAReservation(data) {
         // Crear cliente en PMS
         newCliente = await Cliente.create({ firstName: customerFullName, lastName: channelInfo.ota_name, email: customerMail, phone: customerPhone });
         
-        console.log(newCliente)
         if (!newCliente) {
             throw new NotFoundError('No se pudo crear el cliente en PMS');
         }
         client = newCliente;
 
-        console.log("client: ");
-        console.log(client);
-
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
         if (!costosVendedor) { throw new NotFoundError('Costos vendedor not found'); }
 
         const comisionVendedor = costosVendedor.amount * nNights;
-
-        console.log("Arrival date before: ")
-        console.log(arrivalDate)
-
-        console.log("Departure date before: ")
-        console.log(departureDate)
 
         // arrivalDate.setHours(chalet.others.arrivalTime.getHours());
         // departureDate.setHours(chalet.others.departureTime.getHours());
@@ -1091,12 +1074,6 @@ async function createOTAReservation(data) {
         const arrivalMinute    = chalet.others.arrivalTime.getMinutes();
         const departureHour    = chalet.others.departureTime.getHours();
         const departureMinute  = chalet.others.departureTime.getMinutes();
-
-        console.log("Arrival hour: ")
-        console.log(arrivalHour)
-
-        console.log("Arrival minute: ")
-        console.log(arrivalMinute)
 
         // 3) Parsear y setear hora en CDMX
         const arrivalMoment = moment
@@ -1117,12 +1094,6 @@ async function createOTAReservation(data) {
         const arrivalDateM   = arrivalMoment.toDate();
         const departureDateM = departureMoment.toDate();
 
-        console.log("Arrival date after: ")
-        console.log(arrivalDateM)
-
-        console.log("Departure date after: ")
-        console.log(departureDateM)
-
         var reservationToAdd;
         var message;
 
@@ -1138,7 +1109,14 @@ async function createOTAReservation(data) {
             total: total,
             createdBy: createdBy,
             comisionVendedor: comisionVendedor,
-            status: 'active'
+            status: 'active',
+            channels: {
+                ota_name: channelInfo.ota_name,
+                propertyId: channelInfo.propertyId,
+                listingId: channelInfo.listingId,
+                channelId: channelInfo.channelId,
+                bookingId: channelInfo.bookingId
+            }
         };
         message = "Reservación agregada con éxito";
 
@@ -1151,7 +1129,6 @@ async function createOTAReservation(data) {
         // const idReserva = documento.events[documento.events.length - 1]._id.toString();
         const idReserva = documentoToAdd._id.toString();
         const url = `https://${process.env.URL}/api/eventos/${idReserva}`;
-        console.log("url: ", url)
         // const evento = await Documento.findById(idReserva);
 
         documentoToAdd.url = url;

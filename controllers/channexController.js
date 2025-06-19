@@ -229,7 +229,7 @@ async function webhookReceptor(req, res) {
 
             const booking_id = body.payload.booking_id;
             const nNights = body.payload.count_of_nights;
-        
+
             console.log("Aceptando reserva regularmente");
 
             const response = await channex.get(`/api/v1/bookings/${booking_id}`);
@@ -261,10 +261,11 @@ async function webhookReceptor(req, res) {
             const adults = rooms.occupancy.adults || 0;
             const children = rooms.occupancy.children || 0;
             const infants = rooms.occupancyinfants || 0;
-            const totalGuests = adults + children + infants; 
+            const totalGuests = adults + children + infants;
 
             const nights = nNights;
-            const amount = data.amount;
+            // const amount = data.amount;
+            const amount = body.payload.amount;
 
             const resourceId = habitacion._id;
             const isDeposit = false;
@@ -273,7 +274,7 @@ async function webhookReceptor(req, res) {
 
             const channelInfo = {
                 ota_name,
-                propertyId, 
+                propertyId,
                 listingId,
                 channelId,
                 bookingId
@@ -300,20 +301,23 @@ async function webhookReceptor(req, res) {
             const eventController = require('../controllers/eventController');
             const reservaPms = await eventController.createOTAReservation(reservaPayload);
 
-            if (!reservaPms.success){
+            if (!reservaPms.success) {
                 throw new Error(reservaPms.message);
             }
 
             const { reserva } = reservaPms;
 
+            const { costoBase } = await calcularCostoBaseTotal(habitacion, reserva.arrivalDate, reserva.departureDate);
+            console.log("COSTO BASE: " + costoBase);
             const utilidadesInfo = {
-                costoBase: amount,
+                costoBase: costoBase,
                 totalSinComisiones: amount,
                 idReserva: reserva._id,
                 chaletName: habitacion.propertyDetails.name,
                 arrivalDate: reserva.arrivalDate,
                 departureDate: reserva.departureDate,
-                nNights: reserva.nNights
+                nNights: reserva.nNights,
+                userId: createdBy,
             }
 
             const crearUtilidades = utilidadesController.generarComisionReservaBackend(utilidadesInfo);
@@ -328,7 +332,7 @@ async function webhookReceptor(req, res) {
             const channelId = body.payload.channel_id;
             const propertyId = body.payload.property_id;
             const bookingId = body.payload.booking_id;
-            
+
 
             // Actualizar disponibilidad y cancelar reservacion en PMS
 
@@ -793,6 +797,68 @@ function dmsToDecimal(dmsStr) {
     const seconds = parseInt(intPart.slice(degLen + 2), 10)
         + Number('0.' + decPart);
     return degrees + (minutes / 60) + (seconds / 3600);
+}
+
+async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
+    const habitacionId = habitacion._id;
+
+    // 1) Cargar la primera plataforma activa (o elegir lógica si hay varias)
+    const [plat] = await Plataformas.find({
+        _id: { $in: habitacion.activePlatforms }
+    }).lean();
+    if (!plat) throw new Error('No hay plataformas activas');
+
+    // 2) Default de costo base 2+ noches
+    const defaultCosto2n = habitacion.others.costoBase2nights;
+
+    // 3) Traer sólo los registros de costo en el rango de fechas
+    const registros = await PrecioBaseXDia.find({
+        habitacionId,
+        fecha: {
+            $gte: new Date(arrivalDate.setHours(0, 0, 0, 0)),
+            $lt: new Date(departureDate.setHours(0, 0, 0, 0))
+        }
+    }).lean();
+
+    // 4) Indexar por fecha ISO
+    const mapa = registros.reduce((m, r) => {
+        m[r.fecha.toISOString().slice(0, 10)] = r;
+        return m;
+    }, {});
+
+    let totalCosto = 0;  // suma de costo_base_2noches para cada día
+    let totalPrecio = 0;  // suma de (costo + markup) para cada día
+
+    // 5) Iterar día a día
+    for (
+        let d = new Date(arrivalDate);
+        d < departureDate;
+        d.setDate(d.getDate() + 1)
+    ) {
+        const iso = d.toISOString().slice(0, 10);
+        const rec = mapa[iso];
+
+        // 5a) Costo real de ese día (paquete 2+ noches)
+        const costo2n = rec
+            ? rec.costo_base_2noches
+            : defaultCosto2n;
+        totalCosto += costo2n;
+
+        // 5b) Markup de plataforma para ese día
+        let incremento = 0;
+        if (plat.aumentoFijo != null) {
+            incremento = plat.aumentoFijo;
+        } else if (plat.aumentoPorcentual != null) {
+            incremento = Math.round(costo2n * (plat.aumentoPorcentual / 100));
+        }
+
+        console.log("INCREMENTO PLATAFORMA: ", incremento);
+        // 5c) Precio base cobrado al huésped ese día
+        totalCosto += incremento;
+        totalPrecio += (costo2n + incremento);
+    }
+
+    return { costoBase: totalCosto, totalPrecio };
 }
 
 module.exports = {
