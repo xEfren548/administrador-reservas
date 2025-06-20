@@ -3,6 +3,7 @@ const Plataformas = require('../models/Plataformas');
 const Habitaciones = require('../models/Habitacion');
 const precioBaseController = require('../controllers/precioBaseController');
 const preciosEspecialesController = require('../controllers/preciosEspecialesController');
+const utilidadesController = require('../controllers/utilidadesController');
 
 const renderVistaPlataformas = async (req, res) => {
     const habitaciones = await Habitaciones.find({ isActive: true }).lean();
@@ -50,12 +51,14 @@ const renderVistaPlataformas = async (req, res) => {
     //console.log(preciosHabitacionesData);
 
     const preciosEspecialesData = await preciosEspecialesController.consultarPrecios()
+    const comisiones = await utilidadesController.calcularComisionesOTA()
     res.render('plataformasView', {
         layout: 'tailwindMain',
         habitaciones: habitacionesConNombresDePlataformas,
         preciosHabitaciones: preciosHabitacionesData,
         preciosEspeciales: preciosEspecialesData,
-        plataformas
+        plataformas,
+        comisiones
     });
 }
 

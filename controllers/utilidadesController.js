@@ -34,7 +34,7 @@ async function calcularComisiones(req, res) {
         const loggedUserId = req.session.id;
         const nNights = req.query.nnights;
         const habitacionId = req.query.habitacionid;
-        console.log("nnights: ",  nNights)
+        console.log("nnights: ", nNights)
 
         // const chalets = await Habitacion.findOne();
         // const chalet = chalets.resources.find(chalet => chalet._id.toString() === habitacionId.toString());
@@ -57,11 +57,11 @@ async function calcularComisiones(req, res) {
         let counter = 0
 
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
-        
+
         if (!user) {
             throw new NotFoundError('User does not exist');
         }
-        
+
         console.log("USUARIO LOGUEADO: ", user)
         let minComission = 0
         let finalComission = 0
@@ -79,7 +79,7 @@ async function calcularComisiones(req, res) {
                         finalComission += costosAdministrador.amount * nNights;
                         minComission += costosAdministrador.amount * nNights;
                         console.log('comision master admin: ', costosAdministrador.amount * nNights, user._id.toString());
-                        
+
                     }
                     break;
                 } else {
@@ -149,7 +149,7 @@ async function calcularComisionesInternas(info) {
     try {
         const loggedUserId = info.userId;
         const nNights = info.nNights;
-        console.log("nnights: ",  nNights)
+        console.log("nnights: ", nNights)
 
         const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
@@ -162,19 +162,19 @@ async function calcularComisionesInternas(info) {
         let counter = 0
 
         let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
-        
+
         if (!user) {
             if (info.noVendedor) {
                 const normalizedPhone = info.noVendedor.toString().replace(/^\+52/, '');
 
-                user = await User.findOne({ 
+                user = await User.findOne({
                     $or: [
                         { phone: info.noVendedor },
                         { phone: normalizedPhone },
                         { phone: `+52${normalizedPhone}` }
                     ]
                 });
-            
+
                 if (!user) {
                     throw new NotFoundError('User does not exist');
                 }
@@ -182,7 +182,7 @@ async function calcularComisionesInternas(info) {
                 throw new NotFoundError('User does not exist');
             }
         }
-        
+
         console.log("USUARIO LOGUEADO: ", user)
         let minComission = 0
         let finalComission = 0
@@ -200,7 +200,7 @@ async function calcularComisionesInternas(info) {
                         finalComission += costosAdministrador.amount * nNights;
                         minComission += costosAdministrador.amount * nNights;
                         console.log('comision master admin: ', costosAdministrador.amount * nNights, user._id.toString());
-                        
+
                     }
                     break;
                 } else {
@@ -266,6 +266,30 @@ async function calcularComisionesInternas(info) {
     }
 }
 
+async function calcularComisionesOTA() {
+    try {
+
+        const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
+        const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
+        const costosAdministrador = await Costos.findOne({ category: "Administrador" }); //
+
+        if (!costosGerente) { throw new Error("No se encontró costos para gerente. Favor de agregar.") }
+        if (!costosVendedor) { throw new Error("No se encontró costos para vendedor. Favor de agregar.") }
+        if (!costosAdministrador) { throw new Error("No se encontró costos para administrador. Favor de agregar.") }
+
+        let finalComission = 0
+
+        finalComission += costosAdministrador.amount; // Comision de admin ligado
+        finalComission += 35; // Comision por uso de sistema NyN
+
+        console.log("max comission", finalComission)
+        return finalComission;
+    } catch (err) {
+        console.log(err.message);
+        return null;
+    }
+}
+
 async function generarComisionReserva(req, res) {
     try {
         const loggedUserId = req.session.id;
@@ -304,8 +328,8 @@ async function generarComisionReserva(req, res) {
 
         const chaletType = chalet.propertyDetails.accomodationType;
 
-        
-        
+
+
         const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
         const costosAdministrador = await Costos.findOne({ category: "Administrador" }); //
@@ -313,7 +337,7 @@ async function generarComisionReserva(req, res) {
         if (!costosGerente) { throw new NotFoundError('Costos de gerente no existente'); }
         if (!costosVendedor) { throw new NotFoundError('Costos de vendedor no existente'); }
         if (!costosAdministrador) { throw new NotFoundError('Costos de administrador no existente'); }
-        
+
         let comisionVendedor = costosVendedor.amount;
 
         const fechaActual = new Date();
@@ -348,8 +372,8 @@ async function generarComisionReserva(req, res) {
                             idReserva: idReserva
                         })
                     }
-                        
-                    
+
+
                     break;
                 } else {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
@@ -439,19 +463,19 @@ async function generarComisionReserva(req, res) {
         const chaletJanitor = chalet.others.janitor.toString();
         const chaletOwner = chalet.others.owner.toString();
         const chaletInvestors = chalet.others.investors
-        
+
         console.log('comision inversionistas')
         console.log(chaletInvestors)
         // const idBosqueImperial = '66a7c2f2915b94d6630b67f2'
         const idAdministracionNyN = '671be608256c4d53c3f5e12f'
 
         const chaletAdmin = await User.findById(chaletAdminId)
-        if (!chaletAdmin){
+        if (!chaletAdmin) {
             throw new Error("No chalet admin found.")
         }
 
         // Utilidad
-        if (chaletType === "Bosque Imperial"){
+        if (chaletType === "Bosque Imperial") {
             await altaComisionReturn({
                 monto: utilidadChalet,
                 concepto: `Comisión administrador ligado de Cabaña ${nNights} noches`,
@@ -524,7 +548,7 @@ async function generarComisionReserva(req, res) {
                     const noTickets = investor.noTickets
                     const comision = comisionInversionistas * noTickets
 
-                    if (userInvestor.investorType === 'Asimilado'){
+                    if (userInvestor.investorType === 'Asimilado') {
                         // Comision normal
                         await altaComisionReturn({
                             monto: comision,
@@ -567,7 +591,7 @@ async function generarComisionReserva(req, res) {
                             idReserva: idReserva
                         })
 
-                    } else if (userInvestor.investorType === 'RESICO Fisico'){
+                    } else if (userInvestor.investorType === 'RESICO Fisico') {
                         // Comision normal
                         await altaComisionReturn({
                             monto: comision,
@@ -612,7 +636,7 @@ async function generarComisionReserva(req, res) {
                             idReserva: idReserva
                         })
 
-                    } else if(userInvestor.investorType === 'PF con AE y PM') {
+                    } else if (userInvestor.investorType === 'PF con AE y PM') {
                         // Comision normal
                         await altaComisionReturn({
                             monto: comision,
@@ -717,8 +741,8 @@ async function generarComisionReservaBackend(info) {
 
         const chaletType = chalet.propertyDetails.accomodationType;
 
-        
-        
+
+
         const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
         const costosAdministrador = await Costos.findOne({ category: "Administrador" }); //
@@ -726,7 +750,7 @@ async function generarComisionReservaBackend(info) {
         if (!costosGerente) { throw new NotFoundError('Costos de gerente no existente'); }
         if (!costosVendedor) { throw new NotFoundError('Costos de vendedor no existente'); }
         if (!costosAdministrador) { throw new NotFoundError('Costos de administrador no existente'); }
-        
+
         let comisionVendedor = costosVendedor.amount;
 
         const fechaActual = new Date();
@@ -761,8 +785,8 @@ async function generarComisionReservaBackend(info) {
                             idReserva: reservacionId
                         })
                     }
-                        
-                    
+
+
                     break;
                 } else {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
@@ -852,19 +876,19 @@ async function generarComisionReservaBackend(info) {
         const chaletJanitor = chalet.others.janitor.toString();
         const chaletOwner = chalet.others.owner.toString();
         const chaletInvestors = chalet.others.investors
-        
+
         console.log('comision inversionistas')
         console.log(chaletInvestors)
         // const idBosqueImperial = '66a7c2f2915b94d6630b67f2'
         const idAdministracionNyN = '671be608256c4d53c3f5e12f'
 
         const chaletAdmin = await User.findById(chaletAdminId)
-        if (!chaletAdmin){
+        if (!chaletAdmin) {
             throw new Error("No chalet admin found.")
         }
 
         // Utilidad
-        if (chaletType === "Bosque Imperial"){
+        if (chaletType === "Bosque Imperial") {
             await altaComisionReturn({
                 monto: utilidadChalet,
                 concepto: `Comisión administrador ligado de Cabaña ${nNights} noches`,
@@ -937,7 +961,7 @@ async function generarComisionReservaBackend(info) {
                     const noTickets = investor.noTickets
                     const comision = comisionInversionistas * noTickets
 
-                    if (userInvestor.investorType === 'Asimilado'){
+                    if (userInvestor.investorType === 'Asimilado') {
                         // Comision normal
                         await altaComisionReturn({
                             monto: comision,
@@ -980,7 +1004,7 @@ async function generarComisionReservaBackend(info) {
                             idReserva: reservacionId
                         })
 
-                    } else if (userInvestor.investorType === 'RESICO Fisico'){
+                    } else if (userInvestor.investorType === 'RESICO Fisico') {
                         // Comision normal
                         await altaComisionReturn({
                             monto: comision,
@@ -1025,7 +1049,7 @@ async function generarComisionReservaBackend(info) {
                             idReserva: reservacionId
                         })
 
-                    } else if(userInvestor.investorType === 'PF con AE y PM') {
+                    } else if (userInvestor.investorType === 'PF con AE y PM') {
                         // Comision normal
                         await altaComisionReturn({
                             monto: comision,
@@ -1090,6 +1114,121 @@ async function generarComisionReservaBackend(info) {
     }
 }
 
+async function generarComisionOTA(info) {
+    try {
+        const { idReserva, arrivalDate, nNights, chaletName, costoBase, totalSinComisiones, totalPagado } = info;
+
+        // Obtener datos del chalet
+        const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
+        if (!chalet) throw new Error('Chalet no encontrado');
+
+        // Datos extraídos
+        const chaletType = chalet.propertyDetails.accomodationType;
+        const adminId = chalet.others.admin.toString();
+        const ownerId = chalet.others.owner.toString();
+        const investors = chalet.others.investors.map(inv => inv.investor.toString());
+        const extraCleaningCost = chalet.additionalInfo.extraCleaningCost;
+        const chaletJanitor = chalet.others.janitor.toString();
+
+        // Cargar costos desde BD
+        const costosAdministrador = await Costos.findOne({ category: "Administrador" });
+        if (!costosAdministrador) throw new Error('Costos Administrador no encontrados');
+        const COSTO_ADMIN = costosAdministrador.amount;  // comisión admin por noche
+        const USO_SERVICIO = 35;                        // costo por uso de sistema NyN por noche
+        const idAdministracionNyN = '671be608256c4d53c3f5e12f';
+
+        // Inicializar balance en total pagado
+        let balance = totalSinComisiones;
+
+        // 1. Comisión por uso de sistema NyN (por noches)
+        const montoServicioTotal = USO_SERVICIO * nNights;
+        balance -= montoServicioTotal;
+        await altaComisionReturn({
+            monto: montoServicioTotal,
+            concepto: `Costo por uso de sistema NyN (${nNights} noches)`,
+            fecha: new Date(arrivalDate),
+            idUsuario: idAdministracionNyN,
+            idReserva
+        });
+
+        // 2. Comisión de limpieza (una sola vez)
+        balance -= extraCleaningCost;
+        await altaComisionReturn({
+            monto: extraCleaningCost,
+            concepto: `Comisión limpieza`,
+            fecha: new Date(arrivalDate),
+            idUsuario: chaletJanitor,
+            idReserva
+        });
+
+        // 3. Comisión al Administrador (por noches)
+        const montoAdmin = COSTO_ADMIN * nNights;
+        balance -= montoAdmin;
+        await altaComisionReturn({
+            monto: montoAdmin,
+            concepto: `Comisión OTA administrador (${nNights} noches)`,
+            fecha: new Date(arrivalDate),
+            idUsuario: adminId,
+            idReserva
+        });
+
+        // 4. Retención IVA si es Bosque Imperial (sobre admin)
+        if (chaletType === 'Bosque Imperial') {
+            const ivaAdminTotal = Math.round((COSTO_ADMIN * 0.16 + Number.EPSILON) * 100) / 100 * nNights;
+            balance += ivaAdminTotal;
+            await altaComisionReturn({
+                monto: -ivaAdminTotal,
+                concepto: `Retención IVA OTA (${nNights} noches)`,
+                fecha: new Date(arrivalDate),
+                idUsuario: adminId,
+                idReserva
+            });
+        }
+
+        // 5. Distribución del costo base restante (sin multiplicar por noches)
+        const nuevoCostoBase = costoBase - extraCleaningCost;
+        if (investors.length > 0) {
+            const montoPorInv = Math.round((nuevoCostoBase / investors.length + Number.EPSILON) * 100) / 100;
+            for (const invId of investors) {
+                balance -= montoPorInv;
+                await altaComisionReturn({
+                    monto: montoPorInv,
+                    concepto: `Comisión OTA inversionista`,
+                    fecha: new Date(arrivalDate),
+                    idUsuario: invId,
+                    idReserva
+                });
+            }
+        } else {
+            balance -= nuevoCostoBase;
+            await altaComisionReturn({
+                monto: nuevoCostoBase,
+                concepto: `Comisión OTA dueño cabaña`,
+                fecha: new Date(arrivalDate),
+                idUsuario: ownerId,
+                idReserva
+            });
+        }
+
+        // 6. Registrar utilidad una sola vez (ajustando balance)
+        const utilidadChalet = (totalSinComisiones - costoBase) + balance;
+        if (utilidadChalet !== 0) {
+            await altaComisionReturn({
+                monto: utilidadChalet,
+                concepto: `Utilidad OTA total ajustada`,
+                fecha: new Date(arrivalDate),
+                idUsuario: adminId,
+                idReserva
+            });
+        }
+
+    } catch (err) {
+        console.error('Error en generarComisionOTA:', err);
+        throw err;
+    }
+}
+
+
 async function mostrarUtilidadesPorUsuario(req, res) {
     try {
         const loggedUserId = req.session.id;
@@ -1151,26 +1290,26 @@ async function mostrarUtilidadesPorUsuario(req, res) {
                 utilidadesPorMes[monthIndex] += utilidad.monto;
 
                 if (utilidad.idReserva) {
-                        const reserva = reservasMap.find(reservation => reservation.id.toString() === utilidad.idReserva.toString())
-                        if (reserva) {
-                            const idHabitacion = reserva.resourceId;
-                            utilidad.idHabitacion = idHabitacion;
-                            const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
-                            utilidad.nombreHabitacion = matchId ? matchId.name : "N/A";
-                            utilidad.chaletAdmin = matchId ? chaletAdminMap[matchId.chaletAdmin] : "N/A";
+                    const reserva = reservasMap.find(reservation => reservation.id.toString() === utilidad.idReserva.toString())
+                    if (reserva) {
+                        const idHabitacion = reserva.resourceId;
+                        utilidad.idHabitacion = idHabitacion;
+                        const matchId = nombreCabañas.find(cabaña => cabaña.id.toString() === idHabitacion.toString());
+                        utilidad.nombreHabitacion = matchId ? matchId.name : "N/A";
+                        utilidad.chaletAdmin = matchId ? chaletAdminMap[matchId.chaletAdmin] : "N/A";
 
-                            utilidad.nochesReservadas = reserva.nNights
-                            const arrivalCheckOut =  moment.utc(reserva.departureDate, 'DD/MM/YYYY');
-                            utilidad.checkOut = arrivalCheckOut.format('DD/MM/YYYY');
-                            utilidad.statusReserva = reserva.status.toUpperCase();
-                            
-                        } else {
-                            utilidad.nombreHabitacion = 'N/A';
-                        }
+                        utilidad.nochesReservadas = reserva.nNights
+                        const arrivalCheckOut = moment.utc(reserva.departureDate, 'DD/MM/YYYY');
+                        utilidad.checkOut = arrivalCheckOut.format('DD/MM/YYYY');
+                        utilidad.statusReserva = reserva.status.toUpperCase();
 
                     } else {
-                        utilidad.nombreHabitacion = "N/A";
+                        utilidad.nombreHabitacion = 'N/A';
                     }
+
+                } else {
+                    utilidad.nombreHabitacion = "N/A";
+                }
 
             })
             utilidadesPorMes.forEach((total, index) => {
@@ -1208,7 +1347,7 @@ async function mostrarUtilidadesGlobales(req, res, next) {
         const userRole = req.session.role;
 
         const userPermissions = await Roles.findById(userRole);
-        if(!userPermissions){
+        if (!userPermissions) {
             // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
             return next(new Error("El usuario no tiene un rol definido, contacte al administrador"));
         }
@@ -1248,14 +1387,14 @@ async function mostrarUtilidadesGlobales(req, res, next) {
 
         for (let reserva of reservasMap) {
             const pagos = await pagoController.obtenerPagos(reserva.id);
-    
+
             let pagadoReserva = pagos.reduce((total, pago) => total + pago.importe, 0);
             let restanteReserva = reserva.total - pagadoReserva;
-        
+
             reserva.totalReserva = reserva.total;
             reserva.pagadoReserva = pagadoReserva;
             reserva.restanteReserva = restanteReserva;
-        
+
         }
 
 
@@ -1312,7 +1451,7 @@ async function mostrarUtilidadesGlobales(req, res, next) {
                             utilidad.chaletAdmin = matchId ? chaletAdminMap[matchId.chaletAdmin] : "N/A";
 
                             utilidad.nochesReservadas = reserva.nNights
-                            const arrivalCheckOut =  moment.utc(reserva.departureDate, 'DD/MM/YYYY');
+                            const arrivalCheckOut = moment.utc(reserva.departureDate, 'DD/MM/YYYY');
                             utilidad.checkOut = arrivalCheckOut.format('DD/MM/YYYY');
                             utilidad.statusReserva = reserva.status.toUpperCase();
 
@@ -1391,7 +1530,7 @@ async function vistaParaReporte(req, res, next) {
         const userRole = req.session.role;
 
         const userPermissions = await Roles.findById(userRole);
-        if(!userPermissions){
+        if (!userPermissions) {
             // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
             return next(new Error("El usuario no tiene un rol definido, contacte al administrador"));
         }
@@ -1439,7 +1578,7 @@ async function vistaParaReporte(req, res, next) {
             const habitacion = habitaciones.find(habitacion => habitacion._id.toString() === reserva.resourceId.toString());
             reserva.nombreHabitacion = habitacion ? habitacion.propertyDetails.name : "N/A"
             reserva.costoLimpieza = habitacion ? habitacion.additionalInfo.extraCleaningCost : "N/A"
-            
+
 
             const pagosReserva = pagos.filter(pago => pago.reservacionId.toString() === reserva._id.toString())
             const pagosNoLiquidaEfectivoFilter = pagosReserva.filter(pago => pago.metodoPago !== "Recibio dueño")
@@ -1454,7 +1593,7 @@ async function vistaParaReporte(req, res, next) {
             if (Array.isArray(reserva.notes) && reserva.notes.length > 0) {
                 reserva.notes = reserva.notes.map(note => note.texto).join(', ')
             }
-            
+
             if (Array.isArray(reserva.privateNotes) && reserva.privateNotes.length > 0) {
                 reserva.privateNotes = reserva.privateNotes.map(note => note.texto).join(', ')
             }
@@ -1484,7 +1623,7 @@ async function vistaParaReporte(req, res, next) {
 
         // console.log(reservas)
 
-    
+
 
 
         res.render('reportes', {
@@ -1640,11 +1779,13 @@ module.exports = {
     obtenerComisionesPorReserva,
     calcularComisiones,
     calcularComisionesInternas,
+    calcularComisionesOTA,
     mostrarUtilidadesPorUsuario,
     mostrarUtilidadesGlobales,
     vistaParaReporte,
     generarComisionReserva,
     generarComisionReservaBackend,
+    generarComisionOTA,
     altaComision,
     altaComisionReturn,
     editarComision,

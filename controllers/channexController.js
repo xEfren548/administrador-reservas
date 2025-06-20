@@ -307,20 +307,19 @@ async function webhookReceptor(req, res) {
 
             const { reserva } = reservaPms;
 
-            const { costoBase } = await calcularCostoBaseTotal(habitacion, reserva.arrivalDate, reserva.departureDate);
+            const { costoBase, precioBase } = await calcularCostoBaseTotal(habitacion, reserva.arrivalDate, reserva.departureDate);
             console.log("COSTO BASE: " + costoBase);
             const utilidadesInfo = {
-                costoBase: costoBase,
-                totalSinComisiones: amount,
                 idReserva: reserva._id,
-                chaletName: habitacion.propertyDetails.name,
                 arrivalDate: reserva.arrivalDate,
-                departureDate: reserva.departureDate,
                 nNights: reserva.nNights,
-                userId: createdBy,
+                chaletName: habitacion.propertyDetails.name,
+                costoBase: costoBase,
+                totalSinComisiones: precioBase,
+                totalPagado: amount
             }
 
-            const crearUtilidades = utilidadesController.generarComisionReservaBackend(utilidadesInfo);
+            const crearUtilidades = utilidadesController.generarComisionOTA(utilidadesInfo);
             if (crearUtilidades instanceof Error) {
                 throw new Error(crearUtilidades.message);
             }
@@ -601,6 +600,10 @@ async function updateChannexPrices(habitacionId) {
     const propertyId = habitacion.channels.channexPropertyId;
     const defaultPrice = habitacion.others.basePrice2nights;
 
+
+    const comisiones = await utilidadesController.calcularComisionesOTA()
+    console.log("comisiones OTA", comisiones)
+
     // 1) Fechas: desde hoy hasta 1 año después
     const startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
@@ -638,6 +641,7 @@ async function updateChannexPrices(habitacionId) {
             } else if (plat.aumentoPorcentual != null) {
                 price = Math.round(base * (1 + plat.aumentoPorcentual / 100));
             }
+            price += comisiones
             daily.push({ date: iso, price });
         }
 

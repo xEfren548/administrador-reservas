@@ -314,6 +314,7 @@
 	const habitaciones = {{{ json habitaciones }}};
 	const preciosHabitaciones = {{{ json preciosHabitaciones }}}
 	const preciosEspeciales = {{{ json preciosEspeciales }}}
+	const comisiones = {{{ comisiones }}}
 
 	document.addEventListener('DOMContentLoaded', function () {
 		const selectHabitacion = document.getElementById('habitacion-select');
@@ -875,7 +876,7 @@ function cargarDatosHabitacion(habitacion) {
                     costoBase2Td.textContent = aumentoFijo ? (precioEncontrado.costo_base_2noches + aumentoFijo).toFixed(2) : (precioEncontrado.costo_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
                     costoBase2Row.appendChild(costoBase2Td);
 
-                    precioBase2nightsTd.textContent =  aumentoFijo ? (precioEncontrado.precio_base_2noches + aumentoFijo).toFixed(2) : (precioEncontrado.precio_base_2noches * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    precioBase2nightsTd.textContent =  aumentoFijo ? (precioEncontrado.precio_base_2noches + aumentoFijo + comisiones).toFixed(2) : (precioEncontrado.precio_base_2noches * (1 + aumentoPorcentaje / 100) + comisiones).toFixed(2);
                     precioBase2nightsRow.appendChild(precioBase2nightsTd);
                 } else {
                     costoBaseTd.textContent = aumentoFijo ? (costoBase + aumentoFijo).toFixed(2) : (costoBase * (1 + aumentoPorcentaje / 100)).toFixed(2);
@@ -887,7 +888,7 @@ function cargarDatosHabitacion(habitacion) {
                     costoBase2Td.textContent = aumentoFijo ? (costoBase2 + aumentoFijo).toFixed(2) : (costoBase2 * (1 + aumentoPorcentaje / 100)).toFixed(2);
                     costoBase2Row.appendChild(costoBase2Td);
 
-                    precioBase2nightsTd.textContent =  aumentoFijo ? (precioBase2nights + aumentoFijo).toFixed(2) : (precioBase2nights * (1 + aumentoPorcentaje / 100)).toFixed(2);
+                    precioBase2nightsTd.textContent =  aumentoFijo ? (precioBase2nights + aumentoFijo + comisiones).toFixed(2) : (precioBase2nights * (1 + aumentoPorcentaje / 100) + comisiones).toFixed(2);
                     precioBase2nightsRow.appendChild(precioBase2nightsTd);
                 }
 
