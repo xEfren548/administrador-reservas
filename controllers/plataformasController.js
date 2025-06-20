@@ -4,6 +4,7 @@ const Habitaciones = require('../models/Habitacion');
 const precioBaseController = require('../controllers/precioBaseController');
 const preciosEspecialesController = require('../controllers/preciosEspecialesController');
 const utilidadesController = require('../controllers/utilidadesController');
+const channexController = require('../controllers/channexController');
 
 const renderVistaPlataformas = async (req, res) => {
     const habitaciones = await Habitaciones.find({ isActive: true }).lean();
@@ -166,6 +167,23 @@ const modificarPlataforma = async (req, res) => {
         if (!plataforma) {
             throw new Error('No se encontró la plataforma con el ID proporcionado');
         }
+
+        const chalets = await Habitaciones.find().select('channels activePlatforms'); // asegúrate de traer ambos campos
+        const chaletsConPlataforma = chalets.filter(chalet =>
+            chalet.activePlatforms?.includes(plataforma._id)
+        );
+
+        for (const chalet of chaletsConPlataforma) {
+            if (chalet.channels?.airbnbListingId) {
+                try {
+                    await channexController.updateChannexPrices(chalet._id);
+                    console.log(`✅ Precios actualizados para ${chalet._id}`);
+                } catch (err) {
+                    console.error(`❌ Error en ${chalet._id}: ${err.message}`);
+                }
+            }
+        }
+
         console.log(plataforma);
         res.status(200).send(plataforma);
     } catch (error) {

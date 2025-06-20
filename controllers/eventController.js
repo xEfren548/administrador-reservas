@@ -2049,9 +2049,6 @@ async function moveToPlayground(req, res) {
 
         await logController.createBackendLog(logBody);
 
-
-
-
         res.status(200).json({ message: 'Estaus modificado correctamente', reserva: evento });
 
     } catch (error) {

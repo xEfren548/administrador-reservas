@@ -330,8 +330,6 @@ async function webhookReceptor(req, res) {
 
 
         } else if (eventType === 'booking_cancellation') {
-            const channelId = body.payload.channel_id;
-            const propertyId = body.payload.property_id;
             const bookingId = body.payload.booking_id;
 
             const reserva = await Reservas.findOne({ 'channels.bookingId': bookingId });
@@ -372,9 +370,18 @@ async function webhookReceptor(req, res) {
 
             // Actualizar disponibilidad y cancelar reservacion en PMS
 
-        } else if (eventType === 'alteration_request') {
-            // Aceptar alteración
-            payload = { resolution: { accept: 'accept' } };
+        } else if (eventType === 'booking_modification') {
+            const bookingId = body.payload.booking_id;
+
+            const reserva = await Reservas.findOne({ 'channels.bookingId': bookingId });
+            if (!reserva) {
+                console.log(`No se encontró la reserva con el airbnbBookingId ${bookingId} en la base de datos.`);
+            }
+
+            console.log("Reserva a modificar: ", reserva)
+
+            
+
         } else if (eventType === 'test') {
             // Aceptar reserva regularmente
             payload = { resolution: { accept: 'accept' } };
