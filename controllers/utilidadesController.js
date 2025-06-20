@@ -1138,7 +1138,7 @@ async function generarComisionOTA(info) {
         const idAdministracionNyN = '671be608256c4d53c3f5e12f';
 
         // Inicializar balance en total pagado
-        let balance = totalSinComisiones;
+        let balance = totalPagado;
 
         // 1. Comisión por uso de sistema NyN (por noches)
         const montoServicioTotal = USO_SERVICIO * nNights;
@@ -1175,7 +1175,6 @@ async function generarComisionOTA(info) {
         // 4. Retención IVA si es Bosque Imperial (sobre admin)
         if (chaletType === 'Bosque Imperial') {
             const ivaAdminTotal = Math.round((COSTO_ADMIN * 0.16 + Number.EPSILON) * 100) / 100 * nNights;
-            balance += ivaAdminTotal;
             await altaComisionReturn({
                 monto: -ivaAdminTotal,
                 concepto: `Retención IVA OTA (${nNights} noches)`,
@@ -1211,11 +1210,23 @@ async function generarComisionOTA(info) {
         }
 
         // 6. Registrar utilidad una sola vez (ajustando balance)
-        const utilidadChalet = (totalSinComisiones - costoBase) + balance;
+        const utilidadChalet = (totalSinComisiones - costoBase);
+        balance -= utilidadChalet;
         if (utilidadChalet !== 0) {
             await altaComisionReturn({
                 monto: utilidadChalet,
-                concepto: `Utilidad OTA total ajustada`,
+                concepto: `Utilidad OTA total`,
+                fecha: new Date(arrivalDate),
+                idUsuario: adminId,
+                idReserva
+            });
+        }
+
+        
+        if (balance !== 0) {
+            await altaComisionReturn({
+                monto: balance,
+                concepto: `Ajuste balance OTA`,
                 fecha: new Date(arrivalDate),
                 idUsuario: adminId,
                 idReserva
