@@ -95,7 +95,7 @@ const reservaSchema = new Schema({
         type: Boolean,
         default: false
     },
-    channels: [channelsSchema]
+    channels: channelsSchema
 });
 
 // const documentSchema = new Schema({

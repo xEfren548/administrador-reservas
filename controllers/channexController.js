@@ -7,6 +7,8 @@ const PrecioBaseXDia = require('../models/PrecioBaseXDia');
 const Plataformas = require('../models/Plataformas');
 const BloqueoFechas = require('../models/BloqueoFechas');
 const utilidadesController = require('../controllers/utilidadesController');
+const Documento = require('../models/Evento');
+const pagoController = require('./pagoController');
 
 // Configuración de Channex API
 const CHANNEX_BASE_URL = process.env.NODE_ENV === 'development' ? process.env.DEV_CHANNEX_API_URL : process.env.CHANNEX_BASE_URL;
@@ -331,6 +333,41 @@ async function webhookReceptor(req, res) {
             const channelId = body.payload.channel_id;
             const propertyId = body.payload.property_id;
             const bookingId = body.payload.booking_id;
+
+            const reserva = await Reservas.findOne({ 'channels.bookingId': bookingId });
+            if (!reserva) {
+                console.log(`No se encontró la reserva con el airbnbBookingId ${bookingId} en la base de datos.`);
+            }
+
+            console.log("Reserva a cancelar: ", reserva)
+
+            const idReserva = reserva._id;
+
+            const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
+
+            const pagos = await pagoController.obtenerPagos(idReserva);
+            let pagoTotal = 0
+            pagos.forEach(pago => {
+                pagoTotal += pago.importe;
+            })
+            
+            for (const comisiones of comisionesReserva) {
+                const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
+                if (utilidadEliminada) {
+                    console.log('Utilidad eliminada correctamente');
+                } else {
+                    throw new Error('Error al eliminar comision.');
+                }
+            }
+            
+            reserva.status = 'cancelled';
+            const confirmacion = await reserva.save();
+
+            if (!confirmacion) {
+                throw new Error('Error al cancelar reserva');
+            }
+
+            res.status(200).send("Reserva cancelada correctamente");
 
 
             // Actualizar disponibilidad y cancelar reservacion en PMS
