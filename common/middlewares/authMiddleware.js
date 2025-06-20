@@ -21,8 +21,6 @@ function ensureAuthenticated(req, res, next) {
     }
     // 3) Si hay sesión válida
     if (req.session && req.session.userId) {
-        req.session.id = '6642cfc347113ba5f87ce0a6'
-        req.session.userId = '6642cfc347113ba5f87ce0a6'
         return next();
     }
 
