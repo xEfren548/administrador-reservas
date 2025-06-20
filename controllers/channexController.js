@@ -813,7 +813,8 @@ async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
     if (!plat) throw new Error('No hay plataformas activas');
 
     // 2) Default de costo base 2+ noches
-    const defaultCosto2n = habitacion.others.costoBase2nights;
+    const defaultCosto2n = habitacion.others.baseCost2nights;
+    const defaultPrecio2n = habitacion.others.basePrice2nights;
 
     // 3) Traer sólo los registros de costo en el rango de fechas
     const registros = await PrecioBaseXDia.find({
@@ -848,6 +849,11 @@ async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
             : defaultCosto2n;
         totalCosto += costo2n;
 
+        const precio2n = rec
+            ? rec.precio_base_2noches
+            : defaultPrecio2n;
+        totalPrecio += precio2n;
+
         // 5b) Markup de plataforma para ese día
         let incremento = 0;
         if (plat.aumentoFijo != null) {
@@ -856,13 +862,16 @@ async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
             incremento = Math.round(costo2n * (plat.aumentoPorcentual / 100));
         }
 
-        console.log("INCREMENTO PLATAFORMA: ", incremento);
+        // console.log("INCREMENTO PLATAFORMA: ", incremento);
         // 5c) Precio base cobrado al huésped ese día
-        totalCosto += incremento;
-        totalPrecio += (costo2n + incremento);
+        // totalCosto += incremento;
+        totalPrecio += incremento;
+
+        console.log("COSTO TOTAL: ", totalCosto);
+        console.log("PRECIO TOTAL: ", totalPrecio);
     }
 
-    return { costoBase: totalCosto, totalPrecio };
+    return { costoBase: totalCosto, precioBase: totalPrecio };
 }
 
 module.exports = {
