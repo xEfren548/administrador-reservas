@@ -1137,6 +1137,22 @@ async function generarComisionOTA(info) {
         const USO_SERVICIO = 35;                        // costo por uso de sistema NyN por noche
         const idAdministracionNyN = '671be608256c4d53c3f5e12f';
 
+        // Eliminar comisiones previas si es que existian
+        const comisionesReserva = await obtenerComisionesPorReserva(idReserva);
+
+        if (comisionesReserva) {
+            for (const comisiones of comisionesReserva) {
+                if (!comisiones.concepto.includes('servicio') && !comisiones.concepto.includes('Servicio')) {
+                    const utilidadEliminada = await eliminarComisionReturn(comisiones._id);
+                    if (utilidadEliminada) {
+                        console.log('Utilidad eliminada correctamente');
+                    } else {
+                        throw new Error('Error al eliminar comision.');
+                    }
+                }
+            }
+        }
+
         // Inicializar balance en total pagado
         let balance = totalPagado;
 

@@ -380,7 +380,54 @@ async function webhookReceptor(req, res) {
 
             console.log("Reserva a modificar: ", reserva)
 
+            const reservationId = reserva._id;
             
+            const response = await channex.get(`/api/v1/bookings/${bookingId}`);
+            const data = response.data.data.attributes;
+
+            const ota_name = data.ota_name;
+            const listingId = data.meta.listing_id;
+
+            const habitacion = await Habitacion.findOne({ 'channels.airbnbListingId': listingId });
+            if (!habitacion) {
+                console.log(`No se encontró la habitación con el listingId ${listingId} en la base de datos.`);
+            }
+            
+            const nNights = body.payload.count_of_nights;
+            const arrivalDate = data.arrival_date;
+            const departureDate = data.departure_date;
+            const newPrice = body.payload.amount;
+
+            const infoReserva = {
+                reservationId,
+                nNights,
+                arrivalDate,
+                departureDate,
+                newPrice
+            }
+
+            const infoSession = {
+                id: reserva.createdBy,
+                firstName: ota_name
+            }
+
+            const eventController = require('../controllers/eventController');
+            const eventoEditado = await eventController.editarEventoBackend(infoReserva, infoSession);
+
+            const { costoBase, precioBase } = await calcularCostoBaseTotal(habitacion, eventoEditado.arrivalDate, eventoEditado.departureDate);
+
+            const utilidadesInfo = {
+                idReserva: eventoEditado._id,
+                arrivalDate: eventoEditado.arrivalDate,
+                nNights: eventoEditado.nNights,
+                chaletName: habitacion.propertyDetails.name,
+                costoBase: costoBase,
+                totalSinComisiones: precioBase,
+                totalPagado: newPrice
+            }
+            const nuevasComisiones = await utilidadesController.generarComisionOTA(utilidadesInfo);
+
+            res.status(200).send(eventoEditado);
 
         } else if (eventType === 'test') {
             // Aceptar reserva regularmente
@@ -859,15 +906,20 @@ async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
     // 2) Default de costo base 2+ noches
     const defaultCosto2n = habitacion.others.baseCost2nights;
     const defaultPrecio2n = habitacion.others.basePrice2nights;
+    
+    console.log("Arrival date desde calcular costo y precio: ", arrivalDate)
+    console.log("Departure date desde calcular costo y precio: ", departureDate)
 
     // 3) Traer sólo los registros de costo en el rango de fechas
     const registros = await PrecioBaseXDia.find({
         habitacionId,
         fecha: {
-            $gte: new Date(arrivalDate.setHours(0, 0, 0, 0)),
-            $lt: new Date(departureDate.setHours(0, 0, 0, 0))
+            $gte: moment.utc(arrivalDate).startOf('day').toDate(),
+            $lt: moment.utc(departureDate).startOf('day').toDate()
         }
     }).lean();
+
+    console.log("registros: ", registros)
 
     // 4) Indexar por fecha ISO
     const mapa = registros.reduce((m, r) => {
