@@ -302,11 +302,10 @@ const othersSchema = new mongoose.Schema({
 });
 
 const channelsSchema = new mongoose.Schema({
-    channexPropertyId: { type: String, default: null },
-    airbnbListingId: { type: String, default: null },
+    channelId: { type: String, default: null },
+    listingId: { type: String, default: null },
     roomListingId: { type: String, default: null },
     rateListingId: { type: String, default: null },
-    isMapped: { type: Boolean, default: false }
 })
 
 //--------------------------------------------------
@@ -341,7 +340,8 @@ const preSchema = new mongoose.Schema({
         type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Plataformas'}],
         default: []
     },
-    channels: channelsSchema
+    channexPropertyId: { type: String, default: null },
+    channels: [channelsSchema]
 });
 
 // const habitacionesSchema = new mongoose.Schema({
