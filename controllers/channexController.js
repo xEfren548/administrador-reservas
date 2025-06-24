@@ -707,10 +707,6 @@ async function updateChannexPrices(habitacionId) {
     if (!habitacion.channexPropertyId || habitacion.channels.length === 0)
         throw new Error('La habitación no está mapeada en Channex (falta channels.channexPropertyId)');
     
-    const canal = habitacion.channels.find(channel => channel.channelId === req.session.channelId);
-    if (!canal || !canal.rateListingId) {
-        throw new Error('No se pudo encontrar el canal o el rateListingId');
-    }
     const propertyId = habitacion.channexPropertyId;
     const defaultPrice = habitacion.others.basePrice2nights;
 
@@ -741,51 +737,56 @@ async function updateChannexPrices(habitacionId) {
     // 4) Construir el array de valores para el payload
     const values = [];
 
-    for (const plat of plataformas) {
-        const daily = [];
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-            const iso = d.toISOString().slice(0, 10);
-            const rec = priceRecords.find(r =>
-                r.fecha.toISOString().slice(0, 10) === iso
-            );
-            const base = rec ? rec.precio_base_2noches : defaultPrice;
-            let price = base;
-            if (plat.aumentoFijo != null) {
-                price += plat.aumentoFijo;
-            } else if (plat.aumentoPorcentual != null) {
-                price = Math.round(base * (1 + plat.aumentoPorcentual / 100));
-            }
-            price += comisiones
-            daily.push({ date: iso, price });
-        }
+    const canales = habitacion.channels
 
-        // Agrupar en rangos de precio igual
-        let curr = null;
-        for (const { date, price } of daily) {
-            if (!curr || curr.rate !== price) {
+    for (const canal of canales) {
+            for (const plat of plataformas) {
+                const daily = [];
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    const iso = d.toISOString().slice(0, 10);
+                    const rec = priceRecords.find(r =>
+                        r.fecha.toISOString().slice(0, 10) === iso
+                    );
+                    const base = rec ? rec.precio_base_2noches : defaultPrice;
+                    let price = base;
+                    if (plat.aumentoFijo != null) {
+                        price += plat.aumentoFijo;
+                    } else if (plat.aumentoPorcentual != null) {
+                        price = Math.round(base * (1 + plat.aumentoPorcentual / 100));
+                    }
+                    price += comisiones
+                    daily.push({ date: iso, price });
+                }
+        
+                // Agrupar en rangos de precio igual
+                let curr = null;
+                for (const { date, price } of daily) {
+                    if (!curr || curr.rate !== price) {
+                        if (curr) {
+                            values.push({
+                                property_id: propertyId,
+                                rate_plan_id: canal.rateListingId,
+                                date_from: curr.start,
+                                date_to: curr.end,
+                                rate: curr.rate * 100
+                            });
+                        }
+                        curr = { start: date, end: date, rate: price };
+                    } else {
+                        curr.end = date;
+                    }
+                }
                 if (curr) {
                     values.push({
                         property_id: propertyId,
-                        rate_plan_id: habitacion.channels.rateListingId,
+                        rate_plan_id: canal.rateListingId,
                         date_from: curr.start,
                         date_to: curr.end,
                         rate: curr.rate * 100
                     });
                 }
-                curr = { start: date, end: date, rate: price };
-            } else {
-                curr.end = date;
             }
-        }
-        if (curr) {
-            values.push({
-                property_id: propertyId,
-                rate_plan_id: habitacion.channels.rateListingId,
-                date_from: curr.start,
-                date_to: curr.end,
-                rate: curr.rate * 100
-            });
-        }
+
     }
 
     const payload = { values };
@@ -798,20 +799,16 @@ async function updateChannexPrices(habitacionId) {
     };
 }
 
-
 async function updateChannexAvailability(habitacionId) {
     // 0) Validaciones básicas
     const habitacion = await Habitacion.findById(habitacionId);
     if (!habitacion) throw new Error('Habitación no encontrada');
-    if (!habitacion.channexPropertyId) {
+    if (!habitacion.channexPropertyId || habitacion.channels.length === 0) {
         throw new Error('La habitación debe estar mapeada en Channex (channels.channexPropertyId) y tener roomListingId');
     }
-    const canal = habitacion.channels.find(channel => channel.channelId === req.session.channelId);
-    if (!canal || !canal.roomListingId) {
-        throw new Error('No se pudo encontrar el canal o no tiene roomListingId');
-    }
+
     const propertyId = habitacion.channexPropertyId;
-    const roomTypeId = canal.roomListingId;
+    // const roomTypeId = canal.roomListingId;
 
     // 1) Rango: hoy hasta 1 año después
     const today = new Date();
@@ -865,33 +862,39 @@ async function updateChannexAvailability(habitacionId) {
     const values = [];
     let curr = null;
 
-    for (let d = new Date(marginDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const iso = d.toISOString().slice(0, 10);
-        const disponible = noDisponibles.has(iso) ? 0 : 1;
-        if (!curr || curr.availability !== disponible) {
-            if (curr) {
-                values.push({
-                    property_id: propertyId,
-                    room_type_id: roomTypeId,
-                    date_from: curr.start,
-                    date_to: curr.end,
-                    availability: curr.availability
-                });
+    const canales = habitacion.channels
+
+    for (const canal of canales) {
+
+        for (let d = new Date(marginDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const iso = d.toISOString().slice(0, 10);
+            const disponible = noDisponibles.has(iso) ? 0 : 1;
+            if (!curr || curr.availability !== disponible) {
+                if (curr) {
+                    values.push({
+                        property_id: propertyId,
+                        room_type_id: canal.roomListingId,
+                        date_from: curr.start,
+                        date_to: curr.end,
+                        availability: curr.availability
+                    });
+                }
+                curr = { start: iso, end: iso, availability: disponible };
+            } else {
+                curr.end = iso;
             }
-            curr = { start: iso, end: iso, availability: disponible };
-        } else {
-            curr.end = iso;
+        }
+        if (curr) {
+            values.push({
+                property_id: propertyId,
+                room_type_id: canal.roomListingId,
+                date_from: curr.start,
+                date_to: curr.end,
+                availability: curr.availability
+            });
         }
     }
-    if (curr) {
-        values.push({
-            property_id: propertyId,
-            room_type_id: roomTypeId,
-            date_from: curr.start,
-            date_to: curr.end,
-            availability: curr.availability
-        });
-    }
+
 
     const payload = { values };
     const response = await channex.post('/api/v1/availability', payload);
