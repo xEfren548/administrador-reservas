@@ -7,7 +7,6 @@ function ensureAuthenticated(req, res, next) {
     const whitelistPrefix = [
         
     ];
-    console.log(process.argv[2])
     if (process.argv[2] === '--api') {
         whitelistPrefix.push('/api/channex');
     }
