@@ -63,20 +63,26 @@
                 {{/if}}
             </td>
             <td>
-                {{#if tarifa}}
-                {{#unless nombreListingAirbnb}}
-                <button type="button" class="btn btn-sm btn-success mapear-airbnb-btn"
-                    data-propertyid="{{channexPropertyId}}" data-rateid="{{tarifa.id}}"
-                    data-propertyname="{{propertyDetails.name}}">
-                    Mapear con Airbnb
-                </button>
+            {{#if tarifa}}
+                {{#if listingsChannel.length}}
+                    <span class="text-success fw-bold">Habitación mapeada:</span>
+                    <ul class="mb-0">
+                        {{#each listingsChannel}}
+                            <li>{{this}}</li>
+                        {{/each}}
+                    </ul>
                 {{else}}
-                <span class="text-success fw-bold">Habitación mapeada</span>
-                {{/unless}}
-                {{else}}
-                <span class="text-muted">Crea tarifa primero</span>
+                    <button type="button" class="btn btn-sm btn-success mapear-airbnb-btn"
+                        data-propertyid="{{channexPropertyId}}" data-rateid="{{tarifa.id}}"
+                        data-propertyname="{{propertyDetails.name}}">
+                        Mapear con Airbnb
+                    </button>
                 {{/if}}
+            {{else}}
+                <span class="text-muted">Crea tarifa primero</span>
+            {{/if}}
             </td>
+
         </tr>
         {{/each}}
     </tbody>

@@ -123,7 +123,7 @@ async function dashboardChannexFull(req, res) {
             }
 
             // const canal = hab.channels.find(channel => channel.channelId === req.session.channelId);
-            
+
             // Airbnb listing cleanup
             // if (hab.channels.airbnbListingId) {
             //     const listingObj = chProps.find(l => l.id === hab.channels.airbnbListingId);
@@ -147,7 +147,6 @@ async function dashboardChannexFull(req, res) {
             // if (!hab.channels) hab.channels = {};
 
             const existeEnChannex = hab.channexPropertyId && channexIds.includes(hab.channexPropertyId);
-            console.log(existeEnChannex);
 
             // Tarifa
             let tarifa = null;
@@ -165,33 +164,45 @@ async function dashboardChannexFull(req, res) {
             }
 
             // Busca si está mapeado a un listing de Airbnb
-            let listingId = hab.channels?.listingId || null;
-            let nombreListingAirbnb = null;
+            // let listingId = hab.channels?.listingId || null;
+            // let nombreListingAirbnb = null;
+            let listingsChannel = [];
 
-            if (listingId) {
-                const listingObj = chProps.find(l => l.id === listingId);
-                if (listingObj) nombreListingAirbnb = listingObj.title + ' (' + listingObj.id + ')';
-                else nombreListingAirbnb = listingId;
+            if (Array.isArray(hab.channels)) {
+                hab.channels.forEach(channel => {
+                    if (channel.listingId) {
+                        const listingObj = chProps.find(l => l.id === channel.listingId);
+                        if (listingObj) {
+                            listingsChannel.push(`${listingObj.title} (${listingObj.id})`);
+                        } else {
+                            listingsChannel.push(channel.listingId);
+                        }
+                    }
+                })
             }
 
             return {
                 ...hab,
                 existeEnChannex,
                 tarifa,
-                listingId,
-                nombreListingAirbnb
+                listingsChannel
             };
         });
 
+        console.log(propiedadesMarcadas);
+
         // 7. Para cada listing, busca la habitación que lo tenga asignado
         const listingsMarcados = chProps.map(listing => {
-            const habitacionVinculada = propiedadesMarcadas.find(h => h.listingId === listing.id);
+            // Buscar una habitación que tenga este listingId en cualquiera de sus canales
+            const habitacionVinculada = propiedadesMarcadas.find(hab => {
+                return Array.isArray(hab.channels) &&
+                    hab.channels.some(canal => canal.listingId === listing.id);
+            });
 
             const flag = Boolean(habitacionVinculada);
 
-            // Ajusta 'nombreHabitacion' al campo que use tu modelo Habitacion para mostrar el nombre
             const habitacionNombre = habitacionVinculada
-                ? (habitacionVinculada.propertyDetails.name || habitacionVinculada._id)
+                ? (habitacionVinculada.propertyDetails?.name || habitacionVinculada._id)
                 : null;
 
             return {
@@ -201,6 +212,7 @@ async function dashboardChannexFull(req, res) {
                 listed: flag
             };
         });
+
 
         // console.log(propiedadesMarcadas[0])
         res.render('dashboardChannex', {
@@ -351,7 +363,7 @@ async function webhookReceptor(req, res) {
             pagos.forEach(pago => {
                 pagoTotal += pago.importe;
             })
-            
+
             for (const comisiones of comisionesReserva) {
                 const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
                 if (utilidadEliminada) {
@@ -360,7 +372,7 @@ async function webhookReceptor(req, res) {
                     throw new Error('Error al eliminar comision.');
                 }
             }
-            
+
             reserva.status = 'cancelled';
             const confirmacion = await reserva.save();
 
@@ -384,7 +396,7 @@ async function webhookReceptor(req, res) {
             console.log("Reserva a modificar: ", reserva)
 
             const reservationId = reserva._id;
-            
+
             const response = await channex.get(`/api/v1/bookings/${bookingId}`);
             const data = response.data.data.attributes;
 
@@ -395,7 +407,7 @@ async function webhookReceptor(req, res) {
             if (!habitacion) {
                 console.log(`No se encontró la habitación con el listingId ${listingId} en la base de datos.`);
             }
-            
+
             const nNights = body.payload.count_of_nights;
             const arrivalDate = data.arrival_date;
             const departureDate = data.departure_date;
@@ -650,14 +662,14 @@ async function createRoomChannex(req, res) {
 
         const sameChannel = habitacion.channels.find(channel => channel.channelId === req.session.channelId);
         if (sameChannel) return res.status(400).json({ error: 'La habitación ya fue mapeada en este canal' });
-        
+
         const resp = await channex.post('/api/v1/room_types', req.body);
-        
+
         habitacion.channels.push({
             channelId: req.session.channelId,
             roomListingId: resp.data.data.attributes.id
         })
-        
+
         // habitacion.channels.roomListingId = resp.data.data.attributes.id;
         await habitacion.save();
         res.json(resp.data);
@@ -684,7 +696,7 @@ async function createRateChannex(req, res) {
         if (!canal) {
             throw new Error('No se pudo encontrar el canal');
         }
-        
+
         canal.rateListingId = resp.data.data.attributes.id;
         await habitacion.save();
 
@@ -706,7 +718,7 @@ async function updateChannexPrices(habitacionId) {
     if (!habitacion) throw new Error('Habitación no encontrada');
     if (!habitacion.channexPropertyId || habitacion.channels.length === 0)
         throw new Error('La habitación no está mapeada en Channex (falta channels.channexPropertyId)');
-    
+
     const propertyId = habitacion.channexPropertyId;
     const defaultPrice = habitacion.others.basePrice2nights;
 
@@ -740,52 +752,52 @@ async function updateChannexPrices(habitacionId) {
     const canales = habitacion.channels
 
     for (const canal of canales) {
-            for (const plat of plataformas) {
-                const daily = [];
-                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                    const iso = d.toISOString().slice(0, 10);
-                    const rec = priceRecords.find(r =>
-                        r.fecha.toISOString().slice(0, 10) === iso
-                    );
-                    const base = rec ? rec.precio_base_2noches : defaultPrice;
-                    let price = base;
-                    if (plat.aumentoFijo != null) {
-                        price += plat.aumentoFijo;
-                    } else if (plat.aumentoPorcentual != null) {
-                        price = Math.round(base * (1 + plat.aumentoPorcentual / 100));
-                    }
-                    price += comisiones
-                    daily.push({ date: iso, price });
+        for (const plat of plataformas) {
+            const daily = [];
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const iso = d.toISOString().slice(0, 10);
+                const rec = priceRecords.find(r =>
+                    r.fecha.toISOString().slice(0, 10) === iso
+                );
+                const base = rec ? rec.precio_base_2noches : defaultPrice;
+                let price = base;
+                if (plat.aumentoFijo != null) {
+                    price += plat.aumentoFijo;
+                } else if (plat.aumentoPorcentual != null) {
+                    price = Math.round(base * (1 + plat.aumentoPorcentual / 100));
                 }
-        
-                // Agrupar en rangos de precio igual
-                let curr = null;
-                for (const { date, price } of daily) {
-                    if (!curr || curr.rate !== price) {
-                        if (curr) {
-                            values.push({
-                                property_id: propertyId,
-                                rate_plan_id: canal.rateListingId,
-                                date_from: curr.start,
-                                date_to: curr.end,
-                                rate: curr.rate * 100
-                            });
-                        }
-                        curr = { start: date, end: date, rate: price };
-                    } else {
-                        curr.end = date;
+                price += comisiones
+                daily.push({ date: iso, price });
+            }
+
+            // Agrupar en rangos de precio igual
+            let curr = null;
+            for (const { date, price } of daily) {
+                if (!curr || curr.rate !== price) {
+                    if (curr) {
+                        values.push({
+                            property_id: propertyId,
+                            rate_plan_id: canal.rateListingId,
+                            date_from: curr.start,
+                            date_to: curr.end,
+                            rate: curr.rate * 100
+                        });
                     }
-                }
-                if (curr) {
-                    values.push({
-                        property_id: propertyId,
-                        rate_plan_id: canal.rateListingId,
-                        date_from: curr.start,
-                        date_to: curr.end,
-                        rate: curr.rate * 100
-                    });
+                    curr = { start: date, end: date, rate: price };
+                } else {
+                    curr.end = date;
                 }
             }
+            if (curr) {
+                values.push({
+                    property_id: propertyId,
+                    rate_plan_id: canal.rateListingId,
+                    date_from: curr.start,
+                    date_to: curr.end,
+                    rate: curr.rate * 100
+                });
+            }
+        }
 
     }
 
@@ -930,7 +942,7 @@ async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
     // 2) Default de costo base 2+ noches
     const defaultCosto2n = habitacion.others.baseCost2nights;
     const defaultPrecio2n = habitacion.others.basePrice2nights;
-    
+
     console.log("Arrival date desde calcular costo y precio: ", arrivalDate)
     console.log("Departure date desde calcular costo y precio: ", departureDate)
 
