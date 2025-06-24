@@ -218,7 +218,8 @@ async function dashboardChannexFull(req, res) {
         res.render('dashboardChannex', {
             propiedades: propiedadesMarcadas,
             chProps,
-            listings: listingsMarcados
+            listings: listingsMarcados,
+            channelId: req.session.channelId
         });
 
     } catch (err) {

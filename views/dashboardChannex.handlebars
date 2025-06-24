@@ -1,4 +1,7 @@
-<h2 class="ml-5">Propiedades locales</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="ms-3">Propiedades locales</h2>
+    <button type="button" class="btn btn-primary me-3" id="btnActivateChannel">Activar canal</button>
+</div>
 <table class="table">
     <thead>
         <tr>
@@ -389,6 +392,34 @@
                     }).then(() => window.location.reload());
                 } else {
                     throw new Error(data.message || 'Error en el mapeo');
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message,
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        });
+
+        
+        document.querySelector('#btnActivateChannel').addEventListener('click', async function () {
+            const channelId = '{{channelId}}';
+            try {
+                const response = await fetch(`/api/channex/channels/${channelId}/activate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Canal activado correctamente',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => window.location.reload());
+                } else {
+                    throw new Error(data.message || 'Error al activar el canal');
                 }
             } catch (error) {
                 Swal.fire({
