@@ -15,13 +15,13 @@
         <tr>
             <td>{{propertyDetails.name}}</td>
             <td>
-                {{#if channels.channexPropertyId}}
+                {{#if channexPropertyId}}
                 {{#if existeEnChannex}}
                 <span class="badge bg-success">Sí</span><br>
-                <small>ID: {{channels.channexPropertyId}}</small>
+                <small>ID: {{channexPropertyId}}</small>
                 {{else}}
                 <span class="badge bg-danger">No existe en Channex</span><br>
-                <small>ID local: {{channels.channexPropertyId}}</small>
+                <small>ID local: {{channexPropertyId}}</small>
                 {{/if}}
                 {{else}}
                 <span class="badge bg-secondary">No</span>
@@ -43,13 +43,13 @@
                 {{/if}}
             </td>
             <td>
-                {{#if channels.channexPropertyId}}
+                {{#if channexPropertyId}}
                 {{#if existeEnChannex}}
                 {{#if tarifa}}
                 <span class="text-success">Tarifa creada</span>
                 {{else}}
                 <button type="button" class="btn btn-sm btn-info crear-tarifa-btn"
-                    data-propertyid="{{channels.channexPropertyId}}" data-propertyname="{{propertyDetails.name}}"
+                    data-propertyid="{{channexPropertyId}}" data-propertyname="{{propertyDetails.name}}"
                     data-pmsid="{{_id}}">
                     Crear tarifa
                 </button>
@@ -66,7 +66,7 @@
                 {{#if tarifa}}
                 {{#unless nombreListingAirbnb}}
                 <button type="button" class="btn btn-sm btn-success mapear-airbnb-btn"
-                    data-propertyid="{{channels.channexPropertyId}}" data-rateid="{{tarifa.id}}"
+                    data-propertyid="{{channexPropertyId}}" data-rateid="{{tarifa.id}}"
                     data-propertyname="{{propertyDetails.name}}">
                     Mapear con Airbnb
                 </button>
