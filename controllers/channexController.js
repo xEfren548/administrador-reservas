@@ -189,8 +189,6 @@ async function dashboardChannexFull(req, res) {
             };
         });
 
-        console.log(propiedadesMarcadas);
-
         // 7. Para cada listing, busca la habitación que lo tenga asignado
         const listingsMarcados = chProps.map(listing => {
             // Buscar una habitación que tenga este listingId en cualquiera de sus canales
@@ -351,6 +349,7 @@ async function webhookReceptor(req, res) {
             const reserva = await Reservas.findOne({ 'channels.bookingId': bookingId });
             if (!reserva) {
                 console.log(`No se encontró la reserva con el airbnbBookingId ${bookingId} en la base de datos.`);
+                throw new Error('La reserva no fue encontrada');
             }
 
             console.log("Reserva a cancelar: ", reserva)
@@ -392,6 +391,7 @@ async function webhookReceptor(req, res) {
             const reserva = await Reservas.findOne({ 'channels.bookingId': bookingId });
             if (!reserva) {
                 console.log(`No se encontró la reserva con el airbnbBookingId ${bookingId} en la base de datos.`);
+                throw new Error('La reserva no fue encontrada');
             }
 
             console.log("Reserva a modificar: ", reserva)
@@ -684,7 +684,6 @@ async function createRateChannex(req, res) {
     try {
         const pmsId = req.query.pmsid;
         const channelId = req.session.channelId;
-        console.log(channelId)
         const habitacion = await Habitacion.findById(pmsId);
         if (!habitacion) {
             return res.status(404).json({ error: 'Habitación no encontrada' });
@@ -844,9 +843,6 @@ async function updateChannexAvailability(habitacionId) {
         departureDate: { $gte: marginDate }, // Reservas que empiezan después del margen
         status: { $nin: ['cancelled', 'no-show'] }
     });
-    console.log("End date: ", endDate)
-    console.log("Margin date: ", marginDate)
-    console.log("reservas: ", reservas)
 
     // 4) Generar set de fechas no disponibles (bloqueos + reservas)
     const noDisponibles = new Set(
@@ -944,9 +940,6 @@ async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
     const defaultCosto2n = habitacion.others.baseCost2nights;
     const defaultPrecio2n = habitacion.others.basePrice2nights;
 
-    console.log("Arrival date desde calcular costo y precio: ", arrivalDate)
-    console.log("Departure date desde calcular costo y precio: ", departureDate)
-
     // 3) Traer sólo los registros de costo en el rango de fechas
     const registros = await PrecioBaseXDia.find({
         habitacionId,
@@ -955,8 +948,6 @@ async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
             $lt: moment.utc(departureDate).startOf('day').toDate()
         }
     }).lean();
-
-    console.log("registros: ", registros)
 
     // 4) Indexar por fecha ISO
     const mapa = registros.reduce((m, r) => {
