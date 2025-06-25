@@ -1126,7 +1126,7 @@ async function generarComisionOTA(info) {
         const chaletType = chalet.propertyDetails.accomodationType;
         const adminId = chalet.others.admin.toString();
         const ownerId = chalet.others.owner.toString();
-        const investors = chalet.others.investors.map(inv => inv.investor.toString());
+        const investors = chalet.others.investors;
         const extraCleaningCost = chalet.additionalInfo.extraCleaningCost;
         const chaletJanitor = chalet.others.janitor.toString();
 
@@ -1202,28 +1202,71 @@ async function generarComisionOTA(info) {
 
         // 5. Distribución del costo base restante (sin multiplicar por noches)
         const nuevoCostoBase = costoBase - extraCleaningCost;
+
         if (investors.length > 0) {
-            const montoPorInv = Math.round((nuevoCostoBase / investors.length + Number.EPSILON) * 100) / 100;
-            for (const invId of investors) {
-                balance -= montoPorInv;
-                await altaComisionReturn({
-                    monto: montoPorInv,
-                    concepto: `Comisión OTA inversionista`,
+            const comisionInversionistas = Math.round((nuevoCostoBase / 10 + Number.EPSILON) * 100) / 100;
+            console.log('comisión inversionistas: ', comisionInversionistas);
+
+            for (const investor of investors) {
+                const userInvestor = await User.findById(investor.investor);
+                if (!userInvestor) continue;
+
+                const noTickets = investor.noTickets;
+                const comision = Math.round((comisionInversionistas * noTickets + Number.EPSILON) * 100) / 100;
+
+                const datosBase = {
+                    concepto: `Comisión de inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
                     fecha: new Date(arrivalDate),
-                    idUsuario: invId,
-                    idReserva
-                });
+                    idUsuario: userInvestor._id,
+                    idReserva: reservacionId
+                };
+
+                // Comisión base
+                await altaComisionReturn({ ...datosBase, monto: comision });
+
+                if (userInvestor.investorType === 'Asimilado') {
+                    const iva = Math.round((comision * 0.16 + Number.EPSILON) * 100) / 100;
+                    const isr = Math.round(((comision - iva) * 0.16 + Number.EPSILON) * 100) / 100;
+                    const servicios = Math.round(((comision - iva) * 0.04 + Number.EPSILON) * 100) / 100;
+
+                    await altaComisionReturn({ ...datosBase, monto: -iva, concepto: `IVA inversionista por Reserva de cabaña` });
+                    await altaComisionReturn({ ...datosBase, monto: -isr, concepto: `ISR inversionista por Reserva de cabaña` });
+                    await altaComisionReturn({ ...datosBase, monto: -servicios, concepto: `Servicios Indirectos Bosque Imperial` });
+
+                } else if (userInvestor.investorType === 'RESICO Fisico') {
+                    const iva = Math.round((comision * 0.16 + Number.EPSILON) * 100) / 100;
+                    const retIva = Math.round((comision * 0.1066 + Number.EPSILON) * 100) / 100;
+                    const retIsr = Math.round((comision * 0.0125 + Number.EPSILON) * 100) / 100;
+                    const servicios = Math.round(((comision - iva) * 0.04 + Number.EPSILON) * 100) / 100;
+
+                    await altaComisionReturn({ ...datosBase, monto: -retIva, concepto: `Retención IVA inversionista por Reserva de cabaña` });
+                    await altaComisionReturn({ ...datosBase, monto: -retIsr, concepto: `ISR inversionista por Reserva de cabaña` });
+                    await altaComisionReturn({ ...datosBase, monto: -servicios, concepto: `Servicios Indirectos Bosque Imperial` });
+
+                } else if (userInvestor.investorType === 'PF con AE y PM') {
+                    const iva = Math.round((comision * 0.16 + Number.EPSILON) * 100) / 100;
+                    const servicios = Math.round(((comision - iva) * 0.04 + Number.EPSILON) * 100) / 100;
+
+                    await altaComisionReturn({ ...datosBase, monto: -servicios, concepto: `Servicios Indirectos Bosque Imperial` });
+
+                } else if (userInvestor.investorType === 'Efectivo') {
+                    const iva = Math.round((comision * 0.08 + Number.EPSILON) * 100) / 100;
+
+                    await altaComisionReturn({ ...datosBase, monto: -iva, concepto: `IVA inversionista por Reserva de cabaña (${noTickets} ticket(s))` });
+                }
             }
+
         } else {
-            balance -= nuevoCostoBase;
+            // Sin inversionistas, se asigna al dueño
             await altaComisionReturn({
                 monto: nuevoCostoBase,
-                concepto: `Comisión OTA dueño cabaña`,
+                concepto: `Comisión Dueño de cabaña`,
                 fecha: new Date(arrivalDate),
                 idUsuario: ownerId,
-                idReserva
+                idReserva: reservacionId
             });
         }
+
 
         // 6. Registrar utilidad una sola vez (ajustando balance)
         const utilidadChalet = (totalSinComisiones - costoBase);
@@ -1238,7 +1281,7 @@ async function generarComisionOTA(info) {
             });
         }
 
-        
+
         if (balance !== 0) {
             await altaComisionReturn({
                 monto: balance,
