@@ -258,9 +258,14 @@ async function webhookReceptor(req, res) {
             const channelId = data.channel_id;
             const ota_name = data.ota_name;
 
-            const habitacion = await Habitacion.findOne({ 'channels.airbnbListingId': listingId });
+            const habitacion = await Habitacion.findOne({ 'channexPropertyId': propertyId });
             if (!habitacion) {
-                console.log(`No se encontró la habitación con el listingId ${listingId} en la base de datos.`);
+                return res.status(404).json({ message: 'No se encontró una habitacion con ese ID de channex' });
+            }
+
+            const canal = habitacion.channels.find(channel => channel.listingId === listingId);
+            if (!canal) {
+                return res.status(404).json({ message: 'No se encontró un canal con ese ID' });
             }
 
             const arrivalDate = data.arrival_date;
@@ -702,6 +707,7 @@ async function createRateChannex(req, res) {
 
         const updatePrices = await updateChannexPrices(pmsId);
         const updateAvailability = await updateChannexAvailability(pmsId);
+        const createWebhook = await createPropertyWebhook(habitacion.channexPropertyId);
         if (!updatePrices || !updateAvailability) {
             throw new Error('No se pudo actualizar precios o disponibilidad');
         }
@@ -911,8 +917,29 @@ async function updateChannexAvailability(habitacionId) {
     return response.data;
 }
 
+async function createPropertyWebhook(propertyId) {
+    const base_url = process.env.NODE_ENV === 'development' ? 'https://8792-177-249-172-194.ngrok-free.app/api/channex/webhooks' : `https://${process.env.URL}/api/channex/webhooks`;
+    try {
+        const payload = {
+            webhook: {
+                property_id: propertyId,
+                callback_url: base_url,
+                event_mask: 'booking_new,booking_modification,booking_cancellation,alteration_request',
+                request_params: {},
+                headers: {},
+                is_active: true,
+                send_data: true
+            }
+        };
 
-
+        const response = await channex.post('/api/v1/webhooks', payload);
+        console.log('Webhook creado exitosamente:', response.data);
+        return response.data;
+    } catch (err) {
+        console.error('Error al crear el webhook:', err.response?.data || err.message);
+        throw err;
+    }
+}
 
 function dmsToDecimal(dmsStr) {
     const s = String(dmsStr).replace(/[^\d.]/g, '');

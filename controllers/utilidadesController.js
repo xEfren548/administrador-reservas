@@ -1218,7 +1218,7 @@ async function generarComisionOTA(info) {
                     concepto: `Comisión de inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
                     fecha: new Date(arrivalDate),
                     idUsuario: userInvestor._id,
-                    idReserva: reservacionId
+                    idReserva
                 };
 
                 // Comisión base
@@ -1263,7 +1263,7 @@ async function generarComisionOTA(info) {
                 concepto: `Comisión Dueño de cabaña`,
                 fecha: new Date(arrivalDate),
                 idUsuario: ownerId,
-                idReserva: reservacionId
+                idReserva
             });
         }
 
