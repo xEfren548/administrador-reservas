@@ -918,6 +918,10 @@ async function updateChannexAvailability(habitacionId) {
     return response.data;
 }
 
+// Aqui irá todo lo de booking
+
+
+
 async function createPropertyWebhook(propertyId) {
     const base_url = process.env.NODE_ENV === 'development' ? 'https://8792-177-249-172-194.ngrok-free.app/api/channex/webhooks' : `https://${process.env.URL}/api/channex/webhooks`;
     try {
