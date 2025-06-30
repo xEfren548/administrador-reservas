@@ -965,6 +965,16 @@ async function updateChannexAvailability(habitacionId) {
 
 // Aqui irá todo lo de booking
 
+async function validatePropertyBooking(req, res) {
+    const { pmsId } = req.body;
+    try {
+        const response = await channex.get(`/api/v1/properties/${pmsId}`);
+        res.status(200).json(response.data);
+    } catch (err) {
+        console.error('Error al validar la propiedad en Channex:', err.response ? err.response.data : err.message);
+        res.status(500).json({ error: err.response?.data?.error || err.message });
+    }   
+}
 
 
 async function createPropertyWebhook(propertyId) {
