@@ -13,6 +13,7 @@ router.get('/home', (req, res) => {
     });
 });
 router.get('/dashboard', channexController.dashboardChannexFull);
+router.get('/dashboard/booking', channexController.dashboardBooking);
 router.get('/properties', channexController.mapProperties);
 router.post('/properties/:id/create', channexController.createChannexProperty);
 router.get('/propiedades', channexController.showCreatedPropertiesAirbnb);

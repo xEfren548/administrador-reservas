@@ -226,9 +226,54 @@ async function dashboardChannexFull(req, res) {
     }
 }
 
+async function dashboardBooking(req, res) {
+    try {
+        // 1. Trae todas las habitaciones
+        const propiedades = await Habitacion.find().lean();
 
+        // 2. Limpia channexPropertyId que ya no existan en Channex
+        const respChannex = await channex.get('/api/v1/properties/options');
+        const channexIds = respChannex.data.data.map(opt => opt.id);
+        for (const hab of propiedades) {
+            if (hab.channexPropertyId && !channexIds.includes(hab.channexPropertyId)) {
+                await Habitacion.updateOne(
+                    { _id: hab._id },
+                    { $unset: { channexPropertyId: "" } }
+                );
+                hab.channexPropertyId = undefined;
+            }
+        }
 
+        // 3. Marca cada habitación según su propio canal de Booking
+        const propiedadesMarcadas = propiedades.map(hab => {
+            const existeEnChannex = Boolean(hab.channexPropertyId);
 
+            // Busca en hab.channels el canal tipo Booking.com
+            const bookingChannel = Array.isArray(hab.channels)
+                ? hab.channels.find(c => c.channel === 'BookingCom')
+                : null;
+
+            // Si existe el canal y la habitación ya está creada en Channex
+            const mapeadoBooking = Boolean(bookingChannel && existeEnChannex);
+
+            return {
+                ...hab,
+                existeEnChannex,
+                mapeadoBooking,
+                bookingChannelId: bookingChannel?.channelId
+            };
+        });
+
+        // 4. Renderiza el template con el estado de mapeo de Booking
+        res.render('dashboardBooking', {
+            propiedades: propiedadesMarcadas
+        });
+
+    } catch (err) {
+        console.error('Error en dashboardBooking:', err.response?.data || err.message);
+        return res.redirect('/api/channex/home?error=Error+inesperado+obteniendo+propiedades+Booking');
+    }
+}
 
 async function webhookReceptor(req, res) {
     try {
@@ -1035,6 +1080,7 @@ module.exports = {
     mapProperties,
     getChannexProperties,
     dashboardChannexFull,
+    dashboardBooking,
     showCreatedPropertiesAirbnb,
     createChannexProperty,
     webhookReceptor,

@@ -1,0 +1,187 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="ms-3">Propiedades locales</h2>
+    <button type="button" class="btn btn-primary me-3" id="btnActivateAllChannels">Activar todos los canales</button>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>En Channex</th>
+            <th>Channel ID</th>
+            <th>Tarifa actual</th>
+            <th>Acción Tarifa</th>
+            <th>Booking mapeado</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each propiedades}}
+        <tr>
+            <td>{{propertyDetails.name}}</td>
+            <td>
+                {{#if channexPropertyId}}
+                {{#if existeEnChannex}}
+                <span class="badge bg-success">Sí</span><br>
+                <small>ID: {{channexPropertyId}}</small>
+                {{else}}
+                <span class="badge bg-danger">No existe en Channex</span><br>
+                <small>ID local: {{channexPropertyId}}</small>
+                {{/if}}
+                {{else}}
+                <span class="badge bg-secondary">No</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if bookingChannelId}}
+                {{bookingChannelId}}
+                {{else}}
+                <span class="text-muted">—</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if tarifa}}
+                <span class="badge bg-dark">{{tarifa.title}} ({{tarifa.currency}})</span>
+                {{else}}
+                <span class="text-muted">Sin tarifa</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if channexPropertyId}}
+                {{#if existeEnChannex}}
+                {{#if tarifa}}
+                <button type="button" class="btn btn-sm btn-info sincronizar-tarifa-btn"
+                    data-pmsid="{{_id}}">Sincronizar</button>
+                {{else}}
+                <button type="button" class="btn btn-sm btn-info crear-tarifa-btn"
+                    data-propertyid="{{channexPropertyId}}" data-pmsid="{{_id}}">
+                    Crear tarifa
+                </button>
+                {{/if}}
+                {{else}}
+                <button type="button" class="btn btn-sm btn-warning alta-btn" data-id="{{_id}}">Dar de alta</button>
+                {{/if}}
+                {{else}}
+                <button type="button" class="btn btn-sm btn-primary alta-btn" data-id="{{_id}}">Dar de alta
+                    propiedad</button>
+                {{/if}}
+            </td>
+            <td>
+                {{#if mapeadoBooking}}
+                <span class="badge bg-success">Sí</span>
+                {{else}}
+                <span class="badge bg-danger">No</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if mapeadoBooking}}
+                <button class="btn btn-sm btn-warning desconectar-booking-btn" data-channelid="{{bookingChannelId}}"
+                    data-pmsid="{{_id}}">
+                    Desconectar
+                </button>
+                {{else if channexPropertyId}}
+                <button class="btn btn-sm btn-success conectar-booking-btn" data-pmsid="{{_id}}"
+                    data-propertyid="{{channexPropertyId}}">
+                    Conectar Booking
+                </button>
+                {{else}}
+                <span class="text-muted">---</span>
+                {{/if}}
+            </td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Activar todos los canales
+        document.getElementById('btnActivateAllChannels').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/channex/channels/activate-all', { method: 'POST' });
+                if (!response.ok) throw new Error('Error al activar todos los canales');
+                Swal.fire('Éxito', 'Todos los canales han sido activados', 'success').then(() => location.reload());
+            } catch (err) {
+                Swal.fire('Error', err.message, 'error');
+            }
+        });
+
+        // Dar de alta propiedad
+        document.querySelectorAll('.alta-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                try {
+                    const pmsId = btn.dataset.id;
+                    const res = await fetch(`/api/channex/properties/${pmsId}/create`, { method: 'POST' });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Error al dar de alta propiedad');
+                    Swal.fire('Alta', 'Propiedad creada en Channex', 'success').then(() => location.reload());
+                } catch (err) {
+                    Swal.fire('Error', err.message, 'error');
+                }
+            });
+        });
+
+        // Crear tarifa
+        document.querySelectorAll('.crear-tarifa-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.getElementById('inputPropertyId').value = btn.dataset.propertyid;
+                document.getElementById('inputPmsId').value = btn.dataset.pmsid;
+                document.getElementById('roomTitle').value = "ROOM " + btn.dataset.propertyid;
+                document.getElementById('rateTitle').value = "RATE " + btn.dataset.propertyid;
+                new bootstrap.Modal(document.getElementById('tarifaModal')).show();
+            });
+        });
+
+        // Sincronizar tarifa
+        document.querySelectorAll('.sincronizar-tarifa-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                try {
+                    const pmsId = btn.dataset.pmsid;
+                    Swal.fire({ title: 'Sincronizando...', didOpen: () => Swal.showLoading() });
+                    const res = await fetch('/api/channex/availability-rates', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pmsId })
+                    });
+                    if (!res.ok) throw new Error('Error sincronizando');
+                    Swal.close();
+                    Swal.fire('Listo', 'Sincronización completa', 'success').then(() => location.reload());
+                } catch (err) {
+                    Swal.fire('Error', err.message, 'error');
+                }
+            });
+        });
+
+        // Conectar/Desconectar Booking
+        document.querySelectorAll('.conectar-booking-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                try {
+                    const { pmsid, propertyid } = btn.dataset;
+                    console.log("Pms id: " + pmsid + " Property id: " + propertyid);
+                    const res = await fetch(`/api/booking/properties/${pmsid}/connect`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ property_id: propertyid })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Error conectando Booking');
+                    Swal.fire('Conectado', 'Booking conectado', 'success').then(() => location.reload());
+                } catch (err) {
+                    Swal.fire('Error', err.message, 'error');
+                }
+            });
+        });
+
+        document.querySelectorAll('.desconectar-booking-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                try {
+                    const { channelid } = btn.dataset;
+                    const res = await fetch(`/api/booking/channels/${channelid}/disconnect`, { method: 'POST' });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Error desconectando Booking');
+                    Swal.fire('Desconectado', 'Booking desconectado', 'success').then(() => location.reload());
+                } catch (err) {
+                    Swal.fire('Error', err.message, 'error');
+                }
+            });
+        });
+
+    });
+</script>
+
+<!-- Modales omitidos por brevedad, reutilizar los definidos en tu template anterior -->
