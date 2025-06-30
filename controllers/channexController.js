@@ -363,11 +363,11 @@ async function webhookReceptor(req, res) {
 
             const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
 
-            const pagos = await pagoController.obtenerPagos(idReserva);
-            let pagoTotal = 0
-            pagos.forEach(pago => {
-                pagoTotal += pago.importe;
-            })
+            // const pagos = await pagoController.obtenerPagos(idReserva);
+            // let pagoTotal = 0
+            // pagos.forEach(pago => {
+            //     pagoTotal += pago.importe;
+            // })
 
             for (const comisiones of comisionesReserva) {
                 const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
@@ -408,10 +408,11 @@ async function webhookReceptor(req, res) {
 
             const ota_name = data.ota_name;
             const listingId = data.meta.listing_id;
+            const propertyId = body.payload.propertyId;
 
-            const habitacion = await Habitacion.findOne({ 'channels.airbnbListingId': listingId });
+            const habitacion = await Habitacion.findById(reserva.resourceId);
             if (!habitacion) {
-                console.log(`No se encontró la habitación con el listingId ${listingId} en la base de datos.`);
+                console.log(`No se encontró la habitación en la base de datos.`);
             }
 
             const nNights = body.payload.count_of_nights;
@@ -956,6 +957,7 @@ function dmsToDecimal(dmsStr) {
 
 async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
     const habitacionId = habitacion._id;
+    console.log("Habitacion desde calcular costo base total", habitacion)
 
     // 1) Cargar la primera plataforma activa (o elegir lógica si hay varias)
     const [plat] = await Plataformas.find({
@@ -1010,7 +1012,7 @@ async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
         if (plat.aumentoFijo != null) {
             incremento = plat.aumentoFijo;
         } else if (plat.aumentoPorcentual != null) {
-            incremento = Math.round(costo2n * (plat.aumentoPorcentual / 100));
+            incremento = Math.round(precio2n * (plat.aumentoPorcentual / 100));
         }
 
         // console.log("INCREMENTO PLATAFORMA: ", incremento);

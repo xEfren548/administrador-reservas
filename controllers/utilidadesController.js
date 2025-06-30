@@ -1202,6 +1202,7 @@ async function generarComisionOTA(info) {
 
         // 5. Distribución del costo base restante (sin multiplicar por noches)
         const nuevoCostoBase = costoBase - extraCleaningCost;
+        balance -= nuevoCostoBase;
 
         if (investors.length > 0) {
             const comisionInversionistas = Math.round((nuevoCostoBase / 10 + Number.EPSILON) * 100) / 100;
