@@ -303,6 +303,7 @@ const othersSchema = new mongoose.Schema({
 
 const channelsSchema = new mongoose.Schema({
     channelId: { type: String, default: null },
+    ota_name: { type: String, default: null },
     listingId: { type: String, default: null },
     roomListingId: { type: String, default: null },
     rateListingId: { type: String, default: null },

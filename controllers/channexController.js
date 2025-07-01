@@ -743,7 +743,8 @@ async function createRoomChannex(req, res) {
 
         habitacion.channels.push({
             channelId: req.session.channelId,
-            roomListingId: resp.data.data.attributes.id
+            roomListingId: resp.data.data.attributes.id,
+            ota_name: 'AIRBNB'
         })
 
         // habitacion.channels.roomListingId = resp.data.data.attributes.id;
@@ -779,7 +780,8 @@ async function createBookingRoom(req, res) {
 
         if (Array.isArray(habitacion.channels)) {
             habitacion.channels.push({
-                roomListingId: resp.data.data.attributes.id
+                roomListingId: resp.data.data.attributes.id,
+                ota_name: ota_name.toUpperCase()
             })
         }
 
