@@ -730,7 +730,76 @@ async function createRoomChannex(req, res) {
         res.status(500).json({ error: err.response?.data?.error || err.message });
     }
 }
+async function createBookingRoom(req, res) {
+    try {
+        const pmsId = req.query.pmsid;
+        const ota_name = req.query.ota_name;
+        const habitacion = await Habitacion.findById(pmsId);
+        if (!habitacion) {
+            return res.status(404).json({ error: 'Habitación no encontrada' });
+        }
+        let plataformas = []
+        if (ota_name) {
+            plataformas = await Plataformas.find({
+                nombre: ota_name.toUpperCase()
+            });
+        }
 
+        if (!plataformas || plataformas.length === 0) {
+            throw new Error('La habitación no tiene plataformas activas. Activala desde Editar Cabaña');
+        }
+        req.body.room_type.occ_adults = habitacion.propertyDetails.maxOccupancy;
+        req.body.room_type.default_occupancy = habitacion.propertyDetails.maxOccupancy;
+
+        const resp = await channex.post('/api/v1/room_types', req.body);
+
+        if (Array.isArray(habitacion.channels)) {
+            habitacion.channels.push({
+                roomListingId: resp.data.data.attributes.id
+            })
+        }
+
+        // habitacion.channels.roomListingId = resp.data.data.attributes.id;
+        await habitacion.save();
+        res.json(resp.data);
+    } catch (err) {
+        console.error('Error al crear habitación en Channex:', err.response ? err.response.data : err.message);
+        res.status(500).json({ error: err.response?.data?.error || err.message });
+    }
+}
+
+async function createRateBooking(req, res) {
+    try {
+        const pmsId = req.query.pmsid;
+        const roomId = req.body.rate_plan.room_type_id;
+        const habitacion = await Habitacion.findById(pmsId);
+        if (!habitacion) {
+            return res.status(404).json({ error: 'Habitación no encontrada' });
+        }
+        if (!habitacion.channexPropertyId || habitacion.channels.length === 0)
+            throw new Error('La habitación no está creada en Channex');
+
+        const resp = await channex.post('/api/v1/rate_plans', req.body);
+        const canal = habitacion.channels.find(channel => channel.roomId === roomId);
+        if (!canal) {
+            throw new Error('No se pudo encontrar el canal');
+        }
+
+        canal.rateListingId = resp.data.data.attributes.id;
+        await habitacion.save();
+
+        //const updatePrices = await updateChannexPrices(pmsId, "Booking");
+        //const updateAvailability = await updateChannexAvailability(pmsId);
+        //const createWebhook = await createPropertyWebhook(habitacion.channexPropertyId);
+        //if (!updatePrices || !updateAvailability) {
+        //    throw new Error('No se pudo actualizar precios o disponibilidad');
+        //}
+        res.json(resp.data);
+    } catch (err) {
+        console.error('Error al crear tarifa en Channex:', err.response ? err.response.data : err.message);
+        res.status(500).json({ error: err.response?.data?.error || err.message });
+    }
+}
 async function createRateChannex(req, res) {
     try {
         const pmsId = req.query.pmsid;
@@ -764,7 +833,7 @@ async function createRateChannex(req, res) {
     }
 }
 
-async function updateChannexPrices(habitacionId) {
+async function updateChannexPrices(habitacionId, ota_name = null) {
     // 0) Validaciones básicas
     const habitacion = await Habitacion.findById(habitacionId);
     if (!habitacion) throw new Error('Habitación no encontrada');
@@ -785,13 +854,26 @@ async function updateChannexPrices(habitacionId) {
     endDate.setFullYear(endDate.getFullYear() + 1);
 
     // 2) Cargar plataformas activas
-    const plataformas = await Plataformas.find({
-        _id: { $in: habitacion.activePlatforms }
-    });
+    let plataformas = []
+    if (ota_name) {
+        plataformas = await Plataformas.find({
+            nombre: ota_name.toUpperCase()
+        });
+
+        if (!plataformas || plataformas.length === 0) {
+            throw new Error(`No se encontraron plataformas con el nombre ${ota_name}`);
+        }
+    } else {
+        plataformas = await Plataformas.find({
+            _id: { $in: habitacion.activePlatforms }
+        });
+    }
 
     if (!plataformas || plataformas.length === 0) {
         throw new Error('La habitación no tiene plataformas activas. Activala desde Editar Cabaña');
     }
+
+    console.log("plataformas", plataformas)
 
     // 3) Traer todos los registros de PrecioBaseXDia
     const priceRecords = await PrecioBaseXDia
@@ -1101,5 +1183,7 @@ module.exports = {
     createRoomChannex,
     createRateChannex,
     updateChannexPrices,
-    updateChannexAvailability
+    updateChannexAvailability,
+    createBookingRoom,
+    createRateBooking
 };

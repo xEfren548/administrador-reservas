@@ -27,6 +27,9 @@ router.post('/channels/:channelId/activate', channexController.activateChannel);
 // Rooms and rates
 router.post('/rooms', channexController.createRoomChannex);
 router.post('/rates', channexController.createRateChannex);
+// Booking
+router.post('/rooms/booking', channexController.createBookingRoom);
+router.post('/rates/booking', channexController.createRateBooking);
 
 router.post('/availability-rates', async (req, res) => {
     const { pmsId } = req.body;

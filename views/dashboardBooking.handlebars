@@ -222,6 +222,7 @@
 
         document.getElementById('tarifaForm').addEventListener('submit', async function (e) {
             e.preventDefault();
+
             const property_id = document.getElementById('inputPropertyId').value;
             const room_title = document.getElementById('roomTitle').value;
             const rate_title = document.getElementById('rateTitle').value;
@@ -231,8 +232,6 @@
             console.log("Room Title:", room_title);
             console.log("Rate Title:", rate_title);
             console.log("PMS ID:", pms_id);
-
-            return;
 
             Swal.fire({
                 title: "Creando room y rate... Sincronizando precios...",
@@ -245,7 +244,7 @@
 
             try {
                 // 1. Crea Room
-                const roomRes = await fetch(`/api/channex/rooms?pmsid=${pms_id}`, {
+                const roomRes = await fetch(`/api/channex/rooms/booking?pmsid=${pms_id}&ota_name=booking`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -267,7 +266,7 @@
                 const default_occupancy = roomData.data.attributes.default_occupancy;
 
                 // 2. Crea Rate
-                const rateRes = await fetch(`/api/channex/rates?pmsid=${pms_id}`, {
+                const rateRes = await fetch(`/api/channex/rates/booking?pmsid=${pms_id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
