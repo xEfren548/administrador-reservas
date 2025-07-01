@@ -763,7 +763,11 @@ async function createBookingRoom(req, res) {
         await habitacion.save();
         res.json(resp.data);
     } catch (err) {
-        console.error('Error al crear habitación en Channex:', err.response ? err.response.data : err.message);
+        if (err.response?.data?.errors?.details?.title) {
+            console.log('Error en mapeo 1:', err.response.data.errors.details);
+            return res.status(400).json({ error: err.response?.data?.errors?.details?.title[0] });
+        }
+        console.error('Error al crear room en Channex:', err.response ? err.response.data : err.message);
         res.status(500).json({ error: err.response?.data?.error || err.message });
     }
 }
@@ -780,7 +784,7 @@ async function createRateBooking(req, res) {
             throw new Error('La habitación no está creada en Channex');
 
         const resp = await channex.post('/api/v1/rate_plans', req.body);
-        const canal = habitacion.channels.find(channel => channel.roomId === roomId);
+        const canal = habitacion.channels.find(channel => channel.roomListingId === roomId);
         if (!canal) {
             throw new Error('No se pudo encontrar el canal');
         }
