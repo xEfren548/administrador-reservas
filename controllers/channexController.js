@@ -244,9 +244,33 @@ async function dashboardBooking(req, res) {
             }
         }
 
+        // 5. Tarifas (rate plans)
+        const respRates = await channex.get('/api/v1/rate_plans');
+        const ratePlans = respRates.data.data;
+
+        // console.log(ratePlans)
+
         // 3. Marca cada habitación según su propio canal de Booking
         const propiedadesMarcadas = propiedades.map(hab => {
             const existeEnChannex = Boolean(hab.channexPropertyId);
+
+            // Tarifa
+            let tarifa = null;
+            if (hab.channexPropertyId) {
+                console.log(ratePlans.map(r => console.log(r.relationships.room_type.data.id)))
+                const foundRate = ratePlans.find(r =>
+                    //r => r.relationships.property.data.id === hab.channexPropertyId
+                    hab.channels.some(c => c.roomListingId === r.relationships.room_type.data.id)
+                );
+                if (foundRate) {
+                    tarifa = {
+                        id: foundRate.id,
+                        title: foundRate.attributes.title,
+                        currency: foundRate.attributes.currency
+                    };
+                    console.log(tarifa)
+                }
+            }
 
             // Busca en hab.channels el canal tipo Booking.com
             const bookingChannel = Array.isArray(hab.channels)
@@ -259,6 +283,7 @@ async function dashboardBooking(req, res) {
             return {
                 ...hab,
                 existeEnChannex,
+                tarifa,
                 mapeadoBooking,
                 bookingChannelId: bookingChannel?.channelId
             };
