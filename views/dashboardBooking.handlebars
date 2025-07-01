@@ -50,7 +50,7 @@
                 {{#if existeEnChannex}}
                 {{#if tarifa}}
                 <button type="button" class="btn btn-sm btn-info sincronizar-tarifa-btn"
-                    data-pmsid="{{_id}}">Sincronizar</button>
+                    data-pmsid="{{_id}}">Sincronizar precios y disponibilidad</button>
                 {{else}}
                 <button type="button" class="btn btn-sm btn-info crear-tarifa-btn"
                     data-propertyid="{{channexPropertyId}}" data-pmsid="{{_id}}"
@@ -197,7 +197,7 @@
                     const pmsId = btn.dataset.pmsid;
                     Swal.fire({ title: 'Sincronizando...', didOpen: () => Swal.showLoading() });
                     const res = await fetch('/api/channex/availability-rates', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pmsId })
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pmsId, ota_name: 'booking' })
                     });
                     if (!res.ok) throw new Error('Error sincronizando');
                     Swal.close();

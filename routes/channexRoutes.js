@@ -32,10 +32,10 @@ router.post('/rooms/booking', channexController.createBookingRoom);
 router.post('/rates/booking', channexController.createRateBooking);
 
 router.post('/availability-rates', async (req, res) => {
-    const { pmsId } = req.body;
+    const { pmsId, ota_name } = req.body;
     try {
         // Obtiene precios y la fecha límite (fin de año, por si la quieres mostrar)
-        const { data: prices, fechaLimite } = await channexController.updateChannexPrices(pmsId);
+        const { data: prices, fechaLimite } = await channexController.updateChannexPrices(pmsId, ota_name);
 
         // La disponibilidad siempre cubrirá ese mismo rango (hoy a 1 año)
         const availability = await channexController.updateChannexAvailability(pmsId);

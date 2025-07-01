@@ -268,7 +268,6 @@ async function dashboardBooking(req, res) {
                         title: foundRate.attributes.title,
                         currency: foundRate.attributes.currency
                     };
-                    console.log(tarifa)
                 }
             }
 
