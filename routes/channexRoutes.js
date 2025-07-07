@@ -30,6 +30,7 @@ router.post('/rates', channexController.createRateChannex);
 // Booking
 router.post('/rooms/booking', channexController.createBookingRoom);
 router.post('/rates/booking', channexController.createRateBooking);
+router.post('/channels/booking', channexController.createChannelBooking);
 
 router.post('/availability-rates', async (req, res) => {
     const { pmsId, ota_name } = req.body;

@@ -830,6 +830,70 @@ async function createRateBooking(req, res) {
         res.status(500).json({ error: err.response?.data?.error || err.message });
     }
 }
+
+async function createChannelBooking(req, res) {
+    try {
+        const pmsId = req.query.pmsid;
+        const rateListingId = req.query.rateListingId;
+
+        const { bookingPropertyId, roomTypeCode, ratePlanCode } = req.body;
+
+        const habitacion = await Habitacion.findById(pmsId);
+        if (!habitacion) {
+            return res.status(404).json({ error: 'Habitación no encontrada' });
+        }
+        if (!habitacion.channexPropertyId || habitacion.channels.length === 0) {
+            throw new Error('La habitación no está creada en Channex');
+        }
+
+        const canal = habitacion.channels.find(channel => channel.rateListingId === rateListingId);
+        if (!canal) {
+            throw new Error('No se pudo encontrar el canal');
+        }
+        
+        const payload = {
+            channel: {
+                channel: "BookingCom",
+                group_id: "b5fcd225-d31f-4588-a828-686f7e2b32a4",
+                is_active: false,
+                title: `${habitacion.propertyDetails.name} - BOOKING`,
+                known_mappings_list: [],
+                properties: [
+                    habitacion.channexPropertyId
+                ],
+                rate_plans: [
+                    {
+                        rate_plan_id: rateListingId,
+                        settings: {
+                            occ_changed: false,
+                            occupancy: habitacion.propertyDetails.maxOccupancy,
+                            pricing_type: "USD",
+                            primary_occ: true,
+                            rate_plan_code: ratePlanCode,
+                            readonly: false,
+                            room_type_code: roomTypeCode
+                        }
+                    }
+                ],
+                settings: {
+                    hotel_id: bookingPropertyId
+                }
+            }
+        }
+
+        const resp = await channex.post('/api/v1/channels', payload);
+        const newChannelId = resp.data.data.attributes.id;
+        canal.channelId = newChannelId;
+        await habitacion.save();
+        res.json(resp.data);
+
+
+    } catch (err) {
+        console.error('Error al crear canal en Channex:', err.response ? err.response.data : err.message);
+        res.status(500).json({ error: err.response?.data?.error || err.message });
+    }
+}
+
 async function createRateChannex(req, res) {
     try {
         const pmsId = req.query.pmsid;
@@ -1215,5 +1279,6 @@ module.exports = {
     updateChannexPrices,
     updateChannexAvailability,
     createBookingRoom,
-    createRateBooking
+    createRateBooking,
+    createChannelBooking
 };
