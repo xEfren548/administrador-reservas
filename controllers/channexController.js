@@ -833,12 +833,10 @@ async function createRateBooking(req, res) {
 
 async function createChannelBooking(req, res) {
     try {
-        const pmsId = req.query.pmsid;
-        const rateListingId = req.query.rateListingId;
 
-        const { bookingPropertyId, roomTypeCode, ratePlanCode } = req.body;
+        const { pms_id, rateListingId, bookingPropertyId, roomTypeCode, ratePlanCode } = req.body;
 
-        const habitacion = await Habitacion.findById(pmsId);
+        const habitacion = await Habitacion.findById(pms_id);
         if (!habitacion) {
             return res.status(404).json({ error: 'Habitación no encontrada' });
         }
@@ -889,6 +887,15 @@ async function createChannelBooking(req, res) {
 
 
     } catch (err) {
+        if (err.response?.data?.errors?.details) {
+            console.log('Error en mapeo 1:', err.response.data.errors.details);
+            const details = err.response.data.errors.details || err.response.data.errors.settings || {};
+            // Convertimos a string, venga como objeto o como otro tipo
+            const msg = (typeof details === 'object')
+                ? JSON.stringify(details)
+                : String(details);
+            return res.status(400).json({ error: msg });
+        }
         console.error('Error al crear canal en Channex:', err.response ? err.response.data : err.message);
         res.status(500).json({ error: err.response?.data?.error || err.message });
     }

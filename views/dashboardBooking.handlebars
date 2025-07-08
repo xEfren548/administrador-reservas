@@ -83,9 +83,9 @@
                     data-propertyid="{{channexPropertyId}}">
                     Mapear Booking
                 </button>
-                {{else if channexPropertyId}}
+                {{else if tarifa}}
                 <button class="btn btn-sm btn-success conectar-booking-btn" data-pmsid="{{_id}}"
-                    data-propertyid="{{channexPropertyId}}">
+                    data-propertyid="{{channexPropertyId}}" data-tarifaid="{{tarifa.id}}">
                     Conectar Booking
                 </button>
                 {{else}}
@@ -138,6 +138,8 @@
                 <div class="modal-body">
                     <input type="hidden" id="inputPropertyId" name="property_id">
                     <input type="hidden" id="inputPmsId" name="pms_id">
+                    <input type="hidden" id="inputTarifaId" name="tarifa_id">
+
                     <div class="mb-3">
                         <label for="roomTitle" class="form-label">Nombre del Room</label>
                         <input type="text" class="form-control" id="roomTitle" name="room_title" required>
@@ -221,6 +223,7 @@
             btn.addEventListener('click', async () => {
                 document.getElementById('inputPropertyId').value = btn.dataset.propertyid;
                 document.getElementById('inputPmsId').value = btn.dataset.pmsid;
+                document.getElementById('inputTarifaId').value = btn.dataset.tarifaid;
 
                 new bootstrap.Modal(document.getElementById('bookingModal')).show();
 
@@ -318,6 +321,7 @@
             e.preventDefault();
             const property_id = document.getElementById('inputPropertyId').value;
             const pms_id = document.getElementById('inputPmsId').value;
+            const tarifa_id = document.getElementById('inputTarifaId').value;
 
             const bookingPropertyId = document.getElementById('booking_property_id').value;
             const bookingRoomId = document.getElementById('booking_room_id').value;
@@ -329,6 +333,7 @@
 
             console.log("Property ID:", property_id);
             console.log("PMS ID:", pms_id);
+            console.log("Tarifa ID:", tarifa_id);
 
             try {
                 const res = await fetch(`/api/channex/channels/booking`, {
@@ -337,9 +342,10 @@
                     body: JSON.stringify({
                         property_id: property_id,
                         pms_id: pms_id,
-                        booking_property_id: bookingPropertyId,
-                        booking_room_id: bookingRoomId,
-                        booking_rate_id: bookingRateId
+                        rateListingId: tarifa_id,
+                        bookingPropertyId: bookingPropertyId,
+                        roomTypeCode: bookingRoomId,
+                        ratePlanCode: bookingRateId
                     })
                 });
                 const data = await res.json();
