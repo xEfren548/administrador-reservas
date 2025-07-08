@@ -273,7 +273,7 @@ async function dashboardBooking(req, res) {
 
             // Busca en hab.channels el canal tipo Booking.com
             const bookingChannel = Array.isArray(hab.channels)
-                ? hab.channels.find(c => c.channel === 'BookingCom')
+                ? hab.channels.some(c => c.channelId && c.ota_name === 'BOOKING')
                 : null;
 
             // Si existe el canal y la habitación ya está creada en Channex
