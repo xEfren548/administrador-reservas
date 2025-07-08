@@ -116,7 +116,7 @@ async function dashboardChannexFull(req, res) {
             if (hab.channexPropertyId && !channexIds.includes(hab.channexPropertyId)) {
                 await Habitacion.updateOne(
                     { _id: hab._id },
-                    { $unset: { "channexPropertyId": "" }, }
+                    { $unset: { "channexPropertyId": "" }, channels: [] }
                     // { $unset: { channexPropertyId: "", isMapped: "" } }
                 );
                 hab.channexPropertyId = undefined;
@@ -150,9 +150,9 @@ async function dashboardChannexFull(req, res) {
 
             // Tarifa
             let tarifa = null;
-            if (hab.channexPropertyId) {
+            if (hab.channexPropertyId && Array.isArray(hab.channels)) {
                 const foundRate = ratePlans.find(
-                    r => r.relationships.property.data.id === hab.channexPropertyId
+                    r => r.relationships.property.data.id === hab.channexPropertyId && hab.channels.some(c => c.ota_name === "AIRBNB")
                 );
                 if (foundRate) {
                     tarifa = {
@@ -238,7 +238,7 @@ async function dashboardBooking(req, res) {
             if (hab.channexPropertyId && !channexIds.includes(hab.channexPropertyId)) {
                 await Habitacion.updateOne(
                     { _id: hab._id },
-                    { $unset: { channexPropertyId: "" } }
+                    { $unset: { channexPropertyId: "", channels: [] } }
                 );
                 hab.channexPropertyId = undefined;
             }
@@ -818,12 +818,12 @@ async function createRateBooking(req, res) {
         canal.rateListingId = resp.data.data.attributes.id;
         await habitacion.save();
 
-        //const updatePrices = await updateChannexPrices(pmsId, "Booking");
-        //const updateAvailability = await updateChannexAvailability(pmsId);
-        //const createWebhook = await createPropertyWebhook(habitacion.channexPropertyId);
-        //if (!updatePrices || !updateAvailability) {
-        //    throw new Error('No se pudo actualizar precios o disponibilidad');
-        //}
+        const updatePrices = await updateChannexPrices(pmsId, "BOOKING");
+        const updateAvailability = await updateChannexAvailability(pmsId);
+        const createWebhook = await createPropertyWebhook(habitacion.channexPropertyId);
+        if (!updatePrices || !updateAvailability) {
+            throw new Error('No se pudo actualizar precios o disponibilidad');
+        }
         res.json(resp.data);
     } catch (err) {
         console.error('Error al crear tarifa en Channex:', err.response ? err.response.data : err.message);
@@ -848,7 +848,7 @@ async function createChannelBooking(req, res) {
         if (!canal) {
             throw new Error('No se pudo encontrar el canal');
         }
-        
+
         const payload = {
             channel: {
                 channel: "BookingCom",
@@ -921,7 +921,7 @@ async function createRateChannex(req, res) {
         canal.rateListingId = resp.data.data.attributes.id;
         await habitacion.save();
 
-        const updatePrices = await updateChannexPrices(pmsId);
+        const updatePrices = await updateChannexPrices(pmsId, "AIRBNB");
         const updateAvailability = await updateChannexAvailability(pmsId);
         const createWebhook = await createPropertyWebhook(habitacion.channexPropertyId);
         if (!updatePrices || !updateAvailability) {
@@ -929,6 +929,15 @@ async function createRateChannex(req, res) {
         }
         res.json(resp.data);
     } catch (err) {
+        if (err.response?.data?.errors?.details) {
+            console.log('Error en mapeo 1:', err.response.data.errors.details);
+            const details = err.response.data.errors.details || err.response.data.errors.settings || {};
+            // Convertimos a string, venga como objeto o como otro tipo
+            const msg = (typeof details === 'object')
+                ? JSON.stringify(details)
+                : String(details);
+            return res.status(400).json({ error: msg });
+        }
         console.error('Error al crear tarifa en Channex:', err.response ? err.response.data : err.message);
         res.status(500).json({ error: err.response?.data?.error || err.message });
     }
@@ -943,6 +952,8 @@ async function updateChannexPrices(habitacionId, ota_name = null) {
 
     const propertyId = habitacion.channexPropertyId;
     const defaultPrice = habitacion.others.basePrice2nights;
+
+    console.log("OTA NAME: ", ota_name)
 
 
     const comisiones = await utilidadesController.calcularComisionesOTA()
@@ -987,52 +998,56 @@ async function updateChannexPrices(habitacionId, ota_name = null) {
     const canales = habitacion.channels
 
     for (const canal of canales) {
-        for (const plat of plataformas) {
-            const daily = [];
-            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                const iso = d.toISOString().slice(0, 10);
-                const rec = priceRecords.find(r =>
-                    r.fecha.toISOString().slice(0, 10) === iso
-                );
-                const base = rec ? rec.precio_base_2noches : defaultPrice;
-                let price = base;
-                if (plat.aumentoFijo != null) {
-                    price += plat.aumentoFijo;
-                } else if (plat.aumentoPorcentual != null) {
-                    price = Math.round(base * (1 + plat.aumentoPorcentual / 100));
-                }
-                price += comisiones
-                daily.push({ date: iso, price });
-            }
+        const plataforma = plataformas.find(plat => plat.nombre === canal.ota_name);
+        if (!plataforma) {
+            throw new Error(`No se encontraron plataformas con el nombre ${canal.ota_name}`);
+        }
 
-            // Agrupar en rangos de precio igual
-            let curr = null;
-            for (const { date, price } of daily) {
-                if (!curr || curr.rate !== price) {
-                    if (curr) {
-                        values.push({
-                            property_id: propertyId,
-                            rate_plan_id: canal.rateListingId,
-                            date_from: curr.start,
-                            date_to: curr.end,
-                            rate: curr.rate * 100
-                        });
-                    }
-                    curr = { start: date, end: date, rate: price };
-                } else {
-                    curr.end = date;
-                }
+        const daily = [];
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const iso = d.toISOString().slice(0, 10);
+            const rec = priceRecords.find(r =>
+                r.fecha.toISOString().slice(0, 10) === iso
+            );
+            const base = rec ? rec.precio_base_2noches : defaultPrice;
+            let price = base;
+            if (plataforma.aumentoFijo != null) {
+                price += plataforma.aumentoFijo;
+            } else if (plataforma.aumentoPorcentual != null) {
+                price = Math.round(base * (1 + plataforma.aumentoPorcentual / 100));
             }
-            if (curr) {
-                values.push({
-                    property_id: propertyId,
-                    rate_plan_id: canal.rateListingId,
-                    date_from: curr.start,
-                    date_to: curr.end,
-                    rate: curr.rate * 100
-                });
+            price += comisiones
+            daily.push({ date: iso, price });
+        }
+
+        // Agrupar en rangos de precio igual
+        let curr = null;
+        for (const { date, price } of daily) {
+            if (!curr || curr.rate !== price) {
+                if (curr) {
+                    values.push({
+                        property_id: propertyId,
+                        rate_plan_id: canal.rateListingId,
+                        date_from: curr.start,
+                        date_to: curr.end,
+                        rate: curr.rate * 100
+                    });
+                }
+                curr = { start: date, end: date, rate: price };
+            } else {
+                curr.end = date;
             }
         }
+        if (curr) {
+            values.push({
+                property_id: propertyId,
+                rate_plan_id: canal.rateListingId,
+                date_from: curr.start,
+                date_to: curr.end,
+                rate: curr.rate * 100
+            });
+        }
+
 
     }
 
@@ -1156,13 +1171,25 @@ async function validatePropertyBooking(req, res) {
     } catch (err) {
         console.error('Error al validar la propiedad en Channex:', err.response ? err.response.data : err.message);
         res.status(500).json({ error: err.response?.data?.error || err.message });
-    }   
+    }
 }
 
 
 async function createPropertyWebhook(propertyId) {
     const base_url = process.env.NODE_ENV === 'development' ? 'https://8792-177-249-172-194.ngrok-free.app/api/channex/webhooks' : `https://${process.env.URL}/api/channex/webhooks`;
     try {
+
+        const habitacion = await Habitacion.findOne({ channexPropertyId: propertyId });
+        if (!habitacion) {
+            const error = new Error('Habitación no encontrada en Channex');
+            error.status = 404;
+            throw error;
+        }
+
+        if (habitacion.channels.length > 1) {
+            console.log('La habitación tiene mas de un canal, no se puede crear el webhook');
+            return true;
+        }
         const payload = {
             webhook: {
                 property_id: propertyId,
@@ -1179,6 +1206,17 @@ async function createPropertyWebhook(propertyId) {
         console.log('Webhook creado exitosamente:', response.data);
         return response.data;
     } catch (err) {
+        if (err.response?.data?.errors?.details) {
+            console.log('Error en mapeo 1:', err.response.data.errors.details);
+            const details = err.response.data.errors.details;
+            // Convertimos a string, venga como objeto o como otro tipo
+            const msg = (typeof details === 'object')
+                ? JSON.stringify(details)
+                : String(details);
+            const error = new Error(msg);
+            error.status = err.response.status;
+            throw error;
+        }
         console.error('Error al crear el webhook:', err.response?.data || err.message);
         throw err;
     }
