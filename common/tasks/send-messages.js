@@ -331,7 +331,7 @@ async function cancelReservation() {
                             
                             const chalet = await Habitacion.findById(reservation.resourceId);
 
-                            if (chalet.channels.airbnbListingId) {
+                            if (chalet.channels?.length > 0) {
                                 channexController.updateChannexAvailability(chalet._id)
                                     .then(() => {
                                         console.log("Disponibilidad actualizada en Channex.");

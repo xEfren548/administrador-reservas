@@ -31,7 +31,7 @@ async function agregarNuevoPrecio(req, res) {
 
         await nuevoPrecio.save();
         res.status(201).json({ mensaje: 'Precio base agregado exitosamente.' });
-        if (chalet.channels.airbnbListingId) {
+        if (chalet.channels?.length > 0) {
             channexController.updateChannexPrices(chalet._id)
                 .then(() => {
                     console.log("Precios actualizados en Channex.");
@@ -156,7 +156,7 @@ async function eliminarRegistroPrecio(req, res) {
 
         const chalet = await Habitacion.findById(habitacionId);
 
-        if (chalet.channels.airbnbListingId) {
+        if (chalet.channels?.length > 0) {
             channexController.updateChannexPrices(chalet._id)
             .then(() => {
                 console.log("Precios actualizados en Channex.");

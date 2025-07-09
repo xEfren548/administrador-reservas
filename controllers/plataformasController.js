@@ -174,7 +174,7 @@ const modificarPlataforma = async (req, res) => {
         );
 
         for (const chalet of chaletsConPlataforma) {
-            if (chalet.channels?.airbnbListingId) {
+            if (chalet.channels?.length > 0) {
                 try {
                     await channexController.updateChannexPrices(chalet._id);
                     console.log(`✅ Precios actualizados para ${chalet._id}`);

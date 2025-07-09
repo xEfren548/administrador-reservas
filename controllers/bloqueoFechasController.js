@@ -123,7 +123,7 @@ async function crearFechaBloqueada(req, res){
         const chalet = await Habitacion.findById(habitacionId).select('channels')
         console.log(chalet);
 
-        if (chalet.channels.airbnbListingId) {
+        if (chalet.channels?.length > 0) {
             channexController.updateChannexAvailability(chalet._id)
             .then(() => {
                 console.log("Disponibilidad actualizada en Channex.");
@@ -160,7 +160,7 @@ async function eliminarFechaBloqueada(req, res){
             const chalet = await Habitacion.findById(habitacionId).select('channels')
             console.log(chalet);
 
-            if (chalet.channels.airbnbListingId) {
+            if (chalet.channels?.length > 0) {
                 channexController.updateChannexAvailability(chalet._id)
                 .then(() => {
                     console.log("Disponibilidad actualizada en Channex.");
