@@ -938,7 +938,7 @@ async function createReservation(req, res, next) {
 
         res.status(200).json({ success: true, reservationId: idReserva, message });
 
-        if (chalet.channels.airbnbListingId) {
+        if (chalet.channels.length > 0) {
             channexController.updateChannexAvailability(chalet._id)
                 .then(() => {
                     console.log("Disponibilidad actualizada en Channex.");
@@ -1901,7 +1901,7 @@ async function moveToPlayground(req, res) {
                     // // Save the updated room list to the database
                     // await eventosExistentes.save();
                     console.log("Reserva cancelada de la base de datos.")
-                    if (chalet.channels.airbnbListingId) {
+                    if (chalet.channels.length > 0) {
                         channexController.updateChannexAvailability(chalet._id)
                             .then(() => {
                                 console.log("Disponibilidad actualizada en Channex.");

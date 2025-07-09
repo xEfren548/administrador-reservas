@@ -966,20 +966,11 @@ async function updateChannexPrices(habitacionId, ota_name = null) {
     endDate.setFullYear(endDate.getFullYear() + 1);
 
     // 2) Cargar plataformas activas
-    let plataformas = []
-    if (ota_name) {
-        plataformas = await Plataformas.find({
-            nombre: ota_name.toUpperCase()
-        });
 
-        if (!plataformas || plataformas.length === 0) {
-            throw new Error(`No se encontraron plataformas con el nombre ${ota_name}`);
-        }
-    } else {
-        plataformas = await Plataformas.find({
-            _id: { $in: habitacion.activePlatforms }
-        });
-    }
+    const plataformas = await Plataformas.find({
+        _id: { $in: habitacion.activePlatforms }
+    });
+    
 
     if (!plataformas || plataformas.length === 0) {
         throw new Error('La habitación no tiene plataformas activas. Activala desde Editar Cabaña');
@@ -1104,27 +1095,26 @@ async function updateChannexAvailability(habitacionId) {
     );
     // Marca todas las fechas de cada reserva como no disponibles
     for (const reserva of reservas) {
-        let curr = new Date(reserva.arrivalDate);
-        curr.setHours(0, 0, 0, 0);
-        const checkout = new Date(reserva.departureDate);
-        checkout.setHours(0, 0, 0, 0);
-        checkout.setDate(checkout.getDate() - 1); // <<--- RESTA 1 día al departureDate
+        let curr = moment.utc(reserva.arrivalDate).startOf('day');
+        const checkout = moment.utc(reserva.departureDate)
+                                .startOf('day')
+                                .subtract(1, 'day');
 
+        console.log("curr", curr.format(), "checkout", checkout.format())
         // Por cada día de la reserva
-        while (curr <= checkout) {
-            noDisponibles.add(curr.toISOString().slice(0, 10));
-            curr.setDate(curr.getDate() + 1);
+        while (curr.isSameOrBefore(checkout)) {
+            noDisponibles.add(curr.format('YYYY-MM-DD'));
+            curr.add(1, 'day');
         }
     }
 
     // 4) Recorrer el rango de fechas completo
     const values = [];
-    let curr = null;
-
+    
     const canales = habitacion.channels
-
+    
     for (const canal of canales) {
-
+        let curr = null;
         for (let d = new Date(marginDate); d <= endDate; d.setDate(d.getDate() + 1)) {
             const iso = d.toISOString().slice(0, 10);
             const disponible = noDisponibles.has(iso) ? 0 : 1;
