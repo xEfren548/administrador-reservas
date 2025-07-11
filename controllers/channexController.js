@@ -260,7 +260,7 @@ async function dashboardBooking(req, res) {
                 console.log(ratePlans.map(r => console.log(r.relationships.room_type.data.id)))
                 const foundRate = ratePlans.find(r =>
                     //r => r.relationships.property.data.id === hab.channexPropertyId
-                    hab.channels.some(c => c.roomListingId === r.relationships.room_type.data.id)
+                    hab.channels.some(c => c.roomListingId === r.relationships.room_type.data.id && c.ota_name === 'BOOKING')
                 );
                 if (foundRate) {
                     tarifa = {
@@ -332,7 +332,11 @@ async function webhookReceptor(req, res) {
                 return res.status(404).json({ message: 'No se encontró una habitacion con ese ID de channex' });
             }
 
-            const canal = habitacion.channels.find(channel => channel.listingId === listingId);
+            let canal = habitacion.channels.find(channel => channel.listingId === listingId);
+            if (!canal) {
+                canal = habitacion.channels.find(channel => channel.channelId === channelId);
+            }
+
             if (!canal) {
                 return res.status(404).json({ message: 'No se encontró un canal con ese ID' });
             }
