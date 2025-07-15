@@ -1,0 +1,85 @@
+<div class="container py-5">
+    <div class="text-center mb-4">
+        <h1 class="display-4">Bienvenido</h1>
+        {{#if error}}
+        <div class="alert alert-warning">{{error}}</div>
+        {{/if}}
+        {{#unless session.channelId}}
+        <p class="lead">Conecta tu cuenta de Airbnb o Booking para comenzar.</p>
+        {{/unless}}
+    </div>
+
+    {{#unless session.channelId}}
+    <div class="d-flex justify-content-center gap-3">
+        <!-- Airbnb -->
+        <a href="#" id="connect-airbnb-btn" class="btn d-flex align-items-center px-4 py-3"
+            style="background-color: #FF5A5F; color: #fff; border-radius: .5rem;">
+            <img src="https://www.vectorlogo.zone/logos/airbnb/airbnb-tile.svg" alt="Airbnb" style="height:24px; margin-right:8px;">
+            Conectar Airbnb
+        </a>
+
+        <!-- Booking.com -->
+        <a href="#" id="connect-booking-btn" class="btn d-flex align-items-center px-4 py-3"
+            style="background-color: #003580; color: #fff; border-radius: .5rem;">
+            <img src="https://www.vectorlogo.zone/logos/booking/booking-icon.svg" alt="Booking.com" style="height:24px; margin-right:8px;">
+            Conectar Booking
+        </a>
+    </div>
+    {{/unless}}
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log(window)
+        document.getElementById('connect-airbnb-btn').addEventListener('click', async function () {
+            try {
+                //const redirect_uri = 'https://0de5-177-249-172-194.ngrok-free.app/api/channex/auth/airbnb/callback&token=123'
+                //const redirect_uri = 'http://localhost:3005/api/channex/auth/airbnb/callback&token=123'
+                const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
+                const host = window.location.host;
+                const redirect_uri = `${protocol}://${host}/api/channex/auth/airbnb/callback&token=123`
+                const channexProperty = 'd26d0612-12b3-4157-85fd-8a050fd8831c'; // Cualquier ID del canal
+                const response = await fetch(`/api/channex/connect/airbnb?properties=["${channexProperty}"]&minStayType=Arrival&groupId=b5fcd225-d31f-4588-a828-686f7e2b32a4&redirect_uri=${redirect_uri}`)
+                const data = await response.json()
+                console.log(data)
+                const url = data.url
+                window.location.href = url
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al conectar con Airbnb: ' + error.message,
+                    confirmButtonText: 'Aceptar'
+                })
+            }
+        });
+
+        document.getElementById('connect-booking-btn').addEventListener('click', async function () {
+            try {
+                //const redirect_uri = 'https://0de5-177-249-172-194.ngrok-free.app/api/channex/auth/airbnb/callback&token=123'
+                //const redirect_uri = 'http://localhost:3005/api/channex/auth/airbnb/callback&token=123'
+                const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
+                const host = window.location.host;
+                const redirect_uri = `${protocol}://${host}/api/channex/dashboard/booking`
+                const channexProperty = 'd26d0612-12b3-4157-85fd-8a050fd8831c'; // Cualquier ID del canal
+                //const response = await fetch(`/api/channex/connect/airbnb?properties=["${channexProperty}"]&minStayType=Arrival&groupId=b5fcd225-d31f-4588-a828-686f7e2b32a4&redirect_uri=${redirect_uri}`)
+                //const data = await response.json()
+                //console.log(data)
+                //const url = data.url
+                window.location.href = redirect_uri
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al conectar con Booking: ' + error.message,
+                    confirmButtonText: 'Aceptar'
+                })
+            }
+        });
+    })
+</script>

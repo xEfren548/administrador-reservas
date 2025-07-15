@@ -35,6 +35,10 @@ app.engine('handlebars', engine({
       },
       json: function (context) {
         return JSON.stringify(context);
+      },
+      lookup: function(obj, key) {
+        if (!obj) return null;
+        return obj[key];
       }
     }
   }));

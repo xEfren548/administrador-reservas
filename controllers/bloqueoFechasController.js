@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Habitacion = require('../models/Habitacion');
 const BloqueoFechas = require('../models/BloqueoFechas');
+const channexController = require('../controllers/channexController');
 
 async function obtenerFechasBloqueadas(req, res){
     const fechasBloquedas = await BloqueoFechas.find().lean();
@@ -118,6 +119,20 @@ async function crearFechaBloqueada(req, res){
         if (!agregarFecha){
             return res.status(400).send({ message: 'Failed to create date' });
         }
+
+        const chalet = await Habitacion.findById(habitacionId).select('channels')
+        console.log(chalet);
+
+        if (chalet.channels?.length > 0) {
+            channexController.updateChannexAvailability(chalet._id)
+            .then(() => {
+                console.log("Disponibilidad actualizada en Channex.");
+            })
+            .catch(err => {
+                // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+            });
+        }
         res.status(200).send({ message: 'Date created successfully', date: agregarFecha});
     } catch (error) {
         console.log(error.message);
@@ -140,6 +155,20 @@ async function eliminarFechaBloqueada(req, res){
 
             if (!resultado) {
                 return res.status(200).json({});
+            }
+
+            const chalet = await Habitacion.findById(habitacionId).select('channels')
+            console.log(chalet);
+
+            if (chalet.channels?.length > 0) {
+                channexController.updateChannexAvailability(chalet._id)
+                .then(() => {
+                    console.log("Disponibilidad actualizada en Channex.");
+                })
+                .catch(err => {
+                    // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                    console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                });
             }
 
             return res.status(200).json({ message: 'Registro eliminado correctamente' });

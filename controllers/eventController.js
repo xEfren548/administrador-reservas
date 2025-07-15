@@ -4,6 +4,7 @@ const { es } = require('date-fns/locale');
 const axios = require('axios');
 const mongoose = require('mongoose');
 const moment = require('moment');
+const momentTz = require('moment-timezone');
 const Documento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const Usuario = require('../models/Usuario');
@@ -21,6 +22,7 @@ const utilidadesController = require('../controllers/utilidadesController');
 const clienteController = require('../controllers/clientController');
 const pagoController = require('../controllers/pagoController');
 const sendEmail = require('../common/tasks/send-mails');
+const channexController = require('../controllers/channexController');
 
 
 const BadRequestError = require("../common/error/bad-request-error");
@@ -934,12 +936,277 @@ async function createReservation(req, res, next) {
 
         await logController.createBackendLog(logBody);
 
-
+        if (chalet.channels?.length > 0) {
+            channexController.updateChannexAvailability(chalet._id)
+                .then(() => {
+                    console.log("Disponibilidad actualizada en Channex.");
+                })
+                .catch(err => {
+                    // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                    console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                });
+        }
 
         res.status(200).json({ success: true, reservationId: idReserva, message });
+
+
     } catch (err) {
         console.log(err);
         res.status(400).send({ message: err.message });
+    }
+}
+
+async function createOTAReservation(data) {
+    const { customerFullName, customerMail, customerPhone, resourceId, arrivalDate, departureDate, maxOccupation, pax, nNights, total, isDeposit, createdBy, channelInfo } = data;
+    let newCliente = null;
+    let client = null;
+
+    try {
+        // const userRole = req.session.role;
+
+        // const userPermissions = await Roles.findById(userRole);
+        // if (!userPermissions) {
+        //     throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        // }
+
+        const fechaAjustada = new Date(arrivalDate);
+        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+        const departureDateAjustada = new Date(departureDate);
+        departureDateAjustada.setUTCHours(6);
+
+        const arrivalDateObj = new Date(arrivalDate);
+        const departureDateObj = new Date(departureDate);
+
+        // Set specific times
+        arrivalDateObj.setUTCHours(17, 30, 0, 0); // 17:30:00 UTC
+        departureDateObj.setUTCHours(14, 30, 0, 0); // 14:30:00 UTC
+
+        // Convert back to ISO strings
+        const arrivalDateISO = arrivalDateObj.toISOString();
+        const departureDateISO = departureDateObj.toISOString();
+
+
+        const chalet = await Habitacion.findById(resourceId);
+        // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+        if (!chalet) {
+            throw new NotFoundError('Chalet does not exist 2');
+        }
+
+        if (chalet.isActive === false) {
+            return res.status(400).send({
+                message: `La habitación ${chaletName} ha sido desactivada.`,
+            });
+        }
+
+        const mongooseChaletId = new mongoose.Types.ObjectId(chalet._id);
+        const overlappingReservation = await Documento.findOne({
+            resourceId: mongooseChaletId,
+            status: { $nin: ["cancelled", "no-show", "playground"] },
+            $and: [
+                { arrivalDate: { $lt: departureDateISO } }, // Start date overlaps or is before the departure date
+                { departureDate: { $gt: arrivalDateISO } }, // End date overlaps or is after the arrival date
+            ],
+        });
+
+        if (overlappingReservation) {
+            throw new Error("La habitación está ocupada en la fecha seleccionada");
+        }
+
+        // const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: { $nin: ['bloqueo', 'capacidad_minima'] } });
+        // if (fechasBloqueadasPorRestriccion) {
+        //     if (nNights < fechasBloqueadasPorRestriccion.min) {
+        //         return res.status(400).send({ message: `La estancia minima es de ${fechasBloqueadas.min} noches` });
+        //     }
+        // }
+
+        // let currentDate = new Date(fechaAjustada);
+        // currentDate.setUTCHours(6);
+        // while (currentDate <= departureDateAjustada) {
+        //     const fechasBloqueadas = await BloqueoFechas.findOne({ date: currentDate, habitacionId: mongooseChaletId, type: 'bloqueo' });
+        //     if (fechasBloqueadas) {
+        //         const formattedDate = currentDate.toISOString().split('T')[0];
+        //         return res.status(400).send({ message: `La habitacion está bloqueada para la fecha ${formattedDate}` });
+        //     }
+
+        //     currentDate.setDate(currentDate.getDate() + 1);
+
+        // }
+
+        // currentDate = new Date(fechaAjustada);
+        // currentDate.setUTCHours(6);
+
+        // while (currentDate <= departureDateAjustada) {
+        //     const fechasBloqueadasPorCapacidad = await BloqueoFechas.findOne({ date: currentDate, habitacionId: mongooseChaletId, type: 'capacidad_minima' });
+        //     if (fechasBloqueadasPorCapacidad) {
+        //         if (pax < fechasBloqueadasPorCapacidad.min) {
+        //             return res.status(400).send({ message: `La capacidad minima es de ${fechasBloqueadasPorCapacidad.min} personas` });
+        //         }
+        //     }
+
+        //     currentDate.setDate(currentDate.getDate() + 1);
+
+        // }
+
+
+
+        // const isAvailable = await checkAvailability(mongooseChaletId, fechaAjustada, departureDateAjustada);
+        // if (!isAvailable) {
+        //     throw new BadRequestError('La habitación no está disponible en esas fechas');
+        // }
+
+
+        // Crear cliente en PMS
+        newCliente = await Cliente.create({ firstName: customerFullName, lastName: channelInfo.ota_name, email: customerMail, phone: customerPhone });
+        
+        if (!newCliente) {
+            throw new NotFoundError('No se pudo crear el cliente en PMS');
+        }
+        client = newCliente;
+
+        const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
+        if (!costosVendedor) { throw new NotFoundError('Costos vendedor not found'); }
+
+        const comisionVendedor = costosVendedor.amount * nNights;
+
+        // arrivalDate.setHours(chalet.others.arrivalTime.getHours());
+        // departureDate.setHours(chalet.others.departureTime.getHours());
+
+        const arrivalHour      = chalet.others.arrivalTime.getHours();
+        const arrivalMinute    = chalet.others.arrivalTime.getMinutes();
+        const departureHour    = chalet.others.departureTime.getHours();
+        const departureMinute  = chalet.others.departureTime.getMinutes();
+
+        // 3) Parsear y setear hora en CDMX
+        const arrivalMoment = moment
+            .utc(arrivalDate, 'YYYY-MM-DD')
+            .hour(arrivalHour)
+            .minute(arrivalMinute)
+            .second(0)
+            .millisecond(0);
+
+        const departureMoment = momentTz
+            .utc(departureDate, 'YYYY-MM-DD')
+            .hour(departureHour)
+            .minute(departureMinute)
+            .second(0)
+            .millisecond(0);
+
+        // 4) Convertir a Date
+        const arrivalDateM   = arrivalMoment.toDate();
+        const departureDateM = departureMoment.toDate();
+
+        var reservationToAdd;
+        var message;
+
+        reservationToAdd = {
+            client: client._id,
+            resourceId: chalet._id,
+            arrivalDate: arrivalDateM,
+            departureDate: departureDateM,
+            maxOccupation: maxOccupation,
+            pax: pax,
+            nNights: nNights,
+            url: `https://${process.env.URL}/api/eventos/${chalet._id}`,
+            total: total,
+            createdBy: createdBy,
+            comisionVendedor: comisionVendedor,
+            status: 'active',
+            channels: {
+                ota_name: channelInfo.ota_name,
+                propertyId: channelInfo.propertyId,
+                listingId: channelInfo.listingId,
+                channelId: channelInfo.channelId,
+                bookingId: channelInfo.bookingId
+            }
+        };
+        message = "Reservación agregada con éxito";
+
+        const documentoToAdd = new Documento(reservationToAdd);
+        await documentoToAdd.save();
+
+        // Guardar la reserva actualizada en la base de datos
+        // const documento2 = await Documento.findOne()
+
+        // const idReserva = documento.events[documento.events.length - 1]._id.toString();
+        const idReserva = documentoToAdd._id.toString();
+        const url = `https://${process.env.URL}/api/eventos/${idReserva}`;
+        // const evento = await Documento.findById(idReserva);
+
+        documentoToAdd.url = url;
+        await documentoToAdd.save();
+
+        const chaletName = chalet.propertyDetails.name
+        const descripcionLimpieza = 'Limpieza ' + chaletName;
+        const fechaLimpieza = new Date(arrivalDateM);
+        const checkInDate = new Date(arrivalDateM)
+        const checkOutDate = new Date(departureDateM)
+        fechaLimpieza.setDate(fechaLimpieza.getDate())
+        const statusLimpieza = 'Pendiente'
+
+
+        await rackLimpiezaController.createServiceForReservation({
+            id_reserva: idReserva,
+            descripcion: descripcionLimpieza,
+            fecha: fechaLimpieza,
+            checkInDate: checkInDate,
+            checkOutDate: checkOutDate,
+            status: statusLimpieza,
+            idHabitacion: documentoToAdd.resourceId
+        })
+
+
+        if (client.phone) {
+            SendMessages.sendReservationConfirmation(client, chalet, reservationToAdd);
+            console.log("SendMessages.sendReminders");
+            SendMessages.sendInstructions(client, chalet, idReserva)
+        }
+
+        if (client.email) {
+            sendEmail(client.email, idReserva);
+        }
+
+
+
+        const adminLigado = await Usuario.findById(createdBy);
+        if (adminLigado) {
+            if (adminLigado.phone) {
+                SendMessages.sendReservationConfirmation(adminLigado, chalet, reservationToAdd);
+                console.log("Mensaje enviado al agente.")
+            }
+            if (adminLigado.email) {
+                sendEmail(adminLigado.email, idReserva);
+            }
+        }
+
+        // Log
+        const logBody = {
+            fecha: Date.now(),
+            idUsuario: createdBy,
+            type: 'reservation',
+            idReserva: idReserva,
+            acciones: `Reservación creada OTA`,
+            nombreUsuario: `${channelInfo.ota_name}`
+        }
+
+        await logController.createBackendLog(logBody);
+
+        // res.status(200).json({ success: true, reservationId: idReserva, message });
+        return { success: true, reserva: documentoToAdd, message };
+
+        // if (chalet.channels.airbnbListingId) {
+        //     channexController.updateChannexAvailability(chalet._id)
+        //         .then(() => {
+        //             console.log("Disponibilidad actualizada en Channex.");
+        //         })
+        //         .catch(err => {
+        //             // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+        //             console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+        //         });
+        // }
+
+    } catch (err) {
+        console.log(err);
+        return { success: false, message: err.message };
     }
 }
 
@@ -1635,6 +1902,16 @@ async function moveToPlayground(req, res) {
                     // // Save the updated room list to the database
                     // await eventosExistentes.save();
                     console.log("Reserva cancelada de la base de datos.")
+                    if (chalet.channels?.length > 0) {
+                        channexController.updateChannexAvailability(chalet._id)
+                            .then(() => {
+                                console.log("Disponibilidad actualizada en Channex.");
+                            })
+                            .catch(err => {
+                                // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                                console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                            });
+                    }
                     return res.status(200).json({ message: 'Reserva cancelada' });
 
                 } else {
@@ -1658,6 +1935,17 @@ async function moveToPlayground(req, res) {
                     evento.status = 'cancelled';
                     await evento.save();
                     console.log("Reserva cancelada (cambio de status)")
+
+                    if (chalet.channels?.length > 0) {
+                        channexController.updateChannexAvailability(chalet._id)
+                            .then(() => {
+                                console.log("Disponibilidad actualizada en Channex.");
+                            })
+                            .catch(err => {
+                                // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                                console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                            });
+                    }
                     return res.status(200).json({ message: 'Reserva cancelada' });
                 }
             }
@@ -1761,9 +2049,6 @@ async function moveToPlayground(req, res) {
         }
 
         await logController.createBackendLog(logBody);
-
-
-
 
         res.status(200).json({ message: 'Estaus modificado correctamente', reserva: evento });
 
@@ -2248,6 +2533,7 @@ module.exports = {
     obtenerEventoPorId,
     obtenerEventoPorIdRoute,
     createReservation,
+    createOTAReservation,
     sendIntructionsToWhatsapp,
     createOwnerReservation,
     editarEvento,

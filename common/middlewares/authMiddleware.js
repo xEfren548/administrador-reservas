@@ -1,14 +1,30 @@
+const RequestValidationError = require("../error/request-validation-error");
+
 function ensureAuthenticated(req, res, next) {
-    if (req.session && req.session.userId) {
-        // Usuario está autenticado
-        return next();
-    } else {
-        // Usuario no está autenticado, redirigir a /login
-        if (req.url === "/api/eventos/cotizaciones"){
-            return next();
-        }
-        res.redirect('/login');
+    const whitelistExact = [
+        "/api/eventos/cotizaciones"
+    ];
+    const whitelistPrefix = [
+        
+    ];
+    if (process.argv[2] === '--api') {
+        whitelistPrefix.push('/api/channex');
     }
+    // 1) Si es ruta exacta permitida
+    if (whitelistExact.includes(req.path)) {
+        return next();
+    }
+    // 2) Si coincide con algún prefijo permitido (/api/channex/*)
+    if (whitelistPrefix.some(prefix => req.path.startsWith(prefix))) {
+        return next();
+    }
+    // 3) Si hay sesión válida
+    if (req.session && req.session.userId) {
+        return next();
+    }
+
+    res.redirect('/login');
+
 }
 
 module.exports = ensureAuthenticated;

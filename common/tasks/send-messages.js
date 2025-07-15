@@ -6,6 +6,8 @@ const RackLimpieza = require("../../models/RackLimpieza");
 const pagoController = require('../../controllers/pagoController');
 const utilidadesController = require('../../controllers/utilidadesController');
 const logController = require('../../controllers/logController');
+const channexController = require('../../controllers/channexController');
+
 
 const moment = require('moment-timezone');
 const { format } = require('date-fns');
@@ -326,6 +328,18 @@ async function cancelReservation() {
                             }
 
                             await logController.createBackendLog(logBody);
+                            
+                            const chalet = await Habitacion.findById(reservation.resourceId);
+
+                            if (chalet.channels?.length > 0) {
+                                channexController.updateChannexAvailability(chalet._id)
+                                    .then(() => {
+                                        console.log("Disponibilidad actualizada en Channex.");
+                                    })
+                                    .catch(err => {
+                                        console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                                    });
+                            }
                         }
                     }
 

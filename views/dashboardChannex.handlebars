@@ -1,0 +1,435 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="ms-3">Propiedades locales</h2>
+    <button type="button" class="btn btn-primary me-3" id="btnActivateChannel">Activar canal</button>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>En Channex</th>
+            <th>Listing Airbnb mapeado</th>
+            <th>Tarifa actual</th>
+            <th>Acción</th>
+            <th>Mapeo Airbnb</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each propiedades}}
+        <tr>
+            <td>{{propertyDetails.name}}</td>
+            <td>
+                {{#if channexPropertyId}}
+                {{#if existeEnChannex}}
+                <span class="badge bg-success">Sí</span><br>
+                <small>ID: {{channexPropertyId}}</small>
+                {{else}}
+                <span class="badge bg-danger">No existe en Channex</span><br>
+                <small>ID local: {{channexPropertyId}}</small>
+                {{/if}}
+                {{else}}
+                <span class="badge bg-secondary">No</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if nombreListingAirbnb}}
+                <span class="text-success fw-bold">{{nombreListingAirbnb}}</span>
+                {{else}}
+                <span class="text-muted">Sin mapping</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if tarifa}}
+                <span class="badge bg-dark">{{tarifa.title}} ({{tarifa.currency}})</span>
+                <button type="button" class="btn btn-sm btn-info editar-tarifa-btn mt-1" data-id="{{_id}}">Sincronizar precios y disponibilidad</button>
+                {{else}}
+                <span class="text-muted">Sin tarifa</span>
+                {{/if}}
+            </td>
+            <td>
+                {{#if channexPropertyId}}
+                {{#if existeEnChannex}}
+                {{#if tarifa}}
+                <span class="text-success">Tarifa creada</span>
+                {{else}}
+                <button type="button" class="btn btn-sm btn-info crear-tarifa-btn"
+                    data-propertyid="{{channexPropertyId}}" data-propertyname="{{propertyDetails.name}}"
+                    data-pmsid="{{_id}}">
+                    Crear tarifa
+                </button>
+                {{/if}}
+                {{else}}
+                <button type="button" class="btn btn-sm btn-warning alta-btn" data-id="{{_id}}">Dar de alta de
+                    nuevo</button>
+                {{/if}}
+                {{else}}
+                <button type="button" class="btn btn-sm btn-primary alta-btn" data-id="{{_id}}">Dar de alta</button>
+                {{/if}}
+            </td>
+            <td>
+            {{#if tarifa}}
+                {{#if listingsChannel.length}}
+                    <span class="text-success fw-bold">Habitación mapeada:</span>
+                    <ul class="mb-0">
+                        {{#each listingsChannel}}
+                            <li>{{this}}</li>
+                        {{/each}}
+                    </ul>
+                {{else}}
+                    <button type="button" class="btn btn-sm btn-success mapear-airbnb-btn"
+                        data-propertyid="{{channexPropertyId}}" data-rateid="{{tarifa.id}}"
+                        data-propertyname="{{propertyDetails.name}}">
+                        Mapear con Airbnb
+                    </button>
+                {{/if}}
+            {{else}}
+                <span class="text-muted">Crea tarifa primero</span>
+            {{/if}}
+            </td>
+
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
+
+
+
+<h4 class="mt-4">Listings de Airbnb</h4>
+<ul class="list-group">
+    {{#each listings}}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+            <span class="fw-bold">{{this.title}}</span>
+            <small class="text-muted">ID: {{this.id}}</small>
+        </div>
+        {{#if this.habitacionNombre}}
+        <span class="badge bg-success">Habitación: {{this.habitacionNombre}}</span>
+        {{else}}
+        <span class="badge bg-secondary">Sin asignar</span>
+        {{/if}}
+    </li>
+    {{/each}}
+</ul>
+
+
+{{!-- Modal tarifas --}}
+<div class="modal fade" id="tarifaModal" tabindex="-1" aria-labelledby="tarifaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="tarifaForm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tarifaModalLabel">Crear tarifa para <span id="propName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="inputPropertyId" name="property_id">
+                    <input type="hidden" id="inputPmsId" name="pms_id">
+                    <div class="mb-3">
+                        <label for="roomTitle" class="form-label">Nombre del Room</label>
+                        <input type="text" class="form-control" id="roomTitle" name="room_title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="rateTitle" class="form-label">Nombre de la Tarifa</label>
+                        <input type="text" class="form-control" id="rateTitle" name="rate_title" required>
+                    </div>
+                    <!-- Puedes agregar más campos si lo necesitas -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear Room y Tarifa</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{!-- Modal crear mapeo --}}
+
+<div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="mapForm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mapModalLabel">Mapear con Airbnb: <span id="mapPropName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="mapPropertyId" name="property_id">
+                    <input type="hidden" id="mapRateId" name="rate_plan_id">
+                    <div class="mb-3">
+                        <label for="listingSelect" class="form-label">Selecciona listing de Airbnb</label>
+                        <select class="form-select" id="listingSelect" name="listing_id" required>
+                            <option value="">Selecciona...</option>
+                            {{#each listings}}
+                            {{#unless this.listed}}
+                                <option value="{{this.id}}">{{this.title}} ({{this.id}})</option>
+                            {{/unless}}
+                            {{/each}}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Mapear</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const altaButtons = document.querySelectorAll('.alta-btn');
+        altaButtons.forEach(button => {
+            button.addEventListener('click', async function (event) {
+                event.preventDefault();
+                const propertyId = this.getAttribute('data-id');
+                try {
+                    const response = await fetch(`/api/channex/properties/${propertyId}/create`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Propiedad dada de alta',
+                            text: 'La propiedad fue creada en Channex.',
+                            confirmButtonText: 'Aceptar'
+                        }).then(() => window.location.reload());
+                    } else {
+                        throw new Error(data.error || 'Error al dar de alta');
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message,
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            });
+        });
+
+        document.querySelectorAll('.crear-tarifa-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.getElementById('inputPropertyId').value = btn.dataset.propertyid;
+                document.getElementById('inputPmsId').value = btn.dataset.pmsid;
+                document.getElementById('roomTitle').value = "ROOM " + btn.dataset.propertyname.toUpperCase();
+                document.getElementById('rateTitle').value = "RATE " + btn.dataset.propertyname.toUpperCase();
+                document.getElementById('propName').textContent = btn.dataset.propertyname;
+                new bootstrap.Modal(document.getElementById('tarifaModal')).show();
+            });
+        });
+
+        document.querySelectorAll('.editar-tarifa-btn').forEach(btn => {
+            btn.addEventListener('click', async function () {
+                try {
+                    const pmsId = this.getAttribute('data-id');
+                    if (!pmsId) {
+                        throw new Error('Id de Habitacion no encontrado');
+                    }
+
+                    Swal.fire({
+                        title: 'Sincronizando tarifas y disponibilidad',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    })
+
+                    const response = await fetch(`/api/channex/availability-rates`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            pmsId: pmsId
+                        })
+                    })
+                    console.log(response)
+                    if (!response.ok) throw new Error(response.error || 'Error al sincronizar tarifas y disponibilidad');
+
+                    Swal.close();
+
+                    Swal.fire({
+                        title: "Tarifas y disponibilidad sincronizadas correctamente",
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => window.location.reload());
+                } catch (error) {
+                    Swal.close();
+                    console.log(error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message,
+                        confirmButtonText: 'Aceptar'
+                    })
+                    return;
+                }
+            });
+        })
+
+        // Maneja el submit del formulario
+        document.getElementById('tarifaForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const property_id = document.getElementById('inputPropertyId').value;
+            const room_title = document.getElementById('roomTitle').value;
+            const rate_title = document.getElementById('rateTitle').value;
+            const pms_id = document.getElementById('inputPmsId').value;
+
+            Swal.fire({
+                title: "Creando room y rate... Sincronizando precios...",
+                text: "Esto puede tardar, no actualices esta ventana.",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                // 1. Crea Room
+                const roomRes = await fetch(`/api/channex/rooms?pmsid=${pms_id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        room_type: {
+                            property_id: property_id,
+                            title: room_title,
+                            count_of_rooms: 1,
+                            //occ_adults: 2,
+                            //default_occupancy: 2,
+                            occ_children: 0,
+                            occ_infants: 0
+                        }
+                    })
+                });
+                const roomData = await roomRes.json();
+                if (!roomRes.ok) throw new Error(roomData.error || 'Error creando room');
+
+                const room_type_id = roomData.data.id;
+                const default_occupancy = roomData.data.attributes.default_occupancy;
+
+                // 2. Crea Rate
+                const rateRes = await fetch(`/api/channex/rates?pmsid=${pms_id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        rate_plan: {
+                            title: rate_title,
+                            property_id: property_id,
+                            room_type_id: room_type_id,
+                            parent_rate_plan_id: null,
+                            options: [{ occupancy: default_occupancy, is_primary: true }],
+                            children_fee: "0.00",
+                            infant_fee: "0.00",
+                            currency: "MXN", // Puedes ajustar la moneda
+                            sell_mode: "per_room",
+                            rate_mode: "manual"
+                        }
+                    })
+                });
+                const rateData = await rateRes.json();
+                if (!rateRes.ok) throw new Error(rateData.error || 'Error creando rate');
+
+                Swal.close();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Room y tarifa creados correctamente',
+                    confirmButtonText: 'Aceptar'
+                }).then(() => window.location.reload());
+
+            } catch (error) {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message,
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        });
+
+        // Abre el modal de mapeo
+        document.querySelectorAll('.mapear-airbnb-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.getElementById('mapPropertyId').value = btn.dataset.propertyid;
+                document.getElementById('mapRateId').value = btn.dataset.rateid;
+                document.getElementById('mapPropName').textContent = btn.dataset.propertyname;
+                // Limpia el select del modal
+                document.getElementById('listingSelect').selectedIndex = 0;
+                new bootstrap.Modal(document.getElementById('mapModal')).show();
+            });
+        });
+
+        // Envía el mapeo
+        document.getElementById('mapForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const property_id = document.getElementById('mapPropertyId').value;
+            const rate_plan_id = document.getElementById('mapRateId').value;
+            const listing_id = document.getElementById('listingSelect').value;
+
+            try {
+                const response = await fetch(`/api/channex/channels/${property_id}/mappings`, { // channelId va desde server (req.session o prop oculta)
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        mapping: {
+                            rate_plan_id: rate_plan_id,
+                            settings: {
+                                listing_id
+                            }
+                        }
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Propiedad mapeada correctamente',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => window.location.reload());
+                } else {
+                    throw new Error(data.message || 'Error en el mapeo');
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message,
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        });
+
+        
+        document.querySelector('#btnActivateChannel').addEventListener('click', async function () {
+            const channelId = '{{channelId}}';
+            try {
+                const response = await fetch(`/api/channex/channels/${channelId}/activate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Canal activado correctamente',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => window.location.reload());
+                } else {
+                    throw new Error(data.message || 'Error al activar el canal');
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message,
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        });
+
+    });
+</script>
