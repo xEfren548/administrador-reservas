@@ -77,7 +77,7 @@ app.get('/backup', (req, res) => {
 });
 
 app.use((req, res, next) => {
-  const allowedIps = ['::ffff:177.249.172.194'];
+  const allowedIps = ['::ffff:177.249.172.194', '::1'];
   const userIp = req.ip || req.connection.remoteAddress;
   console.log('userIp', userIp);
 

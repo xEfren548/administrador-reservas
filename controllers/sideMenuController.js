@@ -37,6 +37,7 @@ async function generateSideMenu(req, res, next) {
                 { 'Logs': ["/logs", "fas fa-cogs"] },
                 { 'Calendarios': [] },
                 { 'Reportes' : [] },
+                { 'Conexiones': ["/api/channex/home", "fas fa-link"] },
             ],
             'Vendedor': [
                 // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
