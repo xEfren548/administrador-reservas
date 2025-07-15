@@ -2343,6 +2343,11 @@ async function cotizadorChaletsyPrecios(req, res) {
             };
         }
 
+        const nNights = Math.ceil(timeDifference / (1000 * 3600 * 24)); // Calcula la diferencia en días
+        if (nNights <= 0) {
+            return res.status(400).json({ message: 'La fecha de salida debe ser posterior a la fecha de llegada' });
+        }
+
 
         const chalets = await Habitacion.find(filtro).lean();
         const chaletIds = chalets.map(chalet => chalet._id);
@@ -2367,7 +2372,6 @@ async function cotizadorChaletsyPrecios(req, res) {
 
 
         const timeDifference = endDate.getTime() - startDate.getTime();
-        const nNights = Math.ceil(timeDifference / (1000 * 3600 * 24)); // Calcula la diferencia en días
 
         const mappedChalets = availableChalets.map(chalet => ({
 
@@ -2525,6 +2529,22 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     }
 
     return true;
+}
+
+function calculateNightDifference(arrivalDate, departureDate) {
+    const arrivalMoment = moment.utc(arrivalDate);
+    const departureMoment = moment.utc(departureDate);
+    // Verifica si las fechas son válidas
+    if (arrivalMoment.isValid() && departureMoment.isValid() && departureMoment.isSameOrAfter(arrivalMoment)) {
+        const arrivalStartOfDay = arrivalMoment.clone().startOf('day');
+        const departureStartOfDay = departureMoment.clone().startOf('day');
+        
+        // Calculate difference in days
+        const nightDifference = departureStartOfDay.diff(arrivalStartOfDay, 'days');
+        return nightDifference
+    } else {
+        return 0
+    }
 }
 
 
