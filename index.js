@@ -84,6 +84,8 @@ app.use((req, res, next) => {
   if (!allowedIps.includes(userIp)) {
     return res.status(403).send('Sitio en mantenimiento');
   }
+
+  next();
 })
 // Set up all routes.
 app.use(routes);
