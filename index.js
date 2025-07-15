@@ -72,6 +72,16 @@ app.get('/backup', (req, res) => {
   res.send('Respaldo iniciado manualmente');
 });
 
+app.use((req, res, next) => {
+  const allowedIps = ['192.168.0.139'];
+  const userIp = req.ip || req.connection.remoteAddress;
+  console.log('userIp', req)
+
+  if (!allowedIps.includes(userIp)) {
+    return res.status(403).send('Sitio en mantenimiento');
+  }
+})
+
 // Set up all routes.
 app.use(routes);
 
