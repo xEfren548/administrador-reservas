@@ -137,9 +137,9 @@ mongoose.connect(db_url).then(async () => {
   } else {
     // For production, run on HTTPS
     const sslOptions = {
-      key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
+      key: fs.readFileSync(path.join(__dirname, 'cert2', 'key.pem')),
       // cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem'))
-      cert: fs.readFileSync(path.join(__dirname, 'cert', 'fullchain.pem'))
+      cert: fs.readFileSync(path.join(__dirname, 'cert2', 'fullchain.pem'))
     };
     server = https.createServer(sslOptions, app);
     console.log('Production mode: Running on HTTPS');
