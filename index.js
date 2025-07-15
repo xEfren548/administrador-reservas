@@ -73,15 +73,16 @@ app.get('/backup', (req, res) => {
 });
 
 app.use((req, res, next) => {
-  const allowedIps = ['192.168.0.139'];
+  const allowedIps = ['::ffff:177.249.172.194'];
   const userIp = req.ip || req.connection.remoteAddress;
-  console.log('userIp', req)
+  console.log('userIp', userIp);
 
   if (!allowedIps.includes(userIp)) {
     return res.status(403).send('Sitio en mantenimiento');
   }
-})
 
+  next();
+});
 // Set up all routes.
 app.use(routes);
 
