@@ -1271,6 +1271,10 @@ async function createOwnerReservation(req, res, next) {
             throw new NotFoundError('Chalet does not exist 2');
         }
 
+        
+        arrivalDate.setUTCHours(chalet.others.arrivalTime.getHours());
+        departureDate.setUTCHours(chalet.others.departureTime.getHours());
+
         if (privilege === "Inversionistas") {
             // Definicion de reglas de inversionistas
             // const documento = await Documento.find( { createdBy: mInvestorId } );
@@ -1280,8 +1284,8 @@ async function createOwnerReservation(req, res, next) {
 
             const reservaActiva = reservasDeInversionista.find(reserva => new Date(reserva.departureDate) > new Date());
 
-            arrivalDate.setUTCHours(chalet.others.arrivalTime.getHours());
-            departureDate.setUTCHours(chalet.others.departureTime.getHours());
+            // arrivalDate.setUTCHours(chalet.others.arrivalTime.getHours());
+            // departureDate.setUTCHours(chalet.others.departureTime.getHours());
 
 
             if (reservaActiva) {
