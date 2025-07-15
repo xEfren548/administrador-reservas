@@ -80,6 +80,7 @@ app.use((req, res, next) => {
   const allowedIps = ['::ffff:177.249.172.194', '::1'];
   const userIp = req.ip || req.connection.remoteAddress;
   console.log('userIp', userIp);
+  console.log('req path', req.path);
 
   if (!allowedIps.includes(userIp)) {
     return res.status(403).send('Sitio en mantenimiento');
