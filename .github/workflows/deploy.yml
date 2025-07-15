@@ -36,7 +36,7 @@ jobs:
             FTP_USER=${{ secrets.FTP_USER }}
             FTP_PASSWORD=${{ secrets.FTP_PASSWORD }}
             DB_PORT=${{ secrets.PORT }}
-            CHANNEX_API_KEY=${{ secrets.CHANNEX_API_KEY }}
+            CHANNEX_USER_API_KEY=${{ secrets.CHANNEX_USERAPI_KEY }}
             CHANNEX_BASE_URL=${{ secrets.CHANNEX_BASE_URL }}
             EOL
             
