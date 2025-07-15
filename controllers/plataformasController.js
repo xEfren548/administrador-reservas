@@ -75,7 +75,7 @@ const nuevaPlataforma = async (req, res) => {
     try {
 
         const { nombre, descripcion, aumentoFijo, aumentoPorcentaje } = req.body;
-        if (!nombre) {
+        if (!nombre || nombre.trim() === '') {
             throw new Error('El nombre de la plataforma es requerido');
         }
         if (aumentoFijo) {
@@ -95,9 +95,9 @@ const nuevaPlataforma = async (req, res) => {
         let newPlataforma = {}
 
         if (aumentoFijo) {
-            newPlataforma = new Plataformas({ nombre, descripcion, aumentoFijo });
+            newPlataforma = new Plataformas({ nombre: nombre.toUpperCase(), descripcion, aumentoFijo });
         } else if (aumentoPorcentaje) {
-            newPlataforma = new Plataformas({ nombre, descripcion, aumentoPorcentual: aumentoPorcentaje });
+            newPlataforma = new Plataformas({ nombre: nombre.toUpperCase(), descripcion, aumentoPorcentual: aumentoPorcentaje });
         }
 
         // const plataforma = new Plataformas({ nombre, descripcion, aumentoPorcentual: aumentoPorcentaje, aumentoFijo });

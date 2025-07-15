@@ -132,9 +132,15 @@
 					<!-- Campo Nombre -->
 					<div class="mb-6">
 						<label for="nombre" class="block text-sm font-medium text-gray-300">Nombre</label>
-						<input type="text" id="platform_name" name="nombre"
+						{{!-- <input type="text" id="platform_name" name="nombre"
+							class="mt-2 block w-full px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
+							required> --}}
+						<select id="platform_name" name="nombre"
 							class="mt-2 block w-full px-4 py-3 rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-lg"
 							required>
+							<option value="">Seleccione una plataforma</option>
+							<option value="AIRBNB">Airbnb</option>
+							<option value="BOOKING">Booking</option>
 					</div>
 
 					<!-- Campo Descripción -->
