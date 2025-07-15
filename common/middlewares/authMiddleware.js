@@ -7,7 +7,7 @@ function ensureAuthenticated(req, res, next) {
     const whitelistPrefix = [
         
     ];
-    if (process.argv[2] === '--api' || req.userIp === '178.128.141.2') {
+    if (process.argv[2] === '--api' || req.userIp === '178.128.141.2' || req.userIp === '::ffff:178.128.141.2') {
         whitelistPrefix.push('/api/channex');
     }
     // 1) Si es ruta exacta permitida

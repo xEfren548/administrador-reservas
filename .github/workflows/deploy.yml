@@ -25,7 +25,7 @@ jobs:
             git clone https://github.com/xEfren548/administrador-reservas
 
             # Copy local cert to repository
-            cp -r cert administrador-reservas/
+            cp -r cert2 administrador-reservas/
 
             # Install dependencies and start
             cd administrador-reservas
@@ -36,6 +36,8 @@ jobs:
             FTP_USER=${{ secrets.FTP_USER }}
             FTP_PASSWORD=${{ secrets.FTP_PASSWORD }}
             DB_PORT=${{ secrets.PORT }}
+            CHANNEX_API_KEY=${{ secrets.CHANNEX_API_KEY }}
+            CHANNEX_BASE_URL=${{ secrets.CHANNEX_BASE_URL }}
             EOL
             
             npm install
