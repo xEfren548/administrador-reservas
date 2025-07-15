@@ -76,18 +76,18 @@ app.get('/backup', (req, res) => {
   res.send('Respaldo iniciado manualmente');
 });
 
-app.use((req, res, next) => {
-  const allowedIps = ['::ffff:177.249.172.194', '::1'];
-  const userIp = req.ip || req.connection.remoteAddress;
-  console.log('userIp', userIp);
-  console.log('req path', req.path);
+// app.use((req, res, next) => {
+//   const allowedIps = ['::ffff:177.249.172.194', '::1'];
+//   const userIp = req.ip || req.connection.remoteAddress;
+//   console.log('userIp', userIp);
+//   console.log('req path', req.path);
 
-  if (!allowedIps.includes(userIp)) {
-    return res.status(403).send('Sitio en mantenimiento');
-  }
+//   if (!allowedIps.includes(userIp)) {
+//     return res.status(403).send('Sitio en mantenimiento');
+//   }
 
-  next();
-});
+//   next();
+// });
 // Set up all routes.
 app.use(routes);
 
