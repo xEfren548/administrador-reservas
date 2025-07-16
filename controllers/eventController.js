@@ -2343,6 +2343,11 @@ async function cotizadorChaletsyPrecios(req, res) {
             };
         }
 
+        
+        const startDate = new Date(convertirFechaES(fechaLlegada));
+        const endDate = new Date(convertirFechaES(fechaSalida));
+
+        const timeDifference = endDate.getTime() - startDate.getTime();
         const nNights = Math.ceil(timeDifference / (1000 * 3600 * 24)); // Calcula la diferencia en días
         if (nNights <= 0) {
             return res.status(400).json({ message: 'La fecha de salida debe ser posterior a la fecha de llegada' });
@@ -2355,8 +2360,6 @@ async function cotizadorChaletsyPrecios(req, res) {
             throw new Error('No se encontraron habitaciones');
         }
 
-        const startDate = new Date(convertirFechaES(fechaLlegada));
-        const endDate = new Date(convertirFechaES(fechaSalida));
 
         let availableChalets = chalets;
 
@@ -2371,7 +2374,6 @@ async function cotizadorChaletsyPrecios(req, res) {
         }
 
 
-        const timeDifference = endDate.getTime() - startDate.getTime();
 
         const mappedChalets = availableChalets.map(chalet => ({
 
