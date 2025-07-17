@@ -718,7 +718,7 @@ async function createReservation(req, res, next) {
             });
         }
 
-        const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: { $nin: ['bloqueo', 'capacidad_minima'] } });
+        const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: 'restriccion' });
         if (fechasBloqueadasPorRestriccion) {
             if (nNights < fechasBloqueadasPorRestriccion.min) {
                 return res.status(400).send({ message: `La estancia minima es de ${fechasBloqueadas.min} noches` });
@@ -2363,9 +2363,24 @@ async function cotizadorChaletsyPrecios(req, res) {
 
         let availableChalets = chalets;
 
+        const fechaAjustada = moment(startDate).add(6, 'hours').toDate(); // Ajustar la hora a 00:00:00 UTC
+
         if (soloDisponibles) {
             availableChalets = [];
             for (const chalet of chalets) {
+                const disponibilidadPax = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: chalet._id, type: 'capacidad_minima' });
+                if (disponibilidadPax) {
+                    if (huespedes < disponibilidadPax.min) {
+                        continue;
+                    }
+                }
+                const disponibilidadNochesMinimas = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: chalet._id, type: 'restriccion' });
+                if (disponibilidadNochesMinimas) {
+                    if (nNights < disponibilidadNochesMinimas.min) {
+                        continue;
+                    }
+                }
+
                 const disponibilidad = await getDisponibilidad(chalet._id, startDate, endDate);
                 if (disponibilidad) {
                     availableChalets.push(chalet);
