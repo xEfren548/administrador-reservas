@@ -718,7 +718,7 @@ async function createReservation(req, res, next) {
             });
         }
 
-        const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: { $nin: ['bloqueo', 'capacidad_minima'] } });
+        const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: 'restriccion' });
         if (fechasBloqueadasPorRestriccion) {
             if (nNights < fechasBloqueadasPorRestriccion.min) {
                 return res.status(400).send({ message: `La estancia minima es de ${fechasBloqueadas.min} noches` });
