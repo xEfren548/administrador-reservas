@@ -14,6 +14,8 @@ async function obtenerFechasBloqueadas(req, res){
 async function crearFechaRestringida(req, res){
     const {date, min, habitacionId, type} = req.body;
 
+    console.log(req.body);
+
     try {
 
         if (type !== 'restriccion') {
@@ -31,7 +33,7 @@ async function crearFechaRestringida(req, res){
         const description = `Estancia mínima de ${min} noches.`
     
     
-        const existeFecha = await BloqueoFechas.findOne({date: date, habitacionId: mongooseHabitacionId})
+        const existeFecha = await BloqueoFechas.findOne({date: date, habitacionId: mongooseHabitacionId, type: 'restriccion'});
         if (existeFecha){
             // edit the existe fecha to the new description and min
             existeFecha.description = description;
@@ -45,6 +47,7 @@ async function crearFechaRestringida(req, res){
             date: new Date(date),
             description,
             min,
+            type,
             habitacionId: new mongoose.Types.ObjectId(habitacionId)
         })
     
