@@ -33,7 +33,7 @@ async function mapProperties(req, res) {
         return {
             property: {
                 "title": propertyDetails.name,
-                "currency": "MXN",
+                "currency": "USD",
                 "content": {
                     "description": hab.accomodationDescription
                 },
@@ -678,7 +678,7 @@ async function createChannexProperty(req, res) {
         const propertyPayload = {
             property: {
                 title: propertyDetails.name,
-                currency: 'MXN',
+                currency: 'USD',
                 content: { description },
                 email: propertyDetails.email,
                 phone: propertyDetails.phoneNumber,
@@ -1048,6 +1048,8 @@ async function updateChannexPrices(habitacionId, ota_name = null) {
 
     const payload = { values };
     const response = await channex.post('/api/v1/restrictions', payload);
+
+    console.log('Precios actualizados en Channex:', response.data);
 
     // Siempre regresa fecha límite usada
     return {

@@ -38,8 +38,11 @@ router.post('/availability-rates', async (req, res) => {
         // Obtiene precios y la fecha límite (fin de año, por si la quieres mostrar)
         const { data: prices, fechaLimite } = await channexController.updateChannexPrices(pmsId, ota_name);
 
+        console.log("Respuesta de precios:", prices);
+
         // La disponibilidad siempre cubrirá ese mismo rango (hoy a 1 año)
         const availability = await channexController.updateChannexAvailability(pmsId);
+        console.log("Respuesta de disponibilidad:", availability);
         res.status(200).json({ prices, availability, fechaLimite });
     } catch (err) {
         console.error('Error al actualizar precios en Channex:', err.response ? err.response.data : err.message);
