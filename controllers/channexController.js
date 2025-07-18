@@ -257,7 +257,6 @@ async function dashboardBooking(req, res) {
             // Tarifa
             let tarifa = null;
             if (hab.channexPropertyId) {
-                console.log(ratePlans.map(r => console.log(r.relationships.room_type.data.id)))
                 const foundRate = ratePlans.find(r =>
                     //r => r.relationships.property.data.id === hab.channexPropertyId
                     hab.channels.some(c => c.roomListingId === r.relationships.room_type.data.id && c.ota_name === 'BOOKING')
@@ -321,7 +320,6 @@ async function webhookReceptor(req, res) {
 
             const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
             const data = response.data.data.attributes;
-            console.log(JSON.stringify(data, null, 2));
 
             const propertyId = data.property_id;
             const listingId = data.meta.listing_id;
@@ -404,7 +402,6 @@ async function webhookReceptor(req, res) {
             const { reserva } = reservaPms;
 
             const { costoBase, precioBase } = await calcularCostoBaseTotal(habitacion, reserva.arrivalDate, reserva.departureDate);
-            console.log("COSTO BASE: " + costoBase);
             const utilidadesInfo = {
                 idReserva: reserva._id,
                 arrivalDate: reserva.arrivalDate,
@@ -429,8 +426,6 @@ async function webhookReceptor(req, res) {
                 console.log(`No se encontró la reserva con el airbnbBookingId ${bookingId} en la base de datos.`);
                 throw new Error('La reserva no fue encontrada');
             }
-
-            console.log("Reserva a cancelar: ", reserva)
 
             const idReserva = reserva._id;
 
@@ -468,8 +463,6 @@ async function webhookReceptor(req, res) {
                 console.log(`No se encontró la reserva con el airbnbBookingId ${bookingId} en la base de datos.`);
                 throw new Error('La reserva no fue encontrada');
             }
-
-            console.log("Reserva a modificar: ", reserva)
 
             const reservationId = reserva._id;
 
@@ -957,11 +950,7 @@ async function updateChannexPrices(habitacionId, ota_name = null) {
     const propertyId = habitacion.channexPropertyId;
     const defaultPrice = habitacion.others.basePrice2nights;
 
-    console.log("OTA NAME: ", ota_name)
-
-
     const comisiones = await utilidadesController.calcularComisionesOTA()
-    console.log("comisiones OTA", comisiones)
 
     // 1) Fechas: desde hoy hasta 1 año después
     const startDate = new Date();
@@ -979,8 +968,6 @@ async function updateChannexPrices(habitacionId, ota_name = null) {
     if (!plataformas || plataformas.length === 0) {
         throw new Error('La habitación no tiene plataformas activas. Activala desde Editar Cabaña');
     }
-
-    console.log("plataformas", plataformas)
 
     // 3) Traer todos los registros de PrecioBaseXDia
     const priceRecords = await PrecioBaseXDia
@@ -1049,8 +1036,6 @@ async function updateChannexPrices(habitacionId, ota_name = null) {
     const payload = { values };
     const response = await channex.post('/api/v1/restrictions', payload);
 
-    console.log('Precios actualizados en Channex:', response.data);
-
     // Siempre regresa fecha límite usada
     return {
         data: response.data,
@@ -1106,7 +1091,6 @@ async function updateChannexAvailability(habitacionId) {
                                 .startOf('day')
                                 .subtract(1, 'day');
 
-        console.log("curr", curr.format(), "checkout", checkout.format())
         // Por cada día de la reserva
         while (curr.isSameOrBefore(checkout)) {
             noDisponibles.add(curr.format('YYYY-MM-DD'));
@@ -1233,7 +1217,6 @@ function dmsToDecimal(dmsStr) {
 
 async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
     const habitacionId = habitacion._id;
-    console.log("Habitacion desde calcular costo base total", habitacion)
 
     // 1) Cargar la primera plataforma activa (o elegir lógica si hay varias)
     const [plat] = await Plataformas.find({
@@ -1296,8 +1279,6 @@ async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
         // totalCosto += incremento;
         totalPrecio += incremento;
 
-        console.log("COSTO TOTAL: ", totalCosto);
-        console.log("PRECIO TOTAL: ", totalPrecio);
     }
 
     return { costoBase: totalCosto, precioBase: totalPrecio };
