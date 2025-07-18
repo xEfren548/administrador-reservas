@@ -306,6 +306,8 @@ async function webhookReceptor(req, res) {
         const body = req.body;
         const eventType = body.event;
 
+        const revisionId = body.payload?.booking_revision_id;
+
         let payload;
         if (eventType === 'booking_new') {
             // Pre-approval por defecto (bloquea instant booking)
@@ -317,7 +319,7 @@ async function webhookReceptor(req, res) {
 
             console.log("Aceptando reserva regularmente");
 
-            const response = await channex.get(`/api/v1/bookings/${booking_id}`);
+            const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
             const data = response.data.data.attributes;
             console.log(JSON.stringify(data, null, 2));
 
@@ -418,8 +420,6 @@ async function webhookReceptor(req, res) {
                 throw new Error(crearUtilidades.message);
             }
 
-            res.status(200).send(reserva);
-
 
         } else if (eventType === 'booking_cancellation') {
             const bookingId = body.payload.booking_id;
@@ -458,10 +458,7 @@ async function webhookReceptor(req, res) {
                 throw new Error('Error al cancelar reserva');
             }
 
-            res.status(200).send("Reserva cancelada correctamente");
-
-
-            // Actualizar disponibilidad y cancelar reservacion en PMS
+        // Actualizar disponibilidad y cancelar reservacion en PMS
 
         } else if (eventType === 'booking_modification') {
             const bookingId = body.payload.booking_id;
@@ -476,7 +473,7 @@ async function webhookReceptor(req, res) {
 
             const reservationId = reserva._id;
 
-            const response = await channex.get(`/api/v1/bookings/${bookingId}`);
+            const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
             const data = response.data.data.attributes;
 
             const ota_name = data.ota_name;
@@ -522,7 +519,6 @@ async function webhookReceptor(req, res) {
             }
             const nuevasComisiones = await utilidadesController.generarComisionOTA(utilidadesInfo);
 
-            res.status(200).send(eventoEditado);
 
         } else if (eventType === 'test') {
             // Aceptar reserva regularmente
@@ -530,6 +526,10 @@ async function webhookReceptor(req, res) {
         } else {
             return res.status(400).send('Evento no reconocido');
         }
+
+        await channex.post(`/api/v1/booking_revisions/${revisionId}/ack`);
+
+        return res.status(200).send('Evento procesado correctamente');
 
         // await channex.post(`/api/v1/live_feed/${liveFeedId}/resolve`, payload);
     } catch (err) {
@@ -871,9 +871,9 @@ async function createChannelBooking(req, res) {
                             occupancy: habitacion.propertyDetails.maxOccupancy,
                             pricing_type: "USD",
                             primary_occ: true,
-                            rate_plan_code: ratePlanCode,
+                            rate_plan_code: Number(ratePlanCode),
                             readonly: false,
-                            room_type_code: roomTypeCode
+                            room_type_code: Number(roomTypeCode)
                         }
                     }
                 ],
