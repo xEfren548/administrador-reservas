@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const channexController = require('../controllers/channexController');
+const Habitacion = require('../models/Habitacion');
 
 //   /api/channex/
 

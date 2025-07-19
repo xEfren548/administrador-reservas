@@ -123,19 +123,18 @@ async function crearFechaBloqueada(req, res){
             return res.status(400).send({ message: 'Failed to create date' });
         }
 
-        const chalet = await Habitacion.findById(habitacionId).select('channels')
-        console.log(chalet);
+        // const chalet = await Habitacion.findById(habitacionId).select('channels')
 
-        if (chalet.channels?.length > 0) {
-            channexController.updateChannexAvailability(chalet._id)
-            .then(() => {
-                console.log("Disponibilidad actualizada en Channex.");
-            })
-            .catch(err => {
-                // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
-                console.error("Error al actualizar disponibilidad en Channex: ", err.message);
-            });
-        }
+        // if (chalet.channels?.length > 0) {
+        //     channexController.updateChannexAvailability(chalet._id)
+        //     .then(() => {
+        //         console.log("Disponibilidad actualizada en Channex.");
+        //     })
+        //     .catch(err => {
+        //         // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+        //         console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+        //     });
+        // }
         res.status(200).send({ message: 'Date created successfully', date: agregarFecha});
     } catch (error) {
         console.log(error.message);

@@ -487,7 +487,22 @@ addBloqueadas2btn.addEventListener('click', async (e) => {
             if (resultados.length === 0) {
                 throw new Error('No hay fechas seleccionadas para actualizar.');
             }
-    
+
+            const actualizarDisponibilidadResponse = await fetch('/api/channex/availability-rates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pmsId: habitacionesAmodificar
+                }),
+            });
+
+            const data = await actualizarDisponibilidadResponse.json();
+            console.log(data)
+
+            if (data.warning && data.code === "NO_CHANNELS") {
+                console.log("Habitacion sin canales, se omite ")
+                continue;
+            }
             
     
         } catch (error) {
