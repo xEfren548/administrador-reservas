@@ -453,6 +453,9 @@ async function webhookReceptor(req, res) {
                 throw new Error('Error al cancelar reserva');
             }
 
+            const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
+            const data = response.data.data.attributes;
+
             // Actualizar disponibilidad y cancelar reservacion en PMS
 
         } else if (eventType === 'booking_modification') {
