@@ -159,21 +159,20 @@ async function eliminarFechaBloqueada(req, res){
                 return res.status(200).json({});
             }
 
-            const chalet = await Habitacion.findById(habitacionId).select('channels')
-            console.log(chalet);
+            // const chalet = await Habitacion.findById(habitacionId).select('channels')
 
-            if (chalet.channels?.length > 0) {
-                channexController.updateChannexAvailability(chalet._id)
-                .then(() => {
-                    console.log("Disponibilidad actualizada en Channex.");
-                })
-                .catch(err => {
-                    // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
-                    console.error("Error al actualizar disponibilidad en Channex: ", err.message);
-                });
-            }
+            // if (chalet.channels?.length > 0) {
+            //     channexController.updateChannexAvailability(chalet._id)
+            //     .then(() => {
+            //         console.log("Disponibilidad actualizada en Channex.");
+            //     })
+            //     .catch(err => {
+            //         // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+            //         console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+            //     });
+            // }
 
-            return res.status(200).json({ message: 'Registro eliminado correctamente' });
+            return res.status(200).json({ message: 'Registro eliminado correctamente', date: resultado });
 
         } else if (type === "bloqueo_capacidad") {
             const resultado = await BloqueoFechas.findOneAndDelete({ date: fechaAjustada, habitacionId: newHabitacionId, type: 'capacidad_minima' });

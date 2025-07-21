@@ -51,5 +51,20 @@ router.post('/availability-rates', async (req, res) => {
     }
 });
 
+router.post('/availability-rates/single', async (req, res) => {
+    const { pmsId, datesResponse, deletion } = req.body;
+    try {
+
+        // La disponibilidad siempre cubrirá ese mismo rango (hoy a 1 año)
+        const availability = await channexController.updateChannexAvailabilitySingle(pmsId, datesResponse, deletion );
+        console.log("Respuesta de disponibilidad:", availability);
+        res.status(200).json({ availability });
+    } catch (err) {
+        console.error('Error al actualizar disponibilidad en Channex:', err.response ? err.response.data : err.message);
+        res.status(500).json({ error: err.response?.data?.error || err.message });
+    }
+});
+
+
 
 module.exports = router

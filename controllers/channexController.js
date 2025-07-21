@@ -453,7 +453,7 @@ async function webhookReceptor(req, res) {
                 throw new Error('Error al cancelar reserva');
             }
 
-        // Actualizar disponibilidad y cancelar reservacion en PMS
+            // Actualizar disponibilidad y cancelar reservacion en PMS
 
         } else if (eventType === 'booking_modification') {
             const bookingId = body.payload.booking_id;
@@ -940,7 +940,7 @@ async function createRateChannex(req, res) {
     }
 }
 
-async function updateChannexPrices(habitacionId, ota_name = null) {
+async function updateChannexPrices(habitacionId) {
     // 0) Validaciones básicas
     const habitacion = await Habitacion.findById(habitacionId);
     if (!habitacion) throw new Error('Habitación no encontrada');
@@ -963,7 +963,7 @@ async function updateChannexPrices(habitacionId, ota_name = null) {
     const plataformas = await Plataformas.find({
         _id: { $in: habitacion.activePlatforms }
     });
-    
+
 
     if (!plataformas || plataformas.length === 0) {
         throw new Error('La habitación no tiene plataformas activas. Activala desde Editar Cabaña');
@@ -1088,8 +1088,8 @@ async function updateChannexAvailability(habitacionId) {
     for (const reserva of reservas) {
         let curr = moment.utc(reserva.arrivalDate).startOf('day');
         const checkout = moment.utc(reserva.departureDate)
-                                .startOf('day')
-                                .subtract(1, 'day');
+            .startOf('day')
+            .subtract(1, 'day');
 
         // Por cada día de la reserva
         while (curr.isSameOrBefore(checkout)) {
@@ -1100,9 +1100,9 @@ async function updateChannexAvailability(habitacionId) {
 
     // 4) Recorrer el rango de fechas completo
     const values = [];
-    
+
     const canales = habitacion.channels
-    
+
     for (const canal of canales) {
         let curr = null;
         for (let d = new Date(marginDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -1135,6 +1135,82 @@ async function updateChannexAvailability(habitacionId) {
     }
 
 
+    const payload = { values };
+    const response = await channex.post('/api/v1/availability', payload);
+
+    return response.data;
+}
+
+async function updateChannexAvailabilitySingle(habitacionId, datesResponse, deletion) {
+    // 0) Validaciones básicas
+    const habitacion = await Habitacion.findById(habitacionId);
+    if (!habitacion) throw new Error('Habitación no encontrada');
+    if (!habitacion.channexPropertyId || habitacion.channels.length === 0) {
+        throw new Error(
+            'La habitación debe estar mapeada en Channex (channels.channexPropertyId) y tener roomListingId'
+        );
+    }
+
+    const propertyId = habitacion.channexPropertyId;
+    const canales = habitacion.channels;
+
+    // 1) Extraer y normalizar las fechas bloqueadas a YYYY-MM-DD
+    const blockedDates = datesResponse
+        .map(item => {
+            // si item.date es un objeto con item.date.date, o bien una cadena directamente
+            const raw = item.date.date || item.date;
+            const d = new Date(raw);
+            d.setHours(0, 0, 0, 0);
+            return d.toISOString().slice(0, 10);
+        })
+        .filter((v, i, a) => a.indexOf(v) === i)   // elimina duplicados
+        .sort();                                   // ordena ascendente
+
+    if (blockedDates.length === 0) {
+        return { message: 'No hay fechas bloqueadas para actualizar.' };
+    }
+
+    // 2) Agrupar fechas consecutivas en rangos
+    const ranges = [];
+    let start = blockedDates[0];
+    let end = blockedDates[0];
+
+    for (let i = 1; i < blockedDates.length; i++) {
+        const prev = new Date(blockedDates[i - 1]);
+        const curr = new Date(blockedDates[i]);
+        prev.setDate(prev.getDate() + 1);
+        const prevPlusOne = prev.toISOString().slice(0, 10);
+
+        if (blockedDates[i] === prevPlusOne) {
+            // sigue el rango
+            end = blockedDates[i];
+        } else {
+            // cierra rango anterior y abre uno nuevo
+            ranges.push({ start, end });
+            start = blockedDates[i];
+            end = blockedDates[i];
+        }
+    }
+    // añade el último rango
+    ranges.push({ start, end });
+
+    // 3) Construir el payload solo con availability = 0 en los rangos bloqueados
+    const values = [];
+    for (const canal of canales) {
+        for (const { start: date_from, end: date_to } of ranges) {
+            values.push({
+                property_id: propertyId,
+                room_type_id: canal.roomListingId,
+                date_from,
+                date_to,
+                availability: deletion === false || deletion === undefined ? 0 : 1
+            });
+        }
+    }
+
+    console.log(values);
+
+    // 4) Enviar al endpoint de Channex
     const payload = { values };
     const response = await channex.post('/api/v1/availability', payload);
 
@@ -1300,6 +1376,7 @@ module.exports = {
     createRateChannex,
     updateChannexPrices,
     updateChannexAvailability,
+    updateChannexAvailabilitySingle,
     createBookingRoom,
     createRateBooking,
     createChannelBooking
