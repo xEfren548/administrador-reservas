@@ -2433,13 +2433,13 @@
 						const rowCostoBase = document.createElement("tr");
 						rowCostoBase.id = `costo-base-especialestd-${roomName}-${key}pax`
 						const tdCostoBase = document.createElement("td");
-						tdCostoBase.textContent = "Precio Base"
+						tdCostoBase.textContent = "Costo Base"
 						tdCostoBase.classList.add("sticky-column");
 						rowCostoBase.appendChild(tdCostoBase);
 
 						const rowPrecioBase = document.createElement("tr");
 						const tdPrecioBase = document.createElement("td");
-						tdPrecioBase.textContent = "Costo Base"
+						tdPrecioBase.textContent = "Precio Base"
 						tdPrecioBase.classList.add("sticky-column");
 						rowPrecioBase.id = `precio-base-especialestd-${roomName}-${key}pax`
 						rowPrecioBase.appendChild(tdPrecioBase);
@@ -2548,10 +2548,10 @@
 						const precioEspecialPorPersonaEncontrado = precioData.find(precio => precio.fecha === currentDateMx)
 						if (precioEspecialPorPersonaEncontrado) {
 							// Dates match, use special prices
-							costoBaseEspecialTd.textContent = precioEspecialPorPersonaEncontrado.precio_modificado;
-							precioBaseEspecialTd.textContent = precioEspecialPorPersonaEncontrado.precio_base_2noches;
+							costoBaseEspecialTd.textContent = precioEspecialPorPersonaEncontrado.costo_base;
+							precioBaseEspecialTd.textContent = precioEspecialPorPersonaEncontrado.precio_modificado;
 							costoBase2EspecialTd.textContent = precioEspecialPorPersonaEncontrado.costo_base_2noches;
-							precioBase2EspecialTd.textContent = precioEspecialPorPersonaEncontrado.costo_base_2noches;
+							precioBase2EspecialTd.textContent = precioEspecialPorPersonaEncontrado.precio_base_2noches;
 						} else {
 							// Use default or found prices if they don't match
 							if (precioEncontrado) {

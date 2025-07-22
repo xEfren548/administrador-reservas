@@ -83,14 +83,11 @@ async function consultarPreciosPorId(req, res) {
 async function consultarPreciosPorFecha(req, res) {
     try {
         const { fecha, habitacionid, needSpecialPrice, pax } = req.query;
-        console.log("need special price? ", needSpecialPrice)
-        console.log(typeof needSpecialPrice)
 
         let precio = null;
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
-        console.log(fechaAjustada);
 
         if (needSpecialPrice === "true") {
             precio = await PreciosEspeciales.findOne({ fecha: fechaAjustada, habitacionId: habitacionid, noPersonas: pax })
@@ -99,7 +96,6 @@ async function consultarPreciosPorFecha(req, res) {
 
         }
 
-        console.log(precio);
 
         if (precio === null) {
             // const habitacionesExistentes = await Habitacion.findOne(); // Buscar el documento que contiene los eventos
@@ -129,7 +125,6 @@ async function consultarPreciosPorFecha(req, res) {
                 }
             }
 
-            console.log("PRECIO FINAL: ", precio);
 
         }
         res.send(precio);
@@ -147,9 +142,7 @@ async function eliminarRegistroPrecio(req, res) {
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
-        console.log(fechaAjustada);
         const resultado = await PrecioBaseXDia.findOneAndDelete({ fecha: fechaAjustada, habitacionId: habitacionId });
-        console.log(resultado);
         if (!resultado) {
             return res.status(200).json({});
         }
@@ -246,15 +239,6 @@ async function cargarPreciosCSV(req, res) {
                     throw new Error(`Fila ${index + 2}: Uno o más precios son inválidos.`);
                 }
 
-                console.log("Fila después de conversión:", {
-                    habitacionName,
-                    fechaInicio,
-                    fechaFin,
-                    costoBase,
-                    precioBase,
-                    costoBase2Noches,
-                    precioBase2Noches
-                });
 
                 // 🔹 Insertar o actualizar precios para cada día en el rango de fechas
                 let currentDate = new Date(fechaInicio);
@@ -277,7 +261,6 @@ async function cargarPreciosCSV(req, res) {
                             { upsert: true, new: true } // Si no existe, lo crea
                         );
     
-                        console.log("Precio guardado para el día:", currentDate);
     
                         currentDate.setDate(currentDate.getDate() + 1);
                         
@@ -302,7 +285,6 @@ async function cargarPreciosCSV(req, res) {
                             { upsert: true, new: true } // Si no existe, lo crea
                         );
     
-                        console.log("Precio guardado para el día:", currentDate);
     
                         currentDate.setDate(currentDate.getDate() + 1);
                         
@@ -337,7 +319,6 @@ async function cargarPreciosCSV(req, res) {
 
         fs.unlinkSync(filePath);
 
-        console.log("Precios guardados:", preciosGuardados);
 
         res.json({
             message: "Proceso finalizado",
