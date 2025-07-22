@@ -6,6 +6,7 @@ const PrecioBaseXDia = require('../models/PrecioBaseXDia');
 const PreciosEspeciales = require('../models/PreciosEspeciales');
 const Habitacion = require('../models/Habitacion');
 const channexController = require('../controllers/channexController');
+const BloqueoFechas = require('../models/BloqueoFechas');
 
 // Controlador para agregar nuevos datos
 async function agregarNuevoPrecio(req, res) {
@@ -88,6 +89,19 @@ async function consultarPreciosPorFecha(req, res) {
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+
+        let currentDate = new Date(fechaAjustada);
+        currentDate.setUTCHours(6);
+
+        const fechasBloqueadasPorCapacidad = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: habitacionid, type: 'capacidad_minima' });
+        if (fechasBloqueadasPorCapacidad) {
+            console.log("current date: ", currentDate);
+            console.log("fechasBloqueadasPorCapacidad: ", fechasBloqueadasPorCapacidad);
+            if (pax < fechasBloqueadasPorCapacidad.min) {
+                return res.status(400).send({ mensaje: `La capacidad minima es de ${fechasBloqueadasPorCapacidad.min} personas` });
+            }
+        }
+
 
         if (needSpecialPrice === "true") {
             precio = await PreciosEspeciales.findOne({ fecha: fechaAjustada, habitacionId: habitacionid, noPersonas: pax })
