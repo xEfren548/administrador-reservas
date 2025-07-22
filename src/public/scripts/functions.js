@@ -413,7 +413,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     // Verificar el estado de la respuesta
                     if (!response.ok) {
-                        throw new Error('Error en la solicitud fetch: ' + response.statusText);
+                        const data = await response.json();
+                        console.log(data)
+                        throw new Error('Error en la solicitud: ' + data.mensaje);
                     }
 
                     // Convertir la respuesta a JSON
@@ -474,6 +476,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
             } catch (error) {
                 console.error('Ha ocurrido un error: ', error.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: `${error.message || 'Ha ocurrido un error al calcular los precios.'}`,
+                    showCancelButton: false,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Aceptar'
+                })
 
             } finally {
                 // Ocultar la leyenda de "Calculando precios..."

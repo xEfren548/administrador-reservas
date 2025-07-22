@@ -665,6 +665,10 @@ async function createReservation(req, res, next) {
             throw new Error("El usuario no tiene permiso para crear reservas");
         }
 
+        if (total <= 0) {
+            throw new Error("El total debe ser mayor a 0");
+        }
+
         console.log("is depo: ", isDeposit);
         console.log("cliente email: ", clientEmail);
 
@@ -744,6 +748,8 @@ async function createReservation(req, res, next) {
         while (currentDate <= departureDateAjustada) {
             const fechasBloqueadasPorCapacidad = await BloqueoFechas.findOne({ date: currentDate, habitacionId: mongooseChaletId, type: 'capacidad_minima' });
             if (fechasBloqueadasPorCapacidad) {
+                console.log("current date: ", currentDate);
+                console.log("fechasBloqueadasPorCapacidad: ", fechasBloqueadasPorCapacidad);
                 if (pax < fechasBloqueadasPorCapacidad.min) {
                     return res.status(400).send({ message: `La capacidad minima es de ${fechasBloqueadasPorCapacidad.min} personas` });
                 }
@@ -937,7 +943,10 @@ async function createReservation(req, res, next) {
         await logController.createBackendLog(logBody);
 
         if (chalet.channels?.length > 0) {
-            channexController.updateChannexAvailability(chalet._id)
+            const depDateLessOne = checkOutDate.setDate(checkOutDate.getDate() - 1);
+
+            const datesResponse = [{ date: { date: arrivalDate } }, { date: { date: depDateLessOne } }];
+            channexController.updateChannexAvailabilitySingle(chalet._id, datesResponse)
                 .then(() => {
                     console.log("Disponibilidad actualizada en Channex.");
                 })
@@ -1731,7 +1740,8 @@ async function modificarEvento(req, res) {
     }
 }
 
-async function checkAvailability(resourceId, arrivalDate, departureDate, eventId = null) {
+async function checkAvailability(resourceId, arrivalDate, departureDate, eventId = null, nNights) {
+    console.log("nNights: ", nNights);
     const newResourceId = new mongoose.Types.ObjectId(resourceId);
     const arrivalDateObj = new Date(`${arrivalDate}T00:00:00`);
     const departureDateObj = new Date(`${departureDate}T00:00:00`);
@@ -1772,6 +1782,18 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
 
     console.log("OVERLAPPING EVENTS: ")
     console.log(overlappingEvents)
+
+    const fechaAjustada = new Date(arrivalDate);
+    fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+
+
+    const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: resourceId, type: 'restriccion' });
+    if (fechasBloqueadasPorRestriccion) {
+        if (nNights < fechasBloqueadasPorRestriccion.min) {
+            return false;
+        }
+    }
+
 
     // Exclude the current event (if `eventId` is provided)
     const validEvents = overlappingEvents.filter((event) => !eventId || event._id.toString() !== eventId);
@@ -2591,6 +2613,7 @@ module.exports = {
     sendReservationMail,
     cotizadorView,
     cotizadorClientesView,
-    cotizadorChaletsyPrecios
+    cotizadorChaletsyPrecios,
+    calculateNightDifference
 };
 

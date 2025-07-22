@@ -220,7 +220,7 @@ agregarFechasBtn.addEventListener("click", async (e) => {
     console.log(fechaFin)   
     console.log(fechas)
     
-    for (const habitacionesAmodificar of checkedChalets){
+    for (const chaletId of checkedChalets){
         
 
 
@@ -257,7 +257,7 @@ agregarFechasBtn.addEventListener("click", async (e) => {
     
                 // const {date, description, min, habitacionId} = req.body;
                 const estanciaMinima = document.querySelector('#estancia-minima-select')
-                const habitacionId = habitacionesAmodificar;
+                const habitacionId = chaletId;
     
                 for (const fecha of fechas) {
     
@@ -394,7 +394,11 @@ $('#delete-prices-btn').on('click', async () => {
             }
             const data = await response.json();
             console.log(data);
-            resultados.push(data);
+            if (tipoBloqueo === 'bloqueo') {
+                resultados.push(data.date);   
+            } else {
+                resultados.push(data);
+            }
         } catch (error) {
             console.log(error)
             Swal.fire({
@@ -410,7 +414,26 @@ $('#delete-prices-btn').on('click', async () => {
     console.log(resultados)
     const allEmpty = resultados.every(obj => Object.keys(obj).length === 0);
 
-    if (!allEmpty) {
+    if (!allEmpty && resultados.length > 0) {
+        if (tipoBloqueo === 'bloqueo') {
+                const actualizarDisponibilidadResponse = await fetch('/api/channex/availability-rates/single', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pmsId: chaletId,
+                        datesResponse: resultados,
+                        deletion: true
+                    }),
+                });
+
+                const data = await actualizarDisponibilidadResponse.json();
+                console.log(data)
+
+                if (data.warning && data.code === "NO_CHANNELS") {
+                    console.log("Habitacion sin canales, se omite ")
+                    return;
+                }
+            }
         Swal.fire({
             icon: 'success',
             title: "¡Completado!",
@@ -487,7 +510,23 @@ addBloqueadas2btn.addEventListener('click', async (e) => {
             if (resultados.length === 0) {
                 throw new Error('No hay fechas seleccionadas para actualizar.');
             }
-    
+
+            const actualizarDisponibilidadResponse = await fetch('/api/channex/availability-rates/single', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pmsId: habitacionesAmodificar,
+                    datesResponse: resultados
+                }),
+            });
+
+            const data = await actualizarDisponibilidadResponse.json();
+            console.log(data)
+
+            if (data.warning && data.code === "NO_CHANNELS") {
+                console.log("Habitacion sin canales, se omite ")
+                continue;
+            }
             
     
         } catch (error) {
@@ -641,7 +680,7 @@ addBloqueadasCapacidadBtn.addEventListener('click', async (e) => {
     console.log(fechaFin)   
     console.log(fechas)
     
-    for (const habitacionesAmodificar of checkedChalets){
+    for (const chaletId of checkedChalets){
         
 
 
@@ -677,7 +716,7 @@ addBloqueadasCapacidadBtn.addEventListener('click', async (e) => {
                 console.log('ejecutando fetch repetido...');
     
                 // const {date, description, min, habitacionId} = req.body;
-                const habitacionId = habitacionesAmodificar;
+                const habitacionId = chaletId;
                 const min = document.querySelector('#capacidad-minima-select').value
     
                 for (const fecha of fechas) {

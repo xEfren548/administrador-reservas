@@ -155,7 +155,8 @@ router.get('/check-availability', async (req, res) => {
     // const departure = new Date(departureDate);
 
     try {
-        const isAvailable = await eventController.checkAvailability(resourceId, arrivalDate, departureDate, eventId);
+        const nNights = eventController.calculateNightDifference(arrivalDate, departureDate);
+        const isAvailable = await eventController.checkAvailability(resourceId, arrivalDate, departureDate, eventId, nNights);
 
         res.json({ available: isAvailable });
 

@@ -33,7 +33,7 @@ async function mapProperties(req, res) {
         return {
             property: {
                 "title": propertyDetails.name,
-                "currency": "MXN",
+                "currency": "USD",
                 "content": {
                     "description": hab.accomodationDescription
                 },
@@ -257,7 +257,6 @@ async function dashboardBooking(req, res) {
             // Tarifa
             let tarifa = null;
             if (hab.channexPropertyId) {
-                console.log(ratePlans.map(r => console.log(r.relationships.room_type.data.id)))
                 const foundRate = ratePlans.find(r =>
                     //r => r.relationships.property.data.id === hab.channexPropertyId
                     hab.channels.some(c => c.roomListingId === r.relationships.room_type.data.id && c.ota_name === 'BOOKING')
@@ -306,6 +305,8 @@ async function webhookReceptor(req, res) {
         const body = req.body;
         const eventType = body.event;
 
+        const revisionId = body.payload?.booking_revision_id;
+
         let payload;
         if (eventType === 'booking_new') {
             // Pre-approval por defecto (bloquea instant booking)
@@ -317,9 +318,8 @@ async function webhookReceptor(req, res) {
 
             console.log("Aceptando reserva regularmente");
 
-            const response = await channex.get(`/api/v1/bookings/${booking_id}`);
+            const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
             const data = response.data.data.attributes;
-            console.log(JSON.stringify(data, null, 2));
 
             const propertyId = data.property_id;
             const listingId = data.meta.listing_id;
@@ -402,7 +402,6 @@ async function webhookReceptor(req, res) {
             const { reserva } = reservaPms;
 
             const { costoBase, precioBase } = await calcularCostoBaseTotal(habitacion, reserva.arrivalDate, reserva.departureDate);
-            console.log("COSTO BASE: " + costoBase);
             const utilidadesInfo = {
                 idReserva: reserva._id,
                 arrivalDate: reserva.arrivalDate,
@@ -418,8 +417,6 @@ async function webhookReceptor(req, res) {
                 throw new Error(crearUtilidades.message);
             }
 
-            res.status(200).send(reserva);
-
 
         } else if (eventType === 'booking_cancellation') {
             const bookingId = body.payload.booking_id;
@@ -429,8 +426,6 @@ async function webhookReceptor(req, res) {
                 console.log(`No se encontró la reserva con el airbnbBookingId ${bookingId} en la base de datos.`);
                 throw new Error('La reserva no fue encontrada');
             }
-
-            console.log("Reserva a cancelar: ", reserva)
 
             const idReserva = reserva._id;
 
@@ -458,8 +453,8 @@ async function webhookReceptor(req, res) {
                 throw new Error('Error al cancelar reserva');
             }
 
-            res.status(200).send("Reserva cancelada correctamente");
-
+            const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
+            const data = response.data.data.attributes;
 
             // Actualizar disponibilidad y cancelar reservacion en PMS
 
@@ -472,11 +467,9 @@ async function webhookReceptor(req, res) {
                 throw new Error('La reserva no fue encontrada');
             }
 
-            console.log("Reserva a modificar: ", reserva)
-
             const reservationId = reserva._id;
 
-            const response = await channex.get(`/api/v1/bookings/${bookingId}`);
+            const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
             const data = response.data.data.attributes;
 
             const ota_name = data.ota_name;
@@ -522,7 +515,6 @@ async function webhookReceptor(req, res) {
             }
             const nuevasComisiones = await utilidadesController.generarComisionOTA(utilidadesInfo);
 
-            res.status(200).send(eventoEditado);
 
         } else if (eventType === 'test') {
             // Aceptar reserva regularmente
@@ -530,6 +522,10 @@ async function webhookReceptor(req, res) {
         } else {
             return res.status(400).send('Evento no reconocido');
         }
+
+        await channex.post(`/api/v1/booking_revisions/${revisionId}/ack`);
+
+        return res.status(200).send('Evento procesado correctamente');
 
         // await channex.post(`/api/v1/live_feed/${liveFeedId}/resolve`, payload);
     } catch (err) {
@@ -678,7 +674,7 @@ async function createChannexProperty(req, res) {
         const propertyPayload = {
             property: {
                 title: propertyDetails.name,
-                currency: 'MXN',
+                currency: 'USD',
                 content: { description },
                 email: propertyDetails.email,
                 phone: propertyDetails.phoneNumber,
@@ -871,9 +867,9 @@ async function createChannelBooking(req, res) {
                             occupancy: habitacion.propertyDetails.maxOccupancy,
                             pricing_type: "USD",
                             primary_occ: true,
-                            rate_plan_code: ratePlanCode,
+                            rate_plan_code: Number(ratePlanCode),
                             readonly: false,
-                            room_type_code: roomTypeCode
+                            room_type_code: Number(roomTypeCode)
                         }
                     }
                 ],
@@ -947,7 +943,7 @@ async function createRateChannex(req, res) {
     }
 }
 
-async function updateChannexPrices(habitacionId, ota_name = null) {
+async function updateChannexPrices(habitacionId) {
     // 0) Validaciones básicas
     const habitacion = await Habitacion.findById(habitacionId);
     if (!habitacion) throw new Error('Habitación no encontrada');
@@ -957,11 +953,7 @@ async function updateChannexPrices(habitacionId, ota_name = null) {
     const propertyId = habitacion.channexPropertyId;
     const defaultPrice = habitacion.others.basePrice2nights;
 
-    console.log("OTA NAME: ", ota_name)
-
-
     const comisiones = await utilidadesController.calcularComisionesOTA()
-    console.log("comisiones OTA", comisiones)
 
     // 1) Fechas: desde hoy hasta 1 año después
     const startDate = new Date();
@@ -974,13 +966,11 @@ async function updateChannexPrices(habitacionId, ota_name = null) {
     const plataformas = await Plataformas.find({
         _id: { $in: habitacion.activePlatforms }
     });
-    
+
 
     if (!plataformas || plataformas.length === 0) {
         throw new Error('La habitación no tiene plataformas activas. Activala desde Editar Cabaña');
     }
-
-    console.log("plataformas", plataformas)
 
     // 3) Traer todos los registros de PrecioBaseXDia
     const priceRecords = await PrecioBaseXDia
@@ -1101,10 +1091,9 @@ async function updateChannexAvailability(habitacionId) {
     for (const reserva of reservas) {
         let curr = moment.utc(reserva.arrivalDate).startOf('day');
         const checkout = moment.utc(reserva.departureDate)
-                                .startOf('day')
-                                .subtract(1, 'day');
+            .startOf('day')
+            .subtract(1, 'day');
 
-        console.log("curr", curr.format(), "checkout", checkout.format())
         // Por cada día de la reserva
         while (curr.isSameOrBefore(checkout)) {
             noDisponibles.add(curr.format('YYYY-MM-DD'));
@@ -1114,9 +1103,9 @@ async function updateChannexAvailability(habitacionId) {
 
     // 4) Recorrer el rango de fechas completo
     const values = [];
-    
+
     const canales = habitacion.channels
-    
+
     for (const canal of canales) {
         let curr = null;
         for (let d = new Date(marginDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -1149,6 +1138,84 @@ async function updateChannexAvailability(habitacionId) {
     }
 
 
+    const payload = { values };
+    const response = await channex.post('/api/v1/availability', payload);
+
+    return response.data;
+}
+
+async function updateChannexAvailabilitySingle(habitacionId, datesResponse, deletion = false) {
+    // 0) Validaciones básicas
+    const habitacion = await Habitacion.findById(habitacionId);
+    if (!habitacion) throw new Error('Habitación no encontrada');
+    if (!habitacion.channexPropertyId || habitacion.channels.length === 0) {
+        throw new Error(
+            'La habitación debe estar mapeada en Channex (channels.channexPropertyId) y tener roomListingId'
+        );
+    }
+
+    console.log(datesResponse)
+
+    const propertyId = habitacion.channexPropertyId;
+    const canales = habitacion.channels;
+
+    // 1) Extraer y normalizar las fechas bloqueadas a YYYY-MM-DD
+    const blockedDates = datesResponse
+        .map(item => {
+            // si item.date es un objeto con item.date.date, o bien una cadena directamente
+            const raw = item.date.date || item.date;
+            const d = new Date(raw);
+            d.setHours(0, 0, 0, 0);
+            return d.toISOString().slice(0, 10);
+        })
+        .filter((v, i, a) => a.indexOf(v) === i)   // elimina duplicados
+        .sort();                                   // ordena ascendente
+
+    if (blockedDates.length === 0) {
+        return { message: 'No hay fechas bloqueadas para actualizar.' };
+    }
+
+    // 2) Agrupar fechas consecutivas en rangos
+    const ranges = [];
+    let start = blockedDates[0];
+    let end = blockedDates[0];
+
+    for (let i = 1; i < blockedDates.length; i++) {
+        const prev = new Date(blockedDates[i - 1]);
+        const curr = new Date(blockedDates[i]);
+        prev.setDate(prev.getDate() + 1);
+        const prevPlusOne = prev.toISOString().slice(0, 10);
+
+        if (blockedDates[i] === prevPlusOne) {
+            // sigue el rango
+            end = blockedDates[i];
+        } else {
+            // cierra rango anterior y abre uno nuevo
+            ranges.push({ start, end });
+            start = blockedDates[i];
+            end = blockedDates[i];
+        }
+    }
+    // añade el último rango
+    ranges.push({ start, end });
+
+    // 3) Construir el payload solo con availability = 0 en los rangos bloqueados
+    const values = [];
+    for (const canal of canales) {
+        for (const { start: date_from, end: date_to } of ranges) {
+            values.push({
+                property_id: propertyId,
+                room_type_id: canal.roomListingId,
+                date_from,
+                date_to,
+                availability: deletion === false ? 0 : 1
+            });
+        }
+    }
+
+    console.log(values);
+
+    // 4) Enviar al endpoint de Channex
     const payload = { values };
     const response = await channex.post('/api/v1/availability', payload);
 
@@ -1231,7 +1298,6 @@ function dmsToDecimal(dmsStr) {
 
 async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
     const habitacionId = habitacion._id;
-    console.log("Habitacion desde calcular costo base total", habitacion)
 
     // 1) Cargar la primera plataforma activa (o elegir lógica si hay varias)
     const [plat] = await Plataformas.find({
@@ -1294,8 +1360,6 @@ async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
         // totalCosto += incremento;
         totalPrecio += incremento;
 
-        console.log("COSTO TOTAL: ", totalCosto);
-        console.log("PRECIO TOTAL: ", totalPrecio);
     }
 
     return { costoBase: totalCosto, precioBase: totalPrecio };
@@ -1317,6 +1381,7 @@ module.exports = {
     createRateChannex,
     updateChannexPrices,
     updateChannexAvailability,
+    updateChannexAvailabilitySingle,
     createBookingRoom,
     createRateBooking,
     createChannelBooking
