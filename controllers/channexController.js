@@ -1144,7 +1144,7 @@ async function updateChannexAvailability(habitacionId) {
     return response.data;
 }
 
-async function updateChannexAvailabilitySingle(habitacionId, datesResponse, deletion) {
+async function updateChannexAvailabilitySingle(habitacionId, datesResponse, deletion = false) {
     // 0) Validaciones básicas
     const habitacion = await Habitacion.findById(habitacionId);
     if (!habitacion) throw new Error('Habitación no encontrada');
@@ -1153,6 +1153,8 @@ async function updateChannexAvailabilitySingle(habitacionId, datesResponse, dele
             'La habitación debe estar mapeada en Channex (channels.channexPropertyId) y tener roomListingId'
         );
     }
+
+    console.log(datesResponse)
 
     const propertyId = habitacion.channexPropertyId;
     const canales = habitacion.channels;
@@ -1206,7 +1208,7 @@ async function updateChannexAvailabilitySingle(habitacionId, datesResponse, dele
                 room_type_id: canal.roomListingId,
                 date_from,
                 date_to,
-                availability: deletion === false || deletion === undefined ? 0 : 1
+                availability: deletion === false ? 0 : 1
             });
         }
     }

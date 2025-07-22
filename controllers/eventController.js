@@ -937,7 +937,10 @@ async function createReservation(req, res, next) {
         await logController.createBackendLog(logBody);
 
         if (chalet.channels?.length > 0) {
-            channexController.updateChannexAvailability(chalet._id)
+            const depDateLessOne = checkOutDate.setDate(checkOutDate.getDate() - 1);
+
+            const datesResponse = [{ date: { date: arrivalDate } }, { date: { date: depDateLessOne } }];
+            channexController.updateChannexAvailabilitySingle(chalet._id, datesResponse)
                 .then(() => {
                     console.log("Disponibilidad actualizada en Channex.");
                 })
