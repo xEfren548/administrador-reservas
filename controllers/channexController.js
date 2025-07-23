@@ -120,6 +120,7 @@ async function dashboardChannexFull(req, res) {
                     // { $unset: { channexPropertyId: "", isMapped: "" } }
                 );
                 hab.channexPropertyId = undefined;
+                hab.channexRoomId = undefined;
             }
 
             // const canal = hab.channels.find(channel => channel.channelId === req.session.channelId);
@@ -211,6 +212,7 @@ async function dashboardChannexFull(req, res) {
             };
         });
 
+        console.log("propiedades marcadas: ", propiedadesMarcadas[0]);
 
         // console.log(propiedadesMarcadas[0])
         res.render('dashboardChannex', {
@@ -664,6 +666,14 @@ async function createChannexProperty(req, res) {
             return res.status(400).json({ error: 'La habitación ya fue mapeada' });
         }
 
+        const plataformas = await Plataformas.find({
+            _id: { $in: hab.activePlatforms }
+        });
+
+        if (!plataformas || plataformas.length === 0) {
+            throw new Error('La habitación no tiene plataformas activas. Activala desde Editar Cabaña');
+        }
+
         // 2) Armar el payload para Channex
         const {
             propertyDetails,
@@ -726,6 +736,10 @@ async function createRoomChannex(req, res) {
             return res.status(404).json({ error: 'Habitación no encontrada' });
         }
 
+        if (habitacion.channexRoomId) {
+            return res.status(400).json({ error: 'El room ya fue mapeado' });
+        }
+
         const plataformas = await Plataformas.find({
             _id: { $in: habitacion.activePlatforms }
         });
@@ -735,17 +749,14 @@ async function createRoomChannex(req, res) {
         }
         req.body.room_type.occ_adults = habitacion.propertyDetails.maxOccupancy;
         req.body.room_type.default_occupancy = habitacion.propertyDetails.maxOccupancy;
+        req.body.room_type.title = `ROOM ${habitacion.propertyDetails.name}`;
 
         const sameChannel = habitacion.channels.find(channel => channel.channelId === req.session.channelId);
         if (sameChannel) return res.status(400).json({ error: 'La habitación ya fue mapeada en este canal' });
 
         const resp = await channex.post('/api/v1/room_types', req.body);
 
-        habitacion.channels.push({
-            channelId: req.session.channelId,
-            roomListingId: resp.data.data.attributes.id,
-            ota_name: 'AIRBNB'
-        })
+        habitacion.channexRoomId = resp.data.data.attributes.id;
 
         // habitacion.channels.roomListingId = resp.data.data.attributes.id;
         await habitacion.save();
@@ -909,16 +920,29 @@ async function createRateChannex(req, res) {
         if (!habitacion) {
             return res.status(404).json({ error: 'Habitación no encontrada' });
         }
-        if (!habitacion.channexPropertyId || habitacion.channels.length === 0)
+        if ((!habitacion.channexPropertyId || habitacion.channels.length === 0) && !habitacion.channexRoomId)
             throw new Error('La habitación no está creada en Channex');
+        
+        // req.body.room_type.occ_adults = habitacion.propertyDetails.maxOccupancy;
+        const default_occupancy = habitacion.propertyDetails.maxOccupancy;
+        // req.body.room_type.title = `ROOM ${habitacion.propertyDetails.name}`;
+
+        req.body.rate_plan.options = [{ occupancy: default_occupancy, is_primary: true }]
 
         const resp = await channex.post('/api/v1/rate_plans', req.body);
-        const canal = habitacion.channels.find(channel => channel.channelId === channelId);
-        if (!canal) {
-            throw new Error('No se pudo encontrar el canal');
-        }
+        // const canal = habitacion.channels.find(channel => channel.channelId === channelId);
+        // if (!canal) {
+        //     throw new Error('No se pudo encontrar el canal');
+        // }
 
-        canal.rateListingId = resp.data.data.attributes.id;
+        
+        habitacion.channels.push({
+            channelId: channelId,
+            ota_name: 'AIRBNB',
+            rateListingId: resp.data.data.attributes.id
+        })
+
+        // canal.rateListingId = resp.data.data.attributes.id;
         await habitacion.save();
 
         const updatePrices = await updateChannexPrices(pmsId, "AIRBNB");
@@ -1050,12 +1074,12 @@ async function updateChannexAvailability(habitacionId) {
     // 0) Validaciones básicas
     const habitacion = await Habitacion.findById(habitacionId);
     if (!habitacion) throw new Error('Habitación no encontrada');
-    if (!habitacion.channexPropertyId || habitacion.channels.length === 0) {
+    if (!habitacion.channexPropertyId || habitacion.channels.length === 0 || !habitacion.channexRoomId) {
         throw new Error('La habitación debe estar mapeada en Channex (channels.channexPropertyId) y tener roomListingId');
     }
 
     const propertyId = habitacion.channexPropertyId;
-    // const roomTypeId = canal.roomListingId;
+    const roomTypeId = habitacion.channexRoomId;
 
     // 1) Rango: hoy hasta 1 año después
     const today = new Date();
@@ -1115,7 +1139,7 @@ async function updateChannexAvailability(habitacionId) {
                 if (curr) {
                     values.push({
                         property_id: propertyId,
-                        room_type_id: canal.roomListingId,
+                        room_type_id: roomTypeId,
                         date_from: curr.start,
                         date_to: curr.end,
                         availability: curr.availability
@@ -1129,7 +1153,7 @@ async function updateChannexAvailability(habitacionId) {
         if (curr) {
             values.push({
                 property_id: propertyId,
-                room_type_id: canal.roomListingId,
+                room_type_id: roomTypeId,
                 date_from: curr.start,
                 date_to: curr.end,
                 availability: curr.availability
@@ -1148,7 +1172,7 @@ async function updateChannexAvailabilitySingle(habitacionId, datesResponse, dele
     // 0) Validaciones básicas
     const habitacion = await Habitacion.findById(habitacionId);
     if (!habitacion) throw new Error('Habitación no encontrada');
-    if (!habitacion.channexPropertyId || habitacion.channels.length === 0) {
+    if (!habitacion.channexPropertyId || habitacion.channels.length === 0 || !habitacion.channexRoomId) {
         throw new Error(
             'La habitación debe estar mapeada en Channex (channels.channexPropertyId) y tener roomListingId'
         );
@@ -1157,6 +1181,7 @@ async function updateChannexAvailabilitySingle(habitacionId, datesResponse, dele
     console.log(datesResponse)
 
     const propertyId = habitacion.channexPropertyId;
+    const roomTypeId = habitacion.channexRoomId;
     const canales = habitacion.channels;
 
     // 1) Extraer y normalizar las fechas bloqueadas a YYYY-MM-DD
@@ -1205,7 +1230,7 @@ async function updateChannexAvailabilitySingle(habitacionId, datesResponse, dele
         for (const { start: date_from, end: date_to } of ranges) {
             values.push({
                 property_id: propertyId,
-                room_type_id: canal.roomListingId,
+                room_type_id: roomTypeId,
                 date_from,
                 date_to,
                 availability: deletion === false ? 0 : 1
