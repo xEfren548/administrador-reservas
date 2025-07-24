@@ -323,7 +323,7 @@
 
             try {
                 // 2. Crea Rate
-                const rateRes = await fetch(`/api/channex/rates?pmsid=${pms_id}`, {
+                const rateRes = await fetch(`/api/channex/rates?pmsid=${pms_id}&ota_name=airbnb`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

@@ -243,6 +243,7 @@ async function dashboardBooking(req, res) {
                     { $unset: { channexPropertyId: "", channels: [] } }
                 );
                 hab.channexPropertyId = undefined;
+                hab.channexRoomId = undefined;
             }
         }
 
@@ -250,7 +251,7 @@ async function dashboardBooking(req, res) {
         const respRates = await channex.get('/api/v1/rate_plans');
         const ratePlans = respRates.data.data;
 
-        // console.log(ratePlans)
+        console.log(ratePlans)
 
         // 3. Marca cada habitación según su propio canal de Booking
         const propiedadesMarcadas = propiedades.map(hab => {
@@ -261,7 +262,8 @@ async function dashboardBooking(req, res) {
             if (hab.channexPropertyId) {
                 const foundRate = ratePlans.find(r =>
                     //r => r.relationships.property.data.id === hab.channexPropertyId
-                    hab.channels.some(c => c.roomListingId === r.relationships.room_type.data.id && c.ota_name === 'BOOKING')
+                    // hab.channels.some(c => c.roomListingId === r.relationships.room_type.data.id && c.ota_name === 'BOOKING')
+                    hab.channels.some(c => c.rateListingId === r.id && c.ota_name === 'BOOKING')
                 );
                 if (foundRate) {
                     tarifa = {
@@ -711,7 +713,7 @@ async function createChannexProperty(req, res) {
 
     } catch (err) {
         console.error('Error mapeando propiedad a Channex:', err.response?.data || err.message);
-        return res.status(500).json({ error: 'Error al mapear propiedad en Channex' });
+        return res.status(500).json({ error: err.response?.data?.error || err.message });
     }
 }
 
@@ -813,23 +815,38 @@ async function createRateBooking(req, res) {
     try {
         const pmsId = req.query.pmsid;
         const roomId = req.body.rate_plan.room_type_id;
+        let ota_name = req.query.ota_name;
+
+        if (!ota_name) {
+            return res.status(400).json({ error: 'No se proporcionó el nombre de la plataforma' });
+        }
+        ota_name = ota_name.toUpperCase();
         const habitacion = await Habitacion.findById(pmsId);
         if (!habitacion) {
             return res.status(404).json({ error: 'Habitación no encontrada' });
         }
-        if (!habitacion.channexPropertyId || habitacion.channels.length === 0)
+        if (!habitacion.channexPropertyId || !habitacion.channexRoomId)
             throw new Error('La habitación no está creada en Channex');
 
-        const resp = await channex.post('/api/v1/rate_plans', req.body);
-        const canal = habitacion.channels.find(channel => channel.roomListingId === roomId);
-        if (!canal) {
-            throw new Error('No se pudo encontrar el canal');
-        }
+        const default_occupancy = habitacion.propertyDetails.maxOccupancy;
 
-        canal.rateListingId = resp.data.data.attributes.id;
+        req.body.rate_plan.options = [{ occupancy: default_occupancy, is_primary: true }]
+
+        const resp = await channex.post('/api/v1/rate_plans', req.body);
+        // const canal = habitacion.channels.find(channel => channel.roomListingId === roomId);
+        // if (!canal) {
+        //     throw new Error('No se pudo encontrar el canal');
+        // }
+
+        habitacion.channels.push({
+            rateListingId: resp.data.data.attributes.id,
+            ota_name: ota_name
+        })
+
+        // canal.rateListingId = resp.data.data.attributes.id;
         await habitacion.save();
 
-        const updatePrices = await updateChannexPrices(pmsId, "BOOKING");
+        const updatePrices = await updateChannexPrices(pmsId, ota_name);
         const updateAvailability = await updateChannexAvailability(pmsId);
         const createWebhook = await createPropertyWebhook(habitacion.channexPropertyId);
         if (!updatePrices || !updateAvailability) {
@@ -916,6 +933,11 @@ async function createRateChannex(req, res) {
     try {
         const pmsId = req.query.pmsid;
         const channelId = req.session.channelId;
+        let ota_name = req.query.ota_name;
+        if (!ota_name) {
+            return res.status(400).json({ error: 'No se proporcionó el nombre de la plataforma' });
+        }
+        ota_name = ota_name.toUpperCase();
         const habitacion = await Habitacion.findById(pmsId);
         if (!habitacion) {
             return res.status(404).json({ error: 'Habitación no encontrada' });
@@ -938,14 +960,14 @@ async function createRateChannex(req, res) {
         
         habitacion.channels.push({
             channelId: channelId,
-            ota_name: 'AIRBNB',
+            ota_name: ota_name,
             rateListingId: resp.data.data.attributes.id
         })
 
         // canal.rateListingId = resp.data.data.attributes.id;
         await habitacion.save();
 
-        const updatePrices = await updateChannexPrices(pmsId, "AIRBNB");
+        const updatePrices = await updateChannexPrices(pmsId, ota_name);
         const updateAvailability = await updateChannexAvailability(pmsId);
         const createWebhook = await createPropertyWebhook(habitacion.channexPropertyId);
         if (!updatePrices || !updateAvailability) {
