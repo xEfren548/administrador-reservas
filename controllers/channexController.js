@@ -1248,17 +1248,17 @@ async function updateChannexAvailabilitySingle(habitacionId, datesResponse, dele
 
     // 3) Construir el payload solo con availability = 0 en los rangos bloqueados
     const values = [];
-    for (const canal of canales) {
-        for (const { start: date_from, end: date_to } of ranges) {
-            values.push({
-                property_id: propertyId,
-                room_type_id: roomTypeId,
-                date_from,
-                date_to,
-                availability: deletion === false ? 0 : 1
-            });
-        }
+    // for (const canal of canales) {
+    for (const { start: date_from, end: date_to } of ranges) {
+        values.push({
+            property_id: propertyId,
+            room_type_id: roomTypeId,
+            date_from,
+            date_to,
+            availability: deletion === false ? 0 : 1
+        });
     }
+    // }    
 
     console.log(values);
 
