@@ -54,7 +54,7 @@
                 {{else}}
                 <button type="button" class="btn btn-sm btn-info crear-tarifa-btn"
                     data-propertyid="{{channexPropertyId}}" data-pmsid="{{_id}}"
-                    data-propertyname="{{propertyDetails.name}}">
+                    data-propertyname="{{propertyDetails.name}}" data-roomid="{{channexRoomId}}">
                     Crear tarifa
                 </button>
                 {{/if}}
@@ -139,11 +139,12 @@
                     <input type="hidden" id="inputPropertyId" name="property_id">
                     <input type="hidden" id="inputPmsId" name="pms_id">
                     <input type="hidden" id="inputTarifaId" name="tarifa_id">
+                    <input type="hidden" id="inputRoomId" name="room_id">
 
-                    <div class="mb-3">
+                    {{!-- <div class="mb-3">
                         <label for="roomTitle" class="form-label">Nombre del Room</label>
                         <input type="text" class="form-control" id="roomTitle" name="room_title" required>
-                    </div>
+                    </div> --}}
                     <div class="mb-3">
                         <label for="rateTitle" class="form-label">Nombre de la Tarifa</label>
                         <input type="text" class="form-control" id="rateTitle" name="rate_title" required>
@@ -176,11 +177,38 @@
         document.querySelectorAll('.alta-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 try {
+                    // 1. Crea propiedad
                     const pmsId = btn.dataset.id;
                     const res = await fetch(`/api/channex/properties/${pmsId}/create`, { method: 'POST' });
                     const data = await res.json();
                     if (!res.ok) throw new Error(data.error || 'Error al dar de alta propiedad');
-                    Swal.fire('Alta', 'Propiedad creada en Channex', 'success').then(() => location.reload());
+                    
+                    const property_id = data.data.id;
+
+                    // 2. Crea Room
+                    //const roomRes = await fetch(`/api/channex/rooms/booking?pmsid=${pms_id}&ota_name=booking`, {
+                    const roomRes = await fetch(`/api/channex/rooms?pmsid=${pmsId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            room_type: {
+                                property_id: property_id,
+                                //title: room_title,
+                                count_of_rooms: 1,
+                                //occ_adults: 2,
+                                //default_occupancy: 2,
+                                occ_children: 0,
+                                occ_infants: 0
+                            }
+                        })
+                    });
+                    const roomData = await roomRes.json();
+                    if (!roomRes.ok) throw new Error(roomData.error || 'Error creando room');
+
+                    const room_type_id = roomData.data.id;
+                    const default_occupancy = roomData.data.attributes.default_occupancy;
+
+                    Swal.fire('Alta', 'Propiedad y room creados en Channex', 'success').then(() => location.reload());
                 } catch (err) {
                     Swal.fire('Error', err.message, 'error');
                 }
@@ -192,9 +220,10 @@
             btn.addEventListener('click', function () {
                 document.getElementById('inputPropertyId').value = btn.dataset.propertyid;
                 document.getElementById('inputPmsId').value = btn.dataset.pmsid;
+                document.getElementById('inputRoomId').value = btn.dataset.roomid;
                 const propertyName = btn.dataset.propertyname;
                 document.getElementById('propName').textContent = propertyName;
-                document.getElementById('roomTitle').value = "ROOM " + propertyName.toUpperCase() + " BOOKING";
+                //document.getElementById('roomTitle').value = "ROOM " + propertyName.toUpperCase() + " BOOKING";
                 document.getElementById('rateTitle').value = "RATE " + propertyName.toUpperCase() + " BOOKING";
                 new bootstrap.Modal(document.getElementById('tarifaModal')).show();
             });
@@ -235,9 +264,10 @@
             e.preventDefault();
 
             const property_id = document.getElementById('inputPropertyId').value;
-            const room_title = document.getElementById('roomTitle').value;
+            //const room_title = document.getElementById('roomTitle').value;
             const rate_title = document.getElementById('rateTitle').value;
             const pms_id = document.getElementById('inputPmsId').value;
+            const room_type_id = document.getElementById('inputRoomId').value;
 
             Swal.fire({
                 title: "Creando room y rate... Sincronizando precios...",
@@ -249,30 +279,9 @@
             });
 
             try {
-                // 1. Crea Room
-                const roomRes = await fetch(`/api/channex/rooms/booking?pmsid=${pms_id}&ota_name=booking`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        room_type: {
-                            property_id: property_id,
-                            title: room_title,
-                            count_of_rooms: 1,
-                            //occ_adults: 2,
-                            //default_occupancy: 2,
-                            occ_children: 0,
-                            occ_infants: 0
-                        }
-                    })
-                });
-                const roomData = await roomRes.json();
-                if (!roomRes.ok) throw new Error(roomData.error || 'Error creando room');
-
-                const room_type_id = roomData.data.id;
-                const default_occupancy = roomData.data.attributes.default_occupancy;
 
                 // 2. Crea Rate
-                const rateRes = await fetch(`/api/channex/rates/booking?pmsid=${pms_id}`, {
+                const rateRes = await fetch(`/api/channex/rates/booking?pmsid=${pms_id}&ota_name=booking`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -281,7 +290,7 @@
                             property_id: property_id,
                             room_type_id: room_type_id,
                             parent_rate_plan_id: null,
-                            options: [{ occupancy: default_occupancy, is_primary: true }],
+                            //options: [{ occupancy: default_occupancy, is_primary: true }],
                             children_fee: "0.00",
                             infant_fee: "0.00",
                             currency: "USD", // Puedes ajustar la moneda
