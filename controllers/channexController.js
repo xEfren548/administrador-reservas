@@ -116,7 +116,7 @@ async function dashboardChannexFull(req, res) {
             if (hab.channexPropertyId && !channexIds.includes(hab.channexPropertyId)) {
                 await Habitacion.updateOne(
                     { _id: hab._id },
-                    { $unset: { "channexPropertyId": "" }, channels: [] }
+                    { $unset: { "channexPropertyId": "" }, channexRoomId: "", channels: [] }
                     // { $unset: { channexPropertyId: "", isMapped: "" } }
                 );
                 hab.channexPropertyId = undefined;
@@ -240,7 +240,7 @@ async function dashboardBooking(req, res) {
             if (hab.channexPropertyId && !channexIds.includes(hab.channexPropertyId)) {
                 await Habitacion.updateOne(
                     { _id: hab._id },
-                    { $unset: { channexPropertyId: "", channels: [] } }
+                    { $unset: { channexPropertyId: "", channexRoomId: "", channels: [] } }
                 );
                 hab.channexPropertyId = undefined;
                 hab.channexRoomId = undefined;
@@ -698,7 +698,12 @@ async function createChannexProperty(req, res) {
                 address: location.address,
                 longitude: location.longitude ? dmsToDecimal(location.longitude) : null,
                 latitude: location.latitude ? dmsToDecimal(location.latitude) : null,
-                group_id: 'b5fcd225-d31f-4588-a828-686f7e2b32a4'
+                group_id: 'b5fcd225-d31f-4588-a828-686f7e2b32a4',
+                settings: {
+                    "allow_availability_autoupdate_on_confirmation": false,
+                    "allow_availability_autoupdate_on_modification": false,
+                    "allow_availability_autoupdate_on_cancellation": false
+                }
             }
         };
 
