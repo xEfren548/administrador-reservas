@@ -1447,11 +1447,43 @@ async function editarEvento(req, res) {
         const id = req.params.id;
         const privilege = req.session.privilege;
         const { resourceId, nNights, arrivalDate, departureDate, url, total } = req.body;
-        console.log("Procesando solicitud de edición de evento");
+        console.log("Procesando solicitud de edición de evento con ID:", id);
 
         if (privilege !== "Administrador") {
             return res.status(401).send({ message: 'Solo los administradores pueden realizar esta acción.' });
         }
+
+        const eventoOriginal = await Documento.findById(id);
+
+        if (!eventoOriginal) {
+            return res.status(404).send({ message: 'El evento no fue encontrado.' });
+        }
+
+        const chalet = await Habitacion.findById(eventoOriginal.resourceId);
+
+        const arrivalHour      = chalet.others.arrivalTime.getHours();
+        const arrivalMinute    = chalet.others.arrivalTime.getMinutes();
+        const departureHour    = chalet.others.departureTime.getHours();
+        const departureMinute  = chalet.others.departureTime.getMinutes();
+
+        // 3) Parsear y setear hora en CDMX
+        const arrivalMoment = moment
+            .utc(arrivalDate, 'YYYY-MM-DD')
+            .hour(arrivalHour)
+            .minute(arrivalMinute)
+            .second(0)
+            .millisecond(0);
+
+        const departureMoment = momentTz
+            .utc(departureDate, 'YYYY-MM-DD')
+            .hour(departureHour)
+            .minute(departureMinute)
+            .second(0)
+            .millisecond(0);
+
+        // 4) Convertir a Date
+        const arrivalDateM   = arrivalMoment.toDate();
+        const departureDateM = departureMoment.toDate();
 
         const arrivalDateObj = new Date(arrivalDate);
         const departureDateObj = new Date(departureDate);
@@ -1485,8 +1517,8 @@ async function editarEvento(req, res) {
 
         if (resourceId !== undefined) updateFields.resourceId = resourceId;
         if (nNights !== undefined) updateFields.nNights = nNights;
-        if (arrivalDate !== undefined) updateFields.arrivalDate = arrivalDate;
-        if (departureDate !== undefined) updateFields.departureDate = departureDate;
+        if (arrivalDate !== undefined) updateFields.arrivalDate = arrivalDateM;
+        if (departureDate !== undefined) updateFields.departureDate = departureDateM;
         if (url !== undefined) updateFields.url = url;
         if (total !== undefined) updateFields.total = total;
 
