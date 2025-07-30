@@ -502,7 +502,7 @@ async function webhookReceptor(req, res) {
                 });
                 currentDate.setDate(currentDate.getDate() + 1);
             }
-            updateChannexAvailabilitySingle(reserva.resourceId, datesResponse)
+            updateChannexAvailabilitySingle(reserva.resourceId, datesResponse, true)
                 .then(() => {
                     console.log("Disponibilidad actualizada en Channex.");
                 })
