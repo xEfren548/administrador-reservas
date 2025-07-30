@@ -943,10 +943,24 @@ async function createReservation(req, res, next) {
         await logController.createBackendLog(logBody);
 
         if (chalet.channels?.length > 0) {
-            const depDateLessOne = checkOutDate.setDate(checkOutDate.getDate() - 1);
 
-            const datesResponse = [{ date: { date: arrivalDate } }, { date: { date: depDateLessOne } }];
-            channexController.updateChannexAvailabilitySingle(chalet._id, datesResponse)
+            const arrivalDate = new Date(documentoToAdd.arrivalDate);
+            const departureDate = new Date(documentoToAdd.departureDate);
+
+            // Generate all dates between arrival and departure (excluding departure date)
+            const datesResponse = [];
+            const currentDate = new Date(arrivalDate);
+
+            while (currentDate < departureDate) {
+                datesResponse.push({
+                    date: {
+                        date: new Date(currentDate)
+                    }
+                });
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            channexController.updateChannexAvailabilitySingle(documentoToAdd.resourceId, datesResponse)
                 .then(() => {
                     console.log("Disponibilidad actualizada en Channex.");
                 })
@@ -1066,7 +1080,7 @@ async function createOTAReservation(data) {
 
         // Crear cliente en PMS
         newCliente = await Cliente.create({ firstName: customerFullName, lastName: channelInfo.ota_name, email: customerMail, phone: customerPhone });
-        
+
         if (!newCliente) {
             throw new NotFoundError('No se pudo crear el cliente en PMS');
         }
@@ -1080,10 +1094,10 @@ async function createOTAReservation(data) {
         // arrivalDate.setHours(chalet.others.arrivalTime.getHours());
         // departureDate.setHours(chalet.others.departureTime.getHours());
 
-        const arrivalHour      = chalet.others.arrivalTime.getHours();
-        const arrivalMinute    = chalet.others.arrivalTime.getMinutes();
-        const departureHour    = chalet.others.departureTime.getHours();
-        const departureMinute  = chalet.others.departureTime.getMinutes();
+        const arrivalHour = chalet.others.arrivalTime.getHours();
+        const arrivalMinute = chalet.others.arrivalTime.getMinutes();
+        const departureHour = chalet.others.departureTime.getHours();
+        const departureMinute = chalet.others.departureTime.getMinutes();
 
         // 3) Parsear y setear hora en CDMX
         const arrivalMoment = moment
@@ -1101,7 +1115,7 @@ async function createOTAReservation(data) {
             .millisecond(0);
 
         // 4) Convertir a Date
-        const arrivalDateM   = arrivalMoment.toDate();
+        const arrivalDateM = arrivalMoment.toDate();
         const departureDateM = departureMoment.toDate();
 
         var reservationToAdd;
@@ -1280,7 +1294,7 @@ async function createOwnerReservation(req, res, next) {
             throw new NotFoundError('Chalet does not exist 2');
         }
 
-        
+
         arrivalDate.setUTCHours(chalet.others.arrivalTime.getHours());
         departureDate.setUTCHours(chalet.others.departureTime.getHours());
 
@@ -1461,10 +1475,10 @@ async function editarEvento(req, res) {
 
         const chalet = await Habitacion.findById(eventoOriginal.resourceId);
 
-        const arrivalHour      = chalet.others.arrivalTime.getHours();
-        const arrivalMinute    = chalet.others.arrivalTime.getMinutes();
-        const departureHour    = chalet.others.departureTime.getHours();
-        const departureMinute  = chalet.others.departureTime.getMinutes();
+        const arrivalHour = chalet.others.arrivalTime.getHours();
+        const arrivalMinute = chalet.others.arrivalTime.getMinutes();
+        const departureHour = chalet.others.departureTime.getHours();
+        const departureMinute = chalet.others.departureTime.getMinutes();
 
         // 3) Parsear y setear hora en CDMX
         const arrivalMoment = moment
@@ -1482,7 +1496,7 @@ async function editarEvento(req, res) {
             .millisecond(0);
 
         // 4) Convertir a Date
-        const arrivalDateM   = arrivalMoment.toDate();
+        const arrivalDateM = arrivalMoment.toDate();
         const departureDateM = departureMoment.toDate();
 
         const arrivalDateObj = new Date(arrivalDate);
@@ -1544,6 +1558,39 @@ async function editarEvento(req, res) {
         };
 
         await logController.createBackendLog(logBody);
+
+        if (chalet.channels?.length > 0) {
+
+            const originalArrivalDate = new Date(eventoOriginal.arrivalDate);
+            const originalDepartureDate = new Date(eventoOriginal.departureDate);
+
+            // Generate date arrays for old and new periods
+            const datesResponseBefore = channexController.generateDateArray(originalArrivalDate, originalDepartureDate);
+            const datesResponseAfter = channexController.generateDateArray(evento.arrivalDate, evento.departureDate);
+
+            console.log("Fechas anteriores a liberar: ", datesResponseBefore.length, "días");
+            console.log("Fechas nuevas a ocupar: ", datesResponseAfter.length, "días");
+            try {
+                // First, free up the old dates
+                if (datesResponseBefore.length > 0) {
+                    await channexController.updateChannexAvailabilitySingle(evento.resourceId, datesResponseBefore, true);
+                    console.log("Disponibilidad actualizada en Channex (fechas anteriores liberadas).");
+                }
+                // Then, occupy the new dates
+                if (datesResponseAfter.length > 0) {
+                    await channexController.updateChannexAvailabilitySingle(evento.resourceId, datesResponseAfter, false);
+                    console.log("Disponibilidad actualizada en Channex (fechas nuevas ocupadas).");
+                }
+            } catch (error) {
+                console.error("Error al actualizar disponibilidad en Channex: ", error.message);
+
+                // TODO: Consider implementing rollback logic here
+                // This could involve reverting the database changes if Channex update fails
+                console.warn("La reserva fue modificada en la base de datos pero falló la actualización en Channex");
+
+                throw error;
+            }
+        }
 
         console.log('Evento editado correctamente:', evento._id);
         res.status(200).json({ mensaje: 'Evento editado correctamente', evento });
@@ -1658,16 +1705,16 @@ async function eliminarEvento(req, res) {
             try {
                 const arrivalDate = new Date(eventoAeliminar.arrivalDate);
                 const departureDate = new Date(eventoAeliminar.departureDate);
-                
+
                 // Generate all dates between arrival and departure (excluding departure date)
                 const datesResponse = [];
                 const currentDate = new Date(arrivalDate);
-                
+
                 while (currentDate < departureDate) {
-                    datesResponse.push({ 
-                        date: { 
+                    datesResponse.push({
+                        date: {
                             date: new Date(currentDate)
-                        } 
+                        }
                     });
                     currentDate.setDate(currentDate.getDate() + 1);
                 }
@@ -1731,6 +1778,7 @@ async function modificarEvento(req, res) {
         // const eventosExistentes = await Documento.findOne();
         // const evento = eventosExistentes.events.find(evento => evento.id === eventId);
         const evento = await Documento.findById(eventId);
+        const eventoOriginal = evento.toObject();
 
 
         if (!evento) {
@@ -1792,6 +1840,36 @@ async function modificarEvento(req, res) {
         for (const comision of newComisiones) {
             const cRes = await utilidadesController.editarComisionReturn(comision);
             if (cRes) { comisionsResults.push(cRes); }
+        }
+
+        const originalArrivalDate = new Date(eventoOriginal.arrivalDate);
+        const originalDepartureDate = new Date(eventoOriginal.departureDate);
+        // Generate date arrays for old and new periods
+        const datesResponseBefore = channexController.generateDateArray(originalArrivalDate, originalDepartureDate);
+        const datesResponseAfter = channexController.generateDateArray(evento.arrivalDate, evento.departureDate);
+        console.log("Fechas anteriores a liberar: ", datesResponseBefore.length, "días");
+        console.log("Fechas nuevas a ocupar: ", datesResponseAfter.length, "días");
+
+        try {
+            // First, free up the old dates
+            if (datesResponseBefore.length > 0) {
+                await channexController.updateChannexAvailabilitySingle(evento.resourceId, datesResponseBefore, true);
+                console.log("Disponibilidad actualizada en Channex (fechas anteriores liberadas).");
+            }
+            // Then, occupy the new dates
+            if (datesResponseAfter.length > 0) {
+                await channexController.updateChannexAvailabilitySingle(evento.resourceId, datesResponseAfter, false);
+                console.log("Disponibilidad actualizada en Channex (fechas nuevas ocupadas).");
+            }
+        } catch (error) {
+            console.error("Error al actualizar disponibilidad en Channex: ", error.message);
+
+            // TODO: Consider implementing rollback logic here
+            // This could involve reverting the database changes if Channex update fails
+            console.warn("La reserva fue modificada en la base de datos pero falló la actualización en Channex");
+            error.message = "La reserva fue modificada en la base de datos pero falló la actualización en Channex";
+
+            throw error;
         }
 
 
@@ -1995,20 +2073,20 @@ async function moveToPlayground(req, res) {
                         try {
                             const arrivalDate = new Date(eventoAeliminar.arrivalDate);
                             const departureDate = new Date(eventoAeliminar.departureDate);
-                            
+
                             // Generate all dates between arrival and departure (excluding departure date)
                             const datesResponse = [];
                             const currentDate = new Date(arrivalDate);
-                                    
+
                             while (currentDate < departureDate) {
-                                datesResponse.push({ 
-                                    date: { 
+                                datesResponse.push({
+                                    date: {
                                         date: new Date(currentDate)
-                                    } 
+                                    }
                                 });
                                 currentDate.setDate(currentDate.getDate() + 1);
                             }
-                            await updateChannexAvailabilitySingle(chalet._id, datesResponse, true);
+                            await channexController.updateChannexAvailabilitySingle(chalet._id, datesResponse, true);
                             console.log("Disponibilidad actualizada en Channex (evento eliminado).");
                         } catch (error) {
                             console.error("Error al actualizar disponibilidad en Channex: ", error.message);
@@ -2044,20 +2122,20 @@ async function moveToPlayground(req, res) {
                         try {
                             const arrivalDate = new Date(eventoAeliminar.arrivalDate);
                             const departureDate = new Date(eventoAeliminar.departureDate);
-                            
+
                             // Generate all dates between arrival and departure (excluding departure date)
                             const datesResponse = [];
                             const currentDate = new Date(arrivalDate);
-                                    
+
                             while (currentDate < departureDate) {
-                                datesResponse.push({ 
-                                    date: { 
+                                datesResponse.push({
+                                    date: {
                                         date: new Date(currentDate)
-                                    } 
+                                    }
                                 });
                                 currentDate.setDate(currentDate.getDate() + 1);
                             }
-                            await updateChannexAvailabilitySingle(chalet._id, datesResponse, true);
+                            await channexController.updateChannexAvailabilitySingle(chalet._id, datesResponse, true);
                             console.log("Disponibilidad actualizada en Channex (evento eliminado).");
                         } catch (error) {
                             console.error("Error al actualizar disponibilidad en Channex: ", error.message);
@@ -2424,7 +2502,7 @@ async function cotizadorChaletsyPrecios(req, res) {
         }
 
         let filtro = {};
-        
+
         if (!categorias.includes("all")) { //Si se seleccionaron categorias
             if (isForClient) {
                 if (categorias.length > 1) {
@@ -2457,7 +2535,7 @@ async function cotizadorChaletsyPrecios(req, res) {
             };
         }
 
-        
+
         const startDate = new Date(convertirFechaES(fechaLlegada));
         const endDate = new Date(convertirFechaES(fechaSalida));
 
@@ -2669,7 +2747,7 @@ function calculateNightDifference(arrivalDate, departureDate) {
     if (arrivalMoment.isValid() && departureMoment.isValid() && departureMoment.isSameOrAfter(arrivalMoment)) {
         const arrivalStartOfDay = arrivalMoment.clone().startOf('day');
         const departureStartOfDay = departureMoment.clone().startOf('day');
-        
+
         // Calculate difference in days
         const nightDifference = departureStartOfDay.diff(arrivalStartOfDay, 'days');
         return nightDifference

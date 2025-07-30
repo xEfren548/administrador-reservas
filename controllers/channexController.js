@@ -560,6 +560,9 @@ async function webhookReceptor(req, res) {
                 firstName: ota_name
             }
 
+            const originalArrivalDate = new Date(reservaCopia.arrivalDate);
+            const originalDepartureDate = new Date(reservaCopia.departureDate);
+
             const eventController = require('../controllers/eventController');
             console.log("infoReserva: ", infoReserva);
             const eventoEditado = await eventController.editarEventoBackend(infoReserva, infoSession);
@@ -577,60 +580,37 @@ async function webhookReceptor(req, res) {
             }
             const nuevasComisiones = await utilidadesController.generarComisionOTA(utilidadesInfo);
 
-            // Borrar fechas anteriores en CHANNEX
-            const arrivalDateBefore = new Date(reservaCopia.arrivalDate);
-            console.log("reserva copia arrivalDateBefore: ", arrivalDateBefore);
-            console.log("reserva copia arrival Date: ", reservaCopia.arrivalDate);
-            const departureDateBefore = new Date(reservaCopia.departureDate);
-            
-            // Generate all dates between arrival and departure (excluding departure date)
-            const datesResponseBefore = [];
-            const currentDate = new Date(arrivalDateBefore);
-            currentDate.setHours(14, 0, 0, 0);
-            
-            while (currentDate < departureDateBefore) {
-                datesResponseBefore.push({ 
-                    date: { 
-                        date: new Date(currentDate).toISOString()
-                    } 
-                });
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
+            // Generate date arrays for old and new periods
+            const datesResponseBefore = generateDateArray(originalArrivalDate, originalDepartureDate);
+            const datesResponseAfter = generateDateArray(eventoEditado.arrivalDate, eventoEditado.departureDate);
+
+            console.log("Fechas anteriores a liberar: ", datesResponseBefore.length, "días");
+            console.log("Fechas nuevas a ocupar: ", datesResponseAfter.length, "días");
 
             try {
-                await updateChannexAvailabilitySingle(eventoEditado.resourceId, datesResponseBefore, true);
-                console.log("Disponibilidad actualizada en Channex (borrar fechas anteriores).");
+                // First, free up the old dates
+                if (datesResponseBefore.length > 0) {
+                    await updateChannexAvailabilitySingle(eventoEditado.resourceId, datesResponseBefore, true);
+                    console.log("Disponibilidad actualizada en Channex (fechas anteriores liberadas).");
+                }
+
+                // Then, occupy the new dates
+                if (datesResponseAfter.length > 0) {
+                    await updateChannexAvailabilitySingle(eventoEditado.resourceId, datesResponseAfter, false);
+                    console.log("Disponibilidad actualizada en Channex (fechas nuevas ocupadas).");
+                }
+
             } catch (error) {
                 console.error("Error al actualizar disponibilidad en Channex: ", error.message);
+                
+                // TODO: Consider implementing rollback logic here
+                // This could involve reverting the database changes if Channex update fails
+                console.warn("La reserva fue modificada en la base de datos pero falló la actualización en Channex");
+                
                 throw error;
             }
 
-            // Agregar fechas nuevas en CHANNEX
-            const arrivalDateAfter = new Date(eventoEditado.arrivalDate);
-            const departureDateAfter = new Date(eventoEditado.departureDate);
-            
-            // Generate all dates between arrival and departure (excluding departure date)
-            const datesResponseAfter = [];
-            const currentDateAfter = new Date(arrivalDateAfter);
-            currentDateAfter.setHours(14, 0, 0, 0);
-            
-            while (currentDateAfter < departureDateAfter) {
-                datesResponseAfter.push({ 
-                    date: { 
-                        date: new Date(currentDateAfter)
-                    } 
-                });
-                currentDateAfter.setDate(currentDateAfter.getDate() + 1);
-            }
-
-            try {
-                await updateChannexAvailabilitySingle(reservaCopia.resourceId, datesResponseAfter);
-                console.log("Disponibilidad actualizada en Channex (actualizar fechas nuevas).");
-            } catch (error) {
-                console.error("Error al actualizar disponibilidad en Channex: ", error.message);
-                throw error;
-            }
-
+            console.log("Modificación de reserva procesada exitosamente");
 
         } else if (eventType === 'test') {
 
@@ -1529,6 +1509,22 @@ async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
     return { costoBase: totalCosto, precioBase: totalPrecio };
 }
 
+function generateDateArray(startDate, endDate) {
+    const dates = [];
+    const currentDate = new Date(startDate);
+    currentDate.setHours(14, 0, 0, 0);
+    
+    while (currentDate < endDate) {
+        dates.push({ 
+            date: { 
+                date: new Date(currentDate).toISOString()
+            } 
+        });
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return dates;
+}
+
 module.exports = {
     mapProperties,
     getChannexProperties,
@@ -1548,5 +1544,6 @@ module.exports = {
     updateChannexAvailabilitySingle,
     createBookingRoom,
     createRateBooking,
-    createChannelBooking
+    createChannelBooking,
+    generateDateArray
 };
