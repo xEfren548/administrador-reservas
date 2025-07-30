@@ -1992,15 +1992,30 @@ async function moveToPlayground(req, res) {
                     // await eventosExistentes.save();
                     console.log("Reserva cancelada de la base de datos.")
                     if (chalet.channels?.length > 0) {
-                        channexController.updateChannexAvailability(chalet._id)
-                            .then(() => {
-                                console.log("Disponibilidad actualizada en Channex.");
-                            })
-                            .catch(err => {
-                                // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
-                                console.error("Error al actualizar disponibilidad en Channex: ", err.message);
-                            });
+                        try {
+                            const arrivalDate = new Date(eventoAeliminar.arrivalDate);
+                            const departureDate = new Date(eventoAeliminar.departureDate);
+                            
+                            // Generate all dates between arrival and departure (excluding departure date)
+                            const datesResponse = [];
+                            const currentDate = new Date(arrivalDate);
+                                    
+                            while (currentDate < departureDate) {
+                                datesResponse.push({ 
+                                    date: { 
+                                        date: new Date(currentDate)
+                                    } 
+                                });
+                                currentDate.setDate(currentDate.getDate() + 1);
+                            }
+                            await updateChannexAvailabilitySingle(chalet._id, datesResponse, true);
+                            console.log("Disponibilidad actualizada en Channex (evento eliminado).");
+                        } catch (error) {
+                            console.error("Error al actualizar disponibilidad en Channex: ", error.message);
+                            throw error;
+                        }
                     }
+
                     return res.status(200).json({ message: 'Reserva cancelada' });
 
                 } else {
