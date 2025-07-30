@@ -416,11 +416,38 @@ async function webhookReceptor(req, res) {
                 totalPagado: amount
             }
 
-            const crearUtilidades = utilidadesController.generarComisionOTA(utilidadesInfo);
+            const crearUtilidades = await utilidadesController.generarComisionOTA(utilidadesInfo);
             if (crearUtilidades instanceof Error) {
                 throw new Error(crearUtilidades.message);
             }
 
+            if (habitacion.channels?.length > 0) {
+
+                const arrivalDate = new Date(reserva.arrivalDate);
+                const departureDate = new Date(reserva.departureDate);
+                
+                // Generate all dates between arrival and departure (excluding departure date)
+                const datesResponse = [];
+                const currentDate = new Date(arrivalDate);
+                
+                while (currentDate < departureDate) {
+                    datesResponse.push({ 
+                        date: { 
+                            date: new Date(currentDate)
+                        } 
+                    });
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+
+                updateChannexAvailabilitySingle(habitacion._id, datesResponse)
+                    .then(() => {
+                        console.log("Disponibilidad actualizada en Channex.");
+                    })
+                    .catch(err => {
+                        // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                        console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                    });
+            }
 
         } else if (eventType === 'booking_cancellation') {
             const bookingId = body.payload.booking_id;
@@ -460,6 +487,30 @@ async function webhookReceptor(req, res) {
             const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
             const data = response.data.data.attributes;
 
+            const arrivalDate = new Date(reserva.arrivalDate);
+            const departureDate = new Date(reserva.departureDate);
+            
+            // Generate all dates between arrival and departure (excluding departure date)
+            const datesResponse = [];
+            const currentDate = new Date(arrivalDate);
+            
+            while (currentDate < departureDate) {
+                datesResponse.push({ 
+                    date: { 
+                        date: new Date(currentDate)
+                    } 
+                });
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            updateChannexAvailabilitySingle(reserva.resourceId, datesResponse)
+                .then(() => {
+                    console.log("Disponibilidad actualizada en Channex.");
+                })
+                .catch(err => {
+                    // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                    console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                });
+
             // Actualizar disponibilidad y cancelar reservacion en PMS
 
         } else if (eventType === 'booking_modification') {
@@ -470,6 +521,8 @@ async function webhookReceptor(req, res) {
                 console.log(`No se encontró la reserva con el airbnbBookingId ${bookingId} en la base de datos.`);
                 throw new Error('La reserva no fue encontrada');
             }
+
+            const reservaCopia = { ...reserva };
 
             const reservationId = reserva._id;
 
@@ -519,10 +572,63 @@ async function webhookReceptor(req, res) {
             }
             const nuevasComisiones = await utilidadesController.generarComisionOTA(utilidadesInfo);
 
+            // Borrar fechas anteriores en CHANNEX
+            const arrivalDateBefore = new Date(reservaCopia.arrivalDate);
+            const departureDateBefore = new Date(reservaCopia.departureDate);
+            
+            // Generate all dates between arrival and departure (excluding departure date)
+            const datesResponseBefore = [];
+            const currentDate = new Date(arrivalDateBefore);
+            currentDate.setHours(14, 0, 0, 0);
+            
+            while (currentDate < departureDateBefore) {
+                datesResponseBefore.push({ 
+                    date: { 
+                        date: new Date(currentDate)
+                    } 
+                });
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            updateChannexAvailabilitySingle(eventoEditado.resourceId, datesResponseBefore, true)
+                .then(() => {
+                    console.log("Disponibilidad actualizada en Channex.");
+                })
+                .catch(err => {
+                    // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                    console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                });
+
+            // Agregar fechas nuevas en CHANNEX
+            const arrivalDateAfter = new Date(eventoEditado.arrivalDate);
+            const departureDateAfter = new Date(eventoEditado.departureDate);
+            
+            // Generate all dates between arrival and departure (excluding departure date)
+            const datesResponseAfter = [];
+            const currentDateAfter = new Date(arrivalDateAfter);
+            currentDateAfter.setHours(14, 0, 0, 0);
+            
+            while (currentDateAfter < departureDateAfter) {
+                datesResponseAfter.push({ 
+                    date: { 
+                        date: new Date(currentDateAfter)
+                    } 
+                });
+                currentDateAfter.setDate(currentDateAfter.getDate() + 1);
+            }
+            updateChannexAvailabilitySingle(eventoEditado.resourceId, datesResponseAfter)
+                .then(() => {
+                    console.log("Disponibilidad actualizada en Channex.");
+                })
+                .catch(err => {
+                    // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                    console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                });
+
+
 
         } else if (eventType === 'test') {
-            // Aceptar reserva regularmente
-            payload = { resolution: { accept: 'accept' } };
+
+            return res.status(200).send('Evento test');
         } else {
             return res.status(400).send('Evento no reconocido');
         }
@@ -534,7 +640,7 @@ async function webhookReceptor(req, res) {
         // await channex.post(`/api/v1/live_feed/${liveFeedId}/resolve`, payload);
     } catch (err) {
         console.error('Webhook error:', err.response ? err.response.data : err.message);
-        res.status(500).send('Error al procesar evento');
+        res.status(500).send('Error al procesar evento: ' + err.message);
     }
 }
 
