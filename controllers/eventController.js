@@ -1648,6 +1648,31 @@ async function eliminarEvento(req, res) {
             }
         }
 
+        if (eventoAeliminar.channels && Object.keys(eventoAeliminar.channels).length > 0) {
+            try {
+                const arrivalDate = new Date(eventoAeliminar.arrivalDate);
+                const departureDate = new Date(eventoAeliminar.departureDate);
+                
+                // Generate all dates between arrival and departure (excluding departure date)
+                const datesResponse = [];
+                const currentDate = new Date(arrivalDate);
+                
+                while (currentDate < departureDate) {
+                    datesResponse.push({ 
+                        date: { 
+                            date: new Date(currentDate)
+                        } 
+                    });
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                await updateChannexAvailabilitySingle(eventoAeliminar.resourceId, datesResponse, true);
+                console.log("Disponibilidad actualizada en Channex (evento eliminado).");
+            } catch (error) {
+                console.error("Error al actualizar disponibilidad en Channex: ", error.message);
+                throw error;
+            }
+        }
+
         // Log
         const logBody = {
             fecha: Date.now(),
