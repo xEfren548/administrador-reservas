@@ -1648,7 +1648,13 @@ async function eliminarEvento(req, res) {
             }
         }
 
-        if (eventoAeliminar.channels && Object.keys(eventoAeliminar.channels).length > 0) {
+        const habitacion = await Habitacion.findById(eventoAeliminar.roomId);
+
+        if (!habitacion) {
+            throw new Error("La habitación no fue encontrada");
+        }
+
+        if (habitacion.channels?.length > 0) {
             try {
                 const arrivalDate = new Date(eventoAeliminar.arrivalDate);
                 const departureDate = new Date(eventoAeliminar.departureDate);
@@ -1665,7 +1671,7 @@ async function eliminarEvento(req, res) {
                     });
                     currentDate.setDate(currentDate.getDate() + 1);
                 }
-                await updateChannexAvailabilitySingle(eventoAeliminar.resourceId, datesResponse, true);
+                await updateChannexAvailabilitySingle(habitacion._id, datesResponse, true);
                 console.log("Disponibilidad actualizada en Channex (evento eliminado).");
             } catch (error) {
                 console.error("Error al actualizar disponibilidad en Channex: ", error.message);
