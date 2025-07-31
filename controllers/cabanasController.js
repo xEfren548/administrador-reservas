@@ -885,40 +885,23 @@ async function editChalet(req, res, next) {
         }
 
         
-        let totalTickets = 0;
-        let newInvestors = [];
+        // 4) Lógica de inversores
+        const incomingInvestors = Array.isArray(others.investors) ? others.investors : [];
+        const hasExisting = Array.isArray(chaletToUpdate.others.investors) && chaletToUpdate.others.investors.length > 0;
 
-        // Si no tiene inversionistas y está intentando agregarlos
-        if (chaletToUpdate.others.investors?.length === 0 && others.investors?.length > 0) {
-            totalTickets = others.investors.reduce((sum, investor) => sum + investor.noTickets, 0);
-            newInvestors = others.investors;
-        }
-
-        // Si ya tiene inversionistas y se van a modificar
-        if (chaletToUpdate.others.investors?.length > 0 && others.investors?.length > 0) {
-            totalTickets = others.investors.reduce((sum, investor) => sum + investor.noTickets, 0);
-            newInvestors = others.investors;
-        }
-
-        // Si ya tiene inversionistas y no está intentando agregarlos
-        if (chaletToUpdate.others.investors?.length > 0 && others.investors?.length === 0) {
-            totalTickets = 0;
+        let newInvestors;
+        if (hasExisting && incomingInvestors.length === 0) {
+            // Mantener los previos
             newInvestors = chaletToUpdate.others.investors;
-        }
-        
-        // Si no tiene inversionistas y no está intentando agregarlos
-        if (chaletToUpdate.others.investors?.length === 0 && others.investors?.length === 0) {
-            totalTickets = 0;
-            newInvestors = [];
+        } else {
+            // Reemplazar (vacío o con datos)
+            newInvestors = incomingInvestors;
         }
 
-        
-
-
-        
+        const totalTickets = newInvestors.reduce((sum, inv) => sum + inv.noTickets, 0);
         if (totalTickets !== 0 && totalTickets !== 10) {
-            return next(new BadRequestError("El total de tickets de inversionistas debe ser igual a 10."));  ;
-        }        
+            return res.status(400).json({ message: "La suma de tickets debe ser 0 o 10" });
+        }
 
         console.log(others.departureTime);
         console.log(others.arrivalTime);
@@ -931,7 +914,7 @@ async function editChalet(req, res, next) {
         console.log(newDepartureTime);
 
         console.log('investors: ')
-        console.log(others.investors);
+        console.log(newInvestors);
 
         const updatedChalet = {
             ...chaletToUpdate.toObject(), // Keep the original document structure
@@ -953,7 +936,7 @@ async function editChalet(req, res, next) {
                 admin: admin._id,
                 janitor: janitor._id,
                 owner: owner._id,
-                investors: others.investors
+                investors: newInvestors
             },
             images,
             activePlatforms
