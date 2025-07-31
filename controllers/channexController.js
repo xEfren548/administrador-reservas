@@ -1402,7 +1402,7 @@ async function createPropertyWebhook(propertyId) {
                 event_mask: 'booking_new,booking_modification,booking_cancellation,alteration_request',
                 request_params: {},
                 headers: {
-                    'api-key': "channex"
+                    "api-key": "channex"
                 },
                 is_active: true,
                 send_data: true
