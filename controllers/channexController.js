@@ -116,7 +116,7 @@ async function dashboardChannexFull(req, res) {
             if (hab.channexPropertyId && !channexIds.includes(hab.channexPropertyId)) {
                 await Habitacion.updateOne(
                     { _id: hab._id },
-                    { $unset: { "channexPropertyId": "" }, channels: [] }
+                    { $unset: { "channexPropertyId": "" }, channexRoomId: "", channels: [] }
                     // { $unset: { channexPropertyId: "", isMapped: "" } }
                 );
                 hab.channexPropertyId = undefined;
@@ -240,7 +240,7 @@ async function dashboardBooking(req, res) {
             if (hab.channexPropertyId && !channexIds.includes(hab.channexPropertyId)) {
                 await Habitacion.updateOne(
                     { _id: hab._id },
-                    { $unset: { channexPropertyId: "", channels: [] } }
+                    { $unset: { channexPropertyId: "", channexRoomId: "", channels: [] } }
                 );
                 hab.channexPropertyId = undefined;
                 hab.channexRoomId = undefined;
@@ -416,11 +416,38 @@ async function webhookReceptor(req, res) {
                 totalPagado: amount
             }
 
-            const crearUtilidades = utilidadesController.generarComisionOTA(utilidadesInfo);
+            const crearUtilidades = await utilidadesController.generarComisionOTA(utilidadesInfo);
             if (crearUtilidades instanceof Error) {
                 throw new Error(crearUtilidades.message);
             }
 
+            if (habitacion.channels?.length > 0) {
+
+                const arrivalDate = new Date(reserva.arrivalDate);
+                const departureDate = new Date(reserva.departureDate);
+                
+                // Generate all dates between arrival and departure (excluding departure date)
+                const datesResponse = [];
+                const currentDate = new Date(arrivalDate);
+                
+                while (currentDate < departureDate) {
+                    datesResponse.push({ 
+                        date: { 
+                            date: new Date(currentDate)
+                        } 
+                    });
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+
+                updateChannexAvailabilitySingle(habitacion._id, datesResponse)
+                    .then(() => {
+                        console.log("Disponibilidad actualizada en Channex.");
+                    })
+                    .catch(err => {
+                        // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                        console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                    });
+            }
 
         } else if (eventType === 'booking_cancellation') {
             const bookingId = body.payload.booking_id;
@@ -460,6 +487,30 @@ async function webhookReceptor(req, res) {
             const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
             const data = response.data.data.attributes;
 
+            const arrivalDate = new Date(reserva.arrivalDate);
+            const departureDate = new Date(reserva.departureDate);
+            
+            // Generate all dates between arrival and departure (excluding departure date)
+            const datesResponse = [];
+            const currentDate = new Date(arrivalDate);
+            
+            while (currentDate < departureDate) {
+                datesResponse.push({ 
+                    date: { 
+                        date: new Date(currentDate)
+                    } 
+                });
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            updateChannexAvailabilitySingle(reserva.resourceId, datesResponse, true)
+                .then(() => {
+                    console.log("Disponibilidad actualizada en Channex.");
+                })
+                .catch(err => {
+                    // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                    console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                });
+
             // Actualizar disponibilidad y cancelar reservacion en PMS
 
         } else if (eventType === 'booking_modification') {
@@ -470,6 +521,8 @@ async function webhookReceptor(req, res) {
                 console.log(`No se encontró la reserva con el airbnbBookingId ${bookingId} en la base de datos.`);
                 throw new Error('La reserva no fue encontrada');
             }
+
+            const reservaCopia = reserva.toObject();
 
             const reservationId = reserva._id;
 
@@ -485,9 +538,13 @@ async function webhookReceptor(req, res) {
                 console.log(`No se encontró la habitación en la base de datos.`);
             }
 
+            console.log(reserva)
+
             const nNights = body.payload.count_of_nights;
-            const arrivalDate = data.arrival_date;
-            const departureDate = data.departure_date;
+            const arrivalDate = new Date(data.arrival_date);
+            arrivalDate.setUTCHours(reserva.arrivalDate.getUTCHours(), 0, 0, 0);
+            const departureDate = new Date(data.departure_date);
+            departureDate.setUTCHours(reserva.departureDate.getUTCHours(), 0, 0, 0);
             const newPrice = body.payload.amount;
 
             const infoReserva = {
@@ -503,7 +560,11 @@ async function webhookReceptor(req, res) {
                 firstName: ota_name
             }
 
+            const originalArrivalDate = new Date(reservaCopia.arrivalDate);
+            const originalDepartureDate = new Date(reservaCopia.departureDate);
+
             const eventController = require('../controllers/eventController');
+            console.log("infoReserva: ", infoReserva);
             const eventoEditado = await eventController.editarEventoBackend(infoReserva, infoSession);
 
             const { costoBase, precioBase } = await calcularCostoBaseTotal(habitacion, eventoEditado.arrivalDate, eventoEditado.departureDate);
@@ -519,10 +580,41 @@ async function webhookReceptor(req, res) {
             }
             const nuevasComisiones = await utilidadesController.generarComisionOTA(utilidadesInfo);
 
+            // Generate date arrays for old and new periods
+            const datesResponseBefore = generateDateArray(originalArrivalDate, originalDepartureDate);
+            const datesResponseAfter = generateDateArray(eventoEditado.arrivalDate, eventoEditado.departureDate);
+
+            console.log("Fechas anteriores a liberar: ", datesResponseBefore.length, "días");
+            console.log("Fechas nuevas a ocupar: ", datesResponseAfter.length, "días");
+
+            try {
+                // First, free up the old dates
+                if (datesResponseBefore.length > 0) {
+                    await updateChannexAvailabilitySingle(eventoEditado.resourceId, datesResponseBefore, true);
+                    console.log("Disponibilidad actualizada en Channex (fechas anteriores liberadas).");
+                }
+
+                // Then, occupy the new dates
+                if (datesResponseAfter.length > 0) {
+                    await updateChannexAvailabilitySingle(eventoEditado.resourceId, datesResponseAfter, false);
+                    console.log("Disponibilidad actualizada en Channex (fechas nuevas ocupadas).");
+                }
+
+            } catch (error) {
+                console.error("Error al actualizar disponibilidad en Channex: ", error.message);
+                
+                // TODO: Consider implementing rollback logic here
+                // This could involve reverting the database changes if Channex update fails
+                console.warn("La reserva fue modificada en la base de datos pero falló la actualización en Channex");
+                
+                throw error;
+            }
+
+            console.log("Modificación de reserva procesada exitosamente");
 
         } else if (eventType === 'test') {
-            // Aceptar reserva regularmente
-            payload = { resolution: { accept: 'accept' } };
+
+            return res.status(200).send('Evento test');
         } else {
             return res.status(400).send('Evento no reconocido');
         }
@@ -534,7 +626,7 @@ async function webhookReceptor(req, res) {
         // await channex.post(`/api/v1/live_feed/${liveFeedId}/resolve`, payload);
     } catch (err) {
         console.error('Webhook error:', err.response ? err.response.data : err.message);
-        res.status(500).send('Error al procesar evento');
+        res.status(500).send('Error al procesar evento: ' + err.message);
     }
 }
 
@@ -698,7 +790,12 @@ async function createChannexProperty(req, res) {
                 address: location.address,
                 longitude: location.longitude ? dmsToDecimal(location.longitude) : null,
                 latitude: location.latitude ? dmsToDecimal(location.latitude) : null,
-                group_id: 'b5fcd225-d31f-4588-a828-686f7e2b32a4'
+                group_id: 'b5fcd225-d31f-4588-a828-686f7e2b32a4',
+                settings: {
+                    "allow_availability_autoupdate_on_confirmation": false,
+                    "allow_availability_autoupdate_on_modification": false,
+                    "allow_availability_autoupdate_on_cancellation": false
+                }
             }
         };
 
@@ -1412,6 +1509,22 @@ async function calcularCostoBaseTotal(habitacion, arrivalDate, departureDate) {
     return { costoBase: totalCosto, precioBase: totalPrecio };
 }
 
+function generateDateArray(startDate, endDate) {
+    const dates = [];
+    const currentDate = new Date(startDate);
+    currentDate.setHours(14, 0, 0, 0);
+    
+    while (currentDate < endDate) {
+        dates.push({ 
+            date: { 
+                date: new Date(currentDate).toISOString()
+            } 
+        });
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return dates;
+}
+
 module.exports = {
     mapProperties,
     getChannexProperties,
@@ -1431,5 +1544,6 @@ module.exports = {
     updateChannexAvailabilitySingle,
     createBookingRoom,
     createRateBooking,
-    createChannelBooking
+    createChannelBooking,
+    generateDateArray
 };
