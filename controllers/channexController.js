@@ -978,7 +978,7 @@ async function createChannelBooking(req, res) {
             channel: {
                 channel: "BookingCom",
                 group_id: "b5fcd225-d31f-4588-a828-686f7e2b32a4",
-                is_active: false,
+                is_active: true,
                 title: `${habitacion.propertyDetails.name} - BOOKING`,
                 known_mappings_list: [],
                 properties: [
@@ -1381,7 +1381,7 @@ async function validatePropertyBooking(req, res) {
 
 
 async function createPropertyWebhook(propertyId) {
-    const base_url = process.env.NODE_ENV === 'development' ? 'https://8792-177-249-172-194.ngrok-free.app/api/channex/webhooks' : `https://${process.env.URL}/api/channex/webhooks`;
+    const base_url = process.env.NODE_ENV === 'development' ? 'https://e7e377bc9a31.ngrok-free.app/api/channex/webhooks' : `https://${process.env.URL}/api/channex/webhooks`;
     try {
 
         const habitacion = await Habitacion.findOne({ channexPropertyId: propertyId });
