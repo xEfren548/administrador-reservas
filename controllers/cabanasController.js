@@ -878,14 +878,42 @@ async function editChalet(req, res, next) {
         if (!platforms) {
             throw new NotFoundError("Platforms not found");
         }
-
-        let totalTickets = 0;
-        console.log("investors",others.investors);
-        if (others.investors.length === 0) {
-            totalTickets = 0;
-        } else {
-            totalTickets = others.investors.reduce((sum, investor) => sum + investor.noTickets, 0);
+        
+        const chaletToUpdate = await Habitacion.findById(txtChaletId);
+        if (!chaletToUpdate) {
+            throw new Error("Chalet not found.")
         }
+
+        
+        let totalTickets = 0;
+        let newInvestors = [];
+
+        // Si no tiene inversionistas y está intentando agregarlos
+        if (chaletToUpdate.others.investors?.length === 0 && others.investors?.length > 0) {
+            totalTickets = others.investors.reduce((sum, investor) => sum + investor.noTickets, 0);
+            newInvestors = others.investors;
+        }
+
+        // Si ya tiene inversionistas y se van a modificar
+        if (chaletToUpdate.others.investors?.length > 0 && others.investors?.length > 0) {
+            totalTickets = others.investors.reduce((sum, investor) => sum + investor.noTickets, 0);
+            newInvestors = others.investors;
+        }
+
+        // Si ya tiene inversionistas y no está intentando agregarlos
+        if (chaletToUpdate.others.investors?.length > 0 && others.investors?.length === 0) {
+            totalTickets = 0;
+            newInvestors = chaletToUpdate.others.investors;
+        }
+        
+        // Si no tiene inversionistas y no está intentando agregarlos
+        if (chaletToUpdate.others.investors?.length === 0 && others.investors?.length === 0) {
+            totalTickets = 0;
+            newInvestors = [];
+        }
+
+        
+
 
         
         if (totalTickets !== 0 && totalTickets !== 10) {
@@ -904,12 +932,6 @@ async function editChalet(req, res, next) {
 
         console.log('investors: ')
         console.log(others.investors);
-
-        
-        const chaletToUpdate = await Habitacion.findById(txtChaletId);
-        if (!chaletToUpdate) {
-            throw new Error("Chalet not found.")
-        }
 
         const updatedChalet = {
             ...chaletToUpdate.toObject(), // Keep the original document structure
