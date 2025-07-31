@@ -1401,7 +1401,9 @@ async function createPropertyWebhook(propertyId) {
                 callback_url: base_url,
                 event_mask: 'booking_new,booking_modification,booking_cancellation,alteration_request',
                 request_params: {},
-                headers: {},
+                headers: {
+                    'api-key': "channex"
+                },
                 is_active: true,
                 send_data: true
             }

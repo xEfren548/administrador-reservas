@@ -7,7 +7,8 @@ function ensureAuthenticated(req, res, next) {
     const whitelistPrefix = [
         
     ];
-    if (process.argv[2] === '--api' || req.userIp === '178.128.141.2' || req.userIp === '::ffff:178.128.141.2') {
+    if (process.argv[2] === '--api' || req.userIp === '178.128.141.2' || req.userIp === '::ffff:178.128.141.2' || req.headers['api-key'] === 'channex') {
+        console.log("Autorizando a channex...");
         whitelistPrefix.push('/api/channex');
     }
     // 1) Si es ruta exacta permitida
