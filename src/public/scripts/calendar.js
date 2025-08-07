@@ -86,6 +86,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     clientPayments: event.pagosTotales,
                                     madeCheckIn: event.madeCheckIn,
                                     cleaningDetails: event.cleaningDetails,
+                                    ota_name: event.channels?.ota_name,
                                     allDay: true
                                 }
                             })
@@ -112,6 +113,22 @@ document.addEventListener('DOMContentLoaded', async function () {
             const clientPayments = info.event.extendedProps.clientPayments;
             const madeCheckIn = info.event.extendedProps.madeCheckIn;
             const cleaningDetails = info.event.extendedProps.cleaningDetails;
+
+            let otaName = info.event.extendedProps.ota_name?.toUpperCase();
+            if (!otaName) {
+                otaName = 'NYN'
+            }
+
+            const coloresOta = {
+                'AIRBNB': '#FF5A5F',
+                'BOOKINGCOM': '#003580',
+                // 'Expedia': '#007BFF',
+                'NYN': '#3EB489',
+            }
+
+            if (otaName in coloresOta) {
+                colorRectanguloMiddle = coloresOta[otaName];
+            }
 
             const total = info.event.extendedProps.total
             const totalMsg = total === undefined ? '<div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"> \n </div>' : `<div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"><b>Total: $ ${total}</b></div>`
@@ -179,7 +196,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 <div class="event-content ${textColor}" style="position: relative; cursor: pointer; font-family: 'Overpass', sans-serif;">
                     <div class="split-rectangles">
                         <div class="top-half ${colorRectanguloTop}"></div>
-                        <div class="middle-half"></div>
+                        <div class="middle-half" style="background-color: ${colorRectanguloMiddle};" ></div>
                         <div class="bottom-halves">
                             <div class="left-half ${colorRectanguloBottomLeft}" style="border: 1px solid black;"></div>
                             <div class="right-half ${colorRectanguloBottomRight}" style="border: 1px solid black;"></div>
