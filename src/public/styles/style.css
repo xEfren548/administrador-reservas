@@ -140,23 +140,30 @@ body {
 }
 
 .fc-event {
-    height: 100%; /* Ensure event takes the full height of the row */
+    height: 100%;
+    /* Ensure event takes the full height of the row */
     display: flex;
     align-items: center;
     justify-content: center;
-    white-space: normal; /* Allow text to wrap within the event */
+    white-space: normal;
+    /* Allow text to wrap within the event */
     overflow: hidden;
-    box-sizing: border-box; /* Ensure padding is accounted for */
+    box-sizing: border-box;
+    /* Ensure padding is accounted for */
 }
 
 .fc-event-container {
-    width: calc(100% - 10px); /* Ensure event width fills the cell, with padding/margin */
-    max-width: 100%; /* Prevent overflow */
+    width: calc(100% - 10px);
+    /* Ensure event width fills the cell, with padding/margin */
+    max-width: 100%;
+    /* Prevent overflow */
 }
 
 .fc-event {
-    font-size: 12px; /* Smaller font to prevent overflow */
-    padding: 2px; /* Less padding to fit content better */
+    font-size: 12px;
+    /* Smaller font to prevent overflow */
+    padding: 2px;
+    /* Less padding to fit content better */
 }
 
 
@@ -192,32 +199,39 @@ body {
 
 /* Hide scrollbars but allow scrolling */
 #calendar::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, and Edge */
+    display: none;
+    /* Chrome, Safari, and Edge */
 }
 
 #calendar {
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
 .fc-resource-area {
-    background-color: #141418 !important; /* Match the black color from the header */
+    background-color: #141418 !important;
+    /* Match the black color from the header */
 }
 
 .fc-col-header-cell {
-    background-color: #141418 !important; /* Ensure column headers match the black theme */
+    background-color: #141418 !important;
+    /* Ensure column headers match the black theme */
 }
 
 .fc-timeline .fc-resource-group {
     background-color: #141418 !important;
-    color: white; /* Optional: Ensure text contrast */
+    color: white;
+    /* Optional: Ensure text contrast */
 }
 
 .fc-header-toolbar,
 .fc-col-header {
     position: sticky;
     top: 0;
-    z-index: 999; /* Ensure it stays above other elements */
-    background-color: #141418; /* Match your calendar background */
+    z-index: 999;
+    /* Ensure it stays above other elements */
+    background-color: #141418;
+    /* Match your calendar background */
 }
 
 thead {
@@ -236,6 +250,14 @@ td {
     background-color: #141418;
 }
 
+.fc .fc-datagrid-cell-cushion{
+  white-space: normal   !important;   /* permite wraps */
+  overflow-wrap: anywhere;            /* parte palabras largas */
+  text-overflow: clip   !important;   /* quita los … */
+  line-height: 1.25;                  /* un poco más compacto */
+  padding: 4px 6px;                   /* opcional: respiro lateral */
+}
+
 .fc-timeline-slot-frame {
     background-color: #141418;
 }
@@ -245,14 +267,17 @@ td {
 }
 
 /* Only target the specific .fc-scroller inside .fc-scroller-harness */
-.fc-scroller-harness > .fc-scroller:not(.fc-timeline-scrollgrid-scroller) {
-    overflow: scroll !important; /* Hide scrollbars */
-    background-color: #141418 !important; /* Black background */
-    scrollbar-width: none; /* Firefox-specific */
+.fc-scroller-harness>.fc-scroller:not(.fc-timeline-scrollgrid-scroller) {
+    overflow: scroll !important;
+    /* Hide scrollbars */
+    background-color: #141418 !important;
+    /* Black background */
+    scrollbar-width: none;
+    /* Firefox-specific */
 }
 
 /* Chrome, Edge, Safari: Hide scrollbars */
-.fc-scroller-harness > .fc-scroller:not(.fc-timeline-scrollgrid-scroller)::-webkit-scrollbar {
+.fc-scroller-harness>.fc-scroller:not(.fc-timeline-scrollgrid-scroller)::-webkit-scrollbar {
     display: none;
 }
 
@@ -390,6 +415,7 @@ td {
 #spinner {
     display: none;
 }
+
 #spinner-agregarprecios {
     display: none;
 }
@@ -618,7 +644,9 @@ ul.rb li .timestamp {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(51, 51, 51, 0.75); /* Adjust the last value (0.75) for transparency */    transition: opacity 0.75s, visibility 0.75s;
+    background: rgba(51, 51, 51, 0.75);
+    /* Adjust the last value (0.75) for transparency */
+    transition: opacity 0.75s, visibility 0.75s;
     z-index: 9999;
     transition: opacity 0.75s, visibility 0.75s;
 
@@ -638,6 +666,7 @@ ul.rb li .timestamp {
     border-radius: 50%;
     animation: loading 0.75s ease infinite;
 }
+
 .pre-loader {
     position: fixed;
     top: 0;
@@ -647,7 +676,9 @@ ul.rb li .timestamp {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(51, 51, 51, 0.75); /* Adjust the last value (0.75) for transparency */    transition: opacity 0.75s, visibility 0.75s;
+    background: rgba(51, 51, 51, 0.75);
+    /* Adjust the last value (0.75) for transparency */
+    transition: opacity 0.75s, visibility 0.75s;
     z-index: 9999;
     transition: opacity 0.75s, visibility 0.75s;
 }
@@ -675,7 +706,8 @@ ul.rb li .timestamp {
 /* Buttons export data */
 
 .dt-button.btn {
-    margin-right: 5px; /* Añade espacio entre los botones */
+    margin-right: 5px;
+    /* Añade espacio entre los botones */
     background-color: #17a2b8 !important;
     color: #fff !important;
     border-color: rgb(23, 162, 184) !important;
@@ -689,11 +721,14 @@ ul.rb li .timestamp {
 /* Clases select2 */
 
 .select2-selection__choice__display,
-.select2-results__option  {
+.select2-results__option {
     color: black !important;
 }
 
-.selection, .select2-selection, .select2-selection--multiple, .select2-search__field {
+.selection,
+.select2-selection,
+.select2-selection--multiple,
+.select2-search__field {
     background-color: #000 !important;
     border-color: white !important;
     color: white !important;
@@ -723,7 +758,8 @@ ul.rb li .timestamp {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     margin: 10px;
     flex: 1;
-    min-width: 200px; /* Ajusta el tamaño mínimo de cada calendario */
+    min-width: 200px;
+    /* Ajusta el tamaño mínimo de cada calendario */
     max-width: 100px;
     max-height: 250px;
 
@@ -736,14 +772,16 @@ ul.rb li .timestamp {
     font-weight: bold;
 }
 
-.weekdays, .days {
+.weekdays,
+.days {
     display: grid;
     font-size: 12px;
     grid-template-columns: repeat(7, 1fr);
-    gap: 2px;  
+    gap: 2px;
 }
 
-.weekdays div, .days div {
+.weekdays div,
+.days div {
     text-align: center;
     padding: 10px 0;
     border-radius: 4px;
@@ -758,13 +796,20 @@ ul.rb li .timestamp {
     background-color: #f9f9f9;
     cursor: pointer;
     text-align: center;
-    padding: 1px; /* Reduce el padding para hacer los días más pequeños */
-    margin: 1px; /* Espacio mínimo alrededor de cada día */
-    font-size: 10px; /* Ajusta el tamaño de la fuente para que se vea más pequeño */
-    width: 20px; /* Establece un ancho específico para cada día */
-    height: 20px; /* Establece una altura específica para cada día */
-    line-height: 20px; /* Centra el número verticalmente */
-    box-sizing: border-box; /* Asegura que padding y border se incluyan en el tamaño total */
+    padding: 1px;
+    /* Reduce el padding para hacer los días más pequeños */
+    margin: 1px;
+    /* Espacio mínimo alrededor de cada día */
+    font-size: 10px;
+    /* Ajusta el tamaño de la fuente para que se vea más pequeño */
+    width: 20px;
+    /* Establece un ancho específico para cada día */
+    height: 20px;
+    /* Establece una altura específica para cada día */
+    line-height: 20px;
+    /* Centra el número verticalmente */
+    box-sizing: border-box;
+    /* Asegura que padding y border se incluyan en el tamaño total */
 }
 
 .days div:hover {
@@ -777,17 +822,20 @@ ul.rb li .timestamp {
 }
 
 .restricted {
-    background-color: #f6ff00 !important; /* yellow background */
+    background-color: #f6ff00 !important;
+    /* yellow background */
     cursor: not-allowed;
 }
 
 .blocked {
-    background-color: #FF3939 !important; /* yellow background */
+    background-color: #FF3939 !important;
+    /* yellow background */
     cursor: not-allowed;
 }
 
 .blocked-capacity {
-    background-color: #ff9500 !important; /* orange background */
+    background-color: #ff9500 !important;
+    /* orange background */
     cursor: not-allowed;
 }
 
@@ -798,6 +846,7 @@ ul.rb li .timestamp {
     align-items: center;
     margin: 5px 0;
 }
+
 .color-box {
     width: 20px;
     height: 20px;
@@ -805,6 +854,7 @@ ul.rb li .timestamp {
     border: 1px solid #000;
     display: inline-block;
 }
+
 .color-text {
     font-size: 14px;
 }
@@ -813,7 +863,8 @@ ul.rb li .timestamp {
     position: sticky;
     left: 0;
     background-color: white;
-    z-index: 1; /* Para que la columna quede por encima de las demás */
+    z-index: 1;
+    /* Para que la columna quede por encima de las demás */
 }
 
 /* Event content */
@@ -838,23 +889,29 @@ ul.rb li .timestamp {
 }
 
 .top-half {
-    background-color: rgba(255, 255, 255, 0.2); /* Adjust color as needed */
-    height: 50%; /* Adjust height as needed */
+    background-color: rgba(255, 255, 255, 0.2);
+    /* Adjust color as needed */
+    height: 50%;
+    /* Adjust height as needed */
     width: 100%;
 }
 
 .middle-half {
-    background-color: gray; /* Gray color for the middle rectangle */
-    height: 20%; /* Middle section occupies 50% of the height */
+    background-color: gray;
+    /* Gray color for the middle rectangle */
+    height: 20%;
+    /* Middle section occupies 50% of the height */
     width: 100%;
 }
 
 .bottom-halves {
     display: flex;
-    height: 30%; /* Bottom section occupies 25% of the height */
+    height: 30%;
+    /* Bottom section occupies 25% of the height */
 }
 
-.left-half, .right-half {
+.left-half,
+.right-half {
     width: 50%;
     height: 100%;
 }
@@ -866,7 +923,8 @@ ul.rb li .timestamp {
 .event-details {
     position: relative;
     z-index: 2;
-    padding-bottom: 40px; /* Adjust padding as needed */
+    padding-bottom: 40px;
+    /* Adjust padding as needed */
     text-align: center;
 }
 
@@ -881,7 +939,7 @@ ul.rb li .timestamp {
     }
 }
 
-.fc table{
+.fc table {
     font-size: 11px !important;
 }
 
@@ -904,30 +962,33 @@ ul.rb li .timestamp {
 
 /* Texto de superposición "Cambiar foto" */
 .container-pp-image .overlay {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	background-color: rgba(0, 0, 0, 0.6); /* Fondo semi-transparente */
-	color: #fff;
-	text-align: center;
-	padding: 5px;
-	font-size: 12px;
-	border-bottom-left-radius: 50%;
-	border-bottom-right-radius: 50%;
-	opacity: 0;
-	transition: opacity 0.3s;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    /* Fondo semi-transparente */
+    color: #fff;
+    text-align: center;
+    padding: 5px;
+    font-size: 12px;
+    border-bottom-left-radius: 50%;
+    border-bottom-right-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s;
 }
 
 /* Enlace de la imagen */
 .container-pp-image a {
-	text-decoration: none; /* Quita el subrayado */
-	color: inherit; /* Usa el color de texto actual */
+    text-decoration: none;
+    /* Quita el subrayado */
+    color: inherit;
+    /* Usa el color de texto actual */
 }
 
 /* Mostrar el texto al pasar el mouse */
 .container-pp-image:hover .overlay {
-	opacity: 1;
+    opacity: 1;
 }
 
 /* Select options */
@@ -979,10 +1040,12 @@ ul.rb li .timestamp {
 .input-container-tel {
     margin-bottom: 16px;
 }
+
 .character-count {
     font-size: 12px;
     color: #888;
 }
+
 .character-count.exceeded {
     color: red;
 }
@@ -1039,7 +1102,8 @@ ul.rb li .timestamp {
 #select-chalets_modal_edit .modal-body {
     border: none !important;
     box-shadow: none !important;
-    padding: 20px 30px; /* Ajustar según necesidad */
+    padding: 20px 30px;
+    /* Ajustar según necesidad */
 }
 
 /* Quitar posibles bordes heredados */
@@ -1049,7 +1113,7 @@ ul.rb li .timestamp {
 #select-chalets_modal_edit .modal-content {
     border: 0;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
 /* Asegurar que el dialog no tenga bordes */
@@ -1089,25 +1153,128 @@ ul.rb li .timestamp {
 
 /* Custom scrollbar for WebKit browsers (Chrome, Safari, Edge) */
 #selectOptions::-webkit-scrollbar {
-    width: 8px; /* Width of the scrollbar */
+    width: 8px;
+    /* Width of the scrollbar */
 }
 
 #selectOptions::-webkit-scrollbar-track {
-    background: #374151; /* Color of the track */
-    border-radius: 4px; /* Rounded corners for the track */
+    background: #374151;
+    /* Color of the track */
+    border-radius: 4px;
+    /* Rounded corners for the track */
 }
 
 #selectOptions::-webkit-scrollbar-thumb {
-    background: #6649b8; /* Color of the thumb */
-    border-radius: 4px; /* Rounded corners for the thumb */
+    background: #6649b8;
+    /* Color of the thumb */
+    border-radius: 4px;
+    /* Rounded corners for the thumb */
 }
 
 #selectOptions::-webkit-scrollbar-thumb:hover {
-    background: #4b5563; /* Color of the thumb on hover */
+    background: #4b5563;
+    /* Color of the thumb on hover */
 }
 
 /* Custom scrollbar for Firefox */
 #selectOptions {
-    scrollbar-width: thin; /* "auto" or "thin" */
-    scrollbar-color: #6649b8 #374151; /* thumb and track color */
+    scrollbar-width: thin;
+    /* "auto" or "thin" */
+    scrollbar-color: #6649b8 #374151;
+    /* thumb and track color */
+}
+
+/* brand colors (rectángulo central) */
+:root {
+    --airbnb: #FF5A5F;
+    /* Rausch */
+    --booking: #003580;
+    /* Resolution Blue */
+    --nyn: #98FB98;
+    /* Mint TPS */
+}
+
+/* estados de pago (franja superior) */
+:root {
+    --pay-none: #E5484D;
+    /* rojo suave 0 % */
+    --pay-partial: #FFB15E;
+    /* ámbar 1-49 % */
+    --pay-half: #FFC947;
+    /* amarillo 50-99 % */
+    --pay-complete: #2AB57C;
+    /* verde 100 % */
+}
+
+/* check-in (inferior izq.) y limpieza (inferior der.) */
+:root {
+    --status-ok: #2AB57C;
+    --status-warn: #FFC947;
+    --status-ko: #E5484D;
+    --status-void: #6C757D;
+    /* gris neutro */
+}
+
+:root {
+    --stripe-h: 12px;
+    --blocked-bg: #6C757D;
+    /* gris neutro */
+    --blocked-text: #fff;
+    /* antes 4 px -> ahora 12 px */
+}
+
+.fc-event-blocked {
+    background: var(--blocked-bg);
+    color: var(--blocked-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    border-radius: 4px;
+    min-height: 70px;
+    /* igual que las reservas */
+    box-shadow: 0 1px 3px rgb(0 0 0 /.25);
+}
+
+/* Si usas el mismo grid/flex que las reservas, oculta
+   las franjas solo para bloqueados */
+.fc-event-blocked .fc-event-bar,
+.fc-event-blocked .fc-event-brand,
+.fc-event-blocked .fc-event-indicators {
+    display: none;
+}
+
+.fc-event-card {
+    display: flex;
+    /* (o grid, ver opción 2) */
+    flex-direction: column;
+    font-family: 'Inter', sans-serif;
+    border-radius: 4px;
+    overflow: hidden;
+    color: #fff;
+    box-shadow: 0 1px 3px rgb(0 0 0 /.25);
+    min-height: 70px;
+    /* evita “aplastamiento” */
+}
+
+/* barras más gruesas */
+.fc-event-bar,
+.fc-event-brand {
+    height: var(--stripe-h);
+}
+
+.fc-event-indicators {
+    display: flex;
+    height: var(--stripe-h);
+}
+
+.fc-event-indicators>div {
+    flex: 1;
+}
+
+.fc-event-body {
+    padding: 6px 8px;
+    font-size: .8rem;
+    line-height: 1.3;
 }

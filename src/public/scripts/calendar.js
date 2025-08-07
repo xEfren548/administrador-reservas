@@ -99,117 +99,81 @@ document.addEventListener('DOMContentLoaded', async function () {
                         failureCallback(error);
                     })
             },
-        eventContent: function (info) {
+        eventContent: ({ event }) => {
 
-            let background;
-            let textColor;
-            // Rectángulo de hasta arriba
-            let colorRectanguloTop;
-            let colorRectanguloMiddle;
-            let colorRectanguloBottomLeft;
-            let colorRectanguloBottomRight;
+            // 1 · ¿Es fecha bloqueada?
+            const isBlocked = event.extendedProps.type === 'blocked' ||
+                event.title?.toUpperCase() === 'FECHA BLOQUEADA' ||
+                event.extendedProps.clientName === 'Fecha Bloqueada';
 
-            const clientName = info.event.extendedProps.clientName || "\nRESERVA DUEÑO/INVERSIONISTA"
-            const clientPayments = info.event.extendedProps.clientPayments;
-            const madeCheckIn = info.event.extendedProps.madeCheckIn;
-            const cleaningDetails = info.event.extendedProps.cleaningDetails;
-
-            let otaName = info.event.extendedProps.ota_name?.toUpperCase();
-            if (!otaName) {
-                otaName = 'NYN'
-            }
-
-            const coloresOta = {
-                'AIRBNB': '#FF5A5F',
-                'BOOKINGCOM': '#003580',
-                // 'Expedia': '#007BFF',
-                'NYN': '#3EB489',
-            }
-
-            if (otaName in coloresOta) {
-                colorRectanguloMiddle = coloresOta[otaName];
-            }
-
-            const total = info.event.extendedProps.total
-            const totalMsg = total === undefined ? '<div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"> \n </div>' : `<div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"><b>Total: $ ${total}</b></div>`
-
-            if (clientPayments === 0) { // 0% DEL TOTAL
-                colorRectanguloTop = 'bg-danger'
-                        //3200     > 1 = SI    3200 < 3117 = NO
-            } else if (clientPayments >= 1 && clientPayments < total / 2) { // 1-49% DEL TOTAL
-                colorRectanguloTop = 'background-orange'
-            } else if (clientPayments >= (total / 2) && clientPayments < total) { // 50-99% DEL TOTAL
-                colorRectanguloTop = 'bg-warning'
-            } else if (clientPayments >= total) { // 100% DEL TOTAL
-                colorRectanguloTop = 'bg-success'
-            }
-
-            if (madeCheckIn) {
-                colorRectanguloBottomLeft = 'bg-success'
-            } else {
-                colorRectanguloBottomLeft = 'bg-danger'
-            }
-
-            if (cleaningDetails) {
-                if (cleaningDetails.status === 'Completado') {
-                    colorRectanguloBottomRight = 'bg-success'
-                } else if (cleaningDetails.status === 'En proceso') {
-                    colorRectanguloBottomRight = 'bg-warning'
-                } else if (cleaningDetails.status === 'Pendiente') {
-                    colorRectanguloBottomRight = 'bg-danger'
-                }
-
-            } else {
-                colorRectanguloBottomRight = 'bg-dark'
-            }
-
-            /*
-            if (info.event.extendedProps.status === 'active') {
-                background = 'bg-success';
-                textColor = 'text-white';
-            } else if (info.event.extendedProps.status === 'playground') {
-                background = 'bg-warning';
-                textColor = 'text-black-50';
-            } else if (info.event.extendedProps.status === 'cancelled') {
-                background = 'bg-danger';
-                textColor = 'text-white';
-            } else if (info.event.extendedProps.status === 'pending') {
-                background = 'bg-info';
-                textColor = 'text-black';
-            }
-            */
-
-            if (clientName === "Fecha Bloqueada") {
+            if (isBlocked) {
                 return {
                     html: `
-                    <div class="event-content bg-secondary ${textColor}" style="position: relative; cursor: pointer; font-family: 'Overpass', sans-serif;">
-                        <div class="event-details text-white text-center">
-                            <div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"><b>${clientName}</div></b>
-                        </div>
-                    </div>
-                    `
-                }
+                        <div class="fc-event-card fc-event-blocked text-center" title="Fecha bloqueada">
+                        ${'FECHA BLOQUEADA'}
+                        </div>`
+                };
             }
 
+            /* --- Datos de negocio -------------------- */
+            const {
+                clientName = 'RESERVA DUEÑO/INVERSIONISTA',
+                clientPayments = 0,
+                total,
+                madeCheckIn,
+                cleaningDetails,
+                ota_name
+            } = event.extendedProps;
+
+            /* --- Marca / OTA ------------------------- */
+            const ota = (ota_name || 'NYN').toUpperCase();
+            const brandVar = {
+                AIRBNB: 'airbnb',
+                BOOKINGCOM: 'booking',
+                NYN: 'nyn'
+            }[ota] || 'nyn';        // fallback mint
+
+            /* --- Estados semánticos ------------------ */
+            const paymentStatus =
+                clientPayments === 0 ? 'pay-none' :
+                    clientPayments < (total / 2 || 1) ? 'pay-partial' :
+                        clientPayments < (total || 1) ? 'pay-half' :
+                            'pay-complete';
+
+            const checkInStatus = madeCheckIn ? 'status-ok' : 'status-ko';
+
+            const cleaningStatus = !cleaningDetails ? 'status-void' :
+                cleaningDetails.status === 'Completado' ? 'status-ok' :
+                    cleaningDetails.status === 'En proceso' ? 'status-warn' :
+                        'status-ko';
+
+            /* --- Plantilla HTML ---------------------- */
             return {
                 html: `
-                <div class="event-content ${textColor}" style="position: relative; cursor: pointer; font-family: 'Overpass', sans-serif;">
-                    <div class="split-rectangles">
-                        <div class="top-half ${colorRectanguloTop}"></div>
-                        <div class="middle-half" style="background-color: ${colorRectanguloMiddle};" ></div>
-                        <div class="bottom-halves">
-                            <div class="left-half ${colorRectanguloBottomLeft}" style="border: 1px solid black;"></div>
-                            <div class="right-half ${colorRectanguloBottomRight}" style="border: 1px solid black;"></div>
+                    <div class="fc-event-card">
+
+                        <!-- franja superior (avance de pago) -->
+                        <div class="fc-event-bar" style="background:var(--${paymentStatus});"></div>
+
+                        <!-- rectángulo central (marca) -->
+                        <div class="fc-event-brand" style="background:var(--${brandVar});"></div>
+
+                        <!-- indicadores inferiores -->
+                        <div class="fc-event-indicators">
+                        <div style="background:var(--${checkInStatus});"></div>
+                        <div style="background:var(--${cleaningStatus});border-left:1px solid #0002;"></div>
                         </div>
-                    </div>
-                    <div class="event-details text-white">
-                        <div style="text-shadow: -0.4px -0.4px 0 black, 0.4px -0.4px 0 black, -0.4px 0.4px 0 black, 0.4px 0.4px 0 black;"><b>${clientName}</div></b>
-                        ${totalMsg}
-                    </div>
-                </div>
-                `
-            }
+
+                        <!-- cuerpo -->
+                        <div class="fc-event-body">
+                        <strong>${clientName}</strong><br>
+                        ${total ? `&nbsp;$${total}` : ''}
+                        </div>
+
+                    </div>`
+            };
         },
+
         eventMouseEnter: function (mouseEnterInfo) {
             let el = mouseEnterInfo.el;
             el.classList.add("relative");
@@ -540,7 +504,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
         }
     });
-    
+
     document.getElementById('move-to-noshow').addEventListener('click', async function () {
         const confirmacion = await Swal.fire({
             icon: 'warning',
