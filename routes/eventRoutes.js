@@ -130,6 +130,7 @@ router.get('/eventos/:idevento', async (req, res) => {
         
         eventoObjeto.privilege = privilege;
 
+        eventoObjeto.ota_name = eventoObjeto.channels?.ota_name ? eventoObjeto.channels.ota_name : "Recepción";
 
         // Renderiza la página HTML con los detalles del evento
         res.render('detalles_evento', {
