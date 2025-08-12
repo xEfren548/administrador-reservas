@@ -100,6 +100,7 @@ async function loginToken(req, res, next){
     console.log("Login attempt with email:", email);
 
     try{
+        const JWT_SECRET = process.env.JWT_SECRET;
         const user = await Usuario.findOne({ email });
         if(!user){
             return next(new BadRequestError("Wrong credentials"));
@@ -111,7 +112,7 @@ async function loginToken(req, res, next){
         }
 
         // Generating authentiation token.
-        const token = jwt.sign({ email, userId: user._id }, "secret_key", { expiresIn: "24h" });
+        const token = jwt.sign({ email, userId: user._id }, JWT_SECRET, { expiresIn: "24h", algorithm: 'HS256' });
         
         // Saving user's cookies.
         req.session = { 
@@ -131,28 +132,9 @@ async function loginToken(req, res, next){
         console.log("Usuario logeado con éxito");
         // Uncomment the following line in order to test it on the browser.
         console.log(req.session);
-        const redirectToCalendar = ['Administrador', 'Vendedor']
-        const redirectToTheirChalets = ['Dueño de cabañas', 'Colaborador de dueño de cabañas']
-        const redirectToUtilities = ['Inversionistas', 'Limpieza', 'Servicios adicionales']
-
-        const userPrivilege = req.session.privilege;
-
-        // if (redirectToCalendar.includes(userPrivilege)){
-        //     res.redirect('/');
-        // } else if(redirectToTheirChalets.includes(userPrivilege)){
-        //     res.redirect('/api/calendar/duenos')
-        // } else if(redirectToUtilities.includes(userPrivilege)){
-        //     res.redirect('/api/mostrar-utilidades')
-        // } else {
-        //     res.redirect('/api/dashboard');
-
-        // }
 
         res.json({token});
         
-        
-        // Uncomment the following line in order to test it on Postman.
-        //res.status(200).json( req.session );
     } catch(err){
         return next(err);
     }
