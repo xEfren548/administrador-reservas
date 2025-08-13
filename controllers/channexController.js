@@ -33,7 +33,8 @@ async function mapProperties(req, res) {
         return {
             property: {
                 "title": propertyDetails.name,
-                "currency": "USD",
+                "currency": "MXN",
+                "property_type": "apartment",
                 "content": {
                     "description": hab.accomodationDescription
                 },
@@ -778,7 +779,8 @@ async function createChannexProperty(req, res) {
         const propertyPayload = {
             property: {
                 title: propertyDetails.name,
-                currency: 'USD',
+                currency: 'MXN',
+                property_tipe: 'apartment',
                 content: { description },
                 email: propertyDetails.email,
                 phone: propertyDetails.phoneNumber,
@@ -990,7 +992,7 @@ async function createChannelBooking(req, res) {
                         settings: {
                             occ_changed: false,
                             occupancy: habitacion.propertyDetails.maxOccupancy,
-                            pricing_type: "USD",
+                            pricing_type: "MXN",
                             primary_occ: true,
                             rate_plan_code: Number(ratePlanCode),
                             readonly: false,
