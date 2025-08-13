@@ -235,7 +235,6 @@ async function obtenerEventos(req, res) {
                 evento.cleaningDetails = cleaningDetailsMap[chaletId];
             }
         }
-
         // Enviar respuesta
         res.send(eventos);
     } catch (error) {
