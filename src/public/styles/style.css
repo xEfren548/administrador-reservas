@@ -250,12 +250,17 @@ td {
     background-color: #141418;
 }
 
-.fc .fc-datagrid-cell-cushion{
-  white-space: normal   !important;   /* permite wraps */
-  overflow-wrap: anywhere;            /* parte palabras largas */
-  text-overflow: clip   !important;   /* quita los … */
-  line-height: 1.25;                  /* un poco más compacto */
-  padding: 4px 6px;                   /* opcional: respiro lateral */
+.fc .fc-datagrid-cell-cushion {
+    white-space: normal !important;
+    /* permite wraps */
+    overflow-wrap: anywhere;
+    /* parte palabras largas */
+    text-overflow: clip !important;
+    /* quita los … */
+    line-height: 1.25;
+    /* un poco más compacto */
+    padding: 4px 6px;
+    /* opcional: respiro lateral */
 }
 
 .fc-timeline-slot-frame {
@@ -1190,7 +1195,9 @@ ul.rb li .timestamp {
     /* Rausch */
     --booking: #003580;
     /* Resolution Blue */
-    --nyn: #98FB98;
+    --nyn: #54D3C2;
+    /* --nyn: #98FB98;
+    */
     /* Mint TPS */
 }
 
@@ -1237,44 +1244,104 @@ ul.rb li .timestamp {
     box-shadow: 0 1px 3px rgb(0 0 0 /.25);
 }
 
-/* Si usas el mismo grid/flex que las reservas, oculta
-   las franjas solo para bloqueados */
-.fc-event-blocked .fc-event-bar,
-.fc-event-blocked .fc-event-brand,
-.fc-event-blocked .fc-event-indicators {
-    display: none;
-}
-
+/* --- Tarjeta base --- */
 .fc-event-card {
-    display: flex;
-    /* (o grid, ver opción 2) */
-    flex-direction: column;
-    font-family: 'Inter', sans-serif;
-    border-radius: 4px;
+    position: relative;
+    height: 100%;
+    width: 100%;
+    display: grid;
+    grid-template-rows: auto var(--stripe-h) 1fr;
+    border-radius: 6px;
     overflow: hidden;
-    color: #fff;
-    box-shadow: 0 1px 3px rgb(0 0 0 /.25);
-    min-height: 70px;
-    /* evita “aplastamiento” */
+    border: 1px solid #00000014;
+    box-shadow: 0 1px 0 #0000000a inset;
+    background: #fff;
+    /* cuerpo por defecto */
+    font-size: 11px;
+    line-height: 1.2;
 }
 
-/* barras más gruesas */
-.fc-event-bar,
-.fc-event-brand {
-    height: var(--stripe-h);
+/* fila superior: 2 columnas (origen / pago) */
+.fc-event-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 28px;
 }
 
-.fc-event-indicators {
+.fc-event-origin {
     display: flex;
-    height: var(--stripe-h);
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    text-transform: capitalize;
+    letter-spacing: .2px;
+}
+
+.fc-event-pay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+}
+
+/* fila de indicadores (check-in / limpieza) */
+.fc-event-indicators {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
 }
 
 .fc-event-indicators>div {
-    flex: 1;
+    height: var(--stripe-h);
 }
 
+/* cuerpo (nombre + total) */
 .fc-event-body {
     padding: 6px 8px;
-    font-size: .8rem;
-    line-height: 1.3;
+    background: #b3e3f7;
+    /* similar a tu ejemplo; cámbialo si deseas */
+    color: #0b2a38;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+
+.fc-event-name {
+    font-weight: 700;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.fc-event-total {
+    font-weight: 600;
+    opacity: .85;
+}
+
+/* tarjeta para fechas bloqueadas */
+.fc-event-blocked {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center ;
+    text-align: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: var(--blocked-bg);
+    color: var(--blocked-text);
+    font-weight: 800;
+    letter-spacing: .3px;
+    border: 1px solid #00000014;
+}
+
+/* Accesibilidad / contraste sobre fondos claros */
+.fc-event-origin,
+.fc-event-pay {
+    text-shadow: 0 1px 0 #00000033;
+}
+
+.fc-h-event {
+    background-color: #b3e3f7;
+    border: none !important;
 }

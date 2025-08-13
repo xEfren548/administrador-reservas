@@ -100,74 +100,86 @@ document.addEventListener('DOMContentLoaded', async function () {
                     })
             },
         eventContent: ({ event }) => {
-
-            // 1 · ¿Es fecha bloqueada?
-            const isBlocked = event.extendedProps.type === 'blocked' ||
-                event.title?.toUpperCase() === 'FECHA BLOQUEADA' ||
+            /* 1) Fecha bloqueada */
+            const isBlocked =
+                event.extendedProps.type === 'blocked' ||
+                (event.title || '').toUpperCase() === 'FECHA BLOQUEADA' ||
                 event.extendedProps.clientName === 'Fecha Bloqueada';
 
             if (isBlocked) {
                 return {
                     html: `
-                        <div class="fc-event-card fc-event-blocked text-center" title="Fecha bloqueada">
-                        ${'FECHA BLOQUEADA'}
+                        <div class="fc-event-card fc-event-blocked" title="Fecha bloqueada">
+                        FECHA BLOQUEADA
                         </div>`
                 };
             }
 
-            /* --- Datos de negocio -------------------- */
+            /* 2) Datos de negocio */
             const {
                 clientName = 'RESERVA DUEÑO/INVERSIONISTA',
                 clientPayments = 0,
-                total,
+                total = 0,
                 madeCheckIn,
                 cleaningDetails,
                 ota_name
             } = event.extendedProps;
 
-            /* --- Marca / OTA ------------------------- */
+            /* 3) Origen / marca (usa tus vars) */
             const ota = (ota_name || 'NYN').toUpperCase();
-            const brandVar = {
-                AIRBNB: 'airbnb',
-                BOOKINGCOM: 'booking',
-                NYN: 'nyn'
-            }[ota] || 'nyn';        // fallback mint
+            const brandVar = ({
+                'AIRBNB': 'airbnb',
+                'BOOKINGCOM': 'booking',
+                'NYN': 'nyn'
+            })[ota] || 'nyn';
 
-            /* --- Estados semánticos ------------------ */
+            /* 4) Pago */
+            const safeTotal = total > 0 ? total : 0;
+            const pct = safeTotal > 0 ? Math.min(100, Math.round((clientPayments / safeTotal) * 100)) : (clientPayments > 0 ? 100 : 0);
             const paymentStatus =
                 clientPayments === 0 ? 'pay-none' :
-                    clientPayments < (total / 2 || 1) ? 'pay-partial' :
-                        clientPayments < (total || 1) ? 'pay-half' :
+                    clientPayments < (safeTotal / 2 || 1) ? 'pay-partial' :
+                        clientPayments < (safeTotal || 1) ? 'pay-half' :
                             'pay-complete';
 
+            /* 5) Check-in y Limpieza */
             const checkInStatus = madeCheckIn ? 'status-ok' : 'status-ko';
-
             const cleaningStatus = !cleaningDetails ? 'status-void' :
-                cleaningDetails.status === 'Completado' ? 'status-ok' :
+                (cleaningDetails.status === 'Completado' ? 'status-ok' :
                     cleaningDetails.status === 'En proceso' ? 'status-warn' :
-                        'status-ko';
+                        'status-ko');
 
-            /* --- Plantilla HTML ---------------------- */
+            /* 6) Formato total */
+            const totalText = safeTotal
+                ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(safeTotal)
+                : '';
+
+            /* 7) Plantilla */
             return {
                 html: `
-                    <div class="fc-event-card">
-
-                        <!-- franja superior (avance de pago) -->
-                        <div class="fc-event-bar" style="background:var(--${paymentStatus});"></div>
-
-                        <!-- rectángulo central (marca) -->
-                        <div class="fc-event-brand" style="background:var(--${brandVar});"></div>
-
-                        <!-- indicadores inferiores -->
-                        <div class="fc-event-indicators">
-                        <div style="background:var(--${checkInStatus});"></div>
-                        <div style="background:var(--${cleaningStatus});border-left:1px solid #0002;"></div>
+                    <div class="fc-event-card" aria-label="${clientName}">
+                        
+                        <!-- Fila superior: Origen / Estatus de pago -->
+                        <div class="fc-event-top">
+                        <div class="fc-event-origin" style="background:var(--${brandVar});" title="Origen: ${ota}">
+                            
+                        </div>
+                        <div class="fc-event-pay" style="background:var(--${paymentStatus}); border-left:2px solid #0002;" title="Pago: ${pct}%">
+                            
+                        </div>
                         </div>
 
-                        <!-- cuerpo -->
+                        <!-- Franja: Check-in / Limpieza -->
+                        <div class="fc-event-indicators">
+                        <div style="background:var(--${checkInStatus}); border-top:2px solid #0002;" title="Check-in ${madeCheckIn ? 'realizado' : 'pendiente'}"></div>
+                        <div style="background:var(--${cleaningStatus}); border-left:2px solid #0002; border-top:2px solid #0002;" 
+                            title="Limpieza: ${cleaningDetails?.status || 'Sin datos'}"></div>
+                        </div>
+
+                        <!-- Cuerpo: Nombre / Total -->
                         <div class="fc-event-body">
-                        <strong>${clientName}</strong><br>
-                        ${total ? `&nbsp;$${total}` : ''}
+                        <div class="fc-event-name">${clientName}</div>
+                        ${totalText ? `<div class="fc-event-total">${totalText}</div>` : ''}
                         </div>
 
                     </div>`
