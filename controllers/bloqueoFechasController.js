@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Habitacion = require('../models/Habitacion');
 const BloqueoFechas = require('../models/BloqueoFechas');
 const channexController = require('../controllers/channexController');
+const { format } = require('date-fns');
 
 async function obtenerFechasBloqueadas(req, res){
     const fechasBloquedas = await BloqueoFechas.find().lean();
@@ -63,7 +64,9 @@ async function crearFechaRestringida(req, res){
 }
 
 async function crearFechaBloqueada(req, res){
-    const {date, habitacionId, type, min} = req.body;
+    const { habitacionId, type, min} = req.body;
+    let {date} = req.body;
+    console.log("date: ", date);
 
     try {
 
@@ -76,11 +79,14 @@ async function crearFechaBloqueada(req, res){
         }
 
         const fechaFormatted = new Date(date)
-        fechaFormatted.setUTCHours(6); // Ajustar la hora a 00:00:00 UTC
+        fechaFormatted.setUTCHours(17); // Ajustar la hora a 17:00:00 UTC
         const mongooseHabitacionId = new mongoose.Types.ObjectId(habitacionId);
     
         const description = (type === "bloqueo") ? `Fecha bloqueada` : `Capacidad mínima de ${min} personas.`
     
+        if (type === "bloqueo") {
+            date = fechaFormatted
+        }
     
         const existeFecha = await BloqueoFechas.findOne({date: date, habitacionId: mongooseHabitacionId, type: type})
         if (existeFecha){
@@ -88,6 +94,8 @@ async function crearFechaBloqueada(req, res){
             existeFecha.description = description;
             if (type === "capacidad_minima") {
                 existeFecha.min = min;
+            } else if (type === "bloqueo") {
+                existeFecha.date = fechaFormatted
             }
             await existeFecha.save();
             return res.status(201).send({ message: 'Date modified successfully', date: existeFecha});
@@ -105,7 +113,7 @@ async function crearFechaBloqueada(req, res){
             })
         } else if (type === "bloqueo") {
             newFechaBloqueada = new BloqueoFechas({
-                date: new Date(date),
+                date: fechaFormatted,
                 description,
                 habitacionId: new mongoose.Types.ObjectId(habitacionId),
                 type: 'bloqueo'

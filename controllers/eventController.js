@@ -681,7 +681,7 @@ async function createReservation(req, res, next) {
 
         // Set specific times
         arrivalDateObj.setUTCHours(17, 30, 0, 0); // 17:30:00 UTC
-        departureDateObj.setUTCHours(14, 30, 0, 0); // 14:30:00 UTC
+        departureDateObj.setUTCHours(13, 0, 0, 0); // 14:30:00 UTC
 
         // Convert back to ISO strings
         const arrivalDateISO = arrivalDateObj.toISOString();
@@ -729,7 +729,7 @@ async function createReservation(req, res, next) {
         }
 
         let currentDate = new Date(fechaAjustada);
-        currentDate.setUTCHours(6);
+        currentDate.setUTCHours(17);
         while (currentDate <= departureDateAjustada) {
             const fechasBloqueadas = await BloqueoFechas.findOne({ date: currentDate, habitacionId: mongooseChaletId, type: 'bloqueo' });
             if (fechasBloqueadas) {
@@ -2693,28 +2693,39 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     const fechaLlegadaStr = fechaLlegada.toISOString().split('T')[0]; // Extrae solo la fecha (YYYY-MM-DD)
     const fechaSalidaStr = fechaSalida.toISOString().split('T')[0]; // Extrae solo la fecha (YYYY-MM-DD)
 
-    // Asignar horas fijas y convertir a formato ISO
-    const arrivalDateISO = new Date(`${fechaLlegadaStr}T11:30:00`).toISOString();
-    const departureDateISO = new Date(`${fechaSalidaStr}T08:30:00`).toISOString();
+    const arrivalDateObj = new Date(fechaLlegada);
+    const departureDateObj = new Date(fechaSalida);
 
-    const arrivalDateBloqueo = new Date(`${fechaLlegadaStr}T00:00:00`).toISOString();
-    const departureDateBloqueo = new Date(`${fechaSalidaStr}T23:59:59`).toISOString();
+    // Set specific times
+    arrivalDateObj.setUTCHours(17, 30, 0, 0); // 17:30:00 UTC
+    departureDateObj.setUTCHours(13, 0, 0, 0); // 14:30:00 UTC
+
+    // Convert back to ISO strings
+    const arrivalDateISO = arrivalDateObj.toISOString();
+    const departureDateISO = departureDateObj.toISOString();
+
+    console.log("ARRIVAL DATE: ", arrivalDateISO, "DEPARTURE DATE: ", departureDateISO);
+
+    const arrivalDateBloqueo = new Date(`${fechaLlegadaStr}T10:00:00`).toISOString();
+    const departureDateBloqueo = new Date(`${fechaSalidaStr}T06:00:00`).toISOString();
 
     // console.log("ARRIVAL DATE: ", arrivalDateISO, "DEPARTURE DATE: ", departureDateISO);
-
     // Verificar fechas bloqueadas
-    const isBlocked = await BloqueoFechas.exists({
-        habitacionId: newResourceId,
-        type: 'bloqueo',
-        $or: [
-            // Caso 1: La fecha bloqueada está dentro del rango de la reserva
-            { date: { $gte: arrivalDateBloqueo, $lte: departureDateBloqueo } },
-            // Caso 2: La fecha bloqueada coincide exactamente con la fecha de llegada
-            { date: departureDateBloqueo },
-            // Caso 3: La fecha bloqueada coincide exactamente con la fecha de salida
-            { date: departureDateBloqueo },
-        ],
-    });
+    let fechaAjustada = new Date(fechaLlegada);
+    const departureDateAjustada = new Date(fechaSalida);
+    departureDateAjustada.setUTCHours(6);
+    let currentDate = new Date(fechaAjustada);
+    currentDate.setUTCHours(17);
+
+    let isBlocked = false;
+    while (currentDate <= departureDateAjustada) {
+        const fechasBloqueadas = await BloqueoFechas.findOne({ date: currentDate, habitacionId: newResourceId, type: 'bloqueo' });
+        if (fechasBloqueadas) {
+            isBlocked = true;
+            break;
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
 
     if (isBlocked) {
         console.log("FECHAS BLOQUEADAS ENCONTRADAS");
