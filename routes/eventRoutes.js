@@ -8,6 +8,8 @@ const Service = require('../models/Servicio');
 const Cliente = require('../models/Cliente');
 const RackServicios = require('../models/RackServicios');
 const Evento = require('../models/Evento');
+const Habitacion = require('../models/Habitacion');
+const Usuario = require('../models/Usuario');
 const Log = require('../models/Log');
 
 const validationRequest = require('../common/middlewares/validation-request');
@@ -41,7 +43,7 @@ router.get('/eventos/:idevento', async (req, res) => {
         const evento = await Evento.findById(idEvento).lean();
 
         const clientesTodos = await Cliente.find({}).lean();
-        if(!clientesTodos){
+        if (!clientesTodos) {
             throw new NotFoundError("No client not found");
         }
 
@@ -127,7 +129,7 @@ router.get('/eventos/:idevento', async (req, res) => {
 
         console.log(notasPrivadas);
 
-        
+
         eventoObjeto.privilege = privilege;
 
         eventoObjeto.ota_name = eventoObjeto.channels?.ota_name ? eventoObjeto.channels.ota_name : "Recepción";
@@ -146,6 +148,95 @@ router.get('/eventos/:idevento', async (req, res) => {
     } catch (error) {
         console.error('Error al obtener los detalles del evento:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// Ruta para obtener los detalles de un evento por su ID para FLUTTER
+router.get('/eventos/f/:idevento', async (req, res) => {
+    const id = req.params.idevento;
+    try {
+        // const documentos = await Documento.find({ 'events.resourceId': newId });
+        // const habitaciones = await Habitacion.findOne();
+
+        // let eventos = [];
+        // documentos.forEach(doc => {
+        //     const matchingEvents = doc.events.filter(evento => evento.resourceId.equals(newId));
+        //     eventos = eventos.concat(matchingEvents);
+        // });
+        console.log(id);
+        const evento = await Evento.findById(id).lean();
+
+        if (!evento) { throw new Error('No se encontró el evento'); }
+
+        // const habitacion = habitaciones.resources.find(habitacion => habitacion._id.equals(newId));
+        const habitacion = await Habitacion.findById(evento.resourceId).lean();
+        if (!habitacion) { throw new Error('No se encontró la habitación'); }
+
+        // Fetch colorUsuario for each evento's createdBy
+        const createdBy = evento.createdBy;
+        let colorUsuario = null; // Default to null if usuario is not found
+        let clientName = null;
+        let chaletName = habitacion.propertyDetails.name;
+        let creadaPor = null;
+        let precioBaseTotal = null;
+        let montoPendiente = null;
+        let pagosTotales = 0.0;
+        if (createdBy) {
+            const usuario = await Usuario.findById(createdBy).select('color firstName lastName').exec();
+            if (usuario) {
+                colorUsuario = usuario.color;
+                creadaPor = usuario.firstName + ' ' + usuario.lastName;
+            }
+        }
+        if (evento.client) {
+            const client = await Cliente.findById(evento.client);
+            if (client) {
+                // clientName = (client.firstName + ' ' + client.lastName).toUpperCase();
+                clientName = (client.firstName + ' ' + client.lastName);
+            } else {
+                clientName = "Reserva"
+            }
+        } else {
+            if (evento.clienteProvisional) {
+                clientName = evento.clienteProvisional;
+            }
+        }
+
+        if (evento.status !== "reserva dueño") {
+            const pagosReserva = await pagoController.obtenerPagos(evento._id);
+            let pagoTotal = 0
+            pagosReserva.forEach(pago => {
+                pagoTotal += pago.importe;
+            })
+            const totalReserva = evento.total;
+            // let precioBaseTotal = 0
+            if (evento.status === "reserva de dueño") {
+                precioBaseTotal = 0;
+            } else {
+                precioBaseTotal = evento.nNights > 1 ? habitacion.others.basePrice2nights * evento.nNights : habitacion.others.basePrice * evento.nNights
+            }
+
+            montoPendiente = totalReserva - pagoTotal;
+            pagosTotales = pagoTotal;
+            console.log("Precio base total: ", precioBaseTotal)
+        }
+
+        const nuevoEvento = {
+            ...evento,
+            colorUsuario: colorUsuario,
+            clientName: clientName,
+            creadaPor: creadaPor,
+            precioBaseTotal: precioBaseTotal,
+            chaletName: chaletName,
+            montoPendiente: montoPendiente,
+            pagosTotales: pagosTotales
+        };
+
+        console.log(nuevoEvento)
+        res.send(nuevoEvento);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener eventos' });
     }
 });
 
