@@ -229,7 +229,8 @@ router.get('/eventos/f/:idevento', async (req, res) => {
             precioBaseTotal: precioBaseTotal,
             chaletName: chaletName,
             montoPendiente: montoPendiente,
-            pagosTotales: pagosTotales
+            pagosTotales: pagosTotales,
+            imagenReserva: Array.isArray(habitacion.images) ? habitacion.images[0] : ''
         };
 
         console.log(nuevoEvento)
