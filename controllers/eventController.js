@@ -137,7 +137,7 @@ const submitReservationValidators = [
 ];
 
 async function obtenerEventos(req, res) {
-    const { start, end } = req.query;
+    const { start, end, chaletId } = req.query;
     try {
         console.log(start, end)
         const privilege = req.session.privilege;
@@ -151,7 +151,11 @@ async function obtenerEventos(req, res) {
             const assignedChalets = req.session.assignedChalets;
             eventos = await Documento.find({ resourceId: { $in: assignedChalets }, status: { $nin: ["no-show", "cancelled"] }, arrivalDate: { $gte: startDate, $lte: endDate } }).lean();
         } else {
-            eventos = await Documento.find({ status: { $nin: ["no-show", "cancelled"] }, arrivalDate: { $gte: startDate, $lte: endDate } }).lean();
+            if (chaletId) {
+                eventos = await Documento.find({ resourceId: chaletId, status: { $nin: ["no-show", "cancelled"] }, arrivalDate: { $gte: startDate, $lte: endDate } }).lean();
+            } else {
+                eventos = await Documento.find({ status: { $nin: ["no-show", "cancelled"] }, arrivalDate: { $gte: startDate, $lte: endDate } }).lean();
+            }
         }
 
         // Mapa para almacenar detalles de limpieza
