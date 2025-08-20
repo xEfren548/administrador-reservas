@@ -18,11 +18,15 @@ const logController = require('./controllers/logController');
 const NotFoundError = require('./common/error/not-found-error');
 const SendMessages = require('./common/tasks/send-messages');
 const backupController = require('./controllers/backupController');
+const { sessionFromToken } = require('./common/middlewares/sessionFromToken');
 
 
 // Configura Express para servir archivos estáticos desde la carpeta 'public'
 app.use(express.static(path.join(__dirname, 'src', 'public')));
 app.use(express.json())
+
+// Monta el middleware ANTES de las rutas que usan req.session
+// app.use(sessionFromToken);
 
 // Express File Upload
 // app.use(fileUpload());

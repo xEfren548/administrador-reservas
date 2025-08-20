@@ -301,6 +301,8 @@ async function obtenerEventosOptimizados(req, res) {
     const { start, end, chaletId } = req.query;
 
     try {
+        console.log(req.session);
+
         const privilege = req.session?.privilege;
         const assignedChalets = Array.isArray(req.session?.assignedChalets)
             ? req.session.assignedChalets

@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const Usuario = require('../models/Usuario');
 const BadRequestError = require("../common/error/bad-request-error");
-const {check} = require("express-validator");
+const { check } = require("express-validator");
 
 const validators = [
     check('email')
@@ -24,7 +24,7 @@ const validators = [
         .matches(/[0-9]/).withMessage('Password must contain at least one number')
         .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character')
         */
-        .custom(async (value, {req}) => {
+        .custom(async (value, { req }) => {
             const user = await Usuario.findOne({ email: req.session.email });
             const passwordMatch = await bcrypt.compare(value, user.password);
             if (!passwordMatch) {
@@ -34,26 +34,26 @@ const validators = [
         }),
 ];
 
-async function login(req, res, next){
+async function login(req, res, next) {
     const { email, password } = req.body;
     console.log("Login attempt with email:", email);
 
-    try{
+    try {
         const user = await Usuario.findOne({ email });
-        if(!user){
+        if (!user) {
             return next(new BadRequestError("Wrong credentials"));
         }
 
         const pwdEqual = await bcrypt.compare(password, user.password);
-        if(!pwdEqual){
+        if (!pwdEqual) {
             return next(new BadRequestError("Wrong credentials"));
         }
 
         // Generating authentiation token.
         const token = jwt.sign({ email, userId: user._id }, "secret_key", { expiresIn: "5h" });
-        
+
         // Saving user's cookies.
-        req.session = { 
+        req.session = {
             token,
             firstName: user.firstName,
             lastName: user.lastName,
@@ -65,8 +65,8 @@ async function login(req, res, next){
             profileImageUrl: user.profileImageUrl,
             role: user.role,
             assignedChalets: user.assignedChalets
-        };        
-        
+        };
+
         console.log("Usuario logeado con éxito");
         // Uncomment the following line in order to test it on the browser.
         console.log(req.session);
@@ -76,71 +76,76 @@ async function login(req, res, next){
 
         const userPrivilege = req.session.privilege;
 
-        if (redirectToCalendar.includes(userPrivilege)){
+        if (redirectToCalendar.includes(userPrivilege)) {
             res.redirect('/');
-        } else if(redirectToTheirChalets.includes(userPrivilege)){
+        } else if (redirectToTheirChalets.includes(userPrivilege)) {
             res.redirect('/api/calendar/duenos')
-        } else if(redirectToUtilities.includes(userPrivilege)){
+        } else if (redirectToUtilities.includes(userPrivilege)) {
             res.redirect('/api/mostrar-utilidades')
         } else {
             res.redirect('/api/dashboard');
 
         }
-        
-        
+
+
         // Uncomment the following line in order to test it on Postman.
         //res.status(200).json( req.session );
-    } catch(err){
+    } catch (err) {
         return next(err);
     }
 }
 
-async function loginToken(req, res, next){
+async function loginToken(req, res, next) {
     const { email, password } = req.body;
-    console.log("Login attempt with email:", email);
-
-    try{
+    try {
         const JWT_SECRET = process.env.JWT_SECRET;
-        const user = await Usuario.findOne({ email });
-        if(!user){
-            return next(new BadRequestError("Wrong credentials"));
+        if (!JWT_SECRET) throw new Error('Missing JWT_SECRET');
+
+        const user = await Usuario.findOne({ email }).lean();
+        if (!user) {
+            return res.status(401).json({ message: 'Wrong credentials' });
         }
 
-        const pwdEqual = await bcrypt.compare(password, user.password);
-        if(!pwdEqual){
-            return next(new BadRequestError("Wrong credentials"));
+        const ok = await bcrypt.compare(password, user.password);
+        if (!ok) {
+            return res.status(401).json({ message: 'Wrong credentials' });
         }
 
-        // Generating authentiation token.
-        const token = jwt.sign({ email, userId: user._id }, JWT_SECRET, { expiresIn: "24h", algorithm: 'HS256' });
-        
-        // Saving user's cookies.
-        req.session = { 
+        // Solo lo mínimo indispensable dentro del token (sub, email, roles)
+        const token = jwt.sign(
+            {
+                id: user._id.toString(),
+                email: user.email,
+                role: user.role,
+                privilege: user.privilege,
+                // Puedes incluir assignedChalets si lo consultan MUCHO en cada request
+                assignedChalets: user.assignedChalets ?? [],
+            },
+            JWT_SECRET,
+            { expiresIn: '24h', algorithm: 'HS256' }
+        );
+
+        // Respuesta compatible con tu app actual (solo token).
+        // Si quieres, añade "user" para precargar datos en memoria (no obligatorio).
+        return res.json({
             token,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            privilege: user.privilege,
-            id: user._id,
-            privilege: user.privilege,
-            userId: user._id.toString(),
-            profileImageUrl: user.profileImageUrl,
-            role: user.role,
-            assignedChalets: user.assignedChalets
-        };        
-        
-        console.log("Usuario logeado con éxito");
-        // Uncomment the following line in order to test it on the browser.
-        console.log(req.session);
-
-        res.json({token});
-        
-    } catch(err){
+            // user: {
+            //   id: user._id,
+            //   firstName: user.firstName,
+            //   lastName: user.lastName,
+            //   email: user.email,
+            //   privilege: user.privilege,
+            //   role: user.role,
+            //   assignedChalets: user.assignedChalets ?? [],
+            //   profileImageUrl: user.profileImageUrl ?? null,
+            // },
+        });
+    } catch (err) {
         return next(err);
     }
 }
 
-async function logout(req, res, next){
+async function logout(req, res, next) {
     req.session = null;
     console.log("Successfully logged out")
     res.redirect('/login');
