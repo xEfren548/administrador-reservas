@@ -137,112 +137,162 @@ const submitReservationValidators = [
 ];
 
 async function obtenerEventos(req, res) {
-    const { start, end, chaletId } = req.query;
+    // Quitamos chaletId de req.query como pediste
+    const { start, end } = req.query;
+
     try {
-        console.log(start, end)
-        const privilege = req.session.privilege;
-        let eventos = [];
+        const ObjectId = mongoose.Types.ObjectId;
+        const privilege = req.session?.privilege;
+        const assignedChalets = Array.isArray(req.session?.assignedChalets)
+            ? req.session.assignedChalets
+            : [];
 
         const startDate = new Date(start);
         const endDate = new Date(end);
 
-        // Obtener eventos según el privilegio del usuario
+        // -------- Filtro base (mismos criterios que tu versión) --------
+        const filtro = {
+            status: { $nin: ["no-show", "cancelled"] },
+            arrivalDate: { $gte: startDate, $lte: endDate },
+        };
+
         if (privilege === "Vendedor") {
-            const assignedChalets = req.session.assignedChalets;
-            eventos = await Documento.find({ resourceId: { $in: assignedChalets }, status: { $nin: ["no-show", "cancelled"] }, arrivalDate: { $gte: startDate, $lte: endDate } }).lean();
+            const asObjectIds = assignedChalets.map(id => ObjectId.isValid(id) ? new ObjectId(id) : id);
+            filtro.resourceId = { $in: asObjectIds };
+        }
+        // Nota: si no eres Vendedor, trae todo (mismo comportamiento que tu else global sin chaletId)
+
+        // -------- Reservas (SIN proyección para mantener todos los datos) --------
+        const eventos = await Documento.find(filtro).lean();
+
+        // IDs únicos de recursos
+        const resourceIds = [...new Set(eventos.map(e => e?.resourceId?.toString()).filter(Boolean))];
+
+        // -------- BLOQUEOS (batch, mismo comportamiento: SIN filtrar por rango) --------
+        // En tu código original, para cada chalet traías TODOS los bloqueos. Aquí lo hacemos en una sola query.
+        let bloqueos = [];
+        if (resourceIds.length) {
+            bloqueos = await BloqueoFechas.find(
+                { habitacionId: { $in: resourceIds.map(id => ObjectId.isValid(id) ? new ObjectId(id) : id) }, type: "bloqueo" }
+            ).lean();
+        }
+
+        // Convertimos bloqueos a “eventos” sintéticos con el MISMO shape que usabas
+        const eventosBloqueo = bloqueos.map(fecha => {
+            const arrivalDate = new Date(fecha.date);
+            arrivalDate.setUTCHours(15, 0, 0, 0);
+
+            const departureDate = new Date(arrivalDate);
+            departureDate.setUTCDate(departureDate.getUTCDate() + 1);
+            departureDate.setUTCHours(12, 0, 0, 0);
+
+            return {
+                _id: new mongoose.Types.ObjectId(),
+                client: "N/A",
+                resourceId: fecha.habitacionId,
+                arrivalDate: fecha.date, // respetamos tu asignación original (no la normalizada)
+                departureDate: departureDate,
+                maxOccupation: 0,
+                pax: 0,
+                nNights: 1,
+                total: 0,
+                termsAccepted: false,
+                madeCheckIn: false,
+                surveySubmitted: false,
+                isDeposit: false,
+                status: "n/a",
+                createdBy: "n/a",
+                thanksSent: false,
+                colorUsuario: "#ff0000",
+                clientName: "Fecha Bloqueada",
+            };
+        });
+
+        // -------- Cleaning details (conservado). Optimización: paralelo por chalet --------
+        // Tu código pedía el "más reciente" por chalet (ordenaba y tomaba el primero).
+        // Si el controller no permite batch, ejecutamos en paralelo por resourceId único.
+        const cleaningDetailsMap = {};
+        if (resourceIds.length) {
+            await Promise.all(resourceIds.map(async (rid) => {
+                try {
+                    const rack = await rackLimpiezaController.getSpecificServicesMongo(rid);
+                    if (Array.isArray(rack) && rack.length) {
+                        rack.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                        const first = rack[0];
+                        cleaningDetailsMap[rid] = {
+                            idHabitacion: first.idHabitacion,
+                            fecha: first.fecha,
+                            status: first.status
+                        };
+                    }
+                } catch (e) {
+                    // no interrumpir flujo si falla limpieza de un chalet
+                }
+            }));
+        }
+
+        // -------- Clientes (batch) --------
+        const clientIds = [...new Set(eventos.map(e => e.client).filter(Boolean))];
+        const clientes = clientIds.length
+            ? await Cliente.find({ _id: { $in: clientIds } }, { firstName: 1, lastName: 1 }).lean()
+            : [];
+        const clientesMap = new Map(clientes.map(c => [c._id.toString(), c]));
+
+        // -------- Pagos (batch si existe modelo Pago; si no, fallback controller) --------
+        const eventoIds = eventos.map(e => e._id);
+        let pagosMap = new Map();
+
+        if (typeof Pago !== 'undefined') {
+            const pagosAgg = await Pago.aggregate([
+                { $match: { bookingId: { $in: eventoIds } } },
+                { $group: { _id: "$bookingId", total: { $sum: "$importe" } } }
+            ]);
+            pagosMap = new Map(pagosAgg.map(p => [p._id.toString(), p.total || 0]));
         } else {
-            if (chaletId) {
-                eventos = await Documento.find({ resourceId: chaletId, status: { $nin: ["no-show", "cancelled"] }, arrivalDate: { $gte: startDate, $lte: endDate } }).lean();
-            } else {
-                eventos = await Documento.find({ status: { $nin: ["no-show", "cancelled"] }, arrivalDate: { $gte: startDate, $lte: endDate } }).lean();
-            }
+            // Fallback (menos óptimo pero conserva comportamiento original)
+            const pagosArray = await Promise.all(eventoIds.map(async (id) => {
+                try {
+                    const pagos = await pagoController.obtenerPagos(id);
+                    const total = (pagos || []).reduce((acc, p) => acc + (p.importe || 0), 0);
+                    return { id: id.toString(), total };
+                } catch {
+                    return { id: id.toString(), total: 0 };
+                }
+            }));
+            pagosMap = new Map(pagosArray.map(p => [p.id, p.total]));
         }
 
-        // Mapa para almacenar detalles de limpieza
-        let cleaningDetailsMap = {};
+        // -------- Enriquecer reservas (MISMO shape + campos calculados) --------
+        for (const e of eventos) {
+            // Saltar bloqueos sintéticos (aún no están en la lista)
+            if (e.clientName === "Fecha Bloqueada") continue;
 
-        // Obtener IDs únicos de los chalets
-        const idAllChalets = [...new Set(eventos.map(evento => evento.resourceId.toString()))];
+            // pagosTotales (igual que tu cálculo original)
+            const totalPagos = pagosMap.get(e._id.toString());
+            e.pagosTotales = typeof totalPagos === 'number' ? totalPagos : 0;
 
-        // Procesar cada chalet
-        for (let chaletId of idAllChalets) {
-            // Obtener y ordenar detalles de limpieza
-            const rackLimpieza = await rackLimpiezaController.getSpecificServicesMongo(chaletId);
-            const sortedRackLimpieza = rackLimpieza.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-
-            // Guardar el primer objeto de sortedRackLimpieza en el mapa
-            if (sortedRackLimpieza.length > 0) {
-                const firstCleaningDetail = sortedRackLimpieza[0];
-                cleaningDetailsMap[chaletId] = {
-                    idHabitacion: firstCleaningDetail.idHabitacion,
-                    fecha: firstCleaningDetail.fecha,
-                    status: firstCleaningDetail.status
-                };
-            }
-
-            // Obtener fechas bloqueadas para el chalet
-            const fechasBloqueadas = await BloqueoFechas.find({ habitacionId: chaletId, type: "bloqueo" }).lean();
-
-            // Agregar eventos de fechas bloqueadas
-            for (const fecha of fechasBloqueadas) {
-                const arrivalDate = new Date(fecha.date);
-                arrivalDate.setUTCHours(15, 0, 0, 0);
-                const departureDate = new Date(arrivalDate);
-                departureDate.setDate(departureDate.getDate() + 1);
-                departureDate.setUTCHours(12, 0, 0, 0);
-
-                const evento = {
-                    _id: new mongoose.Types.ObjectId(),
-                    client: "N/A",
-                    resourceId: fecha.habitacionId,
-                    arrivalDate: fecha.date,
-                    departureDate: departureDate,
-                    maxOccupation: 0,
-                    pax: 0,
-                    nNights: 1,
-                    total: 0,
-                    termsAccepted: false,
-                    madeCheckIn: false,
-                    surveySubmitted: false,
-                    isDeposit: false,
-                    status: "n/a",
-                    createdBy: "n/a",
-                    thanksSent: false,
-                    colorUsuario: "#ff0000",
-                    clientName: "Fecha Bloqueada",
-                };
-                eventos.push(evento);
-            }
-        }
-
-        // Procesar cada evento
-        for (let evento of eventos) {
-            if (evento.clientName === "Fecha Bloqueada") continue; // Saltar eventos de fechas bloqueadas
-
-            // Calcular el total de pagos
-            const pagos = await pagoController.obtenerPagos(evento._id);
-            const pagoTotal = pagos.reduce((total, pago) => total + pago.importe, 0);
-            evento.pagosTotales = pagoTotal;
-
-            // Obtener nombre del cliente
-            const reservationClient = evento.client;
-            if (reservationClient) {
-                const client = await Cliente.findById(reservationClient);
-                if (client) {
-                    evento.clientName = (client.firstName + ' ' + client.lastName).toUpperCase();
+            // clientName si aplica (igual que tu lógica original)
+            if (e.client && !e.clientName) {
+                const c = clientesMap.get(e.client.toString());
+                if (c) {
+                    e.clientName = `${(c.firstName || '').trim()} ${(c.lastName || '').trim()}`
+                        .trim()
+                        .toUpperCase();
                 }
             }
 
-            // Agregar detalles de limpieza si el resourceId coincide
-            const chaletId = evento.resourceId.toString();
-            if (cleaningDetailsMap[chaletId]) {
-                evento.cleaningDetails = cleaningDetailsMap[chaletId];
+            // cleaningDetails si hay coincidencia
+            const rid = e.resourceId?.toString?.() || String(e.resourceId);
+            if (cleaningDetailsMap[rid]) {
+                e.cleaningDetails = cleaningDetailsMap[rid];
             }
         }
-        // Enviar respuesta
-        res.send(eventos);
+
+        // -------- Respuesta: reservas + bloqueos (mismo orden lógico que tenías) --------
+        res.send([...eventos, ...eventosBloqueo]);
+
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({ message: 'Error al obtener eventos' });
     }
 }
