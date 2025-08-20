@@ -247,6 +247,182 @@ async function obtenerEventos(req, res) {
     }
 }
 
+async function obtenerEventosOptimizados(req, res) {
+    const { start, end, chaletId } = req.query;
+
+    try {
+        const privilege = req.session?.privilege;
+        const assignedChalets = Array.isArray(req.session?.assignedChalets)
+            ? req.session.assignedChalets
+            : [];
+
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+
+        ObjectId = mongoose.Types.ObjectId;
+
+        // ---------- Filtro base para reservas ----------
+        const filtro = {
+            status: { $nin: ["no-show", "cancelled"] },
+            arrivalDate: { $gte: startDate, $lte: endDate },
+        };
+
+        // Alcance de recursos (reservas)
+        if (privilege === "Vendedor") {
+            const asObjectIds = assignedChalets.map(id => ObjectId.isValid(id) ? new ObjectId(id) : id);
+            filtro.resourceId = { $in: asObjectIds };
+        } else if (chaletId) {
+            filtro.resourceId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
+        }
+
+        // ---------- Trae reservas (solo campos necesarios) ----------
+        const reservas = await Documento.find(filtro, {
+            _id: 1,
+            client: 1,
+            resourceId: 1,
+            arrivalDate: 1,
+            departureDate: 1,
+            maxOccupation: 1,
+            pax: 1,
+            nNights: 1,
+            total: 1,
+            termsAccepted: 1,
+            madeCheckIn: 1,
+            surveySubmitted: 1,
+            isDeposit: 1,
+            status: 1,
+            createdBy: 1,
+            thanksSent: 1,
+            colorUsuario: 1,
+            clientName: 1,
+        }).lean();
+
+        // ---------- Universo de recursos para BLOQUEOS ----------
+        const resourceIdsFromReservas = reservas
+            .map(r => r.resourceId?.toString())
+            .filter(Boolean);
+
+        // Incluye los recursos asignados (Vendedor) o el chalet explícito (Admin/otros),
+        // para traer bloqueos aunque no existan reservas en el rango.
+        const scopeResourceIds = new Set(resourceIdsFromReservas);
+        if (privilege === "Vendedor") {
+            for (const id of assignedChalets) scopeResourceIds.add(id.toString());
+        } else if (chaletId) {
+            scopeResourceIds.add(chaletId.toString());
+        }
+
+        // ---------- Batch: Clientes (para reservas) ----------
+        const clientIds = [...new Set(reservas.map(e => e.client).filter(Boolean))];
+        const clientes = clientIds.length
+            ? await Cliente.find({ _id: { $in: clientIds } }, { firstName: 1, lastName: 1 }).lean()
+            : [];
+        const clientesMap = new Map(clientes.map(c => [c._id.toString(), c]));
+
+        // ---------- Batch: Pagos (agregación) ----------
+        const reservaIds = reservas.map(e => e._id);
+        let pagosMap = new Map();
+        if (typeof Pago !== 'undefined') {
+            const pagosAgg = await Pago.aggregate([
+                { $match: { bookingId: { $in: reservaIds } } },
+                { $group: { _id: "$bookingId", total: { $sum: "$importe" } } }
+            ]);
+            pagosMap = new Map(pagosAgg.map(p => [p._id.toString(), p.total || 0]));
+        } else {
+            // Fallback (menos óptimo) con tu controller
+            // const pagosArray = await Promise.all(reservaIds.map(async (id) => {
+            //   const pagos = await pagoController.obtenerPagos(id);
+            //   const total = (pagos || []).reduce((acc, p) => acc + (p.importe || 0), 0);
+            //   return { id: id.toString(), total };
+            // }));
+            // pagosMap = new Map(pagosArray.map(p => [p.id, p.total]));
+        }
+
+        // ---------- Normaliza RESERVAS a eventos ----------
+        const eventosReservas = reservas.map(e => {
+            // Nombre del cliente si no viene en el doc
+            if (!e.clientName && e.client) {
+                const c = clientesMap.get(e.client.toString());
+                if (c) {
+                    e.clientName = `${(c.firstName || '').trim()} ${(c.lastName || '').trim()}`
+                        .trim()
+                        .toUpperCase();
+                }
+            }
+            e.pagosTotales = typeof pagosMap.get(e._id.toString()) === 'number'
+                ? pagosMap.get(e._id.toString())
+                : 0;
+
+            return {
+                ...e,
+                isBlocked: false,    // <- unificado
+                blockType: null,     // <- unificado
+            };
+        });
+
+        // ---------- Trae BLOQUEOS en el rango ----------
+        let eventosBloqueo = [];
+        const idsParaBloqueos = [...scopeResourceIds].filter(Boolean);
+
+        if (idsParaBloqueos.length) {
+            // Filtra bloqueos por recursos del alcance y fecha dentro del rango solicitado
+            const bloqueos = await BloqueoFechas.find(
+                {
+                    habitacionId: { $in: idsParaBloqueos.map(id => ObjectId.isValid(id) ? new ObjectId(id) : id) },
+                    type: "bloqueo",
+                    date: { $gte: startDate, $lte: endDate }
+                },
+                { habitacionId: 1, date: 1 }
+            ).lean();
+
+            // Normaliza BLOQUEOS a eventos
+            eventosBloqueo = bloqueos.map(b => {
+                // arrival = 15:00 UTC del día del bloqueo
+                const arrivalDate = new Date(b.date);
+                arrivalDate.setUTCHours(15, 0, 0, 0);
+                // departure = siguiente día 12:00 UTC
+                const departureDate = new Date(arrivalDate);
+                departureDate.setUTCDate(departureDate.getUTCDate() + 1);
+                departureDate.setUTCHours(12, 0, 0, 0);
+
+                return {
+                    _id: new ObjectId(),
+                    client: "N/A",
+                    resourceId: b.habitacionId,
+                    arrivalDate,
+                    departureDate,
+                    maxOccupation: 0,
+                    pax: 0,
+                    nNights: 1,
+                    total: 0,
+                    termsAccepted: false,
+                    madeCheckIn: false,
+                    surveySubmitted: false,
+                    isDeposit: false,
+                    status: "blocked",          // <- estandariza estado
+                    createdBy: "system",
+                    thanksSent: false,
+                    colorUsuario: "#ff0000",
+                    clientName: "Fecha Bloqueada",
+                    pagosTotales: 0,
+                    isBlocked: true,            // <- unificado
+                    blockType: "bloqueo",       // <- unificado
+                };
+            });
+        }
+
+        // ---------- Respuesta unificada ----------
+        // Puedes ordenar si lo deseas (ej. por arrivalDate)
+        const eventos = [...eventosReservas, ...eventosBloqueo];
+        // eventos.sort((a, b) => new Date(a.arrivalDate) - new Date(b.arrivalDate));
+
+        res.send(eventos);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener eventos' });
+    }
+}
+
 async function obtenerEventosDeCabana(req, res) {
     const { id } = req.params;
     const newId = new mongoose.Types.ObjectId(id);
@@ -2776,6 +2952,7 @@ module.exports = {
     createOwnersReservationValidators,
     submitReservationValidators,
     obtenerEventos,
+    obtenerEventosOptimizados,
     obtenerEventosDeCabana,
     obtenerEventoPorId,
     obtenerEventoPorIdRoute,

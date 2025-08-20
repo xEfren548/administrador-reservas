@@ -16,6 +16,8 @@ const validationRequest = require('../common/middlewares/validation-request');
 
 // Rutas estáticas
 router.get('/eventos', eventController.obtenerEventos);
+router.get('/eventos-opt', eventController.obtenerEventosOptimizados);
+
 router.get('/eventos/chalet/:id', eventController.obtenerEventosDeCabana);
 router.get('/eventos/route/:id', eventController.obtenerEventoPorIdRoute);
 router.get('/cotizar', eventController.cotizadorView);
