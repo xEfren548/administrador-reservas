@@ -41,7 +41,6 @@ function clientIp(req) {
 }
 
 async function ensureAuthenticated(req, res, next) {
-    console.log("req session inicial: ", req.session);
     const JWT_SECRET = process.env.JWT_SECRET;
     if (!JWT_SECRET) {
         return res.status(500).json({ message: 'Server misconfigured (JWT_SECRET)' });
@@ -61,7 +60,6 @@ async function ensureAuthenticated(req, res, next) {
     // 1) Whitelist exacto
     if (WHITELIST_EXACT.has(path)) return next();
 
-    console.log("req.session?.userId", req.session?.userId);
     if (req.session?.userId) return next();
 
     // 2) Whitelist por prefijo

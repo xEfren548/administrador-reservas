@@ -7,8 +7,6 @@ export async function sessionFromToken(req, res, next) {
         const auth = req.headers.authorization || '';
         const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
 
-        console.log(token);
-
         if (!token) {
             req.session = null;
             return next();
