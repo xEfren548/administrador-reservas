@@ -245,8 +245,8 @@ async function obtenerEventos(req, res) {
 
         if (typeof Pago !== 'undefined') {
             const pagosAgg = await Pago.aggregate([
-                { $match: { bookingId: { $in: eventoIds } } },
-                { $group: { _id: "$bookingId", total: { $sum: "$importe" } } }
+                { $match: { reservacionId: { $in: eventoIds } } },
+                { $group: { _id: "$reservacionId", total: { $sum: "$importe" } } }
             ]);
             pagosMap = new Map(pagosAgg.map(p => [p._id.toString(), p.total || 0]));
         } else {
