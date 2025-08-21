@@ -38,6 +38,7 @@ jobs:
             DB_PORT=${{ secrets.PORT }}
             CHANNEX_USER_API_KEY=${{ secrets.CHANNEX_USER_API_KEY }}
             CHANNEX_BASE_URL=${{ secrets.CHANNEX_BASE_URL }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
             EOL
             
             npm install
