@@ -13,6 +13,7 @@ const BloqueoFechas = require('../models/BloqueoFechas');
 const BloqueoInversionistas = require('../models/BloqueoInversionistas');
 const Tipologias = require('./../models/TipologiasCabana');
 const Roles = require('../models/Roles');
+const Pago = require('../models/Pago');
 const Cliente = require('../models/Cliente');
 const PrecioBaseXDia = require('../models/PrecioBaseXDia');
 const PreciosEspeciales = require('../models/PreciosEspeciales');
@@ -375,8 +376,8 @@ async function obtenerEventosOptimizados(req, res) {
         let pagosMap = new Map();
         if (typeof Pago !== 'undefined') {
             const pagosAgg = await Pago.aggregate([
-                { $match: { bookingId: { $in: reservaIds } } },
-                { $group: { _id: "$bookingId", total: { $sum: "$importe" } } }
+                { $match: { reservacionId: { $in: reservaIds } } },
+                { $group: { _id: "$reservacionId", total: { $sum: "$importe" } } }
             ]);
             pagosMap = new Map(pagosAgg.map(p => [p._id.toString(), p.total || 0]));
         } else {
