@@ -118,6 +118,9 @@ async function loginToken(req, res, next) {
                 email: user.email,
                 role: user.role,
                 privilege: user.privilege,
+                profileImageUrl: user.profileImageUrl,
+                firstName: user.firstName,
+                lastName: user.lastName,
                 // Puedes incluir assignedChalets si lo consultan MUCHO en cada request
                 assignedChalets: user.assignedChalets ?? [],
             },
