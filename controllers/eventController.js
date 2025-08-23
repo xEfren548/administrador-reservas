@@ -2914,6 +2914,101 @@ async function cotizadorChaletsyPrecios(req, res) {
     }
 }
 
+// Para obtener habitaciones disponibles para flutter
+async function obtenerHabitacionesDisponibles(req, res) {
+    try {
+        console.log(req.query);
+        console.log(req.params);
+        const { fechaLlegada, fechaSalida } = req.query ?? {};
+        let tipologia = req.query.tipo == 'Mostrar todo' ? 'all' : req.query.tipo;
+
+        if (!fechaLlegada || !fechaSalida) {
+            return res.status(400).json({ message: 'fechaLlegada y fechaSalida son requeridos' });
+        }
+
+        const startDate = parseDateFlexible(fechaLlegada);
+        const endDate = parseDateFlexible(fechaSalida);
+
+        // noches
+        const nNights = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+        if (isNaN(nNights) || nNights <= 0) {
+            return res.status(400).json({ message: 'La fecha de salida debe ser posterior a la fecha de llegada' });
+        }
+
+        // Filtro base (solo campos necesarios para performance)
+        const filtro = {
+            isActive: true,
+        };
+
+        // Tipología opcional
+        if (tipologia && tipologia !== 'all') {
+            const lista = Array.isArray(tipologia) ? tipologia : [tipologia];
+            filtro['propertyDetails.accomodationType'] = { $in: lista };
+        }
+
+        console.log("filtro: ", filtro);
+        // Trae solo lo que usaremos → mapea a RoomOption
+        const chalets = await Habitacion.find(filtro)
+            .select({
+                _id: 1,
+                'propertyDetails.name': 1,
+                'propertyDetails.maxOccupancy': 1,
+                'propertyDetails.accomodationType': 1,
+                'others.basePrice': 1,
+            })
+            .lean();
+
+        if (!chalets || chalets.length === 0) {
+            return res.status(200).json({ rooms: [], meta: { nNights, total: 0 } });
+        }
+
+        console.log(chalets);
+
+        // Ajuste para consultas de bloqueos (tu código original usa 06:00 UTC)
+        const fechaAjustada = moment(startDate).utc().add(6, 'hours').toDate();
+
+        const disponibles = [];
+
+        // Chequeo secuencial (puedes paralelizar con Promise.allSettled si lo deseas)
+        for (const c of chalets) {
+            const chaletId = c._id;
+
+            // 2) Restricción de noches mínimas (restriccion)
+            const nochesMin = await BloqueoFechas.findOne({
+                date: fechaAjustada,
+                habitacionId: chaletId,
+                type: 'restriccion',
+            }).lean();
+
+            if (nochesMin && nNights < Number(nochesMin.min)) {
+                continue; // no cumple noches mínimas
+            }
+
+            // 3) Disponibilidad real en el rango
+            const libre = await getDisponibilidad(chaletId, startDate, endDate);
+            if (!libre) continue;
+
+            // 4) Map a RoomOption
+            disponibles.push({
+                id: chaletId,
+                nombre: c.propertyDetails?.name ?? 'Habitación',
+                ocMax: c.propertyDetails?.maxOccupancy ?? 0,
+                basePrice: c.others?.basePrice ?? 0,
+                tipo: c.propertyDetails?.accomodationType ?? 'N/D',
+            });
+        }
+        console.log("RESPUESTA: ")
+        console.log(JSON.stringify(disponibles));
+        return res.status(200).json({
+            rooms: disponibles,
+            meta: { nNights, total: disponibles.length, fechaLlegada: startDate, fechaSalida: endDate },
+        });
+    } catch (err) {
+        console.error('Error en obtenerHabitacionesDisponibles:', err);
+        return res.status(500).json({ message: 'Error al obtener disponibilidad: ' + err.message });
+    }
+}
+
 function convertirFechaES(fecha) {
     const [dia, mes, anio] = fecha.split("/");
     return `${anio}-${mes}-${dia}`; // Formato YYYY-MM-DD
@@ -2999,6 +3094,14 @@ function calculateNightDifference(arrivalDate, departureDate) {
     }
 }
 
+function parseDateFlexible(s) {
+    if (typeof s !== 'string') return new Date(s);
+    if (/\d{2}\/\d{2}\/\d{4}/.test(s)) {
+        const [dd, mm, yyyy] = s.split('/');
+        return new Date(Number(yyyy), Number(mm) - 1, Number(dd), 0, 0, 0, 0);
+    }
+    return new Date(s);
+}
 
 module.exports = {
     createReservationValidators,
@@ -3028,6 +3131,7 @@ module.exports = {
     cotizadorView,
     cotizadorClientesView,
     cotizadorChaletsyPrecios,
-    calculateNightDifference
+    calculateNightDifference,
+    obtenerHabitacionesDisponibles
 };
 

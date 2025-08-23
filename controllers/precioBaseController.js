@@ -7,6 +7,7 @@ const PreciosEspeciales = require('../models/PreciosEspeciales');
 const Habitacion = require('../models/Habitacion');
 const channexController = require('../controllers/channexController');
 const BloqueoFechas = require('../models/BloqueoFechas');
+const utilidadesController = require('../controllers/utilidadesController');
 
 // Controlador para agregar nuevos datos
 async function agregarNuevoPrecio(req, res) {
@@ -148,6 +149,96 @@ async function consultarPreciosPorFecha(req, res) {
     }
 }
 
+async function consultarPreciosPorFechas(req, res) {
+    try {
+        const { fechaLlegada, fechaSalida, habitacionid, needSpecialPrice, pax } = req.query;
+
+        const nNights = Math.ceil((new Date(fechaSalida) - new Date(fechaLlegada)) / (1000 * 60 * 60 * 24));
+
+        const comisiones = await utilidadesController.calcularComisionesInternas({
+            userId: req.session.id,
+            nNights: nNights,
+        });
+
+        console.log("comisionesss: ", comisiones);    
+
+        let precio = null;
+        console.log("fechas llegada y salida: ", fechaLlegada, fechaSalida);    
+        // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
+        const fechaAjustada = new Date(fechaLlegada);
+        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+
+        let currentDate = new Date(fechaAjustada);
+        currentDate.setUTCHours(6);
+
+        const fechaLimite = new Date(fechaSalida);
+        fechaLimite.setUTCHours(6);
+
+        const precios = [];
+
+        while (currentDate < fechaLimite) {
+            console.log("current date: ", currentDate);
+
+            const fechasBloqueadasPorCapacidad = await BloqueoFechas.findOne({ date: currentDate, habitacionId: habitacionid, type: 'capacidad_minima' });
+            if (fechasBloqueadasPorCapacidad) {
+                console.log("current date: ", currentDate);
+                console.log("fechasBloqueadasPorCapacidad: ", fechasBloqueadasPorCapacidad);
+                if (pax < fechasBloqueadasPorCapacidad.min) {
+                    return res.status(400).send({ mensaje: `La capacidad minima es de ${fechasBloqueadasPorCapacidad.min} personas` });
+                }
+            }
+
+
+            if (needSpecialPrice === "true") {
+                precio = await PreciosEspeciales.findOne({ fecha: currentDate, habitacionId: habitacionid, noPersonas: pax })
+            } else {
+                precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: habitacionid });
+
+            }
+
+
+            if (precio === null) {
+
+                precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: habitacionid });
+
+                if (!precio) {
+
+
+                    const habitacion = await Habitacion.findById(habitacionid).lean();
+
+                    if (!habitacion) {
+                        throw new Error('Habitacion no encontrada');
+                    }
+
+                    precio = {
+                        costo_base: habitacion.others.baseCost,
+                        costo_base_2noches: habitacion.others.baseCost2nights,
+                        precio_modificado: habitacion.others.basePrice,
+                        precio_base_2noches: habitacion.others.basePrice2nights
+                    }
+                    precios.push(precio);
+                    return;
+                }
+
+
+            }
+
+            precios.push(precio);
+
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        console.log(precios);
+        const twoOrMoreNights = precios.length > 1;
+        const costoBaseFinal = !twoOrMoreNights ? precios[0].costo_base_2noches : precios.reduce((total, precio) => total + precio.costo_base, 0);
+        let precioBaseFinal = !twoOrMoreNights ? precios[0].precio_base_2noches : precios.reduce((total, precio) => total + precio.precio_modificado, 0);
+        precioBaseFinal += comisiones;
+        res.json({precios, costoBaseFinal, precioBaseFinal});
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: 'Hubo un error al consultar los precios base.' });
+    }
+}
+
 async function eliminarRegistroPrecio(req, res) {
     try {
 
@@ -165,13 +256,13 @@ async function eliminarRegistroPrecio(req, res) {
 
         if (chalet.channels?.length > 0) {
             channexController.updateChannexPrices(chalet._id)
-            .then(() => {
-                console.log("Precios actualizados en Channex.");
-            })
-            .catch(err => {
-                // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
-                console.error("Error al actualizar precios en Channex: ", err.message);
-            });
+                .then(() => {
+                    console.log("Precios actualizados en Channex.");
+                })
+                .catch(err => {
+                    // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                    console.error("Error al actualizar precios en Channex: ", err.message);
+                });
         }
 
         res.status(200).json({ message: 'Registro eliminado correctamente' });
@@ -226,7 +317,7 @@ async function cargarPreciosCSV(req, res) {
                 const habitacionName = row.Nombre;
                 // if (!mongoose.Types.ObjectId.isValid(habitacionId)) {
                 //     throw new Error(`Fila ${index + 2}: ID de habitación inválido.`);
-                
+
                 // }
                 const habitacion = await Habitacion.findOne({ 'propertyDetails.name': habitacionName });
 
@@ -274,13 +365,13 @@ async function cargarPreciosCSV(req, res) {
                             },
                             { upsert: true, new: true } // Si no existe, lo crea
                         );
-    
-    
+
+
                         currentDate.setDate(currentDate.getDate() + 1);
-                        
-                        
+
+
                     }
-                    
+
                 } else {
                     while (currentDate <= endDate) {
                         currentDate.setUTCHours(6);
@@ -298,11 +389,11 @@ async function cargarPreciosCSV(req, res) {
                             },
                             { upsert: true, new: true } // Si no existe, lo crea
                         );
-    
-    
+
+
                         currentDate.setDate(currentDate.getDate() + 1);
-                        
-                        
+
+
                     }
 
                 }
@@ -316,15 +407,15 @@ async function cargarPreciosCSV(req, res) {
 
                 if (habitacion.channels.airbnbListingId) {
                     channexController.updateChannexPrices(habitacion._id)
-                    .then(() => {
-                        console.log("Precios actualizados en Channex.");
-                    })
-                    .catch(err => {
-                        // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
-                        console.error("Error al actualizar precios en Channex: ", err.message);
-                    });
+                        .then(() => {
+                            console.log("Precios actualizados en Channex.");
+                        })
+                        .catch(err => {
+                            // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                            console.error("Error al actualizar precios en Channex: ", err.message);
+                        });
                 }
-            
+
             } catch (error) {
                 errores.push(error.message);
                 console.error("Error al procesar la fila:", error);
@@ -361,6 +452,7 @@ module.exports = {
     consultarPrecios,
     consultarPreciosPorId,
     consultarPreciosPorFecha,
+    consultarPreciosPorFechas,
     eliminarRegistroPrecio,
     verificarExistenciaRegistro,
     cargarPreciosCSV

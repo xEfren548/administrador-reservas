@@ -174,6 +174,7 @@ router.get('/api/calendario-precios', precioBaseController.verificarExistenciaRe
 router.post('/api/calendario-precios', precioBaseController.agregarNuevoPrecio);
 router.get('/api/calendario-precios/:id', precioBaseController.consultarPreciosPorId);
 router.get('/api/consulta-fechas/', precioBaseController.consultarPreciosPorFecha);
+router.get('/api/consulta-precios/', precioBaseController.consultarPreciosPorFechas);
 router.delete('/api/calendario-precios', precioBaseController.eliminarRegistroPrecio);
 // router.get('/api/calendario-precios', precioBaseController.obtenerHabitacionesConPrecios)
 router.post('/api/cargar-precios', upload.single("csvFile"), precioBaseController.cargarPreciosCSV);
