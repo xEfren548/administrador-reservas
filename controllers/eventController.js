@@ -300,6 +300,7 @@ async function obtenerEventos(req, res) {
 
 async function obtenerEventosOptimizados(req, res) {
     const { start, end, chaletId } = req.query;
+    console.log("Query params:", { start, end, chaletId });  
 
     try {
         console.log(req.session);
@@ -323,7 +324,16 @@ async function obtenerEventosOptimizados(req, res) {
         // Alcance de recursos (reservas)
         if (privilege === "Vendedor") {
             const asObjectIds = assignedChalets.map(id => ObjectId.isValid(id) ? new ObjectId(id) : id);
-            filtro.resourceId = { $in: asObjectIds };
+            if (chaletId) {
+                if (!asObjectIds.some(id => id.toString() === chaletId)) {
+                    // Chalet específico no está en los asignados del vendedor: no hay resultados
+                    return res.json([]);
+                }
+                filtro.resourceId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
+
+            } else {
+                filtro.resourceId = { $in: asObjectIds };
+            }
         } else if (chaletId) {
             filtro.resourceId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
         }
@@ -359,7 +369,16 @@ async function obtenerEventosOptimizados(req, res) {
         // para traer bloqueos aunque no existan reservas en el rango.
         const scopeResourceIds = new Set(resourceIdsFromReservas);
         if (privilege === "Vendedor") {
-            for (const id of assignedChalets) scopeResourceIds.add(id.toString());
+            if (chaletId) {
+                scopeResourceIds.add(chaletId.toString());
+                if (!assignedChalets.some(id => id.toString() === chaletId)) {
+                    // Chalet específico no estaba en los asignados del vendedor: no hay resultados
+                    return res.json([]);
+                }
+
+            } else {
+                for (const id of assignedChalets) scopeResourceIds.add(id.toString());
+            }
         } else if (chaletId) {
             scopeResourceIds.add(chaletId.toString());
         }

@@ -153,6 +153,8 @@ async function consultarPreciosPorFechas(req, res) {
     try {
         const { fechaLlegada, fechaSalida, habitacionid, needSpecialPrice, pax } = req.query;
 
+        console.log({ fechaLlegada, fechaSalida, habitacionid, needSpecialPrice, pax });
+
         const nNights = Math.ceil((new Date(fechaSalida) - new Date(fechaLlegada)) / (1000 * 60 * 60 * 24));
 
         const comisiones = await utilidadesController.calcularComisionesInternas({
@@ -217,7 +219,8 @@ async function consultarPreciosPorFechas(req, res) {
                         precio_base_2noches: habitacion.others.basePrice2nights
                     }
                     precios.push(precio);
-                    return;
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    continue;
                 }
 
 
@@ -231,8 +234,9 @@ async function consultarPreciosPorFechas(req, res) {
         const twoOrMoreNights = precios.length > 1;
         const costoBaseFinal = !twoOrMoreNights ? precios[0].costo_base_2noches : precios.reduce((total, precio) => total + precio.costo_base, 0);
         let precioBaseFinal = !twoOrMoreNights ? precios[0].precio_base_2noches : precios.reduce((total, precio) => total + precio.precio_modificado, 0);
+        const precioTotalSinComision = precioBaseFinal;
         precioBaseFinal += comisiones;
-        res.json({precios, costoBaseFinal, precioBaseFinal});
+        res.json({precios, costoBaseFinal, precioBaseFinal, precioTotalSinComision});
     } catch (error) {
         console.error(error);
         res.status(500).json({ mensaje: 'Hubo un error al consultar los precios base.' });
