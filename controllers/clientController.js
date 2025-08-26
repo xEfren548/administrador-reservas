@@ -106,6 +106,14 @@ async function showClientsView(req, res, next) {
     }
 }
 
+async function showAllClients(req, res, next) {
+    try {
+        const clients = await Cliente.find();
+        res.send(clients);
+    } catch (err) {
+        return next(err);
+    }
+}
 async function showClients(req, res, next) {
     try {
         const { id } = req.params;
@@ -355,6 +363,7 @@ module.exports = {
     deleteClientValidators,
     showClientsView,
     showClients,
+    showAllClients,
     createClient,
     createClientLocal,
     editClient,

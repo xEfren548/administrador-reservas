@@ -7,6 +7,7 @@ const Reserva = require('../models/Evento');
 
 router.get('/clientes/mostrar-clientes', clientController.showClientsView);
 router.get('/clientes/show-clients/:id', clientController.showClients);
+router.get('/clientes/show-clients', clientController.showAllClients);
 router.post('/clientes/crear-cliente', clientController.createClientValidators, validationRequest, clientController.createClient);
 router.put('/clientes/editar-cliente', clientController.editClientValidators, validationRequest, clientController.editClient);
 router.put('/clientes/editar-cliente/:uuid', clientController.editClientValidators, validationRequest, clientController.editClientById);
