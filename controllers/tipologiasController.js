@@ -64,6 +64,7 @@ async function deleteTipologia(req, res, next) {
 module.exports = {
     renderTipologiaView,
     createTipologia,
+    getTipologias,
     editTipologia,
     deleteTipologia
 }
