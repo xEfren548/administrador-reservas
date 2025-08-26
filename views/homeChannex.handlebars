@@ -31,7 +31,6 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        console.log(window)
         document.getElementById('connect-airbnb-btn').addEventListener('click', async function () {
             try {
                 //const redirect_uri = 'https://0de5-177-249-172-194.ngrok-free.app/api/channex/auth/airbnb/callback&token=123'
@@ -39,10 +38,9 @@
                 const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
                 const host = window.location.host;
                 const redirect_uri = `${protocol}://${host}/api/channex/auth/airbnb/callback&token=123`
-                const channexProperty = 'd26d0612-12b3-4157-85fd-8a050fd8831c'; // Cualquier ID del canal
-                const response = await fetch(`/api/channex/connect/airbnb?properties=["${channexProperty}"]&minStayType=Arrival&groupId=b5fcd225-d31f-4588-a828-686f7e2b32a4&redirect_uri=${redirect_uri}`)
+                const channexProperty = '213ef1c8-6eba-4496-ba0a-318b1841efc1'; // Cualquier ID del canal
+                const response = await fetch(`/api/channex/connect/airbnb?properties=["${channexProperty}"]&minStayType=Arrival&groupId=6d7fb08d-8d09-485e-a809-fda052006d5f&redirect_uri=${redirect_uri}`)
                 const data = await response.json()
-                console.log(data)
                 const url = data.url
                 window.location.href = url
 
@@ -64,11 +62,12 @@
                 const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
                 const host = window.location.host;
                 const redirect_uri = `${protocol}://${host}/api/channex/dashboard/booking`
-                const channexProperty = 'd26d0612-12b3-4157-85fd-8a050fd8831c'; // Cualquier ID del canal
+                const channexProperty = '213ef1c8-6eba-4496-ba0a-318b1841efc1'; // Cualquier ID del canal
                 //const response = await fetch(`/api/channex/connect/airbnb?properties=["${channexProperty}"]&minStayType=Arrival&groupId=b5fcd225-d31f-4588-a828-686f7e2b32a4&redirect_uri=${redirect_uri}`)
                 //const data = await response.json()
                 //console.log(data)
                 //const url = data.url
+
                 window.location.href = redirect_uri
 
             } catch (error) {

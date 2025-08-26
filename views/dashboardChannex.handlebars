@@ -244,7 +244,6 @@
 
         document.querySelectorAll('.crear-tarifa-btn').forEach(btn => {
             btn.addEventListener('click', function () {
-                console.log(btn.dataset)
                 document.getElementById('inputPropertyId').value = btn.dataset.propertyid;
                 document.getElementById('inputPmsId').value = btn.dataset.pmsid;
                 document.getElementById('inputRoomId').value = btn.dataset.roomid;
@@ -278,7 +277,6 @@
                             pmsId: pmsId
                         })
                     })
-                    console.log(response)
                     if (!response.ok) throw new Error(response.error || 'Error al sincronizar tarifas y disponibilidad');
 
                     Swal.close();
@@ -310,7 +308,6 @@
             const rate_title = document.getElementById('rateTitle').value;
             const pms_id = document.getElementById('inputPmsId').value;
             const room_type_id = document.getElementById('inputRoomId').value;
-            console.log("Room Type ID:", room_type_id);
 
             Swal.fire({
                 title: "Creando tarifa... Sincronizando precios...",
