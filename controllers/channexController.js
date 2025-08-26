@@ -11,7 +11,7 @@ const Documento = require('../models/Evento');
 const pagoController = require('./pagoController');
 
 // Configuración de Channex API
-const CHANNEX_BASE_URL = process.env.NODE_ENV === 'development' ? process.env.DEV_CHANNEX_API_URL : process.env.CHANNEX_BASE_URL;
+const CHANNEX_BASE_URL = process.env.NODE_ENV === 'development' ? process.env.DEV_CHANNEX_API_URL : process.env.CHANNEX_API_URL;
 const USER_API_KEY = process.env.CHANNEX_USER_API_KEY;
 
 const channex = axios.create({
