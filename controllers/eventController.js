@@ -3099,15 +3099,19 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
 
 async function getIncomingReservations(req, res) {
     const { start, end, chaletId } = req.query;
-    console.log("Query params:", { start, end, chaletId });
+    console.log("Query params:", { start, end, chaletId });  
 
     try {
         console.log(req.session);
 
-        const privilege = req.session?.privilege;
+        const privilege = req.session?.privilege; // "Vendedor" | "Dueño de cabañas" | "Administrador"
         const assignedChalets = Array.isArray(req.session?.assignedChalets)
             ? req.session.assignedChalets
             : [];
+        const sessionUserId =
+            req.session?.userId ||
+            req.session?.user?._id ||
+            req.session?.user?._id?.toString?.();
 
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - 7); // 7 días atrás
@@ -3116,27 +3120,65 @@ async function getIncomingReservations(req, res) {
 
         ObjectId = mongoose.Types.ObjectId;
 
+        // ---------- Determinar universo permitido de resourceIds según privilegio ----------
+        // allowedResourceIds: null => sin restricción (Administrador)
+        let allowedResourceIds = null; // Set<string>
+
+        if (privilege === "Vendedor") {
+            const asObjectIds = assignedChalets.map(id =>
+                ObjectId.isValid(id) ? new ObjectId(id).toString() : id.toString()
+            );
+            allowedResourceIds = new Set(asObjectIds);
+
+        } else if (privilege === "Dueño de cabañas") {
+            if (!sessionUserId) {
+                // No podemos determinar la propiedad sin usuario en sesión
+                return res.json([]);
+            }
+            const ownerId = ObjectId.isValid(sessionUserId)
+                ? new ObjectId(sessionUserId)
+                : sessionUserId;
+
+            // Traer solo _id de chalets donde el usuario es dueño
+            const ownedChalets = await Habitacion.find(
+                { "others.owner": ownerId },
+                { _id: 1 }
+            ).lean();
+
+            allowedResourceIds = new Set(ownedChalets.map(c => c._id.toString()));
+        } else if (privilege === "Administrador") {
+            allowedResourceIds = null; // sin restricción
+        }
+
         // ---------- Filtro base para reservas ----------
         const filtro = {
             status: { $nin: ["no-show", "cancelled"] },
             arrivalDate: { $gte: startDate, $lte: endDate },
         };
 
-        // Alcance de recursos (reservas)
-        if (privilege === "Vendedor") {
-            const asObjectIds = assignedChalets.map(id => ObjectId.isValid(id) ? new ObjectId(id) : id);
-            if (chaletId) {
-                if (!asObjectIds.some(id => id.toString() === chaletId)) {
-                    // Chalet específico no está en los asignados del vendedor: no hay resultados
+        // Aplicar chaletId si se solicitó uno específico
+        if (chaletId) {
+            const targetId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
+
+            // Si hay restricción por privilegio, validar que pertenezca al universo permitido
+            if (allowedResourceIds instanceof Set) {
+                if (!allowedResourceIds.has(targetId.toString())) {
+                    return res.json([]); // fuera de alcance
+                }
+            }
+            filtro.resourceId = targetId;
+
+        } else {
+            // Sin chaletId: si hay restricción (Vendedor / Dueño), limitar al universo permitido
+            if (allowedResourceIds instanceof Set) {
+                if (allowedResourceIds.size === 0) {
                     return res.json([]);
                 }
-                filtro.resourceId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
-
-            } else {
-                filtro.resourceId = { $in: asObjectIds };
+                filtro.resourceId = { $in: Array.from(allowedResourceIds).map(id =>
+                    ObjectId.isValid(id) ? new ObjectId(id) : id
+                ) };
             }
-        } else if (chaletId) {
-            filtro.resourceId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
+            // Administrador: sin filtro adicional por resourceId
         }
 
         // ---------- Trae reservas (solo campos necesarios) ----------
@@ -3161,31 +3203,37 @@ async function getIncomingReservations(req, res) {
             clientName: 1,
         }).lean();
 
-        // ---------- Universo de recursos para BLOQUEOS ----------
+        // ---------- Universo de recursos para enriquecer con chalet info ----------
         const resourceIdsFromReservas = reservas
             .map(r => r.resourceId?.toString())
             .filter(Boolean);
 
-        // Incluye los recursos asignados (Vendedor) o el chalet explícito (Admin/otros),
-        // para traer bloqueos aunque no existan reservas en el rango.
         const scopeResourceIds = new Set(resourceIdsFromReservas);
 
+        // ---------- Batch: Chalets (para owner y name) ----------
         const chalets = scopeResourceIds.size
             ? await Habitacion.find(
                 { _id: { $in: Array.from(scopeResourceIds) } },
                 { _id: 1, "others.owner": 1, "propertyDetails.name": 1 }
-            ).lean()
+              ).lean()
             : [];
         const chaletsMap = new Map(
-            chalets.map(c => [c._id.toString(), { owner: c.others?.owner || null, name: c.propertyDetails?.name || null }])
+            chalets.map(c => [
+                c._id.toString(),
+                {
+                    owner: c?.others?.owner ?? null,
+                    name: c?.propertyDetails?.name ?? null,
+                }
+            ])
         );
-
-        console.log("Chalets en el rango:", chaletsMap);
 
         // ---------- Batch: Clientes (para reservas) ----------
         const clientIds = [...new Set(reservas.map(e => e.client).filter(Boolean))];
         const clientes = clientIds.length
-            ? await Cliente.find({ _id: { $in: clientIds } }, { firstName: 1, lastName: 1 }).lean()
+            ? await Cliente.find(
+                { _id: { $in: clientIds } },
+                { firstName: 1, lastName: 1 }
+              ).lean()
             : [];
         const clientesMap = new Map(clientes.map(c => [c._id.toString(), c]));
 
@@ -3206,38 +3254,34 @@ async function getIncomingReservations(req, res) {
             if (!e.clientName && e.client) {
                 const c = clientesMap.get(e.client.toString());
                 if (c) {
-                    e.clientName = `${(c.firstName || '').trim()} ${(c.lastName || '').trim()}`
-                        .trim()
-                        .toUpperCase();
+                    e.clientName = `${(c.firstName || '').trim()} ${(c.lastName || '').trim()}`.trim().toUpperCase();
                 }
             }
             e.pagosTotales = typeof pagosMap.get(e._id.toString()) === 'number'
                 ? pagosMap.get(e._id.toString())
                 : 0;
 
+            const chaletInfo = chaletsMap.get(e.resourceId?.toString());
+
             return {
                 ...e,
-                isBlocked: false,    // <- unificado
-                blockType: null,     // <- unificado
+                isBlocked: false,
+                blockType: null,
+                chaletOwner: chaletInfo?.owner || null,
+                chaletName: chaletInfo?.name || null,
             };
         });
 
-
-        // ---------- Respuesta unificada ----------
-        // Puedes ordenar si lo deseas (ej. por arrivalDate)
+        // ---------- Respuesta ----------
         const eventos = [...eventosReservas];
-        // eventos.sort((a, b) => new Date(a.arrivalDate) - new Date(b.arrivalDate));
-
         res.send(eventos);
 
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener eventos' });
     }
-
-
-
 }
+
 
 function calculateNightDifference(arrivalDate, departureDate) {
     const arrivalMoment = moment.utc(arrivalDate);
