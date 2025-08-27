@@ -300,7 +300,7 @@ async function obtenerEventos(req, res) {
 
 async function obtenerEventosOptimizados(req, res) {
     const { start, end, chaletId } = req.query;
-    console.log("Query params:", { start, end, chaletId });  
+    console.log("Query params:", { start, end, chaletId });
 
     try {
         console.log(req.session);
@@ -3097,6 +3097,148 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     return true;
 }
 
+async function getIncomingReservations(req, res) {
+    const { start, end, chaletId } = req.query;
+    console.log("Query params:", { start, end, chaletId });
+
+    try {
+        console.log(req.session);
+
+        const privilege = req.session?.privilege;
+        const assignedChalets = Array.isArray(req.session?.assignedChalets)
+            ? req.session.assignedChalets
+            : [];
+
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7); // 7 días atrás
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 7); // 7 días adelante
+
+        ObjectId = mongoose.Types.ObjectId;
+
+        // ---------- Filtro base para reservas ----------
+        const filtro = {
+            status: { $nin: ["no-show", "cancelled"] },
+            arrivalDate: { $gte: startDate, $lte: endDate },
+        };
+
+        // Alcance de recursos (reservas)
+        if (privilege === "Vendedor") {
+            const asObjectIds = assignedChalets.map(id => ObjectId.isValid(id) ? new ObjectId(id) : id);
+            if (chaletId) {
+                if (!asObjectIds.some(id => id.toString() === chaletId)) {
+                    // Chalet específico no está en los asignados del vendedor: no hay resultados
+                    return res.json([]);
+                }
+                filtro.resourceId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
+
+            } else {
+                filtro.resourceId = { $in: asObjectIds };
+            }
+        } else if (chaletId) {
+            filtro.resourceId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
+        }
+
+        // ---------- Trae reservas (solo campos necesarios) ----------
+        const reservas = await Documento.find(filtro, {
+            _id: 1,
+            client: 1,
+            resourceId: 1,
+            arrivalDate: 1,
+            departureDate: 1,
+            maxOccupation: 1,
+            pax: 1,
+            nNights: 1,
+            total: 1,
+            termsAccepted: 1,
+            madeCheckIn: 1,
+            surveySubmitted: 1,
+            isDeposit: 1,
+            status: 1,
+            createdBy: 1,
+            thanksSent: 1,
+            colorUsuario: 1,
+            clientName: 1,
+        }).lean();
+
+        // ---------- Universo de recursos para BLOQUEOS ----------
+        const resourceIdsFromReservas = reservas
+            .map(r => r.resourceId?.toString())
+            .filter(Boolean);
+
+        // Incluye los recursos asignados (Vendedor) o el chalet explícito (Admin/otros),
+        // para traer bloqueos aunque no existan reservas en el rango.
+        const scopeResourceIds = new Set(resourceIdsFromReservas);
+
+        const chalets = scopeResourceIds.size
+            ? await Habitacion.find(
+                { _id: { $in: Array.from(scopeResourceIds) } },
+                { _id: 1, "others.owner": 1, "propertyDetails.name": 1 }
+            ).lean()
+            : [];
+        const chaletsMap = new Map(
+            chalets.map(c => [c._id.toString(), { owner: c.others?.owner || null, name: c.propertyDetails?.name || null }])
+        );
+
+        console.log("Chalets en el rango:", chaletsMap);
+
+        // ---------- Batch: Clientes (para reservas) ----------
+        const clientIds = [...new Set(reservas.map(e => e.client).filter(Boolean))];
+        const clientes = clientIds.length
+            ? await Cliente.find({ _id: { $in: clientIds } }, { firstName: 1, lastName: 1 }).lean()
+            : [];
+        const clientesMap = new Map(clientes.map(c => [c._id.toString(), c]));
+
+        // ---------- Batch: Pagos (agregación) ----------
+        const reservaIds = reservas.map(e => e._id);
+        let pagosMap = new Map();
+        if (typeof Pago !== 'undefined') {
+            const pagosAgg = await Pago.aggregate([
+                { $match: { reservacionId: { $in: reservaIds } } },
+                { $group: { _id: "$reservacionId", total: { $sum: "$importe" } } }
+            ]);
+            pagosMap = new Map(pagosAgg.map(p => [p._id.toString(), p.total || 0]));
+        }
+
+        // ---------- Normaliza RESERVAS a eventos ----------
+        const eventosReservas = reservas.map(e => {
+            // Nombre del cliente si no viene en el doc
+            if (!e.clientName && e.client) {
+                const c = clientesMap.get(e.client.toString());
+                if (c) {
+                    e.clientName = `${(c.firstName || '').trim()} ${(c.lastName || '').trim()}`
+                        .trim()
+                        .toUpperCase();
+                }
+            }
+            e.pagosTotales = typeof pagosMap.get(e._id.toString()) === 'number'
+                ? pagosMap.get(e._id.toString())
+                : 0;
+
+            return {
+                ...e,
+                isBlocked: false,    // <- unificado
+                blockType: null,     // <- unificado
+            };
+        });
+
+
+        // ---------- Respuesta unificada ----------
+        // Puedes ordenar si lo deseas (ej. por arrivalDate)
+        const eventos = [...eventosReservas];
+        // eventos.sort((a, b) => new Date(a.arrivalDate) - new Date(b.arrivalDate));
+
+        res.send(eventos);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener eventos' });
+    }
+
+
+
+}
+
 function calculateNightDifference(arrivalDate, departureDate) {
     const arrivalMoment = moment.utc(arrivalDate);
     const departureMoment = moment.utc(departureDate);
@@ -3151,6 +3293,7 @@ module.exports = {
     cotizadorClientesView,
     cotizadorChaletsyPrecios,
     calculateNightDifference,
-    obtenerHabitacionesDisponibles
+    obtenerHabitacionesDisponibles,
+    getIncomingReservations
 };
 
