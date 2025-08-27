@@ -232,8 +232,8 @@ async function consultarPreciosPorFechas(req, res) {
         }
         console.log(precios);
         const twoOrMoreNights = precios.length > 1;
-        const costoBaseFinal = !twoOrMoreNights ? precios[0].costo_base_2noches : precios.reduce((total, precio) => total + precio.costo_base, 0);
-        let precioBaseFinal = !twoOrMoreNights ? precios[0].precio_base_2noches : precios.reduce((total, precio) => total + precio.precio_modificado, 0);
+        const costoBaseFinal = twoOrMoreNights ? precios.reduce((total, precio) => total + precio.costo_base_2noches, 0) : precios[0].costo_base;
+        let precioBaseFinal = twoOrMoreNights ? precios.reduce((total, precio) => total + precio.precio_base_2noches, 0) : precios[0].precio_modificado;
         const precioTotalSinComision = precioBaseFinal;
         precioBaseFinal += comisiones;
         res.json({precios, costoBaseFinal, precioBaseFinal, precioTotalSinComision});
