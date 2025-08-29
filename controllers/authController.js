@@ -125,7 +125,8 @@ async function loginToken(req, res, next) {
                 assignedChalets: user.assignedChalets ?? [],
             },
             JWT_SECRET,
-            { expiresIn: '24h', algorithm: 'HS256' }
+            { expiresIn: '7d', algorithm: 'HS256' }
+            // { expiresIn: '1m', algorithm: 'HS256' }
         );
 
         // Respuesta compatible con tu app actual (solo token).
