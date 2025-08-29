@@ -15,6 +15,7 @@ const Documento = require('./../models/Evento');
 const User = require('./../models/Usuario');
 const Cliente = require('./../models/Cliente');
 const Roles = require('./../models/Roles');
+const { $where } = require('../models/Log');
 
 async function obtenerComisionesPorReserva(idReserva) {
     try {
@@ -1411,6 +1412,163 @@ async function mostrarUtilidadesPorUsuario(req, res) {
         console.log(error.message);
         res.status(200).send('Something went wrong while retrieving services.');
     }
+} 
+
+async function mostrarUtilidadesPorUsuarioJson(req, res) {
+    try {
+        const loggedUserId = req.session.id;
+
+        // Disparar lecturas en paralelo
+        const [user, habitacionesExistentes, reservas, utilidades] = await Promise.all([
+            usersController.obtenerUsuarioPorIdMongo(loggedUserId),
+            Habitacion.find().lean(),
+            Documento.find().lean(),
+            Utilidades.find({ idUsuario: loggedUserId }).lean(),
+        ]);
+
+        if (!habitacionesExistentes || habitacionesExistentes.length === 0) {
+            return res.status(404).send('No rooms found');
+        }
+        if (!reservas || reservas.length === 0) {
+            return res.status(404).send('No documents found');
+        }
+
+        // Maps rápidos para lookup O(1)
+        const cabanasById = new Map(
+            habitacionesExistentes.map(h => [
+                h._id.toString(),
+                {
+                    name: h?.propertyDetails?.name ?? 'N/A',
+                    chaletAdmin: h?.others?.admin ? h.others.admin.toString() : null,
+                },
+            ])
+        );
+
+        const reservasById = new Map(
+            reservas.map(r => [
+                r._id.toString(),
+                {
+                    resourceId: r?.resourceId ? r.resourceId.toString() : null,
+                    nNights: r?.nNights ?? 0,
+                    departureDate: r?.departureDate ?? null,
+                    status: (r?.status ?? 'N/A').toString(),
+                },
+            ])
+        );
+
+        // Resolver nombres de admins de cabañas (evitar N+1 serial)
+        const chaletAdminIds = [...new Set(
+            habitacionesExistentes
+                .map(h => h?.others?.admin)
+                .filter(Boolean)
+                .map(a => a.toString())
+        )];
+
+        // Si tu controller no tiene método batch, al menos paralelizamos:
+        const chaletAdminMap = {};
+        if (chaletAdminIds.length > 0) {
+            const admins = await Promise.all(
+                chaletAdminIds.map(async (id) => {
+                    const u = await usersController.obtenerUsuarioPorIdMongo(id);
+                    return [id, u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : '-'];
+                })
+            );
+            for (const [id, nombre] of admins) chaletAdminMap[id] = nombre || '-';
+        }
+
+        // Acumulados
+        let totalEarnings = 0;
+        const utilidadesPorMes = Array(12).fill(0);
+
+        const currentMonth = moment.utc().month(); // 0-11
+        const currentYear = moment.utc().year();
+
+        // Enriquecer utilidades in-place manteniendo shape; añadimos campo interno __ts para ordenar
+        for (const u of utilidades) {
+            // Nombre de quien genera/recibe la utilidad
+            u.nombreUsuario = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
+
+            // Parse seguro: tratamos u.fecha como Date o string ISO
+            const fechaMoment = u.fecha
+                ? moment.utc(u.fecha)
+                : moment.invalid();
+
+            // Guardamos un timestamp interno para ordenación (no se envía)
+            u.__ts = fechaMoment.isValid() ? fechaMoment.valueOf() : 0;
+
+            // Formato de salida conservando 'DD/MM/YYYY' como ya usabas
+            u.fecha = fechaMoment.isValid() ? fechaMoment.format('DD/MM/YYYY') : 'N/A';
+
+            // Totales por mes (si la fecha es válida)
+            if (fechaMoment.isValid()) {
+                utilidadesPorMes[fechaMoment.month()] += (u.monto ?? 0);
+
+                // Total del mes/año actual
+                if (fechaMoment.month() === currentMonth && fechaMoment.year() === currentYear) {
+                    totalEarnings += (u.monto ?? 0);
+                }
+            }
+
+            // Enlace a reserva (si existe)
+            if (u.idReserva) {
+                const r = reservasById.get(u.idReserva.toString());
+                if (r) {
+                    u.idHabitacion = r.resourceId ?? null;
+
+                    // Datos de cabaña
+                    if (r.resourceId && cabanasById.has(r.resourceId)) {
+                        const cab = cabanasById.get(r.resourceId);
+                        u.nombreHabitacion = cab.name ?? 'N/A';
+                        u.chaletAdmin = cab.chaletAdmin ? (chaletAdminMap[cab.chaletAdmin] ?? '-') : 'N/A';
+                    } else {
+                        u.nombreHabitacion = 'N/A';
+                        u.chaletAdmin = 'N/A';
+                    }
+
+                    // Más campos de reserva
+                    u.nochesReservadas = r.nNights ?? 0;
+
+                    const checkOutMoment = r.departureDate
+                        ? moment.utc(r.departureDate)
+                        : moment.invalid();
+
+                    u.checkOut = checkOutMoment.isValid()
+                        ? checkOutMoment.format('DD/MM/YYYY')
+                        : 'N/A';
+
+                    u.statusReserva = (r.status ?? 'N/A').toString().toUpperCase();
+                } else {
+                    u.nombreHabitacion = 'N/A';
+                    u.chaletAdmin = 'N/A';
+                }
+            } else {
+                u.nombreHabitacion = 'N/A';
+                u.chaletAdmin = 'N/A';
+            }
+        }
+
+        // (Opcional) Log mensual
+        // utilidadesPorMes.forEach((total, i) => console.log(`${moment().month(i).format('MMMM')}: ${total}`));
+
+        // Límite
+        const limit = 1000;
+
+        // Ordenar por fecha DESC usando el timestamp interno
+        utilidades.sort((a, b) => (b.__ts || 0) - (a.__ts || 0));
+
+        // Limpiar campo interno antes de responder
+        for (const u of utilidades) delete u.__ts;
+
+        return res.json({
+            utilidades,
+            totalEarnings,
+            limit,
+            utilidadesPorMes,
+        });
+    } catch (error) {
+        console.log(error?.message || error);
+        return res.status(200).send('Something went wrong while retrieving services.');
+    }
 }
 
 async function mostrarUtilidadesGlobales(req, res, next) {
@@ -1852,6 +2010,7 @@ module.exports = {
     calcularComisionesInternas,
     calcularComisionesOTA,
     mostrarUtilidadesPorUsuario,
+    mostrarUtilidadesPorUsuarioJson,
     mostrarUtilidadesGlobales,
     vistaParaReporte,
     generarComisionReserva,

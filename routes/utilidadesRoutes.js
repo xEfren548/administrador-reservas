@@ -4,6 +4,8 @@ const utilidadesController = require('../controllers/utilidadesController');
 
 router.get('/utilidades', utilidadesController.calcularComisiones)
 router.get('/mostrar-utilidades', utilidadesController.mostrarUtilidadesPorUsuario)
+router.get('/mostrar-utilidades-json', utilidadesController.mostrarUtilidadesPorUsuarioJson)
+
 router.get('/mostrar-utilidades-globales', utilidadesController.mostrarUtilidadesGlobales)
 router.get('/reportes', utilidadesController.vistaParaReporte)
 
