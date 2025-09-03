@@ -1855,7 +1855,7 @@
 
     async function obtenerDatosDePago(paymentId) {
         try {
-            const response = await fetch(`/api/pagos/${paymentId}`, {
+            const response = await fetch(`/api/pagos/obtener?paymentid=${paymentId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

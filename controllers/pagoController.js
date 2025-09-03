@@ -19,9 +19,26 @@ async function obtenerPagos(idReservacion) {
 
 async function obtenerPagoPorId(req, res) {
     try {
-        const { id } = req.params;
-        const pago = await Pago.findById(id);
+        const { paymentid } = req.query;
+        const pago = await Pago.findById(paymentid);
         res.send(pago);
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+async function obtenerPagosDeReservas(req, res) {
+    try {
+        console.log(req.query);
+        const { idReserva } = req.query;
+        let pagos = [];
+        if (!idReserva) {
+            pagos = await Pago.find().lean();
+        } else {
+            pagos = await Pago.find({ reservacionId: idReserva }).lean();
+        }
+
+        res.send(pagos);
     } catch (error) {
         console.log(error.message);
     }
@@ -91,7 +108,7 @@ async function registrarPago(req, res, next) {
         }
         
         await logController.createBackendLog(logBody);
-        res.status(201).json({ mensaje: 'Pago registrado correctamente.' });
+        res.status(201).json({ mensaje: 'Pago registrado correctamente.', payment: pago  });
     } catch (error) {
         console.error(error);
         res.status(500).json({ mensaje: error.message });
@@ -183,7 +200,7 @@ async function editarPago(req, res) {
         }
         
         await logController.createBackendLog(logBody);
-        res.status(200).json({ mensaje: 'Pago editado correctamente.' });
+        res.status(200).json({ mensaje: 'Pago editado correctamente.', payment: pago  })
     } catch (e) {
         console.error(e);
         res.status(500).json({ mensaje: 'Hubo un error al editar el pago: ' + e.message + '.' });
@@ -388,6 +405,7 @@ async function renderPagos(req, res, next) {
 module.exports = {
     obtenerPagos,
     obtenerPagoPorId,
+    obtenerPagosDeReservas,
     registrarPago,
     editarPago,
     eliminarPago,

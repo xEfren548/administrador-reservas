@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const pagoController = require('../controllers/pagoController');
 
-router.get('/:id', pagoController.obtenerPagoPorId); 
+router.get('/obtener', pagoController.obtenerPagoPorId); 
+router.get('/reserva', pagoController.obtenerPagosDeReservas);
 router.post('/', pagoController.registrarPago)
 router.put('/:id', pagoController.editarPago)
 router.delete('/:id', pagoController.eliminarPago)
