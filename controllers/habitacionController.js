@@ -11,6 +11,8 @@ async function obtenerHabitaciones(req, res) {
         if (privilege === "Vendedor") {
             const assignedChalets = req.session.assignedChalets;
             habitaciones = await Habitacion.find({ _id: assignedChalets, isActive: true }).lean();
+        } else if (privilege === "Limpieza") {
+            habitaciones = await Habitacion.find({ 'others.janitor': req.session.id, isActive: true }).lean();
         } else {
             habitaciones = await Habitacion.find( { isActive: true }).lean();
         }
