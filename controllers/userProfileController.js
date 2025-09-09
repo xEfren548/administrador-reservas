@@ -42,7 +42,7 @@ const nameValidator = [
 
 const emailValidator = [
     check()
-        .custom((value, { req }) => {
+    .custom((value, { req }) => {
             if (!req.session.email) {
                 throw new Error('Missing email cookie');
             }

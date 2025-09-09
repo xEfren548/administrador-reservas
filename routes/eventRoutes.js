@@ -223,6 +223,8 @@ router.get('/eventos/f/:idevento', async (req, res) => {
             console.log("Precio base total: ", precioBaseTotal)
         }
 
+        const logs = await Log.find({ idReserva: id, type: 'reservation' }).lean();
+
         const nuevoEvento = {
             ...evento,
             colorUsuario: colorUsuario,
@@ -232,7 +234,8 @@ router.get('/eventos/f/:idevento', async (req, res) => {
             chaletName: chaletName,
             montoPendiente: montoPendiente,
             pagosTotales: pagosTotales,
-            imagenReserva: Array.isArray(habitacion.images) ? habitacion.images[0] : ''
+            imagenReserva: Array.isArray(habitacion.images) ? habitacion.images[0] : '',
+            logs: logs || []
         };
 
         console.log(nuevoEvento)

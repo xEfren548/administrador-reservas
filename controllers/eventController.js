@@ -15,6 +15,7 @@ const BloqueoInversionistas = require('../models/BloqueoInversionistas');
 const Tipologias = require('./../models/TipologiasCabana');
 const Roles = require('../models/Roles');
 const Pago = require('../models/Pago');
+const Logs = require('../models/Log');
 const Cliente = require('../models/Cliente');
 const PrecioBaseXDia = require('../models/PrecioBaseXDia');
 const PreciosEspeciales = require('../models/PreciosEspeciales');
@@ -362,6 +363,18 @@ async function obtenerEventosOptimizados(req, res) {
             clientName: 1,
         }).lean();
 
+        const reservaIds = reservas.map(e => e._id);
+        const logs = await Logs.find({ idReserva: { $in: reservaIds }, type: 'reservation' }).lean();
+
+        const logsPorReserva = new Map();
+        logs.forEach(log => {
+            const idRes = log.idReserva.toString();
+            if (!logsPorReserva.has(idRes)) {
+                logsPorReserva.set(idRes, []);
+            }
+            logsPorReserva.get(idRes).push(log);
+        })
+
         // ---------- Universo de recursos para BLOQUEOS ----------
         const resourceIdsFromReservas = reservas
             .map(r => r.resourceId?.toString())
@@ -393,7 +406,6 @@ async function obtenerEventosOptimizados(req, res) {
         const clientesMap = new Map(clientes.map(c => [c._id.toString(), c]));
 
         // ---------- Batch: Pagos (agregación) ----------
-        const reservaIds = reservas.map(e => e._id);
         let pagosMap = new Map();
         if (typeof Pago !== 'undefined') {
             const pagosAgg = await Pago.aggregate([
@@ -428,6 +440,7 @@ async function obtenerEventosOptimizados(req, res) {
 
             return {
                 ...e,
+                logs: logsPorReserva.get(e._id.toString()) || [],
                 isBlocked: false,    // <- unificado
                 blockType: null,     // <- unificado
             };
