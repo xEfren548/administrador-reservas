@@ -2147,8 +2147,9 @@ async function modificarEvento(req, res) {
     }
 }
 
-async function checkAvailability(resourceId, arrivalDate, departureDate, eventId = null, nNights) {
+async function checkAvailability(resourceId, arrivalDate, departureDate, eventId = null, nNights, isForOwner = false) {
     console.log("nNights: ", nNights);
+    console.log("isForOwner: ", isForOwner);
     const newResourceId = new mongoose.Types.ObjectId(resourceId);
     const arrivalDateObj = new Date(`${arrivalDate}T00:00:00`);
     const departureDateObj = new Date(`${departureDate}T00:00:00`);
@@ -2194,8 +2195,9 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
     fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
 
 
+
     const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: resourceId, type: 'restriccion' });
-    if (fechasBloqueadasPorRestriccion) {
+    if (fechasBloqueadasPorRestriccion && !isForOwner) {
         if (nNights < fechasBloqueadasPorRestriccion.min) {
             return false;
         }

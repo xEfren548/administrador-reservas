@@ -248,13 +248,15 @@ router.get('/eventos/f/:idevento', async (req, res) => {
 
 router.get('/check-availability', async (req, res) => {
     const { resourceId, arrivalDate, departureDate, eventId } = req.query;
+    let isForOwner = req.query.isForOwner;
 
     // const arrival = new Date(arrivalDate);
     // const departure = new Date(departureDate);
 
+    isForOwner = isForOwner === 'true';
     try {
         const nNights = eventController.calculateNightDifference(arrivalDate, departureDate);
-        const isAvailable = await eventController.checkAvailability(resourceId, arrivalDate, departureDate, eventId, nNights);
+        const isAvailable = await eventController.checkAvailability(resourceId, arrivalDate, departureDate, eventId, nNights, isForOwner);
 
         res.json({ available: isAvailable });
 
