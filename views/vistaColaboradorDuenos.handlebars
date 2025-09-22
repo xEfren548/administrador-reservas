@@ -302,7 +302,7 @@
 
                 const results = [];
                 for (const idHabitacion of dataBsIds) {
-                    const response = await fetch(`/api/check-availability/?resourceId=${idHabitacion}&arrivalDate=${arrivalDate}&departureDate=${departureDate}`);
+                    const response = await fetch(`/api/check-availability/?resourceId=${idHabitacion}&arrivalDate=${arrivalDate}&departureDate=${departureDate}&isForOwner=true`);
                     const result = await response.json();
                     results.push({ idHabitacion, available: result.available });
                 }
