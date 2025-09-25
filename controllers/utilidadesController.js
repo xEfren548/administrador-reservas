@@ -1853,8 +1853,6 @@ async function vistaParaReporte(req, res, next) {
         // console.log(reservas)
 
 
-
-
         res.render('reportes', {
             reservas: reservas
         })

@@ -104,6 +104,8 @@
                             <span class="badge bg-info p-2 fs-6" >Reserva de dueño</span>
                             {{else if (eq this.status "playground")}}
                             <span class="badge bg-warning p-2 fs-6" >Playground</span>
+                            {{else if (eq this.status "no-show")}}
+                            <span class="badge bg-secondary p-2 fs-6" >No show</span>
                             {{else}}
                             <span class="badge bg-warning p-2 fs-6" >Pendiente</span>
                             {{/if}}
