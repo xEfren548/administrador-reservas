@@ -337,6 +337,19 @@ async function obtenerEventosOptimizados(req, res) {
             } else {
                 filtro.resourceId = { $in: asObjectIds };
             }
+        } else if (privilege === "Dueño de cabañas") {
+            const ownerChalets = await Habitacion.find({ 'others.owner': req.session.userId }, { _id: 1 }).lean();
+            const ownerChaletIds = ownerChalets.map(h => h._id);
+
+            if (chaletId) {
+                if (!ownerChaletIds.some(id => id.toString() === chaletId)) {
+                    // Chalet específico no pertenece al dueno de cabañas: no hay resultados
+                    return res.json([]);
+                }
+                filtro.resourceId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
+            } else {
+                filtro.resourceId = { $in: ownerChaletIds };
+            }
         } else if (chaletId) {
             filtro.resourceId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
         }
