@@ -514,7 +514,6 @@ async function obtenerEventosOptimizados(req, res) {
         // Puedes ordenar si lo deseas (ej. por arrivalDate)
         const eventos = [...eventosReservas, ...eventosBloqueo];
         // eventos.sort((a, b) => new Date(a.arrivalDate) - new Date(b.arrivalDate));
-
         res.send(eventos);
 
     } catch (error) {
@@ -3002,6 +3001,8 @@ async function obtenerHabitacionesDisponibles(req, res) {
         console.log(req.query);
         console.log(req.params);
         const { fechaLlegada, fechaSalida } = req.query ?? {};
+        const isForOwner = req.query.isForOwner === 'true';
+
         let tipologia = req.query.tipo == 'Mostrar todo' ? 'all' : req.query.tipo;
 
         if (!fechaLlegada || !fechaSalida) {
@@ -3023,9 +3024,11 @@ async function obtenerHabitacionesDisponibles(req, res) {
         };
 
         // Tipología opcional
-        if (tipologia && tipologia !== 'all') {
+        if (tipologia && tipologia !== 'all' && !isForOwner) {
             const lista = Array.isArray(tipologia) ? tipologia : [tipologia];
             filtro['propertyDetails.accomodationType'] = { $in: lista };
+        } else if (isForOwner) {
+            filtro['others.owner'] = req.session.id;
         }
 
         console.log("filtro: ", filtro);
@@ -3044,7 +3047,6 @@ async function obtenerHabitacionesDisponibles(req, res) {
             return res.status(200).json({ rooms: [], meta: { nNights, total: 0 } });
         }
 
-        console.log(chalets);
 
         // Ajuste para consultas de bloqueos (tu código original usa 06:00 UTC)
         const fechaAjustada = moment(startDate).utc().add(6, 'hours').toDate();
@@ -3250,6 +3252,7 @@ async function getIncomingReservations(req, res) {
         const reservas = await Documento.find(filtro, {
             _id: 1,
             client: 1,
+            clienteProvisional: 1,
             resourceId: 1,
             arrivalDate: 1,
             departureDate: 1,
@@ -3340,6 +3343,7 @@ async function getIncomingReservations(req, res) {
         // ---------- Respuesta ----------
         const eventos = [...eventosReservas];
         res.send(eventos);
+        console.log('eventos: ', eventos)
 
     } catch (error) {
         console.error(error);
