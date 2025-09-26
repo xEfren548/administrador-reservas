@@ -8,6 +8,7 @@ const http = require('http');
 const https = require('https');
 const app = express();
 const { engine } = require('express-handlebars');
+const { corsMiddleware } = require('./config/cors');
 const routes = require('./routes/indexRoutes');
 const schedule = require('node-schedule');
 const cron = require('node-cron');
@@ -23,6 +24,9 @@ const backupController = require('./controllers/backupController');
 // Configura Express para servir archivos estáticos desde la carpeta 'public'
 app.use(express.static(path.join(__dirname, 'src', 'public')));
 app.use(express.json())
+
+// CORS
+app.use(corsMiddleware);
 
 // Monta el middleware ANTES de las rutas que usan req.session
 
