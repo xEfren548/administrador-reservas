@@ -3004,6 +3004,7 @@ async function obtenerHabitacionesDisponibles(req, res) {
         const isForOwner = req.query.isForOwner === 'true';
 
         let tipologia = req.query.tipo == 'Mostrar todo' ? 'all' : req.query.tipo;
+        let habitacionId = req.query.habitacionId ?? null;
 
         if (!fechaLlegada || !fechaSalida) {
             return res.status(400).json({ message: 'fechaLlegada y fechaSalida son requeridos' });
@@ -3029,6 +3030,8 @@ async function obtenerHabitacionesDisponibles(req, res) {
             filtro['propertyDetails.accomodationType'] = { $in: lista };
         } else if (isForOwner) {
             filtro['others.owner'] = req.session.id;
+        } else if(habitacionId) {
+            filtro['_id'] = habitacionId;
         }
 
         console.log("filtro: ", filtro);
