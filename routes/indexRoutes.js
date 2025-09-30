@@ -37,6 +37,7 @@ const webhookRoutes = require('./webHook');
 const plataformasRoutes = require('./plataformasRoutes');
 const aprobacionesRoutes = require('./aprobacionesRoutes');
 const channexRoutes = require('./channexRoutes');
+const generalRoutes = require('./webClientesRoutes/generalRoutes');
 
 const authMiddleware = require('../common/middlewares/authMiddleware');
 
@@ -65,6 +66,8 @@ router.use('/', instruccionesRoutes);
 router.use('/procesar-encuesta', surveyProcessingRoutes);
 router.use('/getchaletsRoutes', getchaletsRoutes);
 router.use('/', webhookRoutes);
+
+router.use('/api/client', generalRoutes);
 
 
 router.use('/api', authRoutes);

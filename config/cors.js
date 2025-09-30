@@ -5,6 +5,7 @@ const cors = require('cors');
 const ALLOWED_ORIGINS = new Set([
     'https://nynhoteles.com.mx',
     'http://localhost:51779',
+    'http://localhost:8080',
 ]);
 
 const options = {
