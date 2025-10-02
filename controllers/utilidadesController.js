@@ -534,7 +534,7 @@ async function generarComisionReserva(req, res) {
         // Comisión de dueño de cabañas (NUEVA)
         let nuevoCostoBase = costoBase - chalet.additionalInfo.extraCleaningCost
         console.log('nuevo costo base: ', nuevoCostoBase)
-        let cuantosInversionistas = chaletInvestors.length
+        let cuantosInversionistas = chaletInvestors?.length
         console.log('cuantos inversionistas: ', cuantosInversionistas)
         // let comisionInversionistas = Math.round((nuevoCostoBase / cuantosInversionistas + Number.EPSILON) * 100) / 100;
         let comisionInversionistas = Math.round((nuevoCostoBase / 10 + Number.EPSILON) * 100) / 100;

@@ -22,7 +22,7 @@ function createParamsArray(params) {
     })
 }
 
-function sendTemplateMsg(clientInfo, template, params, buttons = []) {
+async function sendTemplateMsg(clientInfo, template, params, buttons = []) {
     console.log("sendTemplateMsg");
 
     const botId = '472231735966563';
@@ -76,17 +76,42 @@ function sendTemplateMsg(clientInfo, template, params, buttons = []) {
         json: true
     };
 
-    fetch(url, postReq)
-        .then(data => {
-            return data.json()
-        })
-        .then(res => {
-            console.log(res)
-        })
-        .catch(error => console.log(error));
+    try {
+        const response = await fetch(url, postReq);
+        const result = await response.json();
+        
+        if (!response.ok) {
+            // NO lanzar error, retornar objeto indicando fallo
+            return {
+                success: false,
+                error: result.error?.message || 'Unknown error',
+                errorCode: result.error?.code,
+                data: result
+            };
+        }
+        
+        console.log('WhatsApp Response:', result);
+        
+        // Retornar objeto indicando éxito
+        return {
+            success: true,
+            data: result,
+            messageId: result.messages?.[0]?.id
+        };
+        
+    } catch (error) {
+        console.error('Error sending WhatsApp message:', error);
+        
+        // Retornar objeto indicando fallo por error de red/conexión
+        return {
+            success: false,
+            error: error.message,
+            errorType: 'network'
+        };
+    }
 }
 
-function sendReservationConfirmation(clientInfo, chaletInfo, reservationInfo) {
+async function sendReservationConfirmation(clientInfo, chaletInfo, reservationInfo) {
     // const formatArrivalDate = moment(reservationInfo.arrivalDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
     // const formatDepartureDate = moment(reservationInfo.departureDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
     console.log("sendReservationConfirmation");
@@ -104,17 +129,17 @@ function sendReservationConfirmation(clientInfo, chaletInfo, reservationInfo) {
     const arrMsg = `${formattedArrivalDate} a las ${chaletArrivalHour}`
     const depMsg = `${formattedDepartureDate} a las ${chaletDepartureHour}`
 
-    sendTemplateMsg(clientInfo, "confirmacion_de_reserva", [
+    await sendTemplateMsg(clientInfo, "confirmacion_de_reserva", [
         chaletInfo.propertyDetails.name,
         arrMsg,
         depMsg
     ])
 }
 
-function sendInstructions(clientInfo, chaletInfo, idReserva) {
+async function sendInstructions(clientInfo, chaletInfo, idReserva) {
     const url = `https://nynhoteles.com.mx/instrucciones/${idReserva}`
     console.log(`Sending instructions`);
-    sendTemplateMsg(
+    await sendTemplateMsg(
         clientInfo,
         "instrucciones_de_cliente",
         [clientInfo.firstName, chaletInfo.propertyDetails.name, idReserva],
@@ -127,11 +152,11 @@ function sendInstructions(clientInfo, chaletInfo, idReserva) {
     );
 
 }
-function sendSurveyToClient(clientInfo, chaletInfo, idReserva) {
+async function sendSurveyToClient(clientInfo, chaletInfo, idReserva) {
 
     console.log(`Sending instructions`);
 
-    sendTemplateMsg(
+    await sendTemplateMsg(
         clientInfo,
         "encuesta_de_satisfaccion",
         [chaletInfo.propertyDetails.name, idReserva],
@@ -170,7 +195,7 @@ async function sendReminders() {
             console.log("Reservation date: ", reservation.arrivalDate);
             if (new Date() === new Date(reservation.arrivalDate.getTime() - (12 * 60 * 60 * 1000))) {
                 console.log(`Sending reminder for reservation with arrival date: ${reservation.arrivalDate}`);
-                sendTemplateMsg(client, "purchase_receipt_1", [client.firstName, chalet.propertyDetails.name]);
+                await sendTemplateMsg(client, "purchase_receipt_1", [client.firstName, chalet.propertyDetails.name]);
             }
         };
     }
@@ -227,7 +252,7 @@ async function sendThanks() {
                 console.log(`Sending thanks for reservation with departure date: ${reservation.departureDate}`);
 
                 // Send the thank-you message
-                sendTemplateMsg(
+                await sendTemplateMsg(
                     client,
                     "encuesta_de_satisfaccion",
                     [chalet.propertyDetails.name, reservation._id.toString()],
@@ -245,6 +270,64 @@ async function sendThanks() {
         }
     }
 
+}
+
+async function sendCheckInMessage() {
+    console.log("Enviando mensajes de check in");
+
+    moment.locale('es');
+
+    const today = moment().startOf('day').toDate();
+    const tomorrow = moment().add(1, 'day').startOf('day').toDate();
+    const todayFormattedDate = moment().format("DD [de] MMMM");
+
+    const reservas = await Evento.find({ status: { $nin: ["cancelled", "no-show"] }, arrivalDate: { $gte: today, $lt: tomorrow }, checkInSent: false });
+    console.log(`Found ${reservas.length} reservations for tomorrow.`);
+
+    for (const reserva of reservas) {
+        const client = await Cliente.findById(reserva.client);
+        if (!client) {
+            console.log(`Client ${reserva.client} does not exist.`);
+            continue;
+        }
+
+        const chalet = await Habitacion.findOne({ _id: reserva.resourceId }).select('propertyDetails');
+        console.log("Chalet details:", chalet);
+        if (!chalet || chalet.propertyDetails.accomodationType.toUpperCase() !== "BOSQUE IMPERIAL") {
+            console.log(`Chalet ${reserva.resourceId} does not exist.`);
+            continue;
+        }
+
+        const receiver = {
+            phone: '523310258667'
+        }
+
+        const formattedCheckOut = moment(reserva.departureDate).format("DD [de] MMMM");
+
+        const whatsappResponse = await sendTemplateMsg(receiver, 'automatizacion_checkin', [
+            todayFormattedDate,
+            `${client.firstName} ${client.lastName}`,
+            chalet.propertyDetails.name,
+            reserva.pax.toString(),
+            todayFormattedDate,
+            formattedCheckOut
+
+        ]);
+
+        console.log("whatsappResponse: ", whatsappResponse);
+
+        if (whatsappResponse.success) {
+            reserva.checkInSent = true;
+            await reserva.save();
+            console.log(`Mensaje enviado a ${client.firstName}. (${receiver.phone}) para la reserva ${reserva._id}`);
+        } else {
+            console.log(`Error al enviar mensaje a ${client.firstName}. (${receiver.phone}) para la reserva ${reserva._id}`);
+        }
+        
+
+
+    }
+    // sendTemplateMsg(clientInfo, template, params, buttons = [])
 }
 
 
@@ -379,5 +462,6 @@ module.exports = {
     sendSurveyToClient,
     sendReminders,
     sendThanks,
-    cancelReservation
+    cancelReservation,
+    sendCheckInMessage
 };

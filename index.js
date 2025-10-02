@@ -172,6 +172,14 @@ mongoose.connect(db_url).then(async () => {
       backupController.createBackup();
     });
 
+    // Enviar mensaje de check-in a las 08:00 AM cada día
+    cron.schedule('08 00 * * *', async () => {
+      await SendMessages.sendCheckInMessage();
+    }, {
+      scheduled: true,
+      timezone: "America/Mexico_City"
+    })
+
     
     
 

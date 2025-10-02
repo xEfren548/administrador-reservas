@@ -1195,6 +1195,12 @@ async function createReservation(req, res, next) {
             sendEmail(client.email, idReserva);
         }
 
+        const today = moment().startOf('day');
+        const arrival = moment(arrivalDate).startOf('day');
+        if (today.isSame(arrival) && chalet.propertyDetails.accomodationType.toUpperCase() === "BOSQUE IMPERIAL") {
+            await SendMessages.sendCheckInMessage();
+        }
+
 
 
         const agenteQueReserva = await Usuario.findById(createdBy);

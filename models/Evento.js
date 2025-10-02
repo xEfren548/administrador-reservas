@@ -1,3 +1,4 @@
+const { check } = require("express-validator");
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
@@ -92,6 +93,10 @@ const reservaSchema = new Schema({
         type: Number
     },
     thanksSent: {
+        type: Boolean,
+        default: false
+    },
+    checkInSent: {
         type: Boolean,
         default: false
     },
