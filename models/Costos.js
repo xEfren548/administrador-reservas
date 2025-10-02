@@ -9,7 +9,7 @@ const costSchema = new Schema({
     },
     category: {
         type: String,
-        enum: ['Dueño', 'Gerente', 'Vendedor'],
+        enum: ['Dueño', 'Gerente', 'Vendedor', 'vendedor virtual'],
         required: true
     },
     commission: {

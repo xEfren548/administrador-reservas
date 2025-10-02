@@ -15,7 +15,7 @@ const createCostValidators = [
         }),
     check('category')
         .notEmpty().withMessage('Category is required')
-        .isIn(['Dueño', 'Gerente', 'Vendedor']).withMessage('Invalid category'),
+        .isIn(['Dueño', 'Gerente', 'Vendedor', 'vendedor virtual']).withMessage('Invalid category'),
     check('commission')
         .notEmpty().withMessage('Commission is required')
         .isIn(['Aumento porcentual', 'Aumento por costo fijo']).withMessage('Invalid commission'),
@@ -50,7 +50,7 @@ const editCostValidators = [
         }),
     check('category')
         .optional({ checkFalsy: true })
-        .isIn(['Dueño', 'Gerente', 'Vendedor']).withMessage('Invalid category'),
+        .isIn(['Dueño', 'Gerente', 'Vendedor', 'vendedor virtual']).withMessage('Invalid category'),
     check('commission')
         .optional({ checkFalsy: true })
         .isIn(['Aumento porcentual', 'Aumento por costo fijo']).withMessage('Invalid commission'),

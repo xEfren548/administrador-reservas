@@ -88,6 +88,7 @@
                                         <option value="Dueño">Dueño</option>
                                         <option value="Gerente">Gerente</option>
                                         <option value="Vendedor">Vendedor</option>
+                                        <option value="vendedor virtual">Vendedor virtual</option>
                                     </select>
                                 </div>
                             </div>
@@ -282,7 +283,7 @@
         });
 
         // Showing fields depending on cost category
-        /** 
+        
         var slctUserCategory = document.getElementById("slctUserCategory");
         slctUserCategory.addEventListener("change", () => {
             if(slctUserCategory.value == "Vendedor"){
@@ -296,7 +297,7 @@
                 document.getElementById("maxAmount").style.display = "none";
             }
         });
-        **/
+        
         // Saving new cost.
         var btnSaveUser = document.getElementById("btnSaveUser")
         if (btnSaveUser){
