@@ -230,7 +230,10 @@ async function showClientsResponses(req, res, next) {
             const nombreHabitacion = habitacion.propertyDetails.name;
 
             const client = await Cliente.findById(reservation.client);
-            if (!client) { throw new NotFoundError("Client does not exist."); }
+            // if (!client) { throw new NotFoundError("Client does not exist."); }
+            if (!client) {
+                continue;
+            }
 
             let fechaFormat = moment.utc(clientSurveyResponses.createdAt).format('DD/MM/YYYY');
 
