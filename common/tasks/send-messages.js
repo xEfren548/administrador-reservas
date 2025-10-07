@@ -299,7 +299,7 @@ async function sendCheckInMessage() {
         }
 
         const receiver = {
-            phone: '523310258667'
+            phone: '523317583008'
         }
 
         const formattedCheckOut = moment(reserva.departureDate).format("DD [de] MMMM");
@@ -317,8 +317,8 @@ async function sendCheckInMessage() {
         console.log("whatsappResponse: ", whatsappResponse);
 
         if (whatsappResponse.success) {
-            reserva.checkInSent = true;
-            await reserva.save();
+            // reserva.checkInSent = true;
+            // await reserva.save();
             console.log(`Mensaje enviado a ${client.firstName}. (${receiver.phone}) para la reserva ${reserva._id}`);
         } else {
             console.log(`Error al enviar mensaje a ${client.firstName}. (${receiver.phone}) para la reserva ${reserva._id}`);
