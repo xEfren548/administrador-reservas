@@ -259,14 +259,14 @@ async function mostrarTodasHabitaciones(req, res) {
 async function cotizadorChaletsyPrecios(req, res) {
     try {
         // 1. Extraer parámetros de query string
-        const { location, guests, checkIn, checkOut } = req.query;
+        const { location, guests, checkIn, checkOut, beds, bathrooms, amenities } = req.query;
 
         // 2. Validar parámetros requeridos
         if (!guests || !checkIn || !checkOut) {
             return res.status(400).json({
                 error: 'Faltan parámetros requeridos',
-                required: ['location', 'guests', 'checkIn', 'checkOut'],
-                received: { location, guests, checkIn, checkOut }
+                required: ['guests', 'checkIn', 'checkOut'],
+                received: { location, guests, checkIn, checkOut, beds, bathrooms, amenities }
             });
         }
 
@@ -294,7 +294,30 @@ async function cotizadorChaletsyPrecios(req, res) {
             });
         }
 
-        // Construir query de búsqueda basado en los campos de HabitacionesResponse
+        // 5. Parsear filtros adicionales
+        let amenitiesArray = [];
+        if (amenities) {
+            try {
+                // Intentar parsear como JSON array
+                amenitiesArray = JSON.parse(amenities);
+                console.log('Amenities parsed as JSON:', amenitiesArray);
+            } catch (error) {
+                // Fallback: si no es JSON válido, tratarlo como array de query params
+                amenitiesArray = Array.isArray(amenities) ? amenities : [amenities];
+                console.log('Amenities parsed as query params:', amenitiesArray);
+            }
+        }
+
+        const bedsNumber = beds && beds !== 'any' ? parseInt(beds) : null;
+        const bathroomsNumber = bathrooms && bathrooms !== 'any' ? parseInt(bathrooms) : null;
+
+        console.log('Filtros adicionales:', {
+            beds: bedsNumber,
+            bathrooms: bathroomsNumber,
+            amenities: amenitiesArray
+        });
+
+        // 6. Construir query de búsqueda basado en los campos de HabitacionesResponse
         const searchQuery = {
             // Filtrar por capacidad de huéspedes
             $and: [
@@ -305,13 +328,14 @@ async function cotizadorChaletsyPrecios(req, res) {
             isActive: true,
         };
 
-        // Agregar filtro de ubicación solo si se proporciona y no es 'any' o vacío
+        // 7. Agregar filtro de ubicación solo si se proporciona y no es 'any' o vacío
         if (location && location.trim() !== '' && location !== 'any') {
             const locationDecoded = decodeURIComponent(location);
             const locationRegex = new RegExp(locationDecoded, 'i'); // Case insensitive
             console.log('Location Regex:', locationRegex);
             console.log('Location Decoded:', locationDecoded);
-            const population = locationDecoded.split(',')[0].trim();
+            
+            const population = locationDecoded.split(',')[0]?.trim();
             const state = locationDecoded.split(',')[1]?.trim();
             console.log('Population:', population, 'State:', state);
 
@@ -321,6 +345,7 @@ async function cotizadorChaletsyPrecios(req, res) {
                     { 'propertyDetails.name': locationRegex },
                     { 'location.state': locationRegex },
                     { 'location.population': locationRegex },
+                    { 'location.country': locationRegex },
                     // También buscar en la combinación "población, estado"
                     {
                         $expr: {
@@ -335,25 +360,63 @@ async function cotizadorChaletsyPrecios(req, res) {
             });
         }
 
+        // 8. Agregar filtro de camas si se proporciona
+        if (bedsNumber !== null && bedsNumber > 0) {
+            searchQuery.$and.push({
+                'additionalInfo.nBeds': { $gte: bedsNumber }
+            });
+        }
+
+        // 9. Agregar filtro de baños si se proporciona
+        if (bathroomsNumber !== null && bathroomsNumber > 0) {
+            searchQuery.$and.push({
+                'additionalInfo.nRestrooms': { $gte: bathroomsNumber }
+            });
+        }
+
+        // 10. Agregar filtro de amenidades si se proporciona
+        if (amenitiesArray && amenitiesArray.length > 0) {
+            const amenityConditions = amenitiesArray.map(amenity => {
+                // Construir condiciones para buscar amenidades en todas las categorías
+                return {
+                    $or: [
+                        { [`accommodationFeatures.generalFeatures.${amenity}`]: true },
+                        { [`accommodationFeatures.parking.${amenity}`]: true },
+                        { [`accommodationFeatures.kitchen.${amenity}`]: true },
+                        { [`accommodationFeatures.activities.${amenity}`]: true },
+                        { [`accommodationFeatures.views.${amenity}`]: true },
+                        { [`accommodationFeatures.livingRoom.${amenity}`]: true },
+                        { [`accommodationFeatures.bedroom.${amenity}`]: true },
+                        { [`accommodationFeatures.bathroom.${amenity}`]: true },
+                        { [`accommodationFeatures.exterior.${amenity}`]: true },
+                        { [`accommodationFeatures.services.${amenity}`]: true }
+                    ]
+                };
+            });
+
+            // Todas las amenidades deben estar presentes (AND)
+            searchQuery.$and.push(...amenityConditions);
+        }
+
         console.log('MongoDB Search Query:', JSON.stringify(searchQuery, null, 2));
 
-
-
-        // Buscar habitaciones que cumplan los criterios
+        // 11. Buscar habitaciones que cumplan los criterios
         const habitaciones = await Habitacion.find(searchQuery)
             .sort({ 'others.basePrice': 1 })
             .lean(); // Para mejor performance
 
-        // 6. Filtrar por disponibilidad de fechas (si tienes sistema de reservas)
-        // const habitacionesDisponibles = await filtrarPorDisponibilidad(
-        //     habitaciones,
-        //     checkInDate,
-        //     checkOutDate
-        // );
+        console.log(`Habitaciones encontradas antes de filtros de disponibilidad: ${habitaciones.length}`);
 
-        const habitacionesDisponibles = habitaciones; // Temporalmente, si no tienes sistema de reservas
+        // 12. Filtrar por disponibilidad de fechas (si tienes sistema de reservas)
+        const habitacionesDisponibles = await filtrarPorDisponibilidad(
+            habitaciones,
+            checkInDate,
+            checkOutDate
+        );
 
-        // 7. Calcular precios para cada habitación
+        console.log(`Habitaciones disponibles después de filtros: ${habitacionesDisponibles.length}`);
+
+        // 13. Calcular precios para cada habitación
         const habitacionesConPrecios = habitacionesDisponibles.map(habitacion => {
             const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
             const precioTotal = calcularPrecioTotal(habitacion, nights, guestsNumber);
@@ -370,10 +433,10 @@ async function cotizadorChaletsyPrecios(req, res) {
             };
         });
 
-        // 8. Ordenar por precio (opcional)
+        // 14. Ordenar por precio (opcional)
         habitacionesConPrecios.sort((a, b) => a.precioCalculado - b.precioCalculado);
 
-        // 9. Respuesta exitosa
+        // 15. Respuesta exitosa
         res.status(200).json({
             success: true,
             data: habitacionesConPrecios,
@@ -381,10 +444,22 @@ async function cotizadorChaletsyPrecios(req, res) {
                 location: location || 'any',
                 guests: guestsNumber,
                 checkIn: checkInDate,
-                checkOut: checkOutDate
+                checkOut: checkOutDate,
+                beds: bedsNumber,
+                bathrooms: bathroomsNumber,
+                amenities: amenitiesArray
             },
             totalResults: habitacionesConPrecios.length,
-            message: `Se encontraron ${habitacionesConPrecios.length} habitaciones disponibles`
+            message: habitacionesConPrecios.length > 0 
+                ? `Se encontraron ${habitacionesConPrecios.length} habitaciones disponibles` 
+                : 'No se encontraron habitaciones que cumplan con los criterios de búsqueda',
+            appliedFilters: {
+                hasLocationFilter: !!(location && location !== 'any'),
+                hasBedsFilter: bedsNumber !== null,
+                hasBathroomsFilter: bathroomsNumber !== null,
+                hasAmenitiesFilter: amenitiesArray.length > 0,
+                amenitiesCount: amenitiesArray.length
+            }
         });
 
     } catch (error) {
