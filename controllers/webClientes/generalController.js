@@ -2,6 +2,7 @@ const Habitacion = require('../../models/Habitacion');
 const PrecioBaseXDia = require('../../models/PrecioBaseXDia');
 const PreciosEspeciales = require('../../models/PreciosEspeciales');
 const BloqueoFechas = require('../../models/BloqueoFechas');
+const Costos = require('../../models/Costos');
 const Usuario = require('../../models/Usuario');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
@@ -417,13 +418,13 @@ async function cotizadorChaletsyPrecios(req, res) {
         console.log(`Habitaciones disponibles después de filtros: ${habitacionesDisponibles.length}`);
 
         // 13. Calcular precios para cada habitación
-        const habitacionesConPrecios = habitacionesDisponibles.map(habitacion => {
+        const habitacionesConPrecios = await Promise.all(habitacionesDisponibles.map(async habitacion => {
             const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-            const precioTotal = calcularPrecioTotal(habitacion, nights, guestsNumber);
+            const precios = await consultarPreciosPorFechas(checkInDate, checkOutDate, habitacion, guestsNumber);
 
             return {
                 ...habitacion,
-                precioCalculado: precioTotal,
+                precioCalculado: precios,
                 noches: nights,
                 fechaConsulta: {
                     checkIn: checkInDate,
@@ -431,11 +432,11 @@ async function cotizadorChaletsyPrecios(req, res) {
                     huespedes: guestsNumber
                 }
             };
-        });
+        }));
 
         // 14. Ordenar por precio (opcional)
-        habitacionesConPrecios.sort((a, b) => a.precioCalculado - b.precioCalculado);
-
+        // habitacionesConPrecios.sort((a, b) => a.precioCalculado - b.precioCalculado);
+        console.log(JSON.stringify(habitacionesConPrecios[0], null, 2));
         // 15. Respuesta exitosa
         res.status(200).json({
             success: true,
@@ -483,11 +484,11 @@ async function filtrarPorDisponibilidad(habitaciones, checkIn, checkOut) {
                 habitacionId: habitacion._id,
                 $or: [
                     {
-                        fechaInicio: { $lt: checkOut },
-                        fechaFin: { $gt: checkIn }
+                        arrivalDate: { $lt: checkOut },
+                        departureDate: { $gt: checkIn }
                     }
                 ],
-                estado: { $in: ['confirmada', 'pendiente'] }
+                status: { $nin: ['no-show', 'cancelled'] }
             });
 
             if (!reservasConflicto) {
@@ -536,6 +537,131 @@ function calcularPrecioTotal(habitacion, nights, guests) {
 function convertirFechaES(fecha) {
     const [dia, mes, anio] = fecha.split("/");
     return `${anio}-${mes}-${dia}`; // Formato YYYY-MM-DD
+}
+
+const web = 'fernando';
+
+const COMISSIONS_MAP = {
+    'fernando': 'VENDEDOR VIRTUAL 1',
+    'carlos': 'VENDEDOR VIRTUAL 2',
+    'externo': 'VENDEDOR VIRTUAL 3'
+}
+
+
+
+
+
+async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, pax) {
+    try {
+
+        // console.log({ fechaLlegada, fechaSalida, habitacion, pax });
+
+        const habitacionid = habitacion._id;
+
+        const nNights = Math.ceil((new Date(fechaSalida) - new Date(fechaLlegada)) / (1000 * 60 * 60 * 24));
+
+        const usuarioWeb = COMISSIONS_MAP[web];
+        if (!usuarioWeb) {
+            throw new Error("No se encontró el usuario para comisiones");
+        }
+
+        const costoComision = await Costos.findOne({ costName: usuarioWeb });
+        if (!costoComision) {
+            throw new Error("No se encontró el costo para el usuario de comisiones");
+        }
+
+        const montoComision = costoComision.amount * nNights;
+        console.log("montoComision web: ", montoComision);
+
+        // const comisiones = await utilidadesController.calcularComisionesInternas({
+        //     userId: req.session.id,
+        //     nNights: nNights,
+        // });
+
+        // console.log("comisionesss: ", comisiones);    
+
+        let precio = null;
+        console.log("fechas llegada y salida: ", fechaLlegada, fechaSalida);    
+        // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
+        const fechaAjustada = new Date(fechaLlegada);
+        fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
+
+        let currentDate = new Date(fechaAjustada);
+        currentDate.setUTCHours(6);
+
+        const fechaLimite = new Date(fechaSalida);
+        fechaLimite.setUTCHours(6);
+
+        const precios = [];
+
+        while (currentDate < fechaLimite) {
+
+            // const fechasBloqueadasPorCapacidad = await BloqueoFechas.findOne({ date: currentDate, habitacionId: habitacionid, type: 'capacidad_minima' });
+            // if (fechasBloqueadasPorCapacidad) {
+            //     console.log("current date: ", currentDate);
+            //     console.log("fechasBloqueadasPorCapacidad: ", fechasBloqueadasPorCapacidad);
+            //     if (pax < fechasBloqueadasPorCapacidad.min) {
+            //         return res.status(400).send({ mensaje: `La capacidad minima es de ${fechasBloqueadasPorCapacidad.min} personas` });
+            //     }
+            // }
+
+
+            precio = await PreciosEspeciales.findOne({ fecha: currentDate, habitacionId: habitacionid, noPersonas: pax })
+            if (precio) {
+                precio.precio_modificado += montoComision;
+                precio.precio_base_2noches += montoComision;
+            }
+
+            if (!precio) {
+                precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: habitacionid });
+                if (precio) {
+                    precio.precio_modificado += montoComision;
+                    precio.precio_base_2noches += montoComision;
+                }
+
+            }
+
+            if (precio === null) {
+
+                precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: habitacionid });
+
+                if (!precio) {
+
+                    if (!habitacion) {
+                        throw new Error('Habitacion no encontrada');
+                    }
+
+                    precio = {
+                        costo_base: habitacion.others.baseCost,
+                        costo_base_2noches: habitacion.others.baseCost2nights,
+                        precio_modificado: habitacion.others.basePrice + montoComision,
+                        precio_base_2noches: habitacion.others.basePrice2nights + montoComision,
+                    }
+                    precios.push(precio);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    continue;
+                }
+
+
+            }
+
+            precios.push(precio);
+
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        const twoOrMoreNights = precios.length > 1;
+        const costoBaseFinal = twoOrMoreNights ? precios.reduce((total, precio) => total + precio.costo_base_2noches, 0) : precios[0].costo_base;
+        let precioBaseFinal = twoOrMoreNights ? precios.reduce((total, precio) => total + precio.precio_base_2noches, 0) : precios[0].precio_modificado;
+        const precioTotalSinComision = precioBaseFinal - montoComision;
+        // precioBaseFinal += montoComision;
+        console.log({ precios, costoBaseFinal, precioBaseFinal, precioTotalSinComision });
+        return { precios, precioBaseFinal, costoBaseFinal, precioTotalSinComision };
+        // res.json({precios, costoBaseFinal, precioBaseFinal, precioTotalSinComision});
+    } catch (error) {
+        console.error(error);
+        throw new Error('Error al consultar precios: ' + error.message);
+    }
 }
 
 async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
