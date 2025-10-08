@@ -473,6 +473,149 @@ async function cotizadorChaletsyPrecios(req, res) {
     }
 }
 
+async function cotizarReserva(habitacionId, checkIn, checkOut, guests) {
+    try {
+        // Validar parámetros
+        if (!habitacionId || !checkIn || !checkOut || !guests) {
+            throw new Error('Faltan parámetros requeridos: habitacionId, checkIn, checkOut, guests');
+        }
+
+        // Validar fechas
+        const fechaLlegada = new Date(checkIn);
+        const fechaSalida = new Date(checkOut);
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+
+        if (fechaLlegada < hoy) {
+            return {
+                success: false,
+                available: false,
+                error: 'La fecha de llegada no puede ser anterior a hoy',
+                errorType: 'INVALID_DATE'
+            };
+        }
+
+        if (fechaSalida <= fechaLlegada) {
+            return {
+                success: false,
+                available: false,
+                error: 'La fecha de salida debe ser posterior a la fecha de llegada',
+                errorType: 'INVALID_DATE_RANGE'
+            };
+        }
+
+        // Buscar la habitación
+        const habitacion = await Habitacion.findById(habitacionId);
+        if (!habitacion) {
+            return {
+                success: false,
+                available: false,
+                error: 'Habitación no encontrada',
+                errorType: 'CABIN_NOT_FOUND'
+            };
+        }
+
+        // Validar capacidad
+        if (guests > habitacion.propertyDetails.maxOccupancy) {
+            return {
+                success: false,
+                available: false,
+                error: `La capacidad máxima es de ${habitacion.propertyDetails.maxOccupancy} huéspedes`,
+                errorType: 'CAPACITY_EXCEEDED'
+            };
+        }
+
+        if (guests < habitacion.propertyDetails.minOccupancy) {
+            return {
+                success: false,
+                available: false,
+                error: `La capacidad mínima es de ${habitacion.propertyDetails.minOccupancy} huéspedes`,
+                errorType: 'CAPACITY_INSUFFICIENT'
+            };
+        }
+
+        // Verificar disponibilidad
+        const habitacionesDisponibles = await filtrarPorDisponibilidad([habitacion], checkIn, checkOut);
+        
+        if (habitacionesDisponibles.length === 0) {
+            return {
+                success: false,
+                available: false,
+                error: 'La habitación no está disponible para las fechas seleccionadas',
+                errorType: 'NOT_AVAILABLE'
+            };
+        }
+
+        // Calcular precios
+        const precioCalculado = await consultarPreciosPorFechas(checkIn, checkOut, habitacion, guests);
+
+        // Calcular noches
+        const nights = Math.ceil((fechaSalida - fechaLlegada) / (1000 * 60 * 60 * 24));
+
+        return {
+            success: true,
+            available: true,
+            habitacion: {
+                _id: habitacion._id,
+                name: habitacion.propertyDetails.name,
+                maxOccupancy: habitacion.propertyDetails.maxOccupancy,
+                minOccupancy: habitacion.propertyDetails.minOccupancy
+            },
+            booking: {
+                checkIn,
+                checkOut,
+                guests,
+                nights
+            },
+            precioCalculado,
+            pricing: {
+                basePrice: precioCalculado.precioBaseFinal,
+                totalPrice: precioCalculado.precioBaseFinal,
+                pricePerNight: Math.round(precioCalculado.precioBaseFinal / nights),
+                cleaningFee: habitacion.additionalInfo?.extraCleaningCost || 0,
+                totalWithFees: precioCalculado.precioBaseFinal + (habitacion.additionalInfo?.extraCleaningCost || 0)
+            }
+        };
+
+    } catch (error) {
+        console.error('Error en cotizarReserva:', error);
+        return {
+            success: false,
+            available: false,
+            error: 'Error interno del servidor: ' + error.message,
+            errorType: 'SERVER_ERROR'
+        };
+    }
+}
+
+async function cotizarReservaController(req, res) {
+    try {
+        const { habitacionId, checkIn, checkOut, guests } = req.body;
+
+        const resultado = await cotizarReserva(habitacionId, checkIn, checkOut, guests);
+
+        if (resultado.success) {
+            res.status(200).json(resultado);
+        } else {
+            // Determinar código de estado según el tipo de error
+            let statusCode = 400;
+            if (resultado.errorType === 'CABIN_NOT_FOUND') statusCode = 404;
+            if (resultado.errorType === 'SERVER_ERROR') statusCode = 500;
+
+            res.status(statusCode).json(resultado);
+        }
+
+    } catch (error) {
+        console.error('Error en cotizarReservaController:', error);
+        res.status(500).json({
+            success: false,
+            available: false,
+            error: 'Error interno del servidor',
+            errorType: 'SERVER_ERROR'
+        });
+    }
+}
+
 // Función auxiliar para filtrar por disponibilidad
 async function filtrarPorDisponibilidad(habitaciones, checkIn, checkOut) {
     // Si tienes un modelo de Reservas, verifica disponibilidad
@@ -503,35 +646,6 @@ async function filtrarPorDisponibilidad(habitaciones, checkIn, checkOut) {
     return habitaciones;
 }
 
-// Función auxiliar para calcular precio total
-function calcularPrecioTotal(habitacion, nights, guests) {
-    let precioBase = habitacion.precio || 0;
-
-    // Precio por noche
-    let precioTotal = precioBase * nights;
-
-    // Cargos por huéspedes extra (si aplica)
-    if (guests > habitacion.capacidadBase && habitacion.precioHuespedExtra) {
-        const huéspedesExtra = guests - habitacion.capacidadBase;
-        precioTotal += huéspedesExtra * habitacion.precioHuespedExtra * nights;
-    }
-
-    // Descuentos por estancia larga
-    if (nights >= 7 && habitacion.descuentoSemanal) {
-        precioTotal *= (1 - habitacion.descuentoSemanal / 100);
-    }
-
-    if (nights >= 30 && habitacion.descuentoMensual) {
-        precioTotal *= (1 - habitacion.descuentoMensual / 100);
-    }
-
-    // Aplicar impuestos si están definidos
-    if (habitacion.impuestos) {
-        precioTotal *= (1 + habitacion.impuestos / 100);
-    }
-
-    return Math.round(precioTotal * 100) / 100; // Redondear a 2 decimales
-}
 
 
 function convertirFechaES(fecha) {
@@ -733,4 +847,5 @@ module.exports = {
     mostrarUnaHabitacion,
     mostrarTodasHabitaciones,
     cotizadorChaletsyPrecios,
+    cotizarReservaController,
 }
