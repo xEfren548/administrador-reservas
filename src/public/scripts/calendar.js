@@ -42,7 +42,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                         return response.json()
                     })
                     .then(function (data) {
-                        console.log(data)
                         let resources = data.map(function (event) {
                             return {
                                 id: event._id,
@@ -59,7 +58,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             },
         events:
             function (info, successCallback, failureCallback) {
-                console.log(info);
                 fetch(`${urlEventos}?start=${info.startStr}&end=${info.endStr}`)
                     .then(function (response) {
                         return response.json()
@@ -90,12 +88,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     allDay: true
                                 }
                             })
-                        console.log(events);
                         successCallback(events);
                         $(spinner).addClass('loader--hidden')
                     })
                     .catch(function (error) {
-                        console.log(error);
                         failureCallback(error);
                     })
             },
@@ -226,31 +222,24 @@ document.addEventListener('DOMContentLoaded', async function () {
             const { DateTime } = luxon;
 
             const event = info.event;
-            console.log(info);
             idReserva = event.id;
             const eventStatus = info.event.extendedProps.status;
             const newEventStart = info.event.start;
-            console.log("Fecha inicio recibida de info: ", newEventStart);
             const eventDateStart = new Date(newEventStart);
             eventDateStart.setHours(eventDateStart.getHours() + 6);
-            console.log("Event start convertido: ", eventDateStart);
             // const eventDateStart = moment.tz(newEventStart, "America/Mexico_City").toDate();
 
 
             const newEventEnd = info.event.end;
-            console.log("Fecha fin recibida de info: ", newEventStart);
 
             // const eventDateEnd = new Date(newEventEnd);
             // const eventDateEnd = convertToTimeZone(newEventEnd, 'America/Mexico_City');
             const eventDateEnd = new Date(newEventEnd);
             eventDateEnd.setHours(eventDateEnd.getHours() + 6);
-            console.log("Event end convertido: ", eventDateEnd);
             const comisionVendedor = info.event.extendedProps.comisionVendedor;
             const totalViejo = info.event.extendedProps.total;
 
             const resourceId = (info.newResource && info.newResource.id) || info.el.fcSeg.eventRange.def.resourceIds[0];
-
-            console.log(eventDateStart, eventDateEnd)
 
             const hoverableEventElement = document.querySelector(".fc-hoverable-event");
             if (hoverableEventElement) {
@@ -306,8 +295,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                 };
 
-                console.log(info)
-
                 const newResource = info.newResource ? { id: info.newResource.id } : null;
 
                 try {
@@ -333,9 +320,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         throw new Error(data.message || 'Error al actualizar fechas');
                     }
 
-                    console.log('Respuesta del servidor: ', data);
                 } catch (err) {
-                    console.log('Error: ', err);
                     Swal.fire({
                         icon: 'error',
                         title: `Error al actualizar fechas: ${err.message}`,
@@ -697,19 +682,14 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 })
                 .catch(err => {
-                    console.log('Error: ', err);
                 });
         } catch (err) {
-            console.log(err);
         }
     }
 
 });
 
 async function availableDate(resourceId, arrivalDate, departureDate, idReserva) {
-    console.log('desde show available')
-    console.log("arrivalDate: ", arrivalDate);
-    console.log("departureDate: ", departureDate);
     const arrivalValue = new Date(`${arrivalDate}T00:00:00`);
     const departureValue = new Date(`${departureDate}T00:00:00`);
     // const tipologiaHabitacionInput = document.querySelector('#tipologia_habitacion');
@@ -723,9 +703,6 @@ async function availableDate(resourceId, arrivalDate, departureDate, idReserva) 
     try {
         if (!isNaN(arrivalDate) && !isNaN(departureDate) && departureDate >= arrivalDate) {
 
-            console.log(arrivalDate)
-            console.log(departureDate)
-
             // verificarDisponibilidadElement.style.display = 'block';
 
             const arrivalYear = arrivalDate.getFullYear();
@@ -738,17 +715,11 @@ async function availableDate(resourceId, arrivalDate, departureDate, idReserva) 
             const departureDay = departureDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
             const departureDateSend = `${departureYear}-${departureMonth}-${departureDay}`;
 
-            console.log(arrivalDateSend)
-            console.log(departureDateSend)
-
 
             // const results = [];
             const response = await fetch(`/api/check-availability/?resourceId=${resourceId}&arrivalDate=${arrivalDateSend}&departureDate=${departureDateSend}&eventId=${idReserva}`);
             const result = await response.json();
-            console.log(result)
-            console.log(result.available)
             if (!result.available) {
-                console.log('Cabaña no disponible');
                 return false;
                 // throw new Error('La cabaña no está disponible en las nuevas fechas. Intenta de nuevo con otras fechas.')
             }
@@ -764,14 +735,12 @@ async function availableDate(resourceId, arrivalDate, departureDate, idReserva) 
         });
     } finally {
         // verificarDisponibilidadElement.style.display = 'none';
-        console.log('finalizado');
     }
 
 
 }
 
 async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisionVendedor) {
-    console.log('obtener total ');
     // const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
     // const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
     const arrivalYear = arrivalDate.getFullYear();
@@ -784,18 +753,11 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
     const departureDay = departureDate.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
     const departureDateSend = `${departureYear}-${departureMonth}-${departureDay}`;
 
-    console.log("arrival send: ", arrivalDateSend)
-    console.log("departure send", departureDateSend)
-
     if (arrivalDateSend && departureDateSend && resourceId) {
         // Aquí puedes ejecutar la acción deseada
-        console.log("Los tres elementos tienen un valor. Ejecutar acción...");
         const fechas = obtenerRangoFechas(arrivalDateSend, departureDateSend)
         const nNights = calculateNightDifference(arrivalDateSend, departureDateSend)
         const habitacionId = resourceId
-
-        console.log("fechas: " + fechas)
-        console.log("Nights: " + nNights)
 
         const resultados = []
 
@@ -806,8 +768,6 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
                 const month = (fecha.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
                 const day = fecha.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
                 const formatedDate = `${year}-${month}-${day}`;
-
-                console.log("Fecha a buscar precio: ", formatedDate)
 
                 const response = await fetch(`/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}`);
 
@@ -823,7 +783,6 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
                 resultados.push(data);
 
             }
-            console.log(resultados)
             let totalPrecios = 0
             let totalCostoBase = 0
 
@@ -838,7 +797,6 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
                         totalPrecios += resultado.precio_base_2noches
                         totalCostoBase += resultado.costo_base_2noches
                     } else {
-                        console.log('no hay precios disponibles')
                     }
                 } else {
                     if (resultado.precio_modificado) {
@@ -846,12 +804,9 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
                         totalCostoBase += resultado.costo_base
 
                     } else {
-                        console.log('No hay precios disponibles')
                     }
                 }
             })
-
-            console.log("Total precios: ", totalPrecios)
 
             // Asignar comisiones
             if (isNaN(comisionVendedor) || comisionVendedor == null) {
@@ -862,9 +817,7 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
             // console.log("Total precios con comisiones: ", totalPrecios)
             const comisionUsuarios = await obtenerComisiones(nNights, habitacionId);
             let precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
-            console.log("Precio minimo permitido: ", precioMinimoPermitido)
             // precioMinimoPermitido += comisionVendedor;
-            console.log("Precio total de la reserva", precioMinimoPermitido);
             // totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
             // console.log("Total precios con comisiones: ", totalPrecios)
             return precioMinimoPermitido
@@ -906,7 +859,6 @@ function obtenerRangoFechas(arrivalDate, departureDate) {
 }
 
 function calculateNightDifference(arrivalDate, departureDate) {
-    console.log('Desde calcular noches')
     const arrivalValue = new Date(arrivalDate);
     const departureValue = new Date(departureDate);
     let nightsInput;
@@ -927,16 +879,569 @@ function calculateNightDifference(arrivalDate, departureDate) {
 async function obtenerComisiones(nNights, habitacionId) {
     try {
         const response = await fetch(`/api/utilidades?nnights=${nNights}&habitacionid=${habitacionId}`);
-        console.log(response);
         const data = await response.json();
-        console.log(data);
         const minComission = data.minComission
         const finalComission = data.finalComission
         const comisiones = { minComission: minComission, finalComission: finalComission }
         return comisiones
 
     } catch (error) {
-        console.log(error.message);
     }
 }
+
+// Custom horizontal scrollbar functionality for calendar
+class CalendarScrollbar {
+    constructor(calendar) {
+        this.calendar = calendar;
+        this.scrollbarContainer = null;
+        this.scrollbar = null;
+        this.thumb = null;
+        this.isDragging = false;
+        this.dragStartX = 0;
+        this.thumbStartX = 0;
+        this.timelineElement = null;
+        
+        this.init();
+    }
+
+    init() {
+        this.createScrollbar();
+        this.setupEventListeners();
+        
+        // Wait for calendar to render then update scrollbar
+        setTimeout(() => {
+            this.findTimelineElement();
+            this.updateScrollbar();
+        }, 2000);
+    }
+
+    findTimelineElement() {
+        // Try multiple selectors to find the scrollable timeline element
+        const selectors = [
+            '#calendar .fc-timeline-lane-frame',
+            '#calendar .fc-timeline-lane',
+            '#calendar .fc-timeline-slots',
+            '#calendar .fc-scroller-harness .fc-scroller',
+            '#calendar .fc-scroller'
+        ];
+        
+        for (const selector of selectors) {
+            this.timelineElement = document.querySelector(selector);
+            if (this.timelineElement) {
+                break;
+            }
+        }
+        
+        if (!this.timelineElement) {
+            setTimeout(() => this.findTimelineElement(), 1000);
+        }
+    }
+
+    createScrollbar() {
+        // Create scrollbar container
+        this.scrollbarContainer = document.createElement('div');
+        this.scrollbarContainer.className = 'calendar-scroll-container';
+        this.scrollbarContainer.style.cssText = `
+            position: relative;
+            width: 100%;
+            margin-bottom: 15px;
+            z-index: 1000;
+        `;
+        
+        // Create scrollbar track
+        this.scrollbar = document.createElement('div');
+        this.scrollbar.className = 'custom-scrollbar';
+        this.scrollbar.style.cssText = `
+            width: 100%;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            transition: height 0.2s ease;
+            margin: 0 3em;
+        `;
+        
+        // Create scrollbar thumb
+        this.thumb = document.createElement('div');
+        this.thumb.className = 'custom-scrollbar-thumb';
+        this.thumb.style.cssText = `
+            height: 100%;
+            background: linear-gradient(90deg, #4a9eff, #007bff);
+            border-radius: 4px;
+            position: absolute;
+            cursor: grab;
+            transition: all 0.2s ease;
+            min-width: 40px;
+            box-shadow: 0 2px 8px rgba(74, 158, 255, 0.3);
+            top: 0;
+            left: 0;
+        `;
+        
+        // Create month indicators
+        this.createMonthIndicators();
+        
+        this.scrollbar.appendChild(this.thumb);
+        this.scrollbarContainer.appendChild(this.scrollbar);
+    }
+
+    createMonthIndicators() {
+        const currentDate = new Date();
+        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
+                       'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        
+        // Create indicators for 12 months (current year)
+        for (let i = 0; i < 12; i++) {
+            const indicator = document.createElement('div');
+            indicator.className = 'scrollbar-month-indicator';
+            indicator.textContent = months[i];
+            indicator.style.left = `${(i / 11) * 100}%`;
+            this.scrollbar.appendChild(indicator);
+        }
+    }
+
+    setupEventListeners() {
+        // Thumb drag events (mouse)
+        this.thumb.addEventListener('mousedown', this.startDrag.bind(this));
+        document.addEventListener('mousemove', this.drag.bind(this));
+        document.addEventListener('mouseup', this.endDrag.bind(this));
+        
+        // Thumb drag events (touch)
+        this.thumb.addEventListener('touchstart', this.startTouchDrag.bind(this), { passive: false });
+        document.addEventListener('touchmove', this.touchDrag.bind(this), { passive: false });
+        document.addEventListener('touchend', this.endTouchDrag.bind(this));
+        
+        // Scrollbar click to jump
+        this.scrollbar.addEventListener('click', this.jumpToPosition.bind(this));
+        
+        // Update scrollbar when calendar view changes
+        this.calendar.on('datesSet', () => {
+            setTimeout(() => this.updateScrollbar(), 100);
+        });
+        
+        // Listen for calendar scroll events
+        setTimeout(() => {
+            this.timelineElement = document.querySelector('#calendar .fc-timeline-lane-frame');
+            if (this.timelineElement) {
+                this.timelineElement.addEventListener('scroll', this.onCalendarScroll.bind(this));
+            }
+        }, 1000);
+        
+        // Update on window resize
+        window.addEventListener('resize', this.onResize.bind(this));
+    }
+
+    startDrag(e) {
+        e.preventDefault();
+        this.isDragging = true;
+        this.dragStartX = e.clientX;
+        this.thumbStartX = this.thumb.offsetLeft;
+        document.body.style.userSelect = 'none';
+    }
+
+    drag(e) {
+        if (!this.isDragging) return;
+        
+        e.preventDefault();
+        const deltaX = e.clientX - this.dragStartX;
+        const newThumbX = Math.max(0, Math.min(
+            this.scrollbar.offsetWidth - this.thumb.offsetWidth,
+            this.thumbStartX + deltaX
+        ));
+        
+        this.thumb.style.left = newThumbX + 'px';
+        this.syncCalendarScroll();
+    }
+
+    endDrag() {
+        this.isDragging = false;
+        document.body.style.userSelect = '';
+    }
+
+    // Touch event handlers for mobile devices
+    startTouchDrag(e) {
+        e.preventDefault();
+        this.isDragging = true;
+        this.dragStartX = e.touches[0].clientX;
+        this.thumbStartX = this.thumb.offsetLeft;
+    }
+
+    touchDrag(e) {
+        if (!this.isDragging) return;
+        
+        e.preventDefault();
+        const deltaX = e.touches[0].clientX - this.dragStartX;
+        const newThumbX = Math.max(0, Math.min(
+            this.scrollbar.offsetWidth - this.thumb.offsetWidth,
+            this.thumbStartX + deltaX
+        ));
+        
+        this.thumb.style.left = newThumbX + 'px';
+        this.syncCalendarScroll();
+    }
+
+    endTouchDrag() {
+        this.isDragging = false;
+    }
+
+    onResize() {
+        // Debounce resize events
+        clearTimeout(this.resizeTimeout);
+        this.resizeTimeout = setTimeout(() => {
+            this.updateScrollbar();
+        }, 150);
+    }
+
+    jumpToPosition(e) {
+        if (e.target === this.thumb) return;
+        
+        const rect = this.scrollbar.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const thumbWidth = this.thumb.offsetWidth;
+        const newThumbX = Math.max(0, Math.min(
+            this.scrollbar.offsetWidth - thumbWidth,
+            clickX - thumbWidth / 2
+        ));
+        
+        this.thumb.style.left = newThumbX + 'px';
+        this.syncCalendarScroll();
+    }
+
+    syncCalendarScroll() {
+        if (!this.timelineElement) return;
+        
+        const scrollbarWidth = this.scrollbar.offsetWidth - this.thumb.offsetWidth;
+        const thumbPosition = this.thumb.offsetLeft;
+        const scrollPercentage = scrollbarWidth > 0 ? thumbPosition / scrollbarWidth : 0;
+        
+        const timelineScrollWidth = this.timelineElement.scrollWidth - this.timelineElement.clientWidth;
+        const newScrollLeft = scrollPercentage * timelineScrollWidth;
+        
+        this.timelineElement.scrollLeft = newScrollLeft;
+    }
+
+    onCalendarScroll() {
+        if (this.isDragging) return;
+        this.updateScrollbar();
+    }
+
+    updateScrollbar() {
+        if (!this.timelineElement) {
+            this.findTimelineElement();
+            if (!this.timelineElement) {
+                // Show scrollbar anyway for testing
+                this.scrollbarContainer.style.display = 'block';
+                this.thumb.style.width = '100px';
+                this.thumb.style.left = '0px';
+                return;
+            }
+        }
+        
+        const scrollLeft = this.timelineElement.scrollLeft || 0;
+        const scrollWidth = this.timelineElement.scrollWidth || 1000;
+        const clientWidth = this.timelineElement.clientWidth || 800;
+        
+        if (scrollWidth <= clientWidth) {
+            // For testing, always show the scrollbar
+            this.scrollbarContainer.style.display = 'block';
+            this.thumb.style.width = '60px';
+            this.thumb.style.left = '0px';
+            return;
+        }
+        
+        this.scrollbarContainer.style.display = 'block';
+        
+        // Calculate thumb size and position with responsive adjustments
+        const minThumbWidth = window.innerWidth < 480 ? 25 : window.innerWidth < 768 ? 30 : 40;
+        const thumbWidth = Math.max(minThumbWidth, (clientWidth / scrollWidth) * this.scrollbar.offsetWidth);
+        const thumbPosition = (scrollLeft / (scrollWidth - clientWidth)) * 
+                            (this.scrollbar.offsetWidth - thumbWidth);
+        
+        this.thumb.style.width = thumbWidth + 'px';
+        this.thumb.style.left = Math.max(0, thumbPosition) + 'px';
+        
+        // Add smooth transition for better UX
+        if (!this.isDragging) {
+            this.thumb.style.transition = 'left 0.2s ease';
+        } else {
+            this.thumb.style.transition = 'none';
+        }
+    }
+
+    insertIntoDOM() {
+        const calendarContainer = document.querySelector('#calendar');
+        const calendarParent = document.querySelector('.calendar-container');
+        
+        if (calendarContainer && calendarParent) {
+            // Insert before the calendar element
+            calendarParent.insertBefore(this.scrollbarContainer, calendarContainer);
+        } else if (calendarContainer && calendarContainer.parentNode) {
+            // Fallback: insert before calendar
+            calendarContainer.parentNode.insertBefore(this.scrollbarContainer, calendarContainer);
+        } else {
+        }
+    }
+}
+
+// Initialize custom scrollbar when calendar is ready
+let customScrollbar;
+
+function initializeCustomScrollbar() {
+    if (typeof calendar !== 'undefined' && calendar) {
+        customScrollbar = new CalendarScrollbar(calendar);
+        customScrollbar.insertIntoDOM();
+        
+        // Force initial update after a delay
+        setTimeout(() => {
+            customScrollbar.findTimelineElement();
+            customScrollbar.updateScrollbar();
+        }, 3000);
+    } else {
+        setTimeout(initializeCustomScrollbar, 1000);
+    }
+}
+
+// Start initialization
+setTimeout(initializeCustomScrollbar, 2000);
+
+// Simple test function to show scrollbar immediately
+function createTestScrollbar() {
+    
+    // Create simple scrollbar for testing
+    const testScrollbar = document.createElement('div');
+    testScrollbar.id = 'custom-calendar-scrollbar';
+    testScrollbar.style.cssText = `
+        position: relative;
+        width: calc(100% - 6em);
+        height: 12px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        margin: 15px 3em;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        z-index: 1000;
+    `;
+    
+    const testThumb = document.createElement('div');
+    testThumb.id = 'scrollbar-thumb';
+    testThumb.style.cssText = `
+        height: 100%;
+        width: 100px;
+        background: linear-gradient(90deg, #4a9eff, #007bff);
+        border-radius: 6px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        cursor: grab;
+        box-shadow: 0 2px 8px rgba(74, 158, 255, 0.3);
+    `;
+    
+    testScrollbar.appendChild(testThumb);
+    
+    // Insert AFTER calendar instead of before
+    const calendarContainer = document.querySelector('#calendar');
+    if (calendarContainer && calendarContainer.parentNode) {
+        calendarContainer.parentNode.insertBefore(testScrollbar, calendarContainer.nextSibling);
+        
+        // Add drag functionality
+        addScrollbarFunctionality(testScrollbar, testThumb);
+    }
+}
+
+// Add drag and scroll functionality
+function addScrollbarFunctionality(scrollbar, thumb) {
+    let isDragging = false;
+    let dragStartX = 0;
+    let thumbStartX = 0;
+    
+    // Mouse events
+    thumb.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        isDragging = true;
+        dragStartX = e.clientX;
+        thumbStartX = thumb.offsetLeft;
+        thumb.style.cursor = 'grabbing';
+    });
+    
+    document.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        
+        e.preventDefault();
+        const deltaX = e.clientX - dragStartX;
+        const scrollbarWidth = scrollbar.offsetWidth;
+        const thumbWidth = thumb.offsetWidth;
+        const maxLeft = scrollbarWidth - thumbWidth;
+        
+        let newLeft = thumbStartX + deltaX;
+        newLeft = Math.max(0, Math.min(maxLeft, newLeft));
+        
+        thumb.style.left = newLeft + 'px';
+        
+        // Calculate scroll percentage and apply to calendar
+        const scrollPercentage = newLeft / maxLeft;
+        scrollCalendarToPercentage(scrollPercentage);
+    });
+    
+    document.addEventListener('mouseup', function() {
+        if (isDragging) {
+            isDragging = false;
+            thumb.style.cursor = 'grab';
+        }
+    });
+    
+    // Click to jump functionality
+    scrollbar.addEventListener('click', function(e) {
+        if (e.target === thumb) return;
+        
+        const rect = scrollbar.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const thumbWidth = thumb.offsetWidth;
+        const maxLeft = scrollbar.offsetWidth - thumbWidth;
+        
+        let newLeft = clickX - thumbWidth / 2;
+        newLeft = Math.max(0, Math.min(maxLeft, newLeft));
+        
+        thumb.style.left = newLeft + 'px';
+        
+        const scrollPercentage = newLeft / maxLeft;
+        scrollCalendarToPercentage(scrollPercentage);
+    });
+}
+
+// Function to scroll calendar to a specific percentage
+function scrollCalendarToPercentage(percentage) {
+    // Debug: Find ALL elements with scroll capability
+    
+    const allCalendarElements = document.querySelectorAll('#calendar *');
+    const scrollableElements = [];
+    
+    allCalendarElements.forEach((element, index) => {
+        if (element.scrollWidth > element.clientWidth) {
+            const info = {
+                element: element,
+                selector: getElementSelector(element),
+                scrollWidth: element.scrollWidth,
+                clientWidth: element.clientWidth,
+                maxScroll: element.scrollWidth - element.clientWidth
+            };
+            scrollableElements.push(info);
+        }
+    });
+    
+    // Try to use the element with the most scroll capability
+    if (scrollableElements.length > 0) {
+        const bestElement = scrollableElements.reduce((prev, current) => 
+            current.maxScroll > prev.maxScroll ? current : prev
+        );
+        
+        const maxScroll = bestElement.maxScroll;
+        const newScrollLeft = maxScroll * percentage;
+        bestElement.element.scrollLeft = newScrollLeft;
+        
+        return true;
+    }
+    
+    // Fallback: try specific selectors
+    const selectors = [
+        '#calendar .fc-timeline-body',
+        '#calendar .fc-timeline-lane',
+        '#calendar .fc-timeline-slots',
+        '#calendar .fc-scroller-harness',
+        '#calendar .fc-scroller',
+        '#calendar .fc-timeline-lane-frame',
+        '#calendar .fc-view-harness',
+        '#calendar .fc-timeline'
+    ];
+    
+    for (const selector of selectors) {
+        const element = document.querySelector(selector);
+        if (element && element.scrollWidth > element.clientWidth) {
+            const maxScroll = element.scrollWidth - element.clientWidth;
+            const newScrollLeft = maxScroll * percentage;
+            element.scrollLeft = newScrollLeft;
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// Helper function to get CSS selector for an element
+function getElementSelector(element) {
+    if (element.id) return `#${element.id}`;
+    if (element.className) {
+        const classes = element.className.split(' ').filter(c => c.length > 0);
+        if (classes.length > 0) return `.${classes.join('.')}`;
+    }
+    return element.tagName.toLowerCase();
+}
+
+// Create test scrollbar immediately
+setTimeout(createTestScrollbar, 1000);
+
+// Function to update scrollbar when calendar scrolls
+function setupCalendarScrollListener() {
+    
+    // Find all scrollable elements in calendar
+    const allCalendarElements = document.querySelectorAll('#calendar *');
+    const scrollableElements = [];
+    
+    allCalendarElements.forEach((element) => {
+        if (element.scrollWidth > element.clientWidth) {
+            scrollableElements.push(element);
+        }
+    });
+    
+    if (scrollableElements.length > 0) {
+        // Use the element with the most scroll capability
+        const bestElement = scrollableElements.reduce((prev, current) => 
+            (current.scrollWidth - current.clientWidth) > (prev.scrollWidth - prev.clientWidth) ? current : prev
+        );
+        
+        bestElement.addEventListener('scroll', function() {
+            const thumb = document.querySelector('#scrollbar-thumb');
+            const scrollbar = document.querySelector('#custom-calendar-scrollbar');
+            
+            if (thumb && scrollbar) {
+                const scrollLeft = bestElement.scrollLeft;
+                const maxScroll = bestElement.scrollWidth - bestElement.clientWidth;
+                const scrollPercentage = maxScroll > 0 ? scrollLeft / maxScroll : 0;
+                
+                const thumbWidth = thumb.offsetWidth;
+                const maxThumbLeft = scrollbar.offsetWidth - thumbWidth;
+                const newThumbLeft = scrollPercentage * maxThumbLeft;
+                
+                thumb.style.left = newThumbLeft + 'px';
+            }
+        });
+        
+        return true;
+    }
+    
+    setTimeout(setupCalendarScrollListener, 2000);
+    return false;
+}
+
+// Setup scroll listener after calendar loads
+setTimeout(setupCalendarScrollListener, 3000);
+
+// Add a manual inspection function that can be called from console
+window.inspectCalendarScrollElements = function() {
+    const allElements = document.querySelectorAll('#calendar *');
+    
+    allElements.forEach((element, index) => {
+        if (element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight) {
+        }
+    });
+    
+    // Also check the main calendar container
+    const calendar = document.querySelector('#calendar');
+    if (calendar) {
+    }
+};
+
+// Auto-run inspection after calendar loads
+setTimeout(() => {
+    window.inspectCalendarScrollElements();
+}, 4000);
 

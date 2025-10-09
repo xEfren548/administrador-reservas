@@ -671,6 +671,15 @@ async function generarComisionReserva(req, res) {
                         // Comision negativa de IVA (16%)
                         // let comisionNegativaIva = comision * 0.16;
                         let comisionNegativaIva = Math.round((comision * 0.08 + Number.EPSILON) * 100) / 100;
+                        
+                        let comisionServIndirectos = Math.round(((comision - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
+                        await altaComisionReturn({
+                            monto: -comisionServIndirectos,
+                            concepto: `Servicios Indirectos Bosque Imperial`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
 
                         await altaComisionReturn({
                             monto: -comisionNegativaIva,

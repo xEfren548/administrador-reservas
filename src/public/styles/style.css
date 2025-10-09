@@ -194,7 +194,24 @@ body {
     position: relative;
     /* Arriba | Derecha | Abajo | Izquierda */
     margin: 1em 3em 0 3em;
+}
 
+/* Custom scrollbar positioned below calendar */
+#custom-calendar-scrollbar {
+    background-color: rgba(20, 20, 24, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(10px);
+}
+
+#custom-calendar-scrollbar:hover {
+    background-color: rgba(20, 20, 24, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+#scrollbar-thumb:hover {
+    background: linear-gradient(90deg, #5aa7ff, #0056b3) !important;
+    box-shadow: 0 3px 12px rgba(74, 158, 255, 0.5) !important;
+    transform: scale(1.02);
 }
 
 /* Hide scrollbars but allow scrolling */
@@ -249,6 +266,174 @@ td {
 .fc-datagrid-cell-frame {
     background-color: #141418;
 }
+
+/* Custom horizontal scrollbar for calendar */
+.calendar-scroll-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 15px;
+    z-index: 1000 !important;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 10px 0;
+}
+
+.custom-scrollbar {
+    width: calc(100% - 6em);
+    height: 8px;
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 4px;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    transition: height 0.2s ease;
+    margin: 0 3em;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custom-scrollbar:hover {
+    height: 12px;
+}
+
+.custom-scrollbar-thumb {
+    height: 100%;
+    background: linear-gradient(90deg, #4a9eff, #007bff);
+    border-radius: 4px;
+    position: relative;
+    cursor: grab;
+    transition: all 0.2s ease;
+    min-width: 40px;
+    box-shadow: 0 2px 8px rgba(74, 158, 255, 0.3);
+}
+
+.custom-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, #5aa7ff, #0056b3);
+    box-shadow: 0 3px 12px rgba(74, 158, 255, 0.5);
+    transform: scale(1.02);
+}
+
+.custom-scrollbar-thumb:active {
+    cursor: grabbing;
+    background: linear-gradient(90deg, #3a8eff, #004494);
+}
+
+/* Month indicators on scrollbar */
+.scrollbar-month-indicator {
+    position: absolute;
+    top: -20px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    transform: translateX(-50%);
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.custom-scrollbar:hover .scrollbar-month-indicator {
+    opacity: 1;
+}
+
+/* Smooth scroll behavior for calendar */
+#calendar .fc-timeline-lanes {
+    scroll-behavior: smooth;
+}
+
+/* Hide default scrollbar for calendar timeline */
+#calendar .fc-timeline-lanes::-webkit-scrollbar {
+    display: none;
+}
+
+#calendar .fc-timeline-lanes {
+    scrollbar-width: none;
+}
+
+/* Responsive design for custom scrollbar */
+@media (max-width: 1200px) {
+    .custom-scrollbar {
+        height: 10px;
+        margin: 0 1em;
+    }
+    
+    .custom-scrollbar:hover {
+        height: 14px;
+    }
+    
+    .scrollbar-month-indicator {
+        font-size: 9px;
+        top: -18px;
+    }
+}
+
+@media (max-width: 768px) {
+    .calendar-scroll-container {
+        margin-bottom: 10px;
+    }
+    
+    .custom-scrollbar {
+        height: 12px;
+        margin: 0 0.5em;
+    }
+    
+    .custom-scrollbar:hover {
+        height: 16px;
+    }
+    
+    .custom-scrollbar-thumb {
+        min-width: 30px;
+    }
+    
+    .scrollbar-month-indicator {
+        font-size: 8px;
+        top: -16px;
+        opacity: 0.8;
+    }
+    
+    .custom-scrollbar:hover .scrollbar-month-indicator {
+        opacity: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .custom-scrollbar {
+        height: 14px;
+        margin: 0 0.25em;
+    }
+    
+    .custom-scrollbar:hover {
+        height: 18px;
+    }
+    
+    .custom-scrollbar-thumb {
+        min-width: 25px;
+    }
+    
+    .scrollbar-month-indicator {
+        display: none; /* Hide month indicators on very small screens */
+    }
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+    .custom-scrollbar {
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .scrollbar-month-indicator {
+        color: rgba(255, 255, 255, 0.7);
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .custom-scrollbar {
+        background-color: rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    .custom-scrollbar-thumb {
+        background: linear-gradient(90deg, #ffffff, #cccccc);
+        border: 1px solid #999999;
+    }
+}
+
 
 .fc .fc-datagrid-cell-cushion {
     white-space: normal !important;
