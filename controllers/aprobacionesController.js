@@ -24,10 +24,17 @@ async function showApprovalsView(req, res, next) {
             aprobacion.updatedAt = moment(aprobacion.updatedAt).format('DD/MM/YYYY');
             const vendedor = await Usuarios.findById(aprobacion.sellerId).lean();
             aprobacion.sellerName = vendedor.firstName + " " + vendedor.lastName;
-            const cliente = await Clientes.findById(aprobacion.clientId).lean();
+            let cliente = await Clientes.findById(aprobacion.clientId).lean();
+            console.log(cliente);
+            if (!cliente) {
+                cliente = { firstName: "Cliente", lastName: "Eliminado" };
+            }
             aprobacion.clientName = cliente.firstName + " " + cliente.lastName;
             const reserva = await Reservas.findById(aprobacion.reservationId).lean();
-            aprobacion.currentPrice = reserva.total || 0;
+            if (!reserva) {
+                continue;
+            }
+            aprobacion.currentPrice = reserva.total ? reserva.total : 0;
             const habitacion = await Habitacion.findById(reserva.resourceId).lean();
             aprobacion.chaletName = habitacion.propertyDetails.name || "";
             

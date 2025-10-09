@@ -3,6 +3,7 @@ const PrecioBaseXDia = require('../../models/PrecioBaseXDia');
 const PreciosEspeciales = require('../../models/PreciosEspeciales');
 const BloqueoFechas = require('../../models/BloqueoFechas');
 const Costos = require('../../models/Costos');
+const Reservas = require('../../models/Evento');
 const Usuario = require('../../models/Usuario');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
@@ -301,22 +302,20 @@ async function cotizadorChaletsyPrecios(req, res) {
             try {
                 // Intentar parsear como JSON array
                 amenitiesArray = JSON.parse(amenities);
-                console.log('Amenities parsed as JSON:', amenitiesArray);
             } catch (error) {
                 // Fallback: si no es JSON válido, tratarlo como array de query params
                 amenitiesArray = Array.isArray(amenities) ? amenities : [amenities];
-                console.log('Amenities parsed as query params:', amenitiesArray);
             }
         }
 
         const bedsNumber = beds && beds !== 'any' ? parseInt(beds) : null;
         const bathroomsNumber = bathrooms && bathrooms !== 'any' ? parseInt(bathrooms) : null;
 
-        console.log('Filtros adicionales:', {
-            beds: bedsNumber,
-            bathrooms: bathroomsNumber,
-            amenities: amenitiesArray
-        });
+        // console.log('Filtros adicionales:', {
+        //     beds: bedsNumber,
+        //     bathrooms: bathroomsNumber,
+        //     amenities: amenitiesArray
+        // });
 
         // 6. Construir query de búsqueda basado en los campos de HabitacionesResponse
         const searchQuery = {
@@ -333,12 +332,6 @@ async function cotizadorChaletsyPrecios(req, res) {
         if (location && location.trim() !== '' && location !== 'any') {
             const locationDecoded = decodeURIComponent(location);
             const locationRegex = new RegExp(locationDecoded, 'i'); // Case insensitive
-            console.log('Location Regex:', locationRegex);
-            console.log('Location Decoded:', locationDecoded);
-            
-            const population = locationDecoded.split(',')[0]?.trim();
-            const state = locationDecoded.split(',')[1]?.trim();
-            console.log('Population:', population, 'State:', state);
 
             // Búsqueda flexible por ubicación
             searchQuery.$and.push({
@@ -399,14 +392,12 @@ async function cotizadorChaletsyPrecios(req, res) {
             searchQuery.$and.push(...amenityConditions);
         }
 
-        console.log('MongoDB Search Query:', JSON.stringify(searchQuery, null, 2));
 
         // 11. Buscar habitaciones que cumplan los criterios
         const habitaciones = await Habitacion.find(searchQuery)
             .sort({ 'others.basePrice': 1 })
             .lean(); // Para mejor performance
 
-        console.log(`Habitaciones encontradas antes de filtros de disponibilidad: ${habitaciones.length}`);
 
         // 12. Filtrar por disponibilidad de fechas (si tienes sistema de reservas)
         const habitacionesDisponibles = await filtrarPorDisponibilidad(
@@ -415,7 +406,6 @@ async function cotizadorChaletsyPrecios(req, res) {
             checkOutDate
         );
 
-        console.log(`Habitaciones disponibles después de filtros: ${habitacionesDisponibles.length}`);
 
         // 13. Calcular precios para cada habitación
         const habitacionesConPrecios = await Promise.all(habitacionesDisponibles.map(async habitacion => {
@@ -436,7 +426,7 @@ async function cotizadorChaletsyPrecios(req, res) {
 
         // 14. Ordenar por precio (opcional)
         // habitacionesConPrecios.sort((a, b) => a.precioCalculado - b.precioCalculado);
-        console.log(JSON.stringify(habitacionesConPrecios[0], null, 2));
+        // console.log(JSON.stringify(habitacionesConPrecios[0], null, 2));
         // 15. Respuesta exitosa
         res.status(200).json({
             success: true,
@@ -593,12 +583,14 @@ async function cotizarReservaController(req, res) {
         const { habitacionId, checkIn, checkOut, guests } = req.body;
 
         const resultado = await cotizarReserva(habitacionId, checkIn, checkOut, guests);
+        console.log('Resultado de cotizarReserva:', resultado);
 
         if (resultado.success) {
             res.status(200).json(resultado);
         } else {
             // Determinar código de estado según el tipo de error
             let statusCode = 400;
+            if (resultado.errorType === 'NOT_AVAILABLE' || resultado.errorType === 'INVALID_DATE' || resultado.errorType === 'INVALID_DATE_RANGE') statusCode = 400;
             if (resultado.errorType === 'CABIN_NOT_FOUND') statusCode = 404;
             if (resultado.errorType === 'SERVER_ERROR') statusCode = 500;
 
@@ -618,23 +610,16 @@ async function cotizarReservaController(req, res) {
 
 // Función auxiliar para filtrar por disponibilidad
 async function filtrarPorDisponibilidad(habitaciones, checkIn, checkOut) {
+    console.log(typeof Reservas);
     // Si tienes un modelo de Reservas, verifica disponibilidad
     if (typeof Reservas !== 'undefined') {
         const habitacionesDisponibles = [];
 
         for (const habitacion of habitaciones) {
-            const reservasConflicto = await Reservas.findOne({
-                habitacionId: habitacion._id,
-                $or: [
-                    {
-                        arrivalDate: { $lt: checkOut },
-                        departureDate: { $gt: checkIn }
-                    }
-                ],
-                status: { $nin: ['no-show', 'cancelled'] }
-            });
+            const disponible = await getDisponibilidad(habitacion._id, checkIn, checkOut);
+            console.log(`Habitación ${habitacion._id} disponible: ${disponible}`);
 
-            if (!reservasConflicto) {
+            if (disponible) {
                 habitacionesDisponibles.push(habitacion);
             }
         }
@@ -684,7 +669,7 @@ async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, 
             throw new Error("No se encontró el costo para el usuario de comisiones");
         }
 
-        const montoComision = costoComision.amount * nNights;
+        const montoComision = costoComision.amount;
         console.log("montoComision web: ", montoComision);
 
         // const comisiones = await utilidadesController.calcularComisionesInternas({
@@ -769,7 +754,7 @@ async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, 
         let precioBaseFinal = twoOrMoreNights ? precios.reduce((total, precio) => total + precio.precio_base_2noches, 0) : precios[0].precio_modificado;
         const precioTotalSinComision = precioBaseFinal - montoComision;
         // precioBaseFinal += montoComision;
-        console.log({ precios, costoBaseFinal, precioBaseFinal, precioTotalSinComision });
+        // console.log({ precios, costoBaseFinal, precioBaseFinal, precioTotalSinComision });
         return { precios, precioBaseFinal, costoBaseFinal, precioTotalSinComision };
         // res.json({precios, costoBaseFinal, precioBaseFinal, precioTotalSinComision});
     } catch (error) {
@@ -779,7 +764,15 @@ async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, 
 }
 
 async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
-    const newResourceId = new mongoose.Types.ObjectId(chaletId);
+    const newResourceId = String(chaletId);
+    if (!(fechaLlegada instanceof Date)) {
+        fechaLlegada = new Date(fechaLlegada);
+    }
+    if (!(fechaSalida instanceof Date)) {
+        fechaSalida = new Date(fechaSalida);
+    }
+    console.log("fecha llegada: ", fechaLlegada, "fecha salida: ", fechaSalida);
+    console.log('typeof fechaLlegada: ', typeof fechaLlegada, 'type of fechaSalida: ', typeof fechaSalida);
 
     // Convertir fechas a cadenas en formato YYYY-MM-DD
     const fechaLlegadaStr = fechaLlegada.toISOString().split('T')[0]; // Extrae solo la fecha (YYYY-MM-DD)
@@ -825,7 +818,7 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     }
 
     // Verificar eventos superpuestos
-    const overlappingEvents = await Documento.find({
+    const overlappingEvents = await Reservas.find({
         resourceId: newResourceId,
         status: { $nin: ["cancelled", "no-show", "playground"] },
         $or: [
