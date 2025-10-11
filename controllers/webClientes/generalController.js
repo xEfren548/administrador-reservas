@@ -753,9 +753,11 @@ async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, 
         const costoBaseFinal = twoOrMoreNights ? precios.reduce((total, precio) => total + precio.costo_base_2noches, 0) : precios[0].costo_base;
         let precioBaseFinal = twoOrMoreNights ? precios.reduce((total, precio) => total + precio.precio_base_2noches, 0) : precios[0].precio_modificado;
         const precioTotalSinComision = precioBaseFinal - montoComision;
+        const comisionServicio = 35;
+        precioBaseFinal += comisionServicio;
         // precioBaseFinal += montoComision;
         // console.log({ precios, costoBaseFinal, precioBaseFinal, precioTotalSinComision });
-        return { precios, precioBaseFinal, costoBaseFinal, precioTotalSinComision };
+        return { precios, precioBaseFinal, costoBaseFinal, precioTotalSinComision, comisionServicio };
         // res.json({precios, costoBaseFinal, precioBaseFinal, precioTotalSinComision});
     } catch (error) {
         console.error(error);
