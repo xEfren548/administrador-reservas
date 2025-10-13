@@ -38,6 +38,8 @@ const plataformasRoutes = require('./plataformasRoutes');
 const aprobacionesRoutes = require('./aprobacionesRoutes');
 const channexRoutes = require('./channexRoutes');
 const generalRoutes = require('./webClientesRoutes/generalRoutes');
+const paymentsRoutes = require('./paymentsRoutes');
+const webhooksRoutes = require('./webhooksRoutes');
 
 const authMiddleware = require('../common/middlewares/authMiddleware');
 
@@ -68,6 +70,8 @@ router.use('/getchaletsRoutes', getchaletsRoutes);
 router.use('/', webhookRoutes);
 
 router.use('/api/client', generalRoutes);
+router.use('/payments', paymentsRoutes);
+router.use('/webhooks', webhooksRoutes);
 
 
 router.use('/api', authRoutes);
