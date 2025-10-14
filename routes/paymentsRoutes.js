@@ -3,6 +3,7 @@ const router = require('express').Router();
 const openpay = require('../lib/openpay');
 const Payment = require('../models/Payment');
 const Reserva = require('../models/Evento');
+const { createReservationForClient } = require('../controllers/webClientes/generalController');
 
 // Mapea estados Openpay -> nuestros estados
 function mapStatus(s) {
@@ -17,36 +18,38 @@ function mapStatus(s) {
 }
 
 // POST /api/payments/charge
-// body: { reservationId, method: 'card'|'bank_account'|'store', token_id?, device_session_id?, customerData? }
+// body: { reservationData, method: 'card'|'bank_account'|'store', token_id?, device_session_id?, customerData? }
 router.post('/charge', async (req, res) => {
     try {
-        // todo 
         // La solicitud llega a este endpoint desde el frontend web cliente
-        // El problema es que está buscando una reserva que aun no existe, entonces
-        // falta crear la lógica de reservación + pago en un solo flujo.
-        // Tambien faltan mapear los errores de Openpay a respuestas HTTP adecuadas.
-        const { reservationId, method, token_id, device_session_id, customerData } = req.body;
-        console.log('Payment charge request:', { reservationId, method, token_id, device_session_id, customerData });
-        if (!reservationId || !method) return res.status(400).json({ error: 'reservationId y method son requeridos' });
+        // Ahora recibe los datos para crear la reserva + procesar el pago en un solo flujo
+        const { reservationData, method, token_id, device_session_id, customerData } = req.body;
+        console.log('Payment charge request:', { reservationData, method, token_id, device_session_id, customerData });
+        
+        if (!reservationData || !method) {
+            return res.status(400).json({ error: 'reservationData y method son requeridos' });
+        }
 
-        const reserva = await Reserva.findById(reservationId);
-        if (!reserva) return res.status(404).json({ error: 'Reserva no encontrada' });
+        const amountMx = Number(reservationData.pricing.totalPrice || 0);
+        if (!amountMx || amountMx <= 0) {
+            return res.status(400).json({ error: 'Monto inválido en reservationData.pricing.totalPrice' });
+        }
 
-        const amountMx = Number(reserva.total || 0);
-        if (!amountMx || amountMx <= 0) return res.status(400).json({ error: 'Monto inválido en la reserva' });
+        // Generar orderId temporal antes de crear la reserva
+        const tempOrderId = `temp_${Math.floor(Date.now() / 1000)}_${Math.random().toString(36).substr(2, 5)}`;
 
-        const orderId = `res_${reserva._id}_${Math.floor(Date.now() / 1000)}`;
+        // Idempotencia "casera": si existe Payment con orderId, responde ese
+        const existing = await Payment.findOne({ orderId: tempOrderId });
+        if (existing) {
+            return res.json({ ok: true, reused: true, paymentId: existing._id, status: existing.status });
+        }
 
-        // Idempotencia “casera”: si existe Payment con orderId, responde ese
-        const existing = await Payment.findOne({ orderId });
-        if (existing) return res.json({ ok: true, reused: true, paymentId: existing._id, status: existing.status });
-
-        // Construir request
+        // Construir request de pago
         const chargeReq = {
             amount: amountMx,
             currency: 'MXN',
-            description: `Reserva ${reserva._id}`,
-            order_id: orderId,
+            description: `Reserva - ${customerData?.name || 'Cliente'} - ${new Date().toISOString()}`,
+            order_id: tempOrderId,
             method, // 'card' | 'bank_account' (SPEI) | 'store'
             customer: {
                 name: customerData?.name,
@@ -64,7 +67,7 @@ router.post('/charge', async (req, res) => {
             chargeReq.device_session_id = device_session_id;
         }
 
-        // Ejecutar cargo
+        // Ejecutar cargo primero
         openpay.charges.create(chargeReq, async (error, charge /*, response */) => {
             if (error) {
                 // Devuelve el error de Openpay con contexto
@@ -72,39 +75,119 @@ router.post('/charge', async (req, res) => {
             }
 
             const status = mapStatus(charge.status);
+            
+            try {
+                console.log('Charge processed:', charge);
+                // Si el pago fue exitoso o está en progreso, crear la reserva
+                if (status === 'SUCCEEDED' || status === 'IN_PROGRESS' || status === 'PENDING') {
+                    
+                    // Crear la reserva ahora que el pago se procesó
+                    // const nuevaReserva = await createReservationForClient({
+                    //     ...reservationData,
+                    //     status: status === 'SUCCEEDED' ? 'active' : 'pending',
+                    //     paymentStatus: status === 'SUCCEEDED' ? 'PAID' : 'UNPAID',
+                    //     balanceDue: status === 'SUCCEEDED' ? 0 : amountMx,
+                    //     payments: [] // Se agregará el payment después
+                    // });
 
-            const payment = await Payment.create({
-                reservation: reserva._id,
-                providerPaymentId: charge.id,
-                orderId,
-                method,
-                status,
-                amountMx,
-                capturedAmountMx: status === 'SUCCEEDED' ? amountMx : 0,
-                currency: 'MXN',
-                paymentMethodData: {
-                    brand: charge.card?.brand,
-                    last4: charge.card?.last4,
-                    holderName: charge.card?.holder_name,
-                    type: charge.card?.type || method
-                },
-                description: charge.description,
-                raw: charge
-            });
+                    const statusReserva = status === 'SUCCEEDED' ? 'active' : 'pending';
+                    paymentStatus = status === 'SUCCEEDED' ? 'PAID' : 'UNPAID';
+                    balanceDue = status === 'SUCCEEDED' ? 0 : amountMx;
 
-            // Vincular a la reserva y recalcular
-            reserva.payments.push(payment._id);
-            if (status === 'SUCCEEDED') await reserva.recalcBalance();
-            else await reserva.save();
+                    const nuevaReserva = await createReservationForClient(
+                        reservationData,
+                        statusReserva,
+                        paymentStatus,
+                        balanceDue,
+                    );
 
-            // Para SPEI/Tienda, devuelve referencias al cliente (vienen en charge)
-            return res.json({
-                ok: true,
-                paymentId: payment._id,
-                status: payment.status,
-                charge
-            });
+                    if (!nuevaReserva) {
+                        return res.status(500).json({ error: error.message || 'Error creando reserva después del pago', chargeId: charge.id });
+                    }
+
+
+
+                    // Actualizar orderId con el ID real de la reserva
+                    const finalOrderId = `res_${nuevaReserva._id}_${Math.floor(Date.now() / 1000)}`;
+
+                    // Crear el registro de pago
+                    const payment = await Payment.create({
+                        reservation: nuevaReserva._id,
+                        providerPaymentId: charge.id,
+                        orderId: finalOrderId,
+                        method,
+                        status,
+                        amountMx,
+                        capturedAmountMx: status === 'SUCCEEDED' ? amountMx : 0,
+                        currency: 'MXN',
+                        paymentMethodData: {    
+                            brand: charge.card?.brand,
+                            last4: charge.card?.last4,
+                            holderName: charge.card?.holder_name,
+                            type: charge.card?.type || method
+                        },
+                        description: charge.description,
+                        raw: charge
+                    });
+
+                    // Vincular pago a la reserva y recalcular balance
+                    nuevaReserva.payments.push(payment._id);
+                    if (status === 'SUCCEEDED') {
+                        await nuevaReserva.recalcBalance();
+                    } else {
+                        await nuevaReserva.save();
+                    }
+
+                    // Respuesta exitosa con los datos de la reserva y pago
+                    return res.json({
+                        ok: true,
+                        reservationId: nuevaReserva._id,
+                        paymentId: payment._id,
+                        status: payment.status,
+                        charge,
+                        message: status === 'SUCCEEDED' ? 'Pago exitoso y reserva creada' : 'Pago en proceso, reserva creada'
+                    });
+                    
+                } else {
+                    // Si el pago falló, no crear la reserva
+                    const payment = await Payment.create({
+                        reservation: null, // No hay reserva asociada
+                        providerPaymentId: charge.id,
+                        orderId: tempOrderId,
+                        method,
+                        status,
+                        amountMx,
+                        capturedAmountMx: 0,
+                        currency: 'MXN',
+                        paymentMethodData: {
+                            brand: charge.card?.brand,
+                            last4: charge.card?.last4,
+                            holderName: charge.card?.holder_name,
+                            type: charge.card?.type || method
+                        },
+                        description: charge.description,
+                        raw: charge
+                    });
+
+                    return res.status(402).json({
+                        ok: false,
+                        paymentId: payment._id,
+                        status: payment.status,
+                        charge,
+                        error: 'Pago no exitoso, reserva no creada'
+                    });
+                }
+                
+            } catch (dbError) {
+                console.error('Error creando reserva o pago:', dbError);
+                return res.status(500).json({ 
+                    error: 'Error creando reserva después del pago', 
+                    detail: String(dbError),
+                    chargeId: charge.id 
+                });
+            }
         });
+        
     } catch (e) {
         console.error(e);
         return res.status(500).json({ error: 'Unexpected error', detail: String(e) });

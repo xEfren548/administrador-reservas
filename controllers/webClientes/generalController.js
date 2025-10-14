@@ -5,6 +5,7 @@ const BloqueoFechas = require('../../models/BloqueoFechas');
 const Costos = require('../../models/Costos');
 const Reservas = require('../../models/Evento');
 const Usuario = require('../../models/Usuario');
+const Cliente = require('../../models/Cliente');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const utilidadesController = require('./../utilidadesController');
@@ -838,9 +839,81 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
 }
 
 
+// Reservas
+
+async function createReservationForClient(reservationData, status, paymentStatus, balanceDue) {
+    const guestInfo = reservationData.guestInfo;
+    const pricing = reservationData.pricing;
+
+    
+    try {
+        const chalet = await Habitacion.findById(reservationData.cabinId).select('propertyDetails others');
+        const arrivalDate = moment(reservationData.arrivalDate).toDate();
+        const departureDate = moment(reservationData.departureDate).toDate();
+
+        const cabinArrivalHour = chalet.others.arrivalTime?.getHours();
+        arrivalDate.setUTCHours(cabinArrivalHour || 15, 0, 0, 0);
+
+        const cabinDepartureHour = chalet.others.departureTime?.getHours();
+        departureDate.setUTCHours(cabinDepartureHour || 11, 0, 0, 0);
+        
+        let client = null;
+        const clientEmail = guestInfo.email.toLowerCase().trim();
+        if (clientEmail) {
+            client = await Cliente.findOne({ email: clientEmail });
+        }
+
+        if (!client) {
+            // Crear nuevo cliente
+            
+            const newClient = new Cliente({
+                firstName: guestInfo.firstName,
+                lastName: guestInfo.lastName,
+                email: guestInfo.email,
+            });
+            await newClient.save();
+            client = newClient;
+        }
+
+
+        const newReservation = new Reservas({
+            client: client._id,
+            resourceId: reservationData.cabinId,
+            reservationDate: moment().toDate(),
+            arrivalDate: arrivalDate,
+            departureDate: departureDate,
+            maxOccupation: chalet.propertyDetails.maxOccupancy,
+            nNights: reservationData.nights,
+            pax: reservationData.guests,
+            url: '', // Se actualizará después de guardar
+            status: status,
+            total: pricing.totalPrice,
+            balanceDue: balanceDue,
+            paymentStatus: paymentStatus,
+            payments: []
+        });
+        if (!newReservation) {
+            throw new Error('Error creating reservation object');
+        }
+
+        const idReserva = newReservation._id;
+
+        newReservation.url = `https://${process.env.URL}/api/eventos/${idReserva}`;
+        await newReservation.save();
+        return newReservation;
+
+            
+    } catch (error) {
+        console.error('Error creating reservation:', error);
+        throw new Error('Error creating reservation: ' + error.message);
+    }
+
+}
+
 module.exports = {
     mostrarUnaHabitacion,
     mostrarTodasHabitaciones,
     cotizadorChaletsyPrecios,
     cotizarReservaController,
+    createReservationForClient
 }
