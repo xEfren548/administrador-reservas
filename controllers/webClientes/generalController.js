@@ -848,9 +848,11 @@ async function createReservationForClient(reservationData, status, paymentStatus
     
     try {
         const chalet = await Habitacion.findById(reservationData.cabinId).select('propertyDetails others');
-        const arrivalDate = moment(reservationData.arrivalDate).toDate();
-        const departureDate = moment(reservationData.departureDate).toDate();
+        const arrivalDate = moment(reservationData.checkIn).toDate();
+        const departureDate = moment(reservationData.checkOut).toDate();
 
+        console.log('arrival date before setting hours:', arrivalDate);
+        console.log('departure date before setting hours:', departureDate);
         const cabinArrivalHour = chalet.others.arrivalTime?.getHours();
         arrivalDate.setUTCHours(cabinArrivalHour || 15, 0, 0, 0);
 

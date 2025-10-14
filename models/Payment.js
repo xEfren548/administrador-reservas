@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const PaymentSchema = new mongoose.Schema({
-    reservation: { type: mongoose.Schema.Types.ObjectId, ref: 'Documento', index: true, required: true },
+    reservation: { type: mongoose.Schema.Types.ObjectId, ref: 'Documento', index: true }, // No required para permitir pagos fallidos
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Cliente' },
 
     provider: { type: String, default: 'openpay' },
@@ -19,12 +19,7 @@ const PaymentSchema = new mongoose.Schema({
     capturedAmountMx: { type: Number, default: 0 },   // monto efectivamente cobrado
     currency: { type: String, default: 'MXN' },
 
-    paymentMethodData: {
-        brand: String,     // visa/master/amex
-        last4: String,
-        holderName: String,
-        type: String       // 'credit'|'debit' o 'spei'|'store'
-    },
+    paymentMethodData: mongoose.Schema.Types.Mixed, // Cambiado para permitir flexibilidad
 
     receiptUrl: String,
     description: String,

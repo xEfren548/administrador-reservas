@@ -78,6 +78,7 @@ router.post('/charge', async (req, res) => {
             
             try {
                 console.log('Charge processed:', charge);
+                console.log('Payment model schema:', Payment.schema.paths.paymentMethodData);
                 // Si el pago fue exitoso o está en progreso, crear la reserva
                 if (status === 'SUCCEEDED' || status === 'IN_PROGRESS' || status === 'PENDING') {
                     
@@ -91,8 +92,8 @@ router.post('/charge', async (req, res) => {
                     // });
 
                     const statusReserva = status === 'SUCCEEDED' ? 'active' : 'pending';
-                    paymentStatus = status === 'SUCCEEDED' ? 'PAID' : 'UNPAID';
-                    balanceDue = status === 'SUCCEEDED' ? 0 : amountMx;
+                    const paymentStatus = status === 'SUCCEEDED' ? 'PAID' : 'UNPAID';
+                    const balanceDue = status === 'SUCCEEDED' ? 0 : amountMx;
 
                     const nuevaReserva = await createReservationForClient(
                         reservationData,
@@ -110,6 +111,16 @@ router.post('/charge', async (req, res) => {
                     // Actualizar orderId con el ID real de la reserva
                     const finalOrderId = `res_${nuevaReserva._id}_${Math.floor(Date.now() / 1000)}`;
 
+                    // Preparar datos del método de pago
+                    const paymentMethodInfo = {
+                        brand: charge.card?.brand || method,
+                        last4: charge.card?.card_number ? charge.card.card_number.slice(-4) : 'N/A',
+                        holderName: charge.card?.holder_name || customerData?.name || 'N/A',
+                        type: charge.card?.type || method
+                    };
+
+                    console.log('PaymentMethodInfo prepared:', paymentMethodInfo);
+
                     // Crear el registro de pago
                     const payment = await Payment.create({
                         reservation: nuevaReserva._id,
@@ -120,12 +131,7 @@ router.post('/charge', async (req, res) => {
                         amountMx,
                         capturedAmountMx: status === 'SUCCEEDED' ? amountMx : 0,
                         currency: 'MXN',
-                        paymentMethodData: {    
-                            brand: charge.card?.brand,
-                            last4: charge.card?.last4,
-                            holderName: charge.card?.holder_name,
-                            type: charge.card?.type || method
-                        },
+                        paymentMethodData: paymentMethodInfo,
                         description: charge.description,
                         raw: charge
                     });
@@ -160,9 +166,9 @@ router.post('/charge', async (req, res) => {
                         capturedAmountMx: 0,
                         currency: 'MXN',
                         paymentMethodData: {
-                            brand: charge.card?.brand,
-                            last4: charge.card?.last4,
-                            holderName: charge.card?.holder_name,
+                            brand: charge.card?.brand || method,
+                            last4: charge.card?.card_number ? charge.card.card_number.slice(-4) : 'N/A',
+                            holderName: charge.card?.holder_name || customerData?.name || 'N/A',
                             type: charge.card?.type || method
                         },
                         description: charge.description,
