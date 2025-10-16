@@ -317,8 +317,8 @@ async function sendCheckInMessage() {
         console.log("whatsappResponse: ", whatsappResponse);
 
         if (whatsappResponse.success) {
-            // reserva.checkInSent = true;
-            // await reserva.save();
+            reserva.checkInSent = true;
+            await reserva.save();
             console.log(`Mensaje enviado a ${client.firstName}. (${receiver.phone}) para la reserva ${reserva._id}`);
         } else {
             console.log(`Error al enviar mensaje a ${client.firstName}. (${receiver.phone}) para la reserva ${reserva._id}`);
