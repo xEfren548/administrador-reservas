@@ -9,6 +9,11 @@ const Cliente = require('../../models/Cliente');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const utilidadesController = require('./../utilidadesController');
+const logController = require('../logController');
+const channexController = require('../channexController');
+const sendEmail = require('../../common/tasks/send-mails');
+const rackLimpiezaController = require('../rackLimpiezaController');
+const SendMessages = require('../../common/tasks/send-messages');
 
 // Habitaciones
 async function mostrarUnaHabitacion(req, res) {
@@ -442,8 +447,8 @@ async function cotizadorChaletsyPrecios(req, res) {
                 amenities: amenitiesArray
             },
             totalResults: habitacionesConPrecios.length,
-            message: habitacionesConPrecios.length > 0 
-                ? `Se encontraron ${habitacionesConPrecios.length} habitaciones disponibles` 
+            message: habitacionesConPrecios.length > 0
+                ? `Se encontraron ${habitacionesConPrecios.length} habitaciones disponibles`
                 : 'No se encontraron habitaciones que cumplan con los criterios de búsqueda',
             appliedFilters: {
                 hasLocationFilter: !!(location && location !== 'any'),
@@ -527,7 +532,7 @@ async function cotizarReserva(habitacionId, checkIn, checkOut, guests) {
 
         // Verificar disponibilidad
         const habitacionesDisponibles = await filtrarPorDisponibilidad([habitacion], checkIn, checkOut);
-        
+
         if (habitacionesDisponibles.length === 0) {
             return {
                 success: false,
@@ -681,7 +686,7 @@ async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, 
         // console.log("comisionesss: ", comisiones);    
 
         let precio = null;
-        console.log("fechas llegada y salida: ", fechaLlegada, fechaSalida);    
+        console.log("fechas llegada y salida: ", fechaLlegada, fechaSalida);
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fechaLlegada);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
@@ -845,7 +850,8 @@ async function createReservationForClient(reservationData, status, paymentStatus
     const guestInfo = reservationData.guestInfo;
     const pricing = reservationData.pricing;
 
-    
+    console.log("guest info: ", guestInfo);
+
     try {
         const chalet = await Habitacion.findById(reservationData.cabinId).select('propertyDetails others');
         const arrivalDate = moment(reservationData.checkIn).toDate();
@@ -858,7 +864,7 @@ async function createReservationForClient(reservationData, status, paymentStatus
 
         const cabinDepartureHour = chalet.others.departureTime?.getHours();
         departureDate.setUTCHours(cabinDepartureHour || 11, 0, 0, 0);
-        
+
         let client = null;
         const clientEmail = guestInfo.email.toLowerCase().trim();
         if (clientEmail) {
@@ -867,15 +873,19 @@ async function createReservationForClient(reservationData, status, paymentStatus
 
         if (!client) {
             // Crear nuevo cliente
-            
+
             const newClient = new Cliente({
                 firstName: guestInfo.firstName,
                 lastName: guestInfo.lastName,
                 email: guestInfo.email,
+                phone: guestInfo.phone,
+                address: guestInfo.address || 'Por definir',
             });
             await newClient.save();
             client = newClient;
         }
+
+        console.log("Cliente: ", client);
 
 
         const newReservation = new Reservas({
@@ -902,9 +912,86 @@ async function createReservationForClient(reservationData, status, paymentStatus
 
         newReservation.url = `https://${process.env.URL}/api/eventos/${idReserva}`;
         await newReservation.save();
+
+
+        // Generar rack de limpieza
+        const chaletName = chalet.propertyDetails.name;
+        const descripcionLimpieza = 'Limpieza ' + chaletName;
+        const fechaLimpieza = new Date(arrivalDate);
+        const checkInDate = new Date(arrivalDate)
+        const checkOutDate = new Date(departureDate)
+        fechaLimpieza.setDate(fechaLimpieza.getDate())
+        const statusLimpieza = 'Pendiente'
+
+
+        await rackLimpiezaController.createServiceForReservation({
+            id_reserva: idReserva,
+            descripcion: descripcionLimpieza,
+            fecha: fechaLimpieza,
+            checkInDate: checkInDate,
+            checkOutDate: checkOutDate,
+            status: statusLimpieza,
+            idHabitacion: newReservation.resourceId
+        });
+
+        if (client.phone) {
+            await SendMessages.sendReservationConfirmation(client, chalet, newReservation);
+            console.log("SendMessages.sendReminders");
+            await SendMessages.sendInstructions(client, chalet, idReserva);
+        }
+
+        if (client.email) {
+            sendEmail(client.email, idReserva);
+        }
+
+        const today = moment().startOf('day');
+        const arrival = moment(arrivalDate).startOf('day');
+        if (today.isSame(arrival) && chalet.propertyDetails.accomodationType.toUpperCase() === "BOSQUE IMPERIAL") {
+            await SendMessages.sendCheckInMessage();
+        }
+
+        // Log
+        const logBody = {
+            fecha: Date.now(),
+            type: 'reservation',
+            idReserva: idReserva,
+            acciones: `Reservación creada desde RenTravel`,
+            idUsuario: chalet.others.owner
+        }
+
+        await logController.createBackendLog(logBody);
+
+        if (chalet.channels?.length > 0) {
+
+            const arrivalDate = new Date(newReservation.arrivalDate);
+            const departureDate = new Date(newReservation.departureDate);
+
+            // Generate all dates between arrival and departure (excluding departure date)
+            const datesResponse = [];
+            const currentDate = new Date(arrivalDate);
+
+            while (currentDate < departureDate) {
+                datesResponse.push({
+                    date: {
+                        date: new Date(currentDate)
+                    }
+                });
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            channexController.updateChannexAvailabilitySingle(newReservation.resourceId, datesResponse)
+                .then(() => {
+                    console.log("Disponibilidad actualizada en Channex.");
+                })
+                .catch(err => {
+                    // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                    console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                });
+        }
+
         return newReservation;
 
-            
+
     } catch (error) {
         console.error('Error creating reservation:', error);
         throw new Error('Error creating reservation: ' + error.message);
