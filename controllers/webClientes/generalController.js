@@ -916,6 +916,7 @@ module.exports = {
     mostrarUnaHabitacion,
     mostrarTodasHabitaciones,
     cotizadorChaletsyPrecios,
+    cotizarReserva,
     cotizarReservaController,
     createReservationForClient
 }

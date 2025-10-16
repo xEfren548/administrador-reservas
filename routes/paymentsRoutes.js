@@ -3,7 +3,7 @@ const router = require('express').Router();
 const openpay = require('../lib/openpay');
 const Payment = require('../models/Payment');
 const Reserva = require('../models/Evento');
-const { createReservationForClient } = require('../controllers/webClientes/generalController');
+const { createReservationForClient, cotizarReserva } = require('../controllers/webClientes/generalController');
 
 // Mapea estados Openpay -> nuestros estados
 function mapStatus(s) {
@@ -65,6 +65,19 @@ router.post('/charge', async (req, res) => {
             }
             chargeReq.source_id = token_id;
             chargeReq.device_session_id = device_session_id;
+        }
+
+        // Validar que la habitación esté disponible en las fechas solicitadas
+        const validarDisponibilidadYPrecio = await cotizarReserva(reservationData.cabinId, reservationData.checkIn, reservationData.checkOut, reservationData.guests);
+        console.log('validarDisponibilidadYPrecio:', validarDisponibilidadYPrecio);
+
+        // Validar que los precios dados sean los mismos que los actuales (evitar manipulación)
+        if (!validarDisponibilidadYPrecio?.success) {
+            return res.status(400).json({ error: 'Habitación no disponible en las fechas solicitadas, por favor recarga la página e intenta de nuevo' });
+        }
+
+        if (validarDisponibilidadYPrecio.pricing.totalPrice !== amountMx) {
+            return res.status(400).json({ error: 'El precio ha cambiado, por favor recarga la página e intenta de nuevo' });
         }
 
         // Ejecutar cargo primero
