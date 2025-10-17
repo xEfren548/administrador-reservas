@@ -597,7 +597,6 @@ async function cotizarReservaController(req, res) {
         const { habitacionId, checkIn, checkOut, guests } = req.body;
 
         const resultado = await cotizarReserva(habitacionId, checkIn, checkOut, guests);
-        console.log('Resultado de cotizarReserva:', resultado);
 
         if (resultado.success) {
             res.status(200).json(resultado);
@@ -624,14 +623,12 @@ async function cotizarReservaController(req, res) {
 
 // Función auxiliar para filtrar por disponibilidad
 async function filtrarPorDisponibilidad(habitaciones, checkIn, checkOut) {
-    console.log(typeof Reservas);
     // Si tienes un modelo de Reservas, verifica disponibilidad
     if (typeof Reservas !== 'undefined') {
         const habitacionesDisponibles = [];
 
         for (const habitacion of habitaciones) {
             const disponible = await getDisponibilidad(habitacion._id, checkIn, checkOut);
-            console.log(`Habitación ${habitacion._id} disponible: ${disponible}`);
 
             if (disponible) {
                 habitacionesDisponibles.push(habitacion);
@@ -672,7 +669,6 @@ async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, 
         }
 
         const montoComision = costoComision.amount;
-        console.log("montoComision web: ", montoComision);
 
         // const comisiones = await utilidadesController.calcularComisionesInternas({
         //     userId: req.session.id,
@@ -682,7 +678,6 @@ async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, 
         // console.log("comisionesss: ", comisiones);    
 
         let precio = null;
-        console.log("fechas llegada y salida: ", fechaLlegada, fechaSalida);
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fechaLlegada);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
@@ -775,8 +770,6 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     if (!(fechaSalida instanceof Date)) {
         fechaSalida = new Date(fechaSalida);
     }
-    console.log("fecha llegada: ", fechaLlegada, "fecha salida: ", fechaSalida);
-    console.log('typeof fechaLlegada: ', typeof fechaLlegada, 'type of fechaSalida: ', typeof fechaSalida);
 
     // Convertir fechas a cadenas en formato YYYY-MM-DD
     const fechaLlegadaStr = fechaLlegada.toISOString().split('T')[0]; // Extrae solo la fecha (YYYY-MM-DD)
@@ -793,7 +786,6 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     const arrivalDateISO = arrivalDateObj.toISOString();
     const departureDateISO = departureDateObj.toISOString();
 
-    console.log("ARRIVAL DATE: ", arrivalDateISO, "DEPARTURE DATE: ", departureDateISO);
 
     const arrivalDateBloqueo = new Date(`${fechaLlegadaStr}T10:00:00`).toISOString();
     const departureDateBloqueo = new Date(`${fechaSalidaStr}T06:00:00`).toISOString();
@@ -817,7 +809,6 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     }
 
     if (isBlocked) {
-        console.log("FECHAS BLOQUEADAS ENCONTRADAS");
         return false;
     }
 
@@ -831,8 +822,6 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     });
 
     if (overlappingEvents.length > 0) {
-        console.log("EVENTOS SUPERPUESTOS ENCONTRADOS");
-        console.log(overlappingEvents);
         return false;
     }
 
@@ -846,15 +835,12 @@ async function createReservationForClient(reservationData, status, paymentStatus
     const guestInfo = reservationData.guestInfo;
     const pricing = reservationData.pricing;
 
-    console.log("guest info: ", guestInfo);
 
     try {
         const chalet = await Habitacion.findById(reservationData.cabinId).select('propertyDetails others');
         const arrivalDate = moment(reservationData.checkIn).toDate();
         const departureDate = moment(reservationData.checkOut).toDate();
 
-        console.log('arrival date before setting hours:', arrivalDate);
-        console.log('departure date before setting hours:', departureDate);
         const cabinArrivalHour = chalet.others.arrivalTime?.getHours();
         arrivalDate.setUTCHours(cabinArrivalHour || 15, 0, 0, 0);
 
@@ -1010,8 +996,6 @@ async function createReservationForClient(reservationData, status, paymentStatus
 
 async function generarComisionReservaRentravel(habitacionId, pricing, idReserva, arrivalDate, departureDate, nNights) {
     try {
-        console.log("pricing: ", pricing);
-        console.log("Costo base: " + pricing.base)
 
         // Eliminar comisiones previas si es que existian
         // const comisionesReserva = await obtenerComisionesPorReserva(idReserva);
@@ -1061,10 +1045,6 @@ async function generarComisionReservaRentravel(habitacionId, pricing, idReserva,
         const costoBase = pricing.basePrice;
         let utilidadChalet = totalSinComisiones - costoBase;
 
-        console.log("Total sin comisiones: ", totalSinComisiones);
-        console.log("Costo base: ", costoBase);
-        console.log("Utilidad chalet: ", utilidadChalet);
-
         // Fin obtener comision de vendedor virtual
 
         const chaletAdminId = chalet.others.admin.toString();
@@ -1072,8 +1052,6 @@ async function generarComisionReservaRentravel(habitacionId, pricing, idReserva,
         const chaletOwner = chalet.others.owner.toString();
         const chaletInvestors = chalet.others.investors
 
-        console.log('comision inversionistas')
-        console.log(chaletInvestors)
         // const idBosqueImperial = '66a7c2f2915b94d6630b67f2'
         const idAdministracionNyN = '671be608256c4d53c3f5e12f';
 
@@ -1149,12 +1127,9 @@ async function generarComisionReservaRentravel(habitacionId, pricing, idReserva,
 
         // Comisión de dueño de cabañas (NUEVA)
         let nuevoCostoBase = costoBase - chalet.additionalInfo.extraCleaningCost
-        console.log('nuevo costo base: ', nuevoCostoBase)
         let cuantosInversionistas = chaletInvestors?.length
-        console.log('cuantos inversionistas: ', cuantosInversionistas)
         // let comisionInversionistas = Math.round((nuevoCostoBase / cuantosInversionistas + Number.EPSILON) * 100) / 100;
         let comisionInversionistas = Math.round((nuevoCostoBase / 10 + Number.EPSILON) * 100) / 100;
-        console.log('comision inversionistas: ', comisionInversionistas)
 
 
         if (cuantosInversionistas > 0) {
