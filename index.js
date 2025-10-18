@@ -20,6 +20,8 @@ const NotFoundError = require('./common/error/not-found-error');
 const SendMessages = require('./common/tasks/send-messages');
 const backupController = require('./controllers/backupController');
 
+const passport = require('passport');
+const cookieSession = require('cookie-session');
 
 // Configura Express para servir archivos estáticos desde la carpeta 'public'
 app.use(express.static(path.join(__dirname, 'src', 'public')));
@@ -28,6 +30,16 @@ app.use(express.json())
 // CORS
 app.use(corsMiddleware);
 
+// Configuración de cookie-session (compatible con las rutas existentes)
+app.use(cookieSession({
+    signed: false,
+    secure: process.env.NODE_ENV !== 'development',
+    maxAge: 24 * 60 * 60 * 1000 // 24 horas
+}));
+
+// Inicializar Passport
+app.use(passport.initialize());
+app.use(passport.session());
 // Monta el middleware ANTES de las rutas que usan req.session
 
 // Express File Upload

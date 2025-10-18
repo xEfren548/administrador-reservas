@@ -41,6 +41,9 @@ const generalRoutes = require('./webClientesRoutes/generalRoutes');
 const paymentsRoutes = require('./paymentsRoutes');
 const webhooksRoutes = require('./webhooksRoutes');
 
+// Nuevas rutas para clientes web
+const clientAuthRoutes = require('./authClientes/clientAuthRoutes');
+
 const authMiddleware = require('../common/middlewares/authMiddleware');
 
 // Privileges middlewares authentication
@@ -72,6 +75,9 @@ router.use('/', webhookRoutes);
 router.use('/api/client', generalRoutes);
 router.use('/payments', paymentsRoutes);
 router.use('/webhooks', webhooksRoutes);
+
+// Rutas de autenticación para clientes web
+router.use('/client/auth', clientAuthRoutes);
 
 
 router.use('/api', authRoutes);
