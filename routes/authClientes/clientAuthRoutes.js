@@ -136,6 +136,29 @@ router.post('/logout',
     clientAuthController.logout
 );
 
+// PUT /client/auth/profile - Actualizar perfil del usuario web
+router.put('/profile',
+    clientAuthMiddleware,
+    [
+        body('firstName').optional().isLength({ min: 2, max: 50 }).withMessage('El nombre debe tener entre 2 y 50 caracteres'),
+        body('lastName').optional().isLength({ min: 2, max: 50 }).withMessage('El apellido debe tener entre 2 y 50 caracteres'),
+        body('phone').optional().isMobilePhone('es-MX').withMessage('Número de teléfono inválido')
+    ],
+    clientAuthController.updateProfile
+);
+
+// PUT /client/auth/preferences - Actualizar preferencias del usuario web
+router.put('/preferences',
+    clientAuthMiddleware,
+    [
+        body('preferences').isObject().withMessage('Las preferencias deben ser un objeto'),
+        body('preferences.newsletter').optional().isBoolean(),
+        body('preferences.notifications.email').optional().isBoolean(),
+        body('preferences.notifications.sms').optional().isBoolean()
+    ],
+    clientAuthController.updatePreferences
+);
+
 // Rutas de utilidad
 
 // GET /client/auth/me - Información del usuario (opcional auth)

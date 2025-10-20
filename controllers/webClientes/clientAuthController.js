@@ -629,6 +629,76 @@ const checkIsFavorite = async (req, res) => {
     }
 };
 
+// Actualizar perfil del usuario web
+const updateProfile = async (req, res) => {
+    try {
+        const client = req.client; // Viene del middleware de autenticación
+        const { firstName, lastName, phone } = req.body;
+
+        if (firstName) client.firstName = firstName;
+        if (lastName) client.lastName = lastName;
+        if (phone) client.phone = phone;
+
+        await client.save();
+
+        res.json({
+            success: true,
+            message: 'Perfil actualizado exitosamente',
+            data: { client: client.toPublicJSON() }
+        });
+    } catch (error) {
+        console.error('Error al actualizar perfil:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: error.message
+        });
+    }
+};
+
+// Actualizar preferencias del usuario web
+const updatePreferences = async (req, res) => {
+    try {
+        const client = req.client; // Viene del middleware de autenticación
+        const { preferences } = req.body;
+
+        if (!preferences || typeof preferences !== 'object') {
+            return res.status(400).json({
+                success: false,
+                message: 'Preferencias inválidas'
+            });
+        }
+
+        // Solo actualiza los campos permitidos
+        if (preferences.newsletter !== undefined) {
+            client.preferences.newsletter = preferences.newsletter;
+        }
+        if (preferences.notifications) {
+            if (preferences.notifications.email !== undefined) {
+                client.preferences.notifications.email = preferences.notifications.email;
+            }
+            if (preferences.notifications.sms !== undefined) {
+                client.preferences.notifications.sms = preferences.notifications.sms;
+            }
+        }
+
+        await client.save();
+
+        res.json({
+            success: true,
+            message: 'Preferencias actualizadas exitosamente',
+            data: { preferences: client.preferences }
+        });
+    } catch (error) {
+        console.error('Error al actualizar preferencias:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -645,5 +715,7 @@ module.exports = {
     removeFavoriteAccommodation,
     getFavoriteAccommodations,
     toggleFavoriteAccommodation,
-    checkIsFavorite
+    checkIsFavorite,
+    updateProfile,
+    updatePreferences
 };
