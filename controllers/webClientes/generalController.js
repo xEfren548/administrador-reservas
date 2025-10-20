@@ -5,9 +5,23 @@ const BloqueoFechas = require('../../models/BloqueoFechas');
 const Costos = require('../../models/Costos');
 const Reservas = require('../../models/Evento');
 const Usuario = require('../../models/Usuario');
+const Cliente = require('../../models/Cliente');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const utilidadesController = require('./../utilidadesController');
+const logController = require('../logController');
+const channexController = require('../channexController');
+const sendEmail = require('../../common/tasks/send-mails');
+const rackLimpiezaController = require('../rackLimpiezaController');
+const SendMessages = require('../../common/tasks/send-messages');
+
+const web = 'fernando';
+
+const COMISSIONS_MAP = {
+    'fernando': 'VENDEDOR VIRTUAL 1',
+    'carlos': 'VENDEDOR VIRTUAL 2',
+    'externo': 'VENDEDOR VIRTUAL 3'
+};
 
 // Habitaciones
 async function mostrarUnaHabitacion(req, res) {
@@ -441,8 +455,8 @@ async function cotizadorChaletsyPrecios(req, res) {
                 amenities: amenitiesArray
             },
             totalResults: habitacionesConPrecios.length,
-            message: habitacionesConPrecios.length > 0 
-                ? `Se encontraron ${habitacionesConPrecios.length} habitaciones disponibles` 
+            message: habitacionesConPrecios.length > 0
+                ? `Se encontraron ${habitacionesConPrecios.length} habitaciones disponibles`
                 : 'No se encontraron habitaciones que cumplan con los criterios de búsqueda',
             appliedFilters: {
                 hasLocationFilter: !!(location && location !== 'any'),
@@ -526,7 +540,7 @@ async function cotizarReserva(habitacionId, checkIn, checkOut, guests) {
 
         // Verificar disponibilidad
         const habitacionesDisponibles = await filtrarPorDisponibilidad([habitacion], checkIn, checkOut);
-        
+
         if (habitacionesDisponibles.length === 0) {
             return {
                 success: false,
@@ -559,7 +573,7 @@ async function cotizarReserva(habitacionId, checkIn, checkOut, guests) {
             },
             precioCalculado,
             pricing: {
-                basePrice: precioCalculado.precioBaseFinal,
+                basePrice: precioCalculado.costoBaseFinal,
                 totalPrice: precioCalculado.precioBaseFinal,
                 pricePerNight: Math.round(precioCalculado.precioBaseFinal / nights),
                 cleaningFee: habitacion.additionalInfo?.extraCleaningCost || 0,
@@ -583,7 +597,6 @@ async function cotizarReservaController(req, res) {
         const { habitacionId, checkIn, checkOut, guests } = req.body;
 
         const resultado = await cotizarReserva(habitacionId, checkIn, checkOut, guests);
-        console.log('Resultado de cotizarReserva:', resultado);
 
         if (resultado.success) {
             res.status(200).json(resultado);
@@ -610,14 +623,12 @@ async function cotizarReservaController(req, res) {
 
 // Función auxiliar para filtrar por disponibilidad
 async function filtrarPorDisponibilidad(habitaciones, checkIn, checkOut) {
-    console.log(typeof Reservas);
     // Si tienes un modelo de Reservas, verifica disponibilidad
     if (typeof Reservas !== 'undefined') {
         const habitacionesDisponibles = [];
 
         for (const habitacion of habitaciones) {
             const disponible = await getDisponibilidad(habitacion._id, checkIn, checkOut);
-            console.log(`Habitación ${habitacion._id} disponible: ${disponible}`);
 
             if (disponible) {
                 habitacionesDisponibles.push(habitacion);
@@ -637,18 +648,6 @@ function convertirFechaES(fecha) {
     const [dia, mes, anio] = fecha.split("/");
     return `${anio}-${mes}-${dia}`; // Formato YYYY-MM-DD
 }
-
-const web = 'fernando';
-
-const COMISSIONS_MAP = {
-    'fernando': 'VENDEDOR VIRTUAL 1',
-    'carlos': 'VENDEDOR VIRTUAL 2',
-    'externo': 'VENDEDOR VIRTUAL 3'
-}
-
-
-
-
 
 async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, pax) {
     try {
@@ -670,7 +669,6 @@ async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, 
         }
 
         const montoComision = costoComision.amount;
-        console.log("montoComision web: ", montoComision);
 
         // const comisiones = await utilidadesController.calcularComisionesInternas({
         //     userId: req.session.id,
@@ -680,7 +678,6 @@ async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, 
         // console.log("comisionesss: ", comisiones);    
 
         let precio = null;
-        console.log("fechas llegada y salida: ", fechaLlegada, fechaSalida);    
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fechaLlegada);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
@@ -753,9 +750,11 @@ async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, 
         const costoBaseFinal = twoOrMoreNights ? precios.reduce((total, precio) => total + precio.costo_base_2noches, 0) : precios[0].costo_base;
         let precioBaseFinal = twoOrMoreNights ? precios.reduce((total, precio) => total + precio.precio_base_2noches, 0) : precios[0].precio_modificado;
         const precioTotalSinComision = precioBaseFinal - montoComision;
+        const comisionServicio = 35;
+        precioBaseFinal += comisionServicio;
         // precioBaseFinal += montoComision;
         // console.log({ precios, costoBaseFinal, precioBaseFinal, precioTotalSinComision });
-        return { precios, precioBaseFinal, costoBaseFinal, precioTotalSinComision };
+        return { precios, precioBaseFinal, costoBaseFinal, precioTotalSinComision, comisionServicio };
         // res.json({precios, costoBaseFinal, precioBaseFinal, precioTotalSinComision});
     } catch (error) {
         console.error(error);
@@ -771,8 +770,6 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     if (!(fechaSalida instanceof Date)) {
         fechaSalida = new Date(fechaSalida);
     }
-    console.log("fecha llegada: ", fechaLlegada, "fecha salida: ", fechaSalida);
-    console.log('typeof fechaLlegada: ', typeof fechaLlegada, 'type of fechaSalida: ', typeof fechaSalida);
 
     // Convertir fechas a cadenas en formato YYYY-MM-DD
     const fechaLlegadaStr = fechaLlegada.toISOString().split('T')[0]; // Extrae solo la fecha (YYYY-MM-DD)
@@ -789,7 +786,6 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     const arrivalDateISO = arrivalDateObj.toISOString();
     const departureDateISO = departureDateObj.toISOString();
 
-    console.log("ARRIVAL DATE: ", arrivalDateISO, "DEPARTURE DATE: ", departureDateISO);
 
     const arrivalDateBloqueo = new Date(`${fechaLlegadaStr}T10:00:00`).toISOString();
     const departureDateBloqueo = new Date(`${fechaSalidaStr}T06:00:00`).toISOString();
@@ -813,7 +809,6 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     }
 
     if (isBlocked) {
-        console.log("FECHAS BLOQUEADAS ENCONTRADAS");
         return false;
     }
 
@@ -827,8 +822,6 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     });
 
     if (overlappingEvents.length > 0) {
-        console.log("EVENTOS SUPERPUESTOS ENCONTRADOS");
-        console.log(overlappingEvents);
         return false;
     }
 
@@ -836,9 +829,485 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
 }
 
 
+// Reservas
+
+async function createReservationForClient(reservationData, status, paymentStatus, balanceDue) {
+    const guestInfo = reservationData.guestInfo;
+    const pricing = reservationData.pricing;
+
+
+    try {
+        const chalet = await Habitacion.findById(reservationData.cabinId).select('propertyDetails others');
+        const arrivalDate = moment(reservationData.checkIn).toDate();
+        const departureDate = moment(reservationData.checkOut).toDate();
+
+        const cabinArrivalHour = chalet.others.arrivalTime?.getHours();
+        arrivalDate.setUTCHours(cabinArrivalHour || 15, 0, 0, 0);
+
+        const cabinDepartureHour = chalet.others.departureTime?.getHours();
+        departureDate.setUTCHours(cabinDepartureHour || 11, 0, 0, 0);
+
+        let client = null;
+        const clientEmail = guestInfo.email.toLowerCase().trim();
+        if (clientEmail) {
+            client = await Cliente.findOne({ email: clientEmail });
+        }
+
+        if (!client) {
+            // Crear nuevo cliente
+
+            const newClient = new Cliente({
+                firstName: guestInfo.firstName,
+                lastName: guestInfo.lastName,
+                email: guestInfo.email,
+                phone: guestInfo.phone,
+                address: guestInfo.address || 'Por definir',
+            });
+            await newClient.save();
+            client = newClient;
+        }
+
+        console.log("Cliente: ", client);
+
+
+        const newReservation = new Reservas({
+            client: client._id,
+            resourceId: reservationData.cabinId,
+            reservationDate: moment().toDate(),
+            arrivalDate: arrivalDate,
+            departureDate: departureDate,
+            maxOccupation: chalet.propertyDetails.maxOccupancy,
+            nNights: reservationData.nights,
+            pax: reservationData.guests,
+            url: '', // Se actualizará después de guardar
+            status: status,
+            total: pricing.totalPrice,
+            balanceDue: balanceDue,
+            paymentStatus: paymentStatus,
+            payments: []
+        });
+        if (!newReservation) {
+            throw new Error('Error creating reservation object');
+        }
+
+        const idReserva = newReservation._id;
+
+        newReservation.url = `https://${process.env.URL}/api/eventos/${idReserva}`;
+        await newReservation.save();
+
+
+        // Generar rack de limpieza
+        const chaletName = chalet.propertyDetails.name;
+        const descripcionLimpieza = 'Limpieza ' + chaletName;
+        const fechaLimpieza = new Date(arrivalDate);
+        const checkInDate = new Date(arrivalDate)
+        const checkOutDate = new Date(departureDate)
+        fechaLimpieza.setDate(fechaLimpieza.getDate())
+        const statusLimpieza = 'Pendiente'
+
+
+        await rackLimpiezaController.createServiceForReservation({
+            id_reserva: idReserva,
+            descripcion: descripcionLimpieza,
+            fecha: fechaLimpieza,
+            checkInDate: checkInDate,
+            checkOutDate: checkOutDate,
+            status: statusLimpieza,
+            idHabitacion: newReservation.resourceId
+        });
+
+        if (client.phone) {
+            await SendMessages.sendReservationConfirmation(client, chalet, newReservation);
+            console.log("SendMessages.sendReminders");
+            await SendMessages.sendInstructions(client, chalet, idReserva);
+        }
+
+        if (client.email) {
+            sendEmail(client.email, idReserva);
+        }
+
+        const today = moment().startOf('day');
+        const arrival = moment(arrivalDate).startOf('day');
+        if (today.isSame(arrival) && chalet.propertyDetails.accomodationType.toUpperCase() === "BOSQUE IMPERIAL") {
+            await SendMessages.sendCheckInMessage();
+        }
+
+        // Log
+        const logBody = {
+            fecha: Date.now(),
+            type: 'reservation',
+            idReserva: idReserva,
+            acciones: `Reservación creada desde RenTravel`,
+            idUsuario: chalet.others.owner
+        }
+
+        await logController.createBackendLog(logBody);
+
+        // Crear utilidades de reserva
+        const generarReservas = await generarComisionReservaRentravel(newReservation.resourceId, pricing, idReserva, arrivalDate, departureDate, newReservation.nNights);
+        if (generarReservas) {
+            console.log("Utilidades de reserva generadas correctamente");
+        } else {
+            throw new Error("Error al generar utilidades de reserva");
+        }
+
+
+        // Actualizar disponibilidad en Channex
+
+        if (chalet.channels?.length > 0) {
+
+            const arrivalDate = new Date(newReservation.arrivalDate);
+            const departureDate = new Date(newReservation.departureDate);
+
+            // Generate all dates between arrival and departure (excluding departure date)
+            const datesResponse = [];
+            const currentDate = new Date(arrivalDate);
+
+            while (currentDate < departureDate) {
+                datesResponse.push({
+                    date: {
+                        date: new Date(currentDate)
+                    }
+                });
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            channexController.updateChannexAvailabilitySingle(newReservation.resourceId, datesResponse)
+                .then(() => {
+                    console.log("Disponibilidad actualizada en Channex.");
+                })
+                .catch(err => {
+                    // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                    console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+                });
+        }
+
+        return newReservation;
+
+
+    } catch (error) {
+        console.error('Error creating reservation:', error);
+        throw new Error('Error creating reservation: ' + error.message);
+    }
+
+}
+
+// Utilidades 
+
+async function generarComisionReservaRentravel(habitacionId, pricing, idReserva, arrivalDate, departureDate, nNights) {
+    try {
+
+        // Eliminar comisiones previas si es que existian
+        // const comisionesReserva = await obtenerComisionesPorReserva(idReserva);
+
+        // if (comisionesReserva) {
+        //     for (const comisiones of comisionesReserva) {
+        //         if (!comisiones.concepto.includes('servicio') && !comisiones.concepto.includes('Servicio')) {
+        //             const utilidadEliminada = await eliminarComisionReturn(comisiones._id);
+        //             if (utilidadEliminada) {
+        //                 console.log('Utilidad eliminada correctamente');
+        //             } else {
+        //                 throw new Error('Error al eliminar comision.');
+        //             }
+        //         }
+        //     }
+        // }
+
+        const chalet = await Habitacion.findById(habitacionId);
+        if (!chalet) {
+            throw new NotFoundError('Chalet does not exist 2');
+        }
+
+        const chaletName = chalet.propertyDetails.name;
+
+        // const comisiones = pricing.totalPrice - pricing.totalPriceSinComision;
+
+        const chaletType = chalet.propertyDetails.accomodationType;
+
+        // Obtener comision de vendedor virtual
+
+        const usuarioWeb = COMISSIONS_MAP[web];
+        if (!usuarioWeb) {
+            throw new Error("No se encontró el usuario para comisiones");
+        }
+
+        const costoComision = await Costos.findOne({ costName: usuarioWeb });
+        if (!costoComision) {
+            throw new Error("No se encontró el costo para el usuario de comisiones");
+        }
+
+        const montoComision = costoComision.amount * nNights;
+        const comisionLimpieza = chalet.additionalInfo.extraCleaningCost;
+        const comisionServicio = pricing.comisionServicio;
+
+        const totalCobrado = pricing.totalPrice;
+        const totalSinComisiones = totalCobrado - montoComision - comisionServicio;
+        const costoBase = pricing.basePrice;
+        let utilidadChalet = totalSinComisiones - costoBase;
+
+        // Fin obtener comision de vendedor virtual
+
+        const chaletAdminId = chalet.others.admin.toString();
+        const chaletJanitor = chalet.others.janitor.toString();
+        const chaletOwner = chalet.others.owner.toString();
+        const chaletInvestors = chalet.others.investors
+
+        // const idBosqueImperial = '66a7c2f2915b94d6630b67f2'
+        const idAdministracionNyN = '671be608256c4d53c3f5e12f';
+
+        const chaletAdmin = await Usuario.findById(chaletAdminId);
+        if (!chaletAdmin) {
+            throw new Error("No chalet admin found.");
+        }
+
+        // Utilidad
+        if (chaletType === "Bosque Imperial") {
+            await utilidadesController.altaComisionReturn({
+                monto: utilidadChalet,
+                concepto: `Comisión administrador ligado de Cabaña ${nNights} noches`,
+                fecha: new Date(arrivalDate),
+                idUsuario: chaletAdmin._id.toString(),
+                idReserva: idReserva
+            })
+
+            let comisionNegativaIva = Math.round((utilidadChalet * 0.16 + Number.EPSILON) * 100) / 100;
+
+            await utilidadesController.altaComisionReturn({
+                monto: -comisionNegativaIva,
+                concepto: `Retención IVA ${chaletName} ${nNights} noches`,
+                fecha: new Date(arrivalDate),
+                idUsuario: chaletAdmin._id.toString(),
+                idReserva: idReserva
+            })
+        } else {
+            await utilidadesController.altaComisionReturn({
+                monto: utilidadChalet,
+                concepto: `Comisión administrador ligado de Cabaña ${chaletName} ${nNights} noches`,
+                fecha: new Date(arrivalDate),
+                idUsuario: chaletAdmin._id.toString(),
+                idReserva: idReserva
+            })
+        }
+
+        // Comision de vendedor virtual
+        await utilidadesController.altaComisionReturn({
+            monto: montoComision,
+            concepto: `Comisión por venta vía RenTravel ${chaletName} ${nNights} noches`,
+            fecha: new Date(arrivalDate),
+            idUsuario: chaletAdmin._id.toString(), // Pendiente de validacion
+            idReserva: idReserva
+        })
+
+        // Comisión de limpieza
+        await utilidadesController.altaComisionReturn({
+            monto: comisionLimpieza,
+            concepto: `Comisión limpieza`,
+            fecha: new Date(arrivalDate),
+            idUsuario: chaletJanitor,
+            idReserva: idReserva
+        })
+
+        // Comisión de $35 para administracion
+        await utilidadesController.altaComisionReturn({
+            monto: comisionServicio,
+            concepto: `Costo por uso de sistema NyN`,
+            fecha: new Date(arrivalDate),
+            idUsuario: idAdministracionNyN,
+            idReserva: idReserva
+        })
+
+        // Comisión de dueño de cabañas (ANTERIOR)
+        // await utilidadesController.altaComisionReturn({
+        //     monto: costoBase - chalet.additionalInfo.extraCleaningCost,
+        //     concepto: `Comisión Dueño de cabaña: ${chaletName}`,
+        //     fecha: new Date(departureDate),
+        //     idUsuario: chaletOwner,
+        //     idReserva: idReserva
+        // })
+
+        // Comisión de dueño de cabañas (NUEVA)
+        let nuevoCostoBase = costoBase - chalet.additionalInfo.extraCleaningCost
+        let cuantosInversionistas = chaletInvestors?.length
+        // let comisionInversionistas = Math.round((nuevoCostoBase / cuantosInversionistas + Number.EPSILON) * 100) / 100;
+        let comisionInversionistas = Math.round((nuevoCostoBase / 10 + Number.EPSILON) * 100) / 100;
+
+
+        if (cuantosInversionistas > 0) {
+
+            for (let investor of chaletInvestors) {
+                let userInvestor = await Usuario.findById(investor.investor);
+                if (userInvestor) {
+                    const noTickets = investor.noTickets
+                    const comision = comisionInversionistas * noTickets
+
+                    if (userInvestor.investorType === 'Asimilado') {
+                        // Comision normal
+                        await utilidadesController.altaComisionReturn({
+                            monto: comision,
+                            concepto: `Comisión de inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
+                        // Comision negativa de IVA (16%)
+                        // let comisionNegativaIva = comisionInversionistas * 0.16;
+                        let comisionNegativaIva = Math.round((comision * 0.16 + Number.EPSILON) * 100) / 100;
+
+                        await utilidadesController.altaComisionReturn({
+                            monto: -comisionNegativaIva,
+                            concepto: `IVA inversionista por Reserva de cabaña`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
+                        // Comision negativa de ISR (5%)
+                        // let comisionNegativaIsr = comisionInversionistas * 0.05;
+                        let comisionNegativaIsr = Math.round(((comision - comisionNegativaIva) * 0.16 + Number.EPSILON) * 100) / 100;
+
+                        await utilidadesController.altaComisionReturn({
+                            monto: -comisionNegativaIsr,
+                            concepto: `ISR inversionista por Reserva de cabaña`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
+
+                        // Retencion "Servicios indirectos Bosque imperial"
+                        let comisionNegativaServiciosIndirectos = Math.round(((comision - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
+
+                        await utilidadesController.altaComisionReturn({
+                            monto: -comisionNegativaServiciosIndirectos,
+                            concepto: `Servicios Indirectos Bosque Imperial`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
+
+                    } else if (userInvestor.investorType === 'RESICO Fisico') {
+                        // Comision normal
+                        await utilidadesController.altaComisionReturn({
+                            monto: comision,
+                            concepto: `Comisión de inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
+
+                        // Comision negativa de IVA (16%)
+                        // let comisionNegativaIva = comision * 0.16;
+                        let comisionNegativaIva = Math.round((comision * 0.16 + Number.EPSILON) * 100) / 100;
+
+                        // Comision Retencion IVA
+                        let comisionNegativaRetIva = Math.round((comision * 0.1066 + Number.EPSILON) * 100) / 100;
+
+                        await utilidadesController.altaComisionReturn({
+                            monto: -comisionNegativaRetIva,
+                            concepto: `Retención IVA inversionista por Reserva de cabaña`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
+
+                        // Comision Retencion ISR
+                        let comisionNegativaRetIsr = Math.round((comision * 0.0125 + Number.EPSILON) * 100) / 100;
+                        await utilidadesController.altaComisionReturn({
+                            monto: -comisionNegativaRetIsr,
+                            concepto: `ISR inversionista por Reserva de cabaña`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
+
+                        // Comision Retencion Servicios Indirectos
+                        let comisionServIndirectos = Math.round(((comision - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
+                        await utilidadesController.altaComisionReturn({
+                            monto: -comisionServIndirectos,
+                            concepto: `Servicios Indirectos Bosque Imperial`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
+
+                    } else if (userInvestor.investorType === 'PF con AE y PM') {
+                        // Comision normal
+                        await utilidadesController.altaComisionReturn({
+                            monto: comision,
+                            concepto: `Comisión de inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
+
+                        // IVA
+                        let comisionNegativaIva = Math.round((comision * 0.16 + Number.EPSILON) * 100) / 100;
+
+                        // Comision Retencion Servicios Indirectos
+                        let comisionServIndirectos = Math.round(((comision - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
+                        await utilidadesController.altaComisionReturn({
+                            monto: -comisionServIndirectos,
+                            concepto: `Servicios Indirectos Bosque Imperial`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
+                    } else if (userInvestor.investorType === 'Efectivo') {
+                        // Comision normal
+                        await utilidadesController.altaComisionReturn({
+                            monto: comision,
+                            concepto: `Comisión de inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
+                        // Comision negativa de IVA (16%)
+                        // let comisionNegativaIva = comision * 0.16;
+                        let comisionNegativaIva = Math.round((comision * 0.08 + Number.EPSILON) * 100) / 100;
+                        
+                        let comisionServIndirectos = Math.round(((comision - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
+                        await utilidadesController.altaComisionReturn({
+                            monto: -comisionServIndirectos,
+                            concepto: `Servicios Indirectos Bosque Imperial`,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
+
+                        await utilidadesController.altaComisionReturn({
+                            monto: -comisionNegativaIva,
+                            concepto: `IVA inversionista por Reserva de cabaña (${noTickets} ticket(s)) `,
+                            fecha: new Date(arrivalDate),
+                            idUsuario: userInvestor._id,
+                            idReserva: idReserva
+                        })
+                    }
+
+                }
+
+            }
+
+        } else {
+            // Comisión de dueño de cabañas (ANTERIOR)
+            await utilidadesController.altaComisionReturn({
+                monto: costoBase - chalet.additionalInfo.extraCleaningCost,
+                concepto: `Comisión Dueño de cabaña`,
+                fecha: new Date(arrivalDate),
+                idUsuario: chaletOwner,
+                idReserva: idReserva
+            })
+        }
+
+        return true;
+    } catch (err) {
+        console.log(err)
+        return false;
+    }
+}
+
 module.exports = {
     mostrarUnaHabitacion,
     mostrarTodasHabitaciones,
     cotizadorChaletsyPrecios,
+    cotizarReserva,
     cotizarReservaController,
+    createReservationForClient
 }

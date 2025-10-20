@@ -38,6 +38,12 @@ const plataformasRoutes = require('./plataformasRoutes');
 const aprobacionesRoutes = require('./aprobacionesRoutes');
 const channexRoutes = require('./channexRoutes');
 const generalRoutes = require('./webClientesRoutes/generalRoutes');
+const paymentsRoutes = require('./paymentsRoutes');
+const webhooksRoutes = require('./webhooksRoutes');
+
+// Nuevas rutas para clientes web
+const clientAuthRoutes = require('./authClientes/clientAuthRoutes');
+const clientFavoritesRoutes = require('./authClientes/clientFavoritesRoutes');
 
 const authMiddleware = require('../common/middlewares/authMiddleware');
 
@@ -68,6 +74,14 @@ router.use('/getchaletsRoutes', getchaletsRoutes);
 router.use('/', webhookRoutes);
 
 router.use('/api/client', generalRoutes);
+router.use('/payments', paymentsRoutes);
+router.use('/webhooks', webhooksRoutes);
+
+// Rutas de autenticación para clientes web
+router.use('/client/auth', clientAuthRoutes);
+
+// Rutas de favoritos para clientes web
+router.use('/client/favorites', clientFavoritesRoutes);
 
 
 router.use('/api', authRoutes);

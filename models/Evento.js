@@ -3,11 +3,11 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const channelsSchema = new Schema({
-    ota_name: {type: String, required: false},
-    propertyId: {type: String, required: false},
-    listingId: {type: String, required: false},
-    channelId: {type: String, required: false},
-    bookingId: {type: String, required: false}
+    ota_name: { type: String, required: false },
+    propertyId: { type: String, required: false },
+    listingId: { type: String, required: false },
+    channelId: { type: String, required: false },
+    bookingId: { type: String, required: false }
 })
 
 const reservaSchema = new Schema({
@@ -55,8 +55,8 @@ const reservaSchema = new Schema({
         type: Number,
         //required: true
     },
-    notes: [{texto: String}],
-    privateNotes: [{texto: String}],
+    notes: [{ texto: String }],
+    privateNotes: [{ texto: String }],
     termsAccepted: {
         type: Boolean,
         default: false
@@ -100,8 +100,31 @@ const reservaSchema = new Schema({
         type: Boolean,
         default: false
     },
-    channels: channelsSchema
+    channels: channelsSchema,
+
+    // Integracion OpenPay
+    currency: { type: String, default: "MXN" },
+    paymentStatus: {
+        type: String,
+        enum: ["UNPAID", "PARTIALLY_PAID", "PAID", "REFUND_PENDING", "REFUNDED", "CHARGEBACK"],
+        default: "UNPAID"
+    },
+    balanceDue: { type: Number, default: 0 },
+    payments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Payment' }],
 });
+
+reservaSchema.methods.recalcBalance = async function () {
+    await this.populate('payments');
+    const paid = this.payments
+        .filter(p => p.status === 'SUCCEEDED')
+        .reduce((sum, p) => sum + (p.capturedAmountMx || 0), 0);
+
+    const total = Number(this.total || 0);
+    this.balanceDue = Math.max(total - paid, 0);
+    this.paymentStatus = paid === 0 ? 'UNPAID' : (paid < total ? 'PARTIALLY_PAID' : 'PAID');
+    return this.save();
+};
+
 
 // const documentSchema = new Schema({
 //     events: [reservaSchema]
