@@ -43,6 +43,7 @@ const webhooksRoutes = require('./webhooksRoutes');
 
 // Nuevas rutas para clientes web
 const clientAuthRoutes = require('./authClientes/clientAuthRoutes');
+const clientFavoritesRoutes = require('./authClientes/clientFavoritesRoutes');
 
 const authMiddleware = require('../common/middlewares/authMiddleware');
 
@@ -78,6 +79,9 @@ router.use('/webhooks', webhooksRoutes);
 
 // Rutas de autenticación para clientes web
 router.use('/client/auth', clientAuthRoutes);
+
+// Rutas de favoritos para clientes web
+router.use('/client/favorites', clientFavoritesRoutes);
 
 
 router.use('/api', authRoutes);

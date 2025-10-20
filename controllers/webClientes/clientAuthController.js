@@ -426,6 +426,209 @@ const checkAuth = async (req, res) => {
     }
 };
 
+// Agregar cabaña a favoritos
+const addFavoriteAccommodation = async (req, res) => {
+    try {
+        const client = req.client; // Viene del middleware de autenticación
+        const { accommodationId } = req.body;
+
+        // Validar que se proporcione el ID de la cabaña
+        if (!accommodationId) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID de cabaña requerido'
+            });
+        }
+
+        // Verificar que la cabaña no esté ya en favoritos
+        if (client.preferences.favoriteAccommodations.includes(accommodationId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Esta cabaña ya está en tus favoritos'
+            });
+        }
+
+        // Agregar cabaña a favoritos
+        client.preferences.favoriteAccommodations.push(accommodationId);
+        await client.save();
+
+        res.json({
+            success: true,
+            message: 'Cabaña agregada a favoritos exitosamente',
+            data: {
+                favoriteAccommodations: client.preferences.favoriteAccommodations,
+                totalFavorites: client.preferences.favoriteAccommodations.length
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al agregar favorito:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: error.message
+        });
+    }
+};
+
+// Remover cabaña de favoritos
+const removeFavoriteAccommodation = async (req, res) => {
+    try {
+        const client = req.client; // Viene del middleware de autenticación
+        const { accommodationId } = req.params;
+
+        // Validar que se proporcione el ID de la cabaña
+        if (!accommodationId) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID de cabaña requerido'
+            });
+        }
+
+        // Verificar que la cabaña esté en favoritos
+        const index = client.preferences.favoriteAccommodations.indexOf(accommodationId);
+        if (index === -1) {
+            return res.status(400).json({
+                success: false,
+                message: 'Esta cabaña no está en tus favoritos'
+            });
+        }
+
+        // Remover cabaña de favoritos
+        client.preferences.favoriteAccommodations.splice(index, 1);
+        await client.save();
+
+        res.json({
+            success: true,
+            message: 'Cabaña removida de favoritos exitosamente',
+            data: {
+                favoriteAccommodations: client.preferences.favoriteAccommodations,
+                totalFavorites: client.preferences.favoriteAccommodations.length
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al remover favorito:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: error.message
+        });
+    }
+};
+
+// Obtener cabañas favoritas del cliente
+const getFavoriteAccommodations = async (req, res) => {
+    try {
+        const client = req.client; // Viene del middleware de autenticación
+
+        // Obtener las cabañas favoritas con información completa
+        const clientWithFavorites = await ClienteWeb.findById(client._id)
+            .populate('preferences.favoriteAccommodations')
+            .select('preferences.favoriteAccommodations');
+
+        res.json({
+            success: true,
+            data: {
+                favoriteAccommodations: clientWithFavorites.preferences.favoriteAccommodations,
+                totalFavorites: clientWithFavorites.preferences.favoriteAccommodations.length
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al obtener favoritos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: error.message
+        });
+    }
+};
+
+// Toggle favorito (agregar si no existe, remover si existe)
+const toggleFavoriteAccommodation = async (req, res) => {
+    try {
+        const client = req.client; // Viene del middleware de autenticación
+        const { accommodationId } = req.body;
+
+        // Validar que se proporcione el ID de la cabaña
+        if (!accommodationId) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID de cabaña requerido'
+            });
+        }
+
+        const index = client.preferences.favoriteAccommodations.indexOf(accommodationId);
+        let action = '';
+        
+        if (index === -1) {
+            // No está en favoritos, agregar
+            client.preferences.favoriteAccommodations.push(accommodationId);
+            action = 'added';
+        } else {
+            // Está en favoritos, remover
+            client.preferences.favoriteAccommodations.splice(index, 1);
+            action = 'removed';
+        }
+
+        await client.save();
+
+        res.json({
+            success: true,
+            message: action === 'added' ? 'Cabaña agregada a favoritos' : 'Cabaña removida de favoritos',
+            data: {
+                action: action,
+                isFavorite: action === 'added',
+                favoriteAccommodations: client.preferences.favoriteAccommodations,
+                totalFavorites: client.preferences.favoriteAccommodations.length
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al toggle favorito:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: error.message
+        });
+    }
+};
+
+// Verificar si una cabaña es favorita
+const checkIsFavorite = async (req, res) => {
+    try {
+        const client = req.client; // Viene del middleware de autenticación
+        const { accommodationId } = req.params;
+
+        // Validar que se proporcione el ID de la cabaña
+        if (!accommodationId) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID de cabaña requerido'
+            });
+        }
+
+        const isFavorite = client.preferences.favoriteAccommodations.includes(accommodationId);
+
+        res.json({
+            success: true,
+            data: {
+                isFavorite: isFavorite,
+                accommodationId: accommodationId
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al verificar favorito:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -437,5 +640,10 @@ module.exports = {
     resetPassword,
     getProfile,
     logout,
-    checkAuth
+    checkAuth,
+    addFavoriteAccommodation,
+    removeFavoriteAccommodation,
+    getFavoriteAccommodations,
+    toggleFavoriteAccommodation,
+    checkIsFavorite
 };
