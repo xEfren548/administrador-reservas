@@ -198,6 +198,11 @@ router.get('/status', optionalClientAuth, (req, res) => {
     });
 });
 
+// GET /client/auth/get-my-reservations
+
+router.get('/get-my-reservations', clientAuthMiddleware, clientAuthController.getReservationsForClient);
+
+
 // Middleware de manejo de errores específico para auth
 router.use((err, req, res, next) => {
     console.error('Error en clientAuthRoutes:', err);

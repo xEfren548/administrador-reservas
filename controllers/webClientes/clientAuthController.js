@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const Cliente = require('../../models/Cliente');
 const ClienteWeb = require('../../models/ClienteWeb');
+const Reservas = require('../../models/Evento');
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 
@@ -100,9 +102,9 @@ const login = async (req, res) => {
         const { email, password } = req.body;
 
         // Buscar cliente por email
-        const client = await ClienteWeb.findOne({ 
+        const client = await ClienteWeb.findOne({
             email: email.toLowerCase(),
-            isActive: true 
+            isActive: true
         });
 
         if (!client) {
@@ -166,7 +168,7 @@ const googleCallback = async (req, res) => {
     try {
         // El usuario viene de passport
         const client = req.user;
-        
+
         // Actualizar último login
         client.lastLogin = new Date();
         await client.save();
@@ -228,9 +230,9 @@ const resendVerificationEmail = async (req, res) => {
     try {
         const { email } = req.body;
 
-        const client = await ClienteWeb.findOne({ 
+        const client = await ClienteWeb.findOne({
             email: email.toLowerCase(),
-            isActive: true 
+            isActive: true
         });
 
         if (!client) {
@@ -275,9 +277,9 @@ const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
 
-        const client = await ClienteWeb.findOne({ 
+        const client = await ClienteWeb.findOne({
             email: email.toLowerCase(),
-            isActive: true 
+            isActive: true
         });
 
         if (!client) {
@@ -387,7 +389,7 @@ const logout = async (req, res) => {
     try {
         // Con JWT, el logout es principalmente del lado del cliente
         // Pero podemos invalidar el token si implementamos una blacklist
-        
+
         res.json({
             success: true,
             message: 'Logout exitoso'
@@ -561,7 +563,7 @@ const toggleFavoriteAccommodation = async (req, res) => {
 
         const index = client.preferences.favoriteAccommodations.indexOf(accommodationId);
         let action = '';
-        
+
         if (index === -1) {
             // No está en favoritos, agregar
             client.preferences.favoriteAccommodations.push(accommodationId);
@@ -699,6 +701,46 @@ const updatePreferences = async (req, res) => {
     }
 };
 
+const getReservationsForClient = async (req, res) => {
+    try {
+        const client = req.client; // Viene del middleware de autenticación
+
+        const cliente = await Cliente.findOne({ clienteWebId: client._id });
+
+        if (!cliente) {
+            return res.status(404).json({
+                success: false,
+                message: 'Cliente no encontrado'
+            });
+        }
+
+        const reservations = await Reservas.find({ client: cliente._id });
+
+        if (!reservations || reservations.length === 0) {
+            return res.json({
+                success: true,
+                message: 'No se encontraron reservas para este cliente',
+                data: { reservations: [] }
+            });
+        }
+
+        console.log({data: { reservations: reservations }});
+
+        res.json({
+            success: true,
+            message: 'Reservas obtenidas exitosamente',
+            data: { reservations: reservations }
+        });
+    } catch (error) {
+        console.error('Error al obtener reservas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -717,5 +759,6 @@ module.exports = {
     toggleFavoriteAccommodation,
     checkIsFavorite,
     updateProfile,
-    updatePreferences
+    updatePreferences,
+    getReservationsForClient
 };
