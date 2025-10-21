@@ -3222,6 +3222,13 @@ async function getIncomingReservations(req, res) {
             allowedResourceIds = new Set(ownedChalets.map(c => c._id.toString()));
         } else if (privilege === "Administrador") {
             allowedResourceIds = null; // sin restricción
+        } else if (privilege === "Inversionistas") {
+            const investorId = sessionUserId;
+            const investedChalets = await Habitacion.find(
+                { "others.investors.investor": investorId },
+                { _id: 1 }
+            ).lean();
+            allowedResourceIds = new Set(investedChalets.map(c => c._id.toString()));
         }
 
         // ---------- Filtro base para reservas ----------
