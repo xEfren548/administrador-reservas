@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const Cliente = require('../../models/Cliente');
 const ClienteWeb = require('../../models/ClienteWeb');
 const Reservas = require('../../models/Evento');
+const Habitacion = require('../../models/Habitacion');
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 
@@ -724,12 +725,21 @@ const getReservationsForClient = async (req, res) => {
             });
         }
 
+        const reservationsWithDetails = await Promise.all(reservations.map(async reservation => {
+            const chalet = await Habitacion.findById(reservation.resourceId).select('images');
+            return {
+                ...reservation.toObject(),
+                chaletImage: chalet ? chalet.images[0] : null
+            };
+        }));
+
+
         console.log({data: { reservations: reservations }});
 
         res.json({
             success: true,
             message: 'Reservas obtenidas exitosamente',
-            data: { reservations: reservations }
+            data: { reservations: reservationsWithDetails }
         });
     } catch (error) {
         console.error('Error al obtener reservas:', error);
