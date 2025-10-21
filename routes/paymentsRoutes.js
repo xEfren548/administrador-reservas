@@ -1,7 +1,9 @@
 // routes/payments.routes.js
 const router = require('express').Router();
+const moment = require('moment');
 const openpay = require('../lib/openpay');
 const Payment = require('../models/Payment');
+const Pagos = require('../models/Pago');
 const Reserva = require('../models/Evento');
 const { createReservationForClient, cotizarReserva } = require('../controllers/webClientes/generalController');
 
@@ -149,6 +151,18 @@ router.post('/charge', async (req, res) => {
                         description: charge.description,
                         raw: charge
                     });
+
+                    // Crear pago "ficticio" para relacionar con la reserva
+                    
+                    const pagos = await new Pagos({
+                        fechaPago: moment().toDate(),
+                        importe: amountMx,
+                        metodoPago: "Pasarela de pago",
+                        codigoOperacion: payment.providerPaymentId || '',
+                        reservacionId: nuevaReserva._id,
+                    });
+                    
+                    await pagos.save();
 
                     // Vincular pago a la reserva y recalcular balance
                     nuevaReserva.payments.push(payment._id);
