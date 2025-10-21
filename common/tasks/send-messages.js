@@ -299,12 +299,26 @@ async function sendCheckInMessage() {
         }
 
         const receiver = {
-            phone: '523317583008'
+            phone: '523317583008' // Sofi
         }
+
+        const receiver2 = {
+            phone: '523318411770' // Caseta
+        };
 
         const formattedCheckOut = moment(reserva.departureDate).format("DD [de] MMMM");
 
         const whatsappResponse = await sendTemplateMsg(receiver, 'automatizacion_checkin', [
+            todayFormattedDate,
+            `${client.firstName} ${client.lastName}`,
+            chalet.propertyDetails.name,
+            reserva.pax.toString(),
+            todayFormattedDate,
+            formattedCheckOut
+
+        ]);
+
+        const whatsappResponse2 = await sendTemplateMsg(receiver2, 'automatizacion_checkin', [
             todayFormattedDate,
             `${client.firstName} ${client.lastName}`,
             chalet.propertyDetails.name,
