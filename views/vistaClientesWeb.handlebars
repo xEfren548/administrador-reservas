@@ -1,0 +1,766 @@
+<!-- Dashboard de Clientes Web -->
+<div class="min-h-screen bg-gray-900 p-6">
+    <!-- Header -->
+    <div class="mb-8 mt-4">
+        <h1 class="text-3xl font-bold text-white ml-2">Dashboard de Clientes Web</h1>
+        {{!-- <p class="text-gray-300 mt-2 ml-2">Gestión y análisis de clientes registrados en la plataforma web</p> --}}
+    </div>
+
+    <!-- Cards de Estadísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Clientes -->
+        <div class="bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-900 text-blue-400">
+                    <i class="fas fa-users text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-2xl font-bold text-white">{{stats.total}}</h3>
+                    <p class="text-gray-300">Total Clientes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nuevos este mes -->
+        <div class="bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-900 text-green-400">
+                    <i class="fas fa-user-plus text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-2xl font-bold text-white">{{stats.newThisMonth}}</h3>
+                    <p class="text-gray-300">Nuevos este mes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clientes activos -->
+        <div class="bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-yellow-900 text-yellow-400">
+                    <i class="fas fa-chart-line text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-2xl font-bold text-white">{{stats.active}}</h3>
+                    <p class="text-gray-300">Activos (30 días)</p>
+                    <span class="text-sm text-yellow-400">{{stats.activeRate}}% del total</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verificados -->
+        <div class="bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-900 text-purple-400">
+                    <i class="fas fa-check-circle text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-2xl font-bold text-white">{{stats.verified}}</h3>
+                    <p class="text-gray-300">Email Verificado</p>
+                    <span class="text-sm text-purple-400">{{stats.verificationRate}}% del total</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficas -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Gráfica de registros mensuales -->
+        <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Registros por Mes</h3>
+            <div class="h-64">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfica de métodos de registro -->
+        <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Métodos de Registro</h3>
+            <div class="h-64">
+                <canvas id="registrationChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Clientes -->
+    <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-white">Lista de Clientes Web</h3>
+            <div class="flex space-x-2">
+                <button onclick="exportToCSV()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm">
+                    <i class="fas fa-download mr-1"></i> Exportar CSV
+                </button>
+                <button onclick="refreshData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                    <i class="fas fa-refresh mr-1"></i> Actualizar
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table id="clientsTable" class="min-w-full bg-gray-700">
+                <thead class="bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Cliente</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Teléfono</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Registro</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Estado</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Último Login</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-gray-700 divide-y divide-gray-600">
+                    {{#each clientsWeb}}
+                    <tr class="hover:bg-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    {{#if profilePicture}}
+                                    <img class="h-10 w-10 rounded-full" src="{{profilePicture}}" alt="{{firstName}} {{lastName}}">
+                                    {{else}}
+                                    <div class="h-10 w-10 rounded-full bg-gray-500 flex items-center justify-center">
+                                        <span class="text-sm font-medium text-white">{{substring firstName 0 1}}{{substring lastName 0 1}}</span>
+                                    </div>
+                                    {{/if}}
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-white">{{firstName}} {{lastName}}</div>
+                                    <div class="text-sm text-gray-400">ID: {{_id}}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-white">{{email}}</div>
+                            {{#if isEmailVerified}}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-check-circle mr-1"></i> Verificado
+                            </span>
+                            {{else}}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                <i class="fas fa-exclamation-circle mr-1"></i> Pendiente
+                            </span>
+                            {{/if}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                            {{#if phone}}{{phone}}{{else}}<span class="text-gray-400">No registrado</span>{{/if}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-white">{{formatDate createdAt}}</div>
+                            <div class="text-xs text-gray-400">
+                                {{#if (eq registrationMethod 'google')}}
+                                <i class="fab fa-google text-red-500"></i> Google
+                                {{else if (eq registrationMethod 'facebook')}}
+                                <i class="fab fa-facebook text-blue-500"></i> Facebook
+                                {{else}}
+                                <i class="fas fa-envelope text-gray-500"></i> Email
+                                {{/if}}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{#if isActive}}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-circle mr-1"></i> Activo
+                            </span>
+                            {{else}}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="fas fa-circle mr-1"></i> Inactivo
+                            </span>
+                            {{/if}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                            {{#if lastLogin}}{{formatDate lastLogin}}{{else}}<span class="text-gray-400">Nunca</span>{{/if}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button onclick="viewClientDetails('{{_id}}')" class="text-blue-400 hover:text-blue-300 mr-3">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="editClient('{{_id}}')" class="text-indigo-400 hover:text-indigo-300 mr-3">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            {{#unless isActive}}
+                            <button onclick="activateClient('{{_id}}')" class="text-green-400 hover:text-green-300">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            {{else}}
+                            <button onclick="deactivateClient('{{_id}}')" class="text-red-400 hover:text-red-300">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                            {{/unless}}
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para detalles del cliente -->
+<div id="clientModal" class="fixed inset-0 bg-black bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border border-gray-600 w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-gray-800">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-white" id="modalTitle">Detalles del Cliente</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="modalContent">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar cliente -->
+<div id="editClientModal" class="fixed inset-0 bg-black bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-10 mx-auto p-6 border border-gray-600 w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-gray-800 max-h-screen">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-medium text-white">Editar Cliente</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="editClientForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Nombre -->
+                    <div>
+                        <label for="editFirstName" class="block text-sm font-medium text-gray-300 mb-2">Nombre</label>
+                        <input type="text" id="editFirstName" name="firstName" 
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               required>
+                    </div>
+                    
+                    <!-- Apellido -->
+                    <div>
+                        <label for="editLastName" class="block text-sm font-medium text-gray-300 mb-2">Apellido</label>
+                        <input type="text" id="editLastName" name="lastName" 
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               required>
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="editEmail" class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                    <input type="email" id="editEmail" name="email" 
+                           class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                           required>
+                </div>
+
+                <!-- Teléfono -->
+                <div>
+                    <label for="editPhone" class="block text-sm font-medium text-gray-300 mb-2">Teléfono</label>
+                    <input type="tel" id="editPhone" name="phone" 
+                           class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <!-- Dirección -->
+                <div>
+                    <label for="editAddress" class="block text-sm font-medium text-gray-300 mb-2">Dirección</label>
+                    <textarea id="editAddress" name="address" rows="2"
+                              class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                </div>
+
+                <!-- Nueva contraseña -->
+                <div>
+                    <label for="editPassword" class="block text-sm font-medium text-gray-300 mb-2">Nueva Contraseña</label>
+                    <div class="relative">
+                        <input type="password" id="editPassword" name="password" 
+                               class="w-full px-3 py-2 pr-10 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="Dejar vacío para no cambiar">
+                        <button type="button" onclick="togglePassword('editPassword')" 
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200">
+                            <i class="fas fa-eye" id="editPassword-icon"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1">Mínimo 6 caracteres. Dejar vacío si no deseas cambiar la contraseña.</p>
+                </div>
+
+                <!-- Estado activo -->
+                <div class="flex items-center space-x-3">
+                    <input type="checkbox" id="editIsActive" name="isActive" class="toggle-checkbox sr-only">
+                    <label for="editIsActive" class="toggle-label cursor-pointer">
+                        <div class="toggle-inner w-12 h-6 bg-gray-600 rounded-full relative">
+                            <div class="toggle-switch absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full shadow transform transition-transform duration-300"></div>
+                        </div>
+                    </label>
+                    <span class="text-gray-300">Cliente activo</span>
+                </div>
+
+
+
+                <!-- Botones -->
+                <div class="flex justify-end space-x-3 pt-6">
+                    <button type="button" onclick="closeEditModal()" 
+                            class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                        Cancelar
+                    </button>
+                    <button type="submit" 
+                            class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="fas fa-save mr-2"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos para los toggles */
+.toggle-checkbox:checked + .toggle-label .toggle-inner {
+    background-color: #3B82F6;
+}
+
+.toggle-checkbox:checked + .toggle-label .toggle-switch {
+    transform: translateX(1.5rem);
+}
+
+.toggle-switch {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Estilos para el formulario */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/* Loading spinner */
+.spinner {
+    border: 2px solid transparent;
+    border-top: 2px solid #3B82F6;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+// Datos para las gráficas
+const monthlyData = {{{json stats.monthlyStats}}};
+const registrationData = {{{json stats.registrationMethods}}};
+
+// Gráfica mensual
+const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+new Chart(monthlyCtx, {
+    type: 'line',
+    data: {
+        labels: monthlyData.map(item => item.month),
+        datasets: [{
+            label: 'Nuevos Registros',
+            data: monthlyData.map(item => item.count),
+            borderColor: 'rgb(96, 165, 250)',
+            backgroundColor: 'rgba(96, 165, 250, 0.2)',
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: 'rgb(96, 165, 250)',
+            pointBorderColor: 'rgb(96, 165, 250)'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    color: '#D1D5DB'
+                },
+                grid: {
+                    color: 'rgba(75, 85, 99, 0.3)'
+                }
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1,
+                    color: '#D1D5DB'
+                },
+                grid: {
+                    color: 'rgba(75, 85, 99, 0.3)'
+                }
+            }
+        }
+    }
+});
+
+// Gráfica de métodos de registro
+const registrationCtx = document.getElementById('registrationChart').getContext('2d');
+new Chart(registrationCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Email', 'Google', 'Facebook'],
+        datasets: [{
+            data: [registrationData.email, registrationData.google, registrationData.facebook],
+            backgroundColor: [
+                '#9CA3AF',
+                '#F87171',
+                '#60A5FA'
+            ],
+            borderWidth: 2,
+            borderColor: '#374151'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#D1D5DB',
+                    padding: 20,
+                    usePointStyle: true
+                }
+            }
+        }
+    }
+});
+
+// Inicializar DataTable
+$(document).ready(function() {
+    $('#clientsTable').DataTable({
+        responsive: true,
+        pageLength: 25,
+        order: [[3, 'desc']], // Ordenar por fecha de registro
+        language: {
+            "lengthMenu": "Mostrar _MENU_ registros por página",
+            "zeroRecords": "No se encontraron resultados",
+            "info": "Mostrando página _PAGE_ de _PAGES_",
+            "infoEmpty": "No hay registros disponibles",
+            "infoFiltered": "(filtrado de _MAX_ registros totales)",
+            "search": "Buscar:",
+            "paginate": {
+                "first": "Primero",
+                "last": "Último",
+                "next": "Siguiente",
+                "previous": "Anterior"
+            }
+        },
+        columnDefs: [
+            { orderable: false, targets: [0, 6] }, // Deshabilitar ordenamiento en avatar y acciones
+            { searchable: false, targets: [0, 6] }  // Deshabilitar búsqueda en avatar y acciones
+        ],
+        drawCallback: function() {
+            // Aplicar tooltips después de cada redibujado
+            $('[title]').tooltip();
+        }
+    });
+    
+    // Agregar tooltips
+    $('[title]').tooltip();
+});
+
+// Funciones de interacción
+function viewClientDetails(clientId) {
+    // Aquí implementarías la lógica para mostrar detalles
+    fetch(`/api/clientes-web/${clientId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('modalContent').innerHTML = `
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300">Nombre Completo</label>
+                            <p class="text-sm text-white">${data.firstName} ${data.lastName}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300">Email</label>
+                            <p class="text-sm text-white">${data.email}</p>
+                        </div>
+                    </div>
+                    <!-- Más detalles aquí -->
+                </div>
+            `;
+            document.getElementById('clientModal').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los detalles del cliente');
+        });
+}
+
+function editClient(clientId) {
+    // Cargar datos del cliente y abrir modal de edición
+    fetch(`/api/clientes-web/${clientId}`)
+        .then(response => response.json())
+        .then(data => {
+            // Llenar el formulario con los datos actuales
+            document.getElementById('editFirstName').value = data.firstName || '';
+            document.getElementById('editLastName').value = data.lastName || '';
+            document.getElementById('editEmail').value = data.email || '';
+            document.getElementById('editPhone').value = data.phone || '';
+            document.getElementById('editAddress').value = data.address || '';
+            document.getElementById('editPassword').value = ''; // Siempre vacío
+            
+            // Estado del toggle
+            setToggleState('editIsActive', data.isActive);
+            
+            // Guardar el ID del cliente para el submit
+            document.getElementById('editClientForm').dataset.clientId = clientId;
+            
+            // Mostrar modal
+            document.getElementById('editClientModal').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al cargar los datos del cliente', 'error');
+        });
+}
+
+function activateClient(clientId) {
+    if (confirm('¿Estás seguro de que quieres activar este cliente?')) {
+        // Implementar activación
+        updateClientStatus(clientId, true);
+    }
+}
+
+function deactivateClient(clientId) {
+    if (confirm('¿Estás seguro de que quieres desactivar este cliente?')) {
+        // Implementar desactivación
+        updateClientStatus(clientId, false);
+    }
+}
+
+function updateClientStatus(clientId, status) {
+    fetch(`/api/clientes-web/${clientId}/status`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: status })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error al actualizar el estado del cliente');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar el estado del cliente');
+    });
+}
+
+function closeModal() {
+    document.getElementById('clientModal').classList.add('hidden');
+}
+
+function closeEditModal() {
+    document.getElementById('editClientModal').classList.add('hidden');
+}
+
+// Función para manejar el estado de los toggles
+function setToggleState(inputId, checked) {
+    const input = document.getElementById(inputId);
+    const toggleInner = input.nextElementSibling.querySelector('.toggle-inner');
+    const toggleSwitch = input.nextElementSibling.querySelector('.toggle-switch');
+    
+    input.checked = checked;
+    if (checked) {
+        toggleInner.style.backgroundColor = '#3B82F6';
+        toggleSwitch.style.transform = 'translateX(1.5rem)';
+    } else {
+        toggleInner.style.backgroundColor = '#4B5563';
+        toggleSwitch.style.transform = 'translateX(0rem)';
+    }
+}
+
+// Función para mostrar/ocultar contraseña
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(inputId + '-icon');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Manejo del formulario de edición
+document.getElementById('editClientForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const clientId = this.dataset.clientId;
+    const formData = new FormData(this);
+    
+    // Preparar datos para enviar
+    const updateData = {
+        firstName: formData.get('firstName'),
+        lastName: formData.get('lastName'),
+        email: formData.get('email'),
+        phone: formData.get('phone') || null,
+        address: formData.get('address') || null,
+        isActive: document.getElementById('editIsActive').checked
+    };
+    
+    // Solo incluir password si se proporcionó
+    const password = formData.get('password');
+    if (password && password.trim() !== '') {
+        if (password.length < 6) {
+            showNotification('La contraseña debe tener al menos 6 caracteres', 'error');
+            return;
+        }
+        updateData.password = password;
+    }
+    
+    // Mostrar loading
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<div class="spinner inline-block mr-2"></div> Guardando...';
+    submitBtn.disabled = true;
+    
+    // Enviar actualización
+    fetch(`/api/clientes-web/${clientId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        
+        if (data.success) {
+            showNotification('Cliente actualizado exitosamente');
+            closeEditModal();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification(data.message || 'Error al actualizar cliente', 'error');
+        }
+    })
+    .catch(error => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        console.error('Error:', error);
+        showNotification('Error al actualizar cliente', 'error');
+    });
+});
+
+// Event listeners para los toggles
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar event listener al toggle
+    const toggle = document.getElementById('editIsActive');
+    if (toggle) {
+        toggle.addEventListener('change', function() {
+            const toggleInner = this.nextElementSibling.querySelector('.toggle-inner');
+            const toggleSwitch = this.nextElementSibling.querySelector('.toggle-switch');
+            
+            if (this.checked) {
+                toggleInner.style.backgroundColor = '#3B82F6';
+                toggleSwitch.style.transform = 'translateX(1.5rem)';
+            } else {
+                toggleInner.style.backgroundColor = '#4B5563';
+                toggleSwitch.style.transform = 'translateX(0rem)';
+            }
+        });
+    }
+});
+
+function exportToCSV() {
+    // Implementar exportación CSV
+    window.location.href = '/api/clientes-web/export/csv';
+}
+
+function refreshData() {
+    // Mostrar indicador de carga
+    Swal.fire({
+        title: 'Actualizando datos...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+// Función para mostrar notificaciones
+function showNotification(message, type = 'success') {
+    const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-x-full`;
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+// Mejorar las funciones de activación/desactivación
+function updateClientStatus(clientId, status) {
+    Swal.fire({
+        title: 'Actualizando...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    fetch(`/api/clientes-web/${clientId}/status`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: status })
+    })
+    .then(response => response.json())
+    .then(data => {
+        Swal.close();
+        if (data.success) {
+            showNotification(`Cliente ${status ? 'activado' : 'desactivado'} correctamente`);
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification('Error al actualizar el estado del cliente', 'error');
+        }
+    })
+    .catch(error => {
+        Swal.close();
+        console.error('Error:', error);
+        showNotification('Error al actualizar el estado del cliente', 'error');
+    });
+}
+
+// Helper para fechas
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString('es-ES');
+}
+</script>
+

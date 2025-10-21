@@ -57,6 +57,18 @@ app.engine('handlebars', engine({
       lookup: function(obj, key) {
         if (!obj) return null;
         return obj[key];
+      },
+      substring: function(str, start, end) {
+        return str ? str.substring(start, end) : '';
+      },
+      formatDate: function(date) {
+        if (!date) return 'N/A';
+        const d = new Date(date);
+        return d.toLocaleDateString('es-ES', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
       }
     }
   }));

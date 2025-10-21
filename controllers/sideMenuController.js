@@ -28,6 +28,7 @@ async function generateSideMenu(req, res, next) {
                 { 'Usuarios': ["/api/usuarios", "fas fa-users"] },
                 { 'Roles': ["/newroles", "fas fa-users-cog"] },
                 { 'Clientes': ["/api/clientes/mostrar-clientes", "fa fa-user-circle"] },
+                { 'Clientes Web': ["/api/clientes/mostrar-clientes-web", "fas fa-users"] },
                 { 'Servicios adicionales': ["/api/servicios", "fas fa-spa"] },
                 { 'Limpieza': ["/racklimpieza", "fas fa-broom"] },
                 { 'Cabañas': [] },

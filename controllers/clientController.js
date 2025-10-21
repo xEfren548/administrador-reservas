@@ -1,6 +1,7 @@
 const BadRequestError = require('../common/error/bad-request-error');
 const NotFoundError = require('../common/error/not-found-error');
 const Cliente = require('../models/Cliente');
+const ClientesWeb = require('../models/ClienteWeb');
 const logController = require('../controllers/logController');
 const { check } = require("express-validator");
 const Roles = require("../models/Roles");
@@ -357,6 +358,87 @@ async function deleteClientById(req, res, next) {
     }
 }
 
+// Espacio para clientes WEB
+
+
+async function renderClientsWebView(req, res) {
+    try {
+        // Obtener todos los clientes web (sin populate de favoritos por ahora)
+        const clientsWeb = await ClientesWeb.find().lean();
+
+        // Estadísticas generales
+        const totalClients = clientsWeb.length;
+        
+        // Clientes registrados este mes
+        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        const newThisMonth = clientsWeb.filter(client => 
+            new Date(client.createdAt) >= startOfMonth
+        ).length;
+
+        // Clientes activos (con último login en los últimos 30 días)
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const activeClients = clientsWeb.filter(client => 
+            client.lastLogin && new Date(client.lastLogin) >= thirtyDaysAgo
+        ).length;
+
+        // Clientes verificados
+        const verifiedClients = clientsWeb.filter(client => client.isEmailVerified).length;
+
+        // Métodos de registro
+        const registrationMethods = {
+            email: clientsWeb.filter(client => client.registrationMethod === 'email').length,
+            google: clientsWeb.filter(client => client.registrationMethod === 'google').length,
+            facebook: clientsWeb.filter(client => client.registrationMethod === 'facebook').length
+        };
+
+        // Clientes por mes (últimos 6 meses)
+        const monthlyStats = [];
+        for (let i = 5; i >= 0; i--) {
+            const monthStart = new Date(new Date().getFullYear(), new Date().getMonth() - i, 1);
+            const monthEnd = new Date(new Date().getFullYear(), new Date().getMonth() - i + 1, 0);
+            const count = clientsWeb.filter(client => {
+                const createdDate = new Date(client.createdAt);
+                return createdDate >= monthStart && createdDate <= monthEnd;
+            }).length;
+            
+            monthlyStats.push({
+                month: monthStart.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' }),
+                count: count
+            });
+        }
+
+        res.render('vistaClientesWeb', {
+            clientsWeb: clientsWeb,
+            stats: {
+                total: totalClients,
+                newThisMonth: newThisMonth,
+                active: activeClients,
+                verified: verifiedClients,
+                registrationMethods: registrationMethods,
+                monthlyStats: monthlyStats,
+                verificationRate: totalClients > 0 ? Math.round((verifiedClients / totalClients) * 100) : 0,
+                activeRate: totalClients > 0 ? Math.round((activeClients / totalClients) * 100) : 0
+            },
+            layout: 'tailwindMain'
+        });
+    } catch (err) {
+        console.error('Error in renderClientsWebView:', err);
+        res.status(500).render('error', { message: 'Error loading clients data' });
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
     createClientValidators,
     editClientValidators,
@@ -369,5 +451,6 @@ module.exports = {
     editClient,
     editClientById,
     deleteClient,
-    deleteClientById
+    deleteClientById,
+    renderClientsWebView
 }
