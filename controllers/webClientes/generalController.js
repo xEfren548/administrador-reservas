@@ -6,6 +6,7 @@ const Costos = require('../../models/Costos');
 const Reservas = require('../../models/Evento');
 const Usuario = require('../../models/Usuario');
 const Cliente = require('../../models/Cliente');
+const ClienteWeb = require('../../models/ClienteWeb');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const utilidadesController = require('./../utilidadesController');
@@ -831,7 +832,16 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
 
 // Reservas
 
-async function createReservationForClient(reservationData, status, paymentStatus, balanceDue) {
+/**
+ * Crea una reservación para un cliente, manejando tanto clientes web como clientes normales
+ * @param {Object} reservationData - Datos de la reservación
+ * @param {string} status - Estado de la reservación ('active', 'pending', etc.)
+ * @param {string} paymentStatus - Estado del pago ('PAID', 'UNPAID', etc.)
+ * @param {number} balanceDue - Balance pendiente
+ * @param {string|null} clienteWebId - ID del cliente web (opcional). Si se proporciona, se vinculará con un cliente normal
+ * @returns {Object} Nueva reservación creada
+ */
+async function createReservationForClient(reservationData, status, paymentStatus, balanceDue, clienteWebId = null) {
     const guestInfo = reservationData.guestInfo;
     const pricing = reservationData.pricing;
 
@@ -848,26 +858,64 @@ async function createReservationForClient(reservationData, status, paymentStatus
         departureDate.setUTCHours(cabinDepartureHour || 11, 0, 0, 0);
 
         let client = null;
-        const clientEmail = guestInfo.email.toLowerCase().trim();
-        if (clientEmail) {
-            client = await Cliente.findOne({ email: clientEmail });
+        let isWebClient = false;
+
+        // Si se proporciona un ID de cliente web, usar ese cliente
+        if (clienteWebId) {
+            const clienteWeb = await ClienteWeb.findById(clienteWebId);
+            
+            if (clienteWeb) {
+                // Buscar si ya existe un cliente normal con el mismo email
+                client = await Cliente.findOne({ email: clienteWeb.email.toLowerCase().trim() });
+                
+                if (!client) {
+                    // Crear cliente normal basado en los datos del cliente web
+                    const newClient = new Cliente({
+                        firstName: clienteWeb.firstName || guestInfo.firstName,
+                        lastName: clienteWeb.lastName || guestInfo.lastName,
+                        email: clienteWeb.email,
+                        phone: clienteWeb.phone || guestInfo.phone,
+                        address: clienteWeb.address || guestInfo.address || 'Por definir',
+                        // Agregar referencia al cliente web
+                        clienteWebId: clienteWebId,
+                        isWebClient: true
+                    });
+                    await newClient.save();
+                    client = newClient;
+                } else {
+                    // Actualizar el cliente existente para vincularlo al cliente web
+                    client.clienteWebId = clienteWebId;
+                    client.isWebClient = true;
+                    await client.save();
+                }
+                
+                isWebClient = true;
+            }
         }
 
+        // Si no hay cliente web o no se encontró, proceder con la lógica original
         if (!client) {
-            // Crear nuevo cliente
+            const clientEmail = guestInfo.email.toLowerCase().trim();
+            if (clientEmail) {
+                client = await Cliente.findOne({ email: clientEmail });
+            }
 
-            const newClient = new Cliente({
-                firstName: guestInfo.firstName,
-                lastName: guestInfo.lastName,
-                email: guestInfo.email,
-                phone: guestInfo.phone,
-                address: guestInfo.address || 'Por definir',
-            });
-            await newClient.save();
-            client = newClient;
+            if (!client) {
+                // Crear nuevo cliente normal
+                const newClient = new Cliente({
+                    firstName: guestInfo.firstName,
+                    lastName: guestInfo.lastName,
+                    email: guestInfo.email,
+                    phone: guestInfo.phone,
+                    address: guestInfo.address || 'Por definir',
+                    isWebClient: false
+                });
+                await newClient.save();
+                client = newClient;
+            }
         }
 
-        console.log("Cliente: ", client);
+        console.log(`Cliente ${isWebClient ? 'web' : 'normal'}: `, client);
 
 
         const newReservation = new Reservas({
@@ -884,7 +932,9 @@ async function createReservationForClient(reservationData, status, paymentStatus
             total: pricing.totalPrice,
             balanceDue: balanceDue,
             paymentStatus: paymentStatus,
-            payments: []
+            payments: [],
+            // Agregar flag para identificar si la reserva fue hecha por un cliente web
+            isWebClientReservation: isWebClient
         });
         if (!newReservation) {
             throw new Error('Error creating reservation object');
@@ -1303,11 +1353,58 @@ async function generarComisionReservaRentravel(habitacionId, pricing, idReserva,
     }
 }
 
+/**
+ * Función auxiliar para encontrar o crear un cliente normal basado en un cliente web
+ * @param {string} clienteWebId - ID del cliente web
+ * @returns {Object|null} Cliente normal encontrado o creado, null si no se encuentra el cliente web
+ */
+async function findOrCreateClientFromWebClient(clienteWebId) {
+    try {
+        const clienteWeb = await ClienteWeb.findById(clienteWebId);
+        if (!clienteWeb) {
+            return null;
+        }
+
+        // Buscar cliente normal existente
+        let client = await Cliente.findOne({ clienteWebId: clienteWebId });
+        
+        if (!client) {
+            // También buscar por email como fallback
+            client = await Cliente.findOne({ email: clienteWeb.email.toLowerCase().trim() });
+            
+            if (client) {
+                // Vincular el cliente existente al cliente web
+                client.clienteWebId = clienteWebId;
+                client.isWebClient = true;
+                await client.save();
+            } else {
+                // Crear nuevo cliente normal
+                client = new Cliente({
+                    firstName: clienteWeb.firstName,
+                    lastName: clienteWeb.lastName,
+                    email: clienteWeb.email,
+                    phone: clienteWeb.phone,
+                    address: clienteWeb.address || 'Por definir',
+                    clienteWebId: clienteWebId,
+                    isWebClient: true
+                });
+                await client.save();
+            }
+        }
+
+        return client;
+    } catch (error) {
+        console.error('Error finding or creating client from web client:', error);
+        return null;
+    }
+}
+
 module.exports = {
     mostrarUnaHabitacion,
     mostrarTodasHabitaciones,
     cotizadorChaletsyPrecios,
     cotizarReserva,
     cotizarReservaController,
-    createReservationForClient
+    createReservationForClient,
+    findOrCreateClientFromWebClient
 }

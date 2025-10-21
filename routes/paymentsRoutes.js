@@ -23,7 +23,7 @@ router.post('/charge', async (req, res) => {
     try {
         // La solicitud llega a este endpoint desde el frontend web cliente
         // Ahora recibe los datos para crear la reserva + procesar el pago en un solo flujo
-        const { reservationData, method, token_id, device_session_id, customerData } = req.body;
+        const { reservationData, method, token_id, device_session_id, customerData, clienteWebId } = req.body;
         console.log('Payment charge request:', { reservationData, method, token_id, device_session_id, customerData });
         
         if (!reservationData || !method) {
@@ -113,6 +113,7 @@ router.post('/charge', async (req, res) => {
                         statusReserva,
                         paymentStatus,
                         balanceDue,
+                        clienteWebId // Pasar el ID del cliente web si está disponible
                     );
 
                     if (!nuevaReserva) {

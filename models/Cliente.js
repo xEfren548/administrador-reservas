@@ -27,6 +27,16 @@ const clientSchema = new mongoose.Schema({
     identificationNumber: {
         type: String
     },
+    // Campos para relacionar con ClienteWeb
+    clienteWebId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ClienteWeb',
+        default: null
+    },
+    isWebClient: {
+        type: Boolean,
+        default: false
+    }
 },{timestamps: true});
 
 const Client = mongoose.model('Cliente', clientSchema);
