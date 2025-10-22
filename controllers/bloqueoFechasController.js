@@ -149,6 +149,7 @@ async function eliminarFechaBloqueada(req, res){
         const newHabitacionId = new mongoose.Types.ObjectId(habitacionId);
 
         if (type === 'bloqueo') {
+            fechaAjustada.setUTCHours(17); // Ajustar la hora a 17:00:00 UTC
             const resultado = await BloqueoFechas.findOneAndDelete({ date: fechaAjustada, habitacionId: newHabitacionId, type: 'bloqueo' });
 
             if (!resultado) {
