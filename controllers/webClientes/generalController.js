@@ -422,10 +422,13 @@ async function cotizadorChaletsyPrecios(req, res) {
         );
 
 
-        // 13. Calcular precios para cada habitación
+        // 13. Calcular precios y verificar restricciones para cada habitación
         const habitacionesConPrecios = await Promise.all(habitacionesDisponibles.map(async habitacion => {
             const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
             const precios = await consultarPreciosPorFechas(checkInDate, checkOutDate, habitacion, guestsNumber);
+
+            // Verificar restricciones (capacidad mínima y noches mínimas)
+            const restricciones = await getDisponibilidadDeRestricciones([habitacion], checkInDate, checkOutDate, guestsNumber);
 
             return {
                 ...habitacion,
@@ -435,13 +438,29 @@ async function cotizadorChaletsyPrecios(req, res) {
                     checkIn: checkInDate,
                     checkOut: checkOutDate,
                     huespedes: guestsNumber
-                }
+                },
+                // Agregar información de restricciones
+                hasRestrictions: restricciones.hasRestrictions,
+                restrictions: restricciones.hasRestrictions ? restricciones.errors : null,
+                // Indicador para frontend
+                isBookable: !restricciones.hasRestrictions
             };
         }));
 
-        // 14. Ordenar por precio (opcional)
-        // habitacionesConPrecios.sort((a, b) => a.precioCalculado - b.precioCalculado);
-        // console.log(JSON.stringify(habitacionesConPrecios[0], null, 2));
+        // 14. Ordenar por precio (opcional) - primero las que NO tienen restricciones
+        habitacionesConPrecios.sort((a, b) => {
+            // Primero ordenar por si son reservables (sin restricciones primero)
+            if (a.isBookable !== b.isBookable) {
+                return b.isBookable ? 1 : -1;
+            }
+            // Luego por precio
+            return a.precioCalculado.precioBaseFinal - b.precioCalculado.precioBaseFinal;
+        });
+        
+        // Contar habitaciones reservables y con restricciones
+        const bookableCount = habitacionesConPrecios.filter(h => h.isBookable).length;
+        const restrictedCount = habitacionesConPrecios.filter(h => !h.isBookable).length;
+        
         // 15. Respuesta exitosa
         res.status(200).json({
             success: true,
@@ -456,8 +475,10 @@ async function cotizadorChaletsyPrecios(req, res) {
                 amenities: amenitiesArray
             },
             totalResults: habitacionesConPrecios.length,
+            bookableResults: bookableCount,
+            restrictedResults: restrictedCount,
             message: habitacionesConPrecios.length > 0
-                ? `Se encontraron ${habitacionesConPrecios.length} habitaciones disponibles`
+                ? `Se encontraron ${habitacionesConPrecios.length} habitaciones (${bookableCount} disponibles, ${restrictedCount} con restricciones)`
                 : 'No se encontraron habitaciones que cumplan con los criterios de búsqueda',
             appliedFilters: {
                 hasLocationFilter: !!(location && location !== 'any'),
