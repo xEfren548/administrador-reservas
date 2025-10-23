@@ -2271,7 +2271,7 @@ async function moveToPlayground(req, res) {
             throw new Error('El evento ya estaba en ese estatus');
         }
 
-        if (evento.status === 'no-show') {
+        if (evento.status === 'no-show' || evento.status === 'cancelled') {
             throw new Error('No se pueden hacer modificaciones a esta reserva');
         }
 
