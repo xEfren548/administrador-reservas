@@ -6,6 +6,9 @@ const ALLOWED_ORIGINS = new Set([
     'https://nynhoteles.com.mx',
     'http://localhost:51779',
     'http://localhost:8080',
+    'https://cabanasmazamitlajalisco.com.mx',
+    'https://cabanasmazamitlanavarro.com',
+    'https://cabanasmazamitlanavarro.com.mx'
 ]);
 
 // Dominios que permiten subdominios
