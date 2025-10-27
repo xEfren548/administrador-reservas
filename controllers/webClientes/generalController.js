@@ -24,6 +24,22 @@ const DOMAIN_TO_COST_NAME = {
     'rentravel.com.mx': 'VENDEDOR VIRTUAL RENTRAVEL'
 };
 
+// Mapeo de dominios a IDs de usuarios responsables de las comisiones
+const DOMAIN_TO_USER_ID = {
+    'cabanasmazamitlajalisco.com.mx': '6642cfc347113ba5f87ce0a6', // ID del responsable de Jalisco
+    'cabanasmazamitlanavarro.com.mx': '6642cff447113ba5f87ce0aa', // ID del responsable de Navarro MX
+    'cabanasmazamitlanavarro.com': '6642cff447113ba5f87ce0aa', // ID del responsable de Navarro
+    'rentravel.com.mx': '6642cfc347113ba5f87ce0a6' // ID del responsable de RenTravel - FALTA ASIGNAR
+};
+
+// Mapeo de dominios a nombres legibles para logs
+const DOMAIN_TO_DISPLAY_NAME = {
+    'cabanasmazamitlajalisco.com.mx': 'Cabañas Mazamitla Jalisco',
+    'cabanasmazamitlanavarro.com.mx': 'Cabañas Mazamitla Navarro MX',
+    'cabanasmazamitlanavarro.com': 'Cabañas Mazamitla Navarro',
+    'rentravel.com.mx': 'RenTravel'
+};
+
 /**
  * Extrae el dominio principal desde el origin del request
  * Elimina subdominios como 'dev', 'www', etc.
@@ -34,6 +50,7 @@ function extractMainDomain(req) {
     try {
         // Intentar obtener el origin desde headers
         const origin = req.headers.origin || req.headers.referer;
+        console.log("ORIGIN/REFERER: ", origin);
         
         if (!origin) {
             console.warn('No se encontró origin o referer en el request');
@@ -56,6 +73,8 @@ function extractMainDomain(req) {
                 hostname = parts.slice(1).join('.');
             }
         }
+
+        console.log("hostname: ", hostname);
 
         return hostname;
     } catch (error) {
@@ -90,6 +109,51 @@ function getCostNameFromDomain(req) {
 
     console.log(`Dominio detectado: ${domain} -> Costo: ${costName}`);
     return costName;
+}
+
+/**
+ * Obtiene el ID del usuario responsable basado en el dominio del request
+ * @param {Object} req - Request object de Express
+ * @returns {string|null} ID del usuario o null si no se encuentra
+ */
+function getUserIdFromDomain(req) {
+    const domain = extractMainDomain(req);
+    
+    if (!domain) {
+        console.warn('No se pudo determinar el dominio para obtener user ID');
+        return null;
+    }
+
+    const userId = DOMAIN_TO_USER_ID[domain];
+    
+    if (!userId) {
+        console.warn(`No se encontró mapeo de usuario para el dominio: ${domain}`);
+        return null;
+    }
+
+    console.log(`Usuario responsable para ${domain}: ${userId}`);
+    return userId;
+}
+
+/**
+ * Obtiene el nombre legible del dominio para logs y mensajes
+ * @param {Object} req - Request object de Express
+ * @returns {string} Nombre del dominio o 'RenTravel' por defecto
+ */
+function getDomainDisplayName(req) {
+    const domain = extractMainDomain(req);
+    
+    if (!domain) {
+        return 'RenTravel'; // Valor por defecto
+    }
+
+    const displayName = DOMAIN_TO_DISPLAY_NAME[domain];
+    
+    if (!displayName) {
+        return domain; // Retornar el dominio sin formatear si no hay mapeo
+    }
+
+    return displayName;
 }
 
 // Habitaciones
@@ -768,6 +832,8 @@ async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, 
             costName = getCostNameFromDomain(req);
         }
 
+        console.log("COST NAME: ", costName);
+
         // Si no se pudo determinar el dominio o no hay request, usar un valor por defecto
         if (!costName) {
             console.warn('No se pudo determinar el costo desde el dominio, usando valor por defecto');
@@ -776,6 +842,8 @@ async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, 
 
         // Buscar el costo en la base de datos
         const costoComision = await Costos.findOne({ costName: costName });
+        console.log("COSTO COMISION: ", costoComision);
+
         if (!costoComision) {
             throw new Error(`No se encontró el costo "${costName}" en la base de datos`);
         }
@@ -1277,6 +1345,21 @@ async function generarComisionReservaRentravel(habitacionId, pricing, idReserva,
         const comisionLimpieza = chalet.additionalInfo.extraCleaningCost;
         const comisionServicio = pricing.comisionServicio;
 
+        // Obtener ID del usuario responsable y nombre del dominio para logs
+        let vendedorUserId = null;
+        let domainDisplayName = 'RenTravel'; // Valor por defecto
+        
+        if (req) {
+            vendedorUserId = getUserIdFromDomain(req);
+            domainDisplayName = getDomainDisplayName(req);
+        }
+
+        // Si no se pudo determinar el usuario desde el dominio, usar valor por defecto
+        if (!vendedorUserId) {
+            console.warn('No se pudo determinar el usuario desde el dominio, usando ID por defecto');
+            vendedorUserId = '671be608256c4d53c3f5e12f'; // ID por defecto (Administración NyN)
+        }
+
         const totalCobrado = pricing.totalPrice;
         const totalSinComisiones = totalCobrado - montoComision - comisionServicio;
         const costoBase = pricing.basePrice;
@@ -1329,9 +1412,9 @@ async function generarComisionReservaRentravel(habitacionId, pricing, idReserva,
         // Comision de vendedor virtual
         await utilidadesController.altaComisionReturn({
             monto: montoComision,
-            concepto: `Comisión por venta vía RenTravel ${chaletName} ${nNights} noches`,
+            concepto: `Comisión por venta vía ${domainDisplayName} ${chaletName} ${nNights} noches`,
             fecha: new Date(arrivalDate),
-            idUsuario: chaletAdmin._id.toString(), // Pendiente de validacion
+            idUsuario: vendedorUserId,
             idReserva: idReserva
         })
 

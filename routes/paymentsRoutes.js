@@ -70,7 +70,7 @@ router.post('/charge', async (req, res) => {
         }
 
         // Validar que la habitación esté disponible en las fechas solicitadas
-        const validarDisponibilidadYPrecio = await cotizarReserva(reservationData.cabinId, reservationData.checkIn, reservationData.checkOut, reservationData.guests);
+        const validarDisponibilidadYPrecio = await cotizarReserva(reservationData.cabinId, reservationData.checkIn, reservationData.checkOut, reservationData.guests, req);
         console.log('validarDisponibilidadYPrecio:', validarDisponibilidadYPrecio);
 
         // Validar que los precios dados sean los mismos que los actuales (evitar manipulación)
