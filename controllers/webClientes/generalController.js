@@ -16,13 +16,81 @@ const sendEmail = require('../../common/tasks/send-mails');
 const rackLimpiezaController = require('../rackLimpiezaController');
 const SendMessages = require('../../common/tasks/send-messages');
 
-const web = 'fernando';
-
-const COMISSIONS_MAP = {
-    'fernando': 'VENDEDOR VIRTUAL 1',
-    'carlos': 'VENDEDOR VIRTUAL 2',
-    'externo': 'VENDEDOR VIRTUAL 3'
+// Mapeo de dominios a nombres de costos en la base de datos
+const DOMAIN_TO_COST_NAME = {
+    'cabanasmazamitlajalisco.com.mx': 'VENDEDOR VIRTUAL cabanasmazamitlajalisco',
+    'cabanasmazamitlanavarro.com.mx': 'VENDEDOR VIRTUAL cabanasmazamitlanavarro',
+    'cabanasmazamitlanavarro.com': 'VENDEDOR VIRTUAL cabanasmazamitlanavarro',
+    'rentravel.com.mx': 'VENDEDOR VIRTUAL RENTRAVEL'
 };
+
+/**
+ * Extrae el dominio principal desde el origin del request
+ * Elimina subdominios como 'dev', 'www', etc.
+ * @param {Object} req - Request object de Express
+ * @returns {string|null} Dominio principal o null si no se encuentra
+ */
+function extractMainDomain(req) {
+    try {
+        // Intentar obtener el origin desde headers
+        const origin = req.headers.origin || req.headers.referer;
+        
+        if (!origin) {
+            console.warn('No se encontró origin o referer en el request');
+            return null;
+        }
+
+        // Parsear la URL
+        const url = new URL(origin);
+        let hostname = url.hostname;
+
+        // Remover subdominios comunes de desarrollo/testing
+        const devSubdomains = ['dev', 'www', 'staging', 'test'];
+        const parts = hostname.split('.');
+
+        // Si tiene más de 2 partes (ej: dev.rentravel.com.mx tiene 4 partes)
+        if (parts.length > 2) {
+            // Verificar si el primer segmento es un subdominio de desarrollo
+            if (devSubdomains.includes(parts[0].toLowerCase())) {
+                // Remover el primer segmento
+                hostname = parts.slice(1).join('.');
+            }
+        }
+
+        return hostname;
+    } catch (error) {
+        console.error('Error al extraer dominio:', error);
+        return null;
+    }
+}
+
+/**
+ * Obtiene el nombre del costo asociado al dominio del request
+ * @param {Object} req - Request object de Express
+ * @returns {string|null} Nombre del costo o null si no se encuentra
+ */
+function getCostNameFromDomain(req) {
+    const domain = extractMainDomain(req);
+    
+    if (!domain) {
+        console.warn('No se pudo determinar el dominio');
+        return null;
+    }
+
+    console.log('Dominio extraído:', domain);
+
+    const costName = DOMAIN_TO_COST_NAME[domain];
+    
+    if (!costName) {
+        console.warn(`No se encontró mapeo de costo para el dominio: ${domain}`);
+        return null;
+    }
+
+    console.log('Costo encontrado:', costName);
+
+    console.log(`Dominio detectado: ${domain} -> Costo: ${costName}`);
+    return costName;
+}
 
 // Habitaciones
 async function mostrarUnaHabitacion(req, res) {
@@ -425,7 +493,7 @@ async function cotizadorChaletsyPrecios(req, res) {
         // 13. Calcular precios y verificar restricciones para cada habitación
         const habitacionesConPrecios = await Promise.all(habitacionesDisponibles.map(async habitacion => {
             const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-            const precios = await consultarPreciosPorFechas(checkInDate, checkOutDate, habitacion, guestsNumber);
+            const precios = await consultarPreciosPorFechas(checkInDate, checkOutDate, habitacion, guestsNumber, req);
 
             // Verificar restricciones (capacidad mínima y noches mínimas)
             const restricciones = await getDisponibilidadDeRestricciones([habitacion], checkInDate, checkOutDate, guestsNumber);
@@ -499,7 +567,7 @@ async function cotizadorChaletsyPrecios(req, res) {
     }
 }
 
-async function cotizarReserva(habitacionId, checkIn, checkOut, guests) {
+async function cotizarReserva(habitacionId, checkIn, checkOut, guests, req = null) {
     try {
         // Validar parámetros
         if (!habitacionId || !checkIn || !checkOut || !guests) {
@@ -586,8 +654,8 @@ async function cotizarReserva(habitacionId, checkIn, checkOut, guests) {
             };
         }
 
-        // Calcular precios
-        const precioCalculado = await consultarPreciosPorFechas(checkIn, checkOut, habitacion, guests);
+        // Calcular precios - ahora pasando el req
+        const precioCalculado = await consultarPreciosPorFechas(checkIn, checkOut, habitacion, guests, req);
 
         // Calcular noches
         const nights = Math.ceil((fechaSalida - fechaLlegada) / (1000 * 60 * 60 * 24));
@@ -632,7 +700,7 @@ async function cotizarReservaController(req, res) {
     try {
         const { habitacionId, checkIn, checkOut, guests } = req.body;
 
-        const resultado = await cotizarReserva(habitacionId, checkIn, checkOut, guests);
+        const resultado = await cotizarReserva(habitacionId, checkIn, checkOut, guests, req);
 
         if (resultado.success) {
             res.status(200).json(resultado);
@@ -685,7 +753,7 @@ function convertirFechaES(fecha) {
     return `${anio}-${mes}-${dia}`; // Formato YYYY-MM-DD
 }
 
-async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, pax) {
+async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, pax, req = null) {
     try {
 
         // console.log({ fechaLlegada, fechaSalida, habitacion, pax });
@@ -694,14 +762,22 @@ async function consultarPreciosPorFechas(fechaLlegada, fechaSalida, habitacion, 
 
         const nNights = Math.ceil((new Date(fechaSalida) - new Date(fechaLlegada)) / (1000 * 60 * 60 * 24));
 
-        const usuarioWeb = COMISSIONS_MAP[web];
-        if (!usuarioWeb) {
-            throw new Error("No se encontró el usuario para comisiones");
+        // Obtener el nombre del costo basado en el dominio
+        let costName = null;
+        if (req) {
+            costName = getCostNameFromDomain(req);
         }
 
-        const costoComision = await Costos.findOne({ costName: usuarioWeb });
+        // Si no se pudo determinar el dominio o no hay request, usar un valor por defecto
+        if (!costName) {
+            console.warn('No se pudo determinar el costo desde el dominio, usando valor por defecto');
+            costName = 'VENDEDOR VIRTUAL RENTRAVEL'; // Valor por defecto
+        }
+
+        // Buscar el costo en la base de datos
+        const costoComision = await Costos.findOne({ costName: costName });
         if (!costoComision) {
-            throw new Error("No se encontró el costo para el usuario de comisiones");
+            throw new Error(`No se encontró el costo "${costName}" en la base de datos`);
         }
 
         const montoComision = costoComision.amount;
@@ -944,9 +1020,10 @@ async function getDisponibilidadDeRestricciones(chalets, fechaLlegada, fechaSali
  * @param {string} paymentStatus - Estado del pago ('PAID', 'UNPAID', etc.)
  * @param {number} balanceDue - Balance pendiente
  * @param {string|null} clienteWebId - ID del cliente web (opcional). Si se proporciona, se vinculará con un cliente normal
+ * @param {Object|null} req - Request object de Express (opcional, para determinar el dominio)
  * @returns {Object} Nueva reservación creada
  */
-async function createReservationForClient(reservationData, status, paymentStatus, balanceDue, clienteWebId = null) {
+async function createReservationForClient(reservationData, status, paymentStatus, balanceDue, clienteWebId = null, req = null) {
     const guestInfo = reservationData.guestInfo;
     const pricing = reservationData.pricing;
 
@@ -1099,7 +1176,7 @@ async function createReservationForClient(reservationData, status, paymentStatus
         await logController.createBackendLog(logBody);
 
         // Crear utilidades de reserva
-        const generarReservas = await generarComisionReservaRentravel(newReservation.resourceId, pricing, idReserva, arrivalDate, departureDate, newReservation.nNights);
+        const generarReservas = await generarComisionReservaRentravel(newReservation.resourceId, pricing, idReserva, arrivalDate, departureDate, newReservation.nNights, req);
         if (generarReservas) {
             console.log("Utilidades de reserva generadas correctamente");
         } else {
@@ -1149,7 +1226,7 @@ async function createReservationForClient(reservationData, status, paymentStatus
 
 // Utilidades 
 
-async function generarComisionReservaRentravel(habitacionId, pricing, idReserva, arrivalDate, departureDate, nNights) {
+async function generarComisionReservaRentravel(habitacionId, pricing, idReserva, arrivalDate, departureDate, nNights, req = null) {
     try {
 
         // Eliminar comisiones previas si es que existian
@@ -1179,16 +1256,21 @@ async function generarComisionReservaRentravel(habitacionId, pricing, idReserva,
 
         const chaletType = chalet.propertyDetails.accomodationType;
 
-        // Obtener comision de vendedor virtual
-
-        const usuarioWeb = COMISSIONS_MAP[web];
-        if (!usuarioWeb) {
-            throw new Error("No se encontró el usuario para comisiones");
+        // Obtener comision de vendedor virtual basado en el dominio
+        let costName = null;
+        if (req) {
+            costName = getCostNameFromDomain(req);
         }
 
-        const costoComision = await Costos.findOne({ costName: usuarioWeb });
+        // Si no se pudo determinar el dominio o no hay request, usar un valor por defecto
+        if (!costName) {
+            console.warn('No se pudo determinar el costo desde el dominio en generarComisionReservaRentravel, usando valor por defecto');
+            costName = 'VENDEDOR VIRTUAL RENTRAVEL'; // Valor por defecto
+        }
+
+        const costoComision = await Costos.findOne({ costName: costName });
         if (!costoComision) {
-            throw new Error("No se encontró el costo para el usuario de comisiones");
+            throw new Error(`No se encontró el costo "${costName}" para comisiones`);
         }
 
         const montoComision = costoComision.amount * nNights;

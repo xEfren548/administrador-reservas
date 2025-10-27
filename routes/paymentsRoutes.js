@@ -115,7 +115,8 @@ router.post('/charge', async (req, res) => {
                         statusReserva,
                         paymentStatus,
                         balanceDue,
-                        clienteWebId // Pasar el ID del cliente web si está disponible
+                        clienteWebId, // Pasar el ID del cliente web si está disponible
+                        req // Pasar el request para detectar el dominio
                     );
 
                     if (!nuevaReserva) {
