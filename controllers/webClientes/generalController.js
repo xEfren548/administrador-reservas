@@ -6,6 +6,7 @@ const Costos = require('../../models/Costos');
 const Reservas = require('../../models/Evento');
 const Usuario = require('../../models/Usuario');
 const Cliente = require('../../models/Cliente');
+const ClienteWeb = require('../../models/ClienteWeb');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const utilidadesController = require('./../utilidadesController');
@@ -421,10 +422,13 @@ async function cotizadorChaletsyPrecios(req, res) {
         );
 
 
-        // 13. Calcular precios para cada habitación
+        // 13. Calcular precios y verificar restricciones para cada habitación
         const habitacionesConPrecios = await Promise.all(habitacionesDisponibles.map(async habitacion => {
             const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
             const precios = await consultarPreciosPorFechas(checkInDate, checkOutDate, habitacion, guestsNumber);
+
+            // Verificar restricciones (capacidad mínima y noches mínimas)
+            const restricciones = await getDisponibilidadDeRestricciones([habitacion], checkInDate, checkOutDate, guestsNumber);
 
             return {
                 ...habitacion,
@@ -434,13 +438,29 @@ async function cotizadorChaletsyPrecios(req, res) {
                     checkIn: checkInDate,
                     checkOut: checkOutDate,
                     huespedes: guestsNumber
-                }
+                },
+                // Agregar información de restricciones
+                hasRestrictions: restricciones.hasRestrictions,
+                restrictions: restricciones.hasRestrictions ? restricciones.errors : null,
+                // Indicador para frontend
+                isBookable: !restricciones.hasRestrictions
             };
         }));
 
-        // 14. Ordenar por precio (opcional)
-        // habitacionesConPrecios.sort((a, b) => a.precioCalculado - b.precioCalculado);
-        // console.log(JSON.stringify(habitacionesConPrecios[0], null, 2));
+        // 14. Ordenar por precio (opcional) - primero las que NO tienen restricciones
+        habitacionesConPrecios.sort((a, b) => {
+            // Primero ordenar por si son reservables (sin restricciones primero)
+            if (a.isBookable !== b.isBookable) {
+                return b.isBookable ? 1 : -1;
+            }
+            // Luego por precio
+            return a.precioCalculado.precioBaseFinal - b.precioCalculado.precioBaseFinal;
+        });
+        
+        // Contar habitaciones reservables y con restricciones
+        const bookableCount = habitacionesConPrecios.filter(h => h.isBookable).length;
+        const restrictedCount = habitacionesConPrecios.filter(h => !h.isBookable).length;
+        
         // 15. Respuesta exitosa
         res.status(200).json({
             success: true,
@@ -455,8 +475,10 @@ async function cotizadorChaletsyPrecios(req, res) {
                 amenities: amenitiesArray
             },
             totalResults: habitacionesConPrecios.length,
+            bookableResults: bookableCount,
+            restrictedResults: restrictedCount,
             message: habitacionesConPrecios.length > 0
-                ? `Se encontraron ${habitacionesConPrecios.length} habitaciones disponibles`
+                ? `Se encontraron ${habitacionesConPrecios.length} habitaciones (${bookableCount} disponibles, ${restrictedCount} con restricciones)`
                 : 'No se encontraron habitaciones que cumplan con los criterios de búsqueda',
             appliedFilters: {
                 hasLocationFilter: !!(location && location !== 'any'),
@@ -547,6 +569,20 @@ async function cotizarReserva(habitacionId, checkIn, checkOut, guests) {
                 available: false,
                 error: 'La habitación no está disponible para las fechas seleccionadas',
                 errorType: 'NOT_AVAILABLE'
+            };
+        }
+
+        // Verificar restricciones (capacidad mínima y noches mínimas)
+        const restricciones = await getDisponibilidadDeRestricciones(habitacionesDisponibles, checkIn, checkOut, guests);
+        
+        if (restricciones.hasRestrictions) {
+            const errorMessages = restricciones.errors.map(err => err.message).join(' ');
+            return {
+                success: false,
+                available: false,
+                error: errorMessages,
+                errorType: restricciones.errors[0].type.toUpperCase(),
+                restrictions: restricciones.errors
             };
         }
 
@@ -828,10 +864,89 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     return true;
 }
 
+async function getDisponibilidadDeRestricciones(chalets, fechaLlegada, fechaSalida, huespedes) {
+    const fechaLlegadaDate = new Date(fechaLlegada);
+    const fechaSalidaDate = new Date(fechaSalida);
+    
+    // Calcular número de noches
+    const nNights = Math.ceil((fechaSalidaDate - fechaLlegadaDate) / (1000 * 60 * 60 * 24));
+    
+    const errorMessages = [];
+
+    for (const chalet of chalets) {
+        let currentDate = new Date(fechaLlegadaDate);
+        currentDate.setUTCHours(6, 0, 0, 0);
+        
+        const endDate = new Date(fechaSalidaDate);
+        endDate.setUTCHours(6, 0, 0, 0);
+        
+        // Verificar restricciones para cada fecha
+        while (currentDate < endDate) {
+            // Verificar capacidad mínima
+            const disponibilidadPax = await BloqueoFechas.findOne({ 
+                date: currentDate, 
+                habitacionId: chalet._id, 
+                type: 'capacidad_minima' 
+            });
+            
+            if (disponibilidadPax && huespedes < disponibilidadPax.min) {
+                errorMessages.push({
+                    type: 'capacidad_minima',
+                    message: `El alojamiento tiene una capacidad mínima de ${disponibilidadPax.min} huéspedes para las fechas seleccionadas.`,
+                    minRequired: disponibilidadPax.min,
+                    provided: huespedes,
+                    date: currentDate.toISOString()
+                });
+                break; // No necesitamos seguir verificando si ya encontramos un error
+            }
+            
+            // Verificar noches mínimas
+            const disponibilidadNochesMinimas = await BloqueoFechas.findOne({ 
+                date: currentDate, 
+                habitacionId: chalet._id, 
+                type: 'restriccion' 
+            });
+            
+            if (disponibilidadNochesMinimas && nNights < disponibilidadNochesMinimas.min) {
+                errorMessages.push({
+                    type: 'noches_minimas',
+                    message: `El alojamiento requiere una estancia mínima de ${disponibilidadNochesMinimas.min} noches para las fechas seleccionadas.`,
+                    minRequired: disponibilidadNochesMinimas.min,
+                    provided: nNights,
+                    date: currentDate.toISOString()
+                });
+                break; // No necesitamos seguir verificando si ya encontramos un error
+            }
+            
+            // Avanzar al siguiente día
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        // Si encontramos errores, no necesitamos verificar más chalets
+        if (errorMessages.length > 0) {
+            break;
+        }
+    }
+    
+    return {
+        hasRestrictions: errorMessages.length > 0,
+        errors: errorMessages
+    };
+}
+
 
 // Reservas
 
-async function createReservationForClient(reservationData, status, paymentStatus, balanceDue) {
+/**
+ * Crea una reservación para un cliente, manejando tanto clientes web como clientes normales
+ * @param {Object} reservationData - Datos de la reservación
+ * @param {string} status - Estado de la reservación ('active', 'pending', etc.)
+ * @param {string} paymentStatus - Estado del pago ('PAID', 'UNPAID', etc.)
+ * @param {number} balanceDue - Balance pendiente
+ * @param {string|null} clienteWebId - ID del cliente web (opcional). Si se proporciona, se vinculará con un cliente normal
+ * @returns {Object} Nueva reservación creada
+ */
+async function createReservationForClient(reservationData, status, paymentStatus, balanceDue, clienteWebId = null) {
     const guestInfo = reservationData.guestInfo;
     const pricing = reservationData.pricing;
 
@@ -848,26 +963,64 @@ async function createReservationForClient(reservationData, status, paymentStatus
         departureDate.setUTCHours(cabinDepartureHour || 11, 0, 0, 0);
 
         let client = null;
-        const clientEmail = guestInfo.email.toLowerCase().trim();
-        if (clientEmail) {
-            client = await Cliente.findOne({ email: clientEmail });
+        let isWebClient = false;
+
+        // Si se proporciona un ID de cliente web, usar ese cliente
+        if (clienteWebId) {
+            const clienteWeb = await ClienteWeb.findById(clienteWebId);
+
+            if (clienteWeb) {
+                // Buscar si ya existe un cliente normal con el mismo email
+                client = await Cliente.findOne({ email: clienteWeb.email.toLowerCase().trim() });
+
+                if (!client) {
+                    // Crear cliente normal basado en los datos del cliente web
+                    const newClient = new Cliente({
+                        firstName: clienteWeb.firstName || guestInfo.firstName,
+                        lastName: clienteWeb.lastName || guestInfo.lastName,
+                        email: clienteWeb.email,
+                        phone: clienteWeb.phone || guestInfo.phone,
+                        address: clienteWeb.address || guestInfo.address || 'Por definir',
+                        // Agregar referencia al cliente web
+                        clienteWebId: clienteWebId,
+                        isWebClient: true
+                    });
+                    await newClient.save();
+                    client = newClient;
+                } else {
+                    // Actualizar el cliente existente para vincularlo al cliente web
+                    client.clienteWebId = clienteWebId;
+                    client.isWebClient = true;
+                    await client.save();
+                }
+
+                isWebClient = true;
+            }
         }
 
+        // Si no hay cliente web o no se encontró, proceder con la lógica original
         if (!client) {
-            // Crear nuevo cliente
+            const clientEmail = guestInfo.email.toLowerCase().trim();
+            if (clientEmail) {
+                client = await Cliente.findOne({ email: clientEmail });
+            }
 
-            const newClient = new Cliente({
-                firstName: guestInfo.firstName,
-                lastName: guestInfo.lastName,
-                email: guestInfo.email,
-                phone: guestInfo.phone,
-                address: guestInfo.address || 'Por definir',
-            });
-            await newClient.save();
-            client = newClient;
+            if (!client) {
+                // Crear nuevo cliente normal
+                const newClient = new Cliente({
+                    firstName: guestInfo.firstName,
+                    lastName: guestInfo.lastName,
+                    email: guestInfo.email,
+                    phone: guestInfo.phone,
+                    address: guestInfo.address || 'Por definir',
+                    isWebClient: false
+                });
+                await newClient.save();
+                client = newClient;
+            }
         }
 
-        console.log("Cliente: ", client);
+        console.log(`Cliente ${isWebClient ? 'web' : 'normal'}: `, client);
 
 
         const newReservation = new Reservas({
@@ -884,7 +1037,9 @@ async function createReservationForClient(reservationData, status, paymentStatus
             total: pricing.totalPrice,
             balanceDue: balanceDue,
             paymentStatus: paymentStatus,
-            payments: []
+            payments: [],
+            // Agregar flag para identificar si la reserva fue hecha por un cliente web
+            isWebClientReservation: isWebClient
         });
         if (!newReservation) {
             throw new Error('Error creating reservation object');
@@ -1262,7 +1417,7 @@ async function generarComisionReservaRentravel(habitacionId, pricing, idReserva,
                         // Comision negativa de IVA (16%)
                         // let comisionNegativaIva = comision * 0.16;
                         let comisionNegativaIva = Math.round((comision * 0.08 + Number.EPSILON) * 100) / 100;
-                        
+
                         let comisionServIndirectos = Math.round(((comision - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
                         await utilidadesController.altaComisionReturn({
                             monto: -comisionServIndirectos,
@@ -1303,11 +1458,58 @@ async function generarComisionReservaRentravel(habitacionId, pricing, idReserva,
     }
 }
 
+/**
+ * Función auxiliar para encontrar o crear un cliente normal basado en un cliente web
+ * @param {string} clienteWebId - ID del cliente web
+ * @returns {Object|null} Cliente normal encontrado o creado, null si no se encuentra el cliente web
+ */
+async function findOrCreateClientFromWebClient(clienteWebId) {
+    try {
+        const clienteWeb = await ClienteWeb.findById(clienteWebId);
+        if (!clienteWeb) {
+            return null;
+        }
+
+        // Buscar cliente normal existente
+        let client = await Cliente.findOne({ clienteWebId: clienteWebId });
+
+        if (!client) {
+            // También buscar por email como fallback
+            client = await Cliente.findOne({ email: clienteWeb.email.toLowerCase().trim() });
+
+            if (client) {
+                // Vincular el cliente existente al cliente web
+                client.clienteWebId = clienteWebId;
+                client.isWebClient = true;
+                await client.save();
+            } else {
+                // Crear nuevo cliente normal
+                client = new Cliente({
+                    firstName: clienteWeb.firstName,
+                    lastName: clienteWeb.lastName,
+                    email: clienteWeb.email,
+                    phone: clienteWeb.phone,
+                    address: clienteWeb.address || 'Por definir',
+                    clienteWebId: clienteWebId,
+                    isWebClient: true
+                });
+                await client.save();
+            }
+        }
+
+        return client;
+    } catch (error) {
+        console.error('Error finding or creating client from web client:', error);
+        return null;
+    }
+}
+
 module.exports = {
     mostrarUnaHabitacion,
     mostrarTodasHabitaciones,
     cotizadorChaletsyPrecios,
     cotizarReserva,
     cotizarReservaController,
-    createReservationForClient
+    createReservationForClient,
+    findOrCreateClientFromWebClient
 }

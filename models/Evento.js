@@ -111,6 +111,11 @@ const reservaSchema = new Schema({
     },
     balanceDue: { type: Number, default: 0 },
     payments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Payment' }],
+    // Campo para identificar reservas hechas por clientes web
+    isWebClientReservation: {
+        type: Boolean,
+        default: false
+    }
 });
 
 reservaSchema.methods.recalcBalance = async function () {
