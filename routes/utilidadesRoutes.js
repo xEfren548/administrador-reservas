@@ -17,5 +17,13 @@ router.put('/utilidades', utilidadesController.editarComision);
 
 router.delete('/utilidades', utilidadesController.eliminarComision);
 
+// Reportes personalizados
+
+// Render Reporte Todo en Uno
+router.get('/reportes-personalizados', utilidadesController.renderReporteTodoEnUno);
+
+// Generar Reporte Todo en Uno
+router.get('/reportes/datos', utilidadesController.reporteTodoEnUno);
+
 
 module.exports = router

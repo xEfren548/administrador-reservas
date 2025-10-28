@@ -671,7 +671,7 @@ async function generarComisionReserva(req, res) {
                         // Comision negativa de IVA (16%)
                         // let comisionNegativaIva = comision * 0.16;
                         let comisionNegativaIva = Math.round((comision * 0.08 + Number.EPSILON) * 100) / 100;
-                        
+
                         let comisionServIndirectos = Math.round(((comision - comisionNegativaIva) * 0.04 + Number.EPSILON) * 100) / 100;
                         await altaComisionReturn({
                             monto: -comisionServIndirectos,
@@ -1421,7 +1421,7 @@ async function mostrarUtilidadesPorUsuario(req, res) {
         console.log(error.message);
         res.status(200).send('Something went wrong while retrieving services.');
     }
-} 
+}
 
 async function mostrarUtilidadesPorUsuarioJson(req, res) {
     try {
@@ -2010,6 +2010,314 @@ async function eliminarComisionServicio(idReserva, idServicio) {
     }
 }
 
+async function renderReporteTodoEnUno(req, res) {
+    try {
+        res.render('reporteTodoEnUno');
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+async function reporteTodoEnUno(req, res) {
+    try {
+        const { fechaInicio, fechaFin } = req.query;
+
+        // Validar parámetros
+        if (!fechaInicio || !fechaFin) {
+            return res.status(400).json({
+                success: false,
+                error: 'Se requieren fechaInicio y fechaFin'
+            });
+        }
+
+        // Cargar datos en paralelo
+        const [reservas, habitaciones, clientes, usuarios, pagos] = await Promise.all([
+            Documento.find({
+                arrivalDate: { 
+                    $gte: new Date(fechaInicio), 
+                    $lte: new Date(fechaFin) 
+                }
+            }).lean(),
+            Habitacion.find().lean(),
+            Cliente.find().lean(),
+            usersController.getAllUsersMongo(),
+            Pago.find().lean()
+        ]);
+
+        if (!reservas || reservas.length === 0) {
+            return res.status(200).json({
+                success: true,
+                data: [],
+                message: 'No se encontraron reservas en el rango de fechas especificado',
+                metadata: {
+                    fechaInicio,
+                    fechaFin,
+                    totalReservas: 0
+                }
+            });
+        }
+
+        // Obtener IDs de reservas y cargar utilidades
+        const reservaIds = reservas.map(r => r._id);
+        const utilidades = await Utilidades.find({ 
+            idReserva: { $in: reservaIds } 
+        }).lean();
+
+        // Crear mapas para búsqueda rápida O(1)
+        const habitacionesMap = new Map(
+            habitaciones.map(h => [h._id.toString(), h])
+        );
+
+        const clientesMap = new Map(
+            clientes.map(c => [c._id.toString(), c])
+        );
+
+        const usuariosMap = new Map(
+            usuarios.map(u => [u._id.toString(), u])
+        );
+
+        const utilidadesPorReserva = new Map();
+        utilidades.forEach(u => {
+            const rid = u.idReserva?.toString();
+            if (rid) {
+                if (!utilidadesPorReserva.has(rid)) {
+                    utilidadesPorReserva.set(rid, []);
+                }
+                utilidadesPorReserva.get(rid).push(u);
+            }
+        });
+
+        const pagosPorReserva = new Map();
+        pagos.forEach(p => {
+            const rid = p.reservacionId?.toString();
+            if (rid) {
+                if (!pagosPorReserva.has(rid)) {
+                    pagosPorReserva.set(rid, []);
+                }
+                pagosPorReserva.get(rid).push(p);
+            }
+        });
+
+        // Procesar cada reserva
+        const reporteData = reservas.map(reserva => {
+            const reservaId = reserva._id.toString();
+            const utilidadesReserva = utilidadesPorReserva.get(reservaId) || [];
+            const pagosReserva = pagosPorReserva.get(reservaId) || [];
+
+            // Obtener habitación
+            const habitacion = habitacionesMap.get(reserva.resourceId?.toString());
+            const nombreHabitacion = habitacion?.propertyDetails?.name || 'N/A';
+            const costoLimpieza = habitacion?.additionalInfo?.extraCleaningCost || 0;
+
+            // Obtener cliente
+            const cliente = clientesMap.get(reserva.client?.toString());
+            const nombreCliente = cliente 
+                ? `${cliente.firstName || ''} ${cliente.lastName || ''}`.trim()
+                : reserva.clienteProvisional || 'N/A';
+            const correoCliente = cliente?.email || 'N/A';
+            const telefonoCliente = cliente?.phone || 'N/A';
+
+            // Obtener usuario que creó la reserva
+            const usuarioCreador = usuariosMap.get(reserva.createdBy?.toString());
+            const agenteReserva = usuarioCreador 
+                ? `${usuarioCreador.firstName || ''} ${usuarioCreador.lastName || ''}`.trim()
+                : 'N/A';
+            const adminLigadoReserva = usuarioCreador?.adminname || 'N/A';
+
+            // Obtener administrador ligado a la cabaña
+            const adminCabana = usuariosMap.get(habitacion?.others?.admin?.toString());
+            const adminLigadoCabana = adminCabana
+                ? `${adminCabana.firstName || ''} ${adminCabana.lastName || ''}`.trim()
+                : 'N/A';
+
+            // Procesar utilidades
+            let comisionDueno = 0;
+            let comisionLimpieza = 0;
+            let comisionSistema = 0;
+            let comisionAdminCabana = 0;
+            let comisionGerente = 0;
+            let comisionVendedor = 0;
+            let utilidadTotal = 0;
+            let comisionInversionistas = 0;
+
+            utilidadesReserva.forEach(utilidad => {
+                const concepto = utilidad.concepto || '';
+                const monto = utilidad.monto || 0;
+
+                if (concepto.includes('Dueño de cabaña') || concepto.includes('inversionista')) {
+                    if (concepto.includes('inversionista')) {
+                        comisionInversionistas += monto;
+                    } else {
+                        comisionDueno += monto;
+                    }
+                } else if (concepto.includes('limpieza') || concepto.includes('Limpieza')) {
+                    comisionLimpieza += monto;
+                } else if (concepto.includes('uso de sistema') || concepto.includes('NyN')) {
+                    comisionSistema += monto;
+                } else if (concepto.includes('administrador ligado') || concepto.includes('Administrador ligado')) {
+                    comisionAdminCabana += monto;
+                } else if (concepto.includes('Utilidad')) {
+                    utilidadTotal += monto;
+                } else if (concepto.includes('venta vía') || concepto.includes('Comisión por venta')) {
+                    comisionVendedor += monto;
+                } else if (concepto.includes('Reservación') || concepto.includes('gerente')) {
+                    if (monto === 100 || concepto.toLowerCase().includes('gerente')) {
+                        comisionGerente += monto;
+                    } else {
+                        comisionVendedor += monto;
+                    }
+                }
+            });
+
+            // Calcular totales de pagos
+            const totalPagado = pagosReserva.reduce((sum, pago) => sum + (pago.importe || 0), 0);
+            const pagosNoEfectivo = pagosReserva
+                .filter(p => p.metodoPago !== 'Recibio dueño')
+                .reduce((sum, pago) => sum + (pago.importe || 0), 0);
+            const liquidaEfectivo = pagosReserva
+                .filter(p => p.metodoPago === 'Recibio dueño')
+                .reduce((sum, pago) => sum + (pago.importe || 0), 0);
+
+            // Cálculos finales
+            const precioBase = comisionDueno + comisionInversionistas;
+            const precioBasePorNoche = reserva.nNights > 0 ? precioBase / reserva.nNights : 0;
+            const participacionBosques = precioBase * 0.20;
+            const excedente = totalPagado - (reserva.total || 0);
+
+            // Procesar notas
+            const notas = Array.isArray(reserva.notes) 
+                ? reserva.notes.map(n => n.texto || n).filter(Boolean).join(' | ')
+                : '';
+            const notasPrivadas = Array.isArray(reserva.privateNotes)
+                ? reserva.privateNotes.map(n => n.texto || n).filter(Boolean).join(' | ')
+                : '';
+
+            return {
+                // Identificación
+                id: reserva._id,
+                status: reserva.status || 'N/A',
+                
+                // Información de la reserva
+                cabana: nombreHabitacion,
+                fechaEntrada: momentTz.tz(reserva.arrivalDate, 'America/Mexico_City').format('DD/MM/YYYY'),
+                fechaSalida: momentTz.tz(reserva.departureDate, 'America/Mexico_City').format('DD/MM/YYYY'),
+                noches: reserva.nNights || 0,
+                huespedes: reserva.pax || 0,
+                
+                // Información del cliente
+                nombreCliente,
+                correoCliente,
+                telefonoCliente,
+                
+                // Información de agentes
+                agenteReserva,
+                adminLigadoReserva,
+                adminLigadoCabana,
+                
+                // Precios y comisiones
+                precioBasePorNoche: Math.round(precioBasePorNoche * 100) / 100,
+                precioBase: Math.round(precioBase * 100) / 100,
+                precioReserva: reserva.total || 0,
+                limpieza: comisionLimpieza,
+                participacionBosques: Math.round(participacionBosques * 100) / 100,
+                administracionNyN: comisionSistema,
+                comisionAdminCabana,
+                comisionGerente,
+                comisionVendedor,
+                utilidadTotal,
+                comisionInversionistas,
+                comisionDueno,
+                
+                // Pagos
+                totalPagado,
+                pagosNoEfectivo,
+                liquidaEfectivo,
+                excedente: Math.round(excedente * 100) / 100,
+                balanceDue: reserva.balanceDue || 0,
+                
+                // Notas
+                notas,
+                notasPrivadas,
+                
+                // Metadata
+                fechaReservacion: momentTz.tz(reserva.reservationDate, 'America/Mexico_City').format('DD/MM/YYYY HH:mm'),
+                paymentStatus: reserva.paymentStatus || 'N/A',
+                
+                // Detalles de utilidades (para referencia)
+                detalleUtilidades: utilidadesReserva.map(u => ({
+                    concepto: u.concepto,
+                    monto: u.monto,
+                    fecha: momentTz.tz(u.fecha, 'America/Mexico_City').format('DD/MM/YYYY')
+                }))
+            };
+        });
+
+        // Calcular totales generales
+        const totales = {
+            totalReservas: reporteData.length,
+            totalNoches: reporteData.reduce((sum, r) => sum + r.noches, 0),
+            totalIngresos: reporteData.reduce((sum, r) => sum + r.totalPagado, 0),
+            totalPrecioReservas: reporteData.reduce((sum, r) => sum + r.precioReserva, 0),
+            totalComisionSistema: reporteData.reduce((sum, r) => sum + r.administracionNyN, 0),
+            totalComisionAdmin: reporteData.reduce((sum, r) => sum + r.comisionAdminCabana, 0),
+            totalComisionVendedor: reporteData.reduce((sum, r) => sum + r.comisionVendedor, 0),
+            totalUtilidades: reporteData.reduce((sum, r) => sum + r.utilidadTotal, 0),
+            totalExcedente: reporteData.reduce((sum, r) => sum + r.excedente, 0)
+        };
+
+        // Definir headers para el Excel
+        const headers = [
+            { key: 'id', label: 'ID Reserva', width: 25 },
+            { key: 'status', label: 'Estatus', width: 15 },
+            { key: 'cabana', label: 'Cabaña', width: 30 },
+            { key: 'fechaEntrada', label: 'Fecha Entrada', width: 15 },
+            { key: 'fechaSalida', label: 'Fecha Salida', width: 15 },
+            { key: 'noches', label: 'Noches', width: 10 },
+            { key: 'huespedes', label: 'Huéspedes', width: 10 },
+            { key: 'nombreCliente', label: 'Cliente', width: 30 },
+            { key: 'correoCliente', label: 'Correo', width: 30 },
+            { key: 'telefonoCliente', label: 'Teléfono', width: 15 },
+            { key: 'agenteReserva', label: 'Agente Reserva', width: 25 },
+            { key: 'adminLigadoCabana', label: 'Admin Cabaña', width: 25 },
+            { key: 'precioBasePorNoche', label: 'Precio Base/Noche', width: 15 },
+            { key: 'precioBase', label: 'Precio Base Total', width: 15 },
+            { key: 'precioReserva', label: 'Precio Reserva', width: 15 },
+            { key: 'limpieza', label: 'Limpieza', width: 12 },
+            { key: 'participacionBosques', label: 'Participación 20%', width: 15 },
+            { key: 'administracionNyN', label: 'Admin NyN', width: 12 },
+            { key: 'comisionAdminCabana', label: 'Comisión Admin', width: 15 },
+            { key: 'comisionVendedor', label: 'Comisión Vendedor', width: 15 },
+            { key: 'comisionGerente', label: 'Comisión Gerente', width: 15 },
+            { key: 'utilidadTotal', label: 'Utilidad', width: 12 },
+            { key: 'comisionInversionistas', label: 'Inversionistas', width: 15 },
+            { key: 'totalPagado', label: 'Total Pagado', width: 15 },
+            { key: 'excedente', label: 'Excedente', width: 12 },
+            { key: 'notas', label: 'Notas', width: 40 }
+        ];
+
+        // Respuesta exitosa
+        res.status(200).json({
+            success: true,
+            data: reporteData,
+            totales,
+            headers,
+            metadata: {
+                fechaInicio,
+                fechaFin,
+                fechaGeneracion: momentTz.tz(new Date(), 'America/Mexico_City').format('DD/MM/YYYY HH:mm:ss'),
+                totalRegistros: reporteData.length
+            }
+        });
+
+    } catch (error) {
+        console.error('Error en reporteTodoEnUno:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error generando reporte Todo en Uno',
+            message: error.message
+        });
+    }
+}
 
 module.exports = {
     obtenerComisionesPorReserva,
@@ -2029,5 +2337,7 @@ module.exports = {
     editarComisionReturn,
     eliminarComision,
     eliminarComisionReturn,
-    eliminarComisionServicio
+    eliminarComisionServicio,
+    renderReporteTodoEnUno,
+    reporteTodoEnUno
 }
