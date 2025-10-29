@@ -2148,12 +2148,8 @@ async function reporteTodoEnUno(req, res) {
 
                 if (concepto.includes('Dueño de cabaña') || concepto.includes('inversionista')) {
                     if (concepto.includes('inversionista') && monto > 0) {
-                        console.log("Adding to comisionInversionistas:", monto);
-                        console.log("concepto:", concepto);
                         comisionInversionistas += monto;
                     } else if (concepto.includes('Dueño de cabaña') && monto > 0) {
-                        console.log("Adding to comisionDueno:", monto);
-                        console.log("concepto:", concepto);
                         comisionDueno += monto;
                     }
                 } else if (concepto.includes('limpieza') || concepto.includes('Limpieza')) {
@@ -2185,11 +2181,13 @@ async function reporteTodoEnUno(req, res) {
                 .filter(p => p.metodoPago === 'Recibio dueño')
                 .reduce((sum, pago) => sum + (pago.importe || 0), 0);
 
+            const isNoShow = reserva.status === 'no-show';
+            
             // Cálculos finales
             const precioBase = comisionDueno + comisionInversionistas;
             const precioBasePorNoche = reserva.nNights > 0 ? precioBase / reserva.nNights : 0;
             const participacionBosques = (precioBase + utilidadTotal + comisionLimpieza) * 0.20;
-            const excedente = totalPagado - (reserva.total || 0);
+            const excedente = totalPagado - (isNoShow ? reserva.total / 2 : reserva.total || 0);
             const totalAgencia = comisionAdminCabana + comisionGerente + comisionVendedor + excedente;
 
             // Procesar notas
@@ -2226,7 +2224,8 @@ async function reporteTodoEnUno(req, res) {
                 // Precios y comisiones
                 precioBasePorNoche: Math.round(precioBasePorNoche * 100) / 100,
                 precioBase: Math.round(precioBase * 100) / 100,
-                precioReserva: reserva.total || 0,
+                // precioReserva: reserva.total || 0,
+                precioReserva: reserva.status === 'no-show' ? reserva.total / 2 : reserva.total,
                 limpieza: comisionLimpieza,
                 participacionBosques: Math.round(participacionBosques * 100) / 100,
                 administracionNyN: comisionSistema,

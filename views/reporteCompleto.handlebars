@@ -97,8 +97,8 @@
     </div>
 </div>
 
-<!-- Script de SheetJS desde CDN -->
-<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<!-- Script de SheetJS con soporte de estilos desde CDN -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
 <script>
 // =============================================================================
@@ -187,14 +187,74 @@ async function crearArchivoExcel(data, fechaInicio, fechaFin) {
     // HOJA 1: REPORTE PRINCIPAL
     // =============================================================================
 
+    // Definir categorías (grupos de columnas) - DEBEN COINCIDIR CON EL ORDEN DE LOS HEADERS
+    const categorias = [
+        { nombre: 'Identificación', columnas: ['ID Reserva', 'Estatus'], color: 'E7E6E6', colorDatos: 'F2F2F2' },
+        { nombre: 'Administración', columnas: ['Admin Cabaña', 'Agente Reserva'], color: 'E7E6E6', colorDatos: 'F2F2F2' },
+        { nombre: 'Información de Reserva', columnas: ['Cabaña', 'Agencia', 'Fecha Entrada', 'Fecha Salida', 'Noches', 'Huéspedes'], color: 'FFD966', colorDatos: 'FFF2CC' },
+        { nombre: 'Ingresos Base', columnas: ['Precio Base/Noche', 'Precio Base Total', 'Utilidad', 'Limpieza', 'Participación 20%'], color: '87CEEB', colorDatos: 'D9EDF7' },
+        { nombre: 'Comisiones', columnas: ['Admin NyN', 'Comisión Gerente', 'Comisión Admin', 'Comisión Vendedor'], color: 'FFA500', colorDatos: 'FFE5CC' },
+        { nombre: 'Pagos Cliente', columnas: ['Precio Reserva', 'Total Pagado', 'Excedente', 'Inversionistas'], color: 'C0C0C0', colorDatos: 'E8E8E8' },
+        { nombre: 'Cliente', columnas: ['Cliente', 'Correo', 'Teléfono'], color: 'FFD966', colorDatos: 'FFF2CC' },
+        { nombre: 'Observaciones', columnas: ['Notas'], color: 'E7E6E6', colorDatos: 'F2F2F2' }
+    ];
+
     // Crear array para los datos de la hoja
     const worksheetData = [];
 
-    // 1. Agregar fila de headers
+    // 1. Agregar fila de categorías
+    const categoriaRow = [];
+    const merges = []; // Para guardar las celdas a combinar
+    let colIndex = 0;
+
+    categorias.forEach(categoria => {
+        const inicio = colIndex;
+        const fin = colIndex + categoria.columnas.length - 1;
+        
+        // Agregar el nombre de la categoría solo en la primera columna
+        categoriaRow.push(categoria.nombre);
+        
+        // Agregar celdas vacías para el resto de columnas de la categoría
+        for (let i = 1; i < categoria.columnas.length; i++) {
+            categoriaRow.push('');
+        }
+        
+        // Guardar el rango a combinar (fila 0, de columna inicio a fin)
+        if (categoria.columnas.length > 1) {
+            merges.push({
+                s: { r: 0, c: inicio },
+                e: { r: 0, c: fin },
+                color: categoria.color,
+                colorDatos: categoria.colorDatos
+            });
+        } else {
+            // Para categorías de una sola columna, solo guardamos el color
+            merges.push({
+                s: { r: 0, c: inicio },
+                e: { r: 0, c: inicio },
+                color: categoria.color,
+                colorDatos: categoria.colorDatos
+            });
+        }
+        
+        colIndex += categoria.columnas.length;
+    });
+
+    // Crear mapa de colores por columna para aplicar a todas las filas
+    const coloresColumnas = [];
+    categorias.forEach(categoria => {
+        for (let i = 0; i < categoria.columnas.length; i++) {
+            coloresColumnas.push(categoria.colorDatos);
+        }
+    });
+
+    worksheetData.push(categoriaRow);
+
+    // 2. Agregar fila de headers
     const headerRow = data.headers.map(h => h.label);
     worksheetData.push(headerRow);
 
-    // 2. Agregar filas de datos
+    // 3. Agregar filas de datos
     data.data.forEach(registro => {
         const row = data.headers.map(header => {
             const valor = registro[header.key];
@@ -217,7 +277,7 @@ async function crearArchivoExcel(data, fechaInicio, fechaFin) {
         worksheetData.push(row);
     });
 
-    // 3. Agregar fila de totales
+    // 4. Agregar fila de totales
     const totalesRow = [];
     data.headers.forEach((header, index) => {
         if (index === 0) {
@@ -274,10 +334,31 @@ async function crearArchivoExcel(data, fechaInicio, fechaFin) {
         for (let C = range.s.c; C <= range.e.c; ++C) {
             const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
             
-            if (!worksheet[cellAddress]) continue;
+            // Asegurar que la celda existe
+            if (!worksheet[cellAddress]) {
+                worksheet[cellAddress] = { t: 's', v: '' };
+            }
 
-            // Estilo para header (primera fila)
+            // Estilo para fila de categorías (fila 0)
             if (R === 0) {
+                // Buscar el color de esta columna en merges
+                const merge = merges.find(m => C >= m.s.c && C <= m.e.c);
+                const colorCategoria = merge ? merge.color : 'E7E6E6';
+                
+                worksheet[cellAddress].s = {
+                    font: { bold: true, sz: 11, color: { rgb: "000000" } },
+                    fill: { fgColor: { rgb: colorCategoria } },
+                    alignment: { horizontal: "center", vertical: "center" },
+                    border: {
+                        top: { style: "medium", color: { rgb: "000000" } },
+                        bottom: { style: "medium", color: { rgb: "000000" } },
+                        left: { style: "medium", color: { rgb: "000000" } },
+                        right: { style: "medium", color: { rgb: "000000" } }
+                    }
+                };
+            }
+            // Estilo para header (fila 1)
+            else if (R === 1) {
                 worksheet[cellAddress].s = {
                     font: { bold: true, color: { rgb: "FFFFFF" } },
                     fill: { fgColor: { rgb: "4B5563" } },
@@ -314,7 +395,11 @@ async function crearArchivoExcel(data, fechaInicio, fechaFin) {
             }
             // Estilo para datos normales
             else {
+                // Obtener el color de fondo según la columna
+                const colorColumna = coloresColumnas[C] || 'FFFFFF';
+                
                 worksheet[cellAddress].s = {
+                    fill: { fgColor: { rgb: colorColumna } },
                     alignment: { 
                         horizontal: indicesMonetarios.includes(C) ? "right" : "left",
                         vertical: "center" 
@@ -334,6 +419,12 @@ async function crearArchivoExcel(data, fechaInicio, fechaFin) {
             }
         }
     }
+
+    // Aplicar combinación de celdas para las categorías
+    worksheet['!merges'] = merges.map(m => ({
+        s: { r: m.s.r, c: m.s.c },
+        e: { r: m.e.r, c: m.e.c }
+    }));
 
     // Agregar la hoja al libro
     XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte");
