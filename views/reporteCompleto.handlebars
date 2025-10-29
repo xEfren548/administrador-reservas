@@ -1,41 +1,41 @@
-<!-- Reporte Completo - Todo en Uno -->
-<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+<!-- Reporte Completo - Todo en Uno - Tema Oscuro -->
+<div class="min-h-screen bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Reporte Completo - Todo en Uno</h1>
-            <p class="mt-2 text-sm text-gray-600">
+            <h1 class="text-3xl font-bold text-white">Reporte Completo - Todo en Uno</h1>
+            <p class="mt-2 text-sm text-gray-400">
                 Genera un reporte detallado de todas las reservas en un rango de fechas específico
             </p>
         </div>
 
         <!-- Formulario de Filtros -->
-        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div class="bg-gray-800 shadow-xl rounded-lg p-6 mb-6 border border-gray-700">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Fecha Inicio -->
                 <div>
-                    <label for="fechaInicio" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="fechaInicio" class="block text-sm font-medium text-gray-300 mb-2">
                         Fecha Inicio
                     </label>
                     <input 
                         type="date" 
                         id="fechaInicio" 
                         name="fechaInicio"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         required
                     >
                 </div>
 
                 <!-- Fecha Fin -->
                 <div>
-                    <label for="fechaFin" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="fechaFin" class="block text-sm font-medium text-gray-300 mb-2">
                         Fecha Fin
                     </label>
                     <input 
                         type="date" 
                         id="fechaFin" 
                         name="fechaFin"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         required
                     >
                 </div>
@@ -45,7 +45,7 @@
                     <button 
                         id="btnGenerarReporte"
                         onclick="generarReporteExcel()"
-                        class="w-full px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center"
+                        class="w-full px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors duration-200 flex items-center justify-center"
                     >
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -62,18 +62,18 @@
 
             <!-- Loading Indicator -->
             <div id="loadingIndicator" class="mt-4 hidden">
-                <div class="flex items-center justify-center p-4 bg-blue-50 rounded-lg">
-                    <svg class="animate-spin h-5 w-5 mr-3 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <div class="flex items-center justify-center p-4 bg-blue-900/30 border border-blue-700 rounded-lg">
+                    <svg class="animate-spin h-5 w-5 mr-3 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span class="text-blue-700 font-medium">Generando reporte, por favor espere...</span>
+                    <span class="text-blue-300 font-medium">Generando reporte, por favor espere...</span>
                 </div>
             </div>
         </div>
 
         <!-- Información de Ayuda -->
-        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+        <div class="bg-blue-900/30 border-l-4 border-blue-500 p-4 rounded-r-lg">
             <div class="flex">
                 <div class="flex-shrink-0">
                     <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
@@ -81,8 +81,8 @@
                     </svg>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-sm font-medium text-blue-800">Información del Reporte</h3>
-                    <div class="mt-2 text-sm text-blue-700">
+                    <h3 class="text-sm font-medium text-blue-300">Información del Reporte</h3>
+                    <div class="mt-2 text-sm text-gray-300">
                         <p>El reporte incluye:</p>
                         <ul class="list-disc list-inside mt-1 space-y-1">
                             <li>Información completa de reservas (cliente, cabaña, fechas, precios)</li>
@@ -506,12 +506,12 @@ async function crearArchivoExcel(data, fechaInicio, fechaFin) {
 function mostrarMensaje(mensaje, tipo) {
     const mensajeDiv = document.getElementById('mensajeEstado');
     
-    // Colores según el tipo de mensaje
+    // Colores según el tipo de mensaje (tema oscuro)
     const colores = {
-        success: 'bg-green-50 border-green-400 text-green-800',
-        error: 'bg-red-50 border-red-400 text-red-800',
-        warning: 'bg-yellow-50 border-yellow-400 text-yellow-800',
-        info: 'bg-blue-50 border-blue-400 text-blue-800'
+        success: 'bg-green-900/30 border-green-500 text-green-300',
+        error: 'bg-red-900/30 border-red-500 text-red-300',
+        warning: 'bg-yellow-900/30 border-yellow-500 text-yellow-300',
+        info: 'bg-blue-900/30 border-blue-500 text-blue-300'
     };
 
     // Iconos según el tipo de mensaje
@@ -522,11 +522,19 @@ function mostrarMensaje(mensaje, tipo) {
         info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
     };
 
+    // Color del icono según el tipo
+    const colorIcono = {
+        success: 'text-green-400',
+        error: 'text-red-400',
+        warning: 'text-yellow-400',
+        info: 'text-blue-400'
+    };
+
     mensajeDiv.innerHTML = `
         <div class="border-l-4 p-4 rounded-r-lg ${colores[tipo] || colores.info}">
             <div class="flex">
                 <div class="flex-shrink-0">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="h-5 w-5 ${colorIcono[tipo] || colorIcono.info}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         ${iconos[tipo] || iconos.info}
                     </svg>
                 </div>
