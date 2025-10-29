@@ -2012,7 +2012,7 @@ async function eliminarComisionServicio(idReserva, idServicio) {
 
 async function renderReporteTodoEnUno(req, res) {
     try {
-        res.render('reporteTodoEnUno');
+        res.render('reporteCompleto', { layout: 'tailwindMain' });
     } catch (error) {
         console.log(error.message);
     }
@@ -2036,7 +2036,9 @@ async function reporteTodoEnUno(req, res) {
                 arrivalDate: { 
                     $gte: new Date(fechaInicio), 
                     $lte: new Date(fechaFin) 
-                }
+                },
+                status: { $nin: ['cancelled', 'reserva de dueño'] },
+                // _id: '6893afdf60992b7e4e8c9943'
             }).lean(),
             Habitacion.find().lean(),
             Cliente.find().lean(),
@@ -2145,23 +2147,28 @@ async function reporteTodoEnUno(req, res) {
                 const monto = utilidad.monto || 0;
 
                 if (concepto.includes('Dueño de cabaña') || concepto.includes('inversionista')) {
-                    if (concepto.includes('inversionista')) {
+                    if (concepto.includes('inversionista') && monto > 0) {
+                        console.log("Adding to comisionInversionistas:", monto);
+                        console.log("concepto:", concepto);
                         comisionInversionistas += monto;
-                    } else {
+                    } else if (concepto.includes('Dueño de cabaña') && monto > 0) {
+                        console.log("Adding to comisionDueno:", monto);
+                        console.log("concepto:", concepto);
                         comisionDueno += monto;
                     }
                 } else if (concepto.includes('limpieza') || concepto.includes('Limpieza')) {
                     comisionLimpieza += monto;
                 } else if (concepto.includes('uso de sistema') || concepto.includes('NyN')) {
                     comisionSistema += monto;
-                } else if (concepto.includes('administrador ligado') || concepto.includes('Administrador ligado')) {
+                } else if ((concepto.includes('administrador ligado de vendedor') || concepto.includes('Administrador ligado de vendedor')) && monto / reserva.nNights === 150) {
                     comisionAdminCabana += monto;
-                } else if (concepto.includes('Utilidad')) {
+                } else if ((concepto.includes('administrador ligado de Cabaña') || concepto.includes('Administrador ligado de Cabaña'))) {
                     utilidadTotal += monto;
-                } else if (concepto.includes('venta vía') || concepto.includes('Comisión por venta')) {
-                    comisionVendedor += monto;
-                } else if (concepto.includes('Reservación') || concepto.includes('gerente')) {
-                    if (monto === 100 || concepto.toLowerCase().includes('gerente')) {
+                    
+                // } else if (concepto.includes('admnistrador ligado de vendedor') || concepto.includes('Administrador ligado de vendedor')) {
+                //     comisionVendedor += monto;
+                } else if (concepto.includes('Reservación')) {
+                    if (monto / reserva.nNights === 100 || concepto.toLowerCase().includes('gerente')) {
                         comisionGerente += monto;
                     } else {
                         comisionVendedor += monto;
@@ -2181,8 +2188,9 @@ async function reporteTodoEnUno(req, res) {
             // Cálculos finales
             const precioBase = comisionDueno + comisionInversionistas;
             const precioBasePorNoche = reserva.nNights > 0 ? precioBase / reserva.nNights : 0;
-            const participacionBosques = precioBase * 0.20;
+            const participacionBosques = (precioBase + utilidadTotal + comisionLimpieza) * 0.20;
             const excedente = totalPagado - (reserva.total || 0);
+            const totalAgencia = comisionAdminCabana + comisionGerente + comisionVendedor + excedente;
 
             // Procesar notas
             const notas = Array.isArray(reserva.notes) 
@@ -2199,6 +2207,7 @@ async function reporteTodoEnUno(req, res) {
                 
                 // Información de la reserva
                 cabana: nombreHabitacion,
+                agencia: totalAgencia,
                 fechaEntrada: momentTz.tz(reserva.arrivalDate, 'America/Mexico_City').format('DD/MM/YYYY'),
                 fechaSalida: momentTz.tz(reserva.departureDate, 'America/Mexico_City').format('DD/MM/YYYY'),
                 noches: reserva.nNights || 0,
@@ -2252,46 +2261,48 @@ async function reporteTodoEnUno(req, res) {
             };
         });
 
-        // Calcular totales generales
+        // Calcular totales generales (solo valores positivos)
         const totales = {
             totalReservas: reporteData.length,
-            totalNoches: reporteData.reduce((sum, r) => sum + r.noches, 0),
-            totalIngresos: reporteData.reduce((sum, r) => sum + r.totalPagado, 0),
-            totalPrecioReservas: reporteData.reduce((sum, r) => sum + r.precioReserva, 0),
-            totalComisionSistema: reporteData.reduce((sum, r) => sum + r.administracionNyN, 0),
-            totalComisionAdmin: reporteData.reduce((sum, r) => sum + r.comisionAdminCabana, 0),
-            totalComisionVendedor: reporteData.reduce((sum, r) => sum + r.comisionVendedor, 0),
-            totalUtilidades: reporteData.reduce((sum, r) => sum + r.utilidadTotal, 0),
-            totalExcedente: reporteData.reduce((sum, r) => sum + r.excedente, 0)
+            totalNoches: reporteData.reduce((sum, r) => sum + (r.noches > 0 ? r.noches : 0), 0),
+            totalIngresos: reporteData.reduce((sum, r) => sum + (r.totalPagado > 0 ? r.totalPagado : 0), 0),
+            totalPrecioReservas: reporteData.reduce((sum, r) => sum + (r.precioReserva > 0 ? r.precioReserva : 0), 0),
+            totalComisionSistema: reporteData.reduce((sum, r) => sum + (r.administracionNyN > 0 ? r.administracionNyN : 0), 0),
+            totalComisionAdmin: reporteData.reduce((sum, r) => sum + (r.comisionAdminCabana > 0 ? r.comisionAdminCabana : 0), 0),
+            totalComisionVendedor: reporteData.reduce((sum, r) => sum + (r.comisionVendedor > 0 ? r.comisionVendedor : 0), 0),
+            totalUtilidades: reporteData.reduce((sum, r) => sum + (r.utilidadTotal > 0 ? r.utilidadTotal : 0), 0),
+            totalExcedente: reporteData.reduce((sum, r) => sum + (r.excedente > 0 ? r.excedente : 0), 0),
+            totalAgencia: reporteData.reduce((sum, r) => sum + (r.agencia > 0 ? r.agencia : 0), 0),
         };
 
         // Definir headers para el Excel
         const headers = [
             { key: 'id', label: 'ID Reserva', width: 25 },
             { key: 'status', label: 'Estatus', width: 15 },
+            { key: 'adminLigadoCabana', label: 'Admin Cabaña', width: 25 },
+            { key: 'agenteReserva', label: 'Agente Reserva', width: 25 },
             { key: 'cabana', label: 'Cabaña', width: 30 },
+            { key: 'agencia', label: 'Agencia', width: 20 },
             { key: 'fechaEntrada', label: 'Fecha Entrada', width: 15 },
             { key: 'fechaSalida', label: 'Fecha Salida', width: 15 },
             { key: 'noches', label: 'Noches', width: 10 },
             { key: 'huespedes', label: 'Huéspedes', width: 10 },
-            { key: 'nombreCliente', label: 'Cliente', width: 30 },
-            { key: 'correoCliente', label: 'Correo', width: 30 },
-            { key: 'telefonoCliente', label: 'Teléfono', width: 15 },
-            { key: 'agenteReserva', label: 'Agente Reserva', width: 25 },
-            { key: 'adminLigadoCabana', label: 'Admin Cabaña', width: 25 },
             { key: 'precioBasePorNoche', label: 'Precio Base/Noche', width: 15 },
             { key: 'precioBase', label: 'Precio Base Total', width: 15 },
-            { key: 'precioReserva', label: 'Precio Reserva', width: 15 },
+            { key: 'utilidadTotal', label: 'Utilidad', width: 12 },
             { key: 'limpieza', label: 'Limpieza', width: 12 },
             { key: 'participacionBosques', label: 'Participación 20%', width: 15 },
             { key: 'administracionNyN', label: 'Admin NyN', width: 12 },
+            { key: 'comisionGerente', label: 'Comisión Gerente', width: 15 },
             { key: 'comisionAdminCabana', label: 'Comisión Admin', width: 15 },
             { key: 'comisionVendedor', label: 'Comisión Vendedor', width: 15 },
-            { key: 'comisionGerente', label: 'Comisión Gerente', width: 15 },
-            { key: 'utilidadTotal', label: 'Utilidad', width: 12 },
-            { key: 'comisionInversionistas', label: 'Inversionistas', width: 15 },
+            { key: 'precioReserva', label: 'Precio Reserva', width: 15 },
             { key: 'totalPagado', label: 'Total Pagado', width: 15 },
             { key: 'excedente', label: 'Excedente', width: 12 },
+            { key: 'comisionInversionistas', label: 'Inversionistas', width: 15 },
+            { key: 'nombreCliente', label: 'Cliente', width: 30 },
+            { key: 'correoCliente', label: 'Correo', width: 30 },
+            { key: 'telefonoCliente', label: 'Teléfono', width: 15 },
             { key: 'notas', label: 'Notas', width: 40 }
         ];
 

@@ -1,0 +1,498 @@
+<!-- Reporte Completo - Todo en Uno -->
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Reporte Completo - Todo en Uno</h1>
+            <p class="mt-2 text-sm text-gray-600">
+                Genera un reporte detallado de todas las reservas en un rango de fechas específico
+            </p>
+        </div>
+
+        <!-- Formulario de Filtros -->
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Fecha Inicio -->
+                <div>
+                    <label for="fechaInicio" class="block text-sm font-medium text-gray-700 mb-2">
+                        Fecha Inicio
+                    </label>
+                    <input 
+                        type="date" 
+                        id="fechaInicio" 
+                        name="fechaInicio"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                    >
+                </div>
+
+                <!-- Fecha Fin -->
+                <div>
+                    <label for="fechaFin" class="block text-sm font-medium text-gray-700 mb-2">
+                        Fecha Fin
+                    </label>
+                    <input 
+                        type="date" 
+                        id="fechaFin" 
+                        name="fechaFin"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                    >
+                </div>
+
+                <!-- Botón de Generación -->
+                <div class="flex items-end">
+                    <button 
+                        id="btnGenerarReporte"
+                        onclick="generarReporteExcel()"
+                        class="w-full px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center"
+                    >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Generar Reporte Excel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mensajes de Estado -->
+            <div id="mensajeEstado" class="mt-4 hidden">
+                <!-- Los mensajes se insertarán dinámicamente aquí -->
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="mt-4 hidden">
+                <div class="flex items-center justify-center p-4 bg-blue-50 rounded-lg">
+                    <svg class="animate-spin h-5 w-5 mr-3 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-blue-700 font-medium">Generando reporte, por favor espere...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de Ayuda -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">Información del Reporte</h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <p>El reporte incluye:</p>
+                        <ul class="list-disc list-inside mt-1 space-y-1">
+                            <li>Información completa de reservas (cliente, cabaña, fechas, precios)</li>
+                            <li>Comisiones detalladas (administración, vendedores, inversionistas)</li>
+                            <li>Totales y resúmenes financieros</li>
+                            <li>Hoja de metadata con información del reporte</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script de SheetJS desde CDN -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
+<script>
+// =============================================================================
+// FUNCIÓN PRINCIPAL: GENERAR REPORTE EXCEL
+// =============================================================================
+
+/**
+ * Genera el reporte Excel llamando al endpoint y procesando los datos
+ */
+async function generarReporteExcel() {
+    // Obtener valores de las fechas
+    const fechaInicio = document.getElementById('fechaInicio').value;
+    const fechaFin = document.getElementById('fechaFin').value;
+
+    // Validar que ambas fechas estén seleccionadas
+    if (!fechaInicio || !fechaFin) {
+        mostrarMensaje('Por favor selecciona ambas fechas', 'error');
+        return;
+    }
+
+    // Validar que fecha inicio sea menor o igual a fecha fin
+    if (new Date(fechaInicio) > new Date(fechaFin)) {
+        mostrarMensaje('La fecha de inicio debe ser anterior a la fecha fin', 'error');
+        return;
+    }
+
+    // Mostrar indicador de carga y deshabilitar botón
+    mostrarLoading(true);
+    const btnGenerar = document.getElementById('btnGenerarReporte');
+    btnGenerar.disabled = true;
+    btnGenerar.classList.add('opacity-50', 'cursor-not-allowed');
+
+    try {
+        // Hacer petición al endpoint
+        const response = await fetch(`/api/reportes/datos?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`);
+        
+        if (!response.ok) {
+            throw new Error(`Error en la respuesta del servidor: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Verificar si la respuesta fue exitosa
+        if (!data.success) {
+            throw new Error(data.error || 'Error al obtener los datos del reporte');
+        }
+
+        // Verificar si hay datos
+        if (!data.data || data.data.length === 0) {
+            mostrarMensaje('No se encontraron reservas en el rango de fechas seleccionado', 'warning');
+            return;
+        }
+
+        // Generar el archivo Excel
+        await crearArchivoExcel(data, fechaInicio, fechaFin);
+
+        // Mostrar mensaje de éxito
+        mostrarMensaje(`Reporte generado exitosamente. Total de registros: ${data.data.length}`, 'success');
+
+    } catch (error) {
+        console.error('Error al generar el reporte:', error);
+        mostrarMensaje(`Error al generar el reporte: ${error.message}`, 'error');
+    } finally {
+        // Ocultar indicador de carga y habilitar botón
+        mostrarLoading(false);
+        btnGenerar.disabled = false;
+        btnGenerar.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+}
+
+// =============================================================================
+// FUNCIÓN: CREAR ARCHIVO EXCEL
+// =============================================================================
+
+/**
+ * Crea el archivo Excel con los datos del reporte
+ * @param {Object} data - Datos del reporte (data, totales, headers, metadata)
+ * @param {string} fechaInicio - Fecha de inicio del reporte
+ * @param {string} fechaFin - Fecha fin del reporte
+ */
+async function crearArchivoExcel(data, fechaInicio, fechaFin) {
+    // Crear un nuevo libro de trabajo
+    const workbook = XLSX.utils.book_new();
+
+    // =============================================================================
+    // HOJA 1: REPORTE PRINCIPAL
+    // =============================================================================
+
+    // Crear array para los datos de la hoja
+    const worksheetData = [];
+
+    // 1. Agregar fila de headers
+    const headerRow = data.headers.map(h => h.label);
+    worksheetData.push(headerRow);
+
+    // 2. Agregar filas de datos
+    data.data.forEach(registro => {
+        const row = data.headers.map(header => {
+            const valor = registro[header.key];
+            
+            // Formatear valores según el tipo
+            if (valor === null || valor === undefined) return '';
+            
+            // Si es una fecha, mantener el formato DD/MM/YYYY
+            if (header.key.includes('fecha') || header.key.includes('Fecha')) {
+                return valor;
+            }
+            
+            // Si es un número, retornar el valor numérico
+            if (typeof valor === 'number') {
+                return valor;
+            }
+            
+            return valor;
+        });
+        worksheetData.push(row);
+    });
+
+    // 3. Agregar fila de totales
+    const totalesRow = [];
+    data.headers.forEach((header, index) => {
+        if (index === 0) {
+            totalesRow.push('TOTALES');
+        } else if (header.key === 'noches') {
+            totalesRow.push(data.totales.totalNoches || 0);
+        } else if (header.key === 'agencia') {
+            totalesRow.push(data.totales.totalAgencia || 0);
+        } else if (header.key === 'precioReserva') {
+            totalesRow.push(data.totales.totalPrecioReservas || 0);
+        } else if (header.key === 'administracionNyN') {
+            totalesRow.push(data.totales.totalComisionSistema || 0);
+        } else if (header.key === 'comisionAdminCabana') {
+            totalesRow.push(data.totales.totalComisionAdmin || 0);
+        } else if (header.key === 'comisionVendedor') {
+            totalesRow.push(data.totales.totalComisionVendedor || 0);
+        } else if (header.key === 'utilidadTotal') {
+            totalesRow.push(data.totales.totalUtilidades || 0);
+        } else if (header.key === 'totalPagado') {
+            totalesRow.push(data.totales.totalIngresos || 0);
+        } else if (header.key === 'excedente') {
+            totalesRow.push(data.totales.totalExcedente || 0);
+        } else {
+            totalesRow.push('');
+        }
+    });
+    worksheetData.push(totalesRow);
+
+    // Crear la hoja de trabajo
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    // Establecer anchos de columna
+    worksheet['!cols'] = data.headers.map(h => ({ wch: h.width || 15 }));
+
+    // Aplicar estilos a las celdas
+    const range = XLSX.utils.decode_range(worksheet['!ref']);
+    
+    // Columnas monetarias (necesitan formato de moneda)
+    const columnasMonetarias = [
+        'precioBasePorNoche', 'precioBase', 'precioReserva', 'limpieza', 
+        'participacionBosques', 'administracionNyN', 'comisionAdminCabana', 
+        'comisionGerente', 'comisionVendedor', 'utilidadTotal', 
+        'comisionInversionistas', 'comisionDueno', 'totalPagado', 
+        'pagosNoEfectivo', 'liquidaEfectivo', 'excedente', 'balanceDue', 'agencia'
+    ];
+
+    // Mapear índices de columnas monetarias
+    const indicesMonetarios = data.headers
+        .map((h, idx) => columnasMonetarias.includes(h.key) ? idx : -1)
+        .filter(idx => idx !== -1);
+
+    // Aplicar formato a cada celda
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+            
+            if (!worksheet[cellAddress]) continue;
+
+            // Estilo para header (primera fila)
+            if (R === 0) {
+                worksheet[cellAddress].s = {
+                    font: { bold: true, color: { rgb: "FFFFFF" } },
+                    fill: { fgColor: { rgb: "4B5563" } },
+                    alignment: { horizontal: "center", vertical: "center" },
+                    border: {
+                        top: { style: "thin", color: { rgb: "000000" } },
+                        bottom: { style: "thin", color: { rgb: "000000" } },
+                        left: { style: "thin", color: { rgb: "000000" } },
+                        right: { style: "thin", color: { rgb: "000000" } }
+                    }
+                };
+            }
+            // Estilo para fila de totales (última fila)
+            else if (R === range.e.r) {
+                worksheet[cellAddress].s = {
+                    font: { bold: true },
+                    fill: { fgColor: { rgb: "FEF3C7" } },
+                    alignment: { 
+                        horizontal: indicesMonetarios.includes(C) ? "right" : "left",
+                        vertical: "center" 
+                    },
+                    border: {
+                        top: { style: "thin", color: { rgb: "000000" } },
+                        bottom: { style: "thin", color: { rgb: "000000" } },
+                        left: { style: "thin", color: { rgb: "000000" } },
+                        right: { style: "thin", color: { rgb: "000000" } }
+                    }
+                };
+                
+                // Aplicar formato de moneda a columnas monetarias en totales
+                if (indicesMonetarios.includes(C) && typeof worksheet[cellAddress].v === 'number') {
+                    worksheet[cellAddress].z = '$#,##0.00';
+                }
+            }
+            // Estilo para datos normales
+            else {
+                worksheet[cellAddress].s = {
+                    alignment: { 
+                        horizontal: indicesMonetarios.includes(C) ? "right" : "left",
+                        vertical: "center" 
+                    },
+                    border: {
+                        top: { style: "thin", color: { rgb: "E5E7EB" } },
+                        bottom: { style: "thin", color: { rgb: "E5E7EB" } },
+                        left: { style: "thin", color: { rgb: "E5E7EB" } },
+                        right: { style: "thin", color: { rgb: "E5E7EB" } }
+                    }
+                };
+                
+                // Aplicar formato de moneda a columnas monetarias
+                if (indicesMonetarios.includes(C) && typeof worksheet[cellAddress].v === 'number') {
+                    worksheet[cellAddress].z = '$#,##0.00';
+                }
+            }
+        }
+    }
+
+    // Agregar la hoja al libro
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte");
+
+    // =============================================================================
+    // HOJA 2: METADATA
+    // =============================================================================
+
+    const metadataData = [
+        ['INFORMACIÓN DEL REPORTE'],
+        [],
+        ['Rango de fechas:', `${fechaInicio} - ${fechaFin}`],
+        ['Fecha de generación:', data.metadata.fechaGeneracion],
+        ['Total de registros:', data.metadata.totalRegistros],
+        [],
+        ['TOTALES GENERALES'],
+        [],
+        ['Total Reservas:', data.totales.totalReservas],
+        ['Total Noches:', data.totales.totalNoches],
+        ['Total Ingresos:', data.totales.totalIngresos],
+        ['Total Precio Reservas:', data.totales.totalPrecioReservas],
+        ['Total Comisión Sistema:', data.totales.totalComisionSistema],
+        ['Total Comisión Admin:', data.totales.totalComisionAdmin],
+        ['Total Comisión Vendedor:', data.totales.totalComisionVendedor],
+        ['Total Utilidades:', data.totales.totalUtilidades],
+        ['Total Excedente:', data.totales.totalExcedente]
+    ];
+
+    const metadataSheet = XLSX.utils.aoa_to_sheet(metadataData);
+
+    // Estilos para metadata
+    metadataSheet['!cols'] = [{ wch: 30 }, { wch: 30 }];
+
+    // Aplicar estilos al título
+    if (metadataSheet['A1']) {
+        metadataSheet['A1'].s = {
+            font: { bold: true, sz: 14 },
+            fill: { fgColor: { rgb: "4B5563" } },
+            alignment: { horizontal: "center" }
+        };
+    }
+
+    // Aplicar estilos a los subtítulos
+    if (metadataSheet['A7']) {
+        metadataSheet['A7'].s = {
+            font: { bold: true, sz: 12 },
+            fill: { fgColor: { rgb: "9CA3AF" } }
+        };
+    }
+
+    // Aplicar formato de moneda a los valores monetarios en metadata
+    const celdaMonetarias = ['B11', 'B12', 'B13', 'B14', 'B15', 'B16', 'B17', 'B18'];
+    celdaMonetarias.forEach(celda => {
+        if (metadataSheet[celda] && typeof metadataSheet[celda].v === 'number') {
+            metadataSheet[celda].z = '$#,##0.00';
+        }
+    });
+
+    // Agregar la hoja de metadata al libro
+    XLSX.utils.book_append_sheet(workbook, metadataSheet, "Metadata");
+
+    // =============================================================================
+    // DESCARGAR EL ARCHIVO
+    // =============================================================================
+
+    const nombreArchivo = `Reporte_TodoEnUno_${fechaInicio}_${fechaFin}.xlsx`;
+    XLSX.writeFile(workbook, nombreArchivo);
+}
+
+// =============================================================================
+// FUNCIONES AUXILIARES
+// =============================================================================
+
+/**
+ * Muestra un mensaje de estado al usuario
+ * @param {string} mensaje - Texto del mensaje
+ * @param {string} tipo - Tipo de mensaje (success, error, warning, info)
+ */
+function mostrarMensaje(mensaje, tipo) {
+    const mensajeDiv = document.getElementById('mensajeEstado');
+    
+    // Colores según el tipo de mensaje
+    const colores = {
+        success: 'bg-green-50 border-green-400 text-green-800',
+        error: 'bg-red-50 border-red-400 text-red-800',
+        warning: 'bg-yellow-50 border-yellow-400 text-yellow-800',
+        info: 'bg-blue-50 border-blue-400 text-blue-800'
+    };
+
+    // Iconos según el tipo de mensaje
+    const iconos = {
+        success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
+        error: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
+        warning: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>',
+        info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
+    };
+
+    mensajeDiv.innerHTML = `
+        <div class="border-l-4 p-4 rounded-r-lg ${colores[tipo] || colores.info}">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        ${iconos[tipo] || iconos.info}
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium">${mensaje}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    mensajeDiv.classList.remove('hidden');
+
+    // Ocultar el mensaje después de 5 segundos
+    setTimeout(() => {
+        mensajeDiv.classList.add('hidden');
+    }, 5000);
+}
+
+/**
+ * Muestra u oculta el indicador de carga
+ * @param {boolean} mostrar - true para mostrar, false para ocultar
+ */
+function mostrarLoading(mostrar) {
+    const loadingDiv = document.getElementById('loadingIndicator');
+    if (mostrar) {
+        loadingDiv.classList.remove('hidden');
+    } else {
+        loadingDiv.classList.add('hidden');
+    }
+}
+
+// =============================================================================
+// INICIALIZACIÓN
+// =============================================================================
+
+// Establecer fecha de hoy como fecha fin por defecto
+document.addEventListener('DOMContentLoaded', function() {
+    const hoy = new Date();
+    const fechaHoy = hoy.toISOString().split('T')[0];
+    
+    // Fecha fin = hoy
+    document.getElementById('fechaFin').value = fechaHoy;
+    
+    // Fecha inicio = hace 30 días
+    const hace30Dias = new Date();
+    hace30Dias.setDate(hace30Dias.getDate() - 30);
+    const fechaInicio = hace30Dias.toISOString().split('T')[0];
+    
+    document.getElementById('fechaInicio').value = fechaInicio;
+});
+
+// Permitir generar reporte con Enter
+document.getElementById('fechaInicio').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') generarReporteExcel();
+});
+
+document.getElementById('fechaFin').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') generarReporteExcel();
+});
+</script>
