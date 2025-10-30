@@ -258,12 +258,20 @@ async function generateSideMenu(req, res, next) {
                                     </a>
                                 </li>
                             </ul>
+                            <ul class="collapse nav flex-column ms-1" id="submenu6" data-bs-parent="#menu">
+                                <li class="w-100">
+                                    <a href="/api/reportes-personalizados" class="nav-link px-5" title="Reportes Completos">
+                                        <i class="fas fa-money-bill-wave"></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Reportes Completos</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>`;
                 }
                 else {
                     sideMenuContent +=
                         `<li class="nav-item">
-                        <a href="${route}" class="nav-link align-middle px-4" title="Home">
+                        <a href="${route}" class="nav-link align-middle px-4" title="${key}">
                             <i class="${cssClass}"></i><span class="fs-5 ms-3 d-none d-sm-inline">${key}</span>
                         </a>
                     </li>`;
