@@ -261,7 +261,7 @@ async function generateSideMenu(req, res, next) {
                             <ul class="collapse nav flex-column ms-1" id="submenu6" data-bs-parent="#menu">
                                 <li class="w-100">
                                     <a href="/api/reportes-personalizados" class="nav-link px-5" title="Reportes Completos">
-                                        <i class="fas fa-money-bill-wave"></i><span class="d-none d-sm-inline"
+                                        <i class="fas fa-chart-line"></i><span class="d-none d-sm-inline"
                                             style="margin-left: 8px;">Reportes Completos</span>
                                     </a>
                                 </li>
