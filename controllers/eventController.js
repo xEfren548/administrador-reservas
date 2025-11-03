@@ -318,6 +318,8 @@ async function obtenerEventosOptimizados(req, res) {
 
         ObjectId = mongoose.Types.ObjectId;
 
+        endDate.setUTCHours(23, 59, 59, 999);
+
         // ---------- Filtro base para reservas ----------
         const filtro = {
             status: { $nin: ["no-show", "cancelled"] },
