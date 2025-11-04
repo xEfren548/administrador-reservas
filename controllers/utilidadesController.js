@@ -2030,12 +2030,18 @@ async function reporteTodoEnUno(req, res) {
             });
         }
 
+        const newFechaInicio = new Date(fechaInicio);
+        const newFechaFin = new Date(fechaFin);
+
+        newFechaInicio.setHours(0, 0, 0, 0);
+        newFechaFin.setHours(23, 59, 59, 999);
+
         // Cargar datos en paralelo
         const [reservas, habitaciones, clientes, usuarios, pagos] = await Promise.all([
             Documento.find({
                 arrivalDate: { 
-                    $gte: new Date(fechaInicio), 
-                    $lte: new Date(fechaFin) 
+                    $gte: newFechaInicio,
+                    $lte: newFechaFin
                 },
                 status: { $nin: ['cancelled', 'reserva de dueño'] },
                 // _id: '6893afdf60992b7e4e8c9943'
