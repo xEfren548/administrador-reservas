@@ -2030,11 +2030,15 @@ async function reporteTodoEnUno(req, res) {
             });
         }
 
-        const newFechaInicio = new Date(fechaInicio);
-        const newFechaFin = new Date(fechaFin);
+        // Usar moment-timezone para manejar las fechas en zona horaria de México
+        const newFechaInicio = momentTz.tz(fechaInicio, 'America/Mexico_City').startOf('day').toDate();
+        const newFechaFin = momentTz.tz(fechaFin, 'America/Mexico_City').endOf('day').toDate();
 
-        newFechaInicio.setHours(0, 0, 0, 0);
-        newFechaFin.setHours(23, 59, 59, 999);
+        console.log('Rango de fechas para el reporte:', 
+            momentTz(newFechaInicio).tz('America/Mexico_City').format('DD/MM/YYYY HH:mm:ss'), 
+            'a', 
+            momentTz(newFechaFin).tz('America/Mexico_City').format('DD/MM/YYYY HH:mm:ss')
+        );
 
         // Cargar datos en paralelo
         const [reservas, habitaciones, clientes, usuarios, pagos] = await Promise.all([
@@ -2044,6 +2048,7 @@ async function reporteTodoEnUno(req, res) {
                     $lte: newFechaFin
                 },
                 status: { $nin: ['cancelled', 'reserva de dueño'] },
+                resourceId: '66df9e708c3add1ebc7de4b3',
                 // _id: '6893afdf60992b7e4e8c9943'
             }).lean(),
             Habitacion.find().lean(),
