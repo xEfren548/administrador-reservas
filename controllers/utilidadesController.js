@@ -2034,21 +2034,21 @@ async function reporteTodoEnUno(req, res) {
         const newFechaInicio = momentTz.tz(fechaInicio, 'America/Mexico_City').startOf('day').toDate();
         const newFechaFin = momentTz.tz(fechaFin, 'America/Mexico_City').endOf('day').toDate();
 
-        console.log('Rango de fechas para el reporte:', 
-            momentTz(newFechaInicio).tz('America/Mexico_City').format('DD/MM/YYYY HH:mm:ss'), 
-            'a', 
+        console.log('Rango de fechas para el reporte:',
+            momentTz(newFechaInicio).tz('America/Mexico_City').format('DD/MM/YYYY HH:mm:ss'),
+            'a',
             momentTz(newFechaFin).tz('America/Mexico_City').format('DD/MM/YYYY HH:mm:ss')
         );
 
         // Cargar datos en paralelo
         const [reservas, habitaciones, clientes, usuarios, pagos] = await Promise.all([
             Documento.find({
-                arrivalDate: { 
+                arrivalDate: {
                     $gte: newFechaInicio,
                     $lte: newFechaFin
                 },
                 status: { $nin: ['cancelled', 'reserva de dueño'] },
-                resourceId: '66df9e708c3add1ebc7de4b3',
+                // resourceId: '66df9e708c3add1ebc7de4b3',
                 // _id: '6893afdf60992b7e4e8c9943'
             }).lean(),
             Habitacion.find().lean(),
@@ -2072,8 +2072,8 @@ async function reporteTodoEnUno(req, res) {
 
         // Obtener IDs de reservas y cargar utilidades
         const reservaIds = reservas.map(r => r._id);
-        const utilidades = await Utilidades.find({ 
-            idReserva: { $in: reservaIds } 
+        const utilidades = await Utilidades.find({
+            idReserva: { $in: reservaIds }
         }).lean();
 
         // Crear mapas para búsqueda rápida O(1)
@@ -2124,7 +2124,7 @@ async function reporteTodoEnUno(req, res) {
 
             // Obtener cliente
             const cliente = clientesMap.get(reserva.client?.toString());
-            const nombreCliente = cliente 
+            const nombreCliente = cliente
                 ? `${cliente.firstName || ''} ${cliente.lastName || ''}`.trim()
                 : reserva.clienteProvisional || 'N/A';
             const correoCliente = cliente?.email || 'N/A';
@@ -2132,7 +2132,7 @@ async function reporteTodoEnUno(req, res) {
 
             // Obtener usuario que creó la reserva
             const usuarioCreador = usuariosMap.get(reserva.createdBy?.toString());
-            const agenteReserva = usuarioCreador 
+            const agenteReserva = usuarioCreador
                 ? `${usuarioCreador.firstName || ''} ${usuarioCreador.lastName || ''}`.trim()
                 : 'N/A';
             const adminLigadoReserva = usuarioCreador?.adminname || 'N/A';
@@ -2171,9 +2171,9 @@ async function reporteTodoEnUno(req, res) {
                     comisionAdminCabana += monto;
                 } else if ((concepto.includes('administrador ligado de Cabaña') || concepto.includes('Administrador ligado de Cabaña'))) {
                     utilidadTotal += monto;
-                    
-                // } else if (concepto.includes('admnistrador ligado de vendedor') || concepto.includes('Administrador ligado de vendedor')) {
-                //     comisionVendedor += monto;
+
+                    // } else if (concepto.includes('admnistrador ligado de vendedor') || concepto.includes('Administrador ligado de vendedor')) {
+                    //     comisionVendedor += monto;
                 } else if (concepto.includes('Reservación')) {
                     if (monto / reserva.nNights === 100 || concepto.toLowerCase().includes('gerente')) {
                         comisionGerente += monto;
@@ -2193,7 +2193,7 @@ async function reporteTodoEnUno(req, res) {
                 .reduce((sum, pago) => sum + (pago.importe || 0), 0);
 
             const isNoShow = reserva.status === 'no-show';
-            
+
             // Cálculos finales
             const precioBase = comisionDueno + comisionInversionistas;
             const precioBasePorNoche = reserva.nNights > 0 ? precioBase / reserva.nNights : 0;
@@ -2202,7 +2202,7 @@ async function reporteTodoEnUno(req, res) {
             const totalAgencia = comisionAdminCabana + comisionGerente + comisionVendedor + excedente;
 
             // Procesar notas
-            const notas = Array.isArray(reserva.notes) 
+            const notas = Array.isArray(reserva.notes)
                 ? reserva.notes.map(n => n.texto || n).filter(Boolean).join(' | ')
                 : '';
             const notasPrivadas = Array.isArray(reserva.privateNotes)
@@ -2213,7 +2213,7 @@ async function reporteTodoEnUno(req, res) {
                 // Identificación
                 id: reserva._id,
                 status: reserva.status || 'N/A',
-                
+
                 // Información de la reserva
                 cabana: nombreHabitacion,
                 agencia: totalAgencia,
@@ -2221,17 +2221,17 @@ async function reporteTodoEnUno(req, res) {
                 fechaSalida: momentTz.tz(reserva.departureDate, 'America/Mexico_City').format('DD/MM/YYYY'),
                 noches: reserva.nNights || 0,
                 huespedes: reserva.pax || 0,
-                
+
                 // Información del cliente
                 nombreCliente,
                 correoCliente,
                 telefonoCliente,
-                
+
                 // Información de agentes
                 agenteReserva,
                 adminLigadoReserva,
                 adminLigadoCabana,
-                
+
                 // Precios y comisiones
                 precioBasePorNoche: Math.round(precioBasePorNoche * 100) / 100,
                 precioBase: Math.round(precioBase * 100) / 100,
@@ -2246,22 +2246,22 @@ async function reporteTodoEnUno(req, res) {
                 utilidadTotal,
                 comisionInversionistas,
                 comisionDueno,
-                
+
                 // Pagos
                 totalPagado,
                 pagosNoEfectivo,
                 liquidaEfectivo,
                 excedente: Math.round(excedente * 100) / 100,
                 balanceDue: reserva.balanceDue || 0,
-                
+
                 // Notas
                 notas,
                 notasPrivadas,
-                
+
                 // Metadata
                 fechaReservacion: momentTz.tz(reserva.reservationDate, 'America/Mexico_City').format('DD/MM/YYYY HH:mm'),
                 paymentStatus: reserva.paymentStatus || 'N/A',
-                
+
                 // Detalles de utilidades (para referencia)
                 detalleUtilidades: utilidadesReserva.map(u => ({
                     concepto: u.concepto,
@@ -2337,6 +2337,50 @@ async function reporteTodoEnUno(req, res) {
             error: 'Error generando reporte Todo en Uno',
             message: error.message
         });
+    }
+}
+
+async function reporteDeInversionistas(req, res) {
+    try {
+        // Lógica para generar el reporte de inversionistas
+        const { fechaInicio, fechaFin } = req.body;
+        // Validar parámetros
+        if (!fechaInicio || !fechaFin) {
+            return res.status(400).json({
+                success: false,
+                error: 'Se requieren fechaInicio y fechaFin'
+            });
+        }
+
+        // Usar moment-timezone para manejar las fechas en zona horaria de México
+        const newFechaInicio = momentTz.tz(fechaInicio, 'America/Mexico_City').startOf('day').toDate();
+        const newFechaFin = momentTz.tz(fechaFin, 'America/Mexico_City').endOf('day').toDate();
+
+        console.log('Rango de fechas para el reporte:',
+            momentTz(newFechaInicio).tz('America/Mexico_City').format('DD/MM/YYYY HH:mm:ss'),
+            'a',
+            momentTz(newFechaFin).tz('America/Mexico_City').format('DD/MM/YYYY HH:mm:ss')
+        );
+
+        // Cargar datos en paralelo
+        const [reservas, habitaciones, clientes, usuarios, pagos] = await Promise.all([
+            Documento.find({
+                arrivalDate: {
+                    $gte: newFechaInicio,
+                    $lte: newFechaFin
+                },
+                status: { $nin: ['cancelled', 'reserva de dueño'] },
+                // resourceId: '66df9e708c3add1ebc7de4b3',
+                // _id: '6893afdf60992b7e4e8c9943'
+            }).lean(),
+            Habitacion.find().lean(),
+            Cliente.find().lean(),
+            usersController.getAllUsersMongo(),
+            Pago.find().lean()
+        ]);
+
+    } catch (error) {
+        console.log(error.message);
     }
 }
 
