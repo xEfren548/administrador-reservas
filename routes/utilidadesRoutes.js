@@ -24,6 +24,8 @@ router.get('/reportes-personalizados', utilidadesController.renderReporteTodoEnU
 
 // Generar Reporte Todo en Uno
 router.get('/reportes/datos', utilidadesController.reporteTodoEnUno);
+// Generar Reporte de Inversionistas
+router.get('/reportes/inversionistas', utilidadesController.reporteDeInversionistas);
 
 
 module.exports = router

@@ -2343,7 +2343,7 @@ async function reporteTodoEnUno(req, res) {
 async function reporteDeInversionistas(req, res) {
     try {
         // Lógica para generar el reporte de inversionistas
-        const { fechaInicio, fechaFin } = req.body;
+        const { fechaInicio, fechaFin } = req.query;
         // Validar parámetros
         if (!fechaInicio || !fechaFin) {
             return res.status(400).json({
@@ -2363,7 +2363,7 @@ async function reporteDeInversionistas(req, res) {
         );
 
         // Cargar datos en paralelo
-        const [reservas, habitaciones, clientes, usuarios, pagos] = await Promise.all([
+        const [reservas, habitaciones, usuarios] = await Promise.all([
             Documento.find({
                 arrivalDate: {
                     $gte: newFechaInicio,
@@ -2374,13 +2374,145 @@ async function reporteDeInversionistas(req, res) {
                 // _id: '6893afdf60992b7e4e8c9943'
             }).lean(),
             Habitacion.find().lean(),
-            Cliente.find().lean(),
             usersController.getAllUsersMongo(),
-            Pago.find().lean()
         ]);
 
+
+        if (!reservas || reservas.length === 0) {
+            return res.status(200).json({
+                success: true,
+                data: [],
+                message: 'No se encontraron reservas en el rango de fechas especificado',
+                metadata: {
+                    fechaInicio,
+                    fechaFin,
+                    totalReservas: 0
+                }
+            });
+        }
+
+        // Obtener IDs de reservas y cargar utilidades
+        const reservaIds = reservas.map(r => r._id);
+        const utilidades = await Utilidades.find({
+            idReserva: { $in: reservaIds }
+        }).lean();
+
+        // Crear mapas para búsqueda rápida O(1)
+        const habitacionesMap = new Map(
+            habitaciones.map(h => [h._id.toString(), h])
+        );
+
+        const usuariosMap = new Map(
+            usuarios.map(u => [u._id.toString(), u])
+        );
+
+        const utilidadesPorReserva = new Map();
+        utilidades.forEach(u => {
+            const rid = u.idReserva?.toString();
+            if (rid) {
+                if (!utilidadesPorReserva.has(rid)) {
+                    utilidadesPorReserva.set(rid, []);
+                }
+                utilidadesPorReserva.get(rid).push(u);
+            }
+        });
+
+        const reporteData = [];
+
+        reservas.forEach(reserva => {
+            const reservaId = reserva._id.toString();
+            const utilidadesReserva = utilidadesPorReserva.get(reservaId) || [];
+
+            // Obtener habitación
+            const habitacion = habitacionesMap.get(reserva.resourceId?.toString());
+            if (habitacion.propertyDetails.accomodationType !== "Bosque Imperial") {
+                return; // Saltar a la siguiente reserva si no es "Bosque Imperial"
+            }
+            const nombreHabitacion = habitacion?.propertyDetails?.name || 'N/A';
+
+            // Filtrar todas las utilidades con montos positivos
+            const utilidadesFiltradas = utilidadesReserva.filter(u => {
+                const monto = u.monto || 0;
+                // Solo incluir utilidades con monto positivo
+                return monto > 0;
+            });
+
+            // Crear una fila por cada utilidad filtrada
+            utilidadesFiltradas.forEach(utilidad => {
+                const usuario = usuariosMap.get(utilidad.idUsuario?.toString());
+                const nombreUsuario = usuario 
+                    ? `${usuario.firstName || ''} ${usuario.lastName || ''}`.trim()
+                    : 'N/A';
+
+                // Determinar el concepto correcto
+                let conceptoFinal = utilidad.concepto || 'N/A';
+                const monto = utilidad.monto || 0;
+                
+                // Validar si es Reservación y determinar si es Gerente o Vendedor
+                if (conceptoFinal.includes('Reservación')) {
+                    const noches = reserva.nNights || 1; // Evitar división por cero
+                    if (monto / noches === 100 || conceptoFinal.toLowerCase().includes('gerente')) {
+                        conceptoFinal = 'Comisión Gerente';
+                    } else {
+                        conceptoFinal = 'Comisión Vendedor';
+                    }
+                }
+
+                reporteData.push({
+                    idReserva: reserva._id.toString(),
+                    cabana: nombreHabitacion,
+                    fechaEntrada: momentTz.tz(reserva.arrivalDate, 'America/Mexico_City').format('DD/MM/YYYY'),
+                    fechaSalida: momentTz.tz(reserva.departureDate, 'America/Mexico_City').format('DD/MM/YYYY'),
+                    noches: reserva.nNights || 0,
+                    pax: reserva.pax || 0,
+                    concepto: conceptoFinal,
+                    monto: monto,
+                    usuario: nombreUsuario
+                });
+            });
+        });
+
+        // Calcular totales
+        const totales = {
+            totalRegistros: reporteData.length,
+            totalNoches: reporteData.reduce((sum, r) => sum + (r.noches > 0 ? r.noches : 0), 0),
+            totalMonto: reporteData.reduce((sum, r) => sum + (r.monto > 0 ? r.monto : 0), 0)
+        };
+
+        // Definir headers para el Excel
+        const headers = [
+            { key: 'idReserva', label: 'ID Reserva', width: 25 },
+            { key: 'cabana', label: 'Cabaña', width: 30 },
+            { key: 'fechaEntrada', label: 'Fecha Entrada', width: 15 },
+            { key: 'fechaSalida', label: 'Fecha Salida', width: 15 },
+            { key: 'noches', label: 'Noches', width: 10 },
+            { key: 'pax', label: 'Pax', width: 10 },
+            { key: 'concepto', label: 'Concepto', width: 50 },
+            { key: 'monto', label: 'Monto', width: 15 },
+            { key: 'usuario', label: 'Usuario', width: 30 }
+        ];
+
+        // Respuesta exitosa
+        res.status(200).json({
+            success: true,
+            data: reporteData,
+            totales,
+            headers,
+            metadata: {
+                fechaInicio,
+                fechaFin,
+                fechaGeneracion: momentTz.tz(new Date(), 'America/Mexico_City').format('DD/MM/YYYY HH:mm:ss'),
+                totalRegistros: reporteData.length
+            }
+        });
+
     } catch (error) {
-        console.log(error.message);
+        console.error('Error en reporteDeInversionistas:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error generando reporte de inversionistas',
+            message: error.message
+        });
     }
 }
 
@@ -2404,5 +2536,6 @@ module.exports = {
     eliminarComisionReturn,
     eliminarComisionServicio,
     renderReporteTodoEnUno,
-    reporteTodoEnUno
+    reporteTodoEnUno,
+    reporteDeInversionistas
 }
