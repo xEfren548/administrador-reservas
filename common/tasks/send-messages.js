@@ -275,6 +275,11 @@ async function sendThanks() {
 async function sendCheckInMessage() {
     console.log("Enviando mensajes de check in");
 
+    if (process.env.NODE_ENV !== 'production') {
+        console.log("No se envían mensajes de check-in en entorno de desarrollo.");
+        return;
+    }
+
     moment.locale('es');
 
     const today = moment().startOf('day').toDate();
