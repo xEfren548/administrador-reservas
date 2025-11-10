@@ -17,23 +17,22 @@ async function showApprovalsView(req, res, next) {
         }
 
         const aprobaciones = await Aprobaciones.find().sort({ createdAt: -1 }).lean();
-        console.log(aprobaciones);
 
         for (let aprobacion of aprobaciones) {
+            const reserva = await Reservas.findById(aprobacion.reservationId).lean();
+            if (!reserva) {
+                await Aprobaciones.findByIdAndDelete(aprobacion._id);
+                continue;
+            }
             aprobacion.createdAt = moment(aprobacion.createdAt).format('DD/MM/YYYY');
             aprobacion.updatedAt = moment(aprobacion.updatedAt).format('DD/MM/YYYY');
             const vendedor = await Usuarios.findById(aprobacion.sellerId).lean();
             aprobacion.sellerName = vendedor.firstName + " " + vendedor.lastName;
             let cliente = await Clientes.findById(aprobacion.clientId).lean();
-            console.log(cliente);
             if (!cliente) {
                 cliente = { firstName: "Cliente", lastName: "Eliminado" };
             }
             aprobacion.clientName = cliente.firstName + " " + cliente.lastName;
-            const reserva = await Reservas.findById(aprobacion.reservationId).lean();
-            if (!reserva) {
-                continue;
-            }
             aprobacion.currentPrice = reserva.total ? reserva.total : 0;
             const habitacion = await Habitacion.findById(reserva.resourceId).lean();
             aprobacion.chaletName = habitacion.propertyDetails.name || "";
@@ -51,10 +50,60 @@ async function showApprovalsView(req, res, next) {
             
         }
         
-        console.log(aprobaciones);
         res.render('aprobacionesView', {
             requests: aprobaciones
         });
+
+    } catch (error) {
+        console.log(error);
+        return next(error);
+    }
+}
+
+async function showApprovalsData(req, res, next) {
+    try {
+        const privilege = req.session.privilege;
+
+        if (privilege !== "Administrador") {
+            throw new Error("El usuario no tiene permiso para ver la pantalla de aprobaciones");
+        }
+
+        const aprobaciones = await Aprobaciones.find().sort({ createdAt: -1 }).lean();
+
+        for (let aprobacion of aprobaciones) {
+            const reserva = await Reservas.findById(aprobacion.reservationId).lean();
+            if (!reserva) {
+                // Eliminar la aprobacion si la reserva no existe
+                await Aprobaciones.findByIdAndDelete(aprobacion._id);
+                continue;
+            }
+            aprobacion.createdAt = moment(aprobacion.createdAt).format('DD/MM/YYYY');
+            aprobacion.updatedAt = moment(aprobacion.updatedAt).format('DD/MM/YYYY');
+            const vendedor = await Usuarios.findById(aprobacion.sellerId).lean();
+            aprobacion.sellerName = vendedor.firstName + " " + vendedor.lastName;
+            let cliente = await Clientes.findById(aprobacion.clientId).lean();
+            if (!cliente) {
+                cliente = { firstName: "Cliente", lastName: "Eliminado" };
+            }
+            aprobacion.clientName = cliente.firstName + " " + cliente.lastName;
+            aprobacion.currentPrice = reserva.total ? reserva.total : 0;
+            const habitacion = await Habitacion.findById(reserva.resourceId).lean();
+            aprobacion.chaletName = habitacion.propertyDetails.name || "";
+            
+            
+            const currentArrivalDate = moment.utc(reserva.arrivalDate).format('DD/MM/YYYY');
+            const currentDepartureDate = moment.utc(reserva.departureDate).format('DD/MM/YYYY');
+            aprobacion.currentDates = currentArrivalDate + " - " + currentDepartureDate;
+
+            const newArrivalDate = moment.utc(aprobacion.dateChanges[0].newArrivalDate).format('DD/MM/YYYY');
+            const newDepartureDate = moment.utc(aprobacion.dateChanges[0].newDepartureDate).format('DD/MM/YYYY');
+            aprobacion.newDates = newArrivalDate + " - " + newDepartureDate;
+
+
+            
+        }
+        
+        res.status(200).json({ data: aprobaciones });
 
     } catch (error) {
         console.log(error);
@@ -193,7 +242,6 @@ async function updateRequestStatus(req, res, next) {
         }
 
         const nNights = calculateNightDifference(aprobacion.dateChanges[0].newArrivalDate, aprobacion.dateChanges[0].newDepartureDate);
-        console.log("Noches nuevas: " + nNights);
         const params = {
             reservationId: aprobacion.reservationId,
             arrivalDate: aprobacion.dateChanges[0].newArrivalDate,
@@ -327,7 +375,6 @@ async function createRequest(req, res, next) {
             infoPrices
         } = req.body;
 
-        console.log(req.body);
 
         // Validate required fields
         if (!clientId || !mainReason || !reservationId || !newPrice) {
@@ -400,6 +447,7 @@ async function createRequest(req, res, next) {
 
 module.exports = {
     showApprovalsView,
+    showApprovalsData,
     updateRequestStatus,
     deleteRequest,
     createRequest,
