@@ -155,9 +155,13 @@ async function obtenerEventos(req, res) {
         const endDate = new Date(end);
 
         // -------- Filtro base (mismos criterios que tu versión) --------
+        // Busca reservas que se solapen con el rango solicitado
         const filtro = {
             status: { $nin: ["no-show", "cancelled"] },
-            arrivalDate: { $gte: startDate, $lte: endDate },
+            $and: [
+                { arrivalDate: { $lt: endDate } },      // Llega antes de que termine el rango
+                { departureDate: { $gt: startDate } }   // Sale después de que empiece el rango
+            ]
         };
 
         if (privilege === "Vendedor") {
@@ -321,9 +325,15 @@ async function obtenerEventosOptimizados(req, res) {
         endDate.setUTCHours(23, 59, 59, 999);
 
         // ---------- Filtro base para reservas ----------
+        // Busca reservas que se solapen con el rango solicitado:
+        // - La reserva empieza antes del fin del rango Y
+        // - La reserva termina después del inicio del rango
         const filtro = {
             status: { $nin: ["no-show", "cancelled"] },
-            arrivalDate: { $gte: startDate, $lte: endDate },
+            $and: [
+                { arrivalDate: { $lt: endDate } },      // Llega antes de que termine el rango
+                { departureDate: { $gt: startDate } }   // Sale después de que empiece el rango
+            ]
         };
 
         // Alcance de recursos (reservas)
