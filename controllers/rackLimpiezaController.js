@@ -3,7 +3,10 @@ const Documento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const habitacionController = require('../controllers/habitacionController');
 const Usuario = require('../models/Usuario');
+const Roles = require('../models/Roles');
 const mongoose = require('mongoose');
+const moment = require('moment');
+moment.locale('es');
 
 async function getAllServices(req, res, next) {
     try {
@@ -13,6 +16,114 @@ async function getAllServices(req, res, next) {
     } catch (error) {
         console.log(error.message);
         res.status(200).send('Something went wrong while retrieving services.');
+    }
+}
+
+async function getAllServicesForReport(req, res, next) {
+    try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if(!userPermissions){
+            throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+        }
+
+        const permittedRole = "VIEW_CLEANING";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            throw new Error("El usuario no tiene permiso para ver los servicios de limpieza");
+        }
+        const usuarioLogueado = req.session.userId;
+        let services; 
+
+        const { fechaInicio, fechaFin } = req.query;
+
+        // Validar fechas
+        if (!fechaInicio || !fechaFin) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Las fechas de inicio y fin son requeridas' 
+            });
+        }
+
+        if (req.session.privilege === 'Limpieza') {
+            services = await RackLimpieza.find({ idHabitacion: usuarioLogueado, fecha: { $gte: fechaInicio, $lte: fechaFin } }).lean();
+        } else if (req.session.privilege === 'Dueño de cabañas') {
+            const chalets = await Habitacion.find({ "others.owner": req.session.id }).lean();
+            const chaletIds = chalets.map(chalet => chalet._id);
+            services = await RackLimpieza.find({ idHabitacion: { $in: chaletIds }, fecha: { $gte: fechaInicio, $lte: fechaFin } }).lean();
+        } else {
+            services = await RackLimpieza.find({ fecha: { $gte: fechaInicio, $lte: fechaFin } }).lean();
+        }
+
+        // Procesar los servicios obtenidos
+        const processedServices = [];
+        for (const service of services) {
+            const reserva = await Documento.findById(service.id_reserva).lean();
+            
+            let serviceData = {
+                habitacion: service.nombreHabitacion || 'N/A',
+                fechaServicio: moment.utc(service.fecha).format('DD-MM-YYYY'),
+                fechaLlegada: 'N/A',
+                fechaSalida: 'N/A',
+                estado: service.status || 'N/A',
+                encargado: 'Sin asignar',
+                descripcion: service.descripcion || 'N/A',
+                idReserva: service.id_reserva?.toString() || 'N/A'
+            };
+
+            if (reserva) {
+                serviceData.fechaLlegada = moment.utc(reserva.arrivalDate).format('DD-MMMM-YYYY');
+                serviceData.fechaSalida = moment.utc(reserva.departureDate).format('DD-MMMM-YYYY');
+                
+                // Obtener nombre del encargado
+                if (service.encargadoLimpieza) {
+                    const encargado = await Usuario.findById(service.encargadoLimpieza).select('firstName lastName').lean();
+                    serviceData.encargado = encargado ? `${encargado.firstName} ${encargado.lastName}` : 'Sin asignar';
+                }
+
+                processedServices.push(serviceData);
+            }
+        }
+
+        processedServices.sort((a, b) => {
+            const fechaA = moment(a.fechaLlegada, 'DD-MMMM-YYYY', 'es');
+            const fechaB = moment(b.fechaLlegada, 'DD-MMMM-YYYY', 'es');
+            
+            if (a.estado === "Pendiente" && b.estado !== "Pendiente") return -1;
+            if (a.estado !== "Pendiente" && b.estado === "Pendiente") return 1;
+            
+            return fechaA.diff(fechaB);
+        });
+
+        // Calcular estadísticas
+        const pendientes = processedServices.filter(s => s.estado === 'Pendiente').length;
+        const completados = processedServices.filter(s => s.estado === 'Completado').length;
+        const enProceso = processedServices.filter(s => s.estado === 'En Proceso').length;
+
+        // Enviar datos estructurados al frontend
+        res.json({
+            success: true,
+            data: {
+                periodo: {
+                    inicio: moment(fechaInicio).format('DD/MM/YYYY'),
+                    fin: moment(fechaFin).format('DD/MM/YYYY')
+                },
+                servicios: processedServices,
+                estadisticas: {
+                    total: processedServices.length,
+                    pendientes,
+                    completados,
+                    enProceso
+                }
+            }
+        });
+
+    } catch (error) {
+        console.log('Error obteniendo datos del reporte:', error.message);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 }
 
@@ -226,5 +337,6 @@ module.exports = {
     createServiceForReservation,
     modifyService,
     deleteService,
-    dataForRackLimpiezaCalendar
+    dataForRackLimpiezaCalendar,
+    getAllServicesForReport
 }

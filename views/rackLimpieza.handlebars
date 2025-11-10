@@ -41,6 +41,38 @@
                 </tbody>
             </table>
         </div>
+
+        {{!-- Sección de generar reporte --}}
+        <div class="card mt-4 mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Generar Reporte de Limpieza</h5>
+            </div>
+            <div class="card-body">
+                <form id="frmReporteExcel">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <label for="fechaInicio" class="form-label">Fecha Inicio:</label>
+                            <input type="date" class="form-control" id="fechaInicio" name="fechaInicio" required>
+                        </div>
+                        <div class="col-md-5">
+                            <label for="fechaFin" class="form-label">Fecha Fin:</label>
+                            <input type="date" class="form-control" id="fechaFin" name="fechaFin" required>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success w-100" id="btnGenerarReporte">
+                                <i class="fa fa-file-excel-o" aria-hidden="true"></i> Generar Excel
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <div id="loading-spinner" class="text-center mt-3" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Generando reporte...</span>
+                    </div>
+                    <p class="mt-2">Generando reporte, por favor espere...</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {{else}}
@@ -50,6 +82,9 @@
 
 
 {{!-- Modals --}}
+<!-- SheetJS library for Excel generation -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
 <div class="modal fade" id="editarRackLimpiezaModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
     <form id="frmUpdateUser" action="/api/usuarios/editar-usuario" method="put" class="modal-dialog modal-lg">
@@ -161,6 +196,160 @@
 
             }
         });
+    }
+
+    // Función para generar el reporte de Excel
+    document.getElementById('frmReporteExcel').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const fechaInicio = document.getElementById('fechaInicio').value;
+        const fechaFin = document.getElementById('fechaFin').value;
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const btnGenerarReporte = document.getElementById('btnGenerarReporte');
+
+        // Validar que las fechas estén seleccionadas
+        if (!fechaInicio || !fechaFin) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Fechas requeridas',
+                text: 'Por favor selecciona ambas fechas',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+
+        // Validar que fecha inicio sea menor o igual a fecha fin
+        if (new Date(fechaInicio) > new Date(fechaFin)) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Fechas inválidas',
+                text: 'La fecha de inicio debe ser anterior o igual a la fecha de fin',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+
+        try {
+            // Mostrar spinner y deshabilitar botón
+            loadingSpinner.style.display = 'block';
+            btnGenerarReporte.disabled = true;
+
+            // Hacer petición al backend
+            const response = await fetch(`/api/racklimpieza/report?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`);
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.error || 'Error al obtener los datos del reporte');
+            }
+
+            // Generar el archivo Excel con los datos recibidos
+            generarExcelReporte(result.data);
+
+            // Ocultar spinner y habilitar botón
+            loadingSpinner.style.display = 'none';
+            btnGenerarReporte.disabled = false;
+
+            // Mostrar mensaje de éxito
+            Swal.fire({
+                icon: 'success',
+                title: '¡Reporte generado!',
+                text: 'El archivo Excel se ha descargado correctamente',
+                confirmButtonText: 'Aceptar'
+            });
+
+        } catch (error) {
+            console.error('Error al generar reporte:', error);
+            loadingSpinner.style.display = 'none';
+            btnGenerarReporte.disabled = false;
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Error al generar el reporte',
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    });
+
+    // Función para generar el archivo Excel
+    function generarExcelReporte(data) {
+        const workbook = XLSX.utils.book_new();
+        
+        // Crear datos para la hoja
+        const worksheetData = [];
+        
+        // Título
+        worksheetData.push(['REPORTE DE SERVICIOS DE LIMPIEZA']);
+        worksheetData.push([`Periodo: ${data.periodo.inicio} - ${data.periodo.fin}`]);
+        worksheetData.push([]); // Fila vacía
+        
+        // Encabezados
+        worksheetData.push([
+            'Habitación',
+            'Fecha Servicio',
+            'Fecha Llegada',
+            'Fecha Salida',
+            'Estado',
+            'Encargado',
+            'Descripción',
+            'ID Reserva'
+        ]);
+        
+        // Datos de los servicios
+        data.servicios.forEach(servicio => {
+            worksheetData.push([
+                servicio.habitacion,
+                servicio.fechaServicio,
+                servicio.fechaLlegada,
+                servicio.fechaSalida,
+                servicio.estado,
+                servicio.encargado,
+                servicio.descripcion,
+                servicio.idReserva
+            ]);
+        });
+        
+        // Agregar resumen
+        worksheetData.push([]); // Fila vacía
+        worksheetData.push(['RESUMEN']);
+        worksheetData.push([
+            `Total de servicios: ${data.estadisticas.total}`,
+            '',
+            `Pendientes: ${data.estadisticas.pendientes}`,
+            '',
+            `Completados: ${data.estadisticas.completados}`,
+            '',
+            `En Proceso: ${data.estadisticas.enProceso}`
+        ]);
+        
+        // Crear la hoja de trabajo
+        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+        
+        // Configurar anchos de columna
+        worksheet['!cols'] = [
+            { wch: 25 }, // Habitación
+            { wch: 15 }, // Fecha Servicio
+            { wch: 18 }, // Fecha Llegada
+            { wch: 18 }, // Fecha Salida
+            { wch: 15 }, // Estado
+            { wch: 25 }, // Encargado
+            { wch: 40 }, // Descripción
+            { wch: 25 }  // ID Reserva
+        ];
+        
+        // Merge cells para el título y periodo
+        worksheet['!merges'] = [
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }, // Título
+            { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } }  // Periodo
+        ];
+        
+        // Agregar la hoja al libro
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Reporte de Limpieza');
+        
+        // Generar el archivo y descargarlo
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        const filename = `reporte_limpieza_${timestamp}.xlsx`;
+        XLSX.writeFile(workbook, filename);
     }
 
 
