@@ -3075,23 +3075,27 @@ async function obtenerHabitacionesDisponibles(req, res) {
         const disponibles = [];
 
         // Chequeo secuencial (puedes paralelizar con Promise.allSettled si lo deseas)
+        
         for (const c of chalets) {
             const chaletId = c._id;
 
-            // 2) Restricción de noches mínimas (restriccion)
-            const nochesMin = await BloqueoFechas.findOne({
-                date: fechaAjustada,
-                habitacionId: chaletId,
-                type: 'restriccion',
-            }).lean();
-
-            if (nochesMin && nNights < Number(nochesMin.min)) {
-                continue; // no cumple noches mínimas
+            if (!isForOwner) {
+                // 2) Restricción de noches mínimas (restriccion)
+                const nochesMin = await BloqueoFechas.findOne({
+                    date: fechaAjustada,
+                    habitacionId: chaletId,
+                    type: 'restriccion',
+                }).lean();
+    
+                if (nochesMin && nNights < Number(nochesMin.min)) {
+                    continue; // no cumple noches mínimas
+                }
+    
+                // 3) Disponibilidad real en el rango
+                const libre = await getDisponibilidad(chaletId, startDate, endDate);
+                if (!libre) continue;
             }
 
-            // 3) Disponibilidad real en el rango
-            const libre = await getDisponibilidad(chaletId, startDate, endDate);
-            if (!libre) continue;
 
             // 4) Map a RoomOption
             disponibles.push({
