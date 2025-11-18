@@ -8,7 +8,31 @@ const channelsSchema = new Schema({
     listingId: { type: String, required: false },
     channelId: { type: String, required: false },
     bookingId: { type: String, required: false }
-})
+});
+
+const infoReservaExternaSchema = new Schema({
+    plataforma: { 
+        type: String, 
+        enum: ['Airbnb', 'Booking', 'Directo', 'WhatsApp', 'Facebook', 'Instagram', 'Otro'],
+        default: null 
+    },
+    precioExternoNoche: { type: Number, default: null },
+    precioExternoTotal: { type: Number, default: null },
+    metodoCobro: { 
+        type: String, 
+        enum: ['Efectivo', 'Transferencia', 'Tarjeta', 'PayPal', 'Otro'],
+        default: null 
+    },
+    estadoPago: { 
+        type: String, 
+        enum: ['Pendiente', 'Pagado', 'Parcial'],
+        default: 'Pendiente' 
+    },
+    montoPagado: { type: Number, default: 0 },
+    fechaPago: { type: Date, default: null },
+    comisionPlataforma: { type: Number, default: 0 },
+    gananciaNetaDueno: { type: Number, default: 0 }
+});
 
 const reservaSchema = new Schema({
     client: {
@@ -18,7 +42,7 @@ const reservaSchema = new Schema({
     resourceId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: 'Habitacion'
+        ref: 'habitaciones'
     },
     reservationDate: {
         type: Date,
@@ -102,6 +126,18 @@ const reservaSchema = new Schema({
     },
     channels: channelsSchema,
 
+    // NUEVOS CAMPOS PARA RESERVAS EXTERNAS
+    tipoReserva: {
+        type: String,
+        enum: ['nyn-hoteles', 'reserva-dueno', 'reserva-externa'],
+        default: 'nyn-hoteles',
+        required: true
+    },
+    esReservaExterna: {
+        type: Boolean,
+        default: false
+    },
+    infoReservaExterna: infoReservaExternaSchema,
     // Integracion OpenPay
     currency: { type: String, default: "MXN" },
     paymentStatus: {
@@ -116,6 +152,28 @@ const reservaSchema = new Schema({
         type: Boolean,
         default: false
     }
+});
+
+// Middleware pre-save para calcular automáticamente valores de reservas externas
+reservaSchema.pre('save', function(next) {
+    if (this.tipoReserva === 'reserva-externa' && this.infoReservaExterna) {
+        const info = this.infoReservaExterna;
+        
+        // Calcular precio total si no existe
+        if (info.precioExternoNoche && this.nNights && !info.precioExternoTotal) {
+            info.precioExternoTotal = info.precioExternoNoche * this.nNights;
+        }
+        
+        // Calcular ganancia neta del dueño
+        if (info.precioExternoTotal) {
+            info.gananciaNetaDueno = info.precioExternoTotal - (info.comisionPlataforma || 0);
+        }
+        
+        this.esReservaExterna = true;
+        this.total = info.precioExternoTotal || 0;
+    }
+    
+    next();
 });
 
 reservaSchema.methods.recalcBalance = async function () {

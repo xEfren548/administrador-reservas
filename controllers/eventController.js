@@ -386,6 +386,8 @@ async function obtenerEventosOptimizados(req, res) {
             thanksSent: 1,
             colorUsuario: 1,
             clientName: 1,
+            clienteProvisional: 1,
+            infoReservaExterna: 1
         }).lean();
 
         const reservaIds = reservas.map(e => e._id);
@@ -604,7 +606,8 @@ async function obtenerEventosDeCabana(req, res) {
                 clientName: clientName,
                 creadaPor: creadaPor,
                 precioBaseTotal: precioBaseTotal,
-                montoPendiente: montoPendiente
+                montoPendiente: montoPendiente,
+                tipoReserva: evento.tipoReserva || null
             };
 
         }));
@@ -683,11 +686,12 @@ async function obtenerEventoPorIdRoute(req, res) {
         const evento = await Documento.findById(id);
 
         if (!evento) {
-            throw new Error('El evento no fue encontrado');
+            return res.status(404).json({ success: false, message: 'El evento no fue encontrado' });
         }
-        res.send(evento);
+        res.json({ success: true, data: evento });
     } catch (error) {
-        throw new Error('Error al obtener el evento por id: ' + error.message);
+        console.error('Error al obtener el evento por id:', error);
+        res.status(500).json({ success: false, message: 'Error al obtener el evento: ' + error.message });
     }
 }
 
@@ -778,7 +782,8 @@ async function reservasDeDuenos(req, res, next) {
                     montoPendiente: montoPendiente,
                     mostrarCancelarReserva: evento.status === 'reserva de dueño',  // Nueva propiedad.
                     vendedor: vendedor,
-                    cliente: cliente
+                    cliente: cliente,
+                    tipoReserva: evento.tipoReserva || 'nyn-hoteles'  // Incluir tipo de reserva
 
                 };
             }));
@@ -3301,6 +3306,9 @@ async function getIncomingReservations(req, res) {
             thanksSent: 1,
             colorUsuario: 1,
             clientName: 1,
+            tipoReserva: 1,
+            infoReservaExterna: 1,
+            notes: 1
         }).lean();
 
         // ---------- Universo de recursos para enriquecer con chalet info ----------
@@ -3409,6 +3417,600 @@ function parseDateFlexible(s) {
     return new Date(s);
 }
 
+/**
+ * Crear reserva externa (desde plataformas como Airbnb, Booking, etc.)
+ */
+async function createOwnerExternalReservation(req, res) {
+    try {
+        const {
+            chaletName,
+            arrivalDate,
+            departureDate,
+            maxOccupation,
+            nNights,
+            clienteProvisional,
+            infoReservaExterna,
+            comentario // Nuevo: comentario opcional
+        } = req.body;
+
+
+
+        // Extraer datos de infoReservaExterna
+        const {
+            plataforma,
+            precioExternoNoche,
+            precioExternoTotal,
+            metodoCobro,
+            estadoPago,
+            montoPagado,
+            comisionPlataforma
+        } = infoReservaExterna || {};
+
+        const privilege = req.session.privilege;
+        const duenoId = req.session.id;
+
+        // Validar que solo dueños puedan crear reservas externas
+        if (privilege !== 'Dueño de cabañas') {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Solo los dueños pueden crear reservas externas' 
+            });
+        }
+
+        // Validar campos requeridos (precio puede ser 0)
+        if (!plataforma || precioExternoNoche === undefined || precioExternoNoche === null || !metodoCobro || !estadoPago) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Faltan campos requeridos de la reserva externa' 
+            });
+        }
+
+        // Obtener habitación
+        const chalet = await Habitacion.findOne({ 
+            "propertyDetails.name": chaletName,
+            "others.owner": duenoId 
+        });
+
+        if (!chalet) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Habitación no encontrada o no pertenece al dueño' 
+            });
+        }
+
+        // Validar disponibilidad
+        const arrivalDateObj = new Date(arrivalDate);
+        const departureDateObj = new Date(departureDate);
+
+        arrivalDateObj.setUTCHours(17, 30, 0, 0);
+        departureDateObj.setUTCHours(14, 30, 0, 0);
+
+        const arrivalDateISO = arrivalDateObj.toISOString();
+        const departureDateISO = departureDateObj.toISOString();
+
+        const overlappingReservation = await Documento.findOne({
+            resourceId: chalet._id,
+            status: { $nin: ["cancelled", "no-show", "playground"] },
+            $and: [
+                { arrivalDate: { $lt: departureDateISO } },
+                { departureDate: { $gt: arrivalDateISO } }
+            ],
+        });
+
+        if (overlappingReservation) {
+            return res.status(400).json({
+                success: false,
+                message: `La habitación ya está reservada en esas fechas`
+            });
+        }
+
+        // Calcular valores numéricos con conversión explícita
+        const nochesNum = parseInt(nNights) || 0;
+        const precioNocheNum = parseFloat(precioExternoNoche) || 0;
+        const precioTotalNum = parseFloat(precioExternoTotal) || (precioNocheNum * nochesNum);
+        const comisionNum = parseFloat(comisionPlataforma) || 0;
+        const gananciaNetaDueno = precioTotalNum - comisionNum;
+        const montoPagadoNum = parseFloat(montoPagado) || 0;
+
+        // Crear reserva externa
+        const reservaExterna = new Documento({
+            resourceId: chalet._id,
+            arrivalDate: arrivalDateObj,
+            departureDate: departureDateObj,
+            maxOccupation: parseInt(maxOccupation) || 1,
+            nNights: nochesNum,
+            clienteProvisional: clienteProvisional || `Cliente ${plataforma}`,
+            createdBy: duenoId,
+            url: `https://${process.env.URL}/api/eventos/temp`,
+            
+            // Campos de reserva externa
+            tipoReserva: 'reserva-externa',
+            esReservaExterna: true,
+            status: 'reserva de dueño',
+            total: precioTotalNum,
+            discount: 0,
+            
+            infoReservaExterna: {
+                plataforma,
+                precioExternoNoche: precioNocheNum,
+                precioExternoTotal: precioTotalNum,
+                metodoCobro,
+                estadoPago: estadoPago || 'Pendiente',
+                montoPagado: montoPagadoNum,
+                fechaPago: estadoPago === 'Pagado' ? new Date() : null,
+                comisionPlataforma: comisionNum,
+                gananciaNetaDueno
+            },
+            
+            // Agregar comentario si se proporciona
+            notes: comentario && comentario.trim() ? [{
+                texto: comentario.trim()
+            }] : []
+        });
+
+        await reservaExterna.save();
+
+        // Actualizar URL
+        reservaExterna.url = `https://${process.env.URL}/api/eventos/${reservaExterna._id}`;
+        await reservaExterna.save();
+
+        // Crear servicio de limpieza
+        await rackLimpiezaController.createServiceForReservation({
+            id_reserva: reservaExterna._id,
+            descripcion: `Limpieza ${chalet.propertyDetails.name}`,
+            fecha: new Date(arrivalDateObj),
+            checkInDate: new Date(arrivalDateObj),
+            checkOutDate: new Date(departureDateObj),
+            status: 'Pendiente',
+            idHabitacion: reservaExterna.resourceId
+        });
+
+        // Crear utilidad para el dueño (solo si ya está pagado)
+        if (estadoPago === 'Pagado' && gananciaNetaDueno > 0) {
+            await utilidadesController.altaComisionReturn({
+                monto: gananciaNetaDueno,
+                concepto: `Ganancia reserva externa ${plataforma} - ${chalet.propertyDetails.name}`,
+                fecha: new Date(departureDateObj),
+                idUsuario: duenoId,
+                idReserva: reservaExterna._id,
+                status: 'aplicado'
+            });
+        }
+
+        // Log
+        await logController.createBackendLog({
+            fecha: Date.now(),
+            idUsuario: duenoId,
+            type: 'reservation',
+            idReserva: reservaExterna._id,
+            acciones: `Reserva externa creada desde ${plataforma} por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Reserva externa creada exitosamente',
+            reservationId: reservaExterna._id
+        });
+
+    } catch (error) {
+        console.error('Error creando reserva externa:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+/**
+ * Editar reserva externa
+ */
+async function editOwnerExternalReservation(req, res) {
+    try {
+        const { id } = req.params;
+        const {
+            clienteProvisional,
+            arrivalDate,
+            departureDate,
+            nNights,
+            infoReservaExterna,
+            comentario // Nuevo: comentario opcional
+        } = req.body;
+
+
+        const privilege = req.session.privilege;
+        const duenoId = req.session.id;
+
+        // Buscar reserva
+        const reserva = await Documento.findById(id);
+
+        if (!reserva) {
+            return res.status(404).json({ success: false, message: 'Reserva no encontrada' });
+        }
+
+        if (reserva.tipoReserva !== 'reserva-externa') {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Solo se pueden editar reservas externas' 
+            });
+        }
+
+        // Validar que sea el dueño
+        const chalet = await Habitacion.findById(reserva.resourceId);
+        if (!chalet || chalet.others.owner.toString() !== duenoId?.toString()) {
+            console.log("chalet: ", chalet);
+            console.log("duenoId: ", duenoId);
+            return res.status(403).json({ 
+                success: false, 
+                message: 'No tienes permisos para editar esta reserva' 
+            });
+        }
+
+        // Si se están actualizando las fechas, validar disponibilidad
+        if (arrivalDate && departureDate) {
+            const arrivalDateObj = new Date(arrivalDate);
+            const departureDateObj = new Date(departureDate);
+
+            arrivalDateObj.setUTCHours(17, 30, 0, 0);
+            departureDateObj.setUTCHours(12, 30, 0, 0);
+
+            if (arrivalDateObj >= departureDateObj) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'La fecha de salida debe ser posterior a la fecha de llegada'
+                });
+            }
+
+            // Verificar disponibilidad (excluyendo la reserva actual)
+            const reservasConflicto = await Documento.find({
+                _id: { $ne: id },
+                resourceId: reserva.resourceId,
+                $or: [
+                    {
+                        arrivalDate: { $lt: departureDateObj },
+                        departureDate: { $gt: arrivalDateObj }
+                    }
+                ],
+                status: { $nin: ['cancelled', 'no-show'] }
+            });
+
+            if (reservasConflicto.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'La cabaña no está disponible en las fechas seleccionadas'
+                });
+            }
+
+            // Actualizar fechas
+            arrivalDateObj.setUTCHours(17, 30, 0, 0);
+            departureDateObj.setUTCHours(14, 30, 0, 0);
+            reserva.arrivalDate = arrivalDateObj;
+            reserva.departureDate = departureDateObj;
+            reserva.nNights = parseInt(nNights);
+        }
+
+        // Actualizar nombre del cliente
+        if (clienteProvisional) {
+            reserva.clienteProvisional = clienteProvisional;
+        }
+
+        // Actualizar info de reserva externa
+        if (infoReservaExterna) {
+            if (infoReservaExterna.plataforma) {
+                reserva.infoReservaExterna.plataforma = infoReservaExterna.plataforma;
+            }
+
+            if (infoReservaExterna.precioExternoNoche !== undefined) {
+                reserva.infoReservaExterna.precioExternoNoche = infoReservaExterna.precioExternoNoche;
+                reserva.infoReservaExterna.precioExternoTotal = infoReservaExterna.precioExternoNoche * reserva.nNights;
+            }
+
+            if (infoReservaExterna.comisionPlataforma !== undefined) {
+                reserva.infoReservaExterna.comisionPlataforma = infoReservaExterna.comisionPlataforma;
+            }
+
+            // Recalcular ganancia neta
+            const precioTotal = reserva.infoReservaExterna.precioExternoTotal;
+            const comision = reserva.infoReservaExterna.comisionPlataforma || 0;
+            reserva.infoReservaExterna.gananciaNetaDueno = precioTotal - comision;
+            reserva.total = precioTotal;
+
+            // Actualizar estado de pago
+            if (infoReservaExterna.estadoPago) {
+                const Utilidades = require('../models/Utilidades');
+                reserva.infoReservaExterna.estadoPago = infoReservaExterna.estadoPago;
+                
+                if (infoReservaExterna.estadoPago === 'Pagado') {
+                    reserva.infoReservaExterna.fechaPago = new Date();
+                    
+                    // Crear/actualizar utilidad
+                    const utilidadExistente = await Utilidades.findOne({ 
+                        idReserva: reserva._id
+                    });
+
+                    if (!utilidadExistente && reserva.infoReservaExterna.gananciaNetaDueno > 0) {
+                        await utilidadesController.altaComisionReturn({
+                            monto: reserva.infoReservaExterna.gananciaNetaDueno,
+                            concepto: `Ganancia reserva externa ${reserva.infoReservaExterna.plataforma} - ${chalet.propertyDetails.name}`,
+                            fecha: reserva.departureDate,
+                            idUsuario: duenoId,
+                            idReserva: reserva._id,
+                            status: 'aplicado'
+                        });
+                    }
+                }
+            }
+
+            if (infoReservaExterna.montoPagado !== undefined) {
+                reserva.infoReservaExterna.montoPagado = infoReservaExterna.montoPagado;
+            }
+        }
+
+        // Agregar comentario si se proporciona (solo uno para reservas de dueño)
+        if (comentario && comentario.trim()) {
+            // Reemplazar cualquier comentario existente con el nuevo
+            reserva.notes = [{
+                texto: comentario.trim()
+            }];
+        }
+
+        await reserva.save();
+
+        // Log
+        await logController.createBackendLog({
+            fecha: Date.now(),
+            idUsuario: duenoId,
+            type: 'reservation',
+            idReserva: reserva._id,
+            acciones: `Reserva externa editada por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        });
+
+        res.json({
+            success: true,
+            message: 'Reserva externa actualizada',
+            reserva
+        });
+
+    } catch (error) {
+        console.error('Error editando reserva externa:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+/**
+ * Eliminar reserva de dueño (solo si es reserva de dueño o externa)
+ */
+async function deleteOwnerReservation(req, res) {
+    try {
+        const { id } = req.params;
+        const privilege = req.session.privilege;
+        const duenoId = req.session.id;
+
+        const reserva = await Documento.findById(id);
+
+        if (!reserva) {
+            return res.status(404).json({ success: false, message: 'Reserva no encontrada' });
+        }
+
+        // Validar que sea reserva de dueño o externa
+        if (!['reserva-dueno', 'reserva-externa'].includes(reserva.tipoReserva) && reserva.status !== 'reserva de dueño') {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Solo se pueden eliminar reservas de dueño o externas' 
+            });
+        }
+
+        // Validar permisos
+        const chalet = await Habitacion.findById(reserva.resourceId);
+        if (!chalet || (privilege === 'Dueño de cabañas' && chalet.others.owner.toString() !== duenoId?.toString())) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'No tienes permisos para eliminar esta reserva' 
+            });
+        }
+
+        // Eliminar utilidades asociadas si es externa
+        if (reserva.tipoReserva === 'reserva-externa') {
+            const Utilidades = require('../models/Utilidades');
+            await Utilidades.deleteMany({ 
+                idReserva: reserva._id
+            });
+        }
+
+        // Eliminar reserva
+        await Documento.findByIdAndDelete(id);
+
+        // Log
+        await logController.createBackendLog({
+            fecha: Date.now(),
+            idUsuario: duenoId,
+            type: 'elimination',
+            acciones: `Reserva ${reserva.tipoReserva || reserva.status} eliminada por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        });
+
+        res.json({
+            success: true,
+            message: 'Reserva eliminada exitosamente'
+        });
+
+    } catch (error) {
+        console.error('Error eliminando reserva:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+/**
+ * Actualizar reserva de dueño
+ */
+async function updateOwnerReservation(req, res) {
+    try {
+        const { id } = req.params;
+        const { clienteProvisional, arrivalDate, departureDate, nNights } = req.body;
+        const privilege = req.session.privilege;
+        const duenoId = req.session.id;
+
+        const reserva = await Documento.findById(id);
+
+        if (!reserva) {
+            return res.status(404).json({ success: false, message: 'Reserva no encontrada' });
+        }
+
+        // Validar que sea reserva de dueño
+        if (reserva.tipoReserva !== 'reserva-dueno' && reserva.status !== 'reserva de dueño') {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Solo se pueden editar reservas de dueño' 
+            });
+        }
+
+        // Validar permisos
+        const chalet = await Habitacion.findById(reserva.resourceId);
+        if (!chalet || (privilege === 'Dueño de cabañas' && chalet.others.owner.toString() !== duenoId)) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'No tienes permisos para editar esta reserva' 
+            });
+        }
+
+        // Validar fechas
+        const arrivalDateObj = new Date(arrivalDate);
+        const departureDateObj = new Date(departureDate);
+
+        if (arrivalDateObj >= departureDateObj) {
+            return res.status(400).json({
+                success: false,
+                message: 'La fecha de salida debe ser posterior a la fecha de llegada'
+            });
+        }
+
+        // Verificar disponibilidad (excluyendo la reserva actual)
+        const reservasConflicto = await Documento.find({
+            _id: { $ne: id },
+            resourceId: reserva.resourceId,
+            $or: [
+                {
+                    arrivalDate: { $lt: departureDateObj },
+                    departureDate: { $gt: arrivalDateObj }
+                }
+            ],
+            status: { $nin: ['cancelled', 'no-show'] }
+        });
+
+        if (reservasConflicto.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'La cabaña no está disponible en las fechas seleccionadas'
+            });
+        }
+
+        // Actualizar reserva
+        reserva.clienteProvisional = clienteProvisional;
+        reserva.arrivalDate = arrivalDateObj;
+        reserva.departureDate = departureDateObj;
+        reserva.nNights = parseInt(nNights);
+
+        await reserva.save();
+
+        // Log
+        await logController.createBackendLog({
+            fecha: Date.now(),
+            idUsuario: duenoId,
+            type: 'modification',
+            idReserva: reserva._id,
+            acciones: `Reserva de dueño actualizada por ${req.session.firstName} ${req.session.lastName}`,
+            nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+        });
+
+        res.json({
+            success: true,
+            message: 'Reserva actualizada exitosamente',
+            data: reserva
+        });
+
+    } catch (error) {
+        console.error('Error actualizando reserva de dueño:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+/**
+ * Agregar comentario a reserva
+ */
+async function addCommentToReservation(req, res) {
+    try {
+        const { id } = req.params;
+        const { texto } = req.body;
+        const userId = req.session.id;
+
+        if (!texto || texto.trim().length === 0) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'El comentario no puede estar vacío' 
+            });
+        }
+
+        const reserva = await Documento.findById(id);
+
+        if (!reserva) {
+            return res.status(404).json({ success: false, message: 'Reserva no encontrada' });
+        }
+
+        // Agregar comentario
+        if (!reserva.notes) {
+            reserva.notes = [];
+        }
+
+        reserva.notes.push({
+            texto: texto.trim()
+        });
+
+        await reserva.save();
+
+        res.json({
+            success: true,
+            message: 'Comentario agregado exitosamente',
+            data: reserva.notes
+        });
+
+    } catch (error) {
+        console.error('Error agregando comentario:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+/**
+ * Eliminar comentario de reserva
+ */
+async function deleteCommentFromReservation(req, res) {
+    try {
+        const { id, comentarioIndex } = req.params;
+        const index = parseInt(comentarioIndex);
+
+        const reserva = await Documento.findById(id);
+
+        if (!reserva) {
+            return res.status(404).json({ success: false, message: 'Reserva no encontrada' });
+        }
+
+        if (!reserva.notes || index < 0 || index >= reserva.notes.length) {
+            return res.status(404).json({ success: false, message: 'Comentario no encontrado' });
+        }
+
+        // Eliminar comentario
+        reserva.notes.splice(index, 1);
+        await reserva.save();
+
+        res.json({
+            success: true,
+            message: 'Comentario eliminado exitosamente',
+            data: reserva.notes
+        });
+
+    } catch (error) {
+        console.error('Error eliminando comentario:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
 module.exports = {
     createReservationValidators,
     createOwnersReservationValidators,
@@ -3439,6 +4041,11 @@ module.exports = {
     cotizadorChaletsyPrecios,
     calculateNightDifference,
     obtenerHabitacionesDisponibles,
-    getIncomingReservations
+    getIncomingReservations,
+    createOwnerExternalReservation,
+    editOwnerExternalReservation,
+    deleteOwnerReservation,
+    updateOwnerReservation,
+    addCommentToReservation,
+    deleteCommentFromReservation
 };
-

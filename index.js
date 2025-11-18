@@ -51,6 +51,9 @@ app.engine('handlebars', engine({
       eq: function (value1, value2) {
         return value1 === value2;
       },
+      or: function (value1, value2) {
+        return value1 || value2;
+      },
       json: function (context) {
         return JSON.stringify(context);
       },

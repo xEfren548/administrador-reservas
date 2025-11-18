@@ -1,70 +1,222 @@
 <div class="calendar-header">
     <div class="bg-dark mb-3">
         <a name="" id="crear-reserva-dueno-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
-            data-bs-toggle="modal" data-bs-target="#event_entry_modal">Crear reserva de dueño</a>
+            data-bs-toggle="modal" data-bs-target="#event_entry_modal">Ingresar reserva</a>
     </div>
 </div>
 
 <div class="row flex-nowrap justify-content-center mt-3 " style="width: 100%;">
-    <div class="col-10">
-        <h1>Reservas</h1>
-        <div class="table-responsive">
-
-            <table class="table table-dark table-hover text-center" id="tablaParaDuenos">
-                <thead class="table-light">
-                    <tr>
-                        <th scope="col">Cabaña</th>
-                        <th scope="col">Fecha de llegada</th>
-                        <th scope="col">Fecha de salida</th>
-                        <th scope="col">Estatus</th>
-                        <th scope="col">Vendedor</th>
-                        <th scope="col">Monto pendiente</th>
-                        <th scope="col">Cliente</th>
-                        <th scope="col">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#if eventos.length}}
-                    {{#each eventos}}
-                    <tr>
-                        <td>{{this.roomName}}</td>
-                        <td>{{this.arrivalDate}}</td>
-                        <td>{{this.departureDate}}</td>
-                        <td>{{this.status}}</td>
-                        <td>{{this.vendedor}}</td>
-                        {{#if this.montoPendiente}}
-                        <td>${{this.montoPendiente}}</td>
-                        {{else}}
-                        <td>-</td>
-                        {{/if}}
-                        <td>{{this.cliente}}</td>
-                        {{#if this.mostrarCancelarReserva}}
-                        <td class="text-center">
-                            <button type="button" class="btn btn-danger btn-sm" data-event-id="{{this._id}}"
-                                onclick="cancelarReserva('{{this._id}}')">Cancelar Reserva
-                        </td>
-                        {{else}}
-                        <td class="text-center">
-                            <button type="button" class="btn btn-info btn-sm" data-event-id="{{this._id}}"
-                                data-pagoTotal="{{this.pagoTotal}}" data-montoPendiente="{{this.montoPendiente}}"
-                                onclick="mostrarInfoServicio('{{this._id}}')">Liquidar Reserva
-                            {{#if (eq this.status "no-show")}}
+    <div class="col-12 col-xl-11">
+        <div class="card shadow-lg bg-dark text-white border-secondary">
+            <div class="card-header bg-secondary text-white border-dark">
+                <h2 class="mb-0"><i class="fa fa-calendar me-2"></i>Mis Reservas</h2>
+            </div>
+            <div class="card-body bg-dark">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle" id="tablaParaDuenos">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th scope="col" class="text-center">Tipo</th>
+                                <th scope="col">Cabaña</th>
+                                <th scope="col" class="text-center">Llegada</th>
+                                <th scope="col" class="text-center">Salida</th>
+                                <th scope="col" class="text-center">Noches</th>
+                                <th scope="col" class="text-center">Estatus</th>
+                                <th scope="col">Cliente</th>
+                                <th scope="col" class="text-center">Monto</th>
+                                <th scope="col" class="text-center">Comentarios</th>
+                                <th scope="col" class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#if eventos.length}}
+                            {{#each eventos}}
+                            <tr>
+                                <td class="text-center">
+                                    {{#if (or (eq this.tipoReserva "reserva-externa") (eq this.tipoReserva "reserva-dueno"))}}
+                                    <span class="badge bg-warning text-dark"><i class="fa fa-globe me-1"></i>Externa</span>
+                                    {{else if (eq this.status "reserva de dueño")}}
+                                    <span class="badge bg-warning text-dark"><i class="fa fa-globe me-1"></i>Externa</span>
+                                    {{else}}
+                                    <span class="badge bg-success"><i class="fa fa-building me-1"></i>NyN</span>
+                                    {{/if}}
+                                </td>
+                                <td><strong>{{this.roomName}}</strong></td>
+                                <td class="text-center"><small>{{this.arrivalDate}}</small></td>
+                                <td class="text-center"><small>{{this.departureDate}}</small></td>
+                                <td class="text-center"><span class="badge bg-secondary">{{this.nNights}}</span></td>
+                                <td class="text-center">
+                                    {{#if (eq this.status "active")}}
+                                    <span class="badge bg-success">Activa</span>
+                                    {{else if (eq this.status "pending")}}
+                                    <span class="badge bg-warning text-dark">Pendiente</span>
+                                    {{else if (eq this.status "no-show")}}
+                                    <span class="badge bg-danger">No Show</span>
+                                    {{else}}
+                                    <span class="badge bg-secondary">{{this.status}}</span>
+                                    {{/if}}
+                                </td>
+                                <td>{{this.cliente}}</td>
+                                <td class="text-center">
+                                    {{#if this.montoPendiente}}
+                                    <span class="text-danger fw-bold">${{this.montoPendiente}}</span>
+                                    {{else}}
+                                    <span class="text-success">—</span>
+                                    {{/if}}
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-light" 
+                                        onclick="gestionarComentarios('{{this._id}}')" 
+                                        title="Ver/Agregar comentarios">
+                                        <i class="fa fa-comment"></i>
+                                        {{#if this.notes}}
+                                        <span class="badge bg-primary rounded-pill ms-1">{{this.notes.length}}</span>
+                                        {{/if}}
+                                    </button>
+                                </td>
+                                {{#if this.mostrarCancelarReserva}}
+                                <td class="text-center">
+                                    <div class="btn-group-vertical" role="group">
+                                        <button type="button" class="btn btn-warning btn-sm" data-event-id="{{this._id}}"
+                                            onclick="editarReserva('{{this._id}}', '{{this.tipoReserva}}')">
+                                            <i class="fa fa-pencil me-1"></i>Editar
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm" data-event-id="{{this._id}}"
+                                            onclick="cancelarReserva('{{this._id}}')">
+                                            <i class="fa fa-times me-1"></i>Cancelar
+                                        </button>
+                                    </div>
+                                </td>
+                                {{else}}
+                                <td class="text-center">
+                                    <div class="btn-group-vertical" role="group">
+                                        {{#if (or (eq this.tipoReserva "reserva-externa") (eq this.tipoReserva "reserva-dueno"))}}
+                                        <button type="button" class="btn btn-warning btn-sm" data-event-id="{{this._id}}"
+                                            onclick="editarReserva('{{this._id}}', '{{this.tipoReserva}}')">
+                                            <i class="fa fa-pencil me-1"></i>Editar
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm" data-event-id="{{this._id}}"
+                                            onclick="eliminarReservaDueno('{{this._id}}')">
+                                            <i class="fa fa-trash me-1"></i>Eliminar
+                                        </button>
+                                        {{else}}
+                                        <button type="button" class="btn btn-info btn-sm" data-event-id="{{this._id}}"
+                                            data-pagoTotal="{{this.pagoTotal}}" data-montoPendiente="{{this.montoPendiente}}"
+                                            onclick="mostrarInfoServicio('{{this._id}}')">
+                                            <i class="fa fa-usd me-1"></i>Liquidar
+                                        </button>
+                                        {{#if (eq this.status "no-show")}}
+                                        {{else}}
+                                        <button type="button" class="btn btn-warning btn-sm" data-event-id="{{this._id}}"
+                                            onclick="cambiarStatusReserva('{{this._id}}')">
+                                            <i class="fa fa-ban me-1"></i>No Show
+                                        </button>
+                                        {{/if}}
+                                        {{/if}}
+                                    </div>
+                                </td>
+                                {{/if}}
+                            </tr>
+                            {{/each}}
                             {{else}}
-                            <button type="button" class="btn btn-warning btn-sm mt-2 w-100" data-event-id="{{this._id}}"
-                                onclick="cambiarStatusReserva('{{this._id}}')">No Show
+                            <tr>
+                                <td colspan="10" class="text-center py-5">
+                                    <i class="fa fa-inbox fa-3x text-muted mb-3 d-block"></i>
+                                    <p class="text-muted">No se encontraron reservas</p>
+                                </td>
+                            </tr>
                             {{/if}}
-                        </td>
-                        {{/if}}
-
-                    </tr>
-                    {{/each}}
-                    {{else}}
-                    <td colspan="6">No se encontraron servicios</td>
-                    {{/if}}
-                </tbody>
-            </table>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-secondary border-dark">
+                <a class="btn btn-primary" href="/api/cabanas/ownercalendar" role="button">
+                    <i class="fa fa-calendar me-2"></i>Cambiar a vista de calendario
+                </a>
+            </div>
         </div>
-        <a name="" id="" class="btn btn-primary mt-5" href="/api/cabanas/ownercalendar" role="button">Cambiar a vista de calendario</a>
+
+        {{!-- Sección de Ganancias de Reservas Externas --}}
+        <div class="mt-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="mb-1">Mis Ganancias de Reservas Externas</h2>
+                    <p class="text-muted mb-0">Ingresos de plataformas como Airbnb, Booking, etc.</p>
+                </div>
+                <button id="exportarCartera" class="btn btn-success">
+                    <i class="fa fa-file-excel me-2"></i>Exportar a Excel
+                </button>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-gradient shadow-sm border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="card-body text-white py-4">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <p class="text-white-50 mb-2 small text-uppercase">Total Ganancias Externas</p>
+                                    <h2 class="mb-0 fw-bold" id="totalExternas">$0.00</h2>
+                                </div>
+                                <div>
+                                    <i class="fa fa-usd fa-3x opacity-25"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="startDateExternas" class="form-label text-white">Fecha Inicio:</label>
+                    <input type="date" class="form-control bg-dark text-white border-secondary" id="startDateExternas">
+                </div>
+                <div class="col-md-3">
+                    <label for="endDateExternas" class="form-label text-white">Fecha Fin:</label>
+                    <input type="date" class="form-control bg-dark text-white border-secondary" id="endDateExternas">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button id="filtrarExternas" class="btn btn-primary me-2">
+                        <i class="fa fa-filter me-1"></i>Filtrar
+                    </button>
+                    <button id="clearDatesExternas" class="btn btn-secondary" title="Limpiar filtros">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-hover text-center" id="tablaExternas">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Tipo</th>
+                            <th scope="col">Habitación</th>
+                            <th scope="col">Plataforma</th>
+                            <th scope="col">Fecha Llegada</th>
+                            <th scope="col">Fecha Salida</th>
+                            <th scope="col">Noches</th>
+                            <th scope="col">Precio Total</th>
+                            <th scope="col">Comisión</th>
+                            <th scope="col">Ganancia Neta</th>
+                            <th scope="col">Concepto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyExternas">
+                        <tr>
+                            <td colspan="10" class="text-center">Cargando datos...</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="8"><b>Total Ganancia Neta</b></td>
+                            <td id="totalGananciaExternas"><b>$0.00</b></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
 
     </div>
 </div>
@@ -76,9 +228,10 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Apartar fechas</h5>
+                <h5 class="modal-title" id="modalLabel">Ingresar reserva</h5>
                 <button type="button" class="close" onclick="$('#event_entry_modal').modal('hide');" aria-label="Close">
-                    &times;
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="img-container">
@@ -149,7 +302,97 @@
                         </div>
                     </div> <!-- Cierre row -->
 
+                    <!-- Información de la reserva -->
+                    <h3 class="mt-4">Información de la Reserva</h3>
+                    
+                    <div class="row mt-2">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="plataforma">Plataforma <span class="text-danger">*</span></label>
+                                <select name="plataforma" id="plataforma" class="form-select">
+                                    <option value="">-- Selecciona una plataforma --</option>
+                                    <option value="Airbnb">Airbnb</option>
+                                    <option value="Booking">Booking.com</option>
+                                    <option value="Directo">Reserva Directa</option>
+                                    <option value="WhatsApp">WhatsApp</option>
+                                    <option value="Facebook">Facebook</option>
+                                    <option value="Instagram">Instagram</option>
+                                    <option value="Otro">Otra</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="precioExternoNoche">Precio por noche</label>
+                                <input type="number" name="precioExternoNoche" id="precioExternoNoche" 
+                                    class="form-control" placeholder="0.00" min="0" step="0.01" value="0">
+                                <small class="text-muted">Deja en 0 si no aplica</small>
+                            </div>
+                        </div>
 
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="precioExternoTotal">Precio total</label>
+                                <input type="number" name="precioExternoTotal" id="precioExternoTotal" 
+                                    class="form-control" placeholder="0.00" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-2">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="comisionPlataforma">Comisión plataforma</label>
+                                <input type="number" name="comisionPlataforma" id="comisionPlataforma" 
+                                    class="form-control" placeholder="0.00" min="0" step="0.01" value="0">
+                                <small class="text-muted">Comisión cobrada por la plataforma</small>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="metodoCobro">Método de cobro <span class="text-danger">*</span></label>
+                                <select name="metodoCobro" id="metodoCobro" class="form-select">
+                                    <option value="">-- Selecciona método --</option>
+                                    <option value="Efectivo">Efectivo</option>
+                                    <option value="Transferencia">Transferencia</option>
+                                    <option value="Tarjeta">Tarjeta</option>
+                                    <option value="PayPal">PayPal</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="estadoPago">Estado de pago <span class="text-danger">*</span></label>
+                                <select name="estadoPago" id="estadoPago" class="form-select">
+                                    <option value="">-- Selecciona estado --</option>
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="Pagado">Pagado</option>
+                                    <option value="Parcial">Parcial</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-2" id="rowPagoCompleto" style="display: none;">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="montoPagado">Monto pagado</label>
+                                <input type="number" name="montoPagado" id="montoPagado" 
+                                    class="form-control" placeholder="0.00" min="0" step="0.01" value="0">
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="fechaPago">Fecha de pago</label>
+                                <input type="date" name="fechaPago" id="fechaPago" class="form-control">
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="form-item">
                         <p id="txtReservationError" name="errMsg" class="error"></p>
@@ -168,6 +411,8 @@
 </div>
 <!-- End popup dialog box -->
 
+<!-- SheetJS para exportar a Excel -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -180,6 +425,32 @@
                 "pageLength": 10 // Establece la longitud de página inicial
             });
         }
+
+        // Calcular precio total automáticamente
+        const precioExternoNoche = document.getElementById('precioExternoNoche');
+        const eventNights = document.getElementById('event_nights');
+        const precioExternoTotal = document.getElementById('precioExternoTotal');
+
+        function calcularPrecioTotal() {
+            const precioNoche = parseFloat(precioExternoNoche.value) || 0;
+            const noches = parseInt(eventNights.value) || 0;
+            precioExternoTotal.value = (precioNoche * noches).toFixed(2);
+        }
+
+        precioExternoNoche.addEventListener('input', calcularPrecioTotal);
+        eventNights.addEventListener('change', calcularPrecioTotal);
+
+        // Mostrar/ocultar campos de pago según estado
+        const estadoPago = document.getElementById('estadoPago');
+        const rowPagoCompleto = document.getElementById('rowPagoCompleto');
+
+        estadoPago.addEventListener('change', function() {
+            if (this.value === 'Pagado' || this.value === 'Parcial') {
+                rowPagoCompleto.style.display = 'flex';
+            } else {
+                rowPagoCompleto.style.display = 'none';
+            }
+        });
     });
 
     document.getElementById('save-event-btn').addEventListener('click', async function () {
@@ -191,8 +462,6 @@
         this.disabled = true; // Deshabilitar el botón
 
         try {
-            // Esperar a que obtenerComisiones() se resuelva            
-
             // Crear un objeto con los datos del formulario
             const formData = {
                 arrivalDate: document.getElementById('event_start_date').value.trim(),
@@ -203,8 +472,45 @@
                 clienteProvisional: document.getElementById('cliente_name').value.trim(),
             };
 
+            // Obtener campos de la reserva
+            const plataforma = document.getElementById('plataforma').value;
+            const precioExternoNoche = document.getElementById('precioExternoNoche').value || '0';
+            const metodoCobro = document.getElementById('metodoCobro').value;
+            const estadoPago = document.getElementById('estadoPago').value;
 
-            const response = await fetch('/api/eventos/reservadueno', {
+            // Validar campos requeridos
+            if (!plataforma || !metodoCobro || !estadoPago) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campos incompletos',
+                    text: 'Por favor completa los campos: Plataforma, Método de cobro y Estado de pago',
+                    confirmButtonText: 'Aceptar'
+                });
+                spinner.classList.add('d-none');
+                spinnerText.textContent = 'Crear Reserva';
+                document.getElementById('save-event-btn').disabled = false;
+                return;
+            }
+
+            formData.infoReservaExterna = {
+                plataforma,
+                precioExternoNoche: parseFloat(precioExternoNoche),
+                precioExternoTotal: parseFloat(document.getElementById('precioExternoTotal').value || 0),
+                metodoCobro,
+                estadoPago,
+                comisionPlataforma: parseFloat(document.getElementById('comisionPlataforma').value || 0)
+            };
+
+            // Si está pagado o parcial, agregar monto y fecha
+            if (estadoPago === 'Pagado' || estadoPago === 'Parcial') {
+                formData.infoReservaExterna.montoPagado = parseFloat(document.getElementById('montoPagado').value || 0);
+                formData.infoReservaExterna.fechaPago = document.getElementById('fechaPago').value;
+            }
+
+            // Siempre usar endpoint de reserva externa
+            const endpoint = '/api/eventos/reserva-externa';
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -480,31 +786,65 @@
 
     async function cancelarReserva(id) {
         const confirmacion = await Swal.fire({
-            title: 'Advertencia',
-            text: 'Esta acción liberará las fechas de la reserva.',
+            title: '¿Estás seguro?',
+            text: 'Esta acción liberará las fechas de la reserva y no se puede deshacer.',
             icon: 'warning',
-            showCancelButton: true
-        })
+            showCancelButton: true,
+            confirmButtonText: 'Sí, cancelar',
+            cancelButtonText: 'No',
+            background: '#212529',
+            color: '#fff',
+            buttonsStyling: false,
+            customClass: {
+                popup: 'bg-dark text-white border border-secondary',
+                confirmButton: 'btn btn-danger me-2',
+                cancelButton: 'btn btn-secondary'
+            }
+        });
 
         if (confirmacion.isConfirmed) {
-            const response = await fetch(`/api/eventos/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-            if (response.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Completado!',
-                    text: 'Reserva eliminada correctamente.',
-                    confirmButtonText: 'Aceptar',
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.reload();
+            try {
+                const response = await fetch(`/api/eventos/reserva-dueno/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
 
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Completado!',
+                        text: 'Reserva cancelada correctamente.',
+                        confirmButtonText: 'Aceptar',
+                        background: '#212529',
+                        color: '#fff',
+                        buttonsStyling: false,
+                        customClass: {
+                            popup: 'bg-dark text-white border border-secondary',
+                            confirmButton: 'btn btn-success'
+                        }
+                    }).then(() => window.location.reload());
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error('Error cancelando reserva:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al cancelar la reserva: ' + error.message,
+                    confirmButtonText: 'Aceptar',
+                    background: '#212529',
+                    color: '#fff',
+                    buttonsStyling: false,
+                    customClass: {
+                        popup: 'bg-dark text-white border border-secondary',
+                        confirmButton: 'btn btn-danger'
                     }
-                })
+                });
             }
         }
     }
@@ -533,6 +873,1057 @@
             nightsInput.value = 0
         }
     }
+
+    // ============================================
+    // FUNCIONES PARA GESTIÓN DE RESERVAS DEL DUEÑO
+    // ============================================
+
+    // Función unificada para editar reservas (externa o dueño)
+    async function editarReserva(id, tipoReserva) {
+        try {
+            // Obtener datos de la reserva
+            const response = await fetch(`/api/eventos/route/${id}`);
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message);
+            }
+
+            const reserva = result.data;
+
+            if (tipoReserva === 'reserva-externa') {
+                // Modal para reserva externa
+                await editarReservaExterna(reserva);
+            } else {
+                // Modal para reserva de dueño
+                await editarReservaDueno(reserva);
+            }
+
+        } catch (error) {
+            console.error('Error obteniendo datos de reserva:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al obtener datos de la reserva: ' + error.message,
+                confirmButtonText: 'Aceptar',
+                background: '#212529',
+                color: '#fff',
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'bg-dark text-white border border-secondary',
+                    confirmButton: 'btn btn-danger'
+                }
+            });
+        }
+    }
+
+    async function editarReservaExterna(reserva) {
+        try {
+            const result = await Swal.fire({
+                title: 'Editar Reserva Externa',
+                html: `
+                    <div class="text-start">
+                        <h6 class="border-bottom pb-2 mb-3 text-info"><i class="fa fa-calendar me-2"></i>Información de la Reserva</h6>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nombre del cliente:</label>
+                            <input type="text" id="edit-ext-cliente" class="form-control" 
+                                value="${reserva.clienteProvisional || ''}" placeholder="Nombre del cliente">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fecha de llegada:</label>
+                            <input type="date" id="edit-ext-fechaLlegada" class="form-control" 
+                                value="${reserva.arrivalDate ? new Date(reserva.arrivalDate).toISOString().split('T')[0] : ''}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fecha de salida:</label>
+                            <input type="date" id="edit-ext-fechaSalida" class="form-control" 
+                                value="${reserva.departureDate ? new Date(reserva.departureDate).toISOString().split('T')[0] : ''}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Noches:</label>
+                            <input type="number" id="edit-ext-noches" class="form-control" 
+                                value="${reserva.nNights || 1}" min="1" readonly>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div id="edit-ext-disponibilidad-status" class="alert alert-info d-none">
+                                <i class="fa fa-spinner fa-spin me-2"></i>Verificando disponibilidad...
+                            </div>
+                        </div>
+
+                        <h6 class="border-bottom pb-2 mb-3 mt-4 text-warning"><i class="fa fa-money-bill me-2"></i>Información de Pago</h6>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Plataforma:</label>
+                            <select id="edit-plataforma" class="form-select">
+                                <option value="Airbnb" ${reserva.infoReservaExterna?.plataforma === 'Airbnb' ? 'selected' : ''}>Airbnb</option>
+                                <option value="Booking" ${reserva.infoReservaExterna?.plataforma === 'Booking' ? 'selected' : ''}>Booking.com</option>
+                                <option value="Directo" ${reserva.infoReservaExterna?.plataforma === 'Directo' ? 'selected' : ''}>Reserva Directa</option>
+                                <option value="WhatsApp" ${reserva.infoReservaExterna?.plataforma === 'WhatsApp' ? 'selected' : ''}>WhatsApp</option>
+                                <option value="Facebook" ${reserva.infoReservaExterna?.plataforma === 'Facebook' ? 'selected' : ''}>Facebook</option>
+                                <option value="Instagram" ${reserva.infoReservaExterna?.plataforma === 'Instagram' ? 'selected' : ''}>Instagram</option>
+                                <option value="Otro" ${reserva.infoReservaExterna?.plataforma === 'Otro' ? 'selected' : ''}>Otra</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Precio por noche:</label>
+                            <input type="number" id="edit-precioNoche" class="form-control" 
+                                value="${reserva.infoReservaExterna?.precioExternoNoche || 0}" step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Comisión plataforma:</label>
+                            <input type="number" id="edit-comision" class="form-control" 
+                                value="${reserva.infoReservaExterna?.comisionPlataforma || 0}" step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Estado de pago:</label>
+                            <select id="edit-estadoPago" class="form-select">
+                                <option value="Pendiente" ${reserva.infoReservaExterna?.estadoPago === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                                <option value="Pagado" ${reserva.infoReservaExterna?.estadoPago === 'Pagado' ? 'selected' : ''}>Pagado</option>
+                                <option value="Parcial" ${reserva.infoReservaExterna?.estadoPago === 'Parcial' ? 'selected' : ''}>Parcial</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Monto pagado:</label>
+                            <input type="number" id="edit-montoPagado" class="form-control" 
+                                value="${reserva.infoReservaExterna?.montoPagado || 0}" step="0.01">
+                        </div>
+                    </div>
+                `,
+                width: '600px',
+                background: '#212529',
+                color: '#fff',
+                showCancelButton: true,
+                confirmButtonText: 'Guardar cambios',
+                cancelButtonText: 'Cancelar',
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'bg-dark text-white border border-secondary',
+                    title: 'text-white',
+                    htmlContainer: 'text-white',
+                    confirmButton: 'btn btn-success me-2',
+                    cancelButton: 'btn btn-secondary'
+                },
+                didOpen: () => {
+                    const fechaLlegada = document.getElementById('edit-ext-fechaLlegada');
+                    const fechaSalida = document.getElementById('edit-ext-fechaSalida');
+                    const noches = document.getElementById('edit-ext-noches');
+                    const disponibilidadStatus = document.getElementById('edit-ext-disponibilidad-status');
+
+                    async function validarDisponibilidad() {
+                        if (fechaLlegada.value && fechaSalida.value) {
+                            const llegada = new Date(fechaLlegada.value);
+                            const salida = new Date(fechaSalida.value);
+                            
+                            if (salida <= llegada) {
+                                disponibilidadStatus.className = 'alert alert-warning';
+                                disponibilidadStatus.innerHTML = '<i class="fa fa-exclamation-triangle me-2"></i>La fecha de salida debe ser posterior a la llegada';
+                                disponibilidadStatus.classList.remove('d-none');
+                                return false;
+                            }
+
+                            const diff = Math.ceil((salida - llegada) / (1000 * 60 * 60 * 24));
+                            noches.value = diff > 0 ? diff : 1;
+
+                            disponibilidadStatus.className = 'alert alert-info';
+                            disponibilidadStatus.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>Verificando disponibilidad...';
+                            disponibilidadStatus.classList.remove('d-none');
+
+                            try {
+                                const response = await fetch(`/api/check-availability/?resourceId=${reserva.resourceId}&arrivalDate=${fechaLlegada.value}&departureDate=${fechaSalida.value}&isForOwner=true&eventId=${reserva._id}`);
+                                const result = await response.json();
+
+                                if (result.available) {
+                                    disponibilidadStatus.className = 'alert alert-success';
+                                    disponibilidadStatus.innerHTML = '<i class="fa fa-check-circle me-2"></i>La cabaña está disponible en estas fechas';
+                                    return true;
+                                } else {
+                                    disponibilidadStatus.className = 'alert alert-danger';
+                                    disponibilidadStatus.innerHTML = '<i class="fa fa-times-circle me-2"></i>La cabaña NO está disponible en estas fechas';
+                                    return false;
+                                }
+                            } catch (error) {
+                                disponibilidadStatus.className = 'alert alert-warning';
+                                disponibilidadStatus.innerHTML = '<i class="fa fa-exclamation-triangle me-2"></i>Error al verificar disponibilidad';
+                                return false;
+                            }
+                        }
+                    }
+
+                    fechaLlegada.addEventListener('change', validarDisponibilidad);
+                    fechaSalida.addEventListener('change', validarDisponibilidad);
+                },
+                preConfirm: async () => {
+                    const clienteProvisional = document.getElementById('edit-ext-cliente').value;
+                    const arrivalDate = document.getElementById('edit-ext-fechaLlegada').value;
+                    const departureDate = document.getElementById('edit-ext-fechaSalida').value;
+                    const nNights = parseInt(document.getElementById('edit-ext-noches').value);
+
+                    if (!clienteProvisional || !arrivalDate || !departureDate) {
+                        Swal.showValidationMessage('Por favor completa todos los campos de la reserva');
+                        return false;
+                    }
+
+                    if (new Date(arrivalDate) >= new Date(departureDate)) {
+                        Swal.showValidationMessage('La fecha de salida debe ser posterior a la fecha de llegada');
+                        return false;
+                    }
+
+                    // Validar disponibilidad final
+                    try {
+                        const response = await fetch(`/api/check-availability/?resourceId=${reserva.resourceId}&arrivalDate=${arrivalDate}&departureDate=${departureDate}&isForOwner=true&eventId=${reserva._id}`);
+                        const result = await response.json();
+
+                        if (!result.available) {
+                            Swal.showValidationMessage('La cabaña no está disponible en las fechas seleccionadas');
+                            return false;
+                        }
+                    } catch (error) {
+                        Swal.showValidationMessage('Error al verificar disponibilidad');
+                        return false;
+                    }
+
+                    return {
+                        clienteProvisional,
+                        arrivalDate,
+                        departureDate,
+                        nNights,
+                        infoReservaExterna: {
+                            plataforma: document.getElementById('edit-plataforma').value,
+                            precioExternoNoche: parseFloat(document.getElementById('edit-precioNoche').value),
+                            comisionPlataforma: parseFloat(document.getElementById('edit-comision').value),
+                            estadoPago: document.getElementById('edit-estadoPago').value,
+                            montoPagado: parseFloat(document.getElementById('edit-montoPagado').value)
+                        }
+                    };
+                }
+            });
+
+            if (result.isConfirmed) {
+                const updateResponse = await fetch(`/api/eventos/reserva-externa/${reserva._id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(result.value)
+                });
+
+                const updateResult = await updateResponse.json();
+
+                if (updateResult.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Actualizado',
+                        text: 'La reserva externa ha sido actualizada correctamente',
+                        confirmButtonText: 'Aceptar',
+                        background: '#212529',
+                        color: '#fff',
+                        buttonsStyling: false,
+                        customClass: {
+                            popup: 'bg-dark text-white border border-secondary',
+                            confirmButton: 'btn btn-success'
+                        }
+                    }).then(() => location.reload());
+                } else {
+                    throw new Error(updateResult.message);
+                }
+            }
+
+        } catch (error) {
+            console.error('Error editando reserva externa:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al editar la reserva: ' + error.message,
+                confirmButtonText: 'Aceptar',
+                background: '#212529',
+                color: '#fff',
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'bg-dark text-white border border-secondary',
+                    confirmButton: 'btn btn-danger'
+                }
+            });
+        }
+    }
+
+    async function editarReservaDueno(reserva) {
+        try {
+            const result = await Swal.fire({
+                title: 'Editar Reserva de Dueño',
+                html: `
+                    <div class="text-start">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nombre del cliente:</label>
+                            <input type="text" id="edit-cliente" class="form-control" 
+                                value="${reserva.clienteProvisional || ''}" placeholder="Nombre del cliente">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fecha de llegada:</label>
+                            <input type="date" id="edit-fechaLlegada" class="form-control" 
+                                value="${reserva.arrivalDate ? new Date(reserva.arrivalDate).toISOString().split('T')[0] : ''}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fecha de salida:</label>
+                            <input type="date" id="edit-fechaSalida" class="form-control" 
+                                value="${reserva.departureDate ? new Date(reserva.departureDate).toISOString().split('T')[0] : ''}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Noches:</label>
+                            <input type="number" id="edit-noches" class="form-control" 
+                                value="${reserva.nNights || 1}" min="1" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <div id="edit-disponibilidad-status" class="alert alert-info d-none">
+                                <i class="fa fa-spinner fa-spin me-2"></i>Verificando disponibilidad...
+                            </div>
+                        </div>
+                    </div>
+                `,
+                width: '500px',
+                background: '#212529',
+                color: '#fff',
+                showCancelButton: true,
+                confirmButtonText: 'Guardar cambios',
+                cancelButtonText: 'Cancelar',
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'bg-dark text-white border border-secondary',
+                    title: 'text-white',
+                    htmlContainer: 'text-white',
+                    confirmButton: 'btn btn-success me-2',
+                    cancelButton: 'btn btn-secondary'
+                },
+                didOpen: () => {
+                    // Calcular noches automáticamente
+                    const fechaLlegada = document.getElementById('edit-fechaLlegada');
+                    const fechaSalida = document.getElementById('edit-fechaSalida');
+                    const noches = document.getElementById('edit-noches');
+                    const disponibilidadStatus = document.getElementById('edit-disponibilidad-status');
+
+                    async function validarDisponibilidad() {
+                        if (fechaLlegada.value && fechaSalida.value) {
+                            const llegada = new Date(fechaLlegada.value);
+                            const salida = new Date(fechaSalida.value);
+                            
+                            if (salida <= llegada) {
+                                disponibilidadStatus.className = 'alert alert-warning';
+                                disponibilidadStatus.innerHTML = '<i class="fa fa-exclamation-triangle me-2"></i>La fecha de salida debe ser posterior a la llegada';
+                                disponibilidadStatus.classList.remove('d-none');
+                                return false;
+                            }
+
+                            // Calcular noches
+                            const diff = Math.ceil((salida - llegada) / (1000 * 60 * 60 * 24));
+                            noches.value = diff > 0 ? diff : 1;
+
+                            // Verificar disponibilidad
+                            disponibilidadStatus.className = 'alert alert-info';
+                            disponibilidadStatus.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>Verificando disponibilidad...';
+                            disponibilidadStatus.classList.remove('d-none');
+
+                            try {
+                                const arrivalFormatted = fechaLlegada.value;
+                                const departureFormatted = fechaSalida.value;
+                                
+                                const response = await fetch(`/api/check-availability/?resourceId=${reserva.resourceId}&arrivalDate=${arrivalFormatted}&departureDate=${departureFormatted}&isForOwner=true&eventId=${reserva._id}`);
+                                const result = await response.json();
+
+                                if (result.available) {
+                                    disponibilidadStatus.className = 'alert alert-success';
+                                    disponibilidadStatus.innerHTML = '<i class="fa fa-check-circle me-2"></i>La cabaña está disponible en estas fechas';
+                                    return true;
+                                } else {
+                                    disponibilidadStatus.className = 'alert alert-danger';
+                                    disponibilidadStatus.innerHTML = '<i class="fa fa-times-circle me-2"></i>La cabaña NO está disponible en estas fechas';
+                                    return false;
+                                }
+                            } catch (error) {
+                                disponibilidadStatus.className = 'alert alert-warning';
+                                disponibilidadStatus.innerHTML = '<i class="fa fa-exclamation-triangle me-2"></i>Error al verificar disponibilidad';
+                                return false;
+                            }
+                        }
+                    }
+
+                    fechaLlegada.addEventListener('change', validarDisponibilidad);
+                    fechaSalida.addEventListener('change', validarDisponibilidad);
+                },
+                preConfirm: async () => {
+                    const clienteProvisional = document.getElementById('edit-cliente').value;
+                    const arrivalDate = document.getElementById('edit-fechaLlegada').value;
+                    const departureDate = document.getElementById('edit-fechaSalida').value;
+                    const nNights = parseInt(document.getElementById('edit-noches').value);
+
+                    if (!clienteProvisional || !arrivalDate || !departureDate) {
+                        Swal.showValidationMessage('Por favor completa todos los campos');
+                        return false;
+                    }
+
+                    if (new Date(arrivalDate) >= new Date(departureDate)) {
+                        Swal.showValidationMessage('La fecha de salida debe ser posterior a la fecha de llegada');
+                        return false;
+                    }
+
+                    // Validar disponibilidad final antes de guardar
+                    try {
+                        const response = await fetch(`/api/check-availability/?resourceId=${reserva.resourceId}&arrivalDate=${arrivalDate}&departureDate=${departureDate}&isForOwner=true&eventId=${reserva._id}`);
+                        const result = await response.json();
+
+                        if (!result.available) {
+                            Swal.showValidationMessage('La cabaña no está disponible en las fechas seleccionadas');
+                            return false;
+                        }
+                    } catch (error) {
+                        Swal.showValidationMessage('Error al verificar disponibilidad');
+                        return false;
+                    }
+
+                    return {
+                        clienteProvisional,
+                        arrivalDate,
+                        departureDate,
+                        nNights
+                    };
+                }
+            });
+
+            if (result.isConfirmed) {
+                const updateResponse = await fetch(`/api/eventos/reserva-dueno/${reserva._id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(result.value)
+                });
+
+                const updateResult = await updateResponse.json();
+
+                if (updateResult.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Actualizado',
+                        text: 'La reserva de dueño ha sido actualizada correctamente',
+                        confirmButtonText: 'Aceptar',
+                        background: '#212529',
+                        color: '#fff',
+                        buttonsStyling: false,
+                        customClass: {
+                            popup: 'bg-dark text-white border border-secondary',
+                            confirmButton: 'btn btn-success'
+                        }
+                    }).then(() => location.reload());
+                } else {
+                    throw new Error(updateResult.message);
+                }
+            }
+
+        } catch (error) {
+            console.error('Error editando reserva de dueño:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al editar la reserva: ' + error.message,
+                confirmButtonText: 'Aceptar',
+                background: '#212529',
+                color: '#fff',
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'bg-dark text-white border border-secondary',
+                    confirmButton: 'btn btn-danger'
+                }
+            });
+        }
+    }
+
+    async function eliminarReservaDueno(id) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: 'Esta acción no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            background: '#212529',
+            color: '#fff',
+            buttonsStyling: false,
+            customClass: {
+                popup: 'bg-dark text-white border border-secondary',
+                confirmButton: 'btn btn-danger me-2',
+                cancelButton: 'btn btn-secondary'
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/eventos/reserva-dueno/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Eliminada',
+                            text: 'La reserva ha sido eliminada correctamente',
+                            confirmButtonText: 'Aceptar',
+                            background: '#212529',
+                            color: '#fff',
+                            buttonsStyling: false,
+                            customClass: {
+                                popup: 'bg-dark text-white border border-secondary',
+                                confirmButton: 'btn btn-success'
+                            }
+                        }).then(() => location.reload());
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    console.error('Error eliminando reserva:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al eliminar la reserva: ' + error.message,
+                        confirmButtonText: 'Aceptar',
+                        background: '#212529',
+                        color: '#fff',
+                        buttonsStyling: false,
+                        customClass: {
+                            popup: 'bg-dark text-white border border-secondary',
+                            confirmButton: 'btn btn-danger'
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    // ============================================
+    // GESTIÓN DE COMENTARIOS
+    // ============================================
+
+    async function gestionarComentarios(id) {
+        try {
+            // Obtener datos de la reserva con comentarios
+            const response = await fetch(`/api/eventos/route/${id}`);
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message);
+            }
+
+            const reserva = result.data;
+            const comentarios = reserva.notes || [];
+
+            let comentariosHTML = '<div class="mb-3" style="max-height: 300px; overflow-y: auto;">';
+            
+            if (comentarios.length === 0) {
+                comentariosHTML += '<p class="text-muted text-center py-3"><i class="fa fa-comments-o fa-2x mb-2"></i><br>No hay comentarios para esta reserva</p>';
+            } else {
+                comentarios.forEach((nota, index) => {
+                    comentariosHTML += `
+                        <div class="card mb-2 shadow-sm bg-secondary text-white">
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <p class="mb-0 flex-grow-1">${nota.texto}</p>
+                                    <button type="button" class="btn btn-sm btn-outline-danger ms-2" 
+                                        onclick="eliminarComentario('${id}', ${index})">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            comentariosHTML += '</div>';
+            comentariosHTML += `
+                <div class="input-group">
+                    <input type="text" id="nuevoComentario" class="form-control bg-dark text-white border-secondary" 
+                        placeholder="Escribe un comentario..." maxlength="500">
+                    <button class="btn btn-primary" type="button" id="btnAgregarComentario">
+                        <i class="fa fa-plus me-1"></i>Agregar
+                    </button>
+                </div>
+                <small class="text-muted">Máximo 500 caracteres</small>
+            `;
+
+            Swal.fire({
+                title: `<i class="fa fa-comments me-2"></i>Comentarios`,
+                html: comentariosHTML,
+                width: '600px',
+                background: '#212529',
+                color: '#fff',
+                showCloseButton: true,
+                showConfirmButton: false,
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'bg-dark text-white border border-secondary',
+                    title: 'text-white',
+                    htmlContainer: 'text-white',
+                    closeButton: 'btn-close-white'
+                },
+                didOpen: () => {
+                    // Manejar agregar comentario
+                    document.getElementById('btnAgregarComentario').addEventListener('click', async () => {
+                        const textoComentario = document.getElementById('nuevoComentario').value.trim();
+                        
+                        if (!textoComentario) {
+                            Swal.showValidationMessage('El comentario no puede estar vacío');
+                            return;
+                        }
+
+                        try {
+                            const addResponse = await fetch(`/api/eventos/${id}/comentarios`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ texto: textoComentario })
+                            });
+
+                            const addResult = await addResponse.json();
+
+                            if (addResult.success) {
+                                Swal.close();
+                                await Swal.fire({
+                                    icon: 'success',
+                                    title: 'Comentario agregado',
+                                    text: 'El comentario ha sido agregado correctamente',
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                    background: '#212529',
+                                    color: '#fff',
+                                    customClass: {
+                                        popup: 'bg-dark text-white border border-secondary'
+                                    }
+                                });
+                                // Reabrir modal con comentarios actualizados
+                                await gestionarComentarios(id);
+                            } else {
+                                throw new Error(addResult.message);
+                            }
+                        } catch (error) {
+                            Swal.showValidationMessage('Error al agregar comentario: ' + error.message);
+                        }
+                    });
+
+                    // Permitir agregar con Enter
+                    document.getElementById('nuevoComentario').addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            document.getElementById('btnAgregarComentario').click();
+                        }
+                    });
+                }
+            });
+
+        } catch (error) {
+            console.error('Error gestionando comentarios:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al cargar comentarios: ' + error.message,
+                confirmButtonText: 'Aceptar',
+                background: '#212529',
+                color: '#fff',
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'bg-dark text-white border border-secondary',
+                    confirmButton: 'btn btn-danger'
+                }
+            });
+        }
+    }
+
+    async function eliminarComentario(reservaId, comentarioIndex) {
+        try {
+            const result = await Swal.fire({
+                title: '¿Eliminar comentario?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                background: '#212529',
+                color: '#fff',
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'bg-dark text-white border border-secondary',
+                    confirmButton: 'btn btn-danger me-2',
+                    cancelButton: 'btn btn-secondary'
+                }
+            });
+
+            if (result.isConfirmed) {
+                const response = await fetch(`/api/eventos/${reservaId}/comentarios/${comentarioIndex}`, {
+                    method: 'DELETE'
+                });
+
+                const deleteResult = await response.json();
+
+                if (deleteResult.success) {
+                    Swal.close();
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminado',
+                        text: 'El comentario ha sido eliminado',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        background: '#212529',
+                        color: '#fff',
+                        customClass: {
+                            popup: 'bg-dark text-white border border-secondary'
+                        }
+                    });
+                    // Reabrir modal con comentarios actualizados
+                    await gestionarComentarios(reservaId);
+                } else {
+                    throw new Error(deleteResult.message);
+                }
+            }
+        } catch (error) {
+            console.error('Error eliminando comentario:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al eliminar comentario: ' + error.message,
+                confirmButtonText: 'Aceptar',
+                background: '#212529',
+                color: '#fff',
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'bg-dark text-white border border-secondary',
+                    confirmButton: 'btn btn-danger'
+                }
+            });
+        }
+    }
+
+    async function verNotas(id) {
+        try {
+            // Obtener notas existentes
+            const response = await fetch(`/api/reservas/${id}/notas`);
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message);
+            }
+
+            const notas = result.data;
+            let notasHTML = '';
+
+            if (notas.length === 0) {
+                notasHTML = '<p class="text-muted">No hay notas para esta reserva</p>';
+            } else {
+                notasHTML = '<div class="list-group mb-3">';
+                notas.forEach(nota => {
+                    const fecha = new Date(nota.fecha).toLocaleDateString('es-MX');
+                    notasHTML += `
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">${nota.autor?.firstName || 'Usuario'} ${nota.autor?.lastName || ''}</h6>
+                                <small>${fecha}</small>
+                            </div>
+                            <p class="mb-1">${nota.texto}</p>
+                        </div>
+                    `;
+                });
+                notasHTML += '</div>';
+            }
+
+            Swal.fire({
+                title: 'Notas de la Reserva',
+                html: `
+                    ${notasHTML}
+                    <div class="text-start mt-3">
+                        <label class="form-label fw-bold">Agregar nueva nota:</label>
+                        <textarea id="nueva-nota" class="form-control" rows="3" 
+                            placeholder="Escribe aquí tu nota..."></textarea>
+                    </div>
+                `,
+                width: '600px',
+                showCancelButton: true,
+                confirmButtonText: 'Agregar nota',
+                cancelButtonText: 'Cerrar',
+                preConfirm: () => {
+                    const texto = document.getElementById('nueva-nota').value.trim();
+                    if (!texto) {
+                        Swal.showValidationMessage('Por favor escribe una nota');
+                        return false;
+                    }
+                    return { texto };
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const addResponse = await fetch(`/api/reservas/${id}/notas`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(result.value)
+                    });
+
+                    const addResult = await addResponse.json();
+
+                    if (addResult.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Nota agregada',
+                            text: 'La nota ha sido agregada correctamente',
+                            confirmButtonText: 'Aceptar'
+                        }).then(() => verNotas(id)); // Recargar notas
+                    } else {
+                        throw new Error(addResult.message);
+                    }
+                }
+            });
+
+        } catch (error) {
+            console.error('Error gestionando notas:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al gestionar notas: ' + error.message,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    }
+
+    // ============================================
+    // GESTIÓN DE GANANCIAS EXTERNAS
+    // ============================================
+    
+    let tablaExternasDataTable = null;
+
+    // Cargar datos de cartera al iniciar
+    async function cargarCarteraDueno() {
+        try {
+            const startDate = document.getElementById('startDateExternas')?.value;
+            const endDate = document.getElementById('endDateExternas')?.value;
+
+            let url = '/api/cartera-dueno/';
+            if (startDate && endDate) {
+                url += `?fechaInicio=${startDate}&fechaFin=${endDate}`;
+            }
+
+            const response = await fetch(url);
+            const result = await response.json();
+
+            if (result.success) {
+                actualizarVistaCartera(result.data);
+            } else {
+                console.error('Error al cargar cartera:', result.message);
+            }
+        } catch (error) {
+            console.error('Error cargando cartera:', error);
+        }
+    }
+
+    function actualizarVistaCartera(data) {
+        // Actualizar tarjeta de resumen
+        document.getElementById('totalExternas').textContent = `$${data.totalExternas.toFixed(2)}`;
+
+        // Limpiar y llenar tabla
+        const tbody = document.getElementById('tbodyExternas');
+        tbody.innerHTML = '';
+
+        if (data.desglose.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay datos para mostrar</td></tr>';
+            document.getElementById('totalGananciaExternas').textContent = '$0.00';
+            return;
+        }
+
+        let totalGanancia = 0;
+
+        data.desglose.forEach(item => {
+            const row = document.createElement('tr');
+            
+            // Determinar clase de color según tipo
+            const tipoClass = item.tipo === 'Reserva Externa' ? 'table-warning' : '';
+            row.className = tipoClass;
+
+            row.innerHTML = `
+                <td><span class="badge ${item.tipo === 'Reserva Externa' ? 'bg-warning text-dark' : 'bg-success'}">${item.tipo}</span></td>
+                <td>${item.habitacion}</td>
+                <td>${item.plataforma || '-'}</td>
+                <td>${item.fechaLlegada}</td>
+                <td>${item.fechaSalida}</td>
+                <td>${item.noches}</td>
+                <td>${item.precioTotal ? '$' + item.precioTotal.toFixed(2) : '-'}</td>
+                <td>${item.comisionPlataforma ? '$' + item.comisionPlataforma.toFixed(2) : '-'}</td>
+                <td><strong>$${item.monto.toFixed(2)}</strong></td>
+                <td>${item.concepto}</td>
+            `;
+
+            tbody.appendChild(row);
+            totalGanancia += item.monto;
+        });
+
+        document.getElementById('totalGananciaExternas').innerHTML = `<b>$${totalGanancia.toFixed(2)}</b>`;
+
+        // Reinicializar DataTable si existe
+        if (tablaExternasDataTable) {
+            tablaExternasDataTable.destroy();
+        }
+
+        const table = document.getElementById('tablaExternas');
+        if (table) {
+            tablaExternasDataTable = new DataTable(table, {
+                "ordering": false,
+                "paging": true,
+                "lengthMenu": [10, 25, 50, 100],
+                "pageLength": 10,
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+                }
+            });
+        }
+    }
+
+    // Evento para filtrar por fechas
+    document.getElementById('filtrarExternas')?.addEventListener('click', function() {
+        const startDate = document.getElementById('startDateExternas').value;
+        const endDate = document.getElementById('endDateExternas').value;
+
+        if (!startDate || !endDate) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Fechas requeridas',
+                text: 'Por favor selecciona ambas fechas',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+
+        if (new Date(startDate) > new Date(endDate)) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Fechas inválidas',
+                text: 'La fecha de inicio debe ser anterior o igual a la fecha fin',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+
+        cargarCarteraDueno();
+    });
+
+    // Evento para limpiar filtros
+    document.getElementById('clearDatesExternas')?.addEventListener('click', function() {
+        document.getElementById('startDateExternas').value = '';
+        document.getElementById('endDateExternas').value = '';
+        cargarCarteraDueno();
+    });
+
+    // Evento para exportar a Excel
+    document.getElementById('exportarCartera')?.addEventListener('click', async function() {
+        try {
+            const startDate = document.getElementById('startDateExternas')?.value;
+            const endDate = document.getElementById('endDateExternas')?.value;
+
+            let url = '/api/cartera-dueno/exportar';
+            if (startDate && endDate) {
+                url += `?fechaInicio=${startDate}&fechaFin=${endDate}`;
+            }
+
+            const response = await fetch(url);
+            const result = await response.json();
+
+            if (result.success) {
+                // Generar Excel en el frontend
+                generarExcelCartera(result.data);
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Reporte generado',
+                    text: 'El archivo Excel se ha descargado correctamente',
+                    confirmButtonText: 'Aceptar'
+                });
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Error exportando cartera:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al generar el reporte: ' + error.message,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    });
+
+    function generarExcelCartera(data) {
+        const workbook = XLSX.utils.book_new();
+        
+        // Preparar datos para Excel
+        const worksheetData = [];
+        
+        // Título
+        worksheetData.push(['REPORTE DE CARTERA - GANANCIAS TOTALES']);
+        worksheetData.push([`Periodo: ${data.periodo.inicio} - ${data.periodo.fin}`]);
+        worksheetData.push([]); // Fila vacía
+        
+        // Resumen
+        worksheetData.push(['RESUMEN DE GANANCIAS']);
+        worksheetData.push(['Total Reservas Externas:', `$${data.resumen.totalExternas.toFixed(2)}`]);
+        worksheetData.push([]); // Fila vacía
+        
+        // Encabezados de desglose
+        worksheetData.push([
+            'Tipo',
+            'Habitación',
+            'Plataforma',
+            'Fecha Llegada',
+            'Fecha Salida',
+            'Noches',
+            'Precio Total',
+            'Comisión',
+            'Ganancia Neta',
+            'Concepto'
+        ]);
+        
+        // Datos del desglose
+        data.desglose.forEach(item => {
+            worksheetData.push([
+                item.tipo,
+                item.habitacion,
+                item.plataforma || '-',
+                item.fechaLlegada,
+                item.fechaSalida,
+                item.noches,
+                item.precioTotal ? item.precioTotal.toFixed(2) : '-',
+                item.comisionPlataforma ? item.comisionPlataforma.toFixed(2) : '-',
+                item.monto.toFixed(2),
+                item.concepto
+            ]);
+        });
+        
+        // Crear la hoja de trabajo
+        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+        
+        // Configurar anchos de columna
+        worksheet['!cols'] = [
+            { wch: 18 }, // Tipo
+            { wch: 25 }, // Habitación
+            { wch: 15 }, // Plataforma
+            { wch: 15 }, // Fecha Llegada
+            { wch: 15 }, // Fecha Salida
+            { wch: 10 }, // Noches
+            { wch: 15 }, // Precio Total
+            { wch: 15 }, // Comisión
+            { wch: 15 }, // Ganancia Neta
+            { wch: 40 }  // Concepto
+        ];
+        
+        // Agregar la hoja al libro
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Cartera');
+        
+        // Generar el archivo y descargarlo
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        const filename = `cartera_dueno_${timestamp}.xlsx`;
+        XLSX.writeFile(workbook, filename);
+    }
+
+    // Cargar datos al iniciar
+    cargarCarteraDueno();
 
     
 

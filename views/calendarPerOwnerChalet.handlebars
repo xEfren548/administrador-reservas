@@ -1,44 +1,204 @@
-<div class="row flex-nowrap justify-content-center mt-3" style="width: 100%;">
-    <div class="col-12">
-        <h1>Calendario de Habitaciones de Dueños/Inversionistas</h1>
+<div class="container-fluid mt-3" style="background-color: #0d1117; min-height: 100vh; padding: 2rem;">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-11">
+            <!-- Header -->
+            <div class="mb-4">
+                <h1 class="text-white mb-3">
+                    <i class="fa fa-calendar me-2" style="color: #60a5fa;"></i>
+                    Calendario de Reservas
+                </h1>
+                <p class="text-secondary">Gestiona las reservas de tus propiedades</p>
+            </div>
 
-        <label for="tipologia_habitacion" class="form-label">Tipologia</label>
-        <select name="tipologia_habitacion" id="tipologia_habitacion" class="form-select form-select-md" required>
-            <option value="" selected="true" disabled="true"> Selecciona una cabaña para visualizar su calendario...
-            </option>
-            {{#if chalets}}
-            {{#each chalets}}
-            <option value="{{this.name}}" data-bs-id="{{this.id}}"> {{this.name}} </option>
-            {{/each}}
-            {{else}}
-            <option value="0">No se encontraron cabañas</option>
-            {{/if}}
-        </select>
+            <!-- Selector de Tipología -->
+            <div class="card bg-dark border-secondary mb-4">
+                <div class="card-body">
+                    <label for="tipologia_habitacion" class="form-label text-white">
+                        <i class="fa fa-home me-2"></i>Selecciona una cabaña
+                    </label>
+                    <select name="tipologia_habitacion" id="tipologia_habitacion" class="form-select form-select-lg bg-dark text-white border-secondary">
+                        <option value="" selected="true" disabled="true">Selecciona una cabaña para visualizar su calendario...</option>
+                        {{#if chalets}}
+                        {{#each chalets}}
+                        <option value="{{this.name}}" data-bs-id="{{this.id}}">{{this.name}}</option>
+                        {{/each}}
+                        {{else}}
+                        <option value="0">No se encontraron cabañas</option>
+                        {{/if}}
+                    </select>
+                </div>
+            </div>
 
-        <div id="calendar" class="" style="display: none;"></div>
-        <div id="context-menu">
-            <ul>
-                <li id="edit"><i class="fa fa-pencil" aria-hidden="true"></i>&nbsp Editar Reserva</li>
-                <li id="delete"><i class="fa fa-trash" aria-hidden="true"></i>&nbsp Cancelar Reserva</li>
-                <li id="move-to-playground"><i class="fa fa-gamepad" aria-hidden="true"></i>&nbsp Mover al Playground
-                </li>
-                <li id="move-to-active"><i class="fa fa-check-circle" aria-hidden="true"></i> &nbsp Cambiar a Activa
-                </li>
-            </ul>
+            <!-- Leyenda de Colores -->
+            <div class="card bg-dark border-secondary mb-4" id="legend-card" style="display: none;">
+                <div class="card-body">
+                    <h6 class="text-white mb-3">
+                        <i class="fa fa-info-circle me-2"></i>Leyenda de Tipos de Reserva
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div style="width: 24px; height: 24px; background-color: #10b981; border: 2px solid #059669; border-radius: 4px; margin-right: 10px;"></div>
+                                <span class="text-white">
+                                    <strong>Reserva NyN</strong>
+                                    <br><small class="text-secondary">Reservas de clientes normales</small>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div style="width: 24px; height: 24px; background-color: #8b5cf6; border: 2px solid #7c3aed; border-radius: 4px; margin-right: 10px;"></div>
+                                <span class="text-white">
+                                    <strong>Reserva de Dueño</strong>
+                                    <br><small class="text-secondary">Reservas externas y personales del propietario</small>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="fa fa-lightbulb-o me-2"></i>
+                        <strong>Tip:</strong> Haz clic en cualquier reserva de dueño para editarla. Las reservas NyN son de solo lectura.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendario -->
+            <div class="card bg-dark border-secondary">
+                <div class="card-body p-3">
+                    <div id="calendar" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Botón para volver -->
+            <div class="mt-4 text-center">
+                <input type="hidden" id="privilege" value="{{privilege}}">
+                {{#if (eq privilege 'Inversionistas')}}
+                <a class="btn btn-outline-light btn-lg" href="/api/calendar/colaboradorduenos" role="button">
+                    <i class="fa fa-table me-2"></i>Cambiar a vista de tabla
+                </a>
+                {{else if (eq privilege 'Colaborador dueño')}}
+                <a class="btn btn-outline-light btn-lg" href="/api/calendar/colaboradorduenos" role="button">
+                    <i class="fa fa-table me-2"></i>Cambiar a vista de tabla
+                </a>
+                {{else}}
+                <a class="btn btn-outline-light btn-lg" href="/api/calendar/duenos" role="button">
+                    <i class="fa fa-table me-2"></i>Cambiar a vista de tabla
+                </a>
+                {{/if}}
+            </div>
         </div>
-
-    <input type="hidden" id="privilege" value="{{privilege}}"></input>
-    
-    {{#if (eq privilege 'Inversionistas')}}
-    <a name="" id="" class="btn btn-primary mt-5" href="/api/calendar/colaboradorduenos" role="button">Cambiar a vista de tabla</a>
-    {{else if (eq privilege 'Colaborador dueño')}}
-    <a name="" id="" class="btn btn-primary mt-5" href="/api/calendar/colaboradorduenos" role="button">Cambiar a vista de tabla</a>
-    {{else}}
-    <a name="" id="" class="btn btn-primary mt-5" href="/api/calendar/duenos" role="button">Cambiar a vista de tabla</a>
-    {{/if}}
     </div>
 </div>
 
+<style>
+    /* Dark mode para FullCalendar */
+    .fc {
+        background-color: #1f2937;
+        color: #fff;
+    }
+    
+    .fc .fc-toolbar-title {
+        color: #fff;
+        font-size: 1.5rem;
+    }
+    
+    .fc .fc-button {
+        background-color: #374151;
+        border-color: #4b5563;
+        color: #fff;
+    }
+    
+    .fc .fc-button:hover {
+        background-color: #4b5563;
+        border-color: #6b7280;
+    }
+    
+    .fc .fc-button-primary:not(:disabled):active,
+    .fc .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: #60a5fa;
+        border-color: #3b82f6;
+    }
+    
+    .fc .fc-col-header-cell {
+        background-color: #374151;
+        color: #fff;
+        border-color: #4b5563;
+    }
+    
+    .fc .fc-daygrid-day {
+        background-color: #1f2937;
+        border-color: #374151;
+    }
+    
+    .fc .fc-daygrid-day:hover {
+        background-color: #374151;
+    }
+    
+    .fc .fc-daygrid-day-number {
+        color: #9ca3af;
+    }
+    
+    .fc .fc-day-today {
+        background-color: #1e3a5f !important;
+    }
+    
+    .fc .fc-day-other {
+        background-color: #111827;
+    }
+    
+    .fc-event {
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .fc-event:hover {
+        transform: scale(1.02);
+        z-index: 100;
+    }
+    
+    /* IMPORTANTE: Sobrescribir TODOS los estilos de color predeterminados de FullCalendar */
+    .fc-event, 
+    .fc-event-main,
+    .fc-daygrid-event,
+    .fc-h-event {
+        background-color: transparent !important;
+        border-color: transparent !important;
+    }
+    
+    /* Asegurar que los eventos usen solo nuestros colores personalizados */
+    .fc-event .fc-event-main-frame {
+        background-color: inherit !important;
+        border-color: inherit !important;
+    }
+    
+    /* Hacer que los eventos ocupen todo el ancho disponible */
+    .fc-daygrid-event {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .fc-daygrid-event-harness {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    
+    .fc-daygrid-block-event .fc-event-main {
+        padding: 0 !important;
+    }
+    
+    /* Asegurar que el contenido personalizado ocupe todo el espacio */
+    .fc-event-main {
+        width: 100% !important;
+    }
+</style>
 
+<script>
+    // Mostrar leyenda cuando se selecciona una cabaña
+    document.getElementById('tipologia_habitacion').addEventListener('change', function() {
+        if (this.value) {
+            document.getElementById('legend-card').style.display = 'block';
+        }
+    });
+</script>
 
 <script src="/scripts/ownerChaletCalendar.js"></script>

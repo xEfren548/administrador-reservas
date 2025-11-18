@@ -24,14 +24,21 @@ router.get('/cotizar', eventController.cotizadorView);
 
 router.post('/eventos', eventController.createReservationValidators, validationRequest, eventController.createReservation);
 router.post('/notas/:id', eventController.crearNota);
-router.post('/eventos/reservadueno', eventController.createOwnersReservationValidators, validationRequest, eventController.createOwnerReservation)
-router.post('/eventos/cotizaciones', eventController.cotizadorChaletsyPrecios);
+router.post('/eventos/reservadueno', eventController.createOwnersReservationValidators, validationRequest, eventController.createOwnerReservation);
+router.post('/eventos/reserva-externa', eventController.createOwnerExternalReservation);
 
 router.put('/eventos/:id', eventController.editarEvento);
 router.put('/eventos/:id/modificar', eventController.modificarEvento);
+router.put('/eventos/reserva-externa/:id', eventController.editOwnerExternalReservation);
+router.put('/eventos/reserva-dueno/:id', eventController.updateOwnerReservation);
+
+router.post('/eventos/cotizaciones', eventController.cotizadorChaletsyPrecios);
+router.post('/eventos/:id/comentarios', eventController.addCommentToReservation);
 
 router.delete('/eventos/:id', eventController.eliminarEvento);
-router.delete('/notas', eventController.eliminarNota)
+router.delete('/eventos/reserva-dueno/:id', eventController.deleteOwnerReservation);
+router.delete('/notas', eventController.eliminarNota);
+router.delete('/eventos/:id/comentarios/:comentarioIndex', eventController.deleteCommentFromReservation);
 
 
 // Rutas con contenido dinamico de handlebars

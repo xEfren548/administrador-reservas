@@ -1414,7 +1414,8 @@ async function mostrarUtilidadesPorUsuario(req, res) {
             utilidades: utilidades,
             totalEarnings,
             limit,
-            utilidadesPorMes
+            utilidadesPorMes,
+            privilege: req.session.privilege
         })
 
     } catch (error) {

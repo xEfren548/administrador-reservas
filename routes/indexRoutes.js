@@ -40,6 +40,8 @@ const channexRoutes = require('./channexRoutes');
 const generalRoutes = require('./webClientesRoutes/generalRoutes');
 const paymentsRoutes = require('./paymentsRoutes');
 const webhooksRoutes = require('./webhooksRoutes');
+const carteraDuenoRoutes = require('./carteraDuenoRoutes');
+const notasDuenoRoutes = require('./notasDuenoRoutes');
 
 // Nuevas rutas para clientes web
 const clientAuthRoutes = require('./authClientes/clientAuthRoutes');
@@ -113,6 +115,8 @@ router.use('/api/pagos', pagosRoutes);
 router.use('/api', utilidadesRoutes);
 router.use('/api', costosRoutes);
 router.use('/api/channex', channexRoutes);
+router.use('/api/cartera-dueno', carteraDuenoRoutes);
+router.use('/api/reservas', notasDuenoRoutes);
 
 // Additional routes
 router.use('/', rackLimpiezaRoutes);
