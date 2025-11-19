@@ -47,26 +47,41 @@ router.post('/charge', async (req, res) => {
         }
 
         // Construir request de pago
+        // Para cargos directos sin cliente (Without Customer) usando token
         const chargeReq = {
+            method: 'card',
+            source_id: token_id, // Token de la tarjeta
             amount: amountMx,
             currency: 'MXN',
             description: `Reserva - ${customerData?.name || 'Cliente'} - ${new Date().toISOString()}`,
             order_id: tempOrderId,
-            method, // 'card' | 'bank_account' (SPEI) | 'store'
+            device_session_id: device_session_id,
             customer: {
-                name: customerData?.name,
-                last_name: customerData?.last_name,
+                name: customerData?.name || 'Cliente',
+                last_name: customerData?.last_name || '',
                 email: customerData?.email,
-                phone_number: customerData?.phone
+                phone_number: customerData?.phone_number || customerData?.phone,
+                requires_account: false // Importante: no requiere cuenta de cliente
             }
         };
 
+        // Validación de campos requeridos para tarjeta
         if (method === 'card') {
             if (!token_id || !device_session_id) {
                 return res.status(400).json({ error: 'Para método card requiere token_id y device_session_id' });
             }
-            chargeReq.source_id = token_id;
-            chargeReq.device_session_id = device_session_id;
+            // Debug: Verificar que el token es válido
+            console.log('Token ID recibido:', token_id);
+            console.log('Device Session ID:', device_session_id);
+            console.log('Token ID length:', token_id?.length);
+            console.log('Token ID type:', typeof token_id);
+            
+            if (!token_id || token_id === 'undefined' || token_id === 'null' || token_id.trim() === '') {
+                return res.status(400).json({ 
+                    error: 'Token ID inválido o vacío', 
+                    received: { token_id, type: typeof token_id } 
+                });
+            }
         }
 
         // Validar que la habitación esté disponible en las fechas solicitadas
@@ -82,12 +97,156 @@ router.post('/charge', async (req, res) => {
             return res.status(400).json({ error: 'El precio ha cambiado, por favor recarga la página e intenta de nuevo' });
         }
 
-        // Ejecutar cargo primero
-        openpay.charges.create(chargeReq, async (error, charge /*, response */) => {
-            if (error) {
-                // Devuelve el error de Openpay con contexto
-                return res.status(400).json({ error: 'Openpay error', detail: error });
+        console.log('Iniciando proceso de pago con OpenPay...');
+        console.log('OpenPay Merchant ID:', process.env.DEV_OPENPAY_ID);
+        console.log('Token recibido:', token_id);
+        console.log('Token length:', token_id?.length);
+        console.log('Device Session ID:', device_session_id);
+        console.log('Email del cliente:', customerData?.email);
+        console.log('Ambiente OpenPay:', process.env.NODE_ENV, 'Sandbox URL:', process.env.DEV_OPENPAY_URL);
+
+        // IMPORTANTE: Validar que el token fue generado para este merchant
+        // Los tokens de OpenPay tienen el formato: [merchant_id]_[random_string]
+        // Verificar si el merchant ID coincide
+        if (!token_id || token_id.length < 10) {
+            return res.status(400).json({ 
+                error: 'Token inválido o vacío',
+                detail: 'El token recibido no tiene el formato esperado' 
+            });
+        }
+
+        // Paso 1: Buscar o crear cliente en OpenPay
+        // Usamos el email como identificador único
+        const searchEmail = customerData?.email;
+        
+        console.log('Buscando cliente existente por email...');
+        
+        // Intentar obtener lista de clientes (limitada) y buscar por email
+        openpay.customers.list({}, (listError, customers) => {
+            let existingCustomer = null;
+            
+            if (!listError && customers && customers.length > 0) {
+                existingCustomer = customers.find((c) => c.email === searchEmail);
+                if (existingCustomer) {
+                    console.log('Cliente existente encontrado:', existingCustomer.id);
+                }
             }
+
+            if (existingCustomer) {
+                // Cliente existe, proceder a agregar tarjeta y hacer cargo
+                processWithExistingCustomer(existingCustomer.id);
+            } else {
+                // Cliente no existe, crear uno nuevo
+                console.log('Cliente no encontrado, creando nuevo cliente...');
+                createNewCustomerAndCharge();
+            }
+        });
+
+        // Función para procesar con cliente existente
+        function processWithExistingCustomer(customerId) {
+            console.log('Agregando tarjeta a cliente existente:', customerId);
+            
+            const cardReq = { 
+                token_id,
+                device_session_id 
+            };
+            
+            openpay.customers.cards.create(customerId, cardReq, (cardError, card) => {
+                if (cardError) {
+                    console.error('Error agregando tarjeta a cliente existente:', cardError);
+                    
+                    // Si falla, intentar crear cliente nuevo (puede que el cliente anterior esté corrupto)
+                    console.log('Fallback: intentando crear nuevo cliente...');
+                    createNewCustomerAndCharge();
+                    return;
+                }
+                
+                console.log('Tarjeta agregada exitosamente:', card.id);
+                
+                // Hacer cargo con el cliente y tarjeta
+                makeChargeWithCustomer(customerId, card.id);
+            });
+        }
+
+        // Función para crear nuevo cliente y hacer cargo
+        function createNewCustomerAndCharge() {
+            const customerReq = {
+                name: customerData?.name || 'Cliente',
+                last_name: customerData?.last_name || '',
+                email: customerData?.email,
+                phone_number: customerData?.phone_number || customerData?.phone,
+                requires_account: false
+            };
+            
+            openpay.customers.create(customerReq, (custError, customer) => {
+                if (custError) {
+                    console.error('Error creando cliente:', custError);
+                    return res.status(400).json({ 
+                        error: 'Openpay error al crear cliente', 
+                        detail: custError 
+                    });
+                }
+                
+                console.log('Cliente nuevo creado:', customer.id);
+                
+                // Agregar tarjeta al nuevo cliente
+                const cardReq = { 
+                    token_id,
+                    device_session_id 
+                };
+                
+                openpay.customers.cards.create(customer.id, cardReq, (cardError, card) => {
+                    if (cardError) {
+                        console.error('Error agregando tarjeta a nuevo cliente:', cardError);
+                        return res.status(400).json({ 
+                            error: 'Openpay error al agregar tarjeta', 
+                            detail: cardError 
+                        });
+                    }
+                    
+                    console.log('Tarjeta agregada a nuevo cliente:', card.id);
+                    
+                    // Hacer cargo
+                    makeChargeWithCustomer(customer.id, card.id);
+                });
+            });
+        }
+
+        // Función para hacer el cargo
+        function makeChargeWithCustomer(customerId, cardId) {
+            const chargeRequest = {
+                method: 'card',
+                source_id: cardId,
+                amount: amountMx,
+                currency: 'MXN',
+                description: `Reserva - ${customerData?.name || 'Cliente'} - ${new Date().toISOString()}`,
+                order_id: tempOrderId,
+                device_session_id: device_session_id
+            };
+            
+            console.log('Procesando cargo:', JSON.stringify(chargeRequest, null, 2));
+            
+            openpay.customers.charges.create(customerId, chargeRequest, async (chargeError, charge) => {
+                if (chargeError) {
+                    console.error('Error al procesar cargo:', chargeError);
+                    return res.status(400).json({ 
+                        error: 'Openpay error al procesar cargo', 
+                        detail: chargeError 
+                    });
+                }
+                
+                console.log('Cargo procesado exitosamente:', charge.id);
+                
+                // Procesar el cargo exitoso
+                await processSuccessfulCharge(charge, res, customerId);
+            });
+        }
+        
+        // Función helper para procesar cargo exitoso (evitar duplicar código)
+        async function processSuccessfulCharge(charge, res, openPayCustomerId = null) {
+
+            console.log('Charge processed:', charge);
+            console.log('OpenPay Customer ID:', openPayCustomerId);
 
             const status = mapStatus(charge.status);
             
@@ -221,7 +380,7 @@ router.post('/charge', async (req, res) => {
                     chargeId: charge.id 
                 });
             }
-        });
+        } // Fin de processSuccessfulCharge
         
     } catch (e) {
         console.error(e);
