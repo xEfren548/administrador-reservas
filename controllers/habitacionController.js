@@ -17,6 +17,10 @@ async function obtenerHabitaciones(req, res) {
             const ownerChalets = await Habitacion.find({ 'others.owner': req.session.id, isActive: true }).lean();
             const ownerChaletsIds = ownerChalets.map(chalet => chalet._id);
             habitaciones = await Habitacion.find({ _id: ownerChaletsIds, isActive: true }).lean();
+        } else if (privilege === "Inversionistas" ) {
+            const investorChalets = await Habitacion.find({ 'others.investors.investor': req.session.id, isActive: true }).lean();
+            const investorChaletsIds = investorChalets.map(chalet => chalet._id);
+            habitaciones = await Habitacion.find({ _id: investorChaletsIds, isActive: true }).lean();
         } else {
             habitaciones = await Habitacion.find( { isActive: true }).lean();
         }

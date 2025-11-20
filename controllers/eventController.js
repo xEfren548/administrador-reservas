@@ -167,8 +167,28 @@ async function obtenerEventos(req, res) {
         if (privilege === "Vendedor") {
             const asObjectIds = assignedChalets.map(id => ObjectId.isValid(id) ? new ObjectId(id) : id);
             filtro.resourceId = { $in: asObjectIds };
+        } else if (privilege === "Dueño de cabañas") {
+            const ownerChalets = await Habitacion.find({ 'others.owner': req.session.userId }, { _id: 1 }).lean();
+            const ownerChaletIds = ownerChalets.map(h => h._id);
+            if (ownerChaletIds.length > 0) {
+                filtro.resourceId = { $in: ownerChaletIds };
+            } else {
+                // Si no tiene cabañas, no retornar nada
+                return res.send([]);
+            }
+        } else if (privilege === "Inversionistas") {
+            const investorChalets = await Habitacion.find({ 
+                'others.investors.investor': req.session.userId 
+            }, { _id: 1 }).lean();
+            const investorChaletIds = investorChalets.map(h => h._id);
+            if (investorChaletIds.length > 0) {
+                filtro.resourceId = { $in: investorChaletIds };
+            } else {
+                // Si no es inversionista de ninguna cabaña, no retornar nada
+                return res.send([]);
+            }
         }
-        // Nota: si no eres Vendedor, trae todo (mismo comportamiento que tu else global sin chaletId)
+        // Nota: si no eres Vendedor, Dueño o Inversionista, trae todo (Administradores)
 
         // -------- Reservas (SIN proyección para mantener todos los datos) --------
         const eventos = await Documento.find(filtro).lean();
@@ -362,6 +382,29 @@ async function obtenerEventosOptimizados(req, res) {
             } else {
                 filtro.resourceId = { $in: ownerChaletIds };
             }
+        } else if (privilege === "Inversionistas") {
+            const investorChalets = await Habitacion.find({ 
+                'others.investors.investor': req.session.userId 
+            }, { _id: 1 }).lean();
+            const investorChaletIds = investorChalets.map(h => h._id);
+
+            console.log("Inversionista tiene acceso a cabañas:", investorChaletIds);
+
+            // Si no es inversionista de ninguna cabaña, retornar vacío
+            if (investorChaletIds.length === 0) {
+                return res.json([]);
+            }
+
+            if (chaletId) {
+                if (!investorChaletIds.some(id => id.toString() === chaletId)) {
+                    // Chalet específico no pertenece al inversionista: no hay resultados
+                    return res.json([]);
+                }
+                filtro.resourceId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
+            } else {
+                filtro.resourceId = { $in: investorChaletIds };
+            }
+        
         } else if (chaletId) {
             filtro.resourceId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
         }
@@ -390,6 +433,8 @@ async function obtenerEventosOptimizados(req, res) {
             infoReservaExterna: 1
         }).lean();
 
+        console.log('Reservas: ', reservas.length);
+
         const reservaIds = reservas.map(e => e._id);
         const logs = await Logs.find({ idReserva: { $in: reservaIds }, type: 'reservation' }).lean();
 
@@ -407,9 +452,9 @@ async function obtenerEventosOptimizados(req, res) {
             .map(r => r.resourceId?.toString())
             .filter(Boolean);
 
-        // Incluye los recursos asignados (Vendedor) o el chalet explícito (Admin/otros),
-        // para traer bloqueos aunque no existan reservas en el rango.
+        // Incluye los recursos asignados según privilegio para traer bloqueos aunque no existan reservas en el rango
         const scopeResourceIds = new Set(resourceIdsFromReservas);
+        console.log('Scope Resource Ids: ', Array.from(scopeResourceIds));
         if (privilege === "Vendedor") {
             if (chaletId) {
                 scopeResourceIds.add(chaletId.toString());
@@ -417,9 +462,26 @@ async function obtenerEventosOptimizados(req, res) {
                     // Chalet específico no estaba en los asignados del vendedor: no hay resultados
                     return res.json([]);
                 }
-
             } else {
                 for (const id of assignedChalets) scopeResourceIds.add(id.toString());
+            }
+        } else if (privilege === "Dueño de cabañas") {
+            const ownerChalets = await Habitacion.find({ 'others.owner': req.session.userId }, { _id: 1 }).lean();
+            const ownerChaletIds = ownerChalets.map(h => h._id.toString());
+            if (chaletId) {
+                scopeResourceIds.add(chaletId.toString());
+            } else {
+                for (const id of ownerChaletIds) scopeResourceIds.add(id);
+            }
+        } else if (privilege === "Inversionistas") {
+            const investorChalets = await Habitacion.find({ 
+                'others.investors.investor': req.session.userId 
+            }, { _id: 1 }).lean();
+            const investorChaletIds = investorChalets.map(h => h._id.toString());
+            if (chaletId) {
+                scopeResourceIds.add(chaletId.toString());
+            } else {
+                for (const id of investorChaletIds) scopeResourceIds.add(id);
             }
         } else if (chaletId) {
             scopeResourceIds.add(chaletId.toString());
@@ -527,6 +589,7 @@ async function obtenerEventosOptimizados(req, res) {
         // ---------- Respuesta unificada ----------
         // Puedes ordenar si lo deseas (ej. por arrivalDate)
         const eventos = [...eventosReservas, ...eventosBloqueo];
+        console.log('Eventos: ', eventos);
         // eventos.sort((a, b) => new Date(a.arrivalDate) - new Date(b.arrivalDate));
         res.send(eventos);
 
