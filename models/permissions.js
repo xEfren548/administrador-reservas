@@ -30,5 +30,20 @@ module.exports = {
     VIEW_PAYMENTS_REPORT: "Ver reporte de pagos",
     ADD_PAYMENTS: "Alta de pagos",
     ADD_PRIVATE_NOTES: "Alta de notas privadas",
+    
+    // Permisos del módulo de Finanzas (Splitwise)
+    VIEW_FINANCES: "Ver módulo de finanzas",
+    MANAGE_ORGANIZATIONS: "Gestionar organizaciones (crear, editar, activar/desactivar)",
+    VIEW_ORGANIZATIONS: "Ver organizaciones",
+    CREATE_ACCOUNTS: "Crear cuentas",
+    EDIT_ACCOUNTS: "Editar cuentas",
+    DELETE_ACCOUNTS: "Eliminar cuentas",
+    VIEW_ACCOUNTS: "Ver cuentas",
+    ADD_ACCOUNT_PARTICIPANTS: "Agregar participantes a cuentas",
+    REMOVE_ACCOUNT_PARTICIPANTS: "Eliminar participantes de cuentas",
+    EDIT_TRANSACTIONS: "Editar transacciones",
+    DELETE_TRANSACTIONS: "Eliminar transacciones",
+    VIEW_TRANSACTIONS: "Ver transacciones",
+    EXPORT_TRANSACTIONS: "Exportar transacciones a CSV",
 
 };

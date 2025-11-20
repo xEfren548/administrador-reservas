@@ -47,6 +47,13 @@ const notasDuenoRoutes = require('./notasDuenoRoutes');
 const clientAuthRoutes = require('./authClientes/clientAuthRoutes');
 const clientFavoritesRoutes = require('./authClientes/clientFavoritesRoutes');
 
+// Rutas del módulo Splitwise (Finanzas)
+const swOrganizacionRoutes = require('./swOrganizacionRoutes');
+const swCuentaRoutes = require('./swCuentaRoutes');
+const swTransaccionRoutes = require('./swTransaccionRoutes');
+const swSolicitudRoutes = require('./swSolicitudRoutes');
+const finanzasRoutes = require('./finanzasRoutes');
+
 const authMiddleware = require('../common/middlewares/authMiddleware');
 
 // Privileges middlewares authentication
@@ -100,6 +107,7 @@ router.use('/', bloqueoFechasRoutes);
 router.use('/', bloqueoInversionistasRoutes);
 router.use('/', plataformasRoutes);
 router.use('/', aprobacionesRoutes);
+router.use('/', finanzasRoutes);
 
 // API routes
 router.use('/api', eventRoutes);
@@ -117,6 +125,12 @@ router.use('/api', costosRoutes);
 router.use('/api/channex', channexRoutes);
 router.use('/api/cartera-dueno', carteraDuenoRoutes);
 router.use('/api/reservas', notasDuenoRoutes);
+
+// Rutas del módulo Splitwise (Finanzas)
+router.use('/api/sw', swOrganizacionRoutes);
+router.use('/api/sw', swCuentaRoutes);
+router.use('/api/sw', swTransaccionRoutes);
+router.use('/api/sw', swSolicitudRoutes);
 
 // Additional routes
 router.use('/', rackLimpiezaRoutes);

@@ -4,6 +4,7 @@ const userController = require('../controllers/usersController');
 const validationRequest = require('../common/middlewares/validation-request');
 
 router.get('/', userController.showUsersView);
+router.get('/all', userController.getAllUsers); //api/usuarios/all
 router.post('/crear-usuario', userController.createUserValidators, validationRequest, userController.createUser);
 router.get('/mostrar-usuario/:uuid', userController.obtenerUsuarioPorId);
 router.put('/editar-usuario', userController.editUserValidators, validationRequest, userController.editarUsuario);

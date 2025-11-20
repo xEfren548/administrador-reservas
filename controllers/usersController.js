@@ -190,6 +190,16 @@ async function showUsersView(req, res, next){
     }
 }
 
+async function getAllUsers(req, res){
+    try {
+        const users = await Usuario.find({}).lean();
+        res.status(200).json({ success: true, data: users });
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
+}
+
 async function getAllUsersMongo(){
     try {
         const users = await Usuario.find({}).lean();
@@ -479,6 +489,7 @@ module.exports = {
     createUserValidators,
     editUserValidators,
     deleteUserValidators,
+    getAllUsers,
     getAllUsersMongo,
     showUsersView,
     createUser,

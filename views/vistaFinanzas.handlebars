@@ -1,0 +1,409 @@
+<div class="min-h-screen bg-gray-900 text-gray-100">
+    <!-- Header con acciones principales -->
+    <div class="bg-gray-800 border-b border-gray-700 px-4 py-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-white">Finanzas</h1>
+                <p class="mt-1 text-sm text-gray-400">Gestiona organizaciones, cuentas y transacciones</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                {{#if isMasterAdmin}}
+                <button id="btn-nueva-organizacion" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalOrganizacion">
+                    <i class="fas fa-building me-1"></i> Nueva Organización
+                </button>
+                {{/if}}
+                <button id="btn-nueva-cuenta" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalCuenta">
+                    <i class="fas fa-wallet me-1"></i> Nueva Cuenta
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs de navegación -->
+    <div class="bg-gray-800 border-b border-gray-700">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <nav class="flex space-x-4 overflow-x-auto scrollbar-hide" aria-label="Tabs">
+                <button class="tab-button active whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-blue-500 text-blue-400" data-tab="organizaciones">
+                    <i class="fas fa-building me-1"></i> Organizaciones
+                </button>
+                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300" data-tab="cuentas">
+                    <i class="fas fa-wallet me-1"></i> Mis Cuentas
+                </button>
+                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300" data-tab="transacciones">
+                    <i class="fas fa-exchange-alt me-1"></i> Transacciones
+                </button>
+                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300" data-tab="solicitudes">
+                    <i class="fas fa-clock me-1"></i> Solicitudes
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Contenido de tabs -->
+    <div class="px-4 py-6 sm:px-6 lg:px-8">
+        
+        <!-- Tab: Organizaciones -->
+        <div id="tab-organizaciones" class="tab-content active">
+            <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+                <div class="p-4 sm:p-6 border-b border-gray-700">
+                    <h2 class="text-xl font-semibold text-white">Organizaciones</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-300">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Nombre</th>
+                                <th scope="col" class="px-6 py-3">Descripción</th>
+                                <th scope="col" class="px-6 py-3">Estado</th>
+                                <th scope="col" class="px-6 py-3">Fecha Creación</th>
+                                <th scope="col" class="px-6 py-3 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-organizaciones-body">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Mis Cuentas -->
+        <div id="tab-cuentas" class="tab-content hidden">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+                <!-- Cards de cuentas se llenarán dinámicamente -->
+                <div id="cuentas-grid" class="col-span-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Se llenará con JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Transacciones -->
+        <div id="tab-transacciones" class="tab-content hidden">
+            <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+                <div class="p-4 sm:p-6 border-b border-gray-700">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <h2 class="text-xl font-semibold text-white">Transacciones</h2>
+                        <select id="filtro-cuenta-transacciones" class="form-select form-select-sm bg-gray-700 border-gray-600 text-gray-200">
+                            <option value="">Todas las cuentas</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-300" id="tabla-transacciones">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Fecha</th>
+                                <th scope="col" class="px-6 py-3">Tipo</th>
+                                <th scope="col" class="px-6 py-3">Concepto</th>
+                                <th scope="col" class="px-6 py-3">Categoría</th>
+                                <th scope="col" class="px-6 py-3 text-right">Monto</th>
+                                <th scope="col" class="px-6 py-3">Estado</th>
+                                <th scope="col" class="px-6 py-3 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-transacciones-body">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Solicitudes -->
+        <div id="tab-solicitudes" class="tab-content hidden">
+            <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+                <div class="p-4 sm:p-6 border-b border-gray-700">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <h2 class="text-xl font-semibold text-white">Solicitudes Pendientes</h2>
+                        <button id="btn-nueva-solicitud" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalSolicitud">
+                            <i class="fas fa-plus me-1"></i> Nueva Solicitud
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-300">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Fecha</th>
+                                <th scope="col" class="px-6 py-3">Tipo</th>
+                                <th scope="col" class="px-6 py-3">Concepto</th>
+                                <th scope="col" class="px-6 py-3">Solicitante</th>
+                                <th scope="col" class="px-6 py-3 text-right">Monto</th>
+                                <th scope="col" class="px-6 py-3">Estado</th>
+                                <th scope="col" class="px-6 py-3 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-solicitudes-body">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal: Nueva/Editar Organización -->
+<div class="modal fade" id="modalOrganizacion" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-gray-800 text-gray-100">
+            <div class="modal-header border-gray-700">
+                <h5 class="modal-title" id="modalOrganizacionTitle">Nueva Organización</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formOrganizacion">
+                    <input type="hidden" id="organizacion-id">
+                    <div class="mb-3">
+                        <label for="organizacion-nombre" class="form-label">Nombre *</label>
+                        <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="organizacion-nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="organizacion-descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control bg-gray-700 border-gray-600 text-gray-100" id="organizacion-descripcion" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-gray-700">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarOrganizacion">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Nueva/Editar Cuenta -->
+<div class="modal fade" id="modalCuenta" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content bg-gray-800 text-gray-100">
+            <div class="modal-header border-gray-700">
+                <h5 class="modal-title" id="modalCuentaTitle">Nueva Cuenta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formCuenta">
+                    <input type="hidden" id="cuenta-id">
+                    
+                    <!-- Información básica -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="cuenta-nombre" class="form-label">Nombre de la Cuenta *</label>
+                            <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-nombre" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="cuenta-organizacion" class="form-label">Organización *</label>
+                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="cuenta-organizacion" required>
+                                <option value="">Seleccione...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="cuenta-tipo" class="form-label">Tipo de Cuenta</label>
+                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="cuenta-tipo">
+                                <option value="Bancaria">Bancaria</option>
+                                <option value="Efectivo">Efectivo</option>
+                                <option value="Tarjeta">Tarjeta</option>
+                                <option value="Billetera Digital">Billetera Digital</option>
+                                <option value="Otra">Otra</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="cuenta-moneda" class="form-label">Moneda</label>
+                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="cuenta-moneda">
+                                <option value="MXN">MXN</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="cuenta-saldo-inicial" class="form-label">Saldo Inicial</label>
+                            <input type="number" step="0.01" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-saldo-inicial" value="0">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cuenta-descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-descripcion" rows="2"></textarea>
+                    </div>
+
+                    <!-- Datos Bancarios -->
+                    <div class="border-top border-gray-700 pt-3 mt-3">
+                        <h6 class="text-gray-300 mb-3">Datos Bancarios (Opcional)</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="cuenta-beneficiario" class="form-label">Beneficiario</label>
+                                <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-beneficiario">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cuenta-banco" class="form-label">Banco</label>
+                                <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-banco">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="cuenta-clabe" class="form-label">CLABE</label>
+                                <input type="text" maxlength="18" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-clabe">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cuenta-numero" class="form-label">Número de Cuenta</label>
+                                <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-numero">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cuenta-referencia" class="form-label">Referencia</label>
+                            <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-referencia">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-gray-700">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnGuardarCuenta">Guardar Cuenta</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Nueva Solicitud -->
+<div class="modal fade" id="modalSolicitud" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-gray-800 text-gray-100">
+            <div class="modal-header border-gray-700">
+                <h5 class="modal-title">Nueva Solicitud de Transacción</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formSolicitud">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="solicitud-cuenta" class="form-label">Cuenta *</label>
+                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="solicitud-cuenta" required>
+                                <option value="">Seleccione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="solicitud-tipo" class="form-label">Tipo *</label>
+                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="solicitud-tipo" required>
+                                <option value="Gasto">Gasto</option>
+                                <option value="Ingreso">Ingreso</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="solicitud-monto" class="form-label">Monto *</label>
+                            <input type="number" step="0.01" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="solicitud-monto" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="solicitud-concepto" class="form-label">Concepto *</label>
+                            <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="solicitud-concepto" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="solicitud-categoria" class="form-label">Categoría *</label>
+                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="solicitud-categoria" required>
+                                <option value="Otro">Otro</option>
+                                <option value="Alimentación">Alimentación</option>
+                                <option value="Transporte">Transporte</option>
+                                <option value="Servicios">Servicios</option>
+                                <option value="Mantenimiento">Mantenimiento</option>
+                                <option value="Compras">Compras</option>
+                                <option value="Salud">Salud</option>
+                                <option value="Entretenimiento">Entretenimiento</option>
+                                <option value="Educación">Educación</option>
+                                <option value="Hogar">Hogar</option>
+                                <option value="Salario">Salario</option>
+                                <option value="Venta">Venta</option>
+                                <option value="Inversión">Inversión</option>
+                                <option value="Préstamo">Préstamo</option>
+                                <option value="Reembolso">Reembolso</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="solicitud-descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control bg-gray-700 border-gray-600 text-gray-100" id="solicitud-descripcion" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="solicitud-fecha" class="form-label">Fecha</label>
+                        <input type="date" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="solicitud-fecha">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-gray-700">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="btnGuardarSolicitud">Enviar Solicitud</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Detalle de Cuenta -->
+<div class="modal fade" id="modalDetalleCuenta" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content bg-gray-800 text-gray-100">
+            <div class="modal-header border-gray-700">
+                <h5 class="modal-title" id="detalleCuentaNombre">Detalle de Cuenta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="detalleCuentaContent">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tab-content {
+        display: none;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    
+    /* Eliminar scroll horizontal de modales */
+    .modal-dialog {
+        overflow-x: hidden !important;
+    }
+    .modal-body {
+        overflow-x: hidden !important;
+    }
+    .modal-content {
+        overflow-x: hidden !important;
+    }
+    
+    /* Asegurar que los tabs activos tengan el color correcto */
+    .tab-button.active {
+        color: #60A5FA !important; /* text-blue-400 */
+        border-bottom-color: #3B82F6 !important; /* border-blue-500 */
+    }
+    .tab-button:not(.active) {
+        color: #9CA3AF !important; /* text-gray-400 */
+        border-bottom-color: transparent !important;
+    }
+    .tab-button:not(.active):hover {
+        color: #D1D5DB !important; /* text-gray-300 */
+        border-bottom-color: #D1D5DB !important; /* border-gray-300 */
+    }
+</style>
+
+<script>
+    // Variable global para verificar permisos de MASTER ADMIN
+    window.isMasterAdmin = {{#if isMasterAdmin}}true{{else}}false{{/if}};
+</script>
+
+<script src="/scripts/finanzas.js"></script>
