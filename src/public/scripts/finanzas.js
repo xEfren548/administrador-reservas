@@ -876,6 +876,7 @@ function agregarTransaccion(cuentaId) {
     $('#transaccion-cuenta-id').val(cuentaId);
     $('#formTransaccion')[0].reset();
     $('#transaccion-fecha').val(new Date().toISOString().split('T')[0]);
+    $('#preview-imagenes').empty();
     $('#modalTransaccion').modal('show');
 }
 
@@ -903,6 +904,9 @@ async function guardarTransaccion() {
     }
 
     try {
+        mostrarSpinner();
+        
+        // Crear la transacción primero
         const response = await fetch('/api/sw/transacciones', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -921,9 +925,25 @@ async function guardarTransaccion() {
         const data = await response.json();
 
         if (data.success) {
-            mostrarExito('Transacción creada exitosamente');
+            const transaccionId = data.data._id;
+            
+            // Si hay imágenes seleccionadas, subirlas
+            const archivosInput = document.getElementById('transaccion-imagenes');
+            if (archivosInput && archivosInput.files.length > 0) {
+                try {
+                    await subirImagenesTransaccion(transaccionId, archivosInput.files);
+                    mostrarExito('Transacción e imágenes guardadas exitosamente');
+                } catch (errorImg) {
+                    console.error('Error al subir imágenes:', errorImg);
+                    mostrarError('Transacción creada, pero hubo un error al subir las imágenes');
+                }
+            } else {
+                mostrarExito('Transacción creada exitosamente');
+            }
+            
             $('#modalTransaccion').modal('hide');
             $('#formTransaccion')[0].reset();
+            $('#preview-imagenes').empty();
             cargarMisCuentas(); // Actualizar saldos
             
             // Si estamos en el tab de transacciones, recargarlas
@@ -937,6 +957,8 @@ async function guardarTransaccion() {
     } catch (error) {
         console.error('Error:', error);
         mostrarError(error.message || 'Error al crear transacción');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -1098,17 +1120,25 @@ function renderizarTransacciones() {
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-900 text-green-300">Aprobada</span>' :
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-900 text-yellow-300">Pendiente</span>';
 
+        // Indicador de imágenes
+        const cantidadImagenes = trans.imagenes?.length || 0;
+        const iconoImagenes = cantidadImagenes > 0 ? 
+            `<i class="fas fa-paperclip text-blue-400" title="${cantidadImagenes} imagen(es)"></i>` : '';
+
         tbody.append(`
             <tr class="border-b border-gray-700 hover:bg-gray-700">
-                <td class="px-6 py-4">${fecha}</td>
+                <td class="px-6 py-4">${fecha} ${iconoImagenes}</td>
                 <td class="px-6 py-4 ${tipoColor}">${trans.tipo}</td>
                 <td class="px-6 py-4 font-medium text-white">${trans.concepto}</td>
                 <td class="px-6 py-4">${trans.categoria}</td>
                 <td class="px-6 py-4 text-right font-semibold ${tipoColor}">${monto}</td>
                 <td class="px-6 py-4">${estadoBadge}</td>
                 <td class="px-6 py-4 text-center">
-                    <button onclick="verDetalleTransaccion('${trans._id}')" class="btn btn-sm btn-info" title="Ver detalle">
+                    <button onclick="verDetalleTransaccion('${trans._id}')" class="btn btn-sm btn-info me-1" title="Ver detalle">
                         <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="gestionarImagenesTransaccion('${trans._id}')" class="btn btn-sm btn-secondary" title="Ver/Gestionar comprobantes">
+                        <i class="fas fa-images"></i>
                     </button>
                 </td>
             </tr>
@@ -1392,4 +1422,240 @@ async function eliminarParticipante(cuentaId, usuarioId) {
         console.error('Error:', error);
         mostrarError('Error al eliminar participante');
     }
+}
+
+// ===== GESTIÓN DE IMÁGENES DE TRANSACCIONES =====
+
+// Preview de imágenes al seleccionarlas en el formulario de crear transacción
+$(document).on('change', '#transaccion-imagenes', function(e) {
+    const files = e.target.files;
+    const previewContainer = $('#preview-imagenes');
+    previewContainer.empty();
+
+    if (files.length > 3) {
+        mostrarError('Solo puede seleccionar máximo 3 imágenes');
+        e.target.value = '';
+        return;
+    }
+
+    Array.from(files).forEach((file, index) => {
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgContainer = $(`
+                    <div class="preview-image-container">
+                        <img src="${e.target.result}" class="preview-image" alt="Preview ${index + 1}">
+                        <button type="button" class="preview-image-remove" onclick="removerImagenPreview(${index})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `);
+                previewContainer.append(imgContainer);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+});
+
+function removerImagenPreview(index) {
+    const input = document.getElementById('transaccion-imagenes');
+    const dt = new DataTransfer();
+    
+    Array.from(input.files).forEach((file, i) => {
+        if (i !== index) dt.items.add(file);
+    });
+    
+    input.files = dt.files;
+    $('#transaccion-imagenes').trigger('change');
+}
+
+// Subir imágenes de una transacción
+async function subirImagenesTransaccion(transaccionId, files) {
+    const formData = new FormData();
+    
+    Array.from(files).forEach(file => {
+        formData.append('imagenes', file);
+    });
+
+    const response = await fetch(`/api/sw/transacciones/${transaccionId}/imagenes`, {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Error al subir imágenes');
+    }
+
+    return await response.json();
+}
+
+// Abrir modal para gestionar imágenes de una transacción
+async function gestionarImagenesTransaccion(transaccionId) {
+    try {
+        mostrarSpinner();
+        
+        const response = await fetch(`/api/sw/transacciones/${transaccionId}`);
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.message || 'Error al cargar transacción');
+        }
+
+        const transaccion = data.data;
+        $('#modal-imagenes-transaccion-id').val(transaccionId);
+
+        // Mostrar imágenes existentes
+        const imagenesGrid = $('#imagenes-existentes-grid');
+        imagenesGrid.empty();
+
+        if (transaccion.imagenes && transaccion.imagenes.length > 0) {
+            transaccion.imagenes.forEach(imagen => {
+                const imagenUrl = `https://navarro.integradev.site/navarro/splitwise/${imagen}`;
+                const card = $(`
+                    <div class="col-md-4">
+                        <div class="imagen-existente-card" onclick="visualizarImagenCompleta('${imagenUrl}')">
+                            <img src="${imagenUrl}" alt="Comprobante" class="img-fluid">
+                            <button type="button" class="imagen-existente-delete" onclick="event.stopPropagation(); eliminarImagenTransaccion('${transaccionId}', '${imagen}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `);
+                imagenesGrid.append(card);
+            });
+        } else {
+            imagenesGrid.html('<p class="text-gray-400 col-12">No hay imágenes adjuntas</p>');
+        }
+
+        // Mostrar/ocultar sección de subir nuevas según el límite
+        const cantidadActual = transaccion.imagenes?.length || 0;
+        if (cantidadActual >= 3) {
+            $('#subir-imagenes-container').hide();
+        } else {
+            $('#subir-imagenes-container').show();
+            $('#nuevas-imagenes-input').attr('max', 3 - cantidadActual);
+        }
+
+        $('#modalImagenesTransaccion').modal('show');
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError(error.message || 'Error al cargar imágenes');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+// Preview de nuevas imágenes a subir
+$(document).on('change', '#nuevas-imagenes-input', function(e) {
+    const files = e.target.files;
+    const previewContainer = $('#preview-nuevas-imagenes');
+    const btnSubir = $('#btnSubirNuevasImagenes');
+    previewContainer.empty();
+
+    const transaccionId = $('#modal-imagenes-transaccion-id').val();
+    const imagenesActuales = $('#imagenes-existentes-grid .col-md-4').length;
+
+    if (imagenesActuales + files.length > 3) {
+        mostrarError(`Solo puede tener máximo 3 imágenes. Actualmente tiene ${imagenesActuales}`);
+        e.target.value = '';
+        btnSubir.hide();
+        return;
+    }
+
+    if (files.length > 0) {
+        Array.from(files).forEach((file, index) => {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgCol = $(`
+                        <div class="col-4">
+                            <img src="${e.target.result}" class="img-fluid rounded" style="height: 100px; object-fit: cover;" alt="Preview ${index + 1}">
+                        </div>
+                    `);
+                    previewContainer.append(imgCol);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        btnSubir.show();
+    } else {
+        btnSubir.hide();
+    }
+});
+
+// Subir nuevas imágenes desde el modal de gestión
+$(document).on('click', '#btnSubirNuevasImagenes', async function() {
+    const transaccionId = $('#modal-imagenes-transaccion-id').val();
+    const input = document.getElementById('nuevas-imagenes-input');
+    
+    if (!input.files || input.files.length === 0) {
+        mostrarError('Seleccione al menos una imagen');
+        return;
+    }
+
+    try {
+        mostrarSpinner();
+        await subirImagenesTransaccion(transaccionId, input.files);
+        mostrarExito('Imágenes subidas exitosamente');
+        
+        // Recargar el modal
+        $('#modalImagenesTransaccion').modal('hide');
+        setTimeout(() => gestionarImagenesTransaccion(transaccionId), 500);
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError(error.message || 'Error al subir imágenes');
+    } finally {
+        ocultarSpinner();
+    }
+});
+
+// Eliminar una imagen específica
+async function eliminarImagenTransaccion(transaccionId, imagenNombre) {
+    const confirmar = await Swal.fire({
+        title: '¿Eliminar imagen?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#EF4444',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        background: '#1F2937',
+        color: '#F3F4F6'
+    });
+
+    if (!confirmar.isConfirmed) return;
+
+    try {
+        mostrarSpinner();
+        
+        const response = await fetch(`/api/sw/transacciones/${transaccionId}/imagenes/${imagenNombre}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Error al eliminar imagen');
+        }
+
+        mostrarExito('Imagen eliminada exitosamente');
+        
+        // Recargar el modal
+        $('#modalImagenesTransaccion').modal('hide');
+        setTimeout(() => gestionarImagenesTransaccion(transaccionId), 500);
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError(error.message || 'Error al eliminar imagen');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+// Visualizar imagen completa en modal
+function visualizarImagenCompleta(imagenUrl) {
+    $('#imagen-visualizar-full').attr('src', imagenUrl);
+    $('#btn-descargar-imagen').attr('href', imagenUrl);
+    $('#modalVisualizarImagen').modal('show');
 }

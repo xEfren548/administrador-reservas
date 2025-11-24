@@ -3,6 +3,7 @@ const router = express.Router();
 const swTransaccionController = require('../controllers/swTransaccionController');
 const validationRequest = require('../common/middlewares/validation-request');
 const ensureAuthenticated = require('../common/middlewares/authMiddleware');
+const upload = require('../config/multer');
 const { 
     requireCuentaPropietario,
     requireCuentaAcceso,
@@ -101,6 +102,27 @@ router.get(
     '/transacciones/cuenta/:cuentaId/exportar-csv',
     requireExportTransactions,
     swTransaccionController.exportarCSV
+);
+
+/**
+ * @route   POST /api/sw/transacciones/:id/imagenes
+ * @desc    Subir imágenes de comprobantes para una transacción (máximo 3)
+ * @access  Propietario de la cuenta únicamente
+ */
+router.post(
+    '/transacciones/:id/imagenes',
+    upload.array('imagenes', 3),
+    swTransaccionController.uploadTransaccionImages
+);
+
+/**
+ * @route   DELETE /api/sw/transacciones/:id/imagenes/:imagenNombre
+ * @desc    Eliminar una imagen específica de una transacción
+ * @access  Propietario de la cuenta únicamente
+ */
+router.delete(
+    '/transacciones/:id/imagenes/:imagenNombre',
+    swTransaccionController.deleteTransaccionImage
 );
 
 module.exports = router;

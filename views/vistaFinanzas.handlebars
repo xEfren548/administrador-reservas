@@ -486,11 +486,79 @@
                         <label for="transaccion-notas" class="form-label">Notas adicionales</label>
                         <textarea class="form-control bg-gray-700 border-gray-600 text-gray-100" id="transaccion-notas" rows="2" placeholder="Notas internas..."></textarea>
                     </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Comprobantes/Tickets 
+                            <small class="text-gray-400">(Opcional, máx. 3 imágenes)</small>
+                        </label>
+                        <input type="file" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="transaccion-imagenes" accept="image/*" multiple>
+                        <small class="text-gray-400">Formatos: JPG, PNG, WEBP. Máximo 3 archivos.</small>
+                        <div id="preview-imagenes" class="mt-2 d-flex gap-2 flex-wrap"></div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer border-gray-700">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="btnGuardarTransaccion">Crear Transacción</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Ver/Gestionar Imágenes de Transacción -->
+<div class="modal fade" id="modalImagenesTransaccion" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-gray-800 text-gray-100">
+            <div class="modal-header border-gray-700">
+                <h5 class="modal-title">Comprobantes de Transacción</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modal-imagenes-transaccion-id">
+                
+                <!-- Área para mostrar imágenes existentes -->
+                <div id="imagenes-existentes-container" class="mb-4">
+                    <h6 class="text-gray-300 mb-3">Imágenes actuales:</h6>
+                    <div id="imagenes-existentes-grid" class="row g-3">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Área para subir nuevas imágenes (solo si hay menos de 3) -->
+                <div id="subir-imagenes-container">
+                    <h6 class="text-gray-300 mb-3">Agregar nuevas imágenes:</h6>
+                    <input type="file" class="form-control bg-gray-700 border-gray-600 text-gray-100 mb-2" id="nuevas-imagenes-input" accept="image/*" multiple>
+                    <small class="text-gray-400">Máximo 3 imágenes en total por transacción</small>
+                    <div id="preview-nuevas-imagenes" class="mt-2 row g-2"></div>
+                    <button type="button" class="btn btn-sm btn-success mt-3" id="btnSubirNuevasImagenes" style="display: none;">
+                        <i class="fas fa-upload me-1"></i> Subir Imágenes
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer border-gray-700">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Visualizar Imagen Completa -->
+<div class="modal fade" id="modalVisualizarImagen" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-gray-900 text-gray-100 border-0">
+            <div class="modal-header border-gray-700">
+                <h5 class="modal-title">Visualizar Comprobante</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img id="imagen-visualizar-full" src="" alt="Comprobante" class="img-fluid w-100" style="max-height: 80vh; object-fit: contain;">
+            </div>
+            <div class="modal-footer border-gray-700">
+                <a id="btn-descargar-imagen" href="" download class="btn btn-primary">
+                    <i class="fas fa-download me-1"></i> Descargar
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
@@ -534,6 +602,74 @@
     .tab-button:not(.active):hover {
         color: #D1D5DB !important; /* text-gray-300 */
         border-bottom-color: #D1D5DB !important; /* border-gray-300 */
+    }
+
+    /* Estilos para preview de imágenes */
+    .preview-image-container {
+        position: relative;
+        display: inline-block;
+    }
+    .preview-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #4B5563;
+    }
+    .preview-image-remove {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: #EF4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        transition: background-color 0.2s;
+    }
+    .preview-image-remove:hover {
+        background-color: #DC2626;
+    }
+    .imagen-existente-card {
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .imagen-existente-card:hover {
+        transform: scale(1.05);
+    }
+    .imagen-existente-card img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+    .imagen-existente-delete {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background-color: rgba(239, 68, 68, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        transition: all 0.2s;
+    }
+    .imagen-existente-delete:hover {
+        background-color: rgba(220, 38, 38, 1);
+        transform: scale(1.1);
     }
 
     /* Select2 Dark Theme - Componente reutilizable */
