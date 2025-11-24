@@ -7,6 +7,23 @@ let cuentaSeleccionada = null;
 let usuarios = []; // Lista de usuarios disponibles
 let participantes = []; // Lista de participantes de la cuenta actual
 
+// Funciones de spinner global
+function mostrarSpinner() {
+    const spinner = document.getElementById('globalSpinner');
+    if (spinner) {
+        spinner.classList.remove('hidden');
+        spinner.classList.add('block');
+    }
+}
+
+function ocultarSpinner() {
+    const spinner = document.getElementById('globalSpinner');
+    if (spinner) {
+        spinner.classList.add('hidden');
+        spinner.classList.remove('block');
+    }
+}
+
 // Inicialización
 $(document).ready(function() {
     inicializarEventos();
@@ -80,6 +97,7 @@ function cambiarTab(tabName) {
 // ===== ORGANIZACIONES =====
 async function cargarOrganizaciones() {
     try {
+        mostrarSpinner();
         const response = await fetch('/api/sw/organizaciones');
         const data = await response.json();
         
@@ -91,6 +109,8 @@ async function cargarOrganizaciones() {
     } catch (error) {
         console.error('Error al cargar organizaciones:', error);
         mostrarError('Error al cargar organizaciones');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -235,6 +255,7 @@ async function toggleOrganizacion(id, activa) {
 // ===== CUENTAS =====
 async function cargarMisCuentas() {
     try {
+        mostrarSpinner();
         const response = await fetch('/api/sw/cuentas/mis-cuentas');
         const data = await response.json();
         
@@ -249,6 +270,8 @@ async function cargarMisCuentas() {
     } catch (error) {
         console.error('Error al cargar cuentas:', error);
         mostrarError('Error al cargar cuentas');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -443,6 +466,7 @@ function editarCuenta(id) {
 
 async function verDetalleCuenta(id) {
     try {
+        mostrarSpinner();
         const response = await fetch(`/api/sw/cuentas/${id}`);
         const data = await response.json();
         
@@ -452,6 +476,8 @@ async function verDetalleCuenta(id) {
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al cargar detalle de cuenta');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -561,6 +587,7 @@ function mostrarDetalleCuenta(cuenta) {
 // ===== SOLICITUDES =====
 async function cargarSolicitudes() {
     try {
+        mostrarSpinner();
         const response = await fetch('/api/sw/solicitudes/mis-solicitudes');
         const data = await response.json();
         
@@ -571,6 +598,8 @@ async function cargarSolicitudes() {
     } catch (error) {
         console.error('Error al cargar solicitudes:', error);
         mostrarError('Error al cargar solicitudes');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -1012,6 +1041,7 @@ async function cargarTransacciones() {
     if (!cuentaId) return;
 
     try {
+        mostrarSpinner();
         const response = await fetch(`/api/sw/transacciones/cuenta/${cuentaId}`);
         
         if (!response.ok) {
@@ -1040,6 +1070,8 @@ async function cargarTransacciones() {
     } catch (error) {
         console.error('Error al cargar transacciones:', error);
         mostrarError('Error al cargar transacciones');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -1136,6 +1168,7 @@ $('#modalOrganizacion, #modalCuenta, #modalSolicitud, #modalParticipantes').on('
 // ===== PARTICIPANTES =====
 async function cargarUsuarios() {
     try {
+        mostrarSpinner();
         const response = await fetch('/api/usuarios/all');
         const data = await response.json();
         
@@ -1145,6 +1178,8 @@ async function cargarUsuarios() {
         }
     } catch (error) {
         console.error('Error al cargar usuarios:', error);
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -1257,6 +1292,7 @@ async function guardarParticipante() {
 
 async function cargarParticipantes(cuentaId) {
     try {
+        mostrarSpinner();
         const response = await fetch(`/api/sw/cuentas/${cuentaId}/participantes`);
         
         if (!response.ok) {
@@ -1282,6 +1318,8 @@ async function cargarParticipantes(cuentaId) {
     } catch (error) {
         console.error('Error al cargar participantes:', error);
         $(`#participantes-lista-${cuentaId}`).html('<p class="text-red-400 text-sm">Error al cargar participantes</p>');
+    } finally {
+        ocultarSpinner();
     }
 }
 
