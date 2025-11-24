@@ -125,6 +125,7 @@
                         <thead class="text-xs text-gray-400 uppercase bg-gray-700">
                             <tr>
                                 <th scope="col" class="px-6 py-3">Fecha</th>
+                                <th scope="col" class="px-6 py-3">Cuenta</th>
                                 <th scope="col" class="px-6 py-3">Tipo</th>
                                 <th scope="col" class="px-6 py-3">Concepto</th>
                                 <th scope="col" class="px-6 py-3">Solicitante</th>
@@ -360,6 +361,131 @@
     </div>
 </div>
 
+<!-- Modal Agregar Participante -->
+<div class="modal fade" id="modalParticipantes" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-gray-800 text-gray-100">
+            <div class="modal-header border-gray-700">
+                <h5 class="modal-title">Agregar Participante</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formParticipante">
+                    <input type="hidden" id="participanteCuentaId">
+                    
+                    <div class="mb-4">
+                        <label for="selectUsuario" class="form-label text-gray-300">Seleccionar Usuario</label>
+                        <select class="form-select bg-gray-700 text-white border-gray-600" id="selectUsuario" required>
+                            <option value="">Seleccione un usuario...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-gray-300 mb-2">Permisos</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="checkVerTransacciones">
+                            <label class="form-check-label text-gray-300" for="checkVerTransacciones">
+                                Puede ver transacciones
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="checkCrearSolicitudes">
+                            <label class="form-check-label text-gray-300" for="checkCrearSolicitudes">
+                                Puede crear solicitudes de transacción
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="checkVerSaldo">
+                            <label class="form-check-label text-gray-300" for="checkVerSaldo">
+                                Puede ver saldo de la cuenta
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-gray-700">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarParticipante">Agregar Participante</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Nueva Transacción -->
+<div class="modal fade" id="modalTransaccion" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-gray-800 text-gray-100">
+            <div class="modal-header border-gray-700">
+                <h5 class="modal-title">Nueva Transacción</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formTransaccion">
+                    <input type="hidden" id="transaccion-cuenta-id">
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="transaccion-tipo" class="form-label">Tipo *</label>
+                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="transaccion-tipo" required>
+                                <option value="Gasto">Gasto</option>
+                                <option value="Ingreso">Ingreso</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="transaccion-monto" class="form-label">Monto *</label>
+                            <input type="number" step="0.01" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="transaccion-monto" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="transaccion-categoria" class="form-label">Categoría *</label>
+                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="transaccion-categoria" required>
+                                <option value="Otro">Otro</option>
+                                <option value="Alimentación">Alimentación</option>
+                                <option value="Transporte">Transporte</option>
+                                <option value="Servicios">Servicios</option>
+                                <option value="Mantenimiento">Mantenimiento</option>
+                                <option value="Compras">Compras</option>
+                                <option value="Salud">Salud</option>
+                                <option value="Entretenimiento">Entretenimiento</option>
+                                <option value="Educación">Educación</option>
+                                <option value="Hogar">Hogar</option>
+                                <option value="Salario">Salario</option>
+                                <option value="Venta">Venta</option>
+                                <option value="Inversión">Inversión</option>
+                                <option value="Préstamo">Préstamo</option>
+                                <option value="Reembolso">Reembolso</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="transaccion-concepto" class="form-label">Concepto *</label>
+                        <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="transaccion-concepto" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="transaccion-descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control bg-gray-700 border-gray-600 text-gray-100" id="transaccion-descripcion" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="transaccion-fecha" class="form-label">Fecha</label>
+                        <input type="date" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="transaccion-fecha">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="transaccion-notas" class="form-label">Notas adicionales</label>
+                        <textarea class="form-control bg-gray-700 border-gray-600 text-gray-100" id="transaccion-notas" rows="2" placeholder="Notas internas..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-gray-700">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarTransaccion">Crear Transacción</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .tab-content {
         display: none;
@@ -399,11 +525,64 @@
         color: #D1D5DB !important; /* text-gray-300 */
         border-bottom-color: #D1D5DB !important; /* border-gray-300 */
     }
+
+    /* Select2 Dark Theme - Componente reutilizable */
+    .select2-container--bootstrap-5 .select2-selection {
+        background-color: #374151 !important; /* bg-gray-700 */
+        border-color: #4B5563 !important; /* border-gray-600 */
+        color: #F9FAFB !important; /* text-white */
+    }
+    .select2-container--bootstrap-5 .select2-selection--single {
+        height: calc(1.5em + 0.75rem + 2px) !important;
+        padding: 0.375rem 0.75rem !important;
+    }
+    .select2-container--bootstrap-5 .select2-selection__rendered {
+        color: #F9FAFB !important;
+        line-height: 1.5 !important;
+        padding-left: 0 !important;
+    }
+    .select2-container--bootstrap-5 .select2-selection__arrow {
+        height: calc(1.5em + 0.75rem + 2px) !important;
+    }
+    .select2-container--bootstrap-5.select2-container--focus .select2-selection,
+    .select2-container--bootstrap-5.select2-container--open .select2-selection {
+        border-color: #3B82F6 !important; /* border-blue-500 */
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25) !important;
+    }
+    .select2-dropdown {
+        background-color: #374151 !important; /* bg-gray-700 */
+        border-color: #4B5563 !important;
+    }
+    .select2-search--dropdown .select2-search__field {
+        background-color: #1F2937 !important; /* bg-gray-800 */
+        border-color: #4B5563 !important;
+        color: #F9FAFB !important;
+    }
+    .select2-search--dropdown .select2-search__field:focus {
+        border-color: #3B82F6 !important;
+        outline: none !important;
+    }
+    .select2-results__option {
+        background-color: #374151 !important;
+        color: #F9FAFB !important;
+    }
+    .select2-results__option--highlighted {
+        background-color: #3B82F6 !important; /* bg-blue-500 */
+        color: white !important;
+    }
+    .select2-results__option--selected {
+        background-color: #1F2937 !important; /* bg-gray-800 */
+    }
+    .select2-container--bootstrap-5 .select2-selection__placeholder {
+        color: #9CA3AF !important; /* text-gray-400 */
+    }
 </style>
 
 <script>
     // Variable global para verificar permisos de MASTER ADMIN
     window.isMasterAdmin = {{#if isMasterAdmin}}true{{else}}false{{/if}};
+    // ID del usuario actual
+    window.currentUserId = '{{userId}}';
 </script>
 
 <script src="/scripts/finanzas.js"></script>

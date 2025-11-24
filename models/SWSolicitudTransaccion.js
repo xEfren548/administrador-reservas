@@ -252,17 +252,30 @@ swSolicitudTransaccionSchema.statics.obtenerPendientesPorCuenta = function(cuent
 };
 
 // Método estático para obtener solicitudes de un usuario
-swSolicitudTransaccionSchema.statics.obtenerPorUsuario = function(usuarioId, estado = null) {
-    const filtro = { solicitadoPor: usuarioId };
+swSolicitudTransaccionSchema.statics.obtenerPorUsuario = async function(usuarioId, estado = null) {
+    const SWCuenta = require('./SWCuenta');
+    
+    // Obtener cuentas donde el usuario es propietario
+    const cuentasPropias = await SWCuenta.find({ propietario: usuarioId }).select('_id');
+    const cuentasPropiasIds = cuentasPropias.map(c => c._id);
+    
+    // Construir filtro: solicitudes que creó O solicitudes de cuentas que posee
+    const filtro = {
+        $or: [
+            { solicitadoPor: usuarioId },
+            { cuenta: { $in: cuentasPropiasIds } }
+        ]
+    };
     
     if (estado) {
         filtro.estado = estado;
     }
     
     return this.find(filtro)
-    .populate('cuenta', 'nombre')
-    .populate('propietarioCuenta', 'firstName lastName')
-    .sort({ createdAt: -1 });
+        .populate('cuenta', 'nombre propietario')
+        .populate('solicitadoPor', 'firstName lastName')
+        .populate('propietarioCuenta', 'firstName lastName')
+        .sort({ createdAt: -1 });
 };
 
 const SWSolicitudTransaccion = mongoose.model('SWSolicitudTransaccion', swSolicitudTransaccionSchema);

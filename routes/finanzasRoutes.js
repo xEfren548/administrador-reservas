@@ -27,6 +27,7 @@ router.get('/finanzas', ensureAuthenticated, async (req, res) => {
             layout: 'tailwindMain',
             title: 'Finanzas - Splitwise',
             user: req.session.user,
+            userId: req.session.userId,
             isMasterAdmin: isMasterAdmin
         });
     } catch (error) {

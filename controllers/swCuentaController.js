@@ -195,7 +195,7 @@ const getMisCuentas = async (req, res) => {
         const participaciones = await SWParticipante.find({
             usuario: userId,
             activo: true
-        }).select('cuenta rol');
+        }).select('cuenta rol permisos');
 
         const cuentaIds = participaciones.map(p => p.cuenta);
 
@@ -208,14 +208,28 @@ const getMisCuentas = async (req, res) => {
             .populate('propietario', 'firstName lastName email')
             .sort({ createdAt: -1 });
 
-        // Agregar rol del usuario en cada cuenta
+        // Agregar rol del usuario en cada cuenta y ocultar saldo si no tiene permiso
         const cuentasConRol = cuentas.map(cuenta => {
             const participacion = participaciones.find(
                 p => p.cuenta.toString() === cuenta._id.toString()
             );
+            
+            const cuentaObj = cuenta.toObject();
+            
+            // Si es participante (no propietario) y no tiene permiso de ver saldo
+            const esPropietario = cuenta.propietario._id.toString() === userId.toString();
+            const puedeVerSaldo = participacion?.permisos?.puedeVerSaldo !== false; // Por defecto true
+            
+            if (!esPropietario && !puedeVerSaldo) {
+                // Ocultar saldos
+                delete cuentaObj.saldoActual;
+                delete cuentaObj.saldoInicial;
+            }
+            
             return {
-                ...cuenta.toObject(),
-                miRol: participacion?.rol || 'Desconocido'
+                ...cuentaObj,
+                miRol: participacion?.rol || 'Desconocido',
+                puedeVerSaldo: esPropietario || puedeVerSaldo
             };
         });
 
@@ -272,12 +286,25 @@ const getCuentaById = async (req, res) => {
             activo: true 
         }).populate('usuario', 'firstName lastName email');
 
+        // Verificar permiso para ver saldo
+        const esPropietario = cuenta.propietario._id.toString() === userId.toString();
+        const puedeVerSaldo = esPropietario || (participante.permisos && participante.permisos.puedeVerSaldo);
+
+        const cuentaData = cuenta.toObject();
+        
+        // Si no tiene permiso para ver saldo, eliminar campos sensibles
+        if (!puedeVerSaldo) {
+            delete cuentaData.saldoActual;
+            delete cuentaData.saldoInicial;
+        }
+
         res.status(200).json({
             success: true,
             data: {
-                ...cuenta.toObject(),
+                ...cuentaData,
                 participantes,
-                miRol: participante.rol
+                miRol: participante.rol,
+                puedeVerSaldo
             }
         });
     } catch (error) {
@@ -581,7 +608,7 @@ const getParticipantes = async (req, res) => {
 
         const participantes = await SWParticipante.find(filter)
             .populate('usuario', 'firstName lastName email')
-            .populate('agrepadoPor', 'firstName lastName')
+            .populate('agregadoPor', 'firstName lastName')
             .sort({ fechaIngreso: -1 });
 
         res.status(200).json({

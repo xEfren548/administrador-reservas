@@ -4,6 +4,8 @@ let cuentas = [];
 let transacciones = [];
 let solicitudes = [];
 let cuentaSeleccionada = null;
+let usuarios = []; // Lista de usuarios disponibles
+let participantes = []; // Lista de participantes de la cuenta actual
 
 // Inicialización
 $(document).ready(function() {
@@ -24,6 +26,8 @@ function inicializarEventos() {
     $('#btnGuardarOrganizacion').on('click', guardarOrganizacion);
     $('#btnGuardarCuenta').on('click', guardarCuenta);
     $('#btnGuardarSolicitud').on('click', guardarSolicitud);
+    $('#btnGuardarParticipante').on('click', guardarParticipante);
+    $('#btnGuardarTransaccion').on('click', guardarTransaccion);
 
     // Listener para cuando se abre el modal de cuenta
     $('#modalCuenta').on('show.bs.modal', function(e) {
@@ -235,7 +239,10 @@ async function cargarMisCuentas() {
         const data = await response.json();
         
         if (data.success) {
-            cuentas = data.data;
+            cuentas = data.data.map(cuenta => ({
+                ...cuenta,
+                propietario: cuenta.propietario?._id || cuenta.propietario
+            }));
             renderizarCuentas();
             actualizarSelectCuentas();
         }
@@ -263,7 +270,9 @@ function renderizarCuentas() {
     }
 
     cuentas.forEach(cuenta => {
-        const saldo = formatearMoneda(cuenta.saldoActual, cuenta.moneda);
+        const saldo = cuenta.puedeVerSaldo !== false 
+            ? formatearMoneda(cuenta.saldoActual || 0, cuenta.moneda)
+            : '***';
         const icono = obtenerIconoCuenta(cuenta.tipoCuenta);
         const colorSaldo = cuenta.saldoActual >= 0 ? 'text-green-400' : 'text-red-400';
         
@@ -290,22 +299,32 @@ function renderizarCuentas() {
                 
                 <div class="border-t border-gray-700 pt-4">
                     <p class="text-sm text-gray-400 mb-1">Saldo Actual</p>
-                    <p class="text-2xl font-bold ${colorSaldo}">${saldo}</p>
+                    ${cuenta.puedeVerSaldo !== false 
+                        ? `<p class="text-2xl font-bold ${colorSaldo}">${saldo}</p>`
+                        : `<p class="text-2xl font-bold text-gray-500"><i class="fas fa-lock me-2"></i>${saldo}</p>
+                           <p class="text-xs text-gray-500 mt-1">No tienes permiso para ver el saldo</p>`
+                    }
                 </div>
 
                 ${cuenta.descripcion ? `
-                    <div class="mt-4 pt-4 border-t border-gray-700">
+                    <div class="mt-4 pt-4 border-gray-700">
                         <p class="text-sm text-gray-400">${cuenta.descripcion}</p>
                     </div>
                 ` : ''}
 
                 <div class="mt-4 flex gap-2">
-                    <button onclick="event.stopPropagation(); agregarTransaccion('${cuenta._id}')" class="btn btn-sm btn-primary flex-1" ${!cuenta.activa ? 'disabled' : ''}>
-                        <i class="fas fa-plus me-1"></i> Transacción
-                    </button>
-                    <button onclick="event.stopPropagation(); editarCuenta('${cuenta._id}')" class="btn btn-sm btn-warning">
-                        <i class="fas fa-edit"></i>
-                    </button>
+                    ${cuenta.miRol === 'Propietario' ? `
+                        <button onclick="event.stopPropagation(); agregarTransaccion('${cuenta._id}')" class="btn btn-sm btn-primary flex-1" ${!cuenta.activa ? 'disabled' : ''}>
+                            <i class="fas fa-plus me-1"></i> Transacción
+                        </button>
+                        <button onclick="event.stopPropagation(); editarCuenta('${cuenta._id}')" class="btn btn-sm btn-warning">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    ` : `
+                        <button onclick="event.stopPropagation(); verDetalleCuenta('${cuenta._id}')" class="btn btn-sm btn-info flex-1">
+                            <i class="fas fa-eye me-1"></i> Ver Detalle
+                        </button>
+                    `}
                 </div>
             </div>
         `);
@@ -437,14 +456,20 @@ async function verDetalleCuenta(id) {
 }
 
 function mostrarDetalleCuenta(cuenta) {
-    const saldo = formatearMoneda(cuenta.saldoActual, cuenta.moneda);
+    const puedeVerSaldo = cuenta.puedeVerSaldo !== false;
+    const saldo = puedeVerSaldo 
+        ? formatearMoneda(cuenta.saldoActual || 0, cuenta.moneda)
+        : '***';
     const colorSaldo = cuenta.saldoActual >= 0 ? 'text-green-400' : 'text-red-400';
 
     let html = `
         <div class="bg-gray-700 rounded-lg p-6 mb-4">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-2xl font-bold text-white">${cuenta.nombre}</h3>
-                <span class="text-3xl font-bold ${colorSaldo}">${saldo}</span>
+                ${puedeVerSaldo 
+                    ? `<span class="text-3xl font-bold ${colorSaldo}">${saldo}</span>`
+                    : `<span class="text-3xl font-bold text-gray-500"><i class="fas fa-lock me-2"></i>${saldo}</span>`
+                }
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
@@ -455,10 +480,17 @@ function mostrarDetalleCuenta(cuenta) {
                     <p class="text-gray-400">Moneda</p>
                     <p class="text-white font-semibold">${cuenta.moneda}</p>
                 </div>
-                <div>
-                    <p class="text-gray-400">Saldo Inicial</p>
-                    <p class="text-white font-semibold">${formatearMoneda(cuenta.saldoInicial, cuenta.moneda)}</p>
-                </div>
+                ${puedeVerSaldo ? `
+                    <div>
+                        <p class="text-gray-400">Saldo Inicial</p>
+                        <p class="text-white font-semibold">${formatearMoneda(cuenta.saldoInicial || 0, cuenta.moneda)}</p>
+                    </div>
+                ` : `
+                    <div>
+                        <p class="text-gray-400">Saldo Inicial</p>
+                        <p class="text-gray-500"><i class="fas fa-lock me-2"></i>Oculto</p>
+                    </div>
+                `}
                 <div>
                     <p class="text-gray-400">Estado</p>
                     <p class="text-white font-semibold">${cuenta.activa ? 'Activa' : 'Inactiva'}</p>
@@ -503,17 +535,27 @@ function mostrarDetalleCuenta(cuenta) {
 
     html += `</div>`;
 
-    // Participantes (se cargarían de una API adicional)
+    // Sección de participantes
     html += `
         <div class="bg-gray-700 rounded-lg p-6">
-            <h4 class="text-lg font-semibold text-white mb-3">Participantes</h4>
-            <p class="text-gray-400 text-sm">Funcionalidad de participantes próximamente...</p>
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="text-lg font-semibold text-white">Participantes</h4>
+                <button class="btn btn-sm btn-primary" onclick="abrirModalParticipantes('${cuenta._id}')">
+                    <i class="fas fa-user-plus me-2"></i>Agregar Participante
+                </button>
+            </div>
+            <div id="participantes-lista-${cuenta._id}">
+                <p class="text-gray-400 text-sm">Cargando participantes...</p>
+            </div>
         </div>
     `;
 
     $('#detalleCuentaNombre').text(cuenta.nombre);
     $('#detalleCuentaContent').html(html);
     $('#modalDetalleCuenta').modal('show');
+    
+    // Cargar participantes
+    cargarParticipantes(cuenta._id);
 }
 
 // ===== SOLICITUDES =====
@@ -539,7 +581,7 @@ function renderizarSolicitudes() {
     if (solicitudes.length === 0) {
         tbody.html(`
             <tr>
-                <td colspan="7" class="px-6 py-4 text-center text-gray-400">
+                <td colspan="8" class="px-6 py-4 text-center text-gray-400">
                     No hay solicitudes
                 </td>
             </tr>
@@ -552,24 +594,58 @@ function renderizarSolicitudes() {
         const monto = formatearMoneda(sol.monto, 'MXN');
         const tipoColor = sol.tipo === 'Ingreso' ? 'text-green-400' : 'text-red-400';
         const estadoBadge = obtenerBadgeEstado(sol.estado);
+        const nombreCuenta = sol.cuenta?.nombre || 'N/A';
+        
+        // Determinar si el usuario actual es propietario de la cuenta
+        const propietarioId = sol.propietarioCuenta?._id || sol.propietarioCuenta;
+        const esPropietario = propietarioId === window.currentUserId;
+        
+        // Determinar si es el solicitante
+        const solicitanteId = sol.solicitadoPor?._id || sol.solicitadoPor;
+        const esSolicitante = solicitanteId === window.currentUserId;
+
+        let botonesAccion = `
+            <button onclick="verDetalleSolicitud('${sol._id}')" class="btn btn-sm btn-info" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+            </button>
+        `;
+
+        // Si está pendiente y es propietario, mostrar aprobar/rechazar
+        if (sol.estado === 'Pendiente' && esPropietario) {
+            botonesAccion += `
+                <button onclick="aprobarSolicitud('${sol._id}')" class="btn btn-sm btn-success ms-1" title="Aprobar">
+                    <i class="fas fa-check"></i>
+                </button>
+                <button onclick="rechazarSolicitud('${sol._id}')" class="btn btn-sm btn-danger ms-1" title="Rechazar">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+        }
+        
+        // Si está pendiente y es solicitante, mostrar cancelar
+        if (sol.estado === 'Pendiente' && esSolicitante && !esPropietario) {
+            botonesAccion += `
+                <button onclick="cancelarSolicitud('${sol._id}')" class="btn btn-sm btn-warning ms-1" title="Cancelar">
+                    <i class="fas fa-ban"></i>
+                </button>
+            `;
+        }
 
         tbody.append(`
             <tr class="border-b border-gray-700 hover:bg-gray-700">
                 <td class="px-6 py-4">${fecha}</td>
+                <td class="px-6 py-4">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-900 text-blue-300">
+                        <i class="fas fa-wallet me-1"></i>${nombreCuenta}
+                    </span>
+                </td>
                 <td class="px-6 py-4 ${tipoColor}">${sol.tipo}</td>
                 <td class="px-6 py-4 font-medium text-white">${sol.concepto}</td>
                 <td class="px-6 py-4">${sol.solicitadoPor?.firstName || 'N/A'} ${sol.solicitadoPor?.lastName || ''}</td>
                 <td class="px-6 py-4 text-right font-semibold ${tipoColor}">${monto}</td>
                 <td class="px-6 py-4">${estadoBadge}</td>
                 <td class="px-6 py-4 text-center">
-                    <button onclick="verDetalleSolicitud('${sol._id}')" class="btn btn-sm btn-info" title="Ver detalle">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    ${sol.estado === 'Pendiente' ? `
-                        <button onclick="cancelarSolicitud('${sol._id}')" class="btn btn-sm btn-danger ms-1" title="Cancelar">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    ` : ''}
+                    ${botonesAccion}
                 </td>
             </tr>
         `);
@@ -615,6 +691,308 @@ async function guardarSolicitud() {
     }
 }
 
+async function aprobarSolicitud(solicitudId) {
+    const result = await Swal.fire({
+        title: '¿Aprobar solicitud?',
+        text: 'Esta acción creará una transacción en la cuenta',
+        icon: 'question',
+        input: 'textarea',
+        inputLabel: 'Comentario (opcional)',
+        inputPlaceholder: 'Agregar un comentario...',
+        showCancelButton: true,
+        confirmButtonText: 'Aprobar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#10b981',
+        background: '#1f2937',
+        color: '#f9fafb'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch(`/api/sw/solicitudes/${solicitudId}/procesar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    accion: 'aprobar',
+                    comentario: result.value || ''
+                })
+            });
+
+            if (!response.ok) {
+                if (response.status === 403) {
+                    mostrarError('No tienes permiso para aprobar esta solicitud');
+                    return;
+                }
+                const data = await response.json();
+                throw new Error(data.message || `Error HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                mostrarExito('Solicitud aprobada exitosamente');
+                cargarSolicitudes();
+                cargarMisCuentas(); // Actualizar saldos
+            } else {
+                mostrarError(data.message || 'Error al aprobar solicitud');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarError(error.message || 'Error al aprobar solicitud');
+        }
+    }
+}
+
+async function rechazarSolicitud(solicitudId) {
+    const result = await Swal.fire({
+        title: '¿Rechazar solicitud?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        input: 'textarea',
+        inputLabel: 'Motivo del rechazo *',
+        inputPlaceholder: 'Explica por qué se rechaza la solicitud...',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Debes especificar un motivo';
+            }
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Rechazar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ef4444',
+        background: '#1f2937',
+        color: '#f9fafb'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch(`/api/sw/solicitudes/${solicitudId}/procesar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    accion: 'rechazar',
+                    motivoRechazo: result.value
+                })
+            });
+
+            if (!response.ok) {
+                if (response.status === 403) {
+                    mostrarError('No tienes permiso para rechazar esta solicitud');
+                    return;
+                }
+                const data = await response.json();
+                throw new Error(data.message || `Error HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                mostrarExito('Solicitud rechazada');
+                cargarSolicitudes();
+            } else {
+                mostrarError(data.message || 'Error al rechazar solicitud');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarError(error.message || 'Error al rechazar solicitud');
+        }
+    }
+}
+
+async function cancelarSolicitud(solicitudId) {
+    const result = await Swal.fire({
+        title: '¿Cancelar solicitud?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No',
+        confirmButtonColor: '#f59e0b',
+        background: '#1f2937',
+        color: '#f9fafb'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch(`/api/sw/solicitudes/${solicitudId}/cancelar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                if (response.status === 403) {
+                    mostrarError('No tienes permiso para cancelar esta solicitud');
+                    return;
+                }
+                const data = await response.json();
+                throw new Error(data.message || `Error HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                mostrarExito('Solicitud cancelada');
+                cargarSolicitudes();
+            } else {
+                mostrarError(data.message || 'Error al cancelar solicitud');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarError(error.message || 'Error al cancelar solicitud');
+        }
+    }
+}
+
+function agregarTransaccion(cuentaId) {
+    $('#transaccion-cuenta-id').val(cuentaId);
+    $('#formTransaccion')[0].reset();
+    $('#transaccion-fecha').val(new Date().toISOString().split('T')[0]);
+    $('#modalTransaccion').modal('show');
+}
+
+async function guardarTransaccion() {
+    const cuentaId = $('#transaccion-cuenta-id').val();
+    const datos = {
+        cuentaId: cuentaId,
+        tipo: $('#transaccion-tipo').val(),
+        monto: parseFloat($('#transaccion-monto').val()),
+        concepto: $('#transaccion-concepto').val().trim(),
+        categoria: $('#transaccion-categoria').val(),
+        descripcion: $('#transaccion-descripcion').val().trim(),
+        fecha: $('#transaccion-fecha').val(),
+        notas: $('#transaccion-notas').val().trim()
+    };
+
+    if (!datos.cuentaId || !datos.concepto || !datos.monto) {
+        mostrarError('Complete todos los campos requeridos');
+        return;
+    }
+
+    if (datos.monto <= 0) {
+        mostrarError('El monto debe ser mayor a 0');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/sw/transacciones', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos)
+        });
+
+        if (!response.ok) {
+            if (response.status === 403) {
+                mostrarError('No tienes permiso para crear transacciones en esta cuenta');
+                return;
+            }
+            const data = await response.json();
+            throw new Error(data.message || `Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Transacción creada exitosamente');
+            $('#modalTransaccion').modal('hide');
+            $('#formTransaccion')[0].reset();
+            cargarMisCuentas(); // Actualizar saldos
+            
+            // Si estamos en el tab de transacciones, recargarlas
+            const tabActivo = $('.tab-button.active').data('tab');
+            if (tabActivo === 'transacciones') {
+                cargarTransacciones();
+            }
+        } else {
+            mostrarError(data.message || 'Error al crear transacción');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError(error.message || 'Error al crear transacción');
+    }
+}
+
+function verDetalleSolicitud(solicitudId) {
+    const solicitud = solicitudes.find(s => s._id === solicitudId);
+    
+    if (!solicitud) {
+        mostrarError('Solicitud no encontrada');
+        return;
+    }
+    
+    const fecha = new Date(solicitud.fecha).toLocaleDateString('es-MX');
+    const monto = formatearMoneda(solicitud.monto, solicitud.cuenta?.moneda || 'MXN');
+    const tipoColor = solicitud.tipo === 'Ingreso' ? 'text-green-400' : 'text-red-400';
+    
+    let detalleHtml = `
+        <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-gray-400 text-sm">Cuenta</p>
+                    <p class="text-white font-semibold">${solicitud.cuenta?.nombre || 'N/A'}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Estado</p>
+                    <p class="text-white">${obtenerBadgeEstado(solicitud.estado)}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Tipo</p>
+                    <p class="${tipoColor} font-semibold">${solicitud.tipo}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Monto</p>
+                    <p class="${tipoColor} font-semibold text-lg">${monto}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Fecha</p>
+                    <p class="text-white">${fecha}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Categoría</p>
+                    <p class="text-white">${solicitud.categoria}</p>
+                </div>
+            </div>
+            
+            <div>
+                <p class="text-gray-400 text-sm">Concepto</p>
+                <p class="text-white font-semibold text-lg">${solicitud.concepto}</p>
+            </div>
+            
+            ${solicitud.descripcion ? `
+                <div>
+                    <p class="text-gray-400 text-sm">Descripción</p>
+                    <p class="text-white">${solicitud.descripcion}</p>
+                </div>
+            ` : ''}
+            
+            <div>
+                <p class="text-gray-400 text-sm">Solicitado por</p>
+                <p class="text-white">${solicitud.solicitadoPor?.firstName || 'N/A'} ${solicitud.solicitadoPor?.lastName || ''}</p>
+            </div>
+            
+            ${solicitud.respuesta?.comentario ? `
+                <div class="border-t border-gray-700 pt-4">
+                    <p class="text-gray-400 text-sm">Respuesta del propietario</p>
+                    <p class="text-white">${solicitud.respuesta.comentario}</p>
+                    <p class="text-gray-400 text-xs mt-2">
+                        ${solicitud.respuesta.procesadaPor?.firstName || ''} - 
+                        ${new Date(solicitud.respuesta.fechaProcesada).toLocaleString('es-MX')}
+                    </p>
+                </div>
+            ` : ''}
+        </div>
+    `;
+    
+    Swal.fire({
+        title: 'Detalle de Solicitud',
+        html: detalleHtml,
+        width: 600,
+        showCloseButton: true,
+        showConfirmButton: false,
+        background: '#1f2937',
+        color: '#f9fafb'
+    });
+}
+
 // ===== TRANSACCIONES =====
 async function cargarTransacciones() {
     const cuentaId = $('#filtro-cuenta-transacciones').val();
@@ -635,11 +1013,29 @@ async function cargarTransacciones() {
 
     try {
         const response = await fetch(`/api/sw/transacciones/cuenta/${cuentaId}`);
+        
+        if (!response.ok) {
+            if (response.status === 403) {
+                mostrarError('No tienes permiso para ver las transacciones de esta cuenta');
+                $('#tabla-transacciones-body').html(`
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-yellow-400">
+                            <i class="fas fa-lock me-2"></i>No tienes permiso para ver las transacciones de esta cuenta
+                        </td>
+                    </tr>
+                `);
+                return;
+            }
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (data.success) {
             transacciones = data.data;
             renderizarTransacciones();
+        } else {
+            mostrarError(data.message || 'Error al cargar transacciones');
         }
     } catch (error) {
         console.error('Error al cargar transacciones:', error);
@@ -731,8 +1127,231 @@ function mostrarError(mensaje) {
 }
 
 // Limpiar formularios al cerrar modales
-$('#modalOrganizacion, #modalCuenta, #modalSolicitud').on('hidden.bs.modal', function() {
-    $(this).find('form')[0].reset();
+$('#modalOrganizacion, #modalCuenta, #modalSolicitud, #modalParticipantes').on('hidden.bs.modal', function() {
+    $(this).find('form')[0]?.reset();
     $(this).find('input[type="hidden"]').val('');
     $(this).find('.modal-title').text($(this).find('.modal-title').text().replace('Editar', 'Nueva'));
 });
+
+// ===== PARTICIPANTES =====
+async function cargarUsuarios() {
+    try {
+        const response = await fetch('/api/usuarios/all');
+        const data = await response.json();
+        
+        if (data.success) {
+            usuarios = data.data || data.users || [];
+            actualizarSelectUsuarios();
+        }
+    } catch (error) {
+        console.error('Error al cargar usuarios:', error);
+    }
+}
+
+function actualizarSelectUsuarios() {
+    const select = $('#selectUsuario');
+    
+    // Destruir Select2 si ya existe
+    if (select.data('select2')) {
+        select.select2('destroy');
+    }
+    
+    // Limpiar y agregar opciones
+    select.empty().append('<option value="">Seleccione un usuario...</option>');
+    
+    usuarios.forEach(usuario => {
+        const nombre = `${usuario.firstName} ${usuario.lastName}`;
+        const email = usuario.email;
+        select.append(`<option value="${usuario._id}" data-email="${email}">${nombre} - ${email}</option>`);
+    });
+    
+    // Inicializar Select2 con búsqueda
+    select.select2({
+        theme: 'bootstrap-5',
+        dropdownParent: $('#modalParticipantes'),
+        placeholder: 'Buscar usuario por nombre o email...',
+        allowClear: true,
+        language: {
+            noResults: function() {
+                return 'No se encontraron usuarios';
+            },
+            searching: function() {
+                return 'Buscando...';
+            }
+        },
+        matcher: function(params, data) {
+            // Si no hay término de búsqueda, mostrar todo
+            if ($.trim(params.term) === '') {
+                return data;
+            }
+            
+            // Búsqueda en texto visible y email
+            const searchTerm = params.term.toLowerCase();
+            const text = data.text.toLowerCase();
+            
+            if (text.indexOf(searchTerm) > -1) {
+                return data;
+            }
+            
+            return null;
+        }
+    });
+}
+
+async function abrirModalParticipantes(cuentaId) {
+    $('#participanteCuentaId').val(cuentaId);
+    
+    // Cargar usuarios si no están cargados
+    if (usuarios.length === 0) {
+        await cargarUsuarios();
+    }
+    
+    $('#modalParticipantes').modal('show');
+}
+
+async function guardarParticipante() {
+    const cuentaId = $('#participanteCuentaId').val();
+    const usuarioId = $('#selectUsuario').val();
+
+    if (!usuarioId) {
+        mostrarError('Debe seleccionar un usuario');
+        return;
+    }
+
+    const permisos = {
+        puedeVerTransacciones: $('#checkVerTransacciones').is(':checked'),
+        puedeCrearSolicitudes: $('#checkCrearSolicitudes').is(':checked'),
+        puedeVerSaldo: $('#checkVerSaldo').is(':checked')
+    };
+
+    try {
+        const response = await fetch(`/api/sw/cuentas/${cuentaId}/participantes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuarioId, permisos })
+        });
+
+        if (!response.ok) {
+            if (response.status === 403) {
+                mostrarError('No tienes permiso para agregar participantes a esta cuenta');
+                return;
+            }
+            const data = await response.json();
+            throw new Error(data.message || `Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Participante agregado exitosamente');
+            $('#modalParticipantes').modal('hide');
+            cargarParticipantes(cuentaId);
+        } else {
+            mostrarError(data.message || 'Error al agregar participante');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al agregar participante');
+    }
+}
+
+async function cargarParticipantes(cuentaId) {
+    try {
+        const response = await fetch(`/api/sw/cuentas/${cuentaId}/participantes`);
+        
+        if (!response.ok) {
+            if (response.status === 403) {
+                $(`#participantes-lista-${cuentaId}`).html(`
+                    <p class="text-yellow-400 text-sm">
+                        <i class="fas fa-lock me-2"></i>No tienes permiso para ver los participantes de esta cuenta
+                    </p>
+                `);
+                return;
+            }
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            participantes = data.data || [];
+            renderizarParticipantes(cuentaId);
+        } else {
+            $(`#participantes-lista-${cuentaId}`).html(`<p class="text-red-400 text-sm">${data.message || 'Error al cargar participantes'}</p>`);
+        }
+    } catch (error) {
+        console.error('Error al cargar participantes:', error);
+        $(`#participantes-lista-${cuentaId}`).html('<p class="text-red-400 text-sm">Error al cargar participantes</p>');
+    }
+}
+
+function renderizarParticipantes(cuentaId) {
+    const container = $(`#participantes-lista-${cuentaId}`);
+    container.empty();
+
+    if (participantes.length === 0) {
+        container.html('<p class="text-gray-400 text-sm">No hay participantes agregados</p>');
+        return;
+    }
+
+    participantes.forEach(part => {
+        const nombre = part.usuario ? `${part.usuario.firstName} ${part.usuario.lastName}` : 'Usuario desconocido';
+        const rol = part.rol === 'Propietario' ? 
+            '<span class="badge bg-warning text-dark">Propietario</span>' : 
+            '<span class="badge bg-info">Participante</span>';
+
+        const permisos = [];
+        if (part.permisos?.puedeVerTransacciones) permisos.push('Ver transacciones');
+        if (part.permisos?.puedeCrearSolicitudes) permisos.push('Crear solicitudes');
+        if (part.permisos?.puedeVerSaldo) permisos.push('Ver saldo');
+
+        const botonEliminar = part.rol !== 'Propietario' ? 
+            `<button onclick="eliminarParticipante('${cuentaId}', '${part.usuario?._id}')" class="btn btn-sm btn-danger">
+                <i class="fas fa-trash"></i>
+            </button>` : '';
+
+        container.append(`
+            <div class="d-flex justify-content-between align-items-center p-3 mb-2 bg-gray-800 rounded border border-gray-600">
+                <div>
+                    <div class="fw-bold text-white">${nombre}</div>
+                    <div class="text-sm text-gray-400">${rol}</div>
+                    ${permisos.length > 0 ? `<div class="text-xs text-gray-500 mt-1">${permisos.join(', ')}</div>` : ''}
+                </div>
+                <div>
+                    ${botonEliminar}
+                </div>
+            </div>
+        `);
+    });
+}
+
+async function eliminarParticipante(cuentaId, usuarioId) {
+    if (!confirm('¿Está seguro de eliminar este participante?')) return;
+
+    try {
+        const response = await fetch(`/api/sw/cuentas/${cuentaId}/participantes/${usuarioId}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            if (response.status === 403) {
+                mostrarError('No tienes permiso para eliminar participantes de esta cuenta');
+                return;
+            }
+            const data = await response.json();
+            throw new Error(data.message || `Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Participante eliminado exitosamente');
+            cargarParticipantes(cuentaId);
+        } else {
+            mostrarError(data.message || 'Error al eliminar participante');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al eliminar participante');
+    }
+}
