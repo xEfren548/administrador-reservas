@@ -1,4 +1,5 @@
 const moment = require('moment');
+const momentTz = require('moment-timezone');
 
 const Aprobaciones = require('../models/Aprobaciones');
 const Reservas = require('../models/Evento');
@@ -398,6 +399,21 @@ async function createRequest(req, res, next) {
         if (!reservation) {
             return res.status(400).json({ success: false, message: 'Reserva no encontrada' });
         }
+
+        
+        const originalArrivalHour = moment.utc(reservation.arrivalDate).format('HH:mm');
+        const originalDepartureHour = moment.utc(reservation.departureDate).format('HH:mm');
+
+        // Adjust new dates to keep original hours
+        dateChanges.newArrivalDate = moment(dateChanges.newArrivalDate).utc().set({
+            hour: parseInt(originalArrivalHour.split(':')[0]),
+            minute: parseInt(originalArrivalHour.split(':')[1])
+        }).toDate();
+
+        dateChanges.newDepartureDate = moment(dateChanges.newDepartureDate).utc().set({
+            hour: parseInt(originalDepartureHour.split(':')[0]),
+            minute: parseInt(originalDepartureHour.split(':')[1])
+        }).toDate();
 
         const cliente = await Clientes.findById(clientId);
         if (!cliente) {
