@@ -2006,3 +2006,477 @@ async function eliminarImagenSolicitud(solicitudId, imagenNombre) {
     }
 }
 
+// ===== DASHBOARD =====
+let dashboardCharts = {
+    personal: null,
+    orgEvolucion: null,
+    orgCategorias: null
+};
+
+// Cambio de vista del dashboard
+$('#dashboard-selector').on('change', function() {
+    const vista = $(this).val();
+    
+    if (vista === 'personal') {
+        $('#dashboard-personal').removeClass('hidden');
+        $('#dashboard-organizacion').addClass('hidden');
+        $('#organizacion-selector').addClass('hidden');
+        cargarDashboardPersonal();
+    } else {
+        $('#dashboard-personal').addClass('hidden');
+        $('#dashboard-organizacion').removeClass('hidden');
+        $('#organizacion-selector').removeClass('hidden');
+        
+        // Cargar organizaciones en el selector si no está cargado
+        if ($('#organizacion-selector option').length === 1) {
+            cargarOrganizacionesSelector();
+        }
+    }
+});
+
+// Cambio de organización seleccionada
+$('#organizacion-selector').on('change', function() {
+    const organizacionId = $(this).val();
+    if (organizacionId) {
+        cargarDashboardOrganizacion(organizacionId);
+    }
+});
+
+async function cargarOrganizacionesSelector() {
+    try {
+        const response = await fetch('/api/sw/organizaciones');
+        const data = await response.json();
+        
+        if (data.success) {
+            const selector = $('#organizacion-selector');
+            selector.find('option:not(:first)').remove();
+            
+            data.data.forEach(org => {
+                selector.append(`<option value="${org._id}">${org.nombre}</option>`);
+            });
+            
+            // Seleccionar la primera organización automáticamente
+            if (data.data.length > 0) {
+                selector.val(data.data[0]._id).trigger('change');
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Cargar dashboard personal
+async function cargarDashboardPersonal() {
+    try {
+        mostrarSpinner();
+        
+        const response = await fetch('/api/sw/dashboard/personal');
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message);
+        }
+        
+        const stats = data.data;
+        
+        // Actualizar tarjetas
+        $('#personal-saldo-total').text(formatearMoneda(stats.resumenGeneral.saldoTotal));
+        $('#personal-ingresos').text(formatearMoneda(stats.resumenGeneral.totalIngresos));
+        $('#personal-gastos').text(formatearMoneda(stats.resumenGeneral.totalGastos));
+        $('#personal-num-cuentas').text(stats.resumenGeneral.numeroCuentas);
+        
+        // Gráfica de transacciones por cuenta
+        renderizarGraficaCuentasPersonal(stats.transaccionesPorCuenta);
+        
+        // Transacciones recientes
+        renderizarTransaccionesRecientes(stats.transaccionesRecientes);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al cargar dashboard personal');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+function renderizarGraficaCuentasPersonal(transaccionesPorCuenta) {
+    const ctx = document.getElementById('personal-chart-cuentas');
+    
+    if (!ctx) return;
+    
+    // Destruir gráfica anterior si existe
+    if (dashboardCharts.personal) {
+        dashboardCharts.personal.destroy();
+    }
+    
+    // Si no hay datos, mostrar mensaje
+    if (!transaccionesPorCuenta || transaccionesPorCuenta.length === 0) {
+        const container = ctx.parentElement;
+        container.innerHTML = '<p class="text-gray-400 text-center py-10">No hay datos para mostrar</p>';
+        return;
+    }
+    
+    const labels = transaccionesPorCuenta.map(c => c.nombre);
+    const ingresos = transaccionesPorCuenta.map(c => c.ingresos);
+    const gastos = transaccionesPorCuenta.map(c => c.gastos);
+    
+    dashboardCharts.personal = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Ingresos',
+                    data: ingresos,
+                    backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                    borderColor: 'rgba(34, 197, 94, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Gastos',
+                    data: gastos,
+                    backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#f3f4f6'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#9ca3af',
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(55, 65, 81, 0.5)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#9ca3af'
+                    },
+                    grid: {
+                        color: 'rgba(55, 65, 81, 0.5)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderizarTransaccionesRecientes(transacciones) {
+    const container = $('#personal-transacciones-recientes');
+    container.empty();
+    
+    if (transacciones.length === 0) {
+        container.html('<p class="text-gray-400 text-center">No hay transacciones recientes</p>');
+        return;
+    }
+    
+    transacciones.forEach(trans => {
+        const tipoColor = trans.tipo === 'Ingreso' ? 'text-green-400' : 'text-red-400';
+        const tipoIcon = trans.tipo === 'Ingreso' ? 'fa-arrow-up' : 'fa-arrow-down';
+        const fecha = new Date(trans.fecha).toLocaleDateString('es-MX');
+        const monto = formatearMoneda(trans.monto);
+        
+        container.append(`
+            <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                <div class="flex items-center gap-3">
+                    <div class="${tipoColor}">
+                        <i class="fas ${tipoIcon}"></i>
+                    </div>
+                    <div>
+                        <p class="text-white font-medium">${trans.concepto}</p>
+                        <p class="text-gray-400 text-sm">${trans.cuenta} • ${fecha}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="${tipoColor} font-bold">${monto}</p>
+                    <p class="text-gray-400 text-xs">${trans.categoria}</p>
+                </div>
+            </div>
+        `);
+    });
+}
+
+// Cargar dashboard de organización
+async function cargarDashboardOrganizacion(organizacionId) {
+    try {
+        mostrarSpinner();
+        
+        const response = await fetch(`/api/sw/dashboard/organizacion/${organizacionId}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message);
+        }
+        
+        const stats = data.data;
+        
+        // Tarjetas de resumen general
+        $('#org-saldo-total').text(formatearMoneda(stats.resumenGeneral.saldoTotal));
+        $('#org-ingresos').text(formatearMoneda(stats.resumenGeneral.totalIngresos));
+        $('#org-gastos').text(formatearMoneda(stats.resumenGeneral.totalGastos));
+        $('#org-num-cuentas').text(stats.resumenGeneral.numeroCuentas);
+        $('#org-num-transacciones').text(stats.resumenGeneral.numeroTransacciones);
+        
+        // Resumen del mes
+        $('#org-ingresos-mes').text(formatearMoneda(stats.resumenMes.ingresosMes));
+        $('#org-gastos-mes').text(formatearMoneda(stats.resumenMes.gastosMes));
+        $('#org-balance-mes').text(formatearMoneda(stats.resumenMes.netoMes));
+        
+        // Mi participación
+        $('#org-mis-ingresos').text(formatearMoneda(stats.miParticipacion.ingresos));
+        $('#org-mis-gastos').text(formatearMoneda(stats.miParticipacion.gastos));
+        $('#org-mi-balance').text(formatearMoneda(stats.miParticipacion.neto));
+        $('#org-mis-transacciones').text(stats.miParticipacion.numeroTransacciones);
+        
+        // Gráficas
+        renderizarGraficaEvolucion(stats.transaccionesPorMes);
+        renderizarGraficaCategorias(stats.transaccionesPorCategoria);
+        
+        // Top usuarios
+        renderizarTopUsuarios(stats.topUsuarios);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al cargar dashboard de organización');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+function renderizarGraficaEvolucion(transaccionesPorMes) {
+    const ctx = document.getElementById('org-chart-evolucion');
+    
+    if (!ctx) return;
+    
+    if (dashboardCharts.orgEvolucion) {
+        dashboardCharts.orgEvolucion.destroy();
+    }
+    
+    // Si no hay datos, mostrar mensaje
+    if (!transaccionesPorMes || transaccionesPorMes.length === 0) {
+        const container = ctx.parentElement;
+        container.innerHTML = '<p class="text-gray-400 text-center py-10">No hay datos para mostrar</p>';
+        return;
+    }
+    
+    const labels = transaccionesPorMes.map(t => t.mes);
+    const ingresos = transaccionesPorMes.map(t => t.ingresos);
+    const gastos = transaccionesPorMes.map(t => t.gastos);
+    const neto = transaccionesPorMes.map(t => t.neto);
+    
+    dashboardCharts.orgEvolucion = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Ingresos',
+                    data: ingresos,
+                    borderColor: 'rgba(34, 197, 94, 1)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Gastos',
+                    data: gastos,
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Balance',
+                    data: neto,
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#f3f4f6'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#9ca3af',
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(55, 65, 81, 0.5)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#9ca3af'
+                    },
+                    grid: {
+                        color: 'rgba(55, 65, 81, 0.5)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderizarGraficaCategorias(transaccionesPorCategoria) {
+    const ctx = document.getElementById('org-chart-categorias');
+    
+    if (!ctx) return;
+    
+    if (dashboardCharts.orgCategorias) {
+        dashboardCharts.orgCategorias.destroy();
+    }
+    
+    // Si no hay datos, mostrar mensaje
+    if (!transaccionesPorCategoria || transaccionesPorCategoria.length === 0) {
+        const container = ctx.parentElement;
+        container.innerHTML = '<p class="text-gray-400 text-center py-10">No hay datos para mostrar</p>';
+        return;
+    }
+    
+    // Filtrar solo gastos y tomar top 10
+    const gastos = transaccionesPorCategoria
+        .filter(t => t.tipo === 'Gasto')
+        .slice(0, 10);
+    
+    // Si no hay gastos después del filtro, mostrar mensaje
+    if (gastos.length === 0) {
+        const container = ctx.parentElement;
+        container.innerHTML = '<p class="text-gray-400 text-center py-10">No hay gastos para mostrar</p>';
+        return;
+    }
+    
+    const labels = gastos.map(t => t.categoria);
+    const data = gastos.map(t => t.total);
+    
+    const colors = [
+        'rgba(239, 68, 68, 0.7)',
+        'rgba(249, 115, 22, 0.7)',
+        'rgba(245, 158, 11, 0.7)',
+        'rgba(234, 179, 8, 0.7)',
+        'rgba(132, 204, 22, 0.7)',
+        'rgba(34, 197, 94, 0.7)',
+        'rgba(16, 185, 129, 0.7)',
+        'rgba(20, 184, 166, 0.7)',
+        'rgba(6, 182, 212, 0.7)',
+        'rgba(14, 165, 233, 0.7)'
+    ];
+    
+    dashboardCharts.orgCategorias = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderColor: colors.map(c => c.replace('0.7', '1')),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        color: '#ffffff',
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((label, i) => {
+                                    const value = data.datasets[0].data[i];
+                                    return {
+                                        text: `${label}: $${value.toLocaleString()}`,
+                                        fillStyle: data.datasets[0].backgroundColor[i],
+                                        hidden: false,
+                                        index: i,
+                                        fontColor: '#ffffff'
+                                    };
+                                });
+                            }
+                            return [];
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': $' + context.parsed.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderizarTopUsuarios(topUsuarios) {
+    const container = $('#org-top-usuarios');
+    container.empty();
+    
+    if (topUsuarios.length === 0) {
+        container.html('<p class="text-gray-400 text-center">No hay datos de usuarios</p>');
+        return;
+    }
+    
+    topUsuarios.forEach((usuario, index) => {
+        const badge = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+        const balance = usuario.ingresos - usuario.gastos;
+        const balanceColor = balance >= 0 ? 'text-green-400' : 'text-red-400';
+        
+        container.append(`
+            <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">${badge}</span>
+                    <div>
+                        <p class="text-white font-medium">${usuario.nombre}</p>
+                        <p class="text-gray-400 text-sm">${usuario.cantidad} transacciones</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-green-400 text-sm">+${formatearMoneda(usuario.ingresos)}</p>
+                    <p class="text-red-400 text-sm">-${formatearMoneda(usuario.gastos)}</p>
+                    <p class="${balanceColor} text-xs font-semibold mt-1">Balance: ${formatearMoneda(balance)}</p>
+                </div>
+            </div>
+        `);
+    });
+}
+
+// Cargar dashboard personal al iniciar
+$(document).ready(function() {
+    const tabActivo = $('.tab-button.active').data('tab');
+    if (tabActivo === 'dashboard') {
+        cargarDashboardPersonal();
+    }
+});

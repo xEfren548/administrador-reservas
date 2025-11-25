@@ -33,7 +33,10 @@
     <div class="bg-gray-800 border-b border-gray-700">
         <div class="px-4 sm:px-6 lg:px-8">
             <nav class="flex space-x-4 overflow-x-auto scrollbar-hide" aria-label="Tabs">
-                <button class="tab-button active whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-blue-500 text-blue-400" data-tab="organizaciones">
+                <button class="tab-button active whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-blue-500 text-blue-400" data-tab="dashboard">
+                    <i class="fas fa-chart-line me-1"></i> Dashboard
+                </button>
+                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300" data-tab="organizaciones">
                     <i class="fas fa-building me-1"></i> Organizaciones
                 </button>
                 <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300" data-tab="cuentas">
@@ -52,8 +55,221 @@
     <!-- Contenido de tabs -->
     <div class="px-4 py-6 sm:px-6 lg:px-8">
         
+        <!-- Tab: Dashboard -->
+        <div id="tab-dashboard" class="tab-content active">
+            <!-- Selector de Vista -->
+            <div class="mb-6 flex gap-4">
+                <select id="dashboard-selector" class="form-select bg-gray-700 border-gray-600 text-gray-200 w-auto">
+                    <option value="personal">Vista Personal</option>
+                    <option value="organizacion">Vista de Organización</option>
+                </select>
+                <select id="organizacion-selector" class="form-select bg-gray-700 border-gray-600 text-gray-200 w-auto hidden">
+                    <option value="">Seleccione una organización</option>
+                </select>
+            </div>
+
+            <!-- Dashboard Personal -->
+            <div id="dashboard-personal">
+                <h2 class="text-2xl font-bold text-white mb-6">Mi Resumen Personal</h2>
+                
+                <!-- Tarjetas de Resumen -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gradient-to-br from-blue-900 to-blue-700 rounded-lg p-6 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-blue-200 text-sm font-medium">Saldo Total</p>
+                                <p id="personal-saldo-total" class="text-3xl font-bold text-white mt-2">$0.00</p>
+                            </div>
+                            <div class="bg-blue-600 bg-opacity-50 rounded-full p-3">
+                                <i class="fas fa-wallet text-2xl text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-green-900 to-green-700 rounded-lg p-6 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-green-200 text-sm font-medium">Total Ingresos</p>
+                                <p id="personal-ingresos" class="text-3xl font-bold text-white mt-2">$0.00</p>
+                            </div>
+                            <div class="bg-green-600 bg-opacity-50 rounded-full p-3">
+                                <i class="fas fa-arrow-up text-2xl text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-red-900 to-red-700 rounded-lg p-6 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-red-200 text-sm font-medium">Total Gastos</p>
+                                <p id="personal-gastos" class="text-3xl font-bold text-white mt-2">$0.00</p>
+                            </div>
+                            <div class="bg-red-600 bg-opacity-50 rounded-full p-3">
+                                <i class="fas fa-arrow-down text-2xl text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-purple-900 to-purple-700 rounded-lg p-6 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-purple-200 text-sm font-medium">Mis Cuentas</p>
+                                <p id="personal-num-cuentas" class="text-3xl font-bold text-white mt-2">0</p>
+                            </div>
+                            <div class="bg-purple-600 bg-opacity-50 rounded-full p-3">
+                                <i class="fas fa-folder text-2xl text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficas y Tablas Personal -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
+                        <h3 class="text-lg font-semibold text-white mb-4">Transacciones por Cuenta</h3>
+                        <div style="height: 300px;">
+                            <canvas id="personal-chart-cuentas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
+                        <h3 class="text-lg font-semibold text-white mb-4">Transacciones Recientes</h3>
+                        <div id="personal-transacciones-recientes" class="space-y-3 max-h-96 overflow-y-auto">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Organización -->
+            <div id="dashboard-organizacion" class="hidden">
+                <h2 class="text-2xl font-bold text-white mb-6">Dashboard de Organización</h2>
+                
+                <!-- Tarjetas de Resumen Organización -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                    <div class="bg-gradient-to-br from-blue-900 to-blue-700 rounded-lg p-6 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-blue-200 text-sm font-medium">Saldo Total</p>
+                                <p id="org-saldo-total" class="text-2xl font-bold text-white mt-2">$0.00</p>
+                            </div>
+                            <i class="fas fa-wallet text-3xl text-blue-300"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-green-900 to-green-700 rounded-lg p-6 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-green-200 text-sm font-medium">Ingresos</p>
+                                <p id="org-ingresos" class="text-2xl font-bold text-white mt-2">$0.00</p>
+                            </div>
+                            <i class="fas fa-arrow-up text-3xl text-green-300"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-red-900 to-red-700 rounded-lg p-6 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-red-200 text-sm font-medium">Gastos</p>
+                                <p id="org-gastos" class="text-2xl font-bold text-white mt-2">$0.00</p>
+                            </div>
+                            <i class="fas fa-arrow-down text-3xl text-red-300"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-purple-900 to-purple-700 rounded-lg p-6 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-purple-200 text-sm font-medium">Cuentas</p>
+                                <p id="org-num-cuentas" class="text-2xl font-bold text-white mt-2">0</p>
+                            </div>
+                            <i class="fas fa-folder text-3xl text-purple-300"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-yellow-900 to-yellow-700 rounded-lg p-6 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-yellow-200 text-sm font-medium">Transacciones</p>
+                                <p id="org-num-transacciones" class="text-2xl font-bold text-white mt-2">0</p>
+                            </div>
+                            <i class="fas fa-exchange-alt text-3xl text-yellow-300"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen del Mes -->
+                <div class="bg-gray-800 rounded-lg p-6 shadow-xl mb-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">Resumen del Mes Actual</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <p class="text-gray-400 text-sm">Ingresos del Mes</p>
+                            <p id="org-ingresos-mes" class="text-2xl font-bold text-green-400 mt-2">$0.00</p>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <p class="text-gray-400 text-sm">Gastos del Mes</p>
+                            <p id="org-gastos-mes" class="text-2xl font-bold text-red-400 mt-2">$0.00</p>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <p class="text-gray-400 text-sm">Balance del Mes</p>
+                            <p id="org-balance-mes" class="text-2xl font-bold text-blue-400 mt-2">$0.00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficas Organización -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
+                        <h3 class="text-lg font-semibold text-white mb-4">Evolución (Últimos 6 Meses)</h3>
+                        <div style="height: 300px;">
+                            <canvas id="org-chart-evolucion"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
+                        <h3 class="text-lg font-semibold text-white mb-4">Gastos por Categoría</h3>
+                        <div style="height: 300px;">
+                            <canvas id="org-chart-categorias"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Usuarios y Mi Participación -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
+                        <h3 class="text-lg font-semibold text-white mb-4">Usuarios por Actividad</h3>
+                        <div id="org-top-usuarios" class="space-y-3 max-h-96 overflow-y-auto">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
+                        <h3 class="text-lg font-semibold text-white mb-4">Mi Participación</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+                                <span class="text-gray-300">Mis Ingresos</span>
+                                <span id="org-mis-ingresos" class="text-green-400 font-bold">$0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+                                <span class="text-gray-300">Mis Gastos</span>
+                                <span id="org-mis-gastos" class="text-red-400 font-bold">$0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+                                <span class="text-gray-300">Mi Balance</span>
+                                <span id="org-mi-balance" class="text-blue-400 font-bold">$0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+                                <span class="text-gray-300">Mis Transacciones</span>
+                                <span id="org-mis-transacciones" class="text-purple-400 font-bold">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tab: Organizaciones -->
-        <div id="tab-organizaciones" class="tab-content active">
+        <div id="tab-organizaciones" class="tab-content hidden">
             <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
                 <div class="p-4 sm:p-6 border-b border-gray-700">
                     <h2 class="text-xl font-semibold text-white">Organizaciones</h2>
@@ -760,5 +976,8 @@
     // ID del usuario actual
     window.currentUserId = '{{userId}}';
 </script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script src="/scripts/finanzas.js"></script>

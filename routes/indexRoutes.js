@@ -52,6 +52,7 @@ const swOrganizacionRoutes = require('./swOrganizacionRoutes');
 const swCuentaRoutes = require('./swCuentaRoutes');
 const swTransaccionRoutes = require('./swTransaccionRoutes');
 const swSolicitudRoutes = require('./swSolicitudRoutes');
+const swDashboardRoutes = require('./swDashboardRoutes');
 const finanzasRoutes = require('./finanzasRoutes');
 
 const authMiddleware = require('../common/middlewares/authMiddleware');
@@ -131,6 +132,7 @@ router.use('/api/sw', swOrganizacionRoutes);
 router.use('/api/sw', swCuentaRoutes);
 router.use('/api/sw', swTransaccionRoutes);
 router.use('/api/sw', swSolicitudRoutes);
+router.use('/api/sw/dashboard', swDashboardRoutes);
 
 // Additional routes
 router.use('/', rackLimpiezaRoutes);
