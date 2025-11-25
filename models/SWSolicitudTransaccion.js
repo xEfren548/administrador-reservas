@@ -181,6 +181,7 @@ swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comenta
         fechaAprobacion: new Date(),
         solicitudOriginal: this._id,
         archivosAdjuntos: this.archivosAdjuntos,
+        imagenes: this.imagenes,
         reservaAsociada: this.reservaAsociada,
         etiquetas: this.etiquetas,
         notas: this.notas

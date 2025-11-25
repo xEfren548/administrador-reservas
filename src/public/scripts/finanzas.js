@@ -669,7 +669,12 @@ function renderizarSolicitudes() {
                     </span>
                 </td>
                 <td class="px-6 py-4 ${tipoColor}">${sol.tipo}</td>
-                <td class="px-6 py-4 font-medium text-white">${sol.concepto}</td>
+                <td class="px-6 py-4 font-medium text-white">
+                    ${sol.concepto}
+                    ${sol.imagenes && sol.imagenes.length > 0 ? `
+                        <i class="fas fa-paperclip text-gray-400 ms-2" title="${sol.imagenes.length} imagen(es)"></i>
+                    ` : ''}
+                </td>
                 <td class="px-6 py-4">${sol.solicitadoPor?.firstName || 'N/A'} ${sol.solicitadoPor?.lastName || ''}</td>
                 <td class="px-6 py-4 text-right font-semibold ${tipoColor}">${monto}</td>
                 <td class="px-6 py-4">${estadoBadge}</td>
@@ -698,6 +703,9 @@ async function guardarSolicitud() {
     }
 
     try {
+        mostrarSpinner();
+        
+        // Crear la solicitud primero
         const response = await fetch('/api/sw/solicitudes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -707,9 +715,25 @@ async function guardarSolicitud() {
         const data = await response.json();
 
         if (data.success) {
-            mostrarExito('Solicitud creada exitosamente');
+            const solicitudId = data.data._id;
+            
+            // Si hay imágenes seleccionadas, subirlas
+            const archivosInput = document.getElementById('solicitud-imagenes');
+            if (archivosInput && archivosInput.files.length > 0) {
+                try {
+                    await subirImagenesSolicitud(solicitudId, archivosInput.files);
+                    mostrarExito('Solicitud e imágenes guardadas exitosamente');
+                } catch (errorImg) {
+                    console.error('Error al subir imágenes:', errorImg);
+                    mostrarError('Solicitud creada, pero hubo un error al subir las imágenes');
+                }
+            } else {
+                mostrarExito('Solicitud creada exitosamente');
+            }
+            
             $('#modalSolicitud').modal('hide');
             $('#formSolicitud')[0].reset();
+            $('#preview-solicitud-imagenes').empty();
             cargarSolicitudes();
         } else {
             mostrarError(data.message);
@@ -717,6 +741,8 @@ async function guardarSolicitud() {
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al crear solicitud');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -946,11 +972,8 @@ async function guardarTransaccion() {
             $('#preview-imagenes').empty();
             cargarMisCuentas(); // Actualizar saldos
             
-            // Si estamos en el tab de transacciones, recargarlas
-            const tabActivo = $('.tab-button.active').data('tab');
-            if (tabActivo === 'transacciones') {
-                cargarTransacciones();
-            }
+            // Recargar transacciones para mostrar la nueva con sus imágenes
+            await cargarTransacciones();
         } else {
             mostrarError(data.message || 'Error al crear transacción');
         }
@@ -1028,6 +1051,28 @@ function verDetalleSolicitud(solicitudId) {
                         ${solicitud.respuesta.procesadaPor?.firstName || ''} - 
                         ${new Date(solicitud.respuesta.fechaProcesada).toLocaleString('es-MX')}
                     </p>
+                </div>
+            ` : ''}
+            
+            ${solicitud.imagenes && solicitud.imagenes.length > 0 ? `
+                <div class="border-t border-gray-700 pt-4">
+                    <p class="text-gray-400 text-sm mb-3">Imágenes adjuntas (${solicitud.imagenes.length})</p>
+                    <div class="grid grid-cols-3 gap-3">
+                        ${solicitud.imagenes.map(imagen => {
+                            const imagenUrl = `https://navarro.integradev.site/navarro/splitwise/${imagen}`;
+                            return `
+                                <div class="relative group cursor-pointer" onclick="visualizarImagenCompleta('${imagenUrl}')">
+                                    <img src="${imagenUrl}" alt="Imagen adjunta" class="w-full h-24 object-cover rounded-lg border border-gray-600 hover:border-blue-500 transition-colors">
+                                    ${solicitud.estado === 'Pendiente' ? `
+                                        <button onclick="event.stopPropagation(); eliminarImagenSolicitud('${solicitud._id}', '${imagen}')" 
+                                                class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <i class="fas fa-times text-xs"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
             ` : ''}
         </div>
@@ -1599,6 +1644,9 @@ $(document).on('click', '#btnSubirNuevasImagenes', async function() {
         await subirImagenesTransaccion(transaccionId, input.files);
         mostrarExito('Imágenes subidas exitosamente');
         
+        // Recargar transacciones para actualizar el ícono
+        await cargarTransacciones();
+        
         // Recargar el modal
         $('#modalImagenesTransaccion').modal('hide');
         setTimeout(() => gestionarImagenesTransaccion(transaccionId), 500);
@@ -1642,6 +1690,9 @@ async function eliminarImagenTransaccion(transaccionId, imagenNombre) {
 
         mostrarExito('Imagen eliminada exitosamente');
         
+        // Recargar transacciones para actualizar el ícono
+        await cargarTransacciones();
+        
         // Recargar el modal
         $('#modalImagenesTransaccion').modal('hide');
         setTimeout(() => gestionarImagenesTransaccion(transaccionId), 500);
@@ -1654,8 +1705,304 @@ async function eliminarImagenTransaccion(transaccionId, imagenNombre) {
 }
 
 // Visualizar imagen completa en modal
-function visualizarImagenCompleta(imagenUrl) {
-    $('#imagen-visualizar-full').attr('src', imagenUrl);
-    $('#btn-descargar-imagen').attr('href', imagenUrl);
-    $('#modalVisualizarImagen').modal('show');
+function visualizarImagenCompleta(imagenUrl, fromSolicitudDetail = false) {
+    // Si viene desde el detalle de solicitud (SweetAlert), cerrar SweetAlert primero
+    if (Swal.isVisible()) {
+        Swal.close();
+    }
+    
+    // Si viene desde el modal de detalle de transacción (Bootstrap), cerrarlo primero
+    if ($('#modalDetalleTransaccion').hasClass('show')) {
+        $('#modalDetalleTransaccion').modal('hide');
+        // Esperar a que se cierre el modal antes de abrir el visor
+        setTimeout(() => {
+            $('#imagen-visualizar-full').attr('src', imagenUrl);
+            $('#btn-descargar-imagen').attr('href', imagenUrl);
+            $('#modalVisualizarImagen').modal('show');
+        }, 300);
+    } else {
+        $('#imagen-visualizar-full').attr('src', imagenUrl);
+        $('#btn-descargar-imagen').attr('href', imagenUrl);
+        $('#modalVisualizarImagen').modal('show');
+    }
 }
+
+// Ver detalle completo de una transacción
+async function verDetalleTransaccion(transaccionId) {
+    try {
+        mostrarSpinner();
+        
+        const response = await fetch(`/api/sw/transacciones/${transaccionId}`);
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.message || 'Error al cargar transacción');
+        }
+
+        const trans = data.data;
+        
+        // Formatear valores
+        const fecha = new Date(trans.fecha).toLocaleDateString('es-MX', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        const monto = formatearMoneda(trans.monto, trans.cuenta?.moneda || 'MXN');
+        const tipoColor = trans.tipo === 'Ingreso' ? 'text-green-400' : 'text-red-400';
+        const tipoBadge = trans.tipo === 'Ingreso' ? 
+            '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-900 text-green-300"><i class="fas fa-arrow-up me-1"></i>Ingreso</span>' :
+            '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-red-900 text-red-300"><i class="fas fa-arrow-down me-1"></i>Gasto</span>';
+        const estadoBadge = trans.aprobada ? 
+            '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-900 text-green-300"><i class="fas fa-check-circle me-1"></i>Aprobada</span>' :
+            '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-yellow-900 text-yellow-300"><i class="fas fa-clock me-1"></i>Pendiente</span>';
+
+        // Construir HTML del detalle
+        let html = `
+            <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h4 class="text-white mb-2">${trans.concepto}</h4>
+                        <p class="text-gray-400 mb-0"><i class="far fa-calendar me-2"></i>${fecha}</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="mb-2">${tipoBadge}</div>
+                        <h3 class="${tipoColor} mb-0">${monto}</h3>
+                    </div>
+                </div>
+                
+                <div class="border-top border-gray-600 pt-3 mt-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p class="text-gray-400 mb-1 text-sm">Categoría</p>
+                            <p class="text-white mb-0"><i class="fas fa-tag me-2"></i>${trans.categoria}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-gray-400 mb-1 text-sm">Estado</p>
+                            <div>${estadoBadge}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-gray-400 mb-1 text-sm">Cuenta</p>
+                            <p class="text-white mb-0"><i class="fas fa-wallet me-2"></i>${trans.cuenta?.nombre || 'N/A'}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-gray-400 mb-1 text-sm">Creado por</p>
+                            <p class="text-white mb-0"><i class="fas fa-user me-2"></i>${trans.creadoPor?.firstName || ''} ${trans.creadoPor?.lastName || ''}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Descripción
+        if (trans.descripcion) {
+            html += `
+                <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-300 mb-2"><i class="fas fa-align-left me-2"></i>Descripción</h6>
+                    <p class="text-white mb-0">${trans.descripcion}</p>
+                </div>
+            `;
+        }
+
+        // Notas internas
+        if (trans.notas) {
+            html += `
+                <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-300 mb-2"><i class="fas fa-sticky-note me-2"></i>Notas Internas</h6>
+                    <p class="text-white mb-0">${trans.notas}</p>
+                </div>
+            `;
+        }
+
+        // Información de aprobación
+        if (trans.aprobada && trans.aprobadaPor) {
+            const fechaAprobacion = new Date(trans.fechaAprobacion).toLocaleDateString('es-MX');
+            html += `
+                <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-300 mb-2"><i class="fas fa-check-circle me-2"></i>Información de Aprobación</h6>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <p class="text-gray-400 mb-1 text-sm">Aprobada por</p>
+                            <p class="text-white mb-0">${trans.aprobadaPor?.firstName || ''} ${trans.aprobadaPor?.lastName || ''}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-gray-400 mb-1 text-sm">Fecha de aprobación</p>
+                            <p class="text-white mb-0">${fechaAprobacion}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Etiquetas
+        if (trans.etiquetas && trans.etiquetas.length > 0) {
+            html += `
+                <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-300 mb-2"><i class="fas fa-tags me-2"></i>Etiquetas</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        ${trans.etiquetas.map(tag => `<span class="badge bg-blue-600">${tag}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Imágenes adjuntas
+        if (trans.imagenes && trans.imagenes.length > 0) {
+            html += `
+                <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-300 mb-3"><i class="fas fa-images me-2"></i>Comprobantes Adjuntos (${trans.imagenes.length})</h6>
+                    <div class="row g-3">
+            `;
+            
+            trans.imagenes.forEach(imagen => {
+                const imagenUrl = `https://navarro.integradev.site/navarro/splitwise/${imagen}`;
+                html += `
+                    <div class="col-md-4 col-6">
+                        <div class="position-relative" style="cursor: pointer;" onclick="visualizarImagenCompleta('${imagenUrl}')">
+                            <img src="${imagenUrl}" alt="Comprobante" class="img-fluid rounded" style="height: 120px; width: 100%; object-fit: cover;">
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-dark bg-opacity-75">
+                                    <i class="fas fa-search-plus"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                    <button type="button" class="btn btn-sm btn-primary mt-3" onclick="$('#modalDetalleTransaccion').modal('hide'); setTimeout(() => gestionarImagenesTransaccion('${trans._id}'), 300);">
+                        <i class="fas fa-edit me-1"></i> Gestionar Imágenes
+                    </button>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-300 mb-2"><i class="fas fa-images me-2"></i>Comprobantes Adjuntos</h6>
+                    <p class="text-gray-400 mb-2">No hay comprobantes adjuntos</p>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="$('#modalDetalleTransaccion').modal('hide'); setTimeout(() => gestionarImagenesTransaccion('${trans._id}'), 300);">
+                        <i class="fas fa-upload me-1"></i> Agregar Comprobantes
+                    </button>
+                </div>
+            `;
+        }
+
+        // Mostrar el contenido
+        $('#detalle-transaccion-content').html(html);
+        $('#modalDetalleTransaccion').modal('show');
+
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError(error.message || 'Error al cargar detalle de transacción');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+// ===== GESTIÓN DE IMÁGENES DE SOLICITUDES =====
+
+// Preview de imágenes al seleccionarlas en el formulario de crear solicitud
+$(document).on('change', '#solicitud-imagenes', function(e) {
+    const files = e.target.files;
+    const previewContainer = $('#preview-solicitud-imagenes');
+    previewContainer.empty();
+
+    if (files.length > 3) {
+        mostrarError('Solo puede seleccionar máximo 3 imágenes');
+        e.target.value = '';
+        return;
+    }
+
+    Array.from(files).forEach((file, index) => {
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgContainer = $(`
+                    <div class="preview-image-container">
+                        <img src="${e.target.result}" class="preview-image" alt="Preview ${index + 1}">
+                        <button type="button" class="preview-image-remove" onclick="removerImagenPreviewSolicitud(${index})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `);
+                previewContainer.append(imgContainer);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+});
+
+function removerImagenPreviewSolicitud(index) {
+    const input = document.getElementById('solicitud-imagenes');
+    const dt = new DataTransfer();
+    
+    Array.from(input.files).forEach((file, i) => {
+        if (i !== index) dt.items.add(file);
+    });
+    
+    input.files = dt.files;
+    $('#solicitud-imagenes').trigger('change');
+}
+
+// Subir imágenes de una solicitud
+async function subirImagenesSolicitud(solicitudId, files) {
+    const formData = new FormData();
+    
+    Array.from(files).forEach(file => {
+        formData.append('imagenes', file);
+    });
+
+    const response = await fetch(`/api/sw/solicitudes/${solicitudId}/imagenes`, {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Error al subir imágenes');
+    }
+
+    return await response.json();
+}
+
+// Eliminar una imagen de solicitud
+async function eliminarImagenSolicitud(solicitudId, imagenNombre) {
+    const result = await Swal.fire({
+        title: '¿Eliminar imagen?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ef4444',
+        background: '#1f2937',
+        color: '#f9fafb'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/solicitudes/${solicitudId}/imagenes/${imagenNombre}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Imagen eliminada exitosamente');
+            // Recargar solicitudes para actualizar la lista
+            await cargarSolicitudes();
+        } else {
+            mostrarError(data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al eliminar imagen');
+    } finally {
+        ocultarSpinner();
+    }
+}
+

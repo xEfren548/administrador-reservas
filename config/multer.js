@@ -1,7 +1,6 @@
 const multer = require('multer');
 const path = require('path');
 
-console.log("Entrando a multer");
 // Configuración de Multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -12,6 +11,5 @@ const storage = multer.diskStorage({
     }
 });
 const upload = multer({ storage });
-console.log("Saliendo de multer");
 
 module.exports = upload;

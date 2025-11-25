@@ -2,6 +2,8 @@ const SWSolicitudTransaccion = require('../models/SWSolicitudTransaccion');
 const SWCuenta = require('../models/SWCuenta');
 const SWParticipante = require('../models/SWParticipante');
 const { check, validationResult } = require('express-validator');
+const ftp = require('basic-ftp');
+const fs = require('fs');
 
 // Validadores
 const createSolicitudValidators = [
@@ -597,6 +599,226 @@ const getEstadisticasSolicitudes = async (req, res) => {
     }
 };
 
+/**
+ * Subir imágenes de comprobantes para una solicitud (máximo 3)
+ */
+const uploadSolicitudImages = async (req, res) => {
+    const client = new ftp.Client();
+    
+    try {
+        const { id } = req.params;
+        const userId = req.session.userId;
+
+        // Validar que hay archivos
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No se proporcionaron archivos'
+            });
+        }
+
+        // Limitar a 3 imágenes
+        if (req.files.length > 3) {
+            req.files.forEach(file => {
+                fs.unlink(file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            });
+            
+            return res.status(400).json({
+                success: false,
+                message: 'Solo se permiten máximo 3 imágenes por solicitud'
+            });
+        }
+
+        // Verificar que la solicitud existe
+        const solicitud = await SWSolicitudTransaccion.findById(id);
+        if (!solicitud) {
+            req.files.forEach(file => {
+                fs.unlink(file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            });
+            
+            return res.status(404).json({
+                success: false,
+                message: 'Solicitud no encontrada'
+            });
+        }
+
+        // Verificar que el usuario tiene permiso (creador de la solicitud)
+        if (solicitud.solicitadoPor.toString() !== userId.toString()) {
+            req.files.forEach(file => {
+                fs.unlink(file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            });
+            
+            return res.status(403).json({
+                success: false,
+                message: 'No tiene permiso para agregar imágenes a esta solicitud'
+            });
+        }
+
+        // Verificar que no exceda el límite total de 3 imágenes
+        const imagenesActuales = solicitud.imagenes?.length || 0;
+        if (imagenesActuales + req.files.length > 3) {
+            req.files.forEach(file => {
+                fs.unlink(file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            });
+            
+            return res.status(400).json({
+                success: false,
+                message: `Esta solicitud ya tiene ${imagenesActuales} imagen(es). Solo puede tener máximo 3 imágenes en total`
+            });
+        }
+
+        // Conectar al servidor FTP
+        await client.access({
+            host: 'integradev.site',
+            user: process.env.FTP_USER,
+            password: process.env.FTP_PASSWORD,
+            secure: false
+        });
+
+        await client.ensureDir('splitwise');
+
+        const uploadedImages = [];
+
+        // Subir cada archivo
+        for (let i = 0; i < req.files.length; i++) {
+            const localFilePath = req.files[i].path;
+            const timestamp = Date.now();
+            const remoteFileName = `solicitud_${id}_${timestamp}_${i}.${req.files[i].originalname.split('.').pop()}`;
+            
+            await client.uploadFrom(localFilePath, remoteFileName);
+            console.log(`Archivo '${remoteFileName}' subido con éxito`);
+
+            uploadedImages.push(remoteFileName);
+
+            fs.unlink(localFilePath, (err) => {
+                if (err) {
+                    console.error('Error al eliminar el archivo local:', err);
+                } else {
+                    console.log('Archivo local eliminado con éxito');
+                }
+            });
+        }
+
+        // Actualizar la solicitud con las nuevas imágenes
+        await SWSolicitudTransaccion.updateOne(
+            { _id: id },
+            { $push: { imagenes: { $each: uploadedImages } } }
+        );
+
+        console.log("Imágenes de solicitud subidas con éxito");
+        
+        res.status(200).json({
+            success: true,
+            message: 'Imágenes subidas con éxito',
+            data: {
+                imagenesSubidas: uploadedImages.length,
+                rutas: uploadedImages
+            }
+        });
+
+    } catch (error) {
+        console.error("Error al subir imágenes:", error);
+        
+        if (req.files) {
+            req.files.forEach(file => {
+                fs.unlink(file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            });
+        }
+        
+        res.status(500).json({
+            success: false,
+            message: 'Error al subir las imágenes',
+            error: error.message
+        });
+    } finally {
+        client.close();
+    }
+};
+
+/**
+ * Eliminar una imagen específica de una solicitud
+ */
+const deleteSolicitudImage = async (req, res) => {
+    const client = new ftp.Client();
+    
+    try {
+        const { id, imagenNombre } = req.params;
+        const userId = req.session.userId;
+
+        const solicitud = await SWSolicitudTransaccion.findById(id);
+        if (!solicitud) {
+            return res.status(404).json({
+                success: false,
+                message: 'Solicitud no encontrada'
+            });
+        }
+
+        // Verificar que el usuario tiene permiso
+        if (solicitud.solicitadoPor.toString() !== userId.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tiene permiso para eliminar imágenes de esta solicitud'
+            });
+        }
+
+        // Verificar que la imagen existe
+        if (!solicitud.imagenes || !solicitud.imagenes.includes(imagenNombre)) {
+            return res.status(404).json({
+                success: false,
+                message: 'La imagen no existe en esta solicitud'
+            });
+        }
+
+        // Conectar al servidor FTP y eliminar el archivo
+        await client.access({
+            host: 'integradev.site',
+            user: process.env.FTP_USER,
+            password: process.env.FTP_PASSWORD,
+            secure: false
+        });
+
+        await client.ensureDir('splitwise');
+        
+        try {
+            await client.remove(imagenNombre);
+            console.log(`Archivo '${imagenNombre}' eliminado del servidor FTP`);
+        } catch (ftpError) {
+            console.warn('No se pudo eliminar el archivo del servidor FTP:', ftpError.message);
+        }
+
+        // Eliminar la referencia de la base de datos
+        await SWSolicitudTransaccion.updateOne(
+            { _id: id },
+            { $pull: { imagenes: imagenNombre } }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: 'Imagen eliminada con éxito'
+        });
+
+    } catch (error) {
+        console.error("Error al eliminar imagen:", error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al eliminar la imagen',
+            error: error.message
+        });
+    } finally {
+        client.close();
+    }
+};
+
 module.exports = {
     createSolicitudValidators,
     procesarSolicitudValidators,
@@ -608,5 +830,7 @@ module.exports = {
     procesarSolicitud,
     cancelarSolicitud,
     updateSolicitud,
-    getEstadisticasSolicitudes
+    getEstadisticasSolicitudes,
+    uploadSolicitudImages,
+    deleteSolicitudImage
 };
