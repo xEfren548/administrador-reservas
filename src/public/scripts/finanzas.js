@@ -2070,7 +2070,18 @@ async function cargarDashboardPersonal() {
     try {
         mostrarSpinner();
         
-        const response = await fetch('/api/sw/dashboard/personal');
+        // Obtener fechas del filtro
+        const fechaDesde = $('#fecha-desde').val();
+        const fechaHasta = $('#fecha-hasta').val();
+        
+        // Construir URL con parámetros de fecha
+        let url = '/api/sw/dashboard/personal';
+        const params = new URLSearchParams();
+        if (fechaDesde) params.append('fechaDesde', fechaDesde);
+        if (fechaHasta) params.append('fechaHasta', fechaHasta);
+        if (params.toString()) url += '?' + params.toString();
+        
+        const response = await fetch(url);
         const data = await response.json();
         
         if (!data.success) {
@@ -2100,7 +2111,27 @@ async function cargarDashboardPersonal() {
 }
 
 function renderizarGraficaCuentasPersonal(transaccionesPorCuenta) {
-    const ctx = document.getElementById('personal-chart-cuentas');
+    let ctx = document.getElementById('personal-chart-cuentas');
+    
+    // Si el canvas no existe (fue reemplazado por mensaje), recrearlo
+    if (!ctx) {
+        // Buscar el contenedor que tenía el canvas
+        const containers = document.querySelectorAll('.bg-gray-800.rounded-lg.p-6.shadow-xl');
+        let container = null;
+        
+        for (let cont of containers) {
+            const title = cont.querySelector('h3');
+            if (title && title.textContent.includes('Transacciones por Cuenta')) {
+                container = cont.querySelector('div[style*="height"]');
+                break;
+            }
+        }
+        
+        if (container) {
+            container.innerHTML = '<canvas id="personal-chart-cuentas"></canvas>';
+            ctx = document.getElementById('personal-chart-cuentas');
+        }
+    }
     
     if (!ctx) return;
     
@@ -2217,7 +2248,18 @@ async function cargarDashboardOrganizacion(organizacionId) {
     try {
         mostrarSpinner();
         
-        const response = await fetch(`/api/sw/dashboard/organizacion/${organizacionId}`);
+        // Obtener fechas del filtro
+        const fechaDesde = $('#fecha-desde').val();
+        const fechaHasta = $('#fecha-hasta').val();
+        
+        // Construir URL con parámetros de fecha
+        let url = `/api/sw/dashboard/organizacion/${organizacionId}`;
+        const params = new URLSearchParams();
+        if (fechaDesde) params.append('fechaDesde', fechaDesde);
+        if (fechaHasta) params.append('fechaHasta', fechaHasta);
+        if (params.toString()) url += '?' + params.toString();
+        
+        const response = await fetch(url);
         const data = await response.json();
         
         if (!data.success) {
@@ -2260,7 +2302,17 @@ async function cargarDashboardOrganizacion(organizacionId) {
 }
 
 function renderizarGraficaEvolucion(transaccionesPorMes) {
-    const ctx = document.getElementById('org-chart-evolucion');
+    let ctx = document.getElementById('org-chart-evolucion');
+    
+    // Si el canvas no existe (fue reemplazado por mensaje), recrearlo
+    if (!ctx) {
+        const container = document.querySelector('#org-chart-evolucion')?.parentElement || 
+                         document.querySelector('[id*="org-chart-evolucion"]')?.parentElement;
+        if (container) {
+            container.innerHTML = '<canvas id="org-chart-evolucion"></canvas>';
+            ctx = document.getElementById('org-chart-evolucion');
+        }
+    }
     
     if (!ctx) return;
     
@@ -2348,7 +2400,17 @@ function renderizarGraficaEvolucion(transaccionesPorMes) {
 }
 
 function renderizarGraficaCategorias(transaccionesPorCategoria) {
-    const ctx = document.getElementById('org-chart-categorias');
+    let ctx = document.getElementById('org-chart-categorias');
+    
+    // Si el canvas no existe (fue reemplazado por mensaje), recrearlo
+    if (!ctx) {
+        const container = document.querySelector('#org-chart-categorias')?.parentElement || 
+                         document.querySelector('[id*="org-chart-categorias"]')?.parentElement;
+        if (container) {
+            container.innerHTML = '<canvas id="org-chart-categorias"></canvas>';
+            ctx = document.getElementById('org-chart-categorias');
+        }
+    }
     
     if (!ctx) return;
     
@@ -2479,4 +2541,38 @@ $(document).ready(function() {
     if (tabActivo === 'dashboard') {
         cargarDashboardPersonal();
     }
+    
+    // Event handlers para filtro de fechas
+    $('#btn-aplicar-filtro-fechas').on('click', function() {
+        const tipoVista = $('#dashboard-selector').val();
+        if (tipoVista === 'personal') {
+            cargarDashboardPersonal();
+        } else {
+            // Obtener el ID de la organización seleccionada
+            const organizacionId = $('#organizacion-selector').val();
+            if (organizacionId) {
+                cargarDashboardOrganizacion(organizacionId);
+            } else {
+                mostrarError('Por favor seleccione una organización');
+            }
+        }
+    });
+    
+    $('#btn-limpiar-filtro-fechas').on('click', function() {
+        $('#fecha-desde').val('');
+        $('#fecha-hasta').val('');
+        const tipoVista = $('#dashboard-selector').val();
+        if (tipoVista === 'personal') {
+            cargarDashboardPersonal();
+        } else {
+            // Obtener el ID de la organización seleccionada
+            const organizacionId = $('#organizacion-selector').val();
+            if (organizacionId) {
+                cargarDashboardOrganizacion(organizacionId);
+            } else {
+                mostrarError('Por favor seleccione una organización');
+            }
+        }
+    });
 });
+

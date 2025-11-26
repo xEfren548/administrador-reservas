@@ -58,7 +58,7 @@
         <!-- Tab: Dashboard -->
         <div id="tab-dashboard" class="tab-content active">
             <!-- Selector de Vista -->
-            <div class="mb-6 flex gap-4">
+            <div class="mb-6 flex flex-wrap gap-4">
                 <select id="dashboard-selector" class="form-select bg-gray-700 border-gray-600 text-gray-200 w-auto">
                     <option value="personal">Vista Personal</option>
                     <option value="organizacion">Vista de Organización</option>
@@ -66,6 +66,20 @@
                 <select id="organizacion-selector" class="form-select bg-gray-700 border-gray-600 text-gray-200 w-auto hidden">
                     <option value="">Seleccione una organización</option>
                 </select>
+                
+                <!-- Filtro de Fechas -->
+                <div class="flex gap-2 items-center">
+                    <label class="text-gray-300 text-sm">Desde:</label>
+                    <input type="date" id="fecha-desde" class="form-control form-control-sm bg-gray-700 border-gray-600 text-gray-200 w-auto">
+                    <label class="text-gray-300 text-sm">Hasta:</label>
+                    <input type="date" id="fecha-hasta" class="form-control form-control-sm bg-gray-700 border-gray-600 text-gray-200 w-auto">
+                    <button id="btn-aplicar-filtro-fechas" class="btn btn-primary btn-sm">
+                        <i class="fas fa-filter me-1"></i> Aplicar
+                    </button>
+                    <button id="btn-limpiar-filtro-fechas" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-times me-1"></i> Limpiar
+                    </button>
+                </div>
             </div>
 
             <!-- Dashboard Personal -->

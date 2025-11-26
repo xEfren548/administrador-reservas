@@ -10,6 +10,7 @@ const mongoose = require('mongoose');
 const getEstadisticasOrganizacion = async (req, res) => {
     try {
         const { organizacionId } = req.params;
+        const { fechaDesde, fechaHasta } = req.query;
         const userId = req.session.userId;
 
         // Verificar que la organización existe
@@ -43,21 +44,31 @@ const getEstadisticasOrganizacion = async (req, res) => {
             });
         }
 
-        // Obtener todas las transacciones de las cuentas
+        // Construir filtro de fechas con timezone de México
+        let dateFilter = {};
+        if (fechaDesde || fechaHasta) {
+            dateFilter.fecha = {};
+            if (fechaDesde) {
+                // Agregar timezone de México (UTC-6)
+                dateFilter.fecha.$gte = new Date(fechaDesde + 'T00:00:00-06:00');
+            }
+            if (fechaHasta) {
+                // Agregar timezone de México (UTC-6)
+                dateFilter.fecha.$lte = new Date(fechaHasta + 'T23:59:59-06:00');
+            }
+        }
+
+        // Obtener todas las transacciones de las cuentas con filtro de fechas
         const transacciones = await SWTransaccion.find({
             cuenta: { $in: cuentasIds },
-            aprobada: true
+            aprobada: true,
+            ...dateFilter
         }).populate('creadoPor', 'firstName lastName')
           .populate('cuenta', 'nombre moneda');
 
-        // Calcular totales generales
+        // Calcular totales generales basados en transacciones filtradas
         let totalIngresos = 0;
         let totalGastos = 0;
-        let saldoTotal = 0;
-
-        cuentas.forEach(cuenta => {
-            saldoTotal += cuenta.saldoActual || 0;
-        });
 
         transacciones.forEach(trans => {
             if (trans.tipo === 'Ingreso') {
@@ -66,6 +77,9 @@ const getEstadisticasOrganizacion = async (req, res) => {
                 totalGastos += trans.monto;
             }
         });
+
+        // Saldo total = ingresos - gastos (del período filtrado)
+        const saldoTotal = totalIngresos - totalGastos;
 
         // Estadísticas del mes actual
         const inicioMes = new Date();
@@ -234,6 +248,7 @@ const getEstadisticasOrganizacion = async (req, res) => {
  */
 const getEstadisticasPersonales = async (req, res) => {
     try {
+        const { fechaDesde, fechaHasta } = req.query;
         const userId = req.session.userId;
 
         // Obtener SOLO las cuentas donde el usuario es PROPIETARIO
@@ -244,20 +259,30 @@ const getEstadisticasPersonales = async (req, res) => {
 
         const cuentasIds = cuentasPropias.map(c => c._id);
 
-        // Obtener todas las transacciones de las cuentas propias
+        // Construir filtro de fechas con timezone de México
+        let dateFilter = {};
+        if (fechaDesde || fechaHasta) {
+            dateFilter.fecha = {};
+            if (fechaDesde) {
+                // Agregar timezone de México (UTC-6)
+                dateFilter.fecha.$gte = new Date(fechaDesde + 'T00:00:00-06:00');
+            }
+            if (fechaHasta) {
+                // Agregar timezone de México (UTC-6)
+                dateFilter.fecha.$lte = new Date(fechaHasta + 'T23:59:59-06:00');
+            }
+        }
+
+        // Obtener todas las transacciones de las cuentas propias con filtro de fechas
         const transacciones = await SWTransaccion.find({
             cuenta: { $in: cuentasIds },
-            aprobada: true
+            aprobada: true,
+            ...dateFilter
         }).populate('cuenta', 'nombre moneda organizacion');
 
-        // Calcular totales personales
+        // Calcular totales personales basados en transacciones filtradas
         let totalIngresos = 0;
         let totalGastos = 0;
-        let saldoTotal = 0;
-
-        cuentasPropias.forEach(cuenta => {
-            saldoTotal += cuenta.saldoActual || 0;
-        });
 
         transacciones.forEach(trans => {
             if (trans.tipo === 'Ingreso') {
@@ -266,6 +291,9 @@ const getEstadisticasPersonales = async (req, res) => {
                 totalGastos += trans.monto;
             }
         });
+
+        // Saldo total = ingresos - gastos (del período filtrado)
+        const saldoTotal = totalIngresos - totalGastos;
 
         // Transacciones por cuenta
         const transaccionesPorCuenta = {};
