@@ -291,6 +291,7 @@
             'Fecha Salida',
             'Estado',
             'Encargado',
+            'Costo Limpieza',
             'Descripción',
             'ID Reserva'
         ]);
@@ -304,6 +305,7 @@
                 servicio.fechaSalida,
                 servicio.estado,
                 servicio.encargado,
+                `$${servicio.costoLimpieza.toFixed(2)}`,
                 servicio.descripcion,
                 servicio.idReserva
             ]);
@@ -333,14 +335,15 @@
             { wch: 18 }, // Fecha Salida
             { wch: 15 }, // Estado
             { wch: 25 }, // Encargado
+            { wch: 15 }, // Costo Limpieza
             { wch: 40 }, // Descripción
             { wch: 25 }  // ID Reserva
         ];
         
         // Merge cells para el título y periodo
         worksheet['!merges'] = [
-            { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }, // Título
-            { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } }  // Periodo
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }, // Título
+            { s: { r: 1, c: 0 }, e: { r: 1, c: 8 } }  // Periodo
         ];
         
         // Agregar la hoja al libro
