@@ -60,6 +60,10 @@ async function getAllServicesForReport(req, res, next) {
         for (const service of services) {
             const reserva = await Documento.findById(service.id_reserva).lean();
             
+            // Obtener información del chalet para el costo de limpieza
+            const chalet = await Habitacion.findById(service.idHabitacion).lean();
+            const costoLimpieza = chalet?.additionalInfo?.extraCleaningCost || 0;
+            
             let serviceData = {
                 habitacion: service.nombreHabitacion || 'N/A',
                 fechaServicio: moment.utc(service.fecha).format('DD-MM-YYYY'),
@@ -68,7 +72,8 @@ async function getAllServicesForReport(req, res, next) {
                 estado: service.status || 'N/A',
                 encargado: 'Sin asignar',
                 descripcion: service.descripcion || 'N/A',
-                idReserva: service.id_reserva?.toString() || 'N/A'
+                idReserva: service.id_reserva?.toString() || 'N/A',
+                costoLimpieza: costoLimpieza
             };
 
             if (reserva) {
