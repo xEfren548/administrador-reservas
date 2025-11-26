@@ -662,6 +662,39 @@ const recalcularSaldo = async (req, res) => {
     }
 };
 
+/**
+ * Obtener cuentas válidas para ligar a habitaciones
+ * Solo cuentas con datos bancarios completos (CLABE/No. Cuenta, Beneficiario y Banco)
+ */
+const getCuentasValidasParaHabitacion = async (req, res) => {
+    try {
+        const cuentas = await SWCuenta.find({
+            activa: true,
+            'datosBancarios.beneficiario': { $exists: true, $ne: '' },
+            'datosBancarios.banco': { $exists: true, $ne: '' },
+            $or: [
+                { 'datosBancarios.clabe': { $exists: true, $ne: '' } },
+                { 'datosBancarios.numeroCuenta': { $exists: true, $ne: '' } }
+            ]
+        })
+        .select('nombre datosBancarios.clabe datosBancarios.numeroCuenta')
+        .sort({ nombre: 1 })
+        .lean();
+
+        res.status(200).json({
+            success: true,
+            data: cuentas
+        });
+    } catch (error) {
+        console.error('Error al obtener cuentas válidas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener cuentas válidas',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     createCuentaValidators,
     updateCuentaValidators,
@@ -674,5 +707,6 @@ module.exports = {
     removeParticipante,
     updateParticipantePermisos,
     getParticipantes,
-    recalcularSaldo
+    recalcularSaldo,
+    getCuentasValidasParaHabitacion
 };

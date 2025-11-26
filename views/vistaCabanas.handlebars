@@ -806,7 +806,21 @@
                     {{/if}}
                 </select>
             </div>
-
+        </div>
+        <div class="input-group third">
+            <div class="mb-3">
+                <label for="cuenta-financiera" class="form-label">Cuenta Financiera (opcional): </label>
+                <select class="form-select form-select-md w-100" name="cuenta-financiera" id="cuenta-financiera-select">
+                    <option value="" selected>-- Selecciona una cuenta --</option>
+                    {{#if cuentasFinancieras}}
+                    {{#each cuentasFinancieras}}
+                    <option value="{{this._id}}">{{this.nombre}} - {{#if this.datosBancarios.clabe}}{{this.datosBancarios.clabe}}{{else}}{{this.datosBancarios.numeroCuenta}}{{/if}}</option>
+                    {{/each}}
+                    {{else}}
+                    <option value="" disabled>No hay cuentas disponibles</option>
+                    {{/if}}
+                </select>
+            </div>
         </div>
     </div>
 
@@ -1246,7 +1260,8 @@
                         admin: document.getElementById("slctAdmin").value.trim(),
                         janitor: document.getElementById("slctJanitor").value.trim(),
                         owner: document.getElementById("chalet-owner-select").value.trim(),
-                        investors: investorsData
+                        investors: investorsData,
+                        cuentaFinanciera: document.getElementById("cuenta-financiera-select").value || null
                     },
                     files: pdfarrayDB,
                     activePlatforms: selectedPlatforms

@@ -935,7 +935,21 @@
                     {{/if}}
                 </select>
             </div>
-
+        </div>
+        <div class="input-group third">
+            <div class="mb-3">
+                <label for="cuenta-financiera" class="form-label">Cuenta Financiera (opcional): </label>
+                <select class="form-select form-select-md w-100" name="cuenta-financiera" id="cuenta-financiera-select-{{@index}}" data-current="{{others.cuentaFinanciera}}">
+                    <option value="">-- Selecciona una cuenta --</option>
+                    {{#if ../cuentasFinancieras}}
+                    {{#each ../cuentasFinancieras}}
+                    <option value="{{this._id}}">{{this.nombre}} - {{#if this.datosBancarios.clabe}}{{this.datosBancarios.clabe}}{{else}}{{this.datosBancarios.numeroCuenta}}{{/if}}</option>
+                    {{/each}}
+                    {{else}}
+                    <option value="" disabled>No hay cuentas disponibles</option>
+                    {{/if}}
+                </select>
+            </div>
         </div>
     </div>
 
@@ -1040,6 +1054,14 @@
         {{#each chalets}}
             initInvestorForm('{{this.propertyDetails.name}}');
         {{/each}}
+
+        // Preselect cuenta financiera for each form
+        document.querySelectorAll('[id^="cuenta-financiera-select-"]').forEach(select => {
+            const currentValue = select.dataset.current;
+            if (currentValue) {
+                select.value = currentValue;
+            }
+        });
 
         // Set up form selector
         const formSelector = document.getElementById('slctFormSelector');
@@ -1408,7 +1430,8 @@
                         admin: form.querySelector("#slctAdmin").value.trim(),
                         janitor: form.querySelector("#slctJanitor").value.trim(),
                         owner: form.querySelector("#chalet-owner-select").value.trim(),
-                        investors: investors
+                        investors: investors,
+                        cuentaFinanciera: form.querySelector("#cuenta-financiera-select").value || null
                     },
                     images: imagesarray,
                     activePlatforms: selectedPlatforms

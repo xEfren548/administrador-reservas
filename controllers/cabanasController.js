@@ -15,6 +15,7 @@ const fs = require('fs');
 const Roles = require("../models/Roles");
 const permissions = require('../models/permissions');
 const Plataformas = require('../models/Plataformas');
+const SWCuenta = require('../models/SWCuenta');
 
 const showCreateChaletViewValidators = [
     check()
@@ -427,6 +428,16 @@ async function showChaletsView(req, res, next) {
 
         const plataformas = await Plataformas.find().lean();
 
+        const cuentasFinancieras = await SWCuenta.find({
+            activa: true,
+            'datosBancarios.beneficiario': { $exists: true, $ne: '' },
+            'datosBancarios.banco': { $exists: true, $ne: '' },
+            $or: [
+                { 'datosBancarios.clabe': { $exists: true, $ne: '' } },
+                { 'datosBancarios.numeroCuenta': { $exists: true, $ne: '' } }
+            ]
+        }).select('nombre datosBancarios.clabe datosBancarios.numeroCuenta').lean();
+
         res.render('vistaCabanas', {
             chalets: mapChalets,
             admins: admins,
@@ -434,7 +445,8 @@ async function showChaletsView(req, res, next) {
             tipologias: tipologias,
             owners: owners,
             investors: investors,
-            plataformas: plataformas
+            plataformas: plataformas,
+            cuentasFinancieras: cuentasFinancieras
         });
     } catch (error) {
         console.log(error);
@@ -512,7 +524,8 @@ async function createChalet(req, res, next) {
                 admin: admin._id,
                 janitor: janitor._id,
                 owner: owner._id,
-                investors: others.investors
+                investors: others.investors,
+                cuentaFinanciera: others.cuentaFinanciera || null
             },
             images,
             files,
@@ -831,6 +844,16 @@ async function showEditChaletsView(req, res, next) {
         const plataformas = await Plataformas.find().lean();
         console.log("PLATAFORMAS: ", plataformas);
 
+        const cuentasFinancieras = await SWCuenta.find({
+            activa: true,
+            'datosBancarios.beneficiario': { $exists: true, $ne: '' },
+            'datosBancarios.banco': { $exists: true, $ne: '' },
+            $or: [
+                { 'datosBancarios.clabe': { $exists: true, $ne: '' } },
+                { 'datosBancarios.numeroCuenta': { $exists: true, $ne: '' } }
+            ]
+        }).select('nombre datosBancarios.clabe datosBancarios.numeroCuenta').lean();
+
         // This could go on login.
         if (req.session.filesRetrieved !== undefined) {
             getChaletFiles(chalets);
@@ -846,7 +869,8 @@ async function showEditChaletsView(req, res, next) {
             owners: owners,
             tipologias: tipologias,
             investors: investors,
-            plataformas: plataformas
+            plataformas: plataformas,
+            cuentasFinancieras: cuentasFinancieras
         });
     } catch (error) {
         console.error('Error:', error);
@@ -936,7 +960,8 @@ async function editChalet(req, res, next) {
                 admin: admin._id,
                 janitor: janitor._id,
                 owner: owner._id,
-                investors: newInvestors
+                investors: newInvestors,
+                cuentaFinanciera: others.cuentaFinanciera || null
             },
             images,
             activePlatforms

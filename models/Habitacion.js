@@ -298,7 +298,12 @@ const othersSchema = new mongoose.Schema({
     investors: [{
         investor: {type: mongoose.Schema.Types.ObjectId, ref: 'Usuario'},
         noTickets: {type: Number, default: 1}
-    }]
+    }],
+    cuentaFinanciera: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'SWCuenta',
+        default: null
+    }
 });
 
 const channelsSchema = new mongoose.Schema({

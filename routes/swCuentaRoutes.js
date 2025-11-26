@@ -41,6 +41,16 @@ router.get(
 );
 
 /**
+ * @route   GET /api/sw/cuentas/validas-habitacion
+ * @desc    Obtener cuentas válidas para ligar a habitaciones (con datos bancarios completos)
+ * @access  Autenticado
+ */
+router.get(
+    '/cuentas/validas-habitacion',
+    swCuentaController.getCuentasValidasParaHabitacion
+);
+
+/**
  * @route   GET /api/sw/cuentas/:id
  * @desc    Obtener una cuenta por ID
  * @access  Permiso VIEW_ACCOUNTS o MASTER ADMIN + Participante de la cuenta
