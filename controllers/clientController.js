@@ -178,12 +178,13 @@ async function createClient(req, res, next) {
     }
 }
 
-async function createClientLocal(firstName, lastName, reqUser) {
+async function createClientLocal(firstName, lastName, cellphone, reqUser) {
     console.log("Entrando a la funcion")
-    console.log(firstName, lastName)
+    console.log(firstName, lastName, cellphone, reqUser)
     const clienteToAdd = new Cliente({
         firstName: firstName,
-        lastName: lastName
+        lastName: lastName,
+        phone: cellphone,
     });
 
     console.log(clienteToAdd)

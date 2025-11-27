@@ -7,6 +7,7 @@ const pagoController = require('../../controllers/pagoController');
 const utilidadesController = require('../../controllers/utilidadesController');
 const logController = require('../../controllers/logController');
 const channexController = require('../../controllers/channexController');
+const swCuentas = require('../../models/SWCuenta');
 
 
 const moment = require('moment-timezone');
@@ -77,8 +78,11 @@ async function sendTemplateMsg(clientInfo, template, params, buttons = []) {
     };
 
     try {
+        console.log("Sending WhatsApp message to:", clientInfo.phone);
         const response = await fetch(url, postReq);
         const result = await response.json();
+
+        console.log('WhatsApp Response:', result);
         
         if (!response.ok) {
             // NO lanzar error, retornar objeto indicando fallo
@@ -133,6 +137,43 @@ async function sendReservationConfirmation(clientInfo, chaletInfo, reservationIn
         chaletInfo.propertyDetails.name,
         arrMsg,
         depMsg
+    ])
+}
+
+async function sendReservationInstructions(clientInfo, chaletInfo, reservationInfo, cancelationHour, noAgente) { // Enviar instrucciones de pago en las tentativas de reserva
+    // const formatArrivalDate = moment(reservationInfo.arrivalDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
+    // const formatDepartureDate = moment(reservationInfo.departureDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
+    console.log("sendReservationInstructions");
+
+    const chaletArrivalHour = moment.tz(chaletInfo.others.arrivalTime, "America/Mexico_City").format("HH:mm");
+    const chaletDepartureHour = moment.tz(chaletInfo.others.departureTime, "America/Mexico_City").format("HH:mm");
+
+    const cuenta = await swCuentas.findById(chaletInfo.others.cuentaFinanciera).lean();
+    if (!cuenta) {
+        return;
+    }
+
+
+    console.log("chaletArrivalHour", chaletArrivalHour)
+    console.log("chaletDepartureHour", chaletDepartureHour)
+
+    const formattedArrivalDate = moment(reservationInfo.arrivalDate).format("DD/MM/YYYY");
+    const formattedDepartureDate = moment(reservationInfo.departureDate).format("DD/MM/YYYY");
+
+    const arrMsg = `${formattedArrivalDate} ${chaletArrivalHour}`
+    const depMsg = `${formattedDepartureDate} ${chaletDepartureHour}`
+
+    await sendTemplateMsg(clientInfo, "tentativa_reserva_mx", [
+        chaletInfo.propertyDetails.name, // {{1}}
+        arrMsg,// {{2}}
+        depMsg, // {{3}}
+        cancelationHour, // {{4}}
+        reservationInfo.total.toString(), // {{5}}
+        cuenta.datosBancarios.banco, // {{6}}
+        cuenta.datosBancarios.clabe || cuenta.datosBancarios.numeroCuenta, // {{7}}
+        cuenta.datosBancarios.beneficiario, // {{8}}
+        noAgente // {{9}}
+        
     ])
 }
 
@@ -477,6 +518,7 @@ async function cancelReservation() {
 
 module.exports = {
     sendReservationConfirmation,
+    sendReservationInstructions,
     sendInstructions,
     sendSurveyToClient,
     sendReminders,

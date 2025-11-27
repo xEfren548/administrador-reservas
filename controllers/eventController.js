@@ -1005,8 +1005,8 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 }
 
 
-async function createReservation(req, res, next) {
-    const { clientFirstName, clientLastName, clientEmail, chaletName, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit } = req.body;
+async function createReservation(req, res, next) { // Reserva web (legacy)
+    const { clientFirstName, clientLastName, clientEmail, clientPhone, chaletName, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit } = req.body;
     let newCliente = null;
     let client = null;
 
@@ -1130,7 +1130,7 @@ async function createReservation(req, res, next) {
 
         }
         if (!client) {
-            newCliente = await clienteController.createClientLocal(clientFirstName, clientLastName, req.session)
+            newCliente = await clienteController.createClientLocal(clientFirstName, clientLastName, clientPhone, req.session)
             console.log("No cliente")
             console.log(newCliente)
             if (!newCliente) {
@@ -1265,14 +1265,8 @@ async function createReservation(req, res, next) {
         })
 
 
-        if (client.phone) {
-            SendMessages.sendReservationConfirmation(client, chalet, reservationToAdd);
-            console.log("SendMessages.sendReminders");
-            SendMessages.sendInstructions(client, chalet, idReserva)
-        }
-
         if (client.email) {
-            sendEmail(client.email, idReserva);
+            await sendEmail(client.email, idReserva);
         }
 
         const today = moment().startOf('day');
@@ -1284,15 +1278,56 @@ async function createReservation(req, res, next) {
 
 
         const agenteQueReserva = await Usuario.findById(createdBy);
-        if (agenteQueReserva) {
-            if (agenteQueReserva.phone) {
-                SendMessages.sendReservationConfirmation(agenteQueReserva, chalet, reservationToAdd);
-                console.log("Mensaje enviado al agente.")
+
+
+        
+        // if (client.phone) {
+        //     SendMessages.sendReservationConfirmation(client, chalet, reservationToAdd);
+        //     console.log("SendMessages.sendReminders");
+        //     SendMessages.sendInstructions(client, chalet, idReserva)
+        // }
+
+        // Si es por depo, envia instrucciones de pago
+        if (isDeposit) {
+            const cancelationHour = format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es });
+            if (chalet.others.cuentaFinanciera) {
+                if (client.phone) {
+                    
+                    await SendMessages.sendReservationInstructions(client, chalet, documentoToAdd, cancelationHour, agenteQueReserva?.phone);
+                }
+                if (agenteQueReserva && agenteQueReserva.phone) {
+                    console.log("Enviando mensaje al agente que reserva: ");
+                    console.log(agenteQueReserva);
+                    await SendMessages.sendReservationInstructions(agenteQueReserva, chalet, documentoToAdd, cancelationHour, agenteQueReserva?.phone);
+                }
+            } else {
+                if (agenteQueReserva && agenteQueReserva.phone) {
+                    await SendMessages.sendReservationConfirmation(agenteQueReserva, chalet, documentoToAdd, cancelationHour);
+                }
             }
-            if (agenteQueReserva.email) {
-                sendEmail(agenteQueReserva.email, idReserva);
+        } else {
+            if (client.phone) {
+                await SendMessages.sendReservationConfirmation(client, chalet, documentoToAdd);
+            }
+            if (agenteQueReserva && agenteQueReserva.phone) {
+                await SendMessages.sendReservationConfirmation(agenteQueReserva, chalet, documentoToAdd);
+            }
+            if (agenteQueReserva && agenteQueReserva.email) {
+                await sendEmail(agenteQueReserva.email, idReserva);
             }
         }
+                
+
+
+        // if (agenteQueReserva) {
+        //     if (agenteQueReserva.phone) {
+        //         SendMessages.sendReservationConfirmation(agenteQueReserva, chalet, reservationToAdd);
+        //         console.log("Mensaje enviado al agente.")
+        //     }
+        //     if (agenteQueReserva.email) {
+        //         sendEmail(agenteQueReserva.email, idReserva);
+        //     }
+        // }
 
         // Log
         const logBody = {
