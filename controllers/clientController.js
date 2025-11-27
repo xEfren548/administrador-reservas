@@ -181,6 +181,13 @@ async function createClient(req, res, next) {
 async function createClientLocal(firstName, lastName, cellphone, reqUser) {
     console.log("Entrando a la funcion")
     console.log(firstName, lastName, cellphone, reqUser)
+
+    const existingClient = await Cliente.findOne({ phone: cellphone });
+    if (existingClient) {
+        console.log("Cliente ya existe")
+        return existingClient;
+    }
+    
     const clienteToAdd = new Cliente({
         firstName: firstName,
         lastName: lastName,

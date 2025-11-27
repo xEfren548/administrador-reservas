@@ -163,6 +163,10 @@ document.addEventListener("DOMContentLoaded", function () {
             let formData = {};
 
             if (isDeposit){
+                const codigoPais = document.getElementById('codigo-pais-select').value;
+                const numeroTelefono = document.getElementById('telefono-cliente-provisional').value.trim();
+                const telefonoCompleto = numeroTelefono ? codigoPais + numeroTelefono : '';
+                
                 formData = {
                     clientFirstName: document.getElementById('nombre-cliente-provisional').value.trim(),
                     clientLastName: document.getElementById('apellido-cliente-provisional').value.trim(),
@@ -175,6 +179,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     total: document.getElementById('habitacion_total').value.trim(),
                     isDeposit: isDeposit,
                     comisionVendedor: comisionesReserva
+                };
+                
+                // Only add clientPhone if provided
+                if (telefonoCompleto) {
+                    formData.clientPhone = telefonoCompleto;
                 }
             } else {
                 formData = {
