@@ -1,6 +1,7 @@
 const Habitacion = require('../models/Habitacion');
 const PrecioBaseXDia = require('../models/PrecioBaseXDia');
 const { nanoid } = require('nanoid');
+const Usuario = require('../models/Usuario');
 
 async function obtenerHabitaciones(req, res) { 
     try {
@@ -21,6 +22,13 @@ async function obtenerHabitaciones(req, res) {
             const investorChalets = await Habitacion.find({ 'others.investors.investor': req.session.id, isActive: true }).lean();
             const investorChaletsIds = investorChalets.map(chalet => chalet._id);
             habitaciones = await Habitacion.find({ _id: investorChaletsIds, isActive: true }).lean();
+        } else if (privilege === "Colaborador dueño" ) {
+            const user = await Usuario.findById(req.session.id).lean();
+            const ownerId = user.administrator;
+            const ownerChalets = await Habitacion.find({ 'others.owner': ownerId, isActive: true }).lean();
+            const ownerChaletsIds = ownerChalets.map(chalet => chalet._id);
+            habitaciones = await Habitacion.find({ _id: ownerChaletsIds, isActive: true }).lean();
+
         } else {
             habitaciones = await Habitacion.find( { isActive: true }).lean();
         }

@@ -382,6 +382,24 @@ async function obtenerEventosOptimizados(req, res) {
             } else {
                 filtro.resourceId = { $in: ownerChaletIds };
             }
+        } else if (privilege === "Colaborador dueño") {
+            const user = await Usuario.findById(req.session.userId).lean();
+            if (!user) {
+                return res.json([]);
+            }
+            const ownerChalets = await Habitacion.find({ 'others.owner': user.administrator }, { _id: 1 }).lean();
+            const ownerChaletIds = ownerChalets.map(h => h._id);
+
+            if (chaletId) {
+                if (!ownerChaletIds.some(id => id.toString() === chaletId)) {
+                    // Chalet específico no pertenece al dueno de cabañas: no hay resultados
+                    return res.json([]);
+                }
+                filtro.resourceId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
+            } else {
+                filtro.resourceId = { $in: ownerChaletIds };
+            }
+
         } else if (privilege === "Inversionistas") {
             const investorChalets = await Habitacion.find({ 
                 'others.investors.investor': req.session.userId 
@@ -430,7 +448,8 @@ async function obtenerEventosOptimizados(req, res) {
             colorUsuario: 1,
             clientName: 1,
             clienteProvisional: 1,
-            infoReservaExterna: 1
+            infoReservaExterna: 1,
+            notes: 1
         }).lean();
 
         console.log('Reservas: ', reservas.length);
@@ -3339,6 +3358,24 @@ async function getIncomingReservations(req, res) {
             ).lean();
 
             allowedResourceIds = new Set(ownedChalets.map(c => c._id.toString()));
+        } else if (privilege === "Colaborador dueño") {
+            if (!sessionUserId) {
+                // No podemos determinar la propiedad sin usuario en sesión
+                return res.json([]);
+            }
+            const user = await Usuario.findById(sessionUserId).lean();
+            if (!user) return res.json([]);
+
+            const ownerId = ObjectId.isValid(user.administrator)
+                ? new ObjectId(user.administrator)
+                : user.administrator;
+            const ownedChalets = await Habitacion.find(
+                { "others.owner": ownerId },
+                { _id: 1 }
+            ).lean();
+
+            allowedResourceIds = new Set(ownedChalets.map(c => c._id.toString()));
+        
         } else if (privilege === "Administrador") {
             allowedResourceIds = null; // sin restricción
         } else if (privilege === "Inversionistas") {
@@ -3548,7 +3585,7 @@ async function createOwnerExternalReservation(req, res) {
         const duenoId = req.session.id;
 
         // Validar que solo dueños puedan crear reservas externas
-        if (privilege !== 'Dueño de cabañas') {
+        if (privilege !== 'Dueño de cabañas' && privilege !== 'Colaborador dueño') {
             return res.status(403).json({ 
                 success: false, 
                 message: 'Solo los dueños pueden crear reservas externas' 
@@ -3714,7 +3751,20 @@ async function editOwnerExternalReservation(req, res) {
 
 
         const privilege = req.session.privilege;
-        const duenoId = req.session.id;
+        let duenoId = req.session.id;
+
+        if (privilege === 'Colaborador dueño') {
+            const user = await Usuario.findById(req.session.id).lean();
+            duenoId = user.administrator;
+        }
+
+        // Validar que solo dueños puedan editar reservas externas
+        if (privilege !== 'Dueño de cabañas' && privilege !== 'Colaborador dueño') {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Solo los dueños pueden editar reservas externas' 
+            });
+        }
 
         // Buscar reserva
         const reserva = await Documento.findById(id);
@@ -3880,7 +3930,25 @@ async function deleteOwnerReservation(req, res) {
     try {
         const { id } = req.params;
         const privilege = req.session.privilege;
-        const duenoId = req.session.id;
+        let duenoId = req.session.id;
+
+        if (privilege === "Colaborador dueño") {
+            const user = await Usuario.findById(req.session.id).lean();
+            if (!user) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: 'No tienes permisos para eliminar esta reserva' 
+                });
+            }
+            duenoId = user.administrator;
+        }
+
+        if (privilege !== 'Dueño de cabañas' && privilege !== 'Colaborador dueño') {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Solo los dueños pueden eliminar reservas de dueño o externas' 
+            });
+        }
 
         const reserva = await Documento.findById(id);
 
@@ -3898,7 +3966,7 @@ async function deleteOwnerReservation(req, res) {
 
         // Validar permisos
         const chalet = await Habitacion.findById(reserva.resourceId);
-        if (!chalet || (privilege === 'Dueño de cabañas' && chalet.others.owner.toString() !== duenoId?.toString())) {
+        if (!chalet || chalet.others.owner.toString() !== duenoId?.toString()) {
             return res.status(403).json({ 
                 success: false, 
                 message: 'No tienes permisos para eliminar esta reserva' 
@@ -3944,7 +4012,25 @@ async function updateOwnerReservation(req, res) {
         const { id } = req.params;
         const { clienteProvisional, arrivalDate, departureDate, nNights } = req.body;
         const privilege = req.session.privilege;
-        const duenoId = req.session.id;
+        let duenoId = req.session.id;
+
+        if (privilege === "Colaborador dueño") {
+            const user = await Usuario.findById(req.session.id).lean();
+            if (!user) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: 'No tienes permisos para editar esta reserva' 
+                });
+            }
+            duenoId = user.administrator;
+        }
+
+        if (privilege !== 'Dueño de cabañas' && privilege !== 'Colaborador dueño') {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Solo los dueños pueden editar reservas de dueño' 
+            });
+        }
 
         const reserva = await Documento.findById(id);
 
@@ -3962,7 +4048,7 @@ async function updateOwnerReservation(req, res) {
 
         // Validar permisos
         const chalet = await Habitacion.findById(reserva.resourceId);
-        if (!chalet || (privilege === 'Dueño de cabañas' && chalet.others.owner.toString() !== duenoId)) {
+        if (!chalet || chalet.others.owner.toString() !== duenoId?.toString()) {
             return res.status(403).json({ 
                 success: false, 
                 message: 'No tienes permisos para editar esta reserva' 
