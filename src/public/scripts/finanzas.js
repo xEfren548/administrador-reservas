@@ -2275,7 +2275,10 @@ async function cargarDashboardOrganizacion(organizacionId) {
         $('#org-num-cuentas').text(stats.resumenGeneral.numeroCuentas);
         $('#org-num-transacciones').text(stats.resumenGeneral.numeroTransacciones);
         
-        // Resumen del mes
+                // Participantes
+                if (stats.participantes) {
+                    $('#org-num-participantes-unicos').text(stats.participantes.unicos);
+                }        // Resumen del mes
         $('#org-ingresos-mes').text(formatearMoneda(stats.resumenMes.ingresosMes));
         $('#org-gastos-mes').text(formatearMoneda(stats.resumenMes.gastosMes));
         $('#org-balance-mes').text(formatearMoneda(stats.resumenMes.netoMes));

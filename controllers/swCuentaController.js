@@ -139,6 +139,19 @@ const createCuenta = async (req, res) => {
             });
         }
 
+        // Verificar que no exista otra cuenta con el mismo nombre en la misma organización
+        const cuentaExistente = await SWCuenta.findOne({
+            nombre: nombre.trim(),
+            organizacion: organizacion
+        });
+
+        if (cuentaExistente) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ya existe una cuenta con ese nombre en esta organización'
+            });
+        }
+
         const cuenta = new SWCuenta({
             nombre,
             descripcion,

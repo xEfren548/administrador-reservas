@@ -66,6 +66,12 @@ const getEstadisticasOrganizacion = async (req, res) => {
         }).populate('creadoPor', 'firstName lastName')
           .populate('cuenta', 'nombre moneda');
 
+        // Calcular saldos iniciales de todas las cuentas
+        let totalSaldosIniciales = 0;
+        cuentas.forEach(cuenta => {
+            totalSaldosIniciales += cuenta.saldoInicial || 0;
+        });
+
         // Calcular totales generales basados en transacciones filtradas
         let totalIngresos = 0;
         let totalGastos = 0;
@@ -78,8 +84,8 @@ const getEstadisticasOrganizacion = async (req, res) => {
             }
         });
 
-        // Saldo total = ingresos - gastos (del período filtrado)
-        const saldoTotal = totalIngresos - totalGastos;
+        // Saldo total = saldos iniciales + ingresos - gastos
+        const saldoTotal = totalSaldosIniciales + totalIngresos - totalGastos;
 
         // Estadísticas del mes actual
         const inicioMes = new Date();
@@ -199,10 +205,35 @@ const getEstadisticasOrganizacion = async (req, res) => {
             }
         });
 
+        // Obtener todos los participantes de las cuentas de la organización
+        const participantes = await SWParticipante.find({
+            cuenta: { $in: cuentasIds },
+            activo: true
+        }).populate('usuario', 'firstName lastName email')
+          .populate('cuenta', 'nombre');
+
+        // Contar participantes únicos
+        const usuariosUnicos = new Set();
+        participantes.forEach(p => {
+            if (p.usuario && p.usuario._id) {
+                usuariosUnicos.add(p.usuario._id.toString());
+            }
+        });
+
+        // Participantes por rol
+        const participantesPorRol = {};
+        participantes.forEach(p => {
+            if (!participantesPorRol[p.rol]) {
+                participantesPorRol[p.rol] = 0;
+            }
+            participantesPorRol[p.rol]++;
+        });
+
         res.status(200).json({
             success: true,
             data: {
                 resumenGeneral: {
+                    totalSaldosIniciales,
                     totalIngresos,
                     totalGastos,
                     saldoTotal,
@@ -214,6 +245,10 @@ const getEstadisticasOrganizacion = async (req, res) => {
                     gastosMes,
                     netoMes: ingresosMes - gastosMes,
                     numeroTransacciones: transaccionesMes.length
+                },
+                participantes: {
+                    unicos: usuariosUnicos.size,
+                    porRol: participantesPorRol
                 },
                 transaccionesPorCategoria: Object.entries(transaccionesPorCategoria)
                     .map(([categoria, data]) => ({
@@ -280,6 +315,12 @@ const getEstadisticasPersonales = async (req, res) => {
             ...dateFilter
         }).populate('cuenta', 'nombre moneda organizacion');
 
+        // Calcular saldos iniciales de las cuentas propias
+        let totalSaldosIniciales = 0;
+        cuentasPropias.forEach(cuenta => {
+            totalSaldosIniciales += cuenta.saldoInicial || 0;
+        });
+
         // Calcular totales personales basados en transacciones filtradas
         let totalIngresos = 0;
         let totalGastos = 0;
@@ -292,8 +333,8 @@ const getEstadisticasPersonales = async (req, res) => {
             }
         });
 
-        // Saldo total = ingresos - gastos (del período filtrado)
-        const saldoTotal = totalIngresos - totalGastos;
+        // Saldo total = saldos iniciales + ingresos - gastos
+        const saldoTotal = totalSaldosIniciales + totalIngresos - totalGastos;
 
         // Transacciones por cuenta
         const transaccionesPorCuenta = {};
@@ -334,10 +375,11 @@ const getEstadisticasPersonales = async (req, res) => {
             success: true,
             data: {
                 resumenGeneral: {
+                    totalSaldosIniciales,
                     totalIngresos,
                     totalGastos,
                     saldoTotal,
-                    neto: totalIngresos - totalGastos,
+                    neto: totalSaldosIniciales + totalIngresos - totalGastos,
                     numeroCuentas: cuentasPropias.length,
                     numeroTransacciones: transacciones.length
                 },
