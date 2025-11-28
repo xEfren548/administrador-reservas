@@ -2102,6 +2102,9 @@ async function cargarDashboardPersonal() {
         // Transacciones recientes
         renderizarTransaccionesRecientes(stats.transaccionesRecientes);
         
+        // Resumen de organizaciones
+        renderizarResumenOrganizaciones(stats.resumenOrganizaciones || []);
+        
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al cargar dashboard personal');
@@ -2241,6 +2244,68 @@ function renderizarTransaccionesRecientes(transacciones) {
             </div>
         `);
     });
+}
+
+function renderizarResumenOrganizaciones(resumenOrganizaciones) {
+    const container = $('#personal-resumen-organizaciones');
+    container.empty();
+    
+    if (!resumenOrganizaciones || resumenOrganizaciones.length === 0) {
+        container.html('<p class="text-gray-400 text-center">No hay actividad en organizaciones</p>');
+        $('#org-balance-total').text('$0.00');
+        $('#org-balance-ingresos').text('$0.00');
+        $('#org-balance-gastos').text('$0.00');
+        return;
+    }
+    
+    // Calcular totales
+    let totalIngresos = 0;
+    let totalGastos = 0;
+    
+    resumenOrganizaciones.forEach(org => {
+        totalIngresos += org.ingresos;
+        totalGastos += org.gastos;
+        
+        const balanceColor = org.balance >= 0 ? 'text-green-400' : 'text-red-400';
+        const balanceIcon = org.balance >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+        const ingresos = formatearMoneda(org.ingresos);
+        const gastos = formatearMoneda(org.gastos);
+        const balance = formatearMoneda(Math.abs(org.balance));
+        
+        container.append(`
+            <div class="p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-building text-blue-400"></i>
+                        <h4 class="text-white font-semibold">${org.organizacion}</h4>
+                    </div>
+                    <span class="text-gray-400 text-sm">${org.cantidad} transacciones</span>
+                </div>
+                <div class="grid grid-cols-3 gap-3 text-sm">
+                    <div class="text-center p-2 bg-gray-800 rounded">
+                        <p class="text-gray-400 text-xs mb-1">Ingresos</p>
+                        <p class="text-green-400 font-semibold">${ingresos}</p>
+                    </div>
+                    <div class="text-center p-2 bg-gray-800 rounded">
+                        <p class="text-gray-400 text-xs mb-1">Gastos</p>
+                        <p class="text-red-400 font-semibold">${gastos}</p>
+                    </div>
+                    <div class="text-center p-2 bg-gray-800 rounded">
+                        <p class="text-gray-400 text-xs mb-1">Balance</p>
+                        <p class="${balanceColor} font-semibold">
+                            <i class="fas ${balanceIcon} text-xs"></i> ${balance}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `);
+    });
+    
+    // Actualizar card de totales
+    const balanceTotal = totalIngresos - totalGastos;
+    $('#org-balance-total').text(formatearMoneda(balanceTotal));
+    $('#org-balance-ingresos').text(formatearMoneda(totalIngresos));
+    $('#org-balance-gastos').text(formatearMoneda(totalGastos));
 }
 
 // Cargar dashboard de organización

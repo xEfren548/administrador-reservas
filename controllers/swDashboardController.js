@@ -371,6 +371,68 @@ const getEstadisticasPersonales = async (req, res) => {
                 categoria: t.categoria
             }));
 
+        // ===== RESUMEN DE ORGANIZACIONES =====
+        // Obtener todas las participaciones del usuario en organizaciones
+        const participaciones = await SWParticipante.find({
+            usuario: userId,
+            activo: true
+        }).populate({
+            path: 'cuenta',
+            populate: {
+                path: 'organizacion',
+                select: 'nombre'
+            }
+        });
+
+        // Obtener IDs de todas las cuentas donde participa (incluyendo las que es propietario)
+        const cuentasParticipacionIds = participaciones
+            .filter(p => p.cuenta && p.cuenta.organizacion)
+            .map(p => p.cuenta._id);
+
+        // Obtener todas las transacciones creadas por el usuario en esas cuentas
+        const transaccionesOrganizaciones = await SWTransaccion.find({
+            cuenta: { $in: cuentasParticipacionIds },
+            creadoPor: userId,
+            aprobada: true,
+            ...dateFilter
+        }).populate('cuenta', 'nombre organizacion');
+
+        // Calcular balance por organización
+        const balancePorOrganizacion = {};
+        
+        transaccionesOrganizaciones.forEach(trans => {
+            const orgId = trans.cuenta.organizacion?.toString();
+            if (!orgId) return;
+
+            if (!balancePorOrganizacion[orgId]) {
+                // Encontrar el nombre de la organización
+                const participacion = participaciones.find(p => 
+                    p.cuenta && p.cuenta.organizacion && 
+                    p.cuenta.organizacion._id.toString() === orgId
+                );
+                
+                balancePorOrganizacion[orgId] = {
+                    organizacion: participacion?.cuenta?.organizacion?.nombre || 'Sin nombre',
+                    ingresos: 0,
+                    gastos: 0,
+                    cantidad: 0
+                };
+            }
+
+            if (trans.tipo === 'Ingreso') {
+                balancePorOrganizacion[orgId].ingresos += trans.monto;
+            } else {
+                balancePorOrganizacion[orgId].gastos += trans.monto;
+            }
+            balancePorOrganizacion[orgId].cantidad += 1;
+        });
+
+        // Calcular balance neto para cada organización
+        const resumenOrganizaciones = Object.values(balancePorOrganizacion).map(org => ({
+            ...org,
+            balance: org.ingresos - org.gastos
+        })).sort((a, b) => b.cantidad - a.cantidad);
+
         res.status(200).json({
             success: true,
             data: {
@@ -385,7 +447,8 @@ const getEstadisticasPersonales = async (req, res) => {
                 },
                 transaccionesPorCuenta: Object.values(transaccionesPorCuenta)
                     .sort((a, b) => b.cantidad - a.cantidad),
-                transaccionesRecientes
+                transaccionesRecientes,
+                resumenOrganizaciones
             }
         });
     } catch (error) {
