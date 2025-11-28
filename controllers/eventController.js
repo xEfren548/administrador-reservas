@@ -3169,7 +3169,8 @@ async function obtenerHabitacionesDisponibles(req, res) {
             const lista = Array.isArray(tipologia) ? tipologia : [tipologia];
             filtro['propertyDetails.accomodationType'] = { $in: lista };
         } else if (isForOwner) {
-            filtro['others.owner'] = req.session.id;
+            const user = await Usuario.findById(req.session.id).lean();
+            filtro['others.owner'] = user.administrator;
         } else if(habitacionId) {
             filtro['_id'] = habitacionId;
         }
@@ -3582,7 +3583,7 @@ async function createOwnerExternalReservation(req, res) {
         } = infoReservaExterna || {};
 
         const privilege = req.session.privilege;
-        const duenoId = req.session.id;
+        let duenoId = req.session.id;
 
         // Validar que solo dueños puedan crear reservas externas
         if (privilege !== 'Dueño de cabañas' && privilege !== 'Colaborador dueño') {
@@ -3598,6 +3599,11 @@ async function createOwnerExternalReservation(req, res) {
                 success: false, 
                 message: 'Faltan campos requeridos de la reserva externa' 
             });
+        }
+
+        if (privilege === 'Colaborador dueño') {
+            const user = await Usuario.findById(req.session.id).lean();
+            duenoId = user.administrator;
         }
 
         // Obtener habitación
