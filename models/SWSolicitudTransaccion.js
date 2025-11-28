@@ -113,6 +113,16 @@ const swSolicitudTransaccionSchema = new Schema({
         motivoRechazo: {
             type: String,
             trim: true
+        },
+        // Comprobante de confirmación subido por el propietario al aprobar
+        comprobanteConfirmacion: {
+            nombre: String,
+            url: String,
+            tipo: String,
+            fechaSubida: {
+                type: Date,
+                default: Date.now
+            }
         }
     },
     transaccionCreada: {
@@ -159,7 +169,7 @@ swSolicitudTransaccionSchema.pre('save', function(next) {
 });
 
 // Método para aprobar solicitud y crear transacción
-swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comentario = '') {
+swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comentario = '', comprobanteConfirmacion = null) {
     if (this.estado !== 'Pendiente') {
         throw new Error('Solo se pueden aprobar solicitudes pendientes');
     }
@@ -184,7 +194,8 @@ swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comenta
         imagenes: this.imagenes,
         reservaAsociada: this.reservaAsociada,
         etiquetas: this.etiquetas,
-        notas: this.notas
+        notas: this.notas,
+        comprobanteConfirmacion: comprobanteConfirmacion
     });
     
     await transaccion.save();
@@ -194,7 +205,8 @@ swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comenta
     this.respuesta = {
         procesadaPor: usuarioId,
         fechaRespuesta: new Date(),
-        comentario: comentario
+        comentario: comentario,
+        comprobanteConfirmacion: comprobanteConfirmacion
     };
     this.transaccionCreada = transaccion._id;
     

@@ -749,28 +749,48 @@ async function guardarSolicitud() {
 async function aprobarSolicitud(solicitudId) {
     const result = await Swal.fire({
         title: '¿Aprobar solicitud?',
-        text: 'Esta acción creará una transacción en la cuenta',
+        html: `
+            <p class="mb-3">Esta acción creará una transacción en la cuenta</p>
+            <div class="mb-3 text-start">
+                <label for="comentario-aprobacion" class="form-label text-white">Comentario (opcional)</label>
+                <textarea id="comentario-aprobacion" class="form-control" rows="2" placeholder="Agregar un comentario..."></textarea>
+            </div>
+            <div class="mb-3 text-start">
+                <label for="comprobante-confirmacion" class="form-label text-white">
+                    Comprobante de confirmación (opcional)
+                    <i class="fas fa-info-circle ms-1" title="Sube una imagen del comprobante de pago o confirmación"></i>
+                </label>
+                <input type="file" id="comprobante-confirmacion" class="form-control" accept="image/*,.pdf">
+                <small class="text-muted">Formatos: imágenes o PDF</small>
+            </div>
+        `,
         icon: 'question',
-        input: 'textarea',
-        inputLabel: 'Comentario (opcional)',
-        inputPlaceholder: 'Agregar un comentario...',
         showCancelButton: true,
         confirmButtonText: 'Aprobar',
         cancelButtonText: 'Cancelar',
         confirmButtonColor: '#10b981',
         background: '#1f2937',
-        color: '#f9fafb'
+        color: '#f9fafb',
+        preConfirm: () => {
+            const comentario = document.getElementById('comentario-aprobacion').value;
+            const archivo = document.getElementById('comprobante-confirmacion').files[0];
+            return { comentario, archivo };
+        }
     });
 
     if (result.isConfirmed) {
         try {
+            const formData = new FormData();
+            formData.append('accion', 'aprobar');
+            formData.append('comentario', result.value.comentario || '');
+            
+            if (result.value.archivo) {
+                formData.append('comprobanteConfirmacion', result.value.archivo);
+            }
+
             const response = await fetch(`/api/sw/solicitudes/${solicitudId}/procesar`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    accion: 'aprobar',
-                    comentario: result.value || ''
-                })
+                body: formData
             });
 
             if (!response.ok) {
@@ -1056,7 +1076,9 @@ function verDetalleSolicitud(solicitudId) {
             
             ${solicitud.imagenes && solicitud.imagenes.length > 0 ? `
                 <div class="border-t border-gray-700 pt-4">
-                    <p class="text-gray-400 text-sm mb-3">Imágenes adjuntas (${solicitud.imagenes.length})</p>
+                    <p class="text-gray-400 text-sm mb-3">
+                        <i class="fas fa-paperclip me-2"></i>Comprobantes del Participante (${solicitud.imagenes.length})
+                    </p>
                     <div class="grid grid-cols-3 gap-3">
                         ${solicitud.imagenes.map(imagen => {
                             const imagenUrl = `https://navarro.integradev.site/navarro/splitwise/${imagen}`;
@@ -1072,6 +1094,26 @@ function verDetalleSolicitud(solicitudId) {
                                 </div>
                             `;
                         }).join('')}
+                    </div>
+                </div>
+            ` : ''}
+            
+            ${solicitud.respuesta?.comprobanteConfirmacion ? `
+                <div class="border-t border-gray-700 pt-4">
+                    <p class="text-gray-400 text-sm mb-3">
+                        <i class="fas fa-check-circle me-2"></i>Comprobante de Confirmación del Propietario
+                    </p>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="relative cursor-pointer" onclick="visualizarImagenCompleta('https://navarro.integradev.site/navarro/splitwise/${solicitud.respuesta.comprobanteConfirmacion.url}')">
+                            ${solicitud.respuesta.comprobanteConfirmacion.tipo.includes('pdf') ? `
+                                <div class="w-full h-24 bg-red-900 rounded-lg border border-gray-600 hover:border-blue-500 transition-colors flex items-center justify-center">
+                                    <i class="fas fa-file-pdf text-4xl text-red-300"></i>
+                                </div>
+                                <p class="text-xs text-gray-400 text-center mt-1">${solicitud.respuesta.comprobanteConfirmacion.nombre}</p>
+                            ` : `
+                                <img src="https://navarro.integradev.site/navarro/splitwise/${solicitud.respuesta.comprobanteConfirmacion.url}" alt="Comprobante confirmación" class="w-full h-24 object-cover rounded-lg border border-gray-600 hover:border-blue-500 transition-colors">
+                            `}
+                        </div>
                     </div>
                 </div>
             ` : ''}
@@ -1846,11 +1888,11 @@ async function verDetalleTransaccion(transaccionId) {
             `;
         }
 
-        // Imágenes adjuntas
+        // Imágenes adjuntas (Comprobantes del participante)
         if (trans.imagenes && trans.imagenes.length > 0) {
             html += `
                 <div class="bg-gray-700 rounded-lg p-4 mb-4">
-                    <h6 class="text-gray-300 mb-3"><i class="fas fa-images me-2"></i>Comprobantes Adjuntos (${trans.imagenes.length})</h6>
+                    <h6 class="text-gray-300 mb-3"><i class="fas fa-paperclip me-2"></i>Comprobantes del Participante (${trans.imagenes.length})</h6>
                     <div class="row g-3">
             `;
             
@@ -1859,7 +1901,7 @@ async function verDetalleTransaccion(transaccionId) {
                 html += `
                     <div class="col-md-4 col-6">
                         <div class="position-relative" style="cursor: pointer;" onclick="visualizarImagenCompleta('${imagenUrl}')">
-                            <img src="${imagenUrl}" alt="Comprobante" class="img-fluid rounded" style="height: 120px; width: 100%; object-fit: cover;">
+                            <img src="${imagenUrl}" alt="Comprobante participante" class="img-fluid rounded" style="height: 120px; width: 100%; object-fit: cover;">
                             <div class="position-absolute top-0 end-0 m-2">
                                 <span class="badge bg-dark bg-opacity-75">
                                     <i class="fas fa-search-plus"></i>
@@ -1880,11 +1922,42 @@ async function verDetalleTransaccion(transaccionId) {
         } else {
             html += `
                 <div class="bg-gray-700 rounded-lg p-4 mb-4">
-                    <h6 class="text-gray-300 mb-2"><i class="fas fa-images me-2"></i>Comprobantes Adjuntos</h6>
+                    <h6 class="text-gray-300 mb-2"><i class="fas fa-paperclip me-2"></i>Comprobantes del Participante</h6>
                     <p class="text-gray-400 mb-2">No hay comprobantes adjuntos</p>
                     <button type="button" class="btn btn-sm btn-primary" onclick="$('#modalDetalleTransaccion').modal('hide'); setTimeout(() => gestionarImagenesTransaccion('${trans._id}'), 300);">
                         <i class="fas fa-upload me-1"></i> Agregar Comprobantes
                     </button>
+                </div>
+            `;
+        }
+
+        // Comprobante de confirmación del propietario
+        if (trans.comprobanteConfirmacion) {
+            html += `
+                <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-300 mb-3"><i class="fas fa-check-circle me-2"></i>Comprobante de Confirmación del Propietario</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4 col-6">
+                            <div class="position-relative" style="cursor: pointer;" onclick="visualizarImagenCompleta('https://navarro.integradev.site/navarro/splitwise/${trans.comprobanteConfirmacion.url}')">
+                                ${trans.comprobanteConfirmacion.tipo && trans.comprobanteConfirmacion.tipo.includes('pdf') ? `
+                                    <div class="bg-danger bg-opacity-25 rounded d-flex align-items-center justify-content-center" style="height: 120px; width: 100%;">
+                                        <i class="fas fa-file-pdf fa-4x text-danger"></i>
+                                    </div>
+                                    <p class="text-center text-white text-xs mt-2">${trans.comprobanteConfirmacion.nombre}</p>
+                                ` : `
+                                    <img src="https://navarro.integradev.site/navarro/splitwise/${trans.comprobanteConfirmacion.url}" alt="Comprobante confirmación" class="img-fluid rounded" style="height: 120px; width: 100%; object-fit: cover;">
+                                    <div class="position-absolute top-0 end-0 m-2">
+                                        <span class="badge bg-dark bg-opacity-75">
+                                            <i class="fas fa-search-plus"></i>
+                                        </span>
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 text-sm mt-3 mb-0">
+                        <i class="far fa-clock me-2"></i>Subido el ${new Date(trans.comprobanteConfirmacion.fechaSubida).toLocaleDateString('es-MX')}
+                    </p>
                 </div>
             `;
         }

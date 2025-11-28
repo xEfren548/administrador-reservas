@@ -74,6 +74,16 @@ const swTransaccionSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'SWSolicitudTransaccion'
     },
+    // Comprobante de confirmación subido por el propietario al aprobar (opcional)
+    comprobanteConfirmacion: {
+        nombre: String,
+        url: String,
+        tipo: String,
+        fechaSubida: {
+            type: Date,
+            default: Date.now
+        }
+    },
     // Archivos adjuntos (comprobantes, facturas, etc.)
     archivosAdjuntos: [{
         nombre: String,

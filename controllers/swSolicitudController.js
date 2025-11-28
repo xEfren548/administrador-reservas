@@ -364,9 +364,18 @@ const getSolicitudById = async (req, res) => {
  * Procesar solicitud: aprobar o rechazar (solo propietario)
  */
 const procesarSolicitud = async (req, res) => {
+    const client = new ftp.Client();
+    
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            // Limpiar archivo temporal si existe
+            if (req.file) {
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            }
+            
             return res.status(400).json({ 
                 success: false, 
                 errors: errors.array() 
@@ -380,6 +389,13 @@ const procesarSolicitud = async (req, res) => {
         const solicitud = await SWSolicitudTransaccion.findById(id);
 
         if (!solicitud) {
+            // Limpiar archivo temporal si existe
+            if (req.file) {
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            }
+            
             return res.status(404).json({
                 success: false,
                 message: 'Solicitud no encontrada'
@@ -387,6 +403,13 @@ const procesarSolicitud = async (req, res) => {
         }
 
         if (solicitud.estado !== 'Pendiente') {
+            // Limpiar archivo temporal si existe
+            if (req.file) {
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            }
+            
             return res.status(400).json({
                 success: false,
                 message: 'La solicitud ya fue procesada'
@@ -396,6 +419,13 @@ const procesarSolicitud = async (req, res) => {
         // Verificar que es el propietario
         const cuenta = await SWCuenta.findById(solicitud.cuenta);
         if (cuenta.propietario.toString() !== userId.toString()) {
+            // Limpiar archivo temporal si existe
+            if (req.file) {
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            }
+            
             return res.status(403).json({
                 success: false,
                 message: 'Solo el propietario puede procesar solicitudes'
@@ -405,7 +435,63 @@ const procesarSolicitud = async (req, res) => {
         let resultado;
 
         if (accion === 'aprobar') {
-            resultado = await solicitud.aprobar(userId, comentario);
+            // Procesar comprobante de confirmación si se subió
+            let comprobanteConfirmacion = null;
+            
+            if (req.file) {
+                try {
+                    // Conectar al servidor FTP
+                    await client.access({
+                        host: 'integradev.site',
+                        user: process.env.FTP_USER,
+                        password: process.env.FTP_PASSWORD,
+                        secure: false
+                    });
+
+                    await client.ensureDir('splitwise');
+
+                    // Subir archivo al FTP
+                    const localFilePath = req.file.path;
+                    const timestamp = Date.now();
+                    const remoteFileName = `comprobante_confirmacion_${id}_${timestamp}.${req.file.originalname.split('.').pop()}`;
+                    
+                    await client.uploadFrom(localFilePath, remoteFileName);
+                    console.log(`Comprobante de confirmación '${remoteFileName}' subido con éxito al FTP`);
+
+                    comprobanteConfirmacion = {
+                        nombre: req.file.originalname,
+                        url: remoteFileName,
+                        tipo: req.file.mimetype,
+                        fechaSubida: new Date()
+                    };
+
+                    // Eliminar archivo local temporal
+                    fs.unlink(localFilePath, (err) => {
+                        if (err) {
+                            console.error('Error al eliminar el archivo local:', err);
+                        } else {
+                            console.log('Archivo local eliminado con éxito');
+                        }
+                    });
+                } catch (ftpError) {
+                    console.error('Error al subir comprobante al FTP:', ftpError);
+                    // Limpiar archivo local
+                    if (req.file && req.file.path) {
+                        fs.unlink(req.file.path, (err) => {
+                            if (err) console.error('Error al eliminar archivo temporal:', err);
+                        });
+                    }
+                    
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Error al subir el comprobante de confirmación'
+                    });
+                } finally {
+                    client.close();
+                }
+            }
+            
+            resultado = await solicitud.aprobar(userId, comentario, comprobanteConfirmacion);
             
             res.status(200).json({
                 success: true,

@@ -73,6 +73,7 @@ router.get(
  */
 router.post(
     '/solicitudes/:id/procesar',
+    upload.single('comprobanteConfirmacion'),
     swSolicitudController.procesarSolicitudValidators,
     validationRequest,
     swSolicitudController.procesarSolicitud
