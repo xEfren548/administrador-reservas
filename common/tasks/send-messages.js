@@ -330,12 +330,18 @@ async function sendCheckInMessage() {
     const reservas = await Evento.find({ status: { $nin: ["cancelled", "no-show"] }, arrivalDate: { $gte: today, $lt: tomorrow }, checkInSent: false });
     console.log(`Found ${reservas.length} reservations for tomorrow.`);
 
+    let clientName = '';
+
     for (const reserva of reservas) {
         const client = await Cliente.findById(reserva.client);
         if (!client) {
-            console.log(`Client ${reserva.client} does not exist.`);
-            continue;
+            if (reserva.status !== "reserva de dueño") {
+                console.log(`Client ${reserva.client} does not exist.`);
+                continue;
+            } 
         }
+
+        clientName = client ? `${client.firstName} ${client.lastName}` : reserva.clienteProvisional;
 
         const chalet = await Habitacion.findOne({ _id: reserva.resourceId }).select('propertyDetails');
         console.log("Chalet details:", chalet);
@@ -356,7 +362,7 @@ async function sendCheckInMessage() {
 
         const whatsappResponse = await sendTemplateMsg(receiver, 'automatizacion_checkin', [
             todayFormattedDate,
-            `${client.firstName} ${client.lastName}`,
+            clientName,
             chalet.propertyDetails.name,
             reserva.pax.toString(),
             todayFormattedDate,
