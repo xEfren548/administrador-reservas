@@ -39,6 +39,8 @@ jobs:
             CHANNEX_USER_API_KEY=${{ secrets.CHANNEX_USER_API_KEY }}
             CHANNEX_API_URL=${{ secrets.CHANNEX_API_URL }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
+            DEV_STRIPE_SECRET_KEY=${{ secrets.DEV_STRIPE_SECRET_KEY }}
+            DEV_STRIPE_WEBHOOK_SECRET=${{ secrets.DEV_STRIPE_WEBHOOK_SECRET }}
             EOL
             
             npm install
