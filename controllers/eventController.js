@@ -3169,8 +3169,12 @@ async function obtenerHabitacionesDisponibles(req, res) {
             const lista = Array.isArray(tipologia) ? tipologia : [tipologia];
             filtro['propertyDetails.accomodationType'] = { $in: lista };
         } else if (isForOwner) {
-            const user = await Usuario.findById(req.session.id).lean();
-            filtro['others.owner'] = user.administrator;
+            if (req.session.privilege === "Colaborador de dueño") {
+                const user = await Usuario.findById(req.session.id).lean();
+                filtro['others.owner'] = user.administrator;
+            } else {
+                filtro['others.owner'] = req.session.id;
+            }
         } else if(habitacionId) {
             filtro['_id'] = habitacionId;
         }
@@ -3186,7 +3190,7 @@ async function obtenerHabitacionesDisponibles(req, res) {
                 'others.basePrice': 1,
             })
             .lean();
-
+        console.log("Chalets encontrados: ", chalets.length);
         if (!chalets || chalets.length === 0) {
             return res.status(200).json({ rooms: [], meta: { nNights, total: 0 } });
         }
@@ -3213,11 +3217,11 @@ async function obtenerHabitacionesDisponibles(req, res) {
                 if (nochesMin && nNights < Number(nochesMin.min)) {
                     continue; // no cumple noches mínimas
                 }
-    
-                // 3) Disponibilidad real en el rango
-                const libre = await getDisponibilidad(chaletId, startDate, endDate);
-                if (!libre) continue;
             }
+    
+            // 3) Disponibilidad real en el rango
+            const libre = await getDisponibilidad(chaletId, startDate, endDate);
+            if (!libre) continue;
 
 
             // 4) Map a RoomOption
