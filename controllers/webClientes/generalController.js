@@ -1190,6 +1190,8 @@ async function createReservationForClient(reservationData, status, paymentStatus
             throw new Error('Error creating reservation object');
         }
 
+        console.log("New Reservation before save: ", newReservation);
+
         const idReserva = newReservation._id;
 
         newReservation.url = `https://${process.env.URL}/api/eventos/${idReserva}`;
@@ -1244,8 +1246,10 @@ async function createReservationForClient(reservationData, status, paymentStatus
         await logController.createBackendLog(logBody);
 
         // Crear utilidades de reserva
-        const generarReservas = await generarComisionReservaRentravel(newReservation.resourceId, pricing, idReserva, arrivalDate, departureDate, newReservation.nNights, req);
-        if (generarReservas) {
+
+        console.log("PRICING: ", pricing);
+        const generarComisionesReserva = await generarComisionReservaRentravel(newReservation.resourceId, pricing, idReserva, arrivalDate, departureDate, newReservation.nNights, req);
+        if (generarComisionesReserva) {
             console.log("Utilidades de reserva generadas correctamente");
         } else {
             throw new Error("Error al generar utilidades de reserva");

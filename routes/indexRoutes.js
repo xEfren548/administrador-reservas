@@ -85,6 +85,7 @@ router.use('/', webhookRoutes);
 
 router.use('/api/client', generalRoutes);
 router.use('/payments', paymentsRoutes);
+router.use('/api/payments', paymentsRoutes); // También disponible en /api/payments (público)
 router.use('/webhooks', webhooksRoutes);
 
 // Rutas de autenticación para clientes web

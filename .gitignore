@@ -8,3 +8,4 @@ cert
 cert/*
 .husky/*
 backups
+stripe.exe
