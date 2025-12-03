@@ -1149,6 +1149,9 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
 
         }
         if (!client) {
+            console.log("Cliente firstname: ", clientFirstName);
+            console.log("Cliente lastname: ", clientLastName);
+            console.log("Cliente phone: ", clientPhone);
             newCliente = await clienteController.createClientLocal(clientFirstName, clientLastName, clientPhone, req.session)
             console.log("No cliente")
             console.log(newCliente)
