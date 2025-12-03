@@ -924,6 +924,7 @@ async function editChalet(req, res, next) {
 
         const totalTickets = newInvestors.reduce((sum, inv) => sum + inv.noTickets, 0);
         if (totalTickets !== 0 && totalTickets !== 10) {
+            console.log("   Total tickets:", totalTickets);
             return res.status(400).json({ message: "La suma de tickets debe ser 0 o 10" });
         }
 

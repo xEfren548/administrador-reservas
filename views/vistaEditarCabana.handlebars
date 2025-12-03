@@ -1431,85 +1431,112 @@
                         janitor: form.querySelector("#slctJanitor").value.trim(),
                         owner: form.querySelector("#chalet-owner-select").value.trim(),
                         investors: investors,
-                        cuentaFinanciera: form.querySelector("#cuenta-financiera-select").value || null
+                        cuentaFinanciera: form.querySelector('[name="cuenta-financiera"]')?.value || null
                     },
                     images: imagesarray,
                     activePlatforms: selectedPlatforms
                 };
-                try {
-                    Swal.fire({
-                        title: 'Editando cabaña...',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
+                // Helper function to extract error message from response
+                async function getErrorMessage(response, defaultMsg) {
+                    try {
+                        const errorData = await response.json();
+                        // Handle different error response formats
+                        if (errorData.message) return errorData.message;
+                        if (errorData.error) {
+                            if (Array.isArray(errorData.error)) {
+                                return errorData.error.map(e => e.message || e).join(', ');
+                            }
+                            return errorData.error;
                         }
-                    });
-                    fetch('/api/cabanas/editar-cabana', {
+                        if (errorData.errors) {
+                            if (Array.isArray(errorData.errors)) {
+                                return errorData.errors.map(e => e.message || e).join(', ');
+                            }
+                        }
+                        return defaultMsg;
+                    } catch {
+                        return defaultMsg;
+                    }
+                }
+
+                // Show loading
+                Swal.fire({
+                    title: 'Editando cabaña...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                try {
+                    // Step 1: Edit cabin attributes
+                    const editResponse = await fetch('/api/cabanas/editar-cabana', {
                         method: 'POST',
                         headers: {
-                            // Once logged in, the authorization token stored inthe session cookies will automatically be added in each HTTP request.
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(data)
-                    })
-                        .then(response => {
-                            console.log(response);
-                            if (!response.ok) {
-                                console.log(response);
-                                throw new Error('Error al editar atributos de la cabaña');
-                            }
-                            return response.json();
-                        })
-                        .then(async data => {
-                            console.log('Respuesta del servidor:', data);
-                            const response = await fetch('/api/cabanas/subir-imagenes-cabana', {
-                                method: 'POST',
-                                body: formData,
-                            });
-                            if (response.ok) {
-                                console.log('ok subir imagenes')
-                            } else {
-                                throw new Error('Error al subir imagenes');
-                            }
+                    });
 
-                        }).then(async data2 => {
-                            const fileInput = form.querySelector('#pdf-upload');
-                            var pdfFile = fileInput.files[0];
-                            console.log(pdfAborrar)
+                    if (!editResponse.ok) {
+                        const errorMsg = await getErrorMessage(editResponse, 'Error al editar atributos de la cabaña');
+                        throw new Error(errorMsg);
+                    }
 
-                            if (pdfFile) {
-                                pdfData.append('file', pdfFile);
+                    const editData = await editResponse.json();
+                    console.log('Respuesta del servidor:', editData);
 
-                                const response = await fetch('/api/cabanas/subir-pdf-cabana', {
-                                    method: 'POST',
-                                    body: pdfData
-                                });
-                                if (response.ok) {
-                                    console.log('Ok subir pdf ');
-                                } else {
-                                    throw new Error('Error en la solicitud');
-                                }
-                            }
-                        }).then((result) => {
-                            Swal.close()
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Cabaña editada correctamente',
-                                confirmButtonText: 'Aceptar'
-                            }).then((result) => {
-                                window.location.href = '/'
-                            })
-                        })
+                    // Step 2: Upload images (if any)
+                    const imgResponse = await fetch('/api/cabanas/subir-imagenes-cabana', {
+                        method: 'POST',
+                        body: formData,
+                    });
 
+                    if (!imgResponse.ok) {
+                        const errorMsg = await getErrorMessage(imgResponse, 'Error al subir imágenes');
+                        throw new Error(errorMsg);
+                    }
+                    console.log('ok subir imagenes');
+
+                    // Step 3: Upload PDF (if selected)
+                    const fileInput = form.querySelector('#pdf-upload');
+                    const pdfFile = fileInput.files[0];
+                    console.log(pdfAborrar);
+
+                    if (pdfFile) {
+                        pdfData.append('file', pdfFile);
+
+                        const pdfResponse = await fetch('/api/cabanas/subir-pdf-cabana', {
+                            method: 'POST',
+                            body: pdfData
+                        });
+
+                        if (!pdfResponse.ok) {
+                            const errorMsg = await getErrorMessage(pdfResponse, 'Error al subir el PDF');
+                            throw new Error(errorMsg);
+                        }
+                        console.log('Ok subir pdf');
+                    }
+
+                    // Success!
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Cabaña editada correctamente',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => {
+                        window.location.href = '/';
+                    });
 
                 } catch (error) {
-                    Swal.close()
+                    console.error('Error:', error);
+                    Swal.close();
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Error al editar la cabana: ' + error.toLowerCase() + '.',
+                        text: error.message || 'Error desconocido al editar la cabaña',
                         confirmButtonText: 'Aceptar'
-                    })
+                    });
                 }
                 //console.log(imagesarray)  
             })
