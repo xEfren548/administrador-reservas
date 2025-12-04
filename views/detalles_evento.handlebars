@@ -34,7 +34,7 @@
     </span>
 
     <span data-toggle="tooltip" data-placement="bottom">
-        <button type="button" data-bs-toggle="modal" data-bs-target="#edit_status_modal" class="btn btn-secondary">
+        <button type="button" data-bs-toggle="modal" data-bs-target="#edit_status_modal" class="btn btn-outline-primary">
             Modificar Estatus
         </button>
     </span>
@@ -98,10 +98,12 @@
 
 </div>
 
+<hr class="my-3" style="border-color: var(--mint, #7ECEC5); border-width: 2px;">
 
 <div class="row">
     <div class="col-sm-12 col-md-12 col-lg-7 col-xl-7">
-        <div class="row card-details bg-dark">
+        <div class="card-details bg-light border rounded-3 shadow-sm p-3">
+            <div class="row">
             <div class="col-xs-12 col-sm-6 no-padding">
 
 
@@ -197,11 +199,12 @@
 
 
             </div>
+            </div>
         </div>
     </div>
-    <div class="col-sm-12 col-md-12 col-lg-5 col-xl-5">
+    <div class="col-sm-12 col-md-12 col-lg-5 col-xl-5 mt-4 mt-lg-0">
         <h3 class="d-inline-block mr-3 ml-3">Notas</h3>
-        <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_notes_modal" role="button"><i
+        <a name="" id="" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_notes_modal" role="button"><i
                 class="fa fa-plus-circle" aria-hidden="true"></i></a>
         <div class="card-details m-3" style="background-color: #faf1d2; height: auto; width: 80%;">
             <div class="row">
@@ -240,14 +243,14 @@
 
 
 
-<div class="row mt-3">
-    <div class="col-sm-12 col-md-12 col-lg-4 col-xl-4">
+<div class="row mt-4 mt-md-3">
+    <div class="col-sm-12 col-md-12 col-lg-4 col-xl-4 mb-4 mb-lg-0">
         <h3 class="d-inline-block text-wrap">Artículos / </h3>
-        <h3>Servicios Adicionales <a name="" id="" class="btn btn-dark" data-bs-toggle="modal"
+        <h3>Servicios Adicionales <a name="" id="" class="btn btn-primary" data-bs-toggle="modal"
                 data-bs-target="#add_services_modal" role="button"><i class="fa fa-plus-circle"
                     aria-hidden="true"></i></a></h3>
 
-        <div class="bg-dark h-auto pt-1 pr-1 pl-1 pb-1 rounded-3">
+        <div class="bg-light border h-auto pt-1 pr-1 pl-1 pb-1 rounded-3 shadow-sm">
             <div class="article-row row rounded">
                 <div class="col-8">
                     <p>Reservación {{evento.nNights}} noches</p>
@@ -262,7 +265,7 @@
         </div>
 
         {{#if evento.discount}}
-        <div class="bg-dark h-auto pt-1 pr-1 pl-1 pb-1 rounded-3">
+        <div class="bg-light border h-auto pt-1 pr-1 pl-1 pb-1 rounded-3 shadow-sm">
             <div class="article-row row rounded">
                 <div class="col-8">
                     <p>Descuento</p>
@@ -280,7 +283,7 @@
 
         {{#if rackServicios}}
         {{#each rackServicios}}
-        <div class="bg-dark h-auto pt-1 pr-1 pl-1 pb-1 rounded-3">
+        <div class="bg-light border h-auto pt-1 pr-1 pl-1 pb-1 rounded-3 shadow-sm">
             <div class="rack-article article-row row rounded">
                 <div class="col-8">
                     <p>{{this.descripcion}}</p>
@@ -315,11 +318,11 @@
     
 
 
-    <div class="col-sm-12 col-md-12 col-lg-4 col-xl-4 mt-3">
+    <div class="col-sm-12 col-md-12 col-lg-4 col-xl-4 mt-4 mt-lg-3 mb-4 mb-lg-0">
         <h3 class="d-inline-block mr-3 ml-3">Pagos</h3>
-        <a name="" id="" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#add_payment_modal"
+        <a name="" id="" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_payment_modal"
             role="button"><i class="fa fa-plus-circle" aria-hidden="true"></i></a>
-        <div class="bg-dark">
+        <div class="bg-light border rounded-3 shadow-sm">
 
             <table class="table table-hover table-payment">
                 <thead class="table-dark">
@@ -361,7 +364,7 @@
             <div class="row total-section fs-5 p-3">
 
                 <div class="col-6 mb-2">
-                    <label class="text-white fw-bold">Total </label>
+                    <label class="text-dark fw-bold">Total </label>
                 </div>
 
                 <div class="col-6 text-right mb-2">
@@ -374,7 +377,7 @@
                 </div>
 
                 <div class="col-6 mb-2">
-                    <label class="text-white fw-bold">IVA </label>
+                    <label class="text-dark fw-bold">IVA </label>
                 </div>
 
                 <div class="col-6 text-right mb-2">
@@ -387,7 +390,7 @@
                 </div>
 
                 <div class="col-6 mb-2">
-                    <label class="text-white fw-bold">Pagado </label>
+                    <label class="text-dark fw-bold">Pagado </label>
                 </div>
 
                 <div class="col-6 text-right mb-2">
@@ -400,7 +403,7 @@
                 </div>
 
                 <div class="col-6 mb-2">
-                    <label class="text-white fw-bolder">Pendiente </label>
+                    <label class="text-dark fw-bolder">Pendiente </label>
                 </div>
 
                 <div class="col-6 text-right mb-2">
@@ -418,9 +421,9 @@
 
     </div>
 
-    <div class="col-sm-12 col-md-12 col-lg-4 col-xl-4">
+    <div class="col-sm-12 col-md-12 col-lg-4 col-xl-4 mt-4 mt-lg-0">
         <h3>Facturas</h3>
-        <div class="bg-dark h-auto">
+        <div class="bg-light border h-auto rounded-3 shadow-sm">
             <table class="table table-hover table-payment" style="width: 100%;">
                 <thead class="table-dark">
                     <tr>

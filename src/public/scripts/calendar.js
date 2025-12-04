@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             newEl.innerHTML = `
             <div
                 class="fc-hoverable-event"
-                style="position: absolute; top: 100%; left: 0; width: 300px; height: auto; background-color: black; z-index: 100000000 !important; border: 1px solid #e2e8f0; border-radius: 0.375rem; padding: 0.75rem; font-size: 14px; font-family: 'Inter', sans-serif; cursor: pointer;"
+                style="position: absolute; top: 100%; left: 0; width: 300px; height: auto; background-color: #FFFFFF; z-index: 100000000 !important; border: 1px solid #E3E8EE; border-radius: 0.5rem; padding: 0.75rem; font-size: 14px; font-family: 'Poppins', sans-serif; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); color: #2C3E50;"
             >
                 <strong>${newElTitle}</strong>
                 <div>Total: $${newElTotal}</div>

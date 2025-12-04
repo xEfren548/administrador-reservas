@@ -1,20 +1,20 @@
 <div class="calendar-header">
-    <div class="bg-dark mb-3">
-        <a name="" id="crear-reserva-dueno-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
+    <div class="mb-3">
+        <a name="" id="crear-reserva-dueno-btn" class="btn btn-primary btn-sm m-3" href="#" role="button"
             data-bs-toggle="modal" data-bs-target="#event_entry_modal">Ingresar reserva</a>
     </div>
 </div>
 
 <div class="row flex-nowrap justify-content-center mt-3 " style="width: 100%;">
     <div class="col-12 col-xl-11">
-        <div class="card shadow-lg bg-dark text-white border-secondary">
-            <div class="card-header bg-secondary text-white border-dark">
+        <div class="card shadow-lg bg-light border">
+            <div class="card-header text-white" style="background-color: #7ECEC5;">
                 <h2 class="mb-0"><i class="fa fa-calendar me-2"></i>Mis Reservas</h2>
             </div>
-            <div class="card-body bg-dark">
+            <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover align-middle" id="tablaParaDuenos">
-                        <thead class="table-secondary">
+                    <table class="table table-hover align-middle" id="tablaParaDuenos">
+                        <thead style="background-color: #A8DDD7;">
                             <tr>
                                 <th scope="col" class="text-center">Tipo</th>
                                 <th scope="col">Cabaña</th>
@@ -44,7 +44,7 @@
                                 <td><strong>{{this.roomName}}</strong></td>
                                 <td class="text-center"><small>{{this.arrivalDate}}</small></td>
                                 <td class="text-center"><small>{{this.departureDate}}</small></td>
-                                <td class="text-center"><span class="badge bg-secondary">{{this.nNights}}</span></td>
+                                <td class="text-center"><span class="badge bg-primary">{{this.nNights}}</span></td>
                                 <td class="text-center">
                                     {{#if (eq this.status "active")}}
                                     <span class="badge bg-success">Activa</span>
@@ -53,7 +53,7 @@
                                     {{else if (eq this.status "no-show")}}
                                     <span class="badge bg-danger">No Show</span>
                                     {{else}}
-                                    <span class="badge bg-secondary">{{this.status}}</span>
+                                    <span class="badge bg-info">{{this.status}}</span>
                                     {{/if}}
                                 </td>
                                 <td>{{this.cliente}}</td>
@@ -65,7 +65,7 @@
                                     {{/if}}
                                 </td>
                                 <td class="text-center">
-                                    <button type="button" class="btn btn-sm btn-outline-light" 
+                                    <button type="button" class="btn btn-sm btn-outline-primary" 
                                         onclick="gestionarComentarios('{{this._id}}')" 
                                         title="Ver/Agregar comentarios">
                                         <i class="fa fa-comment"></i>
@@ -130,7 +130,7 @@
                     </table>
                 </div>
             </div>
-            <div class="card-footer bg-secondary border-dark">
+            <div class="card-footer bg-light border-top">
                 <a class="btn btn-primary" href="/api/cabanas/ownercalendar" role="button">
                     <i class="fa fa-calendar me-2"></i>Cambiar a vista de calendario
                 </a>
@@ -169,12 +169,12 @@
 
             <div class="row mb-3">
                 <div class="col-md-3">
-                    <label for="startDateExternas" class="form-label text-white">Fecha Inicio:</label>
-                    <input type="date" class="form-control bg-dark text-white border-secondary" id="startDateExternas">
+                    <label for="startDateExternas" class="form-label text-dark">Fecha Inicio:</label>
+                    <input type="date" class="form-control" id="startDateExternas">
                 </div>
                 <div class="col-md-3">
-                    <label for="endDateExternas" class="form-label text-white">Fecha Fin:</label>
-                    <input type="date" class="form-control bg-dark text-white border-secondary" id="endDateExternas">
+                    <label for="endDateExternas" class="form-label text-dark">Fecha Fin:</label>
+                    <input type="date" class="form-control" id="endDateExternas">
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <button id="filtrarExternas" class="btn btn-primary me-2">
@@ -187,8 +187,8 @@
             </div>
 
             <div class="table-responsive">
-                <table class="table table-dark table-hover text-center" id="tablaExternas">
-                    <thead class="table-light">
+                <table class="table table-hover text-center" id="tablaExternas">
+                    <thead class="table-primary">
                         <tr>
                             <th scope="col">Tipo</th>
                             <th scope="col">Habitación</th>
@@ -792,11 +792,11 @@
             showCancelButton: true,
             confirmButtonText: 'Sí, cancelar',
             cancelButtonText: 'No',
-            background: '#212529',
-            color: '#fff',
+            background: '#FFFFFF',
+            color: '#2C3E50',
             buttonsStyling: false,
             customClass: {
-                popup: 'bg-dark text-white border border-secondary',
+                popup: 'bg-light border shadow',
                 confirmButton: 'btn btn-danger me-2',
                 cancelButton: 'btn btn-secondary'
             }
@@ -819,11 +819,11 @@
                         title: '¡Completado!',
                         text: 'Reserva cancelada correctamente.',
                         confirmButtonText: 'Aceptar',
-                        background: '#212529',
-                        color: '#fff',
+                        background: '#FFFFFF',
+                        color: '#2C3E50',
                         buttonsStyling: false,
                         customClass: {
-                            popup: 'bg-dark text-white border border-secondary',
+                            popup: 'bg-light border shadow',
                             confirmButton: 'btn btn-success'
                         }
                     }).then(() => window.location.reload());
@@ -837,11 +837,11 @@
                     title: 'Error',
                     text: 'Error al cancelar la reserva: ' + error.message,
                     confirmButtonText: 'Aceptar',
-                    background: '#212529',
-                    color: '#fff',
+                    background: '#FFFFFF',
+                    color: '#2C3E50',
                     buttonsStyling: false,
                     customClass: {
-                        popup: 'bg-dark text-white border border-secondary',
+                        popup: 'bg-light border shadow',
                         confirmButton: 'btn btn-danger'
                     }
                 });
@@ -906,11 +906,11 @@
                 title: 'Error',
                 text: 'Error al obtener datos de la reserva: ' + error.message,
                 confirmButtonText: 'Aceptar',
-                background: '#212529',
-                color: '#fff',
+                background: '#FFFFFF',
+                color: '#2C3E50',
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
+                    popup: 'bg-light border shadow',
                     confirmButton: 'btn btn-danger'
                 }
             });
@@ -995,16 +995,16 @@
                     </div>
                 `,
                 width: '600px',
-                background: '#212529',
-                color: '#fff',
+                background: '#FFFFFF',
+                color: '#2C3E50',
                 showCancelButton: true,
                 confirmButtonText: 'Guardar cambios',
                 cancelButtonText: 'Cancelar',
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
-                    title: 'text-white',
-                    htmlContainer: 'text-white',
+                    popup: 'bg-light border shadow',
+                    title: 'text-dark',
+                    htmlContainer: 'text-dark',
                     confirmButton: 'btn btn-success me-2',
                     cancelButton: 'btn btn-secondary'
                 },
@@ -1118,11 +1118,11 @@
                         title: 'Actualizado',
                         text: 'La reserva externa ha sido actualizada correctamente',
                         confirmButtonText: 'Aceptar',
-                        background: '#212529',
-                        color: '#fff',
+                        background: '#FFFFFF',
+                        color: '#2C3E50',
                         buttonsStyling: false,
                         customClass: {
-                            popup: 'bg-dark text-white border border-secondary',
+                            popup: 'bg-light border shadow',
                             confirmButton: 'btn btn-success'
                         }
                     }).then(() => location.reload());
@@ -1138,11 +1138,11 @@
                 title: 'Error',
                 text: 'Error al editar la reserva: ' + error.message,
                 confirmButtonText: 'Aceptar',
-                background: '#212529',
-                color: '#fff',
+                background: '#FFFFFF',
+                color: '#2C3E50',
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
+                    popup: 'bg-light border shadow',
                     confirmButton: 'btn btn-danger'
                 }
             });
@@ -1183,16 +1183,16 @@
                     </div>
                 `,
                 width: '500px',
-                background: '#212529',
-                color: '#fff',
+                background: '#FFFFFF',
+                color: '#2C3E50',
                 showCancelButton: true,
                 confirmButtonText: 'Guardar cambios',
                 cancelButtonText: 'Cancelar',
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
-                    title: 'text-white',
-                    htmlContainer: 'text-white',
+                    popup: 'bg-light border shadow',
+                    title: 'text-dark',
+                    htmlContainer: 'text-dark',
                     confirmButton: 'btn btn-success me-2',
                     cancelButton: 'btn btn-secondary'
                 },
@@ -1305,11 +1305,11 @@
                         title: 'Actualizado',
                         text: 'La reserva de dueño ha sido actualizada correctamente',
                         confirmButtonText: 'Aceptar',
-                        background: '#212529',
-                        color: '#fff',
+                        background: '#FFFFFF',
+                        color: '#2C3E50',
                         buttonsStyling: false,
                         customClass: {
-                            popup: 'bg-dark text-white border border-secondary',
+                            popup: 'bg-light border shadow',
                             confirmButton: 'btn btn-success'
                         }
                     }).then(() => location.reload());
@@ -1325,11 +1325,11 @@
                 title: 'Error',
                 text: 'Error al editar la reserva: ' + error.message,
                 confirmButtonText: 'Aceptar',
-                background: '#212529',
-                color: '#fff',
+                background: '#FFFFFF',
+                color: '#2C3E50',
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
+                    popup: 'bg-light border shadow',
                     confirmButton: 'btn btn-danger'
                 }
             });
@@ -1344,11 +1344,11 @@
             showCancelButton: true,
             confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'Cancelar',
-            background: '#212529',
-            color: '#fff',
+            background: '#FFFFFF',
+            color: '#2C3E50',
             buttonsStyling: false,
             customClass: {
-                popup: 'bg-dark text-white border border-secondary',
+                popup: 'bg-light border shadow',
                 confirmButton: 'btn btn-danger me-2',
                 cancelButton: 'btn btn-secondary'
             }
@@ -1367,11 +1367,11 @@
                             title: 'Eliminada',
                             text: 'La reserva ha sido eliminada correctamente',
                             confirmButtonText: 'Aceptar',
-                            background: '#212529',
-                            color: '#fff',
+                            background: '#FFFFFF',
+                            color: '#2C3E50',
                             buttonsStyling: false,
                             customClass: {
-                                popup: 'bg-dark text-white border border-secondary',
+                                popup: 'bg-light border shadow',
                                 confirmButton: 'btn btn-success'
                             }
                         }).then(() => location.reload());
@@ -1385,11 +1385,11 @@
                         title: 'Error',
                         text: 'Error al eliminar la reserva: ' + error.message,
                         confirmButtonText: 'Aceptar',
-                        background: '#212529',
-                        color: '#fff',
+                        background: '#FFFFFF',
+                        color: '#2C3E50',
                         buttonsStyling: false,
                         customClass: {
-                            popup: 'bg-dark text-white border border-secondary',
+                            popup: 'bg-light border shadow',
                             confirmButton: 'btn btn-danger'
                         }
                     });
@@ -1422,10 +1422,10 @@
             } else {
                 comentarios.forEach((nota, index) => {
                     comentariosHTML += `
-                        <div class="card mb-2 shadow-sm bg-secondary text-white">
+                        <div class="card mb-2 shadow-sm bg-light">
                             <div class="card-body py-2">
                                 <div class="d-flex justify-content-between align-items-start">
-                                    <p class="mb-0 flex-grow-1">${nota.texto}</p>
+                                    <p class="mb-0 flex-grow-1 text-dark">${nota.texto}</p>
                                     <button type="button" class="btn btn-sm btn-outline-danger ms-2" 
                                         onclick="eliminarComentario('${id}', ${index})">
                                         <i class="fa fa-trash"></i>
@@ -1440,7 +1440,7 @@
             comentariosHTML += '</div>';
             comentariosHTML += `
                 <div class="input-group">
-                    <input type="text" id="nuevoComentario" class="form-control bg-dark text-white border-secondary" 
+                    <input type="text" id="nuevoComentario" class="form-control" 
                         placeholder="Escribe un comentario..." maxlength="500">
                     <button class="btn btn-primary" type="button" id="btnAgregarComentario">
                         <i class="fa fa-plus me-1"></i>Agregar
@@ -1453,15 +1453,15 @@
                 title: `<i class="fa fa-comments me-2"></i>Comentarios`,
                 html: comentariosHTML,
                 width: '600px',
-                background: '#212529',
-                color: '#fff',
+                background: '#FFFFFF',
+                color: '#2C3E50',
                 showCloseButton: true,
                 showConfirmButton: false,
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
-                    title: 'text-white',
-                    htmlContainer: 'text-white',
+                    popup: 'bg-light border shadow',
+                    title: 'text-dark',
+                    htmlContainer: 'text-dark',
                     closeButton: 'btn-close-white'
                 },
                 didOpen: () => {
@@ -1491,10 +1491,10 @@
                                     text: 'El comentario ha sido agregado correctamente',
                                     timer: 1500,
                                     showConfirmButton: false,
-                                    background: '#212529',
-                                    color: '#fff',
+                                    background: '#FFFFFF',
+                                    color: '#2C3E50',
                                     customClass: {
-                                        popup: 'bg-dark text-white border border-secondary'
+                                        popup: 'bg-light border shadow'
                                     }
                                 });
                                 // Reabrir modal con comentarios actualizados
@@ -1523,11 +1523,11 @@
                 title: 'Error',
                 text: 'Error al cargar comentarios: ' + error.message,
                 confirmButtonText: 'Aceptar',
-                background: '#212529',
-                color: '#fff',
+                background: '#FFFFFF',
+                color: '#2C3E50',
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
+                    popup: 'bg-light border shadow',
                     confirmButton: 'btn btn-danger'
                 }
             });
@@ -1543,11 +1543,11 @@
                 showCancelButton: true,
                 confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar',
-                background: '#212529',
-                color: '#fff',
+                background: '#FFFFFF',
+                color: '#2C3E50',
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
+                    popup: 'bg-light border shadow',
                     confirmButton: 'btn btn-danger me-2',
                     cancelButton: 'btn btn-secondary'
                 }
@@ -1568,10 +1568,10 @@
                         text: 'El comentario ha sido eliminado',
                         timer: 1500,
                         showConfirmButton: false,
-                        background: '#212529',
-                        color: '#fff',
+                        background: '#FFFFFF',
+                        color: '#2C3E50',
                         customClass: {
-                            popup: 'bg-dark text-white border border-secondary'
+                            popup: 'bg-light border shadow'
                         }
                     });
                     // Reabrir modal con comentarios actualizados
@@ -1587,11 +1587,11 @@
                 title: 'Error',
                 text: 'Error al eliminar comentario: ' + error.message,
                 confirmButtonText: 'Aceptar',
-                background: '#212529',
-                color: '#fff',
+                background: '#FFFFFF',
+                color: '#2C3E50',
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
+                    popup: 'bg-light border shadow',
                     confirmButton: 'btn btn-danger'
                 }
             });

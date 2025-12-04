@@ -1,26 +1,26 @@
 /* GLOBAL 
 -------------------------------------------*/
-@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 html, body{
     margin: 0;
     height: 100%;  
-    font-family: "Open Sans", sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 h1, h2, h3, h4, h5, h6{
-    font-family: 'Lora', serif;
+    font-family: 'Poppins', sans-serif;
+    color: var(--black, #1A1A2E);
 }
 
 body:not(h1, h2, h3, h4, h5, h6){
-    font-family: "Open Sans", sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 .error{
     margin: 0;
     text-align: center;
-    color: rgb(255, 80, 80);
+    color: var(--coral, #FF6B6B);
 }
 
 /* LOGIN
@@ -28,12 +28,11 @@ body:not(h1, h2, h3, h4, h5, h6){
 .login-html, .login-body{
     margin: 0;
     height: 100%;  
-    /* fon-size is already set to 10px */
-    background-color: #053537;
+    background-color: var(--dark-blue, #2C3E50);
     background-image: url("../images/login/chalet.png");
     background-repeat: no-repeat;
     background-size: cover;
-    font-family: "Open Sans", sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 .flex-vcontainer{
@@ -54,6 +53,9 @@ body:not(h1, h2, h3, h4, h5, h6){
     margin: 0 auto;
     min-width: 600px;
     max-height: 90%;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
 .login-form > div:first-of-type{
@@ -63,9 +65,9 @@ body:not(h1, h2, h3, h4, h5, h6){
     justify-content:center;
     align-items: center;
     padding: 75px;
-    background-color: #053537;
+    background-color: var(--dark-blue, #2C3E50);
     text-align: center;
-    color: #DD806D;    
+    color: var(--mint, #7ECEC5);    
 }
 
 .login-form img{
@@ -74,10 +76,11 @@ body:not(h1, h2, h3, h4, h5, h6){
 }
 
 .login-form h1{
-    font-size: 2.75em;
-    font-weight: 100;
+    font-size: 2.5em;
+    font-weight: 700;
     line-height: 1em;
-    letter-spacing: 0.3em;
+    letter-spacing: 0.1em;
+    color: var(--mint, #7ECEC5);
 }
 
 @media (max-width: 768px) {
@@ -110,8 +113,9 @@ body:not(h1, h2, h3, h4, h5, h6){
 .form{     
     padding: 75px 50px;
     min-width: 300px;    
-    color: #F6F6DF;
-    backdrop-filter: blur(5px);
+    color: var(--white, #FFFFFF);
+    backdrop-filter: blur(10px);
+    background-color: rgba(44, 62, 80, 0.85);
 }
 
 .form .form-item:first-child {
@@ -129,79 +133,93 @@ body:not(h1, h2, h3, h4, h5, h6){
 .form h2{
     margin: 0 0 45px;
     text-align: center;
-    font-size: 2em;
-    font-weight: 100;
-    line-height: 0.8em;
-    letter-spacing: 0.1em;
+    font-size: 1.75em;
+    font-weight: 600;
+    line-height: 1em;
+    letter-spacing: 0.05em;
+    color: var(--white, #FFFFFF);
 }
 
 .form label{
     display: block;
-    font-size: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--white, #FFFFFF);
+    margin-bottom: 0.5rem;
 }
 
 .form input{
     box-sizing: border-box;
     width: 100%;
-    height: 2.75em;
+    height: 3em;
     margin: 5px 0;
-    padding: 0 15px;
-    background-color: rgba(246, 246, 223, 0.1);
-    color: #F6F6DF;
+    padding: 0 20px;
+    background-color: var(--bg-light, #F7F9FB);
+    color: var(--black, #1A1A2E);
     opacity: 1;
     font-size: 0.9em;
-    letter-spacing: 0.1em;
-    border-radius: 50px;
-    border-style: none;
-    border-width: 100;
+    letter-spacing: 0.02em;
+    border-radius: 8px;
+    border: 1px solid var(--border-light, #E3E8EE);
+    transition: all 0.2s ease;
 }
 
 .form input:focus{
-    background-color: #111111;
-    color:#F6F6DF;
+    background-color: var(--white, #FFFFFF);
+    color: var(--black, #1A1A2E);
     opacity: 1;
-    outline: 1px solid #DD806D;
+    outline: none;
+    border: 2px solid var(--mint, #7ECEC5);
+    box-shadow: 0 0 0 3px rgba(126, 206, 197, 0.2);
+}
+
+.form input::placeholder {
+    color: var(--grey, #6B7280);
 }
 
 .form button{
     display: block;
     box-sizing: border-box;
     width: 100%;
-    height: 2.75em;
+    height: 3em;
     margin: 5px 0;
     padding: 0 15px;
-    background-color: #053537;
-    font-size: 0.9em;
-    color: #F6F6DF;
-    letter-spacing: 0.1em;
-    border-radius: 50px;
-    border-style: none;
-    border-width: 100;    
+    background-color: var(--mint, #7ECEC5);
+    font-size: 1em;
+    font-weight: 600;
+    color: var(--white, #FFFFFF);
+    letter-spacing: 0.02em;
+    border-radius: 8px;
+    border: none;
+    transition: all 0.2s ease;
 }
 
 .form button:hover{    
     cursor: pointer;
+    background-color: var(--mint-dark, #5FBFB3);
+    transform: translateY(-1px);
 }
 
 .form button:active{
-    background-color: #111111;
+    background-color: var(--mint-dark, #5FBFB3);
     outline: none;
     cursor: pointer;
+    transform: translateY(0);
 }
 
 .form hr{
     margin: 25px auto;
-    border-top: 1px solid #F6F6DF;
-    border-style:ridge;
-    border-color: #F6F6DF;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-style: solid;
+    border-color: rgba(255, 255, 255, 0.2);
     border-radius: 100%;
-    opacity: 0.2;
+    opacity: 1;
     width: 100%;
     
 }
 
 .to-signup{
-    font-size: 0.8rem;
+    font-size: 0.875rem;
     text-align: center;
 }
 
@@ -210,13 +228,21 @@ body:not(h1, h2, h3, h4, h5, h6){
 }
 
 .to-signup a{
-    color: #DD806D;
-    border-radius: 50px;
+    color: var(--mint, #7ECEC5);
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.to-signup a:hover {
+    color: var(--mint-dark, #5FBFB3);
+    text-decoration: underline;
 }
 
 .to-signup a:focus,
 .form button:focus{
-    outline: 1px solid #DD806D;
+    outline: 2px solid var(--mint, #7ECEC5);
+    outline-offset: 2px;
 }
 
 /* DASHBOARD
@@ -225,16 +251,19 @@ body:not(h1, h2, h3, h4, h5, h6){
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: 300px repeat(2, 165px);
-    gap: 20px;;
+    gap: 20px;
     box-sizing: border-box;
     padding: 15px;
 }
 
 .dashboard-item{
-    padding: 15px;
-    background-color: rgb(30,30,31);
-    font-family: "Open Sans", sans-serif;
-    overflow-y: scroll;
+    padding: 20px;
+    background-color: var(--bg-card, #FFFFFF);
+    font-family: 'Poppins', sans-serif;
+    overflow-y: auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-light, #E3E8EE);
 }
 
 .graph-item{
@@ -244,14 +273,17 @@ body:not(h1, h2, h3, h4, h5, h6){
 .dashboard-item-header{
     display: flex;
     justify-content: space-between;
-    margin-bottom: 7px;
+    margin-bottom: 10px;
+    align-items: center;
 }
 
 .dashboard-item-header h2{
     display: inline-block;
     margin: 0;
-    font-size: 1.5rem;
-    font-family: "Open Sans", sans-serif;
+    font-size: 1.25rem;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: var(--black, #1A1A2E);
 }
 
 .extra-info{
@@ -273,14 +305,22 @@ body:not(h1, h2, h3, h4, h5, h6){
     box-sizing: content-box;
     height: 1.2rem;
     margin-right: 5px;
-    padding: 3px 10px;
-    background-color: black;    
+    padding: 5px 12px;
+    background-color: var(--bg-light, #F7F9FB);    
     text-align: center;
-    color: inherit;
-    font-family: "Open Sans", sans-serif;
+    color: var(--black, #1A1A2E);
+    font-family: 'Poppins', sans-serif;
     font-size: 0.8rem;
     text-decoration: none;
-    border-radius: 50px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light, #E3E8EE);
+    transition: all 0.2s ease;
+}
+
+.extra-info a:hover {
+    background-color: var(--mint, #7ECEC5);
+    color: var(--white, #FFFFFF);
+    border-color: var(--mint, #7ECEC5);
 }
 
 .dashboard-item-header .operation,
@@ -291,18 +331,20 @@ body:not(h1, h2, h3, h4, h5, h6){
     padding: 0 5px 0;
     background-color: transparent;
     text-align: center;
-    color: inherit;
-    font-family: "Open Sans", sans-serif;
+    color: var(--grey, #6B7280);
+    font-family: 'Poppins', sans-serif;
     font-size: 1rem;
     text-decoration: none;
     border-style: none;
     border-radius: 0%;
+    transition: color 0.2s ease;
 }
 
 .dashboard-item-header .operation:hover,
 .extra-info .operation:hover,
 .extra-info a:hover{
     cursor: pointer;
+    color: var(--mint, #7ECEC5);
 }
 
 .graph img{
@@ -325,33 +367,37 @@ body:not(h1, h2, h3, h4, h5, h6){
 
 .dashboard-item-content .info p{
     margin: 0;
+    color: var(--black, #1A1A2E);
 }
 
 .dashboard-item-content .info p:first-child{    
-    font-family: "Open Sans", sans-serif;
+    font-family: 'Poppins', sans-serif;
     font-size: 1.5rem;
     font-weight: 600;
+    color: var(--black, #1A1A2E);
 }
 
 .dashboard-item-content input{
     width: 100%;
     height: 2.7rem;
-    padding: 10px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: inherit;
-    border-style: none;
-    border-bottom: 1px solid white;
-    border-radius: 5px;
+    padding: 10px 15px;
+    background-color: var(--bg-light, #F7F9FB);
+    color: var(--black, #1A1A2E);
+    border: 1px solid var(--border-light, #E3E8EE);
+    border-radius: 8px;
+    transition: all 0.2s ease;
 }
 
 .dashboard-item-content input:focus{
-    outline: 1px solid white;
+    outline: none;
+    border-color: var(--mint, #7ECEC5);
+    box-shadow: 0 0 0 3px rgba(126, 206, 197, 0.2);
 }
 
 .exit-info{
     display: flex;
     flex-direction: column;
-    overflow: scroll;
+    overflow: auto;
     max-height: 150px;
 }
 
@@ -359,8 +405,10 @@ body:not(h1, h2, h3, h4, h5, h6){
     display: flex;
     align-items: center;
     min-width: 100%;
-    margin: 2px 0;
-    background-color: rgba(255, 255, 255, 0.1);
+    margin: 4px 0;
+    background-color: var(--bg-light, #F7F9FB);
+    border-radius: 8px;
+    border: 1px solid var(--border-light, #E3E8EE);
 }
 
 .exit-card > span{
@@ -371,10 +419,11 @@ body:not(h1, h2, h3, h4, h5, h6){
     max-width: 3rem;
     margin: 15px;
     box-sizing: border-box;
-    background-color: #86b285;
+    background-color: var(--mint, #7ECEC5);
     font-size: 2.5rem;
     font-weight: 700;
     border-style: solid;
+    border-color: var(--mint-dark, #5FBFB3);
     border-radius: 50px;
     user-select: none
 }
@@ -385,12 +434,14 @@ body:not(h1, h2, h3, h4, h5, h6){
 
 .exit-card > div p{
     margin: 5px;
-    font-family: "Open Sans", sans-serif;
+    font-family: 'Poppins', sans-serif;
     font-size: 1rem;
+    color: var(--black, #1A1A2E);
 }
 
 .exit-card > div span{
     font-size: 1rem;
+    color: var(--grey, #6B7280);
 }
 
 .exit-card > div span::after{
@@ -405,19 +456,26 @@ body:not(h1, h2, h3, h4, h5, h6){
     max-width: 3rem;
     margin: 15px;
     padding: 0;
-    background-color: #12408a;
-    color: inherit;
+    background-color: var(--mint, #7ECEC5);
+    color: var(--white, #FFFFFF);
     font-weight: 500;
     border-style: none;
     border-radius: 50px;
+    transition: all 0.2s ease;
 }
 
 .exit-card > button:focus{
-    outline: 1px solid white; 
+    outline: 2px solid var(--mint-dark, #5FBFB3);
+    outline-offset: 2px;
+}
+
+.exit-card > button:hover{
+    background-color: var(--mint-dark, #5FBFB3);
 }
 
 .exit-card > button:active{
-    background-color: #12608a;
+    background-color: var(--mint-dark, #5FBFB3);
+    transform: scale(0.95);
 }
 
 .exit-card > button span{
@@ -430,35 +488,35 @@ body:not(h1, h2, h3, h4, h5, h6){
 .page-info{
     display: flex;
     margin: 20px 0;
+    align-items: center;
 }
 
 .page-info h1{
     display: inline-block;
     flex-grow: 1;
     font-size: 1.5rem;
-    font-family: "Open Sans", sans-serif;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
     text-align: start;
     background-color: transparent;
+    color: var(--black, #1A1A2E);
 }
 
 .page-info .btn-save-info{
     display: inline-block;
     width: 10rem;
-    padding: 6px 12px;
-    background-color: rgb(82, 71, 182);
-    color: white;
+    padding: 8px 16px;
+    background-color: var(--mint, #7ECEC5);
+    color: var(--white, #FFFFFF);
     border-style: none;
-    border-radius: 4px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
 }
 
 .page-info .btn-save-info:hover{
-    display: inline-block;
-    width: 10rem;
-    padding: 6px 12px;
-    background-color: rgb(102, 88, 232);
-    color: white;
-    border-style: none;
-    border-radius: 4px;
+    background-color: var(--mint-dark, #5FBFB3);
+    transform: translateY(-1px);
 }
 
 .chalet-details{
@@ -467,19 +525,32 @@ body:not(h1, h2, h3, h4, h5, h6){
     justify-content: space-between;
     align-items: center;
     margin: 0px;
-    padding: 15px;
+    padding: 20px;
     box-sizing: border-box;
+    background-color: var(--bg-card, #FFFFFF);
+    border-radius: 12px;
+    border: 1px solid var(--border-light, #E3E8EE);
 }
 
 .toggle-collpase-section-button{
     width: 100%;
-    margin: 20px 0;
-    font-size: 1.5rem;
-    font-family: "Open Sans", sans-serif;
+    margin: 15px 0;
+    padding: 12px 16px;
+    font-size: 1.125rem;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
     text-align: start;
-    color: inherit;
-    background-color: transparent;
-    border: none
+    color: var(--black, #1A1A2E);
+    background-color: var(--bg-light, #F7F9FB);
+    border: 1px solid var(--border-light, #E3E8EE);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggle-collpase-section-button:hover {
+    background-color: var(--mint-light, #A8DDD7);
+    border-color: var(--mint, #7ECEC5);
 }
 
 .chalet-details .half{
@@ -497,24 +568,26 @@ body:not(h1, h2, h3, h4, h5, h6){
 }
 
 .input-group{
-    margin: 10px 0;
+    margin: 12px 0;
 }
 
 .input-group label{
     margin: 5px 0;
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--black, #1A1A2E);
+    display: block;
 }
 
 .input-group select{
-    background-color: rgb(50, 50, 50);
+    background-color: var(--bg-light, #F7F9FB);
 }
 
 .input-group optgroup option,
 .input-group option{
     font-style: normal;
-    font-weight: 100;
-    color: black;
+    font-weight: 400;
+    color: var(--black, #1A1A2E);
 }
 
 .input-group label,
@@ -530,30 +603,37 @@ body:not(h1, h2, h3, h4, h5, h6){
 .input-group select,
 .input-group textarea{
     width: 100%;
-    height: 2.7rem;
-    padding: 10px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: inherit;
-    border-style: none;
-    border-bottom: 1px solid white;
-    border-radius: 5px !important;
+    height: 2.75rem;
+    padding: 10px 15px;
+    background-color: var(--bg-light, #F7F9FB);
+    color: var(--black, #1A1A2E);
+    border: 1px solid var(--border-light, #E3E8EE);
+    border-radius: 8px !important;
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
 }
 
 .input-group textarea{
     height: 7rem;
+    padding: 15px;
 }
 
 .input-group input:focus,
 .input-group select:focus,
 .input-group textarea:focus{
-    outline: 1px solid white;
+    outline: none;
+    border-color: var(--mint, #7ECEC5);
+    box-shadow: 0 0 0 3px rgba(126, 206, 197, 0.2);
+    background-color: var(--white, #FFFFFF);
 }
 
 .chalet-details legend{
     display: block;
-    font-size: 1.5rem;
-    font-family: "Open Sans", sans-serif;
+    font-size: 1.25rem;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
     text-align: start;
+    color: var(--black, #1A1A2E);
 }
 
 .option-group{
@@ -562,28 +642,38 @@ body:not(h1, h2, h3, h4, h5, h6){
 }
 
 .checkbox-option{
-    margin: 2px;
+    margin: 4px;
+}
+
+.checkbox-option label {
+    color: var(--black, #1A1A2E);
+    font-family: 'Poppins', sans-serif;
 }
 
 .checkbox-option input[type="checkbox"] {
-    width: 1rem;
-    height: 1rem;
-    border: solid 2px gray;
-    border-radius: 2px;
+    width: 1.125rem;
+    height: 1.125rem;
+    border: solid 2px var(--border-light, #E3E8EE);
+    border-radius: 4px;
+    accent-color: var(--mint, #7ECEC5);
 }
 
 .photo-carousel{
     display: flex;
     width: 100%;
-    margin: 10px 0;;
-    overflow: scroll;
+    margin: 10px 0;
+    overflow-x: auto;
+    padding: 10px 0;
 }
 
 .photo-carousel .photo{
     flex-shrink: 0;
     position: relative;
-    margin: 0;
-    padding: 1.5rem;
+    margin: 0 8px;
+    padding: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .photo-carousel .photo:first-child{
@@ -608,37 +698,51 @@ body:not(h1, h2, h3, h4, h5, h6){
     width: 2.5rem;
     height: 2.5rem;
     box-sizing: border-box;
-    background-color: transparent;
+    background-color: var(--coral, #FF6B6B);
     backdrop-filter: blur(10px);
-    color: white;
-    border: solid 1px white;
+    color: var(--white, #FFFFFF);
+    border: none;
     border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.photo .delete-photo:hover {
+    background-color: #e55a5a;
+    transform: scale(1.1);
 }
 
 .delete-photo span{
     display: inline-block;
     box-sizing: border-box;
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     user-select: none;
 }
 
 .photo img{
     max-width: 550px;
     height: 300px; 
-    background-color: white;
+    background-color: var(--bg-light, #F7F9FB);
     background-image: url("../images/login/chalet.png");
     background-repeat: no-repeat;
     background-size: cover;
-    font-family: "Open Sans", sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 .custom-file-upload label{
     display: inline-block;
     margin-right: 10px;
-    padding: 6px 12px;
-    background-color: black;
-    border-radius: 4px;
+    padding: 10px 20px;
+    background-color: var(--mint, #7ECEC5);
+    color: var(--white, #FFFFFF);
+    border-radius: 8px;
     cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.custom-file-upload label:hover {
+    background-color: var(--mint-dark, #5FBFB3);
 }
 
 .custom-file-upload input[type="file"] {
@@ -646,7 +750,8 @@ body:not(h1, h2, h3, h4, h5, h6){
 }
 
 .custom-file-upload span{
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--grey, #6B7280);
+    font-size: 0.875rem;
 }
 
 /* PARA USUARIOS
@@ -1043,14 +1148,15 @@ iframe{
     display: block;
     width: 100%;
     padding: 15px;
-    background-color: #141418 ;
+    background-color: var(--bg-card, #FFFFFF);
     border-radius: 15px;    
     transition: transform 0.17s ease-in, box-shadow 0.2s ease-in;
+    border: 1px solid var(--border-light, #E3E8EE);
 }
 
 .questions .question:hover{    
     transform: translateY(-7px);
-    box-shadow: 0px 10px 9px 0px #053537;
+    box-shadow: 0px 10px 15px 0px rgba(126, 206, 197, 0.2);
 }
 
 .question .question-card-options{

@@ -1,22 +1,22 @@
-<div class="container-fluid mt-3" style="background-color: #0d1117; min-height: 100vh; padding: 2rem;">
+<div class="container-fluid mt-3" style="background-color: #F7F9FB; min-height: 100vh; padding: 2rem;">
     <div class="row justify-content-center">
         <div class="col-12 col-xl-11">
             <!-- Header -->
             <div class="mb-4">
-                <h1 class="text-white mb-3">
-                    <i class="fa fa-calendar me-2" style="color: #60a5fa;"></i>
+                <h1 class="text-dark mb-3">
+                    <i class="fa fa-calendar me-2" style="color: #7ECEC5;"></i>
                     Calendario de Reservas
                 </h1>
-                <p class="text-secondary">Gestiona las reservas de tus propiedades</p>
+                <p class="text-muted">Gestiona las reservas de tus propiedades</p>
             </div>
 
             <!-- Selector de Tipología -->
-            <div class="card bg-dark border-secondary mb-4">
+            <div class="card bg-white border shadow-sm mb-4">
                 <div class="card-body">
-                    <label for="tipologia_habitacion" class="form-label text-white">
+                    <label for="tipologia_habitacion" class="form-label text-dark">
                         <i class="fa fa-home me-2"></i>Selecciona una cabaña
                     </label>
-                    <select name="tipologia_habitacion" id="tipologia_habitacion" class="form-select form-select-lg bg-dark text-white border-secondary">
+                    <select name="tipologia_habitacion" id="tipologia_habitacion" class="form-select form-select-lg">
                         <option value="" selected="true" disabled="true">Selecciona una cabaña para visualizar su calendario...</option>
                         {{#if chalets}}
                         {{#each chalets}}
@@ -30,27 +30,27 @@
             </div>
 
             <!-- Leyenda de Colores -->
-            <div class="card bg-dark border-secondary mb-4" id="legend-card" style="display: none;">
+            <div class="card bg-white border shadow-sm mb-4" id="legend-card" style="display: none;">
                 <div class="card-body">
-                    <h6 class="text-white mb-3">
+                    <h6 class="text-dark mb-3">
                         <i class="fa fa-info-circle me-2"></i>Leyenda de Tipos de Reserva
                     </h6>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="d-flex align-items-center">
                                 <div style="width: 24px; height: 24px; background-color: #10b981; border: 2px solid #059669; border-radius: 4px; margin-right: 10px;"></div>
-                                <span class="text-white">
+                                <span class="text-dark">
                                     <strong>Reserva NyN</strong>
-                                    <br><small class="text-secondary">Reservas de clientes normales</small>
+                                    <br><small class="text-muted">Reservas de clientes normales</small>
                                 </span>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="d-flex align-items-center">
                                 <div style="width: 24px; height: 24px; background-color: #8b5cf6; border: 2px solid #7c3aed; border-radius: 4px; margin-right: 10px;"></div>
-                                <span class="text-white">
+                                <span class="text-dark">
                                     <strong>Reserva de Dueño</strong>
-                                    <br><small class="text-secondary">Reservas externas y personales del propietario</small>
+                                    <br><small class="text-muted">Reservas externas y personales del propietario</small>
                                 </span>
                             </div>
                         </div>
@@ -63,7 +63,7 @@
             </div>
 
             <!-- Calendario -->
-            <div class="card bg-dark border-secondary">
+            <div class="card bg-white border shadow-sm">
                 <div class="card-body p-3">
                     <div id="calendar" style="display: none;"></div>
                 </div>
@@ -73,15 +73,15 @@
             <div class="mt-4 text-center">
                 <input type="hidden" id="privilege" value="{{privilege}}">
                 {{#if (eq privilege 'Inversionistas')}}
-                <a class="btn btn-outline-light btn-lg" href="/api/calendar/colaboradorduenos" role="button">
+                <a class="btn btn-outline-primary btn-lg" href="/api/calendar/colaboradorduenos" role="button">
                     <i class="fa fa-table me-2"></i>Cambiar a vista de tabla
                 </a>
                 {{else if (eq privilege 'Colaborador dueño')}}
-                <a class="btn btn-outline-light btn-lg" href="/api/calendar/colaboradorduenos" role="button">
+                <a class="btn btn-outline-primary btn-lg" href="/api/calendar/colaboradorduenos" role="button">
                     <i class="fa fa-table me-2"></i>Cambiar a vista de tabla
                 </a>
                 {{else}}
-                <a class="btn btn-outline-light btn-lg" href="/api/calendar/duenos" role="button">
+                <a class="btn btn-outline-primary btn-lg" href="/api/calendar/duenos" role="button">
                     <i class="fa fa-table me-2"></i>Cambiar a vista de tabla
                 </a>
                 {{/if}}
@@ -91,59 +91,59 @@
 </div>
 
 <style>
-    /* Dark mode para FullCalendar */
+    /* Light mode para FullCalendar */
     .fc {
-        background-color: #1f2937;
-        color: #fff;
+        background-color: #FFFFFF;
+        color: #2C3E50;
     }
     
     .fc .fc-toolbar-title {
-        color: #fff;
+        color: #2C3E50;
         font-size: 1.5rem;
     }
     
     .fc .fc-button {
-        background-color: #374151;
-        border-color: #4b5563;
+        background-color: #7ECEC5;
+        border-color: #5FBFB3;
         color: #fff;
     }
     
     .fc .fc-button:hover {
-        background-color: #4b5563;
-        border-color: #6b7280;
+        background-color: #5FBFB3;
+        border-color: #4BA89E;
     }
     
     .fc .fc-button-primary:not(:disabled):active,
     .fc .fc-button-primary:not(:disabled).fc-button-active {
-        background-color: #60a5fa;
-        border-color: #3b82f6;
+        background-color: #5FBFB3;
+        border-color: #4BA89E;
     }
     
     .fc .fc-col-header-cell {
-        background-color: #374151;
+        background-color: #7ECEC5;
         color: #fff;
-        border-color: #4b5563;
+        border-color: #5FBFB3;
     }
     
     .fc .fc-daygrid-day {
-        background-color: #1f2937;
-        border-color: #374151;
+        background-color: #FFFFFF;
+        border-color: #E3E8EE;
     }
     
     .fc .fc-daygrid-day:hover {
-        background-color: #374151;
+        background-color: #F7F9FB;
     }
     
     .fc .fc-daygrid-day-number {
-        color: #9ca3af;
+        color: #2C3E50;
     }
     
     .fc .fc-day-today {
-        background-color: #1e3a5f !important;
+        background-color: #A8DDD7 !important;
     }
     
     .fc .fc-day-other {
-        background-color: #111827;
+        background-color: #F7F9FB;
     }
     
     .fc-event {

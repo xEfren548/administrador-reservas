@@ -1,6 +1,4 @@
-@import url("https://fonts.googleapis.com/css?family=Varela+Round");
-@import url("https://fonts.googleapis.com/css2?family=Overpass:wght@400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=PT+Sans&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 /*
   1. Use a more-intuitive box-sizing model.
@@ -77,30 +75,30 @@ h6 {
 
 .nav-pills li a:hover {
     filter: grayscale(0%) opacity(1);
-    background: #141418;
-    color: #ececec;
-
+    background: var(--mint, #7ECEC5);
+    color: var(--white, #FFFFFF);
 }
 
 body::-webkit-scrollbar {
-    width: 0.25rem;
+    width: 0.5rem;
 }
 
 body::-webkit-scrollbar-track {
-    background: #1e1e24;
+    background: var(--bg-light, #F7F9FB);
 }
 
 body::-webkit-scrollbar-thumb {
-    background: #6649b8;
+    background: var(--mint, #7ECEC5);
+    border-radius: 9999px;
 }
 
 html,
 body {
     overflow-x: hidden !important;
     overflow-y: auto !important;
-    background-color: #141418;
-    color: white !important;
-    font-family: "Overpass", sans-serif;
+    background-color: var(--bg-light, #F7F9FB);
+    color: var(--black, #1A1A2E) !important;
+    font-family: 'Poppins', sans-serif;
     font-size: 14px !important;
 }
 
@@ -110,29 +108,27 @@ body {
     left: 0 !important;
     height: 100% !important;
     width: 250px !important;
-    /* Ancho del navbar */
     z-index: 1000 !important;
     overflow-y: auto !important;
-    /* Añade desplazamiento vertical si es necesario */
 }
 
 #nav {
-    color: white !important;
+    color: var(--black, #1A1A2E) !important;
 }
 
 .nav-link {
-    color: white !important;
-    font-size: 16px !important;
-
+    color: var(--white, #FFFFFF) !important;
+    font-size: 15px !important;
+    font-family: 'Poppins', sans-serif !important;
 }
 
 .navbar,
 .navbar * {
-    font-size: 16px !important;
+    font-size: 15px !important;
 }
 
 .navbar-bg {
-    background-color: #343a40 !important;
+    background-color: var(--dark-blue, #2C3E50) !important;
 }
 
 .fc-license-message {
@@ -180,7 +176,7 @@ body {
 
 .calendar,
 .calendar-header {
-    background-color: #141418;
+    background-color: var(--bg-light, #F7F9FB);
 }
 
 .divcalendar {
@@ -189,28 +185,30 @@ body {
 }
 
 #calendar {
-    background-color: #141418;
+    background-color: var(--bg-card, #FFFFFF);
     overflow-x: auto;
     position: relative;
     /* Arriba | Derecha | Abajo | Izquierda */
     margin: 1em 3em 0 3em;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 /* Custom scrollbar positioned below calendar */
 #custom-calendar-scrollbar {
-    background-color: rgba(20, 20, 24, 0.8) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background-color: rgba(247, 249, 251, 0.9) !important;
+    border: 1px solid var(--border-light, #E3E8EE) !important;
     backdrop-filter: blur(10px);
 }
 
 #custom-calendar-scrollbar:hover {
-    background-color: rgba(20, 20, 24, 0.9) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: rgba(247, 249, 251, 0.95) !important;
+    border: 1px solid var(--mint, #7ECEC5) !important;
 }
 
 #scrollbar-thumb:hover {
-    background: linear-gradient(90deg, #5aa7ff, #0056b3) !important;
-    box-shadow: 0 3px 12px rgba(74, 158, 255, 0.5) !important;
+    background: linear-gradient(90deg, var(--mint-light, #A8DDD7), var(--mint-dark, #5FBFB3)) !important;
+    box-shadow: 0 3px 12px rgba(126, 206, 197, 0.5) !important;
     transform: scale(1.02);
 }
 
@@ -226,19 +224,17 @@ body {
 }
 
 .fc-resource-area {
-    background-color: #141418 !important;
-    /* Match the black color from the header */
+    background-color: var(--bg-card, #FFFFFF) !important;
 }
 
 .fc-col-header-cell {
-    background-color: #141418 !important;
-    /* Ensure column headers match the black theme */
+    background-color: var(--mint, #7ECEC5) !important;
+    color: var(--white, #FFFFFF) !important;
 }
 
 .fc-timeline .fc-resource-group {
-    background-color: #141418 !important;
-    color: white;
-    /* Optional: Ensure text contrast */
+    background-color: var(--bg-light, #F7F9FB) !important;
+    color: var(--black, #1A1A2E);
 }
 
 .fc-header-toolbar,
@@ -246,25 +242,71 @@ body {
     position: sticky;
     top: 0;
     z-index: 999;
-    /* Ensure it stays above other elements */
-    background-color: #141418;
-    /* Match your calendar background */
+    background-color: var(--bg-card, #FFFFFF);
 }
 
 thead {
-    color: white !important;
+    background-color: var(--mint, #7ECEC5) !important;
+    color: var(--white, #FFFFFF) !important;
+}
+
+thead th {
+    background-color: var(--mint, #7ECEC5) !important;
+    color: var(--white, #FFFFFF) !important;
 }
 
 td {
-    border: gray 2px solid !important;
+    border: var(--border-light, #E3E8EE) 1px solid !important;
+    color: var(--black, #1A1A2E) !important;
 }
 
 .fc-resource-timeline-divider {
-    border: black 2px solid !important;
+    border: var(--border-light, #E3E8EE) 1px solid !important;
 }
 
 .fc-datagrid-cell-frame {
-    background-color: #141418;
+    background-color: var(--bg-card, #FFFFFF);
+    color: var(--dark-blue, #2C3E50) !important;
+}
+
+/* FullCalendar additional overrides for light theme */
+.fc-datagrid-cell-main {
+    color: var(--dark-blue, #2C3E50) !important;
+}
+
+.fc-datagrid-expander-placeholder {
+    background-color: transparent !important;
+}
+
+.fc-timeline-lane-frame {
+    background-color: var(--bg-card, #FFFFFF) !important;
+}
+
+.fc-timeline-bg {
+    background-color: var(--bg-light, #F7F9FB) !important;
+}
+
+.fc .fc-scrollgrid {
+    background-color: var(--bg-card, #FFFFFF) !important;
+    border-color: var(--border-light, #E3E8EE) !important;
+}
+
+.fc-scrollgrid-section-header {
+    background-color: var(--mint, #7ECEC5) !important;
+}
+
+.fc-scrollgrid-section-body {
+    background-color: var(--bg-card, #FFFFFF) !important;
+}
+
+/* Resource group (tipologías) styling */
+.fc-datagrid-cell-frame a,
+.fc-datagrid-cell-frame span {
+    color: var(--dark-blue, #2C3E50) !important;
+}
+
+.fc-icon {
+    color: var(--dark-blue, #2C3E50) !important;
 }
 
 /* Custom horizontal scrollbar for calendar */
@@ -273,21 +315,21 @@ td {
     width: 100%;
     margin-bottom: 15px;
     z-index: 1000 !important;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--bg-light, #F7F9FB);
     padding: 10px 0;
 }
 
 .custom-scrollbar {
     width: calc(100% - 6em);
     height: 8px;
-    background-color: rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--border-light, #E3E8EE) !important;
     border-radius: 4px;
     position: relative;
     cursor: pointer;
     overflow: hidden;
     transition: height 0.2s ease;
     margin: 0 3em;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-light, #E3E8EE);
 }
 
 .custom-scrollbar:hover {
@@ -296,24 +338,24 @@ td {
 
 .custom-scrollbar-thumb {
     height: 100%;
-    background: linear-gradient(90deg, #4a9eff, #007bff);
+    background: linear-gradient(90deg, var(--mint, #7ECEC5), var(--mint-dark, #5FBFB3));
     border-radius: 4px;
     position: relative;
     cursor: grab;
     transition: all 0.2s ease;
     min-width: 40px;
-    box-shadow: 0 2px 8px rgba(74, 158, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(126, 206, 197, 0.3);
 }
 
 .custom-scrollbar-thumb:hover {
-    background: linear-gradient(90deg, #5aa7ff, #0056b3);
-    box-shadow: 0 3px 12px rgba(74, 158, 255, 0.5);
+    background: linear-gradient(90deg, var(--mint-light, #A8DDD7), var(--mint-dark, #5FBFB3));
+    box-shadow: 0 3px 12px rgba(126, 206, 197, 0.5);
     transform: scale(1.02);
 }
 
 .custom-scrollbar-thumb:active {
     cursor: grabbing;
-    background: linear-gradient(90deg, #3a8eff, #004494);
+    background: linear-gradient(90deg, var(--mint-dark, #5FBFB3), var(--dark-blue, #2C3E50));
 }
 
 /* Month indicators on scrollbar */
@@ -321,7 +363,7 @@ td {
     position: absolute;
     top: -20px;
     font-size: 10px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--grey, #6B7280);
     transform: translateX(-50%);
     pointer-events: none;
     transition: opacity 0.2s ease;
@@ -449,19 +491,19 @@ td {
 }
 
 .fc-timeline-slot-frame {
-    background-color: #141418;
+    background-color: var(--bg-card, #FFFFFF);
 }
 
 .fc-timeline-slot-cushion {
-    color: white !important;
+    color: var(--dark-blue, #2C3E50) !important;
 }
 
 /* Only target the specific .fc-scroller inside .fc-scroller-harness */
 .fc-scroller-harness>.fc-scroller:not(.fc-timeline-scrollgrid-scroller) {
     overflow: scroll !important;
     /* Hide scrollbars */
-    background-color: #141418 !important;
-    /* Black background */
+    background-color: var(--bg-light, #F7F9FB) !important;
+    /* Light background */
     scrollbar-width: none;
     /* Firefox-specific */
 }
@@ -472,65 +514,87 @@ td {
 }
 
 .fc-scrollgrid-sync-inner {
-    background-color: #141418 !important;
+    background-color: var(--bg-card, #FFFFFF) !important;
 }
 
 .fc-theme-standard .fc-list-day-cushion {
-    background-color: #141418 !important;
+    background-color: var(--bg-light, #F7F9FB) !important;
 }
 
 .fc-daygrid-day-number {
-    color: white !important;
+    color: var(--dark-blue, #2C3E50) !important;
 }
 
 .modal-content {
-    background-color: #141418 !important;
+    background-color: var(--bg-card, #FFFFFF) !important;
+    color: var(--black, #1A1A2E) !important;
+}
+
+#reservationtools {
+    padding: 10px 0;
+    margin-bottom: 15px;
+    border-bottom: 2px solid var(--mint, #7ECEC5);
 }
 
 #reservationtools .btn {
-    color: white !important;
+    color: var(--dark-blue, #2C3E50) !important;
 }
 
 #reservationtools .btn:hover {
-    color: gray !important;
+    color: var(--mint-dark, #5FBFB3) !important;
+}
+
+#reservationtools .btn-cancel {
+    color: var(--coral, #FF6B6B) !important;
+}
+
+#reservationtools .btn-cancel:hover {
+    color: #ff4757 !important;
 }
 
 
 .enviar-email-btn {
-    color: white !important;
+    color: var(--dark-blue, #2C3E50) !important;
+    background-color: var(--mint-light, #A8DDD7) !important;
+    border: 1px solid var(--mint, #7ECEC5) !important;
 }
 
 .enviar-email-btn:hover {
-    color: gainsboro !important;
+    color: var(--white, #FFFFFF) !important;
+    background-color: var(--mint, #7ECEC5) !important;
 }
 
 .card-details {
-    font-size: 10px !important;
-    border-radius: 1%;
-    margin: 1rem !important;
-    padding: 1rem 1rem !important;
+    font-size: 12px !important;
+    border-radius: 8px;
+    margin: 0 !important;
+    padding: 1.5rem !important;
+    width: 100% !important;
 }
 
 .article-row {
-    background-color: black;
+    background-color: var(--bg-light, #F7F9FB);
     margin: 1rem;
     padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-light, #E3E8EE);
 }
 
 /* Estilos Tablas */
 
 /* Aplicar bordes a las celdas de encabezado */
 .table thead th {
-    border: 2px solid gray;
-    /* Color del borde */
+    border: 1px solid var(--mint-dark, #5FBFB3) !important;
+    background-color: var(--mint, #7ECEC5) !important;
+    color: var(--white, #FFFFFF) !important;
 }
 
 /* Cambiar el color de fondo de los botones de paginación */
 .dataTables_wrapper .dataTables_paginate .paginate_button {
-    background-color: #007bff;
-    /* Cambia el color de fondo */
-    color: #fff !important;
-    /* Cambia el color del texto */
+    background-color: var(--bg-light, #F7F9FB);
+    color: var(--black, #1A1A2E) !important;
+    border: 1px solid var(--border-light, #E3E8EE);
+    border-radius: 6px;
 }
 
 /* Cambiar el color de fondo del botón activo de paginación */
@@ -541,53 +605,41 @@ td {
 
 /* Cambiar el color de fondo del menú de longitud de página */
 .dataTables_wrapper .dataTables_length select {
-    background-color: #fff;
-    /* Cambia el color de fondo */
-    color: #000;
-    /* Cambia el color del texto */
+    background-color: var(--bg-light, #F7F9FB);
+    color: var(--black, #1A1A2E);
 }
 
 /* Cambiar el color del borde del menú de longitud de página */
 .dataTables_wrapper .dataTables_length select:focus {
-    border-color: #0056b3;
-    /* Cambia el color del borde */
+    border-color: var(--mint, #7ECEC5);
 }
 
 /* Cambiar el color del texto de las opciones del menú de longitud de página */
 .dataTables_wrapper .dataTables_length select option {
-    color: #fff;
-    /* Cambia el color del texto */
+    color: var(--black, #1A1A2E);
 }
 
-/* Cambiar el color del texto "Show" */
+/* Cambiar el color del texto "Mostrar" y "registros" */
 .dataTables_wrapper .dataTables_length label {
-    color: #fff;
-    /* Cambia el color del texto */
+    color: var(--black, #1A1A2E) !important;
 }
 
-/* Cambiar el color del texto de las opciones del menú de longitud de página */
-.dataTables_wrapper .dataTables_length select option {
-    color: #000;
-    /* Cambia el color del texto */
-}
-
-/* Cambiar el color del texto "Search" */
+/* Cambiar el color del texto "Buscar" */
 .dataTables_wrapper .dataTables_filter label {
-    color: #fff;
-    /* Cambia el color del texto */
+    color: var(--black, #1A1A2E) !important;
 }
 
 /* Cambiar el color del texto dentro del campo de búsqueda */
 .dataTables_wrapper .dataTables_filter input[type="search"] {
-    color: #fff;
-    /* Cambia el color del texto */
+    color: var(--black, #1A1A2E);
+    background-color: var(--bg-light, #F7F9FB);
 }
 
 /* Aplica margen a los nuevos elementos */
 .dataTables_length,
 .dataTables_filter {
     margin-bottom: 20px;
-    /* Ajusta el valor según sea necesario */
+    color: var(--black, #1A1A2E) !important;
 }
 
 /* Aplica margen a los botones de paginación */
@@ -772,10 +824,11 @@ ul.rb li .timestamp {
     display: none;
     position: absolute;
     z-index: 10000;
-    background-color: black;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    background-color: var(--bg-card, #FFFFFF);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     padding: 10px;
-    border-radius: 5px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light, #E3E8EE);
 }
 
 #context-menu ul {
@@ -787,10 +840,11 @@ ul.rb li .timestamp {
 #context-menu ul li {
     padding: 8px 12px;
     cursor: pointer;
+    color: var(--dark-blue, #2C3E50);
 }
 
 #context-menu ul li:hover {
-    background-color: #6649b8;
+    background-color: var(--mint-light, #A8DDD7);
 }
 
 .blur-text {
@@ -912,20 +966,20 @@ ul.rb li .timestamp {
 
 .select2-selection__choice__display,
 .select2-results__option {
-    color: black !important;
+    color: var(--dark-blue, #2C3E50) !important;
 }
 
 .selection,
 .select2-selection,
 .select2-selection--multiple,
 .select2-search__field {
-    background-color: #000 !important;
-    border-color: white !important;
-    color: white !important;
+    background-color: var(--bg-card, #FFFFFF) !important;
+    border-color: var(--border-light, #E3E8EE) !important;
+    color: var(--dark-blue, #2C3E50) !important;
 }
 
 .select2-selection__clear {
-    color: white !important;
+    color: var(--dark-blue, #2C3E50) !important;
 }
 
 /* Bloqueo de calendario */
@@ -1245,11 +1299,12 @@ ul.rb li .timestamp {
 /* Contenedor del error */
 .error-container {
     text-align: center;
-    background-color: #000000;
+    background-color: var(--bg-card, #FFFFFF);
     padding: 2rem;
     border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
+    border: 1px solid var(--border-light, #E3E8EE);
 }
 
 /* Título del error */

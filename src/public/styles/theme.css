@@ -1,0 +1,1337 @@
+/* ===========================================
+   THEME - Nueva Línea Gráfica (App Móvil)
+   =========================================== */
+
+/* Google Fonts - Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* ===========================================
+   CSS Variables - Paleta de Colores
+   =========================================== */
+:root {
+    /* Colores Base */
+    --mint: #7ECEC5;
+    --mint-light: #A8DDD7;
+    --mint-dark: #5FBFB3;
+    
+    --dark-blue: #2C3E50;
+    --coral: #FF6B6B;
+    
+    /* Colores de Texto */
+    --black: #1A1A2E;
+    --grey: #6B7280;
+    --white: #FFFFFF;
+    
+    /* Colores de Fondo */
+    --bg-light: #F7F9FB;
+    --bg-card: #FFFFFF;
+    --border-light: #E3E8EE;
+    
+    /* Colores adicionales */
+    --success: #10B981;
+    --warning: #F59E0B;
+    --error: #EF4444;
+    --info: #3B82F6;
+    
+    /* Sombras */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+    
+    /* Transiciones */
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
+    --transition-slow: 350ms ease;
+}
+
+/* ===========================================
+   Base Styles
+   =========================================== */
+html, body {
+    font-family: 'Poppins', sans-serif !important;
+    background-color: var(--bg-light) !important;
+    color: var(--black) !important;
+    font-size: 14px !important;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===========================================
+   Typography
+   =========================================== */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif !important;
+    color: var(--black);
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 0.5em;
+}
+
+h1 { font-size: 2rem; font-weight: 700; }
+h2 { font-size: 1.75rem; font-weight: 700; }
+h3 { font-size: 1.5rem; font-weight: 600; }
+h4 { font-size: 1.25rem; font-weight: 600; }
+h5 { font-size: 1.125rem; font-weight: 600; }
+h6 { font-size: 1rem; font-weight: 600; }
+
+p {
+    color: var(--black);
+    margin-bottom: 1rem;
+}
+
+.text-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--black);
+}
+
+.text-subtitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--black);
+}
+
+.text-body {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--black);
+}
+
+.text-caption {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--grey);
+}
+
+.text-muted {
+    color: var(--grey) !important;
+}
+
+.text-mint {
+    color: var(--mint) !important;
+}
+
+.text-coral {
+    color: var(--coral) !important;
+}
+
+/* ===========================================
+   Buttons - Bootstrap Override
+   =========================================== */
+.btn {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    padding: 0.5rem 1.25rem;
+    transition: all var(--transition-normal);
+    border: none;
+}
+
+.btn:focus {
+    box-shadow: 0 0 0 3px rgba(126, 206, 197, 0.3);
+}
+
+/* Primary Button - Mint */
+.btn-primary {
+    background-color: var(--mint) !important;
+    border-color: var(--mint) !important;
+    color: var(--white) !important;
+}
+
+.btn-primary:hover, 
+.btn-primary:focus {
+    background-color: var(--mint-dark) !important;
+    border-color: var(--mint-dark) !important;
+    color: var(--white) !important;
+}
+
+.btn-primary:active {
+    background-color: var(--mint-dark) !important;
+    transform: scale(0.98);
+}
+
+/* Secondary Button */
+.btn-secondary {
+    background-color: var(--dark-blue) !important;
+    border-color: var(--dark-blue) !important;
+    color: var(--white) !important;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus {
+    background-color: #1a252f !important;
+    border-color: #1a252f !important;
+}
+
+/* Outline Primary */
+.btn-outline-primary {
+    color: var(--mint) !important;
+    border: 2px solid var(--mint) !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--mint) !important;
+    color: var(--white) !important;
+}
+
+/* Danger Button - Coral */
+.btn-danger {
+    background-color: var(--coral) !important;
+    border-color: var(--coral) !important;
+}
+
+.btn-danger:hover {
+    background-color: #e55a5a !important;
+    border-color: #e55a5a !important;
+}
+
+/* Success Button */
+.btn-success {
+    background-color: var(--success) !important;
+    border-color: var(--success) !important;
+}
+
+/* Warning Button */
+.btn-warning {
+    background-color: var(--warning) !important;
+    border-color: var(--warning) !important;
+    color: var(--white) !important;
+}
+
+/* Light Button */
+.btn-light {
+    background-color: var(--bg-light) !important;
+    border: 1px solid var(--border-light) !important;
+    color: var(--black) !important;
+}
+
+.btn-light:hover {
+    background-color: var(--border-light) !important;
+}
+
+/* ===========================================
+   Cards
+   =========================================== */
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-normal);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    background-color: var(--bg-light);
+    border-bottom: 1px solid var(--border-light);
+    font-weight: 600;
+    color: var(--black);
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.card-footer {
+    background-color: var(--bg-light);
+    border-top: 1px solid var(--border-light);
+    padding: 1rem 1.25rem;
+}
+
+.card-title {
+    font-weight: 600;
+    color: var(--black);
+    margin-bottom: 0.75rem;
+}
+
+/* ===========================================
+   Forms
+   =========================================== */
+.form-control {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    color: var(--black);
+    padding: 0.625rem 1rem;
+    transition: all var(--transition-fast);
+}
+
+.form-control:focus {
+    background-color: var(--white);
+    border-color: var(--mint);
+    box-shadow: 0 0 0 3px rgba(126, 206, 197, 0.2);
+    outline: none;
+}
+
+.form-control::placeholder {
+    color: var(--grey);
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--black);
+    margin-bottom: 0.5rem;
+}
+
+.form-select {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    color: var(--black);
+    padding: 0.625rem 1rem;
+}
+
+.form-select:focus {
+    border-color: var(--mint);
+    box-shadow: 0 0 0 3px rgba(126, 206, 197, 0.2);
+}
+
+.form-check-input:checked {
+    background-color: var(--mint);
+    border-color: var(--mint);
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(126, 206, 197, 0.2);
+    border-color: var(--mint);
+}
+
+/* Input Groups */
+.input-group-text {
+    background-color: var(--bg-light);
+    border: 1px solid var(--border-light);
+    color: var(--grey);
+}
+
+/* ===========================================
+   Tables
+   =========================================== */
+.table {
+    color: var(--black);
+    font-size: 0.875rem;
+}
+
+.table > thead {
+    background-color: var(--mint) !important;
+    color: var(--white) !important;
+}
+
+.table > thead th {
+    font-weight: 600;
+    padding: 1rem;
+    border-bottom: none;
+    color: var(--white) !important;
+}
+
+.table > tbody > tr {
+    background-color: var(--bg-card);
+    transition: background-color var(--transition-fast);
+}
+
+.table > tbody > tr:hover {
+    background-color: var(--bg-light);
+}
+
+.table > tbody td {
+    padding: 0.875rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--black);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(126, 206, 197, 0.05);
+}
+
+/* DataTables Override */
+.dataTables_wrapper {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* DataTables Header Styles - Asegurar visibilidad */
+.dataTables_wrapper table thead,
+.dataTables_wrapper table thead th,
+table.dataTable thead th,
+table.dataTable thead td {
+    background-color: var(--mint) !important;
+    color: var(--white) !important;
+    font-weight: 600;
+    border-color: var(--mint-dark) !important;
+}
+
+.dataTables_wrapper table tbody td,
+table.dataTable tbody td {
+    color: var(--black) !important;
+    background-color: var(--bg-card) !important;
+}
+
+.dataTables_wrapper table tbody tr:hover td,
+table.dataTable tbody tr:hover td {
+    background-color: var(--bg-light) !important;
+}
+
+/* Sorting icons color */
+table.dataTable thead .sorting:before,
+table.dataTable thead .sorting:after,
+table.dataTable thead .sorting_asc:before,
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_desc:before,
+table.dataTable thead .sorting_desc:after {
+    color: var(--white) !important;
+    opacity: 0.7;
+}
+
+table.dataTable thead .sorting_asc:before,
+table.dataTable thead .sorting_desc:after {
+    opacity: 1;
+}
+
+.dataTables_filter input {
+    border: 1px solid var(--border-light) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 0.5rem 1rem !important;
+    background-color: var(--bg-light) !important;
+    color: var(--black) !important;
+}
+
+.dataTables_filter input:focus {
+    border-color: var(--mint) !important;
+    outline: none !important;
+}
+
+.dataTables_length select {
+    border: 1px solid var(--border-light) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 0.375rem 0.75rem !important;
+    background-color: var(--bg-light) !important;
+    color: var(--black) !important;
+}
+
+.dataTables_info {
+    color: var(--grey) !important;
+}
+
+.paginate_button {
+    border-radius: var(--radius-md) !important;
+}
+
+.paginate_button.current {
+    background: var(--mint) !important;
+    border-color: var(--mint) !important;
+    color: var(--white) !important;
+}
+
+/* ===========================================
+   Menu Toggle Button
+   =========================================== */
+.btn-menu-toggle {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-light) !important;
+    color: var(--dark-blue) !important;
+    padding: 0.625rem 0.875rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
+}
+
+.btn-menu-toggle:hover {
+    background-color: var(--mint) !important;
+    border-color: var(--mint) !important;
+    color: var(--white) !important;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-menu-toggle:focus {
+    box-shadow: 0 0 0 3px rgba(126, 206, 197, 0.3);
+}
+
+.btn-menu-toggle i {
+    font-size: 1.125rem;
+}
+
+/* ===========================================
+   Navbar / Sidebar
+   =========================================== */
+.offcanvas {
+    background: linear-gradient(180deg, var(--dark-blue) 0%, #1a252f 100%) !important;
+    border-right: none !important;
+}
+
+.offcanvas .nav-link {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    margin-bottom: 0.125rem;
+}
+
+.offcanvas .nav-link:hover {
+    background-color: rgba(126, 206, 197, 0.15) !important;
+    color: var(--mint) !important;
+    transform: translateX(5px);
+}
+
+.offcanvas .nav-link.active,
+.offcanvas .nav-link[aria-expanded="true"] {
+    background-color: var(--mint) !important;
+    color: var(--white) !important;
+}
+
+.offcanvas .nav-link i {
+    margin-right: 0.75rem;
+    width: 20px;
+    text-align: center;
+    color: var(--mint);
+    transition: color var(--transition-fast);
+}
+
+.offcanvas .nav-link:hover i {
+    color: var(--mint-light);
+}
+
+.offcanvas .nav-link.active i,
+.offcanvas .nav-link[aria-expanded="true"] i {
+    color: var(--white);
+}
+
+/* Submenu styles */
+.offcanvas .collapse .nav-link {
+    padding-left: 2.5rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.offcanvas .collapse .nav-link:hover {
+    color: var(--mint) !important;
+    background-color: rgba(126, 206, 197, 0.1) !important;
+}
+
+/* Sidebar divider */
+.offcanvas hr {
+    border-color: rgba(255, 255, 255, 0.1);
+    margin: 1rem 0;
+}
+
+/* Sidebar Header */
+.sidebar-header {
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1rem;
+}
+
+
+.sidebar-brand {
+    color: var(--mint);
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+/* Sidebar User Section */
+.sidebar-user {
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-user img {
+    border: 2px solid var(--mint);
+}
+
+/* ===========================================
+   Alerts
+   =========================================== */
+.alert {
+    border-radius: var(--radius-md);
+    border: none;
+    font-weight: 500;
+}
+
+.alert-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.alert-danger {
+    background-color: rgba(255, 107, 107, 0.1);
+    color: var(--coral);
+}
+
+.alert-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+}
+
+.alert-info {
+    background-color: rgba(126, 206, 197, 0.1);
+    color: var(--mint-dark);
+}
+
+/* ===========================================
+   Badges
+   =========================================== */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.75em;
+    border-radius: var(--radius-full);
+}
+
+.badge.bg-primary {
+    background-color: var(--mint) !important;
+}
+
+.badge.bg-secondary {
+    background-color: var(--dark-blue) !important;
+}
+
+.badge.bg-danger {
+    background-color: var(--coral) !important;
+}
+
+.badge.bg-success {
+    background-color: var(--success) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--warning) !important;
+}
+
+/* ===========================================
+   Modals
+   =========================================== */
+.modal-content {
+    border-radius: var(--radius-lg);
+    border: none;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    background-color: var(--bg-light);
+    border-bottom: 1px solid var(--border-light);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 1rem 1.5rem;
+}
+
+.modal-title {
+    font-weight: 600;
+    color: var(--black);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    color: var(--black);
+}
+
+.modal-footer {
+    background-color: var(--bg-light);
+    border-top: 1px solid var(--border-light);
+    padding: 1rem 1.5rem;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.btn-close {
+    opacity: 0.5;
+}
+
+.btn-close:hover {
+    opacity: 1;
+}
+
+/* ===========================================
+   Dropdowns
+   =========================================== */
+.dropdown-menu {
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: 0.5rem;
+}
+
+.dropdown-item {
+    font-family: 'Poppins', sans-serif;
+    color: var(--black);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 1rem;
+    transition: all var(--transition-fast);
+}
+
+.dropdown-item:hover {
+    background-color: var(--bg-light);
+    color: var(--mint-dark);
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+    background-color: var(--mint);
+    color: var(--white);
+}
+
+/* ===========================================
+   Breadcrumbs
+   =========================================== */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: 1.5rem;
+}
+
+.breadcrumb-item {
+    font-size: 0.875rem;
+}
+
+.breadcrumb-item a {
+    color: var(--mint);
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    color: var(--mint-dark);
+}
+
+.breadcrumb-item.active {
+    color: var(--grey);
+}
+
+/* ===========================================
+   Progress Bars
+   =========================================== */
+.progress {
+    background-color: var(--bg-light);
+    border-radius: var(--radius-full);
+    height: 0.5rem;
+}
+
+.progress-bar {
+    background-color: var(--mint);
+    border-radius: var(--radius-full);
+}
+
+/* ===========================================
+   Pagination
+   =========================================== */
+.pagination .page-link {
+    color: var(--mint);
+    border: 1px solid var(--border-light);
+    font-family: 'Poppins', sans-serif;
+    transition: all var(--transition-fast);
+}
+
+.pagination .page-link:hover {
+    background-color: var(--bg-light);
+    border-color: var(--mint);
+    color: var(--mint-dark);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--mint);
+    border-color: var(--mint);
+    color: var(--white);
+}
+
+/* ===========================================
+   List Groups
+   =========================================== */
+.list-group-item {
+    border: 1px solid var(--border-light);
+    color: var(--black);
+    transition: all var(--transition-fast);
+}
+
+.list-group-item:first-child {
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.list-group-item:last-child {
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.list-group-item.active {
+    background-color: var(--mint);
+    border-color: var(--mint);
+}
+
+.list-group-item-action:hover {
+    background-color: var(--bg-light);
+    color: var(--black);
+}
+
+/* ===========================================
+   Select2 Override
+   =========================================== */
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+    background-color: var(--bg-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    min-height: 42px;
+}
+
+.select2-container--default .select2-selection--single:focus,
+.select2-container--default .select2-selection--multiple:focus {
+    border-color: var(--mint);
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: var(--black);
+    line-height: 40px;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--mint);
+}
+
+.select2-dropdown {
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+}
+
+/* ===========================================
+   SweetAlert2 Override
+   =========================================== */
+.swal2-popup {
+    font-family: 'Poppins', sans-serif !important;
+    border-radius: var(--radius-lg) !important;
+}
+
+.swal2-title {
+    font-family: 'Poppins', sans-serif !important;
+    color: var(--black) !important;
+}
+
+.swal2-html-container {
+    color: var(--grey) !important;
+}
+
+.swal2-confirm {
+    background-color: var(--mint) !important;
+    border-radius: var(--radius-md) !important;
+}
+
+.swal2-cancel {
+    background-color: var(--grey) !important;
+    border-radius: var(--radius-md) !important;
+}
+
+/* ===========================================
+   FullCalendar Override
+   =========================================== */
+.fc .fc-button-primary {
+    background-color: var(--mint) !important;
+    border-color: var(--mint) !important;
+    font-family: 'Poppins', sans-serif;
+}
+
+.fc .fc-button-primary:hover {
+    background-color: var(--mint-dark) !important;
+    border-color: var(--mint-dark) !important;
+}
+
+.fc .fc-button-primary:disabled {
+    background-color: var(--grey) !important;
+    border-color: var(--grey) !important;
+}
+
+.fc-today-button {
+    background-color: var(--dark-blue) !important;
+    border-color: var(--dark-blue) !important;
+}
+
+/* ===========================================
+   Utility Classes
+   =========================================== */
+.bg-mint {
+    background-color: var(--mint) !important;
+}
+
+.bg-mint-light {
+    background-color: var(--mint-light) !important;
+}
+
+.bg-dark-blue {
+    background-color: var(--dark-blue) !important;
+}
+
+.bg-coral {
+    background-color: var(--coral) !important;
+}
+
+.bg-main {
+    background-color: var(--bg-light) !important;
+}
+
+.border-mint {
+    border-color: var(--mint) !important;
+}
+
+.rounded-theme {
+    border-radius: var(--radius-md);
+}
+
+.rounded-theme-lg {
+    border-radius: var(--radius-lg);
+}
+
+.shadow-theme {
+    box-shadow: var(--shadow-md);
+}
+
+/* ===========================================
+   Page Header
+   =========================================== */
+.page-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.page-header h1 {
+    margin-bottom: 0.25rem;
+}
+
+.page-header .lead {
+    color: var(--grey);
+    margin-bottom: 0;
+}
+
+/* ===========================================
+   Content Wrapper
+   =========================================== */
+.content-wrapper {
+    background-color: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ===========================================
+   Stats Cards
+   =========================================== */
+.stat-card {
+    background-color: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid var(--mint);
+    transition: all var(--transition-normal);
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.stat-card .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--black);
+}
+
+.stat-card .stat-label {
+    font-size: 0.875rem;
+    color: var(--grey);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-card.mint { border-left-color: var(--mint); }
+.stat-card.coral { border-left-color: var(--coral); }
+.stat-card.blue { border-left-color: var(--dark-blue); }
+.stat-card.success { border-left-color: var(--success); }
+.stat-card.warning { border-left-color: var(--warning); }
+
+/* ===========================================
+   Loading Spinner Override
+   =========================================== */
+.spinner-border {
+    color: var(--mint);
+}
+
+.pre-loader {
+    background-color: var(--bg-light);
+}
+
+/* ===========================================
+   Scrollbar Styling
+   =========================================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-light);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--mint);
+    border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--mint-dark);
+}
+
+/* ===========================================
+   Transitions
+   =========================================== */
+a, .btn, .form-control, .card, .nav-link {
+    transition: all var(--transition-fast);
+}
+
+/* ===========================================
+   Responsive Adjustments
+   =========================================== */
+@media (max-width: 768px) {
+    html, body {
+        font-size: 13px !important;
+    }
+    
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .content-wrapper {
+        padding: 1rem;
+    }
+}
+
+/* ===========================================
+   Bootstrap Class Overrides
+   =========================================== */
+
+/* Override bg-dark to use new theme colors */
+.bg-dark {
+    background-color: var(--dark-blue) !important;
+}
+
+/* Table styles - override dark tables */
+.table-dark {
+    background-color: var(--bg-card) !important;
+    color: var(--black) !important;
+    --bs-table-bg: var(--bg-card);
+    --bs-table-color: var(--black);
+    --bs-table-border-color: var(--border-light);
+    --bs-table-striped-bg: rgba(126, 206, 197, 0.05);
+    --bs-table-striped-color: var(--black);
+    --bs-table-active-bg: rgba(126, 206, 197, 0.1);
+    --bs-table-active-color: var(--black);
+    --bs-table-hover-bg: rgba(126, 206, 197, 0.08);
+    --bs-table-hover-color: var(--black);
+}
+
+.table-dark thead {
+    background-color: var(--mint) !important;
+    color: var(--white) !important;
+}
+
+.table-dark th {
+    background-color: var(--mint) !important;
+    color: var(--white) !important;
+    border-color: var(--mint-dark) !important;
+}
+
+.table-dark td {
+    background-color: var(--bg-card) !important;
+    color: var(--black) !important;
+    border-color: var(--border-light) !important;
+}
+
+.table-dark tbody tr:hover {
+    background-color: rgba(126, 206, 197, 0.08) !important;
+}
+
+.table-light {
+    background-color: var(--mint) !important;
+    color: var(--white) !important;
+}
+
+.table-light th,
+.table-light td {
+    color: var(--white) !important;
+}
+
+/* Calendar header override */
+.calendar-header .bg-dark {
+    background-color: var(--bg-card) !important;
+    border-radius: var(--radius-lg);
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Text colors override */
+.text-white {
+    color: var(--white) !important;
+}
+
+.text-dark {
+    color: var(--black) !important;
+}
+
+.text-muted {
+    color: var(--grey) !important;
+}
+
+/* Link colors */
+a {
+    color: var(--mint);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--mint-dark);
+    text-decoration: underline;
+}
+
+/* Nav tabs override */
+.nav-tabs {
+    border-bottom: 2px solid var(--border-light);
+}
+
+.nav-tabs .nav-link {
+    color: var(--grey) !important;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--mint) !important;
+    border-bottom-color: var(--mint-light);
+    background-color: transparent;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--mint) !important;
+    background-color: transparent;
+    border-bottom: 2px solid var(--mint);
+}
+
+/* Container and layout overrides */
+.container-fluid {
+    background-color: var(--bg-light);
+}
+
+.row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Border overrides */
+.border {
+    border-color: var(--border-light) !important;
+}
+
+.border-top {
+    border-top-color: var(--border-light) !important;
+}
+
+.border-bottom {
+    border-bottom-color: var(--border-light) !important;
+}
+
+/* Shadow overrides */
+.shadow {
+    box-shadow: var(--shadow-md) !important;
+}
+
+.shadow-sm {
+    box-shadow: var(--shadow-sm) !important;
+}
+
+.shadow-lg {
+    box-shadow: var(--shadow-lg) !important;
+}
+
+/* Rounded corners override */
+.rounded {
+    border-radius: var(--radius-md) !important;
+}
+
+.rounded-lg {
+    border-radius: var(--radius-lg) !important;
+}
+
+/* Form check override */
+.form-check-input:checked {
+    background-color: var(--mint) !important;
+    border-color: var(--mint) !important;
+}
+
+/* Accordion override */
+.accordion-button {
+    background-color: var(--bg-light);
+    color: var(--black);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: rgba(126, 206, 197, 0.1);
+    color: var(--mint-dark);
+}
+
+.accordion-button:focus {
+    box-shadow: 0 0 0 3px rgba(126, 206, 197, 0.2);
+    border-color: var(--mint);
+}
+
+.accordion-body {
+    background-color: var(--bg-card);
+    color: var(--black);
+}
+
+/* Toast override */
+.toast {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+}
+
+.toast-header {
+    background-color: var(--bg-light);
+    color: var(--black);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.toast-body {
+    color: var(--black);
+}
+
+/* Offcanvas extra styles */
+.offcanvas-header {
+    background-color: var(--dark-blue);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.offcanvas-title {
+    color: var(--mint);
+    font-weight: 600;
+}
+
+.offcanvas-body {
+    background-color: var(--dark-blue);
+}
+
+/* Close button override */
+.btn-close {
+    filter: invert(1);
+}
+
+/* Flatpickr override */
+.flatpickr-calendar {
+    font-family: 'Poppins', sans-serif;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+    background: var(--mint);
+    border-color: var(--mint);
+}
+
+.flatpickr-day:hover {
+    background: var(--mint-light);
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+/* DataTables specific for dark tables */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: var(--black) !important;
+    background-color: var(--bg-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    margin: 0 2px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: var(--mint-light) !important;
+    border-color: var(--mint) !important;
+    color: var(--black) !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: var(--mint) !important;
+    border-color: var(--mint) !important;
+    color: var(--white) !important;
+}
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info {
+    color: var(--black) !important;
+}
+
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select {
+    color: var(--black) !important;
+    background-color: var(--bg-light) !important;
+    border: 1px solid var(--border-light) !important;
+}
+
+/* Preloader update */
+.pre-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-light);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.loader--hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* Custom loader spinner */
+.pre-loader::after {
+    content: '';
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--border-light);
+    border-top-color: var(--mint);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
