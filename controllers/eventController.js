@@ -3167,13 +3167,16 @@ async function obtenerHabitacionesDisponibles(req, res) {
             isActive: true,
         };
 
+        console.log("req session: ", req.session);
+
         // Tipología opcional
         if (tipologia && tipologia !== 'all' && !isForOwner) {
             const lista = Array.isArray(tipologia) ? tipologia : [tipologia];
             filtro['propertyDetails.accomodationType'] = { $in: lista };
         } else if (isForOwner) {
-            if (req.session.privilege === "Colaborador de dueño") {
+            if (req.session.privilege === "Colaborador dueño") {
                 const user = await Usuario.findById(req.session.id).lean();
+                console.log("user: ", user);
                 filtro['others.owner'] = user.administrator;
             } else {
                 filtro['others.owner'] = req.session.id;
