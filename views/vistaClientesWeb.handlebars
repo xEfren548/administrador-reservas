@@ -1,62 +1,62 @@
 <!-- Dashboard de Clientes Web -->
-<div class="min-h-screen bg-gray-900 p-6">
+<div class="min-h-screen bg-gray-50 p-6">
     <!-- Header -->
     <div class="mb-8 mt-4">
-        <h1 class="text-3xl font-bold text-white ml-2">Dashboard de Clientes Web</h1>
-        {{!-- <p class="text-gray-300 mt-2 ml-2">Gestión y análisis de clientes registrados en la plataforma web</p> --}}
+        <h1 class="text-3xl font-bold text-gray-900 ml-2">Dashboard de Clientes Web</h1>
+        {{!-- <p class="text-gray-600 mt-2 ml-2">Gestión y análisis de clientes registrados en la plataforma web</p> --}}
     </div>
 
     <!-- Cards de Estadísticas -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Total Clientes -->
-        <div class="bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-teal-500">
             <div class="flex items-center">
-                <div class="p-3 rounded-full bg-blue-900 text-blue-400">
+                <div class="p-3 rounded-full bg-teal-100 text-teal-600">
                     <i class="fas fa-users text-2xl"></i>
                 </div>
                 <div class="ml-4">
-                    <h3 class="text-2xl font-bold text-white">{{stats.total}}</h3>
-                    <p class="text-gray-300">Total Clientes</p>
+                    <h3 class="text-2xl font-bold text-gray-900">{{stats.total}}</h3>
+                    <p class="text-gray-600">Total Clientes</p>
                 </div>
             </div>
         </div>
 
         <!-- Nuevos este mes -->
-        <div class="bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
             <div class="flex items-center">
                 <div class="p-3 rounded-full bg-green-900 text-green-400">
                     <i class="fas fa-user-plus text-2xl"></i>
                 </div>
                 <div class="ml-4">
-                    <h3 class="text-2xl font-bold text-white">{{stats.newThisMonth}}</h3>
-                    <p class="text-gray-300">Nuevos este mes</p>
+                    <h3 class="text-2xl font-bold text-gray-900">{{stats.newThisMonth}}</h3>
+                    <p class="text-gray-600">Nuevos este mes</p>
                 </div>
             </div>
         </div>
 
         <!-- Clientes activos -->
-        <div class="bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
             <div class="flex items-center">
                 <div class="p-3 rounded-full bg-yellow-900 text-yellow-400">
                     <i class="fas fa-chart-line text-2xl"></i>
                 </div>
                 <div class="ml-4">
-                    <h3 class="text-2xl font-bold text-white">{{stats.active}}</h3>
-                    <p class="text-gray-300">Activos (30 días)</p>
+                    <h3 class="text-2xl font-bold text-gray-900">{{stats.active}}</h3>
+                    <p class="text-gray-600">Activos (30 días)</p>
                     <span class="text-sm text-yellow-400">{{stats.activeRate}}% del total</span>
                 </div>
             </div>
         </div>
 
         <!-- Verificados -->
-        <div class="bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
             <div class="flex items-center">
                 <div class="p-3 rounded-full bg-purple-900 text-purple-400">
                     <i class="fas fa-check-circle text-2xl"></i>
                 </div>
                 <div class="ml-4">
-                    <h3 class="text-2xl font-bold text-white">{{stats.verified}}</h3>
-                    <p class="text-gray-300">Email Verificado</p>
+                    <h3 class="text-2xl font-bold text-gray-900">{{stats.verified}}</h3>
+                    <p class="text-gray-600">Email Verificado</p>
                     <span class="text-sm text-purple-400">{{stats.verificationRate}}% del total</span>
                 </div>
             </div>
@@ -66,16 +66,16 @@
     <!-- Gráficas -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Gráfica de registros mensuales -->
-        <div class="bg-gray-800 rounded-xl shadow-lg p-6">
-            <h3 class="text-lg font-semibold text-white mb-4">Registros por Mes</h3>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Registros por Mes</h3>
             <div class="h-64">
                 <canvas id="monthlyChart"></canvas>
             </div>
         </div>
 
         <!-- Gráfica de métodos de registro -->
-        <div class="bg-gray-800 rounded-xl shadow-lg p-6">
-            <h3 class="text-lg font-semibold text-white mb-4">Métodos de Registro</h3>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Métodos de Registro</h3>
             <div class="h-64">
                 <canvas id="registrationChart"></canvas>
             </div>
@@ -83,35 +83,35 @@
     </div>
 
     <!-- Tabla de Clientes -->
-    <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+    <div class="bg-white rounded-xl shadow-lg p-6">
         <div class="flex justify-between items-center mb-6">
-            <h3 class="text-lg font-semibold text-white">Lista de Clientes Web</h3>
+            <h3 class="text-lg font-semibold text-gray-900">Lista de Clientes Web</h3>
             <div class="flex space-x-2">
-                <button onclick="exportToCSV()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm">
+                <button onclick="exportToCSV()" class="bg-green-600 hover:bg-green-700 text-gray-900 px-4 py-2 rounded-lg text-sm">
                     <i class="fas fa-download mr-1"></i> Exportar CSV
                 </button>
-                <button onclick="refreshData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                <button onclick="refreshData()" class="bg-blue-600 hover:bg-blue-700 text-gray-900 px-4 py-2 rounded-lg text-sm">
                     <i class="fas fa-refresh mr-1"></i> Actualizar
                 </button>
             </div>
         </div>
 
         <div class="overflow-x-auto">
-            <table id="clientsTable" class="min-w-full bg-gray-700">
-                <thead class="bg-gray-700">
+            <table id="clientsTable" class="min-w-full bg-gray-100">
+                <thead class="bg-gray-100">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Cliente</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Teléfono</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Registro</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Estado</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Último Login</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Acciones</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Cliente</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Teléfono</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Registro</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Estado</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Último Login</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="bg-gray-700 divide-y divide-gray-600">
+                <tbody class="bg-gray-100 divide-y divide-gray-600">
                     {{#each clientsWeb}}
-                    <tr class="hover:bg-gray-600">
+                    <tr class="hover:bg-gray-200">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
@@ -119,18 +119,18 @@
                                     <img class="h-10 w-10 rounded-full" src="{{profilePicture}}" alt="{{firstName}} {{lastName}}">
                                     {{else}}
                                     <div class="h-10 w-10 rounded-full bg-gray-500 flex items-center justify-center">
-                                        <span class="text-sm font-medium text-white">{{substring firstName 0 1}}{{substring lastName 0 1}}</span>
+                                        <span class="text-sm font-medium text-gray-900">{{substring firstName 0 1}}{{substring lastName 0 1}}</span>
                                     </div>
                                     {{/if}}
                                 </div>
                                 <div class="ml-4">
-                                    <div class="text-sm font-medium text-white">{{firstName}} {{lastName}}</div>
-                                    <div class="text-sm text-gray-400">ID: {{_id}}</div>
+                                    <div class="text-sm font-medium text-gray-900">{{firstName}} {{lastName}}</div>
+                                    <div class="text-sm text-gray-500">ID: {{_id}}</div>
                                 </div>
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-white">{{email}}</div>
+                            <div class="text-sm text-gray-900">{{email}}</div>
                             {{#if isEmailVerified}}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 <i class="fas fa-check-circle mr-1"></i> Verificado
@@ -141,12 +141,12 @@
                             </span>
                             {{/if}}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
-                            {{#if phone}}{{phone}}{{else}}<span class="text-gray-400">No registrado</span>{{/if}}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{#if phone}}{{phone}}{{else}}<span class="text-gray-500">No registrado</span>{{/if}}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-white">{{formatDate createdAt}}</div>
-                            <div class="text-xs text-gray-400">
+                            <div class="text-sm text-gray-900">{{formatDate createdAt}}</div>
+                            <div class="text-xs text-gray-500">
                                 {{#if (eq registrationMethod 'google')}}
                                 <i class="fab fa-google text-red-500"></i> Google
                                 {{else if (eq registrationMethod 'facebook')}}
@@ -167,11 +167,11 @@
                             </span>
                             {{/if}}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
-                            {{#if lastLogin}}{{formatDate lastLogin}}{{else}}<span class="text-gray-400">Nunca</span>{{/if}}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{#if lastLogin}}{{formatDate lastLogin}}{{else}}<span class="text-gray-500">Nunca</span>{{/if}}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button onclick="viewClientDetails('{{_id}}')" class="text-blue-400 hover:text-blue-300 mr-3">
+                            <button onclick="viewClientDetails('{{_id}}')" class="text-teal-600 hover:text-blue-300 mr-3">
                                 <i class="fas fa-eye"></i>
                             </button>
                             <button onclick="editClient('{{_id}}')" class="text-indigo-400 hover:text-indigo-300 mr-3">
@@ -197,11 +197,11 @@
 
 <!-- Modal para detalles del cliente -->
 <div id="clientModal" class="fixed inset-0 bg-black bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
-    <div class="relative top-20 mx-auto p-5 border border-gray-600 w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-gray-800">
+    <div class="relative top-20 mx-auto p-5 border border-gray-300 w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
         <div class="mt-3">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium text-white" id="modalTitle">Detalles del Cliente</h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-200">
+                <h3 class="text-lg font-medium text-gray-900" id="modalTitle">Detalles del Cliente</h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -214,11 +214,11 @@
 
 <!-- Modal para editar cliente -->
 <div id="editClientModal" class="fixed inset-0 bg-black bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
-    <div class="relative top-10 mx-auto p-6 border border-gray-600 w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-gray-800 max-h-screen">
+    <div class="relative top-10 mx-auto p-6 border border-gray-300 w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white max-h-screen">
         <div class="mt-3">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-medium text-white">Editar Cliente</h3>
-                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-200">
+                <h3 class="text-xl font-medium text-gray-900">Editar Cliente</h3>
+                <button onclick="closeEditModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -227,56 +227,56 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Nombre -->
                     <div>
-                        <label for="editFirstName" class="block text-sm font-medium text-gray-300 mb-2">Nombre</label>
+                        <label for="editFirstName" class="block text-sm font-medium text-gray-600 mb-2">Nombre</label>
                         <input type="text" id="editFirstName" name="firstName" 
-                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                                required>
                     </div>
                     
                     <!-- Apellido -->
                     <div>
-                        <label for="editLastName" class="block text-sm font-medium text-gray-300 mb-2">Apellido</label>
+                        <label for="editLastName" class="block text-sm font-medium text-gray-600 mb-2">Apellido</label>
                         <input type="text" id="editLastName" name="lastName" 
-                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                                required>
                     </div>
                 </div>
 
                 <!-- Email -->
                 <div>
-                    <label for="editEmail" class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                    <label for="editEmail" class="block text-sm font-medium text-gray-600 mb-2">Email</label>
                     <input type="email" id="editEmail" name="email" 
-                           class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                           class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                            required>
                 </div>
 
                 <!-- Teléfono -->
                 <div>
-                    <label for="editPhone" class="block text-sm font-medium text-gray-300 mb-2">Teléfono</label>
+                    <label for="editPhone" class="block text-sm font-medium text-gray-600 mb-2">Teléfono</label>
                     <input type="tel" id="editPhone" name="phone" 
-                           class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                           class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
 
                 <!-- Dirección -->
                 <div>
-                    <label for="editAddress" class="block text-sm font-medium text-gray-300 mb-2">Dirección</label>
+                    <label for="editAddress" class="block text-sm font-medium text-gray-600 mb-2">Dirección</label>
                     <textarea id="editAddress" name="address" rows="2"
-                              class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                              class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
                 </div>
 
                 <!-- Nueva contraseña -->
                 <div>
-                    <label for="editPassword" class="block text-sm font-medium text-gray-300 mb-2">Nueva Contraseña</label>
+                    <label for="editPassword" class="block text-sm font-medium text-gray-600 mb-2">Nueva Contraseña</label>
                     <div class="relative">
                         <input type="password" id="editPassword" name="password" 
-                               class="w-full px-3 py-2 pr-10 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               class="w-full px-3 py-2 pr-10 bg-gray-100 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                placeholder="Dejar vacío para no cambiar">
                         <button type="button" onclick="togglePassword('editPassword')" 
-                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200">
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
                             <i class="fas fa-eye" id="editPassword-icon"></i>
                         </button>
                     </div>
-                    <p class="text-xs text-gray-400 mt-1">Mínimo 6 caracteres. Dejar vacío si no deseas cambiar la contraseña.</p>
+                    <p class="text-xs text-gray-500 mt-1">Mínimo 6 caracteres. Dejar vacío si no deseas cambiar la contraseña.</p>
                 </div>
 
                 <!-- Estado activo -->
@@ -287,7 +287,7 @@
                             <div class="toggle-switch absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full shadow transform transition-transform duration-300"></div>
                         </div>
                     </label>
-                    <span class="text-gray-300">Cliente activo</span>
+                    <span class="text-gray-600">Cliente activo</span>
                 </div>
 
 
@@ -295,11 +295,11 @@
                 <!-- Botones -->
                 <div class="flex justify-end space-x-3 pt-6">
                     <button type="button" onclick="closeEditModal()" 
-                            class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                            class="px-4 py-2 bg-gray-600 text-gray-900 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500">
                         Cancelar
                     </button>
                     <button type="submit" 
-                            class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="px-6 py-2 bg-blue-600 text-gray-900 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <i class="fas fa-save mr-2"></i> Guardar Cambios
                     </button>
                 </div>
@@ -473,12 +473,12 @@ function viewClientDetails(clientId) {
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300">Nombre Completo</label>
-                            <p class="text-sm text-white">${data.firstName} ${data.lastName}</p>
+                            <label class="block text-sm font-medium text-gray-600">Nombre Completo</label>
+                            <p class="text-sm text-gray-900">${data.firstName} ${data.lastName}</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-300">Email</label>
-                            <p class="text-sm text-white">${data.email}</p>
+                            <label class="block text-sm font-medium text-gray-600">Email</label>
+                            <p class="text-sm text-gray-900">${data.email}</p>
                         </div>
                     </div>
                     <!-- Más detalles aquí -->
@@ -702,7 +702,7 @@ function refreshData() {
 function showNotification(message, type = 'success') {
     const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
     const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-x-full`;
+    notification.className = `fixed top-4 right-4 ${bgColor} text-gray-900 px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-x-full`;
     notification.innerHTML = `
         <div class="flex items-center">
             <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>

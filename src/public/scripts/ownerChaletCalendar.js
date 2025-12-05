@@ -178,9 +178,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     
                     newEl.innerHTML = `
-                    <div class="fc-hoverable-event" style="position: absolute; top: 100%; left: 0; width: 300px; height: auto; background-color: #1f2937; z-index: 100000000 !important; border: 1px solid #374151; border-radius: 0.5rem; padding: 0.75rem; font-size: 14px; font-family: 'Inter', sans-serif; cursor: pointer; color: white;">
+                    <div class="fc-hoverable-event" style="position: absolute; top: 100%; left: 0; width: 300px; height: auto; background-color: #ffffff; z-index: 100000000 !important; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 0.75rem; font-size: 14px; font-family: 'Inter', sans-serif; cursor: pointer; color: #1f2937;">
                         <strong style="color: #60a5fa;">${newElTitle}</strong>
-                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #374151;">
+                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
                             <div style="margin-bottom: 0.25rem;"><b>Tipo:</b> ${tipoLabel}</div>
                             ${finalMsg}
                             <div><b>Estado:</b> ${newElStatus.toUpperCase()}</div>
@@ -212,11 +212,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         cancelButtonColor: '#3085d6',
                         confirmButtonText: 'Sí, mover',
                         cancelButtonText: 'Cancelar',
-                        background: '#212529',
+                        background: '#ffffff',
                         color: '#fff',
                         buttonsStyling: false,
                         customClass: {
-                            popup: 'bg-dark text-white border border-secondary',
+                            popup: 'bg-light text-dark border border-secondary',
                             confirmButton: 'btn btn-danger me-2',
                             cancelButton: 'btn btn-secondary'
                         }
@@ -244,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 title: 'Fechas actualizadas',
                                 showConfirmButton: false,
                                 timer: 2500,
-                                background: '#212529',
+                                background: '#ffffff',
                                 color: '#fff'
                             });
                         } catch (error) {
@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 title: 'Error al actualizar fechas: ' + error.message,
                                 showConfirmButton: false,
                                 timer: 2500,
-                                background: '#212529',
+                                background: '#ffffff',
                                 color: '#fff'
                             });
                         }
@@ -316,11 +316,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 title: 'Error',
                 text: 'Error al obtener datos de la reserva: ' + error.message,
                 confirmButtonText: 'Aceptar',
-                background: '#212529',
+                background: '#ffffff',
                 color: '#fff',
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
+                    popup: 'bg-light text-dark border border-secondary',
                     confirmButton: 'btn btn-danger'
                 }
             });
@@ -406,14 +406,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 `,
                 width: '600px',
-                background: '#212529',
+                background: '#ffffff',
                 color: '#fff',
                 showCancelButton: true,
                 confirmButtonText: 'Guardar cambios',
                 cancelButtonText: 'Cancelar',
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
+                    popup: 'bg-light text-dark border border-secondary',
                     confirmButton: 'btn btn-success me-2',
                     cancelButton: 'btn btn-secondary'
                 },
@@ -515,11 +515,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             title: '¡Completado!',
                             text: 'Reserva actualizada correctamente.',
                             confirmButtonText: 'Aceptar',
-                            background: '#212529',
+                            background: '#ffffff',
                             color: '#fff',
                             buttonsStyling: false,
                             customClass: {
-                                popup: 'bg-dark text-white border border-secondary',
+                                popup: 'bg-light text-dark border border-secondary',
                                 confirmButton: 'btn btn-success'
                             }
                         });
@@ -534,11 +534,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         title: 'Error',
                         text: 'Error al actualizar la reserva: ' + error.message,
                         confirmButtonText: 'Aceptar',
-                        background: '#212529',
+                        background: '#ffffff',
                         color: '#fff',
                         buttonsStyling: false,
                         customClass: {
-                            popup: 'bg-dark text-white border border-secondary',
+                            popup: 'bg-light text-dark border border-secondary',
                             confirmButton: 'btn btn-danger'
                         }
                     });
@@ -551,11 +551,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 title: 'Error',
                 text: 'Error al abrir el modal: ' + error.message,
                 confirmButtonText: 'Aceptar',
-                background: '#212529',
+                background: '#ffffff',
                 color: '#fff',
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
+                    popup: 'bg-light text-dark border border-secondary',
                     confirmButton: 'btn btn-danger'
                 }
             });
@@ -601,14 +601,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 `,
                 width: '500px',
-                background: '#212529',
+                background: '#ffffff',
                 color: '#fff',
                 showCancelButton: true,
                 confirmButtonText: 'Guardar cambios',
                 cancelButtonText: 'Cancelar',
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
+                    popup: 'bg-light text-dark border border-secondary',
                     confirmButton: 'btn btn-success me-2',
                     cancelButton: 'btn btn-secondary'
                 },
@@ -698,11 +698,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             title: '¡Completado!',
                             text: 'Reserva actualizada correctamente.',
                             confirmButtonText: 'Aceptar',
-                            background: '#212529',
+                            background: '#ffffff',
                             color: '#fff',
                             buttonsStyling: false,
                             customClass: {
-                                popup: 'bg-dark text-white border border-secondary',
+                                popup: 'bg-light text-dark border border-secondary',
                                 confirmButton: 'btn btn-success'
                             }
                         });
@@ -717,11 +717,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         title: 'Error',
                         text: 'Error al actualizar la reserva: ' + error.message,
                         confirmButtonText: 'Aceptar',
-                        background: '#212529',
+                        background: '#ffffff',
                         color: '#fff',
                         buttonsStyling: false,
                         customClass: {
-                            popup: 'bg-dark text-white border border-secondary',
+                            popup: 'bg-light text-dark border border-secondary',
                             confirmButton: 'btn btn-danger'
                         }
                     });
@@ -734,11 +734,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 title: 'Error',
                 text: 'Error al abrir el modal: ' + error.message,
                 confirmButtonText: 'Aceptar',
-                background: '#212529',
+                background: '#ffffff',
                 color: '#fff',
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'bg-dark text-white border border-secondary',
+                    popup: 'bg-light text-dark border border-secondary',
                     confirmButton: 'btn btn-danger'
                 }
             });
@@ -767,7 +767,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         await Swal.fire({
-            title: '<h4 class="text-white">Información de Reserva</h4>',
+            title: '<h4 class="text-dark">Información de Reserva</h4>',
             html: `
                 <div class="text-start">
                     <div class="mb-2"><strong>Cliente:</strong> ${clienteNombre}</div>
@@ -782,12 +782,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 </div>
             `,
-            background: '#212529',
+            background: '#ffffff',
             color: '#fff',
             confirmButtonText: 'Cerrar',
             buttonsStyling: false,
             customClass: {
-                popup: 'bg-dark text-white border border-secondary',
+                popup: 'bg-light text-dark border border-secondary',
                 confirmButton: 'btn btn-primary'
             },
             width: '500px'

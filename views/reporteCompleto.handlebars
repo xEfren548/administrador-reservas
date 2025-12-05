@@ -1,41 +1,41 @@
 <!-- Reporte Completo - Todo en Uno - Tema Oscuro -->
-<div class="min-h-screen bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-white">Reporte Completo - Todo en Uno</h1>
-            <p class="mt-2 text-sm text-gray-400">
+            <h1 class="text-3xl font-bold text-gray-900">Reporte Completo - Todo en Uno</h1>
+            <p class="mt-2 text-sm text-gray-500">
                 Genera un reporte detallado de todas las reservas en un rango de fechas específico
             </p>
         </div>
 
         <!-- Formulario de Filtros -->
-        <div class="bg-gray-800 shadow-xl rounded-lg p-6 mb-6 border border-gray-700">
+        <div class="bg-white shadow-xl rounded-lg p-6 mb-6 border border-gray-200">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Fecha Inicio -->
                 <div>
-                    <label for="fechaInicio" class="block text-sm font-medium text-gray-300 mb-2">
+                    <label for="fechaInicio" class="block text-sm font-medium text-gray-600 mb-2">
                         Fecha Inicio
                     </label>
                     <input 
                         type="date" 
                         id="fechaInicio" 
                         name="fechaInicio"
-                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        class="w-full px-4 py-2 bg-gray-100 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         required
                     >
                 </div>
 
                 <!-- Fecha Fin -->
                 <div>
-                    <label for="fechaFin" class="block text-sm font-medium text-gray-300 mb-2">
+                    <label for="fechaFin" class="block text-sm font-medium text-gray-600 mb-2">
                         Fecha Fin
                     </label>
                     <input 
                         type="date" 
                         id="fechaFin" 
                         name="fechaFin"
-                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        class="w-full px-4 py-2 bg-gray-100 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         required
                     >
                 </div>
@@ -45,7 +45,7 @@
                     <button 
                         id="btnGenerarReporte"
                         onclick="generarReporteExcel()"
-                        class="w-full px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors duration-200 flex items-center justify-center"
+                        class="w-full px-6 py-2 bg-blue-600 text-gray-900 font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors duration-200 flex items-center justify-center"
                     >
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -82,7 +82,7 @@
                 </div>
                 <div class="ml-3">
                     <h3 class="text-sm font-medium text-blue-300">Información del Reporte</h3>
-                    <div class="mt-2 text-sm text-gray-300">
+                    <div class="mt-2 text-sm text-gray-600">
                         <p>El reporte incluye:</p>
                         <ul class="list-disc list-inside mt-1 space-y-1">
                             <li>Información completa de reservas (cliente, cabaña, fechas, precios)</li>
@@ -96,10 +96,10 @@
         </div>
 
         <!-- Sección de Reporte de Inversionistas -->
-        <div class="mt-8 bg-gray-800 shadow-xl rounded-lg p-6 border border-gray-700">
+        <div class="mt-8 bg-white shadow-xl rounded-lg p-6 border border-gray-200">
             <div class="mb-6">
-                <h2 class="text-2xl font-bold text-white">Reporte de Inversionistas</h2>
-                <p class="mt-2 text-sm text-gray-400">
+                <h2 class="text-2xl font-bold text-gray-900">Reporte de Inversionistas</h2>
+                <p class="mt-2 text-sm text-gray-500">
                     Genera un reporte detallado de todas las comisiones positivas por reserva
                 </p>
             </div>
@@ -107,28 +107,28 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Fecha Inicio -->
                 <div>
-                    <label for="fechaInicioInversionistas" class="block text-sm font-medium text-gray-300 mb-2">
+                    <label for="fechaInicioInversionistas" class="block text-sm font-medium text-gray-600 mb-2">
                         Fecha Inicio
                     </label>
                     <input 
                         type="date" 
                         id="fechaInicioInversionistas" 
                         name="fechaInicioInversionistas"
-                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                        class="w-full px-4 py-2 bg-gray-100 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
                         required
                     >
                 </div>
 
                 <!-- Fecha Fin -->
                 <div>
-                    <label for="fechaFinInversionistas" class="block text-sm font-medium text-gray-300 mb-2">
+                    <label for="fechaFinInversionistas" class="block text-sm font-medium text-gray-600 mb-2">
                         Fecha Fin
                     </label>
                     <input 
                         type="date" 
                         id="fechaFinInversionistas" 
                         name="fechaFinInversionistas"
-                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                        class="w-full px-4 py-2 bg-gray-100 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
                         required
                     >
                 </div>
@@ -138,7 +138,7 @@
                     <button 
                         id="btnGenerarReporteInversionistas"
                         onclick="generarReporteInversionistas()"
-                        class="w-full px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors duration-200 flex items-center justify-center"
+                        class="w-full px-6 py-2 bg-green-600 text-gray-900 font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors duration-200 flex items-center justify-center"
                     >
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>

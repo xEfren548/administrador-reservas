@@ -1,20 +1,20 @@
 <!-- Spinner Global de Carga -->
 <div id="globalSpinner" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 hidden">
-    <div class="bg-gray-800 rounded-lg shadow-2xl p-4 border border-gray-700">
+    <div class="bg-white rounded-lg shadow-2xl p-4 border border-gray-200">
         <div class="flex items-center space-x-3">
-            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-            <p class="text-white text-sm font-medium">Cargando...</p>
+            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-500"></div>
+            <p class="text-gray-900 text-sm font-medium">Cargando...</p>
         </div>
     </div>
 </div>
 
-<div class="min-h-screen bg-gray-900 text-gray-100">
+<div class="min-h-screen bg-gray-50 text-gray-800">
     <!-- Header con acciones principales -->
-    <div class="bg-gray-800 border-b border-gray-700 px-4 py-4 sm:px-6 lg:px-8">
+    <div class="bg-white border-b border-gray-200 px-4 py-4 sm:px-6 lg:px-8">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-white">Finanzas</h1>
-                <p class="mt-1 text-sm text-gray-400">Gestiona organizaciones, cuentas y transacciones</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Finanzas</h1>
+                <p class="mt-1 text-sm text-gray-500">Gestiona organizaciones, cuentas y transacciones</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 {{#if isMasterAdmin}}
@@ -30,22 +30,22 @@
     </div>
 
     <!-- Tabs de navegación -->
-    <div class="bg-gray-800 border-b border-gray-700">
+    <div class="bg-white border-b border-gray-200">
         <div class="px-4 sm:px-6 lg:px-8">
             <nav class="flex space-x-4 overflow-x-auto scrollbar-hide" aria-label="Tabs">
-                <button class="tab-button active whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-blue-500 text-blue-400" data-tab="dashboard">
+                <button class="tab-button active whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-teal-500 text-teal-600" data-tab="dashboard">
                     <i class="fas fa-chart-line me-1"></i> Dashboard
                 </button>
-                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300" data-tab="organizaciones">
+                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="organizaciones">
                     <i class="fas fa-building me-1"></i> Organizaciones
                 </button>
-                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300" data-tab="cuentas">
+                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="cuentas">
                     <i class="fas fa-wallet me-1"></i> Mis Cuentas
                 </button>
-                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300" data-tab="transacciones">
+                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="transacciones">
                     <i class="fas fa-exchange-alt me-1"></i> Transacciones
                 </button>
-                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300" data-tab="solicitudes">
+                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="solicitudes">
                     <i class="fas fa-clock me-1"></i> Solicitudes
                 </button>
             </nav>
@@ -59,20 +59,20 @@
         <div id="tab-dashboard" class="tab-content active">
             <!-- Selector de Vista -->
             <div class="mb-6 flex flex-wrap gap-4">
-                <select id="dashboard-selector" class="form-select bg-gray-700 border-gray-600 text-gray-200 w-auto">
+                <select id="dashboard-selector" class="form-select bg-gray-100 border-gray-300 text-gray-700 w-auto">
                     <option value="personal">Vista Personal</option>
                     <option value="organizacion">Vista de Organización</option>
                 </select>
-                <select id="organizacion-selector" class="form-select bg-gray-700 border-gray-600 text-gray-200 w-auto hidden">
+                <select id="organizacion-selector" class="form-select bg-gray-100 border-gray-300 text-gray-700 w-auto hidden">
                     <option value="">Seleccione una organización</option>
                 </select>
                 
                 <!-- Filtro de Fechas -->
                 <div class="flex gap-2 items-center">
-                    <label class="text-gray-300 text-sm">Desde:</label>
-                    <input type="date" id="fecha-desde" class="form-control form-control-sm bg-gray-700 border-gray-600 text-gray-200 w-auto">
-                    <label class="text-gray-300 text-sm">Hasta:</label>
-                    <input type="date" id="fecha-hasta" class="form-control form-control-sm bg-gray-700 border-gray-600 text-gray-200 w-auto">
+                    <label class="text-gray-600 text-sm">Desde:</label>
+                    <input type="date" id="fecha-desde" class="form-control form-control-sm bg-gray-100 border-gray-300 text-gray-700 w-auto">
+                    <label class="text-gray-600 text-sm">Hasta:</label>
+                    <input type="date" id="fecha-hasta" class="form-control form-control-sm bg-gray-100 border-gray-300 text-gray-700 w-auto">
                     <button id="btn-aplicar-filtro-fechas" class="btn btn-primary btn-sm">
                         <i class="fas fa-filter me-1"></i> Aplicar
                     </button>
@@ -84,54 +84,54 @@
 
             <!-- Dashboard Personal -->
             <div id="dashboard-personal">
-                <h2 class="text-2xl font-bold text-white mb-6">Mi Resumen Personal</h2>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Mi Resumen Personal</h2>
                 
                 <!-- Tarjetas de Resumen -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-gradient-to-br from-blue-900 to-blue-700 rounded-lg p-6 shadow-xl">
+                    <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-teal-500">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-blue-200 text-sm font-medium">Saldo Total</p>
-                                <p id="personal-saldo-total" class="text-3xl font-bold text-white mt-2">$0.00</p>
+                                <p class="text-gray-500 text-sm font-medium">Saldo Total</p>
+                                <p id="personal-saldo-total" class="text-3xl font-bold text-gray-900 mt-2">$0.00</p>
                             </div>
-                            <div class="bg-blue-600 bg-opacity-50 rounded-full p-3">
-                                <i class="fas fa-wallet text-2xl text-white"></i>
+                            <div class="bg-teal-100 rounded-full p-3">
+                                <i class="fas fa-wallet text-2xl text-teal-600"></i>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-green-900 to-green-700 rounded-lg p-6 shadow-xl">
+                    <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-green-500">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-green-200 text-sm font-medium">Total Ingresos</p>
-                                <p id="personal-ingresos" class="text-3xl font-bold text-white mt-2">$0.00</p>
+                                <p class="text-gray-500 text-sm font-medium">Total Ingresos</p>
+                                <p id="personal-ingresos" class="text-3xl font-bold text-green-600 mt-2">$0.00</p>
                             </div>
-                            <div class="bg-green-600 bg-opacity-50 rounded-full p-3">
-                                <i class="fas fa-arrow-up text-2xl text-white"></i>
+                            <div class="bg-green-100 rounded-full p-3">
+                                <i class="fas fa-arrow-up text-2xl text-green-600"></i>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-red-900 to-red-700 rounded-lg p-6 shadow-xl">
+                    <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-red-500">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-red-200 text-sm font-medium">Total Gastos</p>
-                                <p id="personal-gastos" class="text-3xl font-bold text-white mt-2">$0.00</p>
+                                <p class="text-gray-500 text-sm font-medium">Total Gastos</p>
+                                <p id="personal-gastos" class="text-3xl font-bold text-red-600 mt-2">$0.00</p>
                             </div>
-                            <div class="bg-red-600 bg-opacity-50 rounded-full p-3">
-                                <i class="fas fa-arrow-down text-2xl text-white"></i>
+                            <div class="bg-red-100 rounded-full p-3">
+                                <i class="fas fa-arrow-down text-2xl text-red-600"></i>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-purple-900 to-purple-700 rounded-lg p-6 shadow-xl">
+                    <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-purple-500">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-purple-200 text-sm font-medium">Mis Cuentas</p>
-                                <p id="personal-num-cuentas" class="text-3xl font-bold text-white mt-2">0</p>
+                                <p class="text-gray-500 text-sm font-medium">Mis Cuentas</p>
+                                <p id="personal-num-cuentas" class="text-3xl font-bold text-purple-600 mt-2">0</p>
                             </div>
-                            <div class="bg-purple-600 bg-opacity-50 rounded-full p-3">
-                                <i class="fas fa-folder text-2xl text-white"></i>
+                            <div class="bg-purple-100 rounded-full p-3">
+                                <i class="fas fa-folder text-2xl text-purple-600"></i>
                             </div>
                         </div>
                     </div>
@@ -139,15 +139,15 @@
 
                 <!-- Gráficas y Tablas Personal -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
-                        <h3 class="text-lg font-semibold text-white mb-4">Transacciones por Cuenta</h3>
+                    <div class="bg-white rounded-lg p-6 shadow-xl">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Transacciones por Cuenta</h3>
                         <div style="height: 300px;">
                             <canvas id="personal-chart-cuentas"></canvas>
                         </div>
                     </div>
 
-                    <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
-                        <h3 class="text-lg font-semibold text-white mb-4">Transacciones Recientes</h3>
+                    <div class="bg-white rounded-lg p-6 shadow-xl">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Transacciones Recientes</h3>
                         <div id="personal-transacciones-recientes" class="space-y-3 max-h-96 overflow-y-auto">
                             <!-- Se llenará dinámicamente -->
                         </div>
@@ -155,31 +155,31 @@
                 </div>
 
                 <!-- Mi Resumen de Organizaciones -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-xl mb-6">
-                    <h3 class="text-lg font-semibold text-white mb-4">
+                <div class="bg-white rounded-lg p-6 shadow-xl mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
                         <i class="fas fa-building mr-2"></i>Mi Resumen de Organizaciones
                     </h3>
-                    <p class="text-gray-400 text-sm mb-4">Balance de mis transacciones en organizaciones donde participo</p>
+                    <p class="text-gray-500 text-sm mb-4">Balance de mis transacciones en organizaciones donde participo</p>
                     
                     <!-- Card de Balance Total -->
-                    <div class="bg-gradient-to-br from-blue-900 to-blue-700 rounded-lg p-6 shadow-xl mb-4">
+                    <div class="bg-white border-l-4 border-teal-500 rounded-lg p-6 shadow-xl mb-4">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-blue-200 text-sm font-medium mb-2">Balance Total en Organizaciones</p>
-                                <p id="org-balance-total" class="text-3xl font-bold text-white">$0.00</p>
+                                <p class="text-gray-500 text-sm font-medium mb-2">Balance Total en Organizaciones</p>
+                                <p id="org-balance-total" class="text-3xl font-bold text-gray-900">$0.00</p>
                             </div>
-                            <div class="bg-blue-600 bg-opacity-50 rounded-full p-4">
-                                <i class="fas fa-balance-scale text-3xl text-white"></i>
+                            <div class="bg-teal-100 rounded-full p-4">
+                                <i class="fas fa-balance-scale text-3xl text-teal-600"></i>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-blue-600">
+                        <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
                             <div>
-                                <p class="text-blue-300 text-xs mb-1">Total Ingresos</p>
-                                <p id="org-balance-ingresos" class="text-green-400 font-bold text-lg">$0.00</p>
+                                <p class="text-gray-500 text-xs mb-1">Total Ingresos</p>
+                                <p id="org-balance-ingresos" class="text-green-600 font-bold text-lg">$0.00</p>
                             </div>
                             <div>
-                                <p class="text-blue-300 text-xs mb-1">Total Gastos</p>
-                                <p id="org-balance-gastos" class="text-red-400 font-bold text-lg">$0.00</p>
+                                <p class="text-gray-500 text-xs mb-1">Total Gastos</p>
+                                <p id="org-balance-gastos" class="text-red-600 font-bold text-lg">$0.00</p>
                             </div>
                         </div>
                     </div>
@@ -192,101 +192,101 @@
 
             <!-- Dashboard Organización -->
             <div id="dashboard-organizacion" class="hidden">
-                <h2 class="text-2xl font-bold text-white mb-6">Dashboard de Organización</h2>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Dashboard de Organización</h2>
                 
                 <!-- Tarjetas de Resumen Organización -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
-                    <div class="bg-gradient-to-br from-blue-900 to-blue-700 rounded-lg p-6 shadow-xl">
+                    <div class="bg-white border-l-4 border-teal-500 rounded-lg p-6 shadow-xl">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-blue-200 text-sm font-medium">Saldo Total</p>
-                                <p id="org-saldo-total" class="text-2xl font-bold text-white mt-2">$0.00</p>
+                                <p class="text-gray-500 text-sm font-medium">Saldo Total</p>
+                                <p id="org-saldo-total" class="text-2xl font-bold text-gray-900 mt-2">$0.00</p>
                             </div>
-                            <i class="fas fa-wallet text-3xl text-blue-300"></i>
+                            <i class="fas fa-wallet text-3xl text-teal-600"></i>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-green-900 to-green-700 rounded-lg p-6 shadow-xl">
+                    <div class="bg-white border-l-4 border-green-500 rounded-lg p-6 shadow-xl">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-green-200 text-sm font-medium">Ingresos</p>
-                                <p id="org-ingresos" class="text-2xl font-bold text-white mt-2">$0.00</p>
+                                <p class="text-gray-500 text-sm font-medium">Ingresos</p>
+                                <p id="org-ingresos" class="text-2xl font-bold text-gray-900 mt-2">$0.00</p>
                             </div>
-                            <i class="fas fa-arrow-up text-3xl text-green-300"></i>
+                            <i class="fas fa-arrow-up text-3xl text-green-600"></i>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-red-900 to-red-700 rounded-lg p-6 shadow-xl">
+                    <div class="bg-white border-l-4 border-red-500 rounded-lg p-6 shadow-xl">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-red-200 text-sm font-medium">Gastos</p>
-                                <p id="org-gastos" class="text-2xl font-bold text-white mt-2">$0.00</p>
+                                <p class="text-gray-500 text-sm font-medium">Gastos</p>
+                                <p id="org-gastos" class="text-2xl font-bold text-gray-900 mt-2">$0.00</p>
                             </div>
-                            <i class="fas fa-arrow-down text-3xl text-red-300"></i>
+                            <i class="fas fa-arrow-down text-3xl text-red-600"></i>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-purple-900 to-purple-700 rounded-lg p-6 shadow-xl">
+                    <div class="bg-white border-l-4 border-purple-500 rounded-lg p-6 shadow-xl">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-purple-200 text-sm font-medium">Cuentas</p>
-                                <p id="org-num-cuentas" class="text-2xl font-bold text-white mt-2">0</p>
+                                <p class="text-gray-500 text-sm font-medium">Cuentas</p>
+                                <p id="org-num-cuentas" class="text-2xl font-bold text-gray-900 mt-2">0</p>
                             </div>
-                            <i class="fas fa-folder text-3xl text-purple-300"></i>
+                            <i class="fas fa-folder text-3xl text-purple-600"></i>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-yellow-900 to-yellow-700 rounded-lg p-6 shadow-xl">
+                    <div class="bg-white border-l-4 border-yellow-500 rounded-lg p-6 shadow-xl">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-yellow-200 text-sm font-medium">Transacciones</p>
-                                <p id="org-num-transacciones" class="text-2xl font-bold text-white mt-2">0</p>
+                                <p class="text-gray-500 text-sm font-medium">Transacciones</p>
+                                <p id="org-num-transacciones" class="text-2xl font-bold text-gray-900 mt-2">0</p>
                             </div>
-                            <i class="fas fa-exchange-alt text-3xl text-yellow-300"></i>
+                            <i class="fas fa-exchange-alt text-3xl text-yellow-600"></i>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-indigo-900 to-indigo-700 rounded-lg p-6 shadow-xl">
+                    <div class="bg-white border-l-4 border-indigo-500 rounded-lg p-6 shadow-xl">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-indigo-200 text-sm font-medium">Participantes</p>
-                                <p id="org-num-participantes-unicos" class="text-2xl font-bold text-white mt-2">0</p>
+                                <p class="text-gray-500 text-sm font-medium">Participantes</p>
+                                <p id="org-num-participantes-unicos" class="text-2xl font-bold text-gray-900 mt-2">0</p>
                             </div>
-                            <i class="fas fa-users text-3xl text-indigo-300"></i>
+                            <i class="fas fa-users text-3xl text-indigo-600"></i>
                         </div>
                     </div>
                 </div>
 
                 <!-- Resumen del Mes -->
-                <div class="bg-gray-800 rounded-lg p-6 shadow-xl mb-6">
-                    <h3 class="text-lg font-semibold text-white mb-4">Resumen del Mes Actual</h3>
+                <div class="bg-white rounded-lg p-6 shadow-xl mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Resumen del Mes Actual</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-gray-700 rounded-lg p-4">
-                            <p class="text-gray-400 text-sm">Ingresos del Mes</p>
-                            <p id="org-ingresos-mes" class="text-2xl font-bold text-green-400 mt-2">$0.00</p>
+                        <div class="bg-gray-100 rounded-lg p-4">
+                            <p class="text-gray-500 text-sm">Ingresos del Mes</p>
+                            <p id="org-ingresos-mes" class="text-2xl font-bold text-green-600 mt-2">$0.00</p>
                         </div>
-                        <div class="bg-gray-700 rounded-lg p-4">
-                            <p class="text-gray-400 text-sm">Gastos del Mes</p>
-                            <p id="org-gastos-mes" class="text-2xl font-bold text-red-400 mt-2">$0.00</p>
+                        <div class="bg-gray-100 rounded-lg p-4">
+                            <p class="text-gray-500 text-sm">Gastos del Mes</p>
+                            <p id="org-gastos-mes" class="text-2xl font-bold text-red-600 mt-2">$0.00</p>
                         </div>
-                        <div class="bg-gray-700 rounded-lg p-4">
-                            <p class="text-gray-400 text-sm">Balance del Mes</p>
-                            <p id="org-balance-mes" class="text-2xl font-bold text-blue-400 mt-2">$0.00</p>
+                        <div class="bg-gray-100 rounded-lg p-4">
+                            <p class="text-gray-500 text-sm">Balance del Mes</p>
+                            <p id="org-balance-mes" class="text-2xl font-bold text-teal-600 mt-2">$0.00</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Gráficas Organización -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
-                        <h3 class="text-lg font-semibold text-white mb-4">Evolución (Últimos 6 Meses)</h3>
+                    <div class="bg-white rounded-lg p-6 shadow-xl">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Evolución (Últimos 6 Meses)</h3>
                         <div style="height: 300px;">
                             <canvas id="org-chart-evolucion"></canvas>
                         </div>
                     </div>
 
-                    <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
-                        <h3 class="text-lg font-semibold text-white mb-4">Gastos por Categoría</h3>
+                    <div class="bg-white rounded-lg p-6 shadow-xl">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Gastos por Categoría</h3>
                         <div style="height: 300px;">
                             <canvas id="org-chart-categorias"></canvas>
                         </div>
@@ -295,30 +295,30 @@
 
                 <!-- Top Usuarios y Mi Participación -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
-                        <h3 class="text-lg font-semibold text-white mb-4">Usuarios por Actividad</h3>
+                    <div class="bg-white rounded-lg p-6 shadow-xl">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Usuarios por Actividad</h3>
                         <div id="org-top-usuarios" class="space-y-3 max-h-96 overflow-y-auto">
                             <!-- Se llenará dinámicamente -->
                         </div>
                     </div>
 
-                    <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
-                        <h3 class="text-lg font-semibold text-white mb-4">Mi Participación</h3>
+                    <div class="bg-white rounded-lg p-6 shadow-xl">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Mi Participación</h3>
                         <div class="space-y-4">
-                            <div class="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-                                <span class="text-gray-300">Mis Ingresos</span>
-                                <span id="org-mis-ingresos" class="text-green-400 font-bold">$0.00</span>
+                            <div class="flex justify-between items-center p-3 bg-gray-100 rounded-lg">
+                                <span class="text-gray-600">Mis Ingresos</span>
+                                <span id="org-mis-ingresos" class="text-green-600 font-bold">$0.00</span>
                             </div>
-                            <div class="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-                                <span class="text-gray-300">Mis Gastos</span>
-                                <span id="org-mis-gastos" class="text-red-400 font-bold">$0.00</span>
+                            <div class="flex justify-between items-center p-3 bg-gray-100 rounded-lg">
+                                <span class="text-gray-600">Mis Gastos</span>
+                                <span id="org-mis-gastos" class="text-red-600 font-bold">$0.00</span>
                             </div>
-                            <div class="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-                                <span class="text-gray-300">Mi Balance</span>
-                                <span id="org-mi-balance" class="text-blue-400 font-bold">$0.00</span>
+                            <div class="flex justify-between items-center p-3 bg-gray-100 rounded-lg">
+                                <span class="text-gray-600">Mi Balance</span>
+                                <span id="org-mi-balance" class="text-teal-600 font-bold">$0.00</span>
                             </div>
-                            <div class="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-                                <span class="text-gray-300">Mis Transacciones</span>
+                            <div class="flex justify-between items-center p-3 bg-gray-100 rounded-lg">
+                                <span class="text-gray-600">Mis Transacciones</span>
                                 <span id="org-mis-transacciones" class="text-purple-400 font-bold">0</span>
                             </div>
                         </div>
@@ -329,13 +329,13 @@
 
         <!-- Tab: Organizaciones -->
         <div id="tab-organizaciones" class="tab-content hidden">
-            <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
-                <div class="p-4 sm:p-6 border-b border-gray-700">
-                    <h2 class="text-xl font-semibold text-white">Organizaciones</h2>
+            <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                <div class="p-4 sm:p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900">Organizaciones</h2>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-300">
-                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-gray-500 uppercase bg-gray-100">
                             <tr>
                                 <th scope="col" class="px-6 py-3">Nombre</th>
                                 <th scope="col" class="px-6 py-3">Descripción</th>
@@ -364,18 +364,18 @@
 
         <!-- Tab: Transacciones -->
         <div id="tab-transacciones" class="tab-content hidden">
-            <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
-                <div class="p-4 sm:p-6 border-b border-gray-700">
+            <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                <div class="p-4 sm:p-6 border-b border-gray-200">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <h2 class="text-xl font-semibold text-white">Transacciones</h2>
-                        <select id="filtro-cuenta-transacciones" class="form-select form-select-sm bg-gray-700 border-gray-600 text-gray-200">
+                        <h2 class="text-xl font-semibold text-gray-900">Transacciones</h2>
+                        <select id="filtro-cuenta-transacciones" class="form-select form-select-sm bg-gray-100 border-gray-300 text-gray-700">
                             <option value="">Todas las cuentas</option>
                         </select>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-300" id="tabla-transacciones">
-                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                    <table class="w-full text-sm text-left text-gray-600" id="tabla-transacciones">
+                        <thead class="text-xs text-gray-500 uppercase bg-gray-100">
                             <tr>
                                 <th scope="col" class="px-6 py-3">Fecha</th>
                                 <th scope="col" class="px-6 py-3">Tipo</th>
@@ -396,18 +396,18 @@
 
         <!-- Tab: Solicitudes -->
         <div id="tab-solicitudes" class="tab-content hidden">
-            <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
-                <div class="p-4 sm:p-6 border-b border-gray-700">
+            <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                <div class="p-4 sm:p-6 border-b border-gray-200">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <h2 class="text-xl font-semibold text-white">Solicitudes Pendientes</h2>
+                        <h2 class="text-xl font-semibold text-gray-900">Solicitudes Pendientes</h2>
                         <button id="btn-nueva-solicitud" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalSolicitud">
                             <i class="fas fa-plus me-1"></i> Nueva Solicitud
                         </button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-300">
-                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-gray-500 uppercase bg-gray-100">
                             <tr>
                                 <th scope="col" class="px-6 py-3">Fecha</th>
                                 <th scope="col" class="px-6 py-3">Cuenta</th>
@@ -433,25 +433,25 @@
 <!-- Modal: Nueva/Editar Organización -->
 <div class="modal fade" id="modalOrganizacion" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-gray-800 text-gray-100">
-            <div class="modal-header border-gray-700">
+        <div class="modal-content bg-white text-gray-800">
+            <div class="modal-header border-gray-200">
                 <h5 class="modal-title" id="modalOrganizacionTitle">Nueva Organización</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="formOrganizacion">
                     <input type="hidden" id="organizacion-id">
                     <div class="mb-3">
                         <label for="organizacion-nombre" class="form-label">Nombre *</label>
-                        <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="organizacion-nombre" required>
+                        <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="organizacion-nombre" required>
                     </div>
                     <div class="mb-3">
                         <label for="organizacion-descripcion" class="form-label">Descripción</label>
-                        <textarea class="form-control bg-gray-700 border-gray-600 text-gray-100" id="organizacion-descripcion" rows="3"></textarea>
+                        <textarea class="form-control bg-gray-100 border-gray-300 text-gray-800" id="organizacion-descripcion" rows="3"></textarea>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer border-gray-700">
+            <div class="modal-footer border-gray-200">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="btnGuardarOrganizacion">Guardar</button>
             </div>
@@ -462,10 +462,10 @@
 <!-- Modal: Nueva/Editar Cuenta -->
 <div class="modal fade" id="modalCuenta" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content bg-gray-800 text-gray-100">
-            <div class="modal-header border-gray-700">
+        <div class="modal-content bg-white text-gray-800">
+            <div class="modal-header border-gray-200">
                 <h5 class="modal-title" id="modalCuentaTitle">Nueva Cuenta</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="formCuenta">
@@ -475,11 +475,11 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="cuenta-nombre" class="form-label">Nombre de la Cuenta *</label>
-                            <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-nombre" required>
+                            <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="cuenta-nombre" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="cuenta-organizacion" class="form-label">Organización *</label>
-                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="cuenta-organizacion" required>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="cuenta-organizacion" required>
                                 <option value="">Seleccione...</option>
                             </select>
                         </div>
@@ -488,7 +488,7 @@
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label for="cuenta-tipo" class="form-label">Tipo de Cuenta</label>
-                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="cuenta-tipo">
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="cuenta-tipo">
                                 <option value="Bancaria">Bancaria</option>
                                 <option value="Efectivo">Efectivo</option>
                                 <option value="Tarjeta">Tarjeta</option>
@@ -498,7 +498,7 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="cuenta-moneda" class="form-label">Moneda</label>
-                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="cuenta-moneda">
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="cuenta-moneda">
                                 <option value="MXN">MXN</option>
                                 <option value="USD">USD</option>
                                 <option value="EUR">EUR</option>
@@ -506,46 +506,46 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="cuenta-saldo-inicial" class="form-label">Saldo Inicial</label>
-                            <input type="number" step="0.01" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-saldo-inicial" value="0">
+                            <input type="number" step="0.01" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="cuenta-saldo-inicial" value="0">
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="cuenta-descripcion" class="form-label">Descripción</label>
-                        <textarea class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-descripcion" rows="2"></textarea>
+                        <textarea class="form-control bg-gray-100 border-gray-300 text-gray-800" id="cuenta-descripcion" rows="2"></textarea>
                     </div>
 
                     <!-- Datos Bancarios -->
-                    <div class="border-top border-gray-700 pt-3 mt-3">
-                        <h6 class="text-gray-300 mb-3">Datos Bancarios (Opcional)</h6>
+                    <div class="border-top border-gray-200 pt-3 mt-3">
+                        <h6 class="text-gray-600 mb-3">Datos Bancarios (Opcional)</h6>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="cuenta-beneficiario" class="form-label">Beneficiario</label>
-                                <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-beneficiario">
+                                <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="cuenta-beneficiario">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="cuenta-banco" class="form-label">Banco</label>
-                                <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-banco">
+                                <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="cuenta-banco">
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="cuenta-clabe" class="form-label">CLABE</label>
-                                <input type="text" maxlength="18" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-clabe">
+                                <input type="text" maxlength="18" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="cuenta-clabe">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="cuenta-numero" class="form-label">Número de Cuenta</label>
-                                <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-numero">
+                                <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="cuenta-numero">
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="cuenta-referencia" class="form-label">Referencia</label>
-                            <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="cuenta-referencia">
+                            <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="cuenta-referencia">
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer border-gray-700">
+            <div class="modal-footer border-gray-200">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-success" id="btnGuardarCuenta">Guardar Cuenta</button>
             </div>
@@ -556,41 +556,41 @@
 <!-- Modal: Nueva Solicitud -->
 <div class="modal fade" id="modalSolicitud" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content bg-gray-800 text-gray-100">
-            <div class="modal-header border-gray-700">
+        <div class="modal-content bg-white text-gray-800">
+            <div class="modal-header border-gray-200">
                 <h5 class="modal-title">Nueva Solicitud de Transacción</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="formSolicitud">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="solicitud-cuenta" class="form-label">Cuenta *</label>
-                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="solicitud-cuenta" required>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="solicitud-cuenta" required>
                                 <option value="">Seleccione...</option>
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="solicitud-tipo" class="form-label">Tipo *</label>
-                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="solicitud-tipo" required>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="solicitud-tipo" required>
                                 <option value="Gasto">Gasto</option>
                                 <option value="Ingreso">Ingreso</option>
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="solicitud-monto" class="form-label">Monto *</label>
-                            <input type="number" step="0.01" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="solicitud-monto" required>
+                            <input type="number" step="0.01" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="solicitud-monto" required>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-8 mb-3">
                             <label for="solicitud-concepto" class="form-label">Concepto *</label>
-                            <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="solicitud-concepto" required>
+                            <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="solicitud-concepto" required>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="solicitud-categoria" class="form-label">Categoría *</label>
-                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="solicitud-categoria" required>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="solicitud-categoria" required>
                                 <option value="Otro">Otro</option>
                                 <option value="Alimentación">Alimentación</option>
                                 <option value="Transporte">Transporte</option>
@@ -612,26 +612,26 @@
 
                     <div class="mb-3">
                         <label for="solicitud-descripcion" class="form-label">Descripción</label>
-                        <textarea class="form-control bg-gray-700 border-gray-600 text-gray-100" id="solicitud-descripcion" rows="3"></textarea>
+                        <textarea class="form-control bg-gray-100 border-gray-300 text-gray-800" id="solicitud-descripcion" rows="3"></textarea>
                     </div>
 
                     <div class="mb-3">
                         <label for="solicitud-fecha" class="form-label">Fecha</label>
-                        <input type="date" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="solicitud-fecha">
+                        <input type="date" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="solicitud-fecha">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">
                             Comprobantes/Tickets 
-                            <small class="text-gray-400">(Opcional, máx. 3 imágenes)</small>
+                            <small class="text-gray-500">(Opcional, máx. 3 imágenes)</small>
                         </label>
-                        <input type="file" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="solicitud-imagenes" accept="image/*" multiple>
-                        <small class="text-gray-400">Formatos: JPG, PNG, WEBP. Máximo 3 archivos.</small>
+                        <input type="file" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="solicitud-imagenes" accept="image/*" multiple>
+                        <small class="text-gray-500">Formatos: JPG, PNG, WEBP. Máximo 3 archivos.</small>
                         <div id="preview-solicitud-imagenes" class="mt-2 d-flex gap-2 flex-wrap"></div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer border-gray-700">
+            <div class="modal-footer border-gray-200">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-warning" id="btnGuardarSolicitud">Enviar Solicitud</button>
             </div>
@@ -642,10 +642,10 @@
 <!-- Modal: Detalle de Cuenta -->
 <div class="modal fade" id="modalDetalleCuenta" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content bg-gray-800 text-gray-100">
-            <div class="modal-header border-gray-700">
+        <div class="modal-content bg-white text-gray-800">
+            <div class="modal-header border-gray-200">
                 <h5 class="modal-title" id="detalleCuentaNombre">Detalle de Cuenta</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div id="detalleCuentaContent">
@@ -659,46 +659,46 @@
 <!-- Modal Agregar Participante -->
 <div class="modal fade" id="modalParticipantes" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-gray-800 text-gray-100">
-            <div class="modal-header border-gray-700">
+        <div class="modal-content bg-white text-gray-800">
+            <div class="modal-header border-gray-200">
                 <h5 class="modal-title">Agregar Participante</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="formParticipante">
                     <input type="hidden" id="participanteCuentaId">
                     
                     <div class="mb-4">
-                        <label for="selectUsuario" class="form-label text-gray-300">Seleccionar Usuario</label>
-                        <select class="form-select bg-gray-700 text-white border-gray-600" id="selectUsuario" required>
+                        <label for="selectUsuario" class="form-label text-gray-600">Seleccionar Usuario</label>
+                        <select class="form-select bg-gray-100 text-gray-900 border-gray-300" id="selectUsuario" required>
                             <option value="">Seleccione un usuario...</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label text-gray-300 mb-2">Permisos</label>
+                        <label class="form-label text-gray-600 mb-2">Permisos</label>
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" id="checkVerTransacciones">
-                            <label class="form-check-label text-gray-300" for="checkVerTransacciones">
+                            <label class="form-check-label text-gray-600" for="checkVerTransacciones">
                                 Puede ver transacciones
                             </label>
                         </div>
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" id="checkCrearSolicitudes">
-                            <label class="form-check-label text-gray-300" for="checkCrearSolicitudes">
+                            <label class="form-check-label text-gray-600" for="checkCrearSolicitudes">
                                 Puede crear solicitudes de transacción
                             </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="checkVerSaldo">
-                            <label class="form-check-label text-gray-300" for="checkVerSaldo">
+                            <label class="form-check-label text-gray-600" for="checkVerSaldo">
                                 Puede ver saldo de la cuenta
                             </label>
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer border-gray-700">
+            <div class="modal-footer border-gray-200">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="btnGuardarParticipante">Agregar Participante</button>
             </div>
@@ -709,10 +709,10 @@
 <!-- Modal: Nueva Transacción -->
 <div class="modal fade" id="modalTransaccion" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content bg-gray-800 text-gray-100">
-            <div class="modal-header border-gray-700">
+        <div class="modal-content bg-white text-gray-800">
+            <div class="modal-header border-gray-200">
                 <h5 class="modal-title">Nueva Transacción</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="formTransaccion">
@@ -721,18 +721,18 @@
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label for="transaccion-tipo" class="form-label">Tipo *</label>
-                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="transaccion-tipo" required>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="transaccion-tipo" required>
                                 <option value="Gasto">Gasto</option>
                                 <option value="Ingreso">Ingreso</option>
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="transaccion-monto" class="form-label">Monto *</label>
-                            <input type="number" step="0.01" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="transaccion-monto" required>
+                            <input type="number" step="0.01" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="transaccion-monto" required>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="transaccion-categoria" class="form-label">Categoría *</label>
-                            <select class="form-select bg-gray-700 border-gray-600 text-gray-100" id="transaccion-categoria" required>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="transaccion-categoria" required>
                                 <option value="Otro">Otro</option>
                                 <option value="Alimentación">Alimentación</option>
                                 <option value="Transporte">Transporte</option>
@@ -754,36 +754,36 @@
 
                     <div class="mb-3">
                         <label for="transaccion-concepto" class="form-label">Concepto *</label>
-                        <input type="text" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="transaccion-concepto" required>
+                        <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="transaccion-concepto" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="transaccion-descripcion" class="form-label">Descripción</label>
-                        <textarea class="form-control bg-gray-700 border-gray-600 text-gray-100" id="transaccion-descripcion" rows="3"></textarea>
+                        <textarea class="form-control bg-gray-100 border-gray-300 text-gray-800" id="transaccion-descripcion" rows="3"></textarea>
                     </div>
 
                     <div class="mb-3">
                         <label for="transaccion-fecha" class="form-label">Fecha</label>
-                        <input type="date" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="transaccion-fecha">
+                        <input type="date" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="transaccion-fecha">
                     </div>
 
                     <div class="mb-3">
                         <label for="transaccion-notas" class="form-label">Notas adicionales</label>
-                        <textarea class="form-control bg-gray-700 border-gray-600 text-gray-100" id="transaccion-notas" rows="2" placeholder="Notas internas..."></textarea>
+                        <textarea class="form-control bg-gray-100 border-gray-300 text-gray-800" id="transaccion-notas" rows="2" placeholder="Notas internas..."></textarea>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">
                             Comprobantes/Tickets 
-                            <small class="text-gray-400">(Opcional, máx. 3 imágenes)</small>
+                            <small class="text-gray-500">(Opcional, máx. 3 imágenes)</small>
                         </label>
-                        <input type="file" class="form-control bg-gray-700 border-gray-600 text-gray-100" id="transaccion-imagenes" accept="image/*" multiple>
-                        <small class="text-gray-400">Formatos: JPG, PNG, WEBP. Máximo 3 archivos.</small>
+                        <input type="file" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="transaccion-imagenes" accept="image/*" multiple>
+                        <small class="text-gray-500">Formatos: JPG, PNG, WEBP. Máximo 3 archivos.</small>
                         <div id="preview-imagenes" class="mt-2 d-flex gap-2 flex-wrap"></div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer border-gray-700">
+            <div class="modal-footer border-gray-200">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="btnGuardarTransaccion">Crear Transacción</button>
             </div>
@@ -794,17 +794,17 @@
 <!-- Modal: Ver/Gestionar Imágenes de Transacción -->
 <div class="modal fade" id="modalImagenesTransaccion" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content bg-gray-800 text-gray-100">
-            <div class="modal-header border-gray-700">
+        <div class="modal-content bg-white text-gray-800">
+            <div class="modal-header border-gray-200">
                 <h5 class="modal-title">Comprobantes de Transacción</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modal-imagenes-transaccion-id">
                 
                 <!-- Área para mostrar imágenes existentes -->
                 <div id="imagenes-existentes-container" class="mb-4">
-                    <h6 class="text-gray-300 mb-3">Imágenes actuales:</h6>
+                    <h6 class="text-gray-600 mb-3">Imágenes actuales:</h6>
                     <div id="imagenes-existentes-grid" class="row g-3">
                         <!-- Se llenará dinámicamente -->
                     </div>
@@ -812,16 +812,16 @@
 
                 <!-- Área para subir nuevas imágenes (solo si hay menos de 3) -->
                 <div id="subir-imagenes-container">
-                    <h6 class="text-gray-300 mb-3">Agregar nuevas imágenes:</h6>
-                    <input type="file" class="form-control bg-gray-700 border-gray-600 text-gray-100 mb-2" id="nuevas-imagenes-input" accept="image/*" multiple>
-                    <small class="text-gray-400">Máximo 3 imágenes en total por transacción</small>
+                    <h6 class="text-gray-600 mb-3">Agregar nuevas imágenes:</h6>
+                    <input type="file" class="form-control bg-gray-100 border-gray-300 text-gray-800 mb-2" id="nuevas-imagenes-input" accept="image/*" multiple>
+                    <small class="text-gray-500">Máximo 3 imágenes en total por transacción</small>
                     <div id="preview-nuevas-imagenes" class="mt-2 row g-2"></div>
                     <button type="button" class="btn btn-sm btn-success mt-3" id="btnSubirNuevasImagenes" style="display: none;">
                         <i class="fas fa-upload me-1"></i> Subir Imágenes
                     </button>
                 </div>
             </div>
-            <div class="modal-footer border-gray-700">
+            <div class="modal-footer border-gray-200">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
@@ -831,15 +831,15 @@
 <!-- Modal: Visualizar Imagen Completa -->
 <div class="modal fade" id="modalVisualizarImagen" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content bg-gray-900 text-gray-100 border-0">
-            <div class="modal-header border-gray-700">
+        <div class="modal-content bg-gray-50 text-gray-800 border-0">
+            <div class="modal-header border-gray-200">
                 <h5 class="modal-title">Visualizar Comprobante</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center p-0">
                 <img id="imagen-visualizar-full" src="" alt="Comprobante" class="img-fluid w-100" style="max-height: 80vh; object-fit: contain;">
             </div>
-            <div class="modal-footer border-gray-700">
+            <div class="modal-footer border-gray-200">
                 <a id="btn-descargar-imagen" href="" download class="btn btn-primary">
                     <i class="fas fa-download me-1"></i> Descargar
                 </a>
@@ -852,17 +852,17 @@
 <!-- Modal: Detalle de Transacción -->
 <div class="modal fade" id="modalDetalleTransaccion" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content bg-gray-800 text-gray-100">
-            <div class="modal-header border-gray-700">
+        <div class="modal-content bg-white text-gray-800">
+            <div class="modal-header border-gray-200">
                 <h5 class="modal-title">Detalle de Transacción</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div id="detalle-transaccion-content">
                     <!-- Se llenará dinámicamente -->
                 </div>
             </div>
-            <div class="modal-footer border-gray-700">
+            <div class="modal-footer border-gray-200">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
@@ -897,15 +897,15 @@
     
     /* Asegurar que los tabs activos tengan el color correcto */
     .tab-button.active {
-        color: #60A5FA !important; /* text-blue-400 */
-        border-bottom-color: #3B82F6 !important; /* border-blue-500 */
+        color: #0D9488 !important; /* text-teal-600 */
+        border-bottom-color: #14B8A6 !important; /* border-teal-500 */
     }
     .tab-button:not(.active) {
-        color: #9CA3AF !important; /* text-gray-400 */
+        color: #6B7280 !important; /* text-gray-500 */
         border-bottom-color: transparent !important;
     }
     .tab-button:not(.active):hover {
-        color: #D1D5DB !important; /* text-gray-300 */
+        color: #374151 !important; /* text-gray-700 */
         border-bottom-color: #D1D5DB !important; /* border-gray-300 */
     }
 
@@ -919,7 +919,7 @@
         height: 100px;
         object-fit: cover;
         border-radius: 8px;
-        border: 2px solid #4B5563;
+        border: 2px solid #E5E7EB;
     }
     .preview-image-remove {
         position: absolute;
@@ -977,18 +977,18 @@
         transform: scale(1.1);
     }
 
-    /* Select2 Dark Theme - Componente reutilizable */
+    /* Select2 Light Theme - Componente reutilizable */
     .select2-container--bootstrap-5 .select2-selection {
-        background-color: #374151 !important; /* bg-gray-700 */
-        border-color: #4B5563 !important; /* border-gray-600 */
-        color: #F9FAFB !important; /* text-white */
+        background-color: #ffffff !important;
+        border-color: #D1D5DB !important;
+        color: #1F2937 !important;
     }
     .select2-container--bootstrap-5 .select2-selection--single {
         height: calc(1.5em + 0.75rem + 2px) !important;
         padding: 0.375rem 0.75rem !important;
     }
     .select2-container--bootstrap-5 .select2-selection__rendered {
-        color: #F9FAFB !important;
+        color: #1F2937 !important;
         line-height: 1.5 !important;
         padding-left: 0 !important;
     }
@@ -997,35 +997,35 @@
     }
     .select2-container--bootstrap-5.select2-container--focus .select2-selection,
     .select2-container--bootstrap-5.select2-container--open .select2-selection {
-        border-color: #3B82F6 !important; /* border-blue-500 */
-        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25) !important;
+        border-color: #14B8A6 !important;
+        box-shadow: 0 0 0 0.2rem rgba(20, 184, 166, 0.25) !important;
     }
     .select2-dropdown {
-        background-color: #374151 !important; /* bg-gray-700 */
-        border-color: #4B5563 !important;
+        background-color: #ffffff !important;
+        border-color: #D1D5DB !important;
     }
     .select2-search--dropdown .select2-search__field {
-        background-color: #1F2937 !important; /* bg-gray-800 */
-        border-color: #4B5563 !important;
-        color: #F9FAFB !important;
+        background-color: #F9FAFB !important;
+        border-color: #D1D5DB !important;
+        color: #1F2937 !important;
     }
     .select2-search--dropdown .select2-search__field:focus {
-        border-color: #3B82F6 !important;
+        border-color: #14B8A6 !important;
         outline: none !important;
     }
     .select2-results__option {
-        background-color: #374151 !important;
-        color: #F9FAFB !important;
+        background-color: #ffffff !important;
+        color: #1F2937 !important;
     }
     .select2-results__option--highlighted {
-        background-color: #3B82F6 !important; /* bg-blue-500 */
+        background-color: #14B8A6 !important;
         color: white !important;
     }
     .select2-results__option--selected {
-        background-color: #1F2937 !important; /* bg-gray-800 */
+        background-color: #F3F4F6 !important;
     }
     .select2-container--bootstrap-5 .select2-selection__placeholder {
-        color: #9CA3AF !important; /* text-gray-400 */
+        color: #6B7280 !important;
     }
 </style>
 
@@ -1040,3 +1040,5 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script src="/scripts/finanzas.js"></script>
+
+

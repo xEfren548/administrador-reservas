@@ -1,29 +1,29 @@
-<div class="bg-black text-white">
+<div class="bg-gray-50 text-gray-900">
     <div class="min-h-screen flex flex-col items-center p-4">
         <h1 class="text-3xl font-bold text-center mb-8">Cotizador de Cabañas</h1>
 
         <!-- Contenedor del buscador -->
-        <div class="w-auto max-w-6xl bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
+        <div class="w-auto max-w-6xl bg-gray-50 rounded-lg shadow-lg border border-gray-200 p-6">
             <form class="flex flex-col md:flex-row gap-4">
                 <!-- Campo: Categorías (dropdown con checkboxes) -->
                 <div class="flex-1 relative">
-                    <label class="block text-sm font-medium text-gray-400">Categorías</label>
+                    <label class="block text-sm font-medium text-gray-500">Categorías</label>
                     <div class="relative mt-1">
                         <!-- Botón para abrir/cerrar el dropdown -->
                         <button id="dropdown-button" type="button"
-                            class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white text-left flex items-center justify-between">
+                            class="w-full p-2 bg-white border border-gray-200 rounded-md text-gray-900 text-left flex items-center justify-between">
                             <span>Seleccionar categorías</span>
                             <svg class="h-5 w-5">...</svg>
                         </button>
 
                         <!-- Dropdown con checkboxes -->
                         <div id="dropdown-content"
-                            class="absolute z-10 mt-2 min-w-[240px] max-w-96 bg-gray-800 border border-gray-700 rounded-md shadow-lg hidden left-0 right-0 overflow-visiblegi">
+                            class="absolute z-10 mt-2 min-w-[240px] max-w-96 bg-white border border-gray-200 rounded-md shadow-lg hidden left-0 right-0 overflow-visiblegi">
                             <div class="p-2">
                                 <!-- Checkbox "Mostrar todo" -->
-                                <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded-md">
+                                <label class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md">
                                     <input type="checkbox" name="categorias" value="all"
-                                        class="form-checkbox text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                                        class="form-checkbox text-blue-500 bg-gray-100 border-gray-600 rounded focus:ring-blue-500"
                                         checked />
                                     <span>Mostrar todo</span>
                                 </label>
@@ -31,10 +31,10 @@
                                 <!-- Checkboxes de categorías -->
                                 {{#each tipologias}}
                                 <label for="categoria-{{@index}}"
-                                    class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded-md cursor-pointer">
+                                    class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md cursor-pointer">
                                     <input type="checkbox" id="categoria-{{@index}}" name="categorias"
                                         value="{{this.tipologia}}"
-                                        class="form-checkbox text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" />
+                                        class="form-checkbox text-blue-500 bg-gray-100 border-gray-600 rounded focus:ring-blue-500" />
                                     <span>{{this.tipologia}}</span>
                                 </label>
                                 {{/each}}
@@ -46,9 +46,9 @@
 
                 <!-- Campo: Fecha de llegada -->
                 <div class="flex-1">
-                    <label class="block text-sm font-medium text-gray-400">Fechas</label>
+                    <label class="block text-sm font-medium text-gray-500">Fechas</label>
                     <input type="text" id="fecha-input" placeholder="Seleccionar fechas"
-                        class="mt-1 block w-72 p-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-current flatpickr-input" />
+                        class="mt-1 block w-72 p-2 bg-white border border-gray-200 rounded-md text-gray-900 placeholder-current flatpickr-input" />
                 </div>
 
                 <!-- Campo: Fecha de salida -->
@@ -58,8 +58,8 @@
 
                 <!-- Campo: Huéspedes -->
                 <div class="flex-1">
-                    <label class="block text-sm font-medium text-gray-400">Huéspedes</label>
-                    <div class="p-2 bg-gray-800 border border-gray-700 rounded-md text-white">
+                    <label class="block text-sm font-medium text-gray-500">Huéspedes</label>
+                    <div class="p-2 bg-white border border-gray-200 rounded-md text-gray-900">
                         <!-- Título y descripción -->
                         {{!-- <div class="text-sm">Huéspedes</div> --}}
 
@@ -67,7 +67,7 @@
                         <div class="flex items-center justify-between w-32 h-auto">
                             <!-- Botón para disminuir -->
                             <button id="decrementar"
-                                class="p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
+                                class="p-1 bg-gray-100 rounded-md hover:bg-gray-600 transition-colors"
                                 aria-label="Disminuir número de huéspedes">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
                                     fill="currentColor">
@@ -81,7 +81,7 @@
 
                             <!-- Botón para aumentar -->
                             <button id="incrementar"
-                                class="p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
+                                class="p-1 bg-gray-100 rounded-md hover:bg-gray-600 transition-colors"
                                 aria-label="Aumentar número de huéspedes">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
                                     fill="currentColor">
@@ -95,16 +95,16 @@
                 </div>
 
                 <div class="flex-1 justify-center items-center text-center ">
-                    <label class="block text-sm font-medium text-gray-400">Mostrar solo disponibles</label>
+                    <label class="block text-sm font-medium text-gray-500">Mostrar solo disponibles</label>
                     <input type="checkbox" id="buscar-solo-disponibles"
-                        class="form-checkbox text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                        class="form-checkbox text-blue-500 bg-gray-100 border-gray-600 rounded focus:ring-blue-500"
                         checked />
                 </div>
 
                 <!-- Botón de búsqueda -->
                 <div class="flex items-end">
                     <button type="submit" id="buscar-chalets-btn"
-                        class="w-full md:w-auto p-3 text-white rounded-md transition-colors flex items-center justify-center bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 shadow-lg hover:shadow-xl">
+                        class="w-full md:w-auto p-3 text-white rounded-md transition-colors flex items-center justify-center bg-teal-500 hover:bg-teal-600 shadow-lg hover:shadow-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
                             fill="currentColor">
                             <path fill-rule="evenodd"
@@ -128,9 +128,9 @@
 
         <!-- Contenedor del modal -->
         <div class="fixed inset-0 flex items-center justify-center p-4">
-            <div class="bg-gray-900 text-white rounded-lg shadow-lg w-full max-w-2xl max-h-screen overflow-y-auto">
+            <div class="bg-gray-50 text-gray-900 rounded-lg shadow-lg w-full max-w-2xl max-h-screen overflow-y-auto">
                 <!-- Encabezado del modal -->
-                <div class="p-4 border-b border-gray-700">
+                <div class="p-4 border-b border-gray-200">
                     <h2 class="text-xl font-semibold">Reservar Habitación</h2>
                 </div>
 
@@ -139,17 +139,17 @@
                     <!-- Sección: Tipo de Reserva -->
                     <div class="w-11/12 mx-auto"> <!-- 90% del ancho y centrado -->
                         <label
-                            class="block text-sm font-medium text-white-400 mb-2 flex items-center justify-center">Tipo
+                            class="block text-sm font-medium text-gray-900-400 mb-2 flex items-center justify-center">Tipo
                             de Reserva</label>
                         <div class="relative w-full flex items-center justify-center">
                             <input type="checkbox" id="toggleReserva" class="sr-only">
-                            <div class="w-full max-w-lg bg-gray-700 rounded-full p-1 flex justify-between items-center">
+                            <div class="w-full max-w-lg bg-gray-100 rounded-full p-1 flex justify-between items-center">
                                 <span id="label-depo"
-                                    class="flex-1 text-center text-white text-sm px-4 py-2 rounded-l-full cursor-pointer transition-all duration-300 bg-gradient-to-r from-purple-500 to-pink-500">
+                                    class="flex-1 text-center text-white text-sm px-4 py-2 rounded-l-full cursor-pointer transition-all duration-300 bg-teal-500">
                                     Tentativa
                                 </span>
                                 <span id="label-reserva"
-                                    class="flex-1 text-center text-white text-sm px-4 py-2 rounded-r-full cursor-pointer transition-all duration-300">
+                                    class="flex-1 text-center text-gray-900 text-sm px-4 py-2 rounded-r-full cursor-pointer transition-all duration-300">
                                     Reserva
                                 </span>
                             </div>
@@ -158,27 +158,27 @@
 
                     <div class="hidden" id="modalClientContainer">
                         <div
-                            class="w-full max-w-lg mx-auto bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
+                            class="w-full max-w-lg mx-auto bg-gray-50 rounded-lg shadow-lg border border-gray-200 p-6">
                             <div class="mb-4 select-container">
-                                <label for="lblClient" class="block text-sm font-medium text-gray-400">Cliente</label>
+                                <label for="lblClient" class="block text-sm font-medium text-gray-500">Cliente</label>
                                 <input type="text" id="lblClient"
-                                    class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                    class="w-full p-2 bg-white border border-gray-200 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500"
                                     autocomplete="off" placeholder="Buscar y seleccionar cliente..." required>
 
                                 <!-- Contenedor de opciones -->
                                 <div class="relative">
                                     <div id="selectOptions"
-                                        class="select-options absolute w-full bg-gray-800 border border-gray-700 rounded-md shadow-lg mt-1 hidden max-h-48 overflow-y-auto">
+                                        class="select-options absolute w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1 hidden max-h-48 overflow-y-auto">
                                         {{#if clientes}}
                                         {{#each clientes}}
-                                        <div class="select-option px-4 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                                        <div class="select-option px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-900"
                                             data-value="{{this.email}}"
                                             data-label="{{this.firstName}} {{this.lastName}} ({{this.email}})">
                                             {{this.firstName}} {{this.lastName}} ({{this.email}})
                                         </div>
                                         {{/each}}
                                         {{else}}
-                                        <div class="select-optionpx-4 py-2 text-gray-400">No se encontraron clientes
+                                        <div class="select-optionpx-4 py-2 text-gray-500">No se encontraron clientes
                                         </div>
                                         {{/if}}
                                     </div>
@@ -190,7 +190,7 @@
                             <!-- Botón para dar de alta un cliente -->
                             <div class="flex justify-center">
                                 <button
-                                    class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition"
+                                    class="bg-blue-500 hover:bg-blue-600 text-gray-900 font-semibold py-2 px-4 rounded-md transition"
                                     id="clientEntryModalBtn">
                                     Alta de Cliente
                                 </button>
@@ -199,25 +199,25 @@
                     </div>
 
                     <div id="container-alta-cliente-provisional"
-                        class="w-full max-w-lg mx-auto bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
-                        <h3 class="text-xl font-semibold text-white mb-4 text-center">Cliente</h3>
+                        class="w-full max-w-lg mx-auto bg-gray-50 rounded-lg shadow-lg border border-gray-200 p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4 text-center">Cliente</h3>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <!-- Nombre -->
                             <div>
                                 <label for="nombre-cliente-provisional"
-                                    class="block text-sm font-medium text-gray-400">Nombre</label>
+                                    class="block text-sm font-medium text-gray-500">Nombre</label>
                                 <input type="text" id="nombre-cliente-provisional"
-                                    class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                    class="w-full p-2 bg-white border border-gray-200 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500"
                                     placeholder="Nombre de cliente">
                             </div>
 
                             <!-- Apellido -->
                             <div>
                                 <label for="apellido-cliente-provisional"
-                                    class="block text-sm font-medium text-gray-400">Apellido</label>
+                                    class="block text-sm font-medium text-gray-500">Apellido</label>
                                 <input type="text" id="apellido-cliente-provisional"
-                                    class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                    class="w-full p-2 bg-white border border-gray-200 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500"
                                     placeholder="Apellido de cliente">
                             </div>
                         </div>
@@ -228,42 +228,42 @@
                     <!-- Sección: Información de la Reserva -->
                     <div>
                         <div
-                            class="w-full max-w-lg mx-auto bg-gray-900 rounded-lg shadow-lg border border-gray-700 p-6">
+                            class="w-full max-w-lg mx-auto bg-gray-50 rounded-lg shadow-lg border border-gray-200 p-6">
                             <div class="mb-4">
-                                <h3 class="text-xl font-semibold text-white mb-4 text-center">Información de la reserva
+                                <h3 class="text-xl font-semibold text-gray-900 mb-4 text-center">Información de la reserva
                                 </h3>
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label for="fecha-llegada-input"
-                                            class="block text-sm font-medium text-gray-400">Check in</label>
+                                            class="block text-sm font-medium text-gray-500">Check in</label>
                                         <span id="fecha-llegada-input"
-                                            class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
+                                            class="w-full p-2 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
                                     </div>
 
                                     <div>
                                         <label for="fecha-salida-input"
-                                            class="block text-sm font-medium text-gray-400">Check out</label>
+                                            class="block text-sm font-medium text-gray-500">Check out</label>
                                         {{!-- <input type="text" id="fecha-salida-input"
-                                            class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500">
+                                            class="w-full p-2 bg-white border border-gray-200 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500">
                                         --}}
                                         <span id="fecha-salida-input"
-                                            class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center text-center"></span>
+                                            class="w-full p-2 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 flex items-center justify-center text-center"></span>
                                     </div>
 
                                     <div>
                                         <label for="huespedes-input"
-                                            class="block text-sm font-medium text-gray-400">Huéspedes</label>
+                                            class="block text-sm font-medium text-gray-500">Huéspedes</label>
                                         <span id="huespedes-input"
-                                            class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
+                                            class="w-full p-2 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
 
                                     </div>
 
                                     <div>
                                         <label for="nights-input"
-                                            class="block text-sm font-medium text-gray-400">Noches</label>
+                                            class="block text-sm font-medium text-gray-500">Noches</label>
                                         <span id="nights-input"
-                                            class="w-full p-2 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
+                                            class="w-full p-2 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 flex items-center justify-center"></span>
 
                                     </div>
 
@@ -275,20 +275,20 @@
 
                                 </div>
 
-                                <h3 class="text-2xl font-bold text-white mb-4 mt-4 text-center">Precio total: <span
+                                <h3 class="text-2xl font-bold text-gray-900 mb-4 mt-4 text-center">Precio total: <span
                                         id="precio-total" class="text-blue-500 font-bold text-2xl"></span></h3>
 
                             </div>
                         </div>
 
                         <!-- Pie del modal -->
-                        <div class="p-4 border-t border-gray-700 flex justify-end space-x-2">
+                        <div class="p-4 border-t border-gray-200 flex justify-end space-x-2">
                             <button id="cerrar-modal"
-                                class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600">
+                                class="px-4 py-2 bg-gray-100 text-gray-900 rounded-md hover:bg-gray-600">
                                 Cerrar
                             </button>
                             <button id="confirmar-reserva"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                class="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600">
                                 Confirmar Reserva
                             </button>
                         </div>
@@ -307,12 +307,12 @@
 
         <!-- Modal Content -->
         <div
-            class="inline-block w-full max-w-3xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-gray-800 rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-3xl">
+            class="inline-block w-full max-w-3xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-3xl">
             <!-- Modal Header -->
-            <div class="flex items-center justify-between pb-4 border-b border-gray-700">
-                <h3 class="text-xl font-semibold leading-6 text-white">Alta de cliente</h3>
+            <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+                <h3 class="text-xl font-semibold leading-6 text-gray-900">Alta de cliente</h3>
                 <button type="button" onclick="closeModal()"
-                    class="text-gray-400 hover:text-gray-200 focus:outline-none">
+                    class="text-gray-500 hover:text-gray-200 focus:outline-none">
                     <span class="text-2xl">&times;</span>
                 </button>
             </div>
@@ -323,52 +323,52 @@
                     <div class="space-y-4">
                         <!-- Name -->
                         <div>
-                            <label for="txtClientName" class="block text-sm font-medium text-gray-400">Nombre</label>
+                            <label for="txtClientName" class="block text-sm font-medium text-gray-500">Nombre</label>
                             <input type="text" name="txtClientName" id="txtClientName"
-                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                class="w-full p-2 mt-1 bg-gray-100 border border-gray-600 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500"
                                 placeholder="Nombre">
                         </div>
 
                         <!-- Lastname -->
                         <div>
                             <label for="txtClientLastname"
-                                class="block text-sm font-medium text-gray-400">Apellido</label>
+                                class="block text-sm font-medium text-gray-500">Apellido</label>
                             <input type="text" name="txtClientLastname" id="txtClientLastname"
-                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                class="w-full p-2 mt-1 bg-gray-100 border border-gray-600 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500"
                                 placeholder="Apellido">
                         </div>
 
                         <!-- Phone -->
                         <div>
-                            <label for="txtClientPhone" class="block text-sm font-medium text-gray-400">Teléfono</label>
+                            <label for="txtClientPhone" class="block text-sm font-medium text-gray-500">Teléfono</label>
                             <input type="tel" name="txtClientPhone" id="txtClientPhone"
-                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                class="w-full p-2 mt-1 bg-gray-100 border border-gray-600 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500"
                                 placeholder="Teléfono">
                         </div>
 
                         <!-- Address -->
                         <div>
                             <label for="txtClientAddress"
-                                class="block text-sm font-medium text-gray-400">Dirección</label>
+                                class="block text-sm font-medium text-gray-500">Dirección</label>
                             <input type="text" name="txtClientAddress" id="txtClientAddress"
-                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                class="w-full p-2 mt-1 bg-gray-100 border border-gray-600 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500"
                                 placeholder="Dirección">
                         </div>
 
                         <!-- Email -->
                         <div>
-                            <label for="txtClientEmail" class="block text-sm font-medium text-gray-400">Email</label>
+                            <label for="txtClientEmail" class="block text-sm font-medium text-gray-500">Email</label>
                             <input type="text" name="txtClientEmail" id="txtClientEmail"
-                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                class="w-full p-2 mt-1 bg-gray-100 border border-gray-600 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500"
                                 placeholder="Email">
                         </div>
 
                         <!-- ID Type -->
                         <div>
-                            <label for="slctClientIdType" class="block text-sm font-medium text-gray-400">Tipo de
+                            <label for="slctClientIdType" class="block text-sm font-medium text-gray-500">Tipo de
                                 identificación</label>
                             <select name="slctClientIdType" id="slctClientIdType"
-                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                class="w-full p-2 mt-1 bg-gray-100 border border-gray-600 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500"
                                 required>
                                 <option value="" selected disabled>Selecciona el tipo de identificación del cliente
                                 </option>
@@ -380,10 +380,10 @@
 
                         <!-- ID Number -->
                         <div>
-                            <label for="txtClientIdNumber" class="block text-sm font-medium text-gray-400">Número de
+                            <label for="txtClientIdNumber" class="block text-sm font-medium text-gray-500">Número de
                                 identificación</label>
                             <input type="text" name="txtClientIdNumber" id="txtClientIdNumber"
-                                class="w-full p-2 mt-1 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"
+                                class="w-full p-2 mt-1 bg-gray-100 border border-gray-600 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500"
                                 placeholder="Número de identificación">
                         </div>
                     </div>
@@ -396,9 +396,9 @@
                     <!-- Modal Footer -->
                     <div class="flex justify-end mt-6 space-x-3">
                         <button type="button" onclick="closeModal()"
-                            class="px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500">Regresar</button>
+                            class="px-4 py-2 text-sm font-medium text-gray-900 bg-gray-600 rounded-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500">Regresar</button>
                         <button type="button" id="btnSaveClient"
-                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">Agregar
+                            class="px-4 py-2 text-sm font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">Agregar
                             Cliente</button>
                     </div>
                 </form>
@@ -630,7 +630,7 @@
             habitaciones.forEach((habitacion) => {
                 const tarjeta = document.createElement("div");
                 tarjeta.classList.add(
-                    "bg-gray-800",
+                    "bg-white",
                     "rounded-lg",
                     "shadow-lg",
                     "overflow-hidden"
@@ -656,7 +656,7 @@
                     
                     const closeBtn = document.createElement("button");
                     closeBtn.innerHTML = "×";
-                    closeBtn.classList.add("absolute", "top-4", "right-6", "text-white", "text-4xl", "hover:text-gray-300", "focus:outline-none");
+                    closeBtn.classList.add("absolute", "top-4", "right-6", "text-gray-900", "text-4xl", "hover:text-gray-600", "focus:outline-none");
                     closeBtn.onclick = () => modal.classList.add("hidden");
                     
                     const imageContainer = document.createElement("div");
@@ -669,16 +669,16 @@
                     const prevBtn = document.createElement("button");
                     prevBtn.innerHTML = "&#10094;";
                     prevBtn.id = "modal-prev";
-                    prevBtn.classList.add("absolute", "left-0", "top-1/2", "transform", "-translate-y-1/2", "bg-black", "bg-opacity-50", "text-white", "p-4", "rounded", "hover:bg-opacity-70");
+                    prevBtn.classList.add("absolute", "left-0", "top-1/2", "transform", "-translate-y-1/2", "bg-black", "bg-opacity-50", "text-gray-900", "p-4", "rounded", "hover:bg-opacity-70");
                     
                     const nextBtn = document.createElement("button");
                     nextBtn.innerHTML = "&#10095;";
                     nextBtn.id = "modal-next";
-                    nextBtn.classList.add("absolute", "right-0", "top-1/2", "transform", "-translate-y-1/2", "bg-black", "bg-opacity-50", "text-white", "p-4", "rounded", "hover:bg-opacity-70");
+                    nextBtn.classList.add("absolute", "right-0", "top-1/2", "transform", "-translate-y-1/2", "bg-black", "bg-opacity-50", "text-gray-900", "p-4", "rounded", "hover:bg-opacity-70");
                     
                     const counter = document.createElement("div");
                     counter.id = "modal-counter";
-                    counter.classList.add("mt-4", "text-white", "text-center");
+                    counter.classList.add("mt-4", "text-gray-900", "text-center");
                     
                     imageContainer.appendChild(modalImage);
                     imageContainer.appendChild(prevBtn);
@@ -818,11 +818,11 @@
                     // Agregar botones de navegación
                     const prevBtn = document.createElement("button");
                     prevBtn.innerHTML = "&#10094;";
-                    prevBtn.classList.add("carousel-btn", "prev", "absolute", "left-0", "top-1/2", "bg-black", "bg-opacity-50", "text-white", "p-2", "rounded", "z-10");
+                    prevBtn.classList.add("carousel-btn", "prev", "absolute", "left-0", "top-1/2", "bg-black", "bg-opacity-50", "text-gray-900", "p-2", "rounded", "z-10");
 
                     const nextBtn = document.createElement("button");
                     nextBtn.innerHTML = "&#10095;";
-                    nextBtn.classList.add("carousel-btn", "next", "absolute", "right-0", "top-1/2", "bg-black", "bg-opacity-50", "text-white", "p-2", "rounded", "z-10");
+                    nextBtn.classList.add("carousel-btn", "next", "absolute", "right-0", "top-1/2", "bg-black", "bg-opacity-50", "text-gray-900", "p-2", "rounded", "z-10");
 
                     carousel.appendChild(prevBtn);
                     carousel.appendChild(nextBtn);
@@ -883,19 +883,19 @@
 
                 // Nombre de la habitación
                 const nombre = document.createElement("h3");
-                nombre.classList.add("text-xl", "font-semibold", "text-white");
+                nombre.classList.add("text-xl", "font-semibold", "text-gray-900");
                 nombre.textContent = habitacion.name;
                 contenido.appendChild(nombre);
 
                 // Precio por noche
                 const precio = document.createElement("p");
-                precio.classList.add("text-white-400", "mt-2", "font-semibold");
+                precio.classList.add("text-gray-900-400", "mt-2", "font-semibold");
                 precio.textContent = `$${habitacion.totalPrice} por ${evento.nights} noche(s)`;
                 contenido.appendChild(precio);
 
                 // Iconos de características (nuevo)
                 const iconosContainer = document.createElement("div");
-                iconosContainer.classList.add("flex", "flex-wrap", "gap-3", "mt-3", "text-gray-300");
+                iconosContainer.classList.add("flex", "flex-wrap", "gap-3", "mt-3", "text-gray-600");
 
                 // Camas
                 const camasItem = document.createElement("div");
@@ -920,7 +920,7 @@
                 // Capacidad máxima
                 /** 
                 const capacidad = document.createElement("p");
-                capacidad.classList.add("text-gray-400");
+                capacidad.classList.add("text-gray-500");
                 capacidad.textContent = `${habitacion.minPax}-${habitacion.maxPax} huéspedes`;
                 contenido.appendChild(capacidad);
                 */
@@ -1066,10 +1066,10 @@
 
                 if (habitacion.accomodationFeatures) {
                     const featuresContainer = document.createElement("div");
-                    featuresContainer.classList.add("mt-3", "border-t", "border-gray-700", "pt-3");
+                    featuresContainer.classList.add("mt-3", "border-t", "border-gray-200", "pt-3");
 
                     const featuresTitle = document.createElement("h4");
-                    featuresTitle.classList.add("text-white", "font-semibold", "mb-2");
+                    featuresTitle.classList.add("text-gray-900", "font-semibold", "mb-2");
                     featuresTitle.textContent = "Características";
                     featuresContainer.appendChild(featuresTitle);
 
@@ -1094,7 +1094,7 @@
                         categoryContainer.classList.add("mb-2");
 
                         const categoryTitle = document.createElement("h5");
-                        categoryTitle.classList.add("text-gray-300", "text-sm", "font-medium");
+                        categoryTitle.classList.add("text-gray-600", "text-sm", "font-medium");
                         categoryTitle.textContent = categoryName;
                         categoryContainer.appendChild(categoryTitle);
 
@@ -1119,7 +1119,7 @@
                                 featureItem.appendChild(icon);
 
                                 const featureText = document.createElement("span");
-                                featureText.classList.add("text-gray-400");
+                                featureText.classList.add("text-gray-500");
                                 // Convertir camelCase a texto con espacios
                                 featureText.textContent = featureTranslations[feature] || 
                                     feature.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
@@ -1131,7 +1131,7 @@
                                 featureItem.classList.add("col-span-2");
 
                                 const featureText = document.createElement("span");
-                                featureText.classList.add("text-gray-400");
+                                featureText.classList.add("text-gray-500");
                                 // Convertir camelCase a texto con espacios
                                 const featureName = feature
                                     .replace(/([A-Z])/g, ' $1')
@@ -1163,8 +1163,8 @@
                     const toggleButton = document.createElement("button");
                     toggleButton.classList.add(
                         "w-full",
-                        "bg-gray-700",
-                        "text-white",
+                        "bg-gray-100",
+                        "text-gray-900",
                         "py-1",
                         "rounded",
                         "mt-2",
@@ -1183,7 +1183,7 @@
 
                     if (habitacion.accomodationDescription) {
                         const descripcion = document.createElement("p");
-                        descripcion.classList.add("text-gray-300", "mt-2", "text-sm", "mb-4");
+                        descripcion.classList.add("text-gray-600", "mt-2", "text-sm", "mb-4");
                         descripcion.textContent = habitacion.accomodationDescription;
                         featuresDetails.appendChild(descripcion);
                     }
@@ -1221,12 +1221,12 @@
                 botonReservar.classList.add(
                     "mt-4",
                     "w-full",
-                    "bg-blue-600",
+                    "bg-teal-500",
                     "text-white",
                     "py-2",
                     "px-4",
                     "rounded-md",
-                    "hover:bg-blue-700",
+                    "hover:bg-teal-600",
                     "transition-colors"
                 );
 
@@ -1521,13 +1521,17 @@
             if (toggleInput.checked) {
                 clienteReservaContainer.classList.remove("hidden");
                 clienteProvisionalContainer.classList.add("hidden");
-                labelDepo.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
-                labelReserva.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+                labelDepo.classList.remove("bg-teal-500", "text-white");
+                labelDepo.classList.add("text-gray-900");
+                labelReserva.classList.add("bg-teal-500", "text-white");
+                labelReserva.classList.remove("text-gray-900");
             } else {
                 clienteReservaContainer.classList.add("hidden");
                 clienteProvisionalContainer.classList.remove("hidden");
-                labelReserva.classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
-                labelDepo.classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+                labelReserva.classList.remove("bg-teal-500", "text-white");
+                labelReserva.classList.add("text-gray-900");
+                labelDepo.classList.add("bg-teal-500", "text-white");
+                labelDepo.classList.remove("text-gray-900");
             }
         }
 
@@ -1554,7 +1558,7 @@
         window.addNewClientOption = function (clientData) {
             // Create new option element
             const newOption = document.createElement('div');
-            newOption.className = 'select-option px-4 py-2 hover:bg-gray-700 cursor-pointer text-white';
+            newOption.className = 'select-option px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-900';
 
             newOption.dataset.value = clientData.email;
             newOption.dataset.label = `${clientData.firstName} ${clientData.lastName} (${clientData.email})`;

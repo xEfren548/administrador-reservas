@@ -1403,21 +1403,21 @@ ul.rb li .timestamp {
 }
 
 #selectOptions::-webkit-scrollbar-track {
-    background: #374151;
+    background: #e5e7eb;
     /* Color of the track */
     border-radius: 4px;
     /* Rounded corners for the track */
 }
 
 #selectOptions::-webkit-scrollbar-thumb {
-    background: #6649b8;
+    background: #7ECEC5;
     /* Color of the thumb */
     border-radius: 4px;
     /* Rounded corners for the thumb */
 }
 
 #selectOptions::-webkit-scrollbar-thumb:hover {
-    background: #4b5563;
+    background: #5FBFB3;
     /* Color of the thumb on hover */
 }
 
@@ -1425,7 +1425,7 @@ ul.rb li .timestamp {
 #selectOptions {
     scrollbar-width: thin;
     /* "auto" or "thin" */
-    scrollbar-color: #6649b8 #374151;
+    scrollbar-color: #7ECEC5 #e5e7eb;
     /* thumb and track color */
 }
 

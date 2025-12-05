@@ -67,11 +67,11 @@ function inicializarEventos() {
 
 function cambiarTab(tabName) {
     // Actualizar botones
-    $('.tab-button').removeClass('active border-blue-500 text-blue-400')
-        .addClass('border-transparent text-gray-400');
+    $('.tab-button').removeClass('active border-blue-500 text-teal-600')
+        .addClass('border-transparent text-gray-500');
     $(`.tab-button[data-tab="${tabName}"]`)
-        .addClass('active border-blue-500 text-blue-400')
-        .removeClass('border-transparent text-gray-400');
+        .addClass('active border-blue-500 text-teal-600')
+        .removeClass('border-transparent text-gray-500');
 
     // Actualizar contenido
     $('.tab-content').removeClass('active').addClass('hidden');
@@ -121,7 +121,7 @@ function renderizarOrganizaciones() {
     if (organizaciones.length === 0) {
         tbody.html(`
             <tr>
-                <td colspan="5" class="px-6 py-4 text-center text-gray-400">
+                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
                     No hay organizaciones creadas
                 </td>
             </tr>
@@ -155,8 +155,8 @@ function renderizarOrganizaciones() {
         }
 
         tbody.append(`
-            <tr class="border-b border-gray-700 hover:bg-gray-700">
-                <td class="px-6 py-4 font-medium text-white">${org.nombre}</td>
+            <tr class="border-b border-gray-200 hover:bg-gray-100">
+                <td class="px-6 py-4 font-medium text-gray-900">${org.nombre}</td>
                 <td class="px-6 py-4">${org.descripcion || '-'}</td>
                 <td class="px-6 py-4">${estado}</td>
                 <td class="px-6 py-4">${fecha}</td>
@@ -281,7 +281,7 @@ function renderizarCuentas() {
 
     if (cuentas.length === 0) {
         grid.html(`
-            <div class="col-span-full text-center py-12 text-gray-400">
+            <div class="col-span-full text-center py-12 text-gray-500">
                 <i class="fas fa-wallet text-6xl mb-4 opacity-50"></i>
                 <p>No tienes cuentas creadas</p>
                 <button class="btn btn-success btn-sm mt-3" data-bs-toggle="modal" data-bs-target="#modalCuenta">
@@ -297,22 +297,22 @@ function renderizarCuentas() {
             ? formatearMoneda(cuenta.saldoActual || 0, cuenta.moneda)
             : '***';
         const icono = obtenerIconoCuenta(cuenta.tipoCuenta);
-        const colorSaldo = cuenta.saldoActual >= 0 ? 'text-green-400' : 'text-red-400';
+        const colorSaldo = cuenta.saldoActual >= 0 ? 'text-green-600' : 'text-red-600';
         
         // Obtener nombre de organización
         const nombreOrg = cuenta.organizacion?.nombre || 'Sin organización';
 
         grid.append(`
-            <div class="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700 hover:border-blue-500 transition-colors cursor-pointer" onclick="verDetalleCuenta('${cuenta._id}')">
+            <div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200 hover:border-teal-500 transition-colors cursor-pointer" onclick="verDetalleCuenta('${cuenta._id}')">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center">
-                        <div class="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center mr-3">
-                            <i class="fas ${icono} text-blue-400"></i>
+                        <div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas ${icono} text-teal-600"></i>
                         </div>
                         <div>
-                            <h3 class="text-lg font-semibold text-white">${cuenta.nombre}</h3>
-                            <p class="text-xs text-gray-400">${cuenta.tipoCuenta}</p>
-                            <p class="text-xs text-blue-400"><i class="fas fa-building me-1"></i>${nombreOrg}</p>
+                            <h3 class="text-lg font-semibold text-gray-900">${cuenta.nombre}</h3>
+                            <p class="text-xs text-gray-500">${cuenta.tipoCuenta}</p>
+                            <p class="text-xs text-teal-600"><i class="fas fa-building me-1"></i>${nombreOrg}</p>
                         </div>
                     </div>
                     <span class="px-2 py-1 text-xs font-semibold rounded-full bg-${cuenta.activa ? 'green' : 'red'}-900 text-${cuenta.activa ? 'green' : 'red'}-300">
@@ -320,8 +320,8 @@ function renderizarCuentas() {
                     </span>
                 </div>
                 
-                <div class="border-t border-gray-700 pt-4">
-                    <p class="text-sm text-gray-400 mb-1">Saldo Actual</p>
+                <div class="border-t border-gray-200 pt-4">
+                    <p class="text-sm text-gray-500 mb-1">Saldo Actual</p>
                     ${cuenta.puedeVerSaldo !== false 
                         ? `<p class="text-2xl font-bold ${colorSaldo}">${saldo}</p>`
                         : `<p class="text-2xl font-bold text-gray-500"><i class="fas fa-lock me-2"></i>${saldo}</p>
@@ -330,8 +330,8 @@ function renderizarCuentas() {
                 </div>
 
                 ${cuenta.descripcion ? `
-                    <div class="mt-4 pt-4 border-gray-700">
-                        <p class="text-sm text-gray-400">${cuenta.descripcion}</p>
+                    <div class="mt-4 pt-4 border-gray-200">
+                        <p class="text-sm text-gray-500">${cuenta.descripcion}</p>
                     </div>
                 ` : ''}
 
@@ -441,7 +441,7 @@ function editarCuenta(id) {
     $('#cuenta-tipo').val(cuenta.tipoCuenta);
     $('#cuenta-moneda').val(cuenta.moneda);
     $('#cuenta-saldo-inicial').val(cuenta.saldoInicial).prop('readonly', true).css({
-        'background-color': '#374151',
+        'background-color': '#ffffff',
         'color': '#9CA3AF',
         'cursor': 'not-allowed'
     });
@@ -486,12 +486,12 @@ function mostrarDetalleCuenta(cuenta) {
     const saldo = puedeVerSaldo 
         ? formatearMoneda(cuenta.saldoActual || 0, cuenta.moneda)
         : '***';
-    const colorSaldo = cuenta.saldoActual >= 0 ? 'text-green-400' : 'text-red-400';
+    const colorSaldo = cuenta.saldoActual >= 0 ? 'text-green-600' : 'text-red-600';
 
     let html = `
-        <div class="bg-gray-700 rounded-lg p-6 mb-4">
+        <div class="bg-gray-100 rounded-lg p-6 mb-4">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-2xl font-bold text-white">${cuenta.nombre}</h3>
+                <h3 class="text-2xl font-bold text-gray-900">${cuenta.nombre}</h3>
                 ${puedeVerSaldo 
                     ? `<span class="text-3xl font-bold ${colorSaldo}">${saldo}</span>`
                     : `<span class="text-3xl font-bold text-gray-500"><i class="fas fa-lock me-2"></i>${saldo}</span>`
@@ -499,27 +499,27 @@ function mostrarDetalleCuenta(cuenta) {
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                    <p class="text-gray-400">Tipo de Cuenta</p>
-                    <p class="text-white font-semibold">${cuenta.tipoCuenta}</p>
+                    <p class="text-gray-500">Tipo de Cuenta</p>
+                    <p class="text-gray-900 font-semibold">${cuenta.tipoCuenta}</p>
                 </div>
                 <div>
-                    <p class="text-gray-400">Moneda</p>
-                    <p class="text-white font-semibold">${cuenta.moneda}</p>
+                    <p class="text-gray-500">Moneda</p>
+                    <p class="text-gray-900 font-semibold">${cuenta.moneda}</p>
                 </div>
                 ${puedeVerSaldo ? `
                     <div>
-                        <p class="text-gray-400">Saldo Inicial</p>
-                        <p class="text-white font-semibold">${formatearMoneda(cuenta.saldoInicial || 0, cuenta.moneda)}</p>
+                        <p class="text-gray-500">Saldo Inicial</p>
+                        <p class="text-gray-900 font-semibold">${formatearMoneda(cuenta.saldoInicial || 0, cuenta.moneda)}</p>
                     </div>
                 ` : `
                     <div>
-                        <p class="text-gray-400">Saldo Inicial</p>
+                        <p class="text-gray-500">Saldo Inicial</p>
                         <p class="text-gray-500"><i class="fas fa-lock me-2"></i>Oculto</p>
                     </div>
                 `}
                 <div>
-                    <p class="text-gray-400">Estado</p>
-                    <p class="text-white font-semibold">${cuenta.activa ? 'Activa' : 'Inactiva'}</p>
+                    <p class="text-gray-500">Estado</p>
+                    <p class="text-gray-900 font-semibold">${cuenta.activa ? 'Activa' : 'Inactiva'}</p>
                 </div>
             </div>
     `;
@@ -527,31 +527,31 @@ function mostrarDetalleCuenta(cuenta) {
     // Datos bancarios si existen
     if (cuenta.datosBancarios && (cuenta.datosBancarios.beneficiario || cuenta.datosBancarios.banco)) {
         html += `
-            <div class="mt-4 pt-4 border-t border-gray-600">
-                <h4 class="text-lg font-semibold text-white mb-3">Datos Bancarios</h4>
+            <div class="mt-4 pt-4 border-t border-gray-300">
+                <h4 class="text-lg font-semibold text-gray-900 mb-3">Datos Bancarios</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     ${cuenta.datosBancarios.beneficiario ? `
                         <div>
-                            <p class="text-gray-400">Beneficiario</p>
-                            <p class="text-white">${cuenta.datosBancarios.beneficiario}</p>
+                            <p class="text-gray-500">Beneficiario</p>
+                            <p class="text-gray-900">${cuenta.datosBancarios.beneficiario}</p>
                         </div>
                     ` : ''}
                     ${cuenta.datosBancarios.banco ? `
                         <div>
-                            <p class="text-gray-400">Banco</p>
-                            <p class="text-white">${cuenta.datosBancarios.banco}</p>
+                            <p class="text-gray-500">Banco</p>
+                            <p class="text-gray-900">${cuenta.datosBancarios.banco}</p>
                         </div>
                     ` : ''}
                     ${cuenta.datosBancarios.clabe ? `
                         <div>
-                            <p class="text-gray-400">CLABE</p>
-                            <p class="text-white font-mono">${cuenta.datosBancarios.clabe}</p>
+                            <p class="text-gray-500">CLABE</p>
+                            <p class="text-gray-900 font-mono">${cuenta.datosBancarios.clabe}</p>
                         </div>
                     ` : ''}
                     ${cuenta.datosBancarios.numeroCuenta ? `
                         <div>
-                            <p class="text-gray-400">Número de Cuenta</p>
-                            <p class="text-white font-mono">${cuenta.datosBancarios.numeroCuenta}</p>
+                            <p class="text-gray-500">Número de Cuenta</p>
+                            <p class="text-gray-900 font-mono">${cuenta.datosBancarios.numeroCuenta}</p>
                         </div>
                     ` : ''}
                 </div>
@@ -563,15 +563,15 @@ function mostrarDetalleCuenta(cuenta) {
 
     // Sección de participantes
     html += `
-        <div class="bg-gray-700 rounded-lg p-6">
+        <div class="bg-gray-100 rounded-lg p-6">
             <div class="flex items-center justify-between mb-4">
-                <h4 class="text-lg font-semibold text-white">Participantes</h4>
+                <h4 class="text-lg font-semibold text-gray-900">Participantes</h4>
                 <button class="btn btn-sm btn-primary" onclick="abrirModalParticipantes('${cuenta._id}')">
                     <i class="fas fa-user-plus me-2"></i>Agregar Participante
                 </button>
             </div>
             <div id="participantes-lista-${cuenta._id}">
-                <p class="text-gray-400 text-sm">Cargando participantes...</p>
+                <p class="text-gray-500 text-sm">Cargando participantes...</p>
             </div>
         </div>
     `;
@@ -610,7 +610,7 @@ function renderizarSolicitudes() {
     if (solicitudes.length === 0) {
         tbody.html(`
             <tr>
-                <td colspan="8" class="px-6 py-4 text-center text-gray-400">
+                <td colspan="8" class="px-6 py-4 text-center text-gray-500">
                     No hay solicitudes
                 </td>
             </tr>
@@ -621,7 +621,7 @@ function renderizarSolicitudes() {
     solicitudes.forEach(sol => {
         const fecha = new Date(sol.fecha).toLocaleDateString('es-MX');
         const monto = formatearMoneda(sol.monto, 'MXN');
-        const tipoColor = sol.tipo === 'Ingreso' ? 'text-green-400' : 'text-red-400';
+        const tipoColor = sol.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
         const estadoBadge = obtenerBadgeEstado(sol.estado);
         const nombreCuenta = sol.cuenta?.nombre || 'N/A';
         
@@ -661,18 +661,18 @@ function renderizarSolicitudes() {
         }
 
         tbody.append(`
-            <tr class="border-b border-gray-700 hover:bg-gray-700">
+            <tr class="border-b border-gray-200 hover:bg-gray-100">
                 <td class="px-6 py-4">${fecha}</td>
                 <td class="px-6 py-4">
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-900 text-blue-300">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-teal-100 text-blue-300">
                         <i class="fas fa-wallet me-1"></i>${nombreCuenta}
                     </span>
                 </td>
                 <td class="px-6 py-4 ${tipoColor}">${sol.tipo}</td>
-                <td class="px-6 py-4 font-medium text-white">
+                <td class="px-6 py-4 font-medium text-gray-900">
                     ${sol.concepto}
                     ${sol.imagenes && sol.imagenes.length > 0 ? `
-                        <i class="fas fa-paperclip text-gray-400 ms-2" title="${sol.imagenes.length} imagen(es)"></i>
+                        <i class="fas fa-paperclip text-gray-500 ms-2" title="${sol.imagenes.length} imagen(es)"></i>
                     ` : ''}
                 </td>
                 <td class="px-6 py-4">${sol.solicitadoPor?.firstName || 'N/A'} ${sol.solicitadoPor?.lastName || ''}</td>
@@ -752,11 +752,11 @@ async function aprobarSolicitud(solicitudId) {
         html: `
             <p class="mb-3">Esta acción creará una transacción en la cuenta</p>
             <div class="mb-3 text-start">
-                <label for="comentario-aprobacion" class="form-label text-white">Comentario (opcional)</label>
+                <label for="comentario-aprobacion" class="form-label text-gray-900">Comentario (opcional)</label>
                 <textarea id="comentario-aprobacion" class="form-control" rows="2" placeholder="Agregar un comentario..."></textarea>
             </div>
             <div class="mb-3 text-start">
-                <label for="comprobante-confirmacion" class="form-label text-white">
+                <label for="comprobante-confirmacion" class="form-label text-gray-900">
                     Comprobante de confirmación (opcional)
                     <i class="fas fa-info-circle ms-1" title="Sube una imagen del comprobante de pago o confirmación"></i>
                 </label>
@@ -769,8 +769,8 @@ async function aprobarSolicitud(solicitudId) {
         confirmButtonText: 'Aprobar',
         cancelButtonText: 'Cancelar',
         confirmButtonColor: '#10b981',
-        background: '#1f2937',
-        color: '#f9fafb',
+        background: '#ffffff',
+        color: '#1f2937',
         preConfirm: () => {
             const comentario = document.getElementById('comentario-aprobacion').value;
             const archivo = document.getElementById('comprobante-confirmacion').files[0];
@@ -835,8 +835,8 @@ async function rechazarSolicitud(solicitudId) {
         confirmButtonText: 'Rechazar',
         cancelButtonText: 'Cancelar',
         confirmButtonColor: '#ef4444',
-        background: '#1f2937',
-        color: '#f9fafb'
+        background: '#ffffff',
+        color: '#1f2937'
     });
 
     if (result.isConfirmed) {
@@ -883,8 +883,8 @@ async function cancelarSolicitud(solicitudId) {
         confirmButtonText: 'Sí, cancelar',
         cancelButtonText: 'No',
         confirmButtonColor: '#f59e0b',
-        background: '#1f2937',
-        color: '#f9fafb'
+        background: '#ffffff',
+        color: '#1f2937'
     });
 
     if (result.isConfirmed) {
@@ -1015,59 +1015,59 @@ function verDetalleSolicitud(solicitudId) {
     
     const fecha = new Date(solicitud.fecha).toLocaleDateString('es-MX');
     const monto = formatearMoneda(solicitud.monto, solicitud.cuenta?.moneda || 'MXN');
-    const tipoColor = solicitud.tipo === 'Ingreso' ? 'text-green-400' : 'text-red-400';
+    const tipoColor = solicitud.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
     
     let detalleHtml = `
         <div class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <p class="text-gray-400 text-sm">Cuenta</p>
-                    <p class="text-white font-semibold">${solicitud.cuenta?.nombre || 'N/A'}</p>
+                    <p class="text-gray-500 text-sm">Cuenta</p>
+                    <p class="text-gray-900 font-semibold">${solicitud.cuenta?.nombre || 'N/A'}</p>
                 </div>
                 <div>
-                    <p class="text-gray-400 text-sm">Estado</p>
-                    <p class="text-white">${obtenerBadgeEstado(solicitud.estado)}</p>
+                    <p class="text-gray-500 text-sm">Estado</p>
+                    <p class="text-gray-900">${obtenerBadgeEstado(solicitud.estado)}</p>
                 </div>
                 <div>
-                    <p class="text-gray-400 text-sm">Tipo</p>
+                    <p class="text-gray-500 text-sm">Tipo</p>
                     <p class="${tipoColor} font-semibold">${solicitud.tipo}</p>
                 </div>
                 <div>
-                    <p class="text-gray-400 text-sm">Monto</p>
+                    <p class="text-gray-500 text-sm">Monto</p>
                     <p class="${tipoColor} font-semibold text-lg">${monto}</p>
                 </div>
                 <div>
-                    <p class="text-gray-400 text-sm">Fecha</p>
-                    <p class="text-white">${fecha}</p>
+                    <p class="text-gray-500 text-sm">Fecha</p>
+                    <p class="text-gray-900">${fecha}</p>
                 </div>
                 <div>
-                    <p class="text-gray-400 text-sm">Categoría</p>
-                    <p class="text-white">${solicitud.categoria}</p>
+                    <p class="text-gray-500 text-sm">Categoría</p>
+                    <p class="text-gray-900">${solicitud.categoria}</p>
                 </div>
             </div>
             
             <div>
-                <p class="text-gray-400 text-sm">Concepto</p>
-                <p class="text-white font-semibold text-lg">${solicitud.concepto}</p>
+                <p class="text-gray-500 text-sm">Concepto</p>
+                <p class="text-gray-900 font-semibold text-lg">${solicitud.concepto}</p>
             </div>
             
             ${solicitud.descripcion ? `
                 <div>
-                    <p class="text-gray-400 text-sm">Descripción</p>
-                    <p class="text-white">${solicitud.descripcion}</p>
+                    <p class="text-gray-500 text-sm">Descripción</p>
+                    <p class="text-gray-900">${solicitud.descripcion}</p>
                 </div>
             ` : ''}
             
             <div>
-                <p class="text-gray-400 text-sm">Solicitado por</p>
-                <p class="text-white">${solicitud.solicitadoPor?.firstName || 'N/A'} ${solicitud.solicitadoPor?.lastName || ''}</p>
+                <p class="text-gray-500 text-sm">Solicitado por</p>
+                <p class="text-gray-900">${solicitud.solicitadoPor?.firstName || 'N/A'} ${solicitud.solicitadoPor?.lastName || ''}</p>
             </div>
             
             ${solicitud.respuesta?.comentario ? `
-                <div class="border-t border-gray-700 pt-4">
-                    <p class="text-gray-400 text-sm">Respuesta del propietario</p>
-                    <p class="text-white">${solicitud.respuesta.comentario}</p>
-                    <p class="text-gray-400 text-xs mt-2">
+                <div class="border-t border-gray-200 pt-4">
+                    <p class="text-gray-500 text-sm">Respuesta del propietario</p>
+                    <p class="text-gray-900">${solicitud.respuesta.comentario}</p>
+                    <p class="text-gray-500 text-xs mt-2">
                         ${solicitud.respuesta.procesadaPor?.firstName || ''} - 
                         ${new Date(solicitud.respuesta.fechaProcesada).toLocaleString('es-MX')}
                     </p>
@@ -1075,8 +1075,8 @@ function verDetalleSolicitud(solicitudId) {
             ` : ''}
             
             ${solicitud.imagenes && solicitud.imagenes.length > 0 ? `
-                <div class="border-t border-gray-700 pt-4">
-                    <p class="text-gray-400 text-sm mb-3">
+                <div class="border-t border-gray-200 pt-4">
+                    <p class="text-gray-500 text-sm mb-3">
                         <i class="fas fa-paperclip me-2"></i>Comprobantes del Participante (${solicitud.imagenes.length})
                     </p>
                     <div class="grid grid-cols-3 gap-3">
@@ -1084,10 +1084,10 @@ function verDetalleSolicitud(solicitudId) {
                             const imagenUrl = `https://navarro.integradev.site/navarro/splitwise/${imagen}`;
                             return `
                                 <div class="relative group cursor-pointer" onclick="visualizarImagenCompleta('${imagenUrl}')">
-                                    <img src="${imagenUrl}" alt="Imagen adjunta" class="w-full h-24 object-cover rounded-lg border border-gray-600 hover:border-blue-500 transition-colors">
+                                    <img src="${imagenUrl}" alt="Imagen adjunta" class="w-full h-24 object-cover rounded-lg border border-gray-300 hover:border-teal-500 transition-colors">
                                     ${solicitud.estado === 'Pendiente' ? `
                                         <button onclick="event.stopPropagation(); eliminarImagenSolicitud('${solicitud._id}', '${imagen}')" 
-                                                class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-gray-900 rounded-full p-1 w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                             <i class="fas fa-times text-xs"></i>
                                         </button>
                                     ` : ''}
@@ -1099,19 +1099,19 @@ function verDetalleSolicitud(solicitudId) {
             ` : ''}
             
             ${solicitud.respuesta?.comprobanteConfirmacion ? `
-                <div class="border-t border-gray-700 pt-4">
-                    <p class="text-gray-400 text-sm mb-3">
+                <div class="border-t border-gray-200 pt-4">
+                    <p class="text-gray-500 text-sm mb-3">
                         <i class="fas fa-check-circle me-2"></i>Comprobante de Confirmación del Propietario
                     </p>
                     <div class="grid grid-cols-3 gap-3">
                         <div class="relative cursor-pointer" onclick="visualizarImagenCompleta('https://navarro.integradev.site/navarro/splitwise/${solicitud.respuesta.comprobanteConfirmacion.url}')">
                             ${solicitud.respuesta.comprobanteConfirmacion.tipo.includes('pdf') ? `
-                                <div class="w-full h-24 bg-red-900 rounded-lg border border-gray-600 hover:border-blue-500 transition-colors flex items-center justify-center">
+                                <div class="w-full h-24 bg-red-900 rounded-lg border border-gray-300 hover:border-teal-500 transition-colors flex items-center justify-center">
                                     <i class="fas fa-file-pdf text-4xl text-red-300"></i>
                                 </div>
-                                <p class="text-xs text-gray-400 text-center mt-1">${solicitud.respuesta.comprobanteConfirmacion.nombre}</p>
+                                <p class="text-xs text-gray-500 text-center mt-1">${solicitud.respuesta.comprobanteConfirmacion.nombre}</p>
                             ` : `
-                                <img src="https://navarro.integradev.site/navarro/splitwise/${solicitud.respuesta.comprobanteConfirmacion.url}" alt="Comprobante confirmación" class="w-full h-24 object-cover rounded-lg border border-gray-600 hover:border-blue-500 transition-colors">
+                                <img src="https://navarro.integradev.site/navarro/splitwise/${solicitud.respuesta.comprobanteConfirmacion.url}" alt="Comprobante confirmación" class="w-full h-24 object-cover rounded-lg border border-gray-300 hover:border-teal-500 transition-colors">
                             `}
                         </div>
                     </div>
@@ -1126,8 +1126,8 @@ function verDetalleSolicitud(solicitudId) {
         width: 600,
         showCloseButton: true,
         showConfirmButton: false,
-        background: '#1f2937',
-        color: '#f9fafb'
+        background: '#ffffff',
+        color: '#1f2937'
     });
 }
 
@@ -1139,7 +1139,7 @@ async function cargarTransacciones() {
     if (!cuentaId && cuentas.length > 0) {
         $('#tabla-transacciones-body').html(`
             <tr>
-                <td colspan="7" class="px-6 py-4 text-center text-gray-400">
+                <td colspan="7" class="px-6 py-4 text-center text-gray-500">
                     Seleccione una cuenta para ver sus transacciones
                 </td>
             </tr>
@@ -1191,7 +1191,7 @@ function renderizarTransacciones() {
     if (transacciones.length === 0) {
         tbody.html(`
             <tr>
-                <td colspan="7" class="px-6 py-4 text-center text-gray-400">
+                <td colspan="7" class="px-6 py-4 text-center text-gray-500">
                     No hay transacciones en esta cuenta
                 </td>
             </tr>
@@ -1202,7 +1202,7 @@ function renderizarTransacciones() {
     transacciones.forEach(trans => {
         const fecha = new Date(trans.fecha).toLocaleDateString('es-MX');
         const monto = formatearMoneda(trans.monto, 'MXN');
-        const tipoColor = trans.tipo === 'Ingreso' ? 'text-green-400' : 'text-red-400';
+        const tipoColor = trans.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
         const estadoBadge = trans.aprobada ? 
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-900 text-green-300">Aprobada</span>' :
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-900 text-yellow-300">Pendiente</span>';
@@ -1210,13 +1210,13 @@ function renderizarTransacciones() {
         // Indicador de imágenes
         const cantidadImagenes = trans.imagenes?.length || 0;
         const iconoImagenes = cantidadImagenes > 0 ? 
-            `<i class="fas fa-paperclip text-blue-400" title="${cantidadImagenes} imagen(es)"></i>` : '';
+            `<i class="fas fa-paperclip text-teal-600" title="${cantidadImagenes} imagen(es)"></i>` : '';
 
         tbody.append(`
-            <tr class="border-b border-gray-700 hover:bg-gray-700">
+            <tr class="border-b border-gray-200 hover:bg-gray-100">
                 <td class="px-6 py-4">${fecha} ${iconoImagenes}</td>
                 <td class="px-6 py-4 ${tipoColor}">${trans.tipo}</td>
-                <td class="px-6 py-4 font-medium text-white">${trans.concepto}</td>
+                <td class="px-6 py-4 font-medium text-gray-900">${trans.concepto}</td>
                 <td class="px-6 py-4">${trans.categoria}</td>
                 <td class="px-6 py-4 text-right font-semibold ${tipoColor}">${monto}</td>
                 <td class="px-6 py-4">${estadoBadge}</td>
@@ -1248,7 +1248,7 @@ function obtenerBadgeEstado(estado) {
         'Pendiente': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-900 text-yellow-300">Pendiente</span>',
         'Aprobada': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-900 text-green-300">Aprobada</span>',
         'Rechazada': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-900 text-red-300">Rechazada</span>',
-        'Cancelada': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-600 text-gray-300">Cancelada</span>'
+        'Cancelada': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-600 text-gray-600">Cancelada</span>'
     };
     return badges[estado] || estado;
 }
@@ -1258,8 +1258,8 @@ function mostrarExito(mensaje) {
         icon: 'success',
         title: '¡Éxito!',
         text: mensaje,
-        background: '#1f2937',
-        color: '#f3f4f6',
+        background: '#ffffff',
+        color: '#374151',
         confirmButtonColor: '#3b82f6'
     });
 }
@@ -1269,8 +1269,8 @@ function mostrarError(mensaje) {
         icon: 'error',
         title: 'Error',
         text: mensaje,
-        background: '#1f2937',
-        color: '#f3f4f6',
+        background: '#ffffff',
+        color: '#374151',
         confirmButtonColor: '#ef4444'
     });
 }
@@ -1430,11 +1430,11 @@ async function cargarParticipantes(cuentaId) {
             participantes = data.data || [];
             renderizarParticipantes(cuentaId);
         } else {
-            $(`#participantes-lista-${cuentaId}`).html(`<p class="text-red-400 text-sm">${data.message || 'Error al cargar participantes'}</p>`);
+            $(`#participantes-lista-${cuentaId}`).html(`<p class="text-red-600 text-sm">${data.message || 'Error al cargar participantes'}</p>`);
         }
     } catch (error) {
         console.error('Error al cargar participantes:', error);
-        $(`#participantes-lista-${cuentaId}`).html('<p class="text-red-400 text-sm">Error al cargar participantes</p>');
+        $(`#participantes-lista-${cuentaId}`).html('<p class="text-red-600 text-sm">Error al cargar participantes</p>');
     } finally {
         ocultarSpinner();
     }
@@ -1445,7 +1445,7 @@ function renderizarParticipantes(cuentaId) {
     container.empty();
 
     if (participantes.length === 0) {
-        container.html('<p class="text-gray-400 text-sm">No hay participantes agregados</p>');
+        container.html('<p class="text-gray-500 text-sm">No hay participantes agregados</p>');
         return;
     }
 
@@ -1466,10 +1466,10 @@ function renderizarParticipantes(cuentaId) {
             </button>` : '';
 
         container.append(`
-            <div class="d-flex justify-content-between align-items-center p-3 mb-2 bg-gray-800 rounded border border-gray-600">
+            <div class="d-flex justify-content-between align-items-center p-3 mb-2 bg-white rounded border border-gray-300">
                 <div>
-                    <div class="fw-bold text-white">${nombre}</div>
-                    <div class="text-sm text-gray-400">${rol}</div>
+                    <div class="fw-bold text-gray-900">${nombre}</div>
+                    <div class="text-sm text-gray-500">${rol}</div>
                     ${permisos.length > 0 ? `<div class="text-xs text-gray-500 mt-1">${permisos.join(', ')}</div>` : ''}
                 </div>
                 <div>
@@ -1612,7 +1612,7 @@ async function gestionarImagenesTransaccion(transaccionId) {
                 imagenesGrid.append(card);
             });
         } else {
-            imagenesGrid.html('<p class="text-gray-400 col-12">No hay imágenes adjuntas</p>');
+            imagenesGrid.html('<p class="text-gray-500 col-12">No hay imágenes adjuntas</p>');
         }
 
         // Mostrar/ocultar sección de subir nuevas según el límite
@@ -1711,8 +1711,8 @@ async function eliminarImagenTransaccion(transaccionId, imagenNombre) {
         cancelButtonColor: '#6B7280',
         confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar',
-        background: '#1F2937',
-        color: '#F3F4F6'
+        background: '#ffffff',
+        color: '#374151'
     });
 
     if (!confirmar.isConfirmed) return;
@@ -1791,7 +1791,7 @@ async function verDetalleTransaccion(transaccionId) {
             day: 'numeric'
         });
         const monto = formatearMoneda(trans.monto, trans.cuenta?.moneda || 'MXN');
-        const tipoColor = trans.tipo === 'Ingreso' ? 'text-green-400' : 'text-red-400';
+        const tipoColor = trans.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
         const tipoBadge = trans.tipo === 'Ingreso' ? 
             '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-900 text-green-300"><i class="fas fa-arrow-up me-1"></i>Ingreso</span>' :
             '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-red-900 text-red-300"><i class="fas fa-arrow-down me-1"></i>Gasto</span>';
@@ -1801,11 +1801,11 @@ async function verDetalleTransaccion(transaccionId) {
 
         // Construir HTML del detalle
         let html = `
-            <div class="bg-gray-700 rounded-lg p-4 mb-4">
+            <div class="bg-gray-100 rounded-lg p-4 mb-4">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                        <h4 class="text-white mb-2">${trans.concepto}</h4>
-                        <p class="text-gray-400 mb-0"><i class="far fa-calendar me-2"></i>${fecha}</p>
+                        <h4 class="text-gray-900 mb-2">${trans.concepto}</h4>
+                        <p class="text-gray-500 mb-0"><i class="far fa-calendar me-2"></i>${fecha}</p>
                     </div>
                     <div class="text-end">
                         <div class="mb-2">${tipoBadge}</div>
@@ -1813,23 +1813,23 @@ async function verDetalleTransaccion(transaccionId) {
                     </div>
                 </div>
                 
-                <div class="border-top border-gray-600 pt-3 mt-3">
+                <div class="border-top border-gray-300 pt-3 mt-3">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <p class="text-gray-400 mb-1 text-sm">Categoría</p>
-                            <p class="text-white mb-0"><i class="fas fa-tag me-2"></i>${trans.categoria}</p>
+                            <p class="text-gray-500 mb-1 text-sm">Categoría</p>
+                            <p class="text-gray-900 mb-0"><i class="fas fa-tag me-2"></i>${trans.categoria}</p>
                         </div>
                         <div class="col-md-6">
-                            <p class="text-gray-400 mb-1 text-sm">Estado</p>
+                            <p class="text-gray-500 mb-1 text-sm">Estado</p>
                             <div>${estadoBadge}</div>
                         </div>
                         <div class="col-md-6">
-                            <p class="text-gray-400 mb-1 text-sm">Cuenta</p>
-                            <p class="text-white mb-0"><i class="fas fa-wallet me-2"></i>${trans.cuenta?.nombre || 'N/A'}</p>
+                            <p class="text-gray-500 mb-1 text-sm">Cuenta</p>
+                            <p class="text-gray-900 mb-0"><i class="fas fa-wallet me-2"></i>${trans.cuenta?.nombre || 'N/A'}</p>
                         </div>
                         <div class="col-md-6">
-                            <p class="text-gray-400 mb-1 text-sm">Creado por</p>
-                            <p class="text-white mb-0"><i class="fas fa-user me-2"></i>${trans.creadoPor?.firstName || ''} ${trans.creadoPor?.lastName || ''}</p>
+                            <p class="text-gray-500 mb-1 text-sm">Creado por</p>
+                            <p class="text-gray-900 mb-0"><i class="fas fa-user me-2"></i>${trans.creadoPor?.firstName || ''} ${trans.creadoPor?.lastName || ''}</p>
                         </div>
                     </div>
                 </div>
@@ -1839,9 +1839,9 @@ async function verDetalleTransaccion(transaccionId) {
         // Descripción
         if (trans.descripcion) {
             html += `
-                <div class="bg-gray-700 rounded-lg p-4 mb-4">
-                    <h6 class="text-gray-300 mb-2"><i class="fas fa-align-left me-2"></i>Descripción</h6>
-                    <p class="text-white mb-0">${trans.descripcion}</p>
+                <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-600 mb-2"><i class="fas fa-align-left me-2"></i>Descripción</h6>
+                    <p class="text-gray-900 mb-0">${trans.descripcion}</p>
                 </div>
             `;
         }
@@ -1849,9 +1849,9 @@ async function verDetalleTransaccion(transaccionId) {
         // Notas internas
         if (trans.notas) {
             html += `
-                <div class="bg-gray-700 rounded-lg p-4 mb-4">
-                    <h6 class="text-gray-300 mb-2"><i class="fas fa-sticky-note me-2"></i>Notas Internas</h6>
-                    <p class="text-white mb-0">${trans.notas}</p>
+                <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-600 mb-2"><i class="fas fa-sticky-note me-2"></i>Notas Internas</h6>
+                    <p class="text-gray-900 mb-0">${trans.notas}</p>
                 </div>
             `;
         }
@@ -1860,16 +1860,16 @@ async function verDetalleTransaccion(transaccionId) {
         if (trans.aprobada && trans.aprobadaPor) {
             const fechaAprobacion = new Date(trans.fechaAprobacion).toLocaleDateString('es-MX');
             html += `
-                <div class="bg-gray-700 rounded-lg p-4 mb-4">
-                    <h6 class="text-gray-300 mb-2"><i class="fas fa-check-circle me-2"></i>Información de Aprobación</h6>
+                <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-600 mb-2"><i class="fas fa-check-circle me-2"></i>Información de Aprobación</h6>
                     <div class="row g-2">
                         <div class="col-md-6">
-                            <p class="text-gray-400 mb-1 text-sm">Aprobada por</p>
-                            <p class="text-white mb-0">${trans.aprobadaPor?.firstName || ''} ${trans.aprobadaPor?.lastName || ''}</p>
+                            <p class="text-gray-500 mb-1 text-sm">Aprobada por</p>
+                            <p class="text-gray-900 mb-0">${trans.aprobadaPor?.firstName || ''} ${trans.aprobadaPor?.lastName || ''}</p>
                         </div>
                         <div class="col-md-6">
-                            <p class="text-gray-400 mb-1 text-sm">Fecha de aprobación</p>
-                            <p class="text-white mb-0">${fechaAprobacion}</p>
+                            <p class="text-gray-500 mb-1 text-sm">Fecha de aprobación</p>
+                            <p class="text-gray-900 mb-0">${fechaAprobacion}</p>
                         </div>
                     </div>
                 </div>
@@ -1879,8 +1879,8 @@ async function verDetalleTransaccion(transaccionId) {
         // Etiquetas
         if (trans.etiquetas && trans.etiquetas.length > 0) {
             html += `
-                <div class="bg-gray-700 rounded-lg p-4 mb-4">
-                    <h6 class="text-gray-300 mb-2"><i class="fas fa-tags me-2"></i>Etiquetas</h6>
+                <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-600 mb-2"><i class="fas fa-tags me-2"></i>Etiquetas</h6>
                     <div class="d-flex flex-wrap gap-2">
                         ${trans.etiquetas.map(tag => `<span class="badge bg-blue-600">${tag}</span>`).join('')}
                     </div>
@@ -1891,8 +1891,8 @@ async function verDetalleTransaccion(transaccionId) {
         // Imágenes adjuntas (Comprobantes del participante)
         if (trans.imagenes && trans.imagenes.length > 0) {
             html += `
-                <div class="bg-gray-700 rounded-lg p-4 mb-4">
-                    <h6 class="text-gray-300 mb-3"><i class="fas fa-paperclip me-2"></i>Comprobantes del Participante (${trans.imagenes.length})</h6>
+                <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-600 mb-3"><i class="fas fa-paperclip me-2"></i>Comprobantes del Participante (${trans.imagenes.length})</h6>
                     <div class="row g-3">
             `;
             
@@ -1903,7 +1903,7 @@ async function verDetalleTransaccion(transaccionId) {
                         <div class="position-relative" style="cursor: pointer;" onclick="visualizarImagenCompleta('${imagenUrl}')">
                             <img src="${imagenUrl}" alt="Comprobante participante" class="img-fluid rounded" style="height: 120px; width: 100%; object-fit: cover;">
                             <div class="position-absolute top-0 end-0 m-2">
-                                <span class="badge bg-dark bg-opacity-75">
+                                <span class="badge bg-secondary bg-opacity-75">
                                     <i class="fas fa-search-plus"></i>
                                 </span>
                             </div>
@@ -1921,9 +1921,9 @@ async function verDetalleTransaccion(transaccionId) {
             `;
         } else {
             html += `
-                <div class="bg-gray-700 rounded-lg p-4 mb-4">
-                    <h6 class="text-gray-300 mb-2"><i class="fas fa-paperclip me-2"></i>Comprobantes del Participante</h6>
-                    <p class="text-gray-400 mb-2">No hay comprobantes adjuntos</p>
+                <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-600 mb-2"><i class="fas fa-paperclip me-2"></i>Comprobantes del Participante</h6>
+                    <p class="text-gray-500 mb-2">No hay comprobantes adjuntos</p>
                     <button type="button" class="btn btn-sm btn-primary" onclick="$('#modalDetalleTransaccion').modal('hide'); setTimeout(() => gestionarImagenesTransaccion('${trans._id}'), 300);">
                         <i class="fas fa-upload me-1"></i> Agregar Comprobantes
                     </button>
@@ -1934,8 +1934,8 @@ async function verDetalleTransaccion(transaccionId) {
         // Comprobante de confirmación del propietario
         if (trans.comprobanteConfirmacion) {
             html += `
-                <div class="bg-gray-700 rounded-lg p-4 mb-4">
-                    <h6 class="text-gray-300 mb-3"><i class="fas fa-check-circle me-2"></i>Comprobante de Confirmación del Propietario</h6>
+                <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-600 mb-3"><i class="fas fa-check-circle me-2"></i>Comprobante de Confirmación del Propietario</h6>
                     <div class="row g-3">
                         <div class="col-md-4 col-6">
                             <div class="position-relative" style="cursor: pointer;" onclick="visualizarImagenCompleta('https://navarro.integradev.site/navarro/splitwise/${trans.comprobanteConfirmacion.url}')">
@@ -1943,11 +1943,11 @@ async function verDetalleTransaccion(transaccionId) {
                                     <div class="bg-danger bg-opacity-25 rounded d-flex align-items-center justify-content-center" style="height: 120px; width: 100%;">
                                         <i class="fas fa-file-pdf fa-4x text-danger"></i>
                                     </div>
-                                    <p class="text-center text-white text-xs mt-2">${trans.comprobanteConfirmacion.nombre}</p>
+                                    <p class="text-center text-gray-900 text-xs mt-2">${trans.comprobanteConfirmacion.nombre}</p>
                                 ` : `
                                     <img src="https://navarro.integradev.site/navarro/splitwise/${trans.comprobanteConfirmacion.url}" alt="Comprobante confirmación" class="img-fluid rounded" style="height: 120px; width: 100%; object-fit: cover;">
                                     <div class="position-absolute top-0 end-0 m-2">
-                                        <span class="badge bg-dark bg-opacity-75">
+                                        <span class="badge bg-secondary bg-opacity-75">
                                             <i class="fas fa-search-plus"></i>
                                         </span>
                                     </div>
@@ -1955,7 +1955,7 @@ async function verDetalleTransaccion(transaccionId) {
                             </div>
                         </div>
                     </div>
-                    <p class="text-gray-400 text-sm mt-3 mb-0">
+                    <p class="text-gray-500 text-sm mt-3 mb-0">
                         <i class="far fa-clock me-2"></i>Subido el ${new Date(trans.comprobanteConfirmacion.fechaSubida).toLocaleDateString('es-MX')}
                     </p>
                 </div>
@@ -2050,8 +2050,8 @@ async function eliminarImagenSolicitud(solicitudId, imagenNombre) {
         confirmButtonText: 'Eliminar',
         cancelButtonText: 'Cancelar',
         confirmButtonColor: '#ef4444',
-        background: '#1f2937',
-        color: '#f9fafb'
+        background: '#ffffff',
+        color: '#1f2937'
     });
 
     if (!result.isConfirmed) return;
@@ -2192,7 +2192,7 @@ function renderizarGraficaCuentasPersonal(transaccionesPorCuenta) {
     // Si el canvas no existe (fue reemplazado por mensaje), recrearlo
     if (!ctx) {
         // Buscar el contenedor que tenía el canvas
-        const containers = document.querySelectorAll('.bg-gray-800.rounded-lg.p-6.shadow-xl');
+        const containers = document.querySelectorAll('.bg-white.rounded-lg.p-6.shadow-xl');
         let container = null;
         
         for (let cont of containers) {
@@ -2219,7 +2219,7 @@ function renderizarGraficaCuentasPersonal(transaccionesPorCuenta) {
     // Si no hay datos, mostrar mensaje
     if (!transaccionesPorCuenta || transaccionesPorCuenta.length === 0) {
         const container = ctx.parentElement;
-        container.innerHTML = '<p class="text-gray-400 text-center py-10">No hay datos para mostrar</p>';
+        container.innerHTML = '<p class="text-gray-500 text-center py-10">No hay datos para mostrar</p>';
         return;
     }
     
@@ -2254,7 +2254,7 @@ function renderizarGraficaCuentasPersonal(transaccionesPorCuenta) {
             plugins: {
                 legend: {
                     labels: {
-                        color: '#f3f4f6'
+                        color: '#374151'
                     }
                 }
             },
@@ -2262,21 +2262,21 @@ function renderizarGraficaCuentasPersonal(transaccionesPorCuenta) {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        color: '#9ca3af',
+                        color: '#6b7280',
                         callback: function(value) {
                             return '$' + value.toLocaleString();
                         }
                     },
                     grid: {
-                        color: 'rgba(55, 65, 81, 0.5)'
+                        color: 'rgba(209, 213, 219, 0.5)'
                     }
                 },
                 x: {
                     ticks: {
-                        color: '#9ca3af'
+                        color: '#6b7280'
                     },
                     grid: {
-                        color: 'rgba(55, 65, 81, 0.5)'
+                        color: 'rgba(209, 213, 219, 0.5)'
                     }
                 }
             }
@@ -2289,30 +2289,30 @@ function renderizarTransaccionesRecientes(transacciones) {
     container.empty();
     
     if (transacciones.length === 0) {
-        container.html('<p class="text-gray-400 text-center">No hay transacciones recientes</p>');
+        container.html('<p class="text-gray-500 text-center">No hay transacciones recientes</p>');
         return;
     }
     
     transacciones.forEach(trans => {
-        const tipoColor = trans.tipo === 'Ingreso' ? 'text-green-400' : 'text-red-400';
+        const tipoColor = trans.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
         const tipoIcon = trans.tipo === 'Ingreso' ? 'fa-arrow-up' : 'fa-arrow-down';
         const fecha = new Date(trans.fecha).toLocaleDateString('es-MX');
         const monto = formatearMoneda(trans.monto);
         
         container.append(`
-            <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+            <div class="flex items-center justify-between p-3 bg-gray-100 rounded-lg hover:bg-gray-600 transition-colors">
                 <div class="flex items-center gap-3">
                     <div class="${tipoColor}">
                         <i class="fas ${tipoIcon}"></i>
                     </div>
                     <div>
-                        <p class="text-white font-medium">${trans.concepto}</p>
-                        <p class="text-gray-400 text-sm">${trans.cuenta} • ${fecha}</p>
+                        <p class="text-gray-900 font-medium">${trans.concepto}</p>
+                        <p class="text-gray-500 text-sm">${trans.cuenta} • ${fecha}</p>
                     </div>
                 </div>
                 <div class="text-right">
                     <p class="${tipoColor} font-bold">${monto}</p>
-                    <p class="text-gray-400 text-xs">${trans.categoria}</p>
+                    <p class="text-gray-500 text-xs">${trans.categoria}</p>
                 </div>
             </div>
         `);
@@ -2324,7 +2324,7 @@ function renderizarResumenOrganizaciones(resumenOrganizaciones) {
     container.empty();
     
     if (!resumenOrganizaciones || resumenOrganizaciones.length === 0) {
-        container.html('<p class="text-gray-400 text-center">No hay actividad en organizaciones</p>');
+        container.html('<p class="text-gray-500 text-center">No hay actividad en organizaciones</p>');
         $('#org-balance-total').text('$0.00');
         $('#org-balance-ingresos').text('$0.00');
         $('#org-balance-gastos').text('$0.00');
@@ -2339,32 +2339,32 @@ function renderizarResumenOrganizaciones(resumenOrganizaciones) {
         totalIngresos += org.ingresos;
         totalGastos += org.gastos;
         
-        const balanceColor = org.balance >= 0 ? 'text-green-400' : 'text-red-400';
+        const balanceColor = org.balance >= 0 ? 'text-green-600' : 'text-red-600';
         const balanceIcon = org.balance >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
         const ingresos = formatearMoneda(org.ingresos);
         const gastos = formatearMoneda(org.gastos);
         const balance = formatearMoneda(Math.abs(org.balance));
         
         container.append(`
-            <div class="p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+            <div class="p-4 bg-gray-100 rounded-lg hover:bg-gray-600 transition-colors">
                 <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center gap-2">
-                        <i class="fas fa-building text-blue-400"></i>
-                        <h4 class="text-white font-semibold">${org.organizacion}</h4>
+                        <i class="fas fa-building text-teal-600"></i>
+                        <h4 class="text-gray-900 font-semibold">${org.organizacion}</h4>
                     </div>
-                    <span class="text-gray-400 text-sm">${org.cantidad} transacciones</span>
+                    <span class="text-gray-500 text-sm">${org.cantidad} transacciones</span>
                 </div>
                 <div class="grid grid-cols-3 gap-3 text-sm">
-                    <div class="text-center p-2 bg-gray-800 rounded">
-                        <p class="text-gray-400 text-xs mb-1">Ingresos</p>
-                        <p class="text-green-400 font-semibold">${ingresos}</p>
+                    <div class="text-center p-2 bg-white rounded">
+                        <p class="text-gray-500 text-xs mb-1">Ingresos</p>
+                        <p class="text-green-600 font-semibold">${ingresos}</p>
                     </div>
-                    <div class="text-center p-2 bg-gray-800 rounded">
-                        <p class="text-gray-400 text-xs mb-1">Gastos</p>
-                        <p class="text-red-400 font-semibold">${gastos}</p>
+                    <div class="text-center p-2 bg-white rounded">
+                        <p class="text-gray-500 text-xs mb-1">Gastos</p>
+                        <p class="text-red-600 font-semibold">${gastos}</p>
                     </div>
-                    <div class="text-center p-2 bg-gray-800 rounded">
-                        <p class="text-gray-400 text-xs mb-1">Balance</p>
+                    <div class="text-center p-2 bg-white rounded">
+                        <p class="text-gray-500 text-xs mb-1">Balance</p>
                         <p class="${balanceColor} font-semibold">
                             <i class="fas ${balanceIcon} text-xs"></i> ${balance}
                         </p>
@@ -2464,7 +2464,7 @@ function renderizarGraficaEvolucion(transaccionesPorMes) {
     // Si no hay datos, mostrar mensaje
     if (!transaccionesPorMes || transaccionesPorMes.length === 0) {
         const container = ctx.parentElement;
-        container.innerHTML = '<p class="text-gray-400 text-center py-10">No hay datos para mostrar</p>';
+        container.innerHTML = '<p class="text-gray-500 text-center py-10">No hay datos para mostrar</p>';
         return;
     }
     
@@ -2510,7 +2510,7 @@ function renderizarGraficaEvolucion(transaccionesPorMes) {
             plugins: {
                 legend: {
                     labels: {
-                        color: '#f3f4f6'
+                        color: '#374151'
                     }
                 }
             },
@@ -2518,21 +2518,21 @@ function renderizarGraficaEvolucion(transaccionesPorMes) {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        color: '#9ca3af',
+                        color: '#6b7280',
                         callback: function(value) {
                             return '$' + value.toLocaleString();
                         }
                     },
                     grid: {
-                        color: 'rgba(55, 65, 81, 0.5)'
+                        color: 'rgba(209, 213, 219, 0.5)'
                     }
                 },
                 x: {
                     ticks: {
-                        color: '#9ca3af'
+                        color: '#6b7280'
                     },
                     grid: {
-                        color: 'rgba(55, 65, 81, 0.5)'
+                        color: 'rgba(209, 213, 219, 0.5)'
                     }
                 }
             }
@@ -2562,7 +2562,7 @@ function renderizarGraficaCategorias(transaccionesPorCategoria) {
     // Si no hay datos, mostrar mensaje
     if (!transaccionesPorCategoria || transaccionesPorCategoria.length === 0) {
         const container = ctx.parentElement;
-        container.innerHTML = '<p class="text-gray-400 text-center py-10">No hay datos para mostrar</p>';
+        container.innerHTML = '<p class="text-gray-500 text-center py-10">No hay datos para mostrar</p>';
         return;
     }
     
@@ -2574,7 +2574,7 @@ function renderizarGraficaCategorias(transaccionesPorCategoria) {
     // Si no hay gastos después del filtro, mostrar mensaje
     if (gastos.length === 0) {
         const container = ctx.parentElement;
-        container.innerHTML = '<p class="text-gray-400 text-center py-10">No hay gastos para mostrar</p>';
+        container.innerHTML = '<p class="text-gray-500 text-center py-10">No hay gastos para mostrar</p>';
         return;
     }
     
@@ -2648,27 +2648,27 @@ function renderizarTopUsuarios(topUsuarios) {
     container.empty();
     
     if (topUsuarios.length === 0) {
-        container.html('<p class="text-gray-400 text-center">No hay datos de usuarios</p>');
+        container.html('<p class="text-gray-500 text-center">No hay datos de usuarios</p>');
         return;
     }
     
     topUsuarios.forEach((usuario, index) => {
         const badge = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
         const balance = usuario.ingresos - usuario.gastos;
-        const balanceColor = balance >= 0 ? 'text-green-400' : 'text-red-400';
+        const balanceColor = balance >= 0 ? 'text-green-600' : 'text-red-600';
         
         container.append(`
-            <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+            <div class="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">${badge}</span>
                     <div>
-                        <p class="text-white font-medium">${usuario.nombre}</p>
-                        <p class="text-gray-400 text-sm">${usuario.cantidad} transacciones</p>
+                        <p class="text-gray-900 font-medium">${usuario.nombre}</p>
+                        <p class="text-gray-500 text-sm">${usuario.cantidad} transacciones</p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <p class="text-green-400 text-sm">+${formatearMoneda(usuario.ingresos)}</p>
-                    <p class="text-red-400 text-sm">-${formatearMoneda(usuario.gastos)}</p>
+                    <p class="text-green-600 text-sm">+${formatearMoneda(usuario.ingresos)}</p>
+                    <p class="text-red-600 text-sm">-${formatearMoneda(usuario.gastos)}</p>
                     <p class="${balanceColor} text-xs font-semibold mt-1">Balance: ${formatearMoneda(balance)}</p>
                 </div>
             </div>
