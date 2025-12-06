@@ -1,3 +1,175 @@
+<style>
+    /* Fondo general gris claro para mejor contraste */
+    .main-content, 
+    body > .container-fluid,
+    .container-fluid {
+        background-color: #F7F9FB !important;
+    }
+    
+    /* Contenedores principales en blanco */
+    .card-details {
+        background-color: #fff !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+        border: 1px solid #E3E8EE !important;
+        padding: 1.5rem !important;
+    }
+    
+    /* Secciones de artículos/servicios */
+    .bg-light.border {
+        background-color: #fff !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
+        border: 1px solid #E3E8EE !important;
+        margin-bottom: 0.75rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .bg-light.border:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Tarjeta de notas con estilo sticky */
+    .card-details[style*="faf1d2"] {
+        background-color: #FFFBEB !important;
+        border: 1px solid #FDE68A !important;
+        border-radius: 12px !important;
+    }
+    
+    /* Sección de pagos */
+    .table-wrapper,
+    .payments-section,
+    .pagos-section {
+        background-color: #fff !important;
+        border-radius: 16px !important;
+        padding: 1.5rem !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+        border: 1px solid #E3E8EE !important;
+    }
+    
+    /* Headings de sección */
+    h3 {
+        color: #1A1A2E;
+        font-weight: 700;
+    }
+    
+    /* Separador superior con mint */
+    hr.my-3 {
+        border-color: #7ECEC5 !important;
+        border-width: 2px !important;
+        opacity: 1;
+    }
+    
+    /* Toolbar de reservación */
+    #reservationtools {
+        background-color: #fff;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border: 1px solid #E3E8EE;
+        margin-bottom: 1rem;
+    }
+    
+    /* Badges de estatus mejorados */
+    .badge.bg-success { background-color: #10B981 !important; }
+    .badge.bg-danger { background-color: #FF6B6B !important; }
+    .badge.bg-warning { background-color: #F59E0B !important; color: #fff !important; }
+    .badge.bg-info { background-color: #7ECEC5 !important; }
+    
+    /* Botones de acción estilizados */
+    .btn-style-blue {
+        background-color: rgba(126, 206, 197, 0.1) !important;
+        border: 1px solid #7ECEC5 !important;
+        color: #5FBFB3 !important;
+        border-radius: 8px !important;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-style-blue:hover {
+        background-color: #7ECEC5 !important;
+        color: #fff !important;
+    }
+    
+    /* Imagen de perfil */
+    #profile-pic-alone {
+        border: 3px solid #7ECEC5;
+        box-shadow: 0 4px 10px rgba(126, 206, 197, 0.3);
+    }
+    
+    /* Modales con tema claro */
+    .modal-content {
+        border-radius: 16px !important;
+        border: none !important;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.15) !important;
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #7ECEC5 0%, #5FBFB3 100%) !important;
+        color: #fff !important;
+        border-radius: 16px 16px 0 0 !important;
+        border: none !important;
+    }
+    
+    .modal-title {
+        color: #fff !important;
+        font-weight: 600 !important;
+    }
+    
+    .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    
+    /* Tabla de pagos */
+    .table {
+        background-color: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .table thead th {
+        background-color: #F7F9FB !important;
+        color: #1A1A2E !important;
+        font-weight: 600;
+        border-bottom: 2px solid #E3E8EE !important;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(126, 206, 197, 0.05) !important;
+    }
+    
+    /* Inputs y selects */
+    .form-control, .form-select {
+        border: 1px solid #E3E8EE !important;
+        border-radius: 8px !important;
+        background-color: #fff !important;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #7ECEC5 !important;
+        box-shadow: 0 0 0 3px rgba(126, 206, 197, 0.2) !important;
+    }
+    
+    /* Tarjeta de notas estilo sticky */
+    .notes-card {
+        background-color: #FFFBEB !important;
+        border: 1px solid #FDE68A !important;
+        border-radius: 12px !important;
+        padding: 1rem !important;
+        height: auto;
+        width: 80%;
+    }
+    
+    .notes-card .nota-container,
+    .notes-card .nota-privada-container {
+        background: #fff;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-left: 3px solid #F59E0B;
+    }
+</style>
+
 <button class="btn btn-light float-start ml-1" role="button" title="Volver a inicio" onclick="window.location='/'">
     <i class="fa fa-arrow-left" aria-hidden="true"></i>
 </button>
@@ -206,13 +378,13 @@
         <h3 class="d-inline-block mr-3 ml-3">Notas</h3>
         <a name="" id="" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_notes_modal" role="button"><i
                 class="fa fa-plus-circle" aria-hidden="true"></i></a>
-        <div class="card-details m-3" style="background-color: #faf1d2; height: auto; width: 80%;">
+        <div class="notes-card m-3">
             <div class="row">
                 <div class="col-6">
-                    <a href="#" id="comentarios-btn" class="fw-bold" style="text-decoration: none !important;"><p style="color: black; text-decoration: none !important;">COMENTARIOS</p></a>
+                    <a href="#" id="comentarios-btn" class="fw-bold" style="text-decoration: none !important;"><p style="color: #92400E; text-decoration: none !important;">COMENTARIOS</p></a>
                 </div>
                 <div class="col-6">
-                    <a href="#" id="notasprivadas-btn" style="text-decoration: none !important;"><p style="color: black">NOTAS PRIVADAS</p></a>
+                    <a href="#" id="notasprivadas-btn" style="text-decoration: none !important;"><p style="color: #92400E">NOTAS PRIVADAS</p></a>
                 </div>
 
             </div>
@@ -478,9 +650,9 @@
 
             <div class="row flex-nowrap justify-content-center mt-3 " style="width: 95%;">
                 <div class="col-10">
-                    <h4>Tabla de eventos</h4>
-                    <table class="table table-dark table-hover text-center" id="tablaLogs">
-                        <thead class="table-light">
+                    <h4 class="text-dark mb-3">Tabla de eventos</h4>
+                    <table class="table table-hover text-center" id="tablaLogs">
+                        <thead>
                             <tr>
                                 <th scope="col">Usuario</th>
                                 <th scope="col">Acción</th>

@@ -733,13 +733,16 @@ td {
 /* Logs */
 
 .container-logs {
-    background: #232931;
+    background: #FFFFFF;
     width: 90%;
     height: auto;
     margin: 0 auto;
     position: relative;
     margin-top: 5%;
-    box-shadow: 2px 5px 20px rgba(119, 119, 119, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    border: 1px solid #E3E8EE;
+    padding: 1.5rem;
 }
 
 
@@ -767,7 +770,7 @@ td {
     margin: auto;
     margin-left: 10em;
     min-height: 50px;
-    border-left: 1px dashed #fff;
+    border-left: 2px dashed #E3E8EE;
     padding: 0 0 50px 30px;
     position: relative;
 }
@@ -781,29 +784,32 @@ td {
     left: -18px;
     top: -5px;
     content: " ";
-    border: 8px solid rgba(255, 255, 255, 1);
+    border: 4px solid #7ECEC5;
     border-radius: 500%;
-    background: #50d890;
+    background: #FFFFFF;
     height: 30px;
     width: 30px;
     transition: all 500ms ease-in-out;
+    box-shadow: 0 2px 8px rgba(126, 206, 197, 0.3);
 }
 
 .rb-container ul.rb li:hover::before {
-    border-color: #232931;
-    transition: all 1000ms ease-in-out;
+    background: #7ECEC5;
+    border-color: #5FBFB3;
+    transition: all 300ms ease-in-out;
 }
 
 ul.rb li .timestamp {
-    color: #50d890;
+    color: #7ECEC5;
     position: relative;
     width: 100px;
     font-size: 12px;
+    font-weight: 600;
 }
 
 .item-title {
-    color: #fff;
-    font-size: 16px;
+    color: #1A1A2E;
+    font-size: 14px;
 }
 
 .content-logs {
