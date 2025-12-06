@@ -954,7 +954,7 @@ class CalendarScrollbar {
         this.scrollbar.style.cssText = `
             width: 100%;
             height: 8px;
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: #E3E8EE;
             border-radius: 4px;
             position: relative;
             cursor: pointer;
@@ -963,18 +963,18 @@ class CalendarScrollbar {
             margin: 0 3em;
         `;
         
-        // Create scrollbar thumb
+        // Create scrollbar thumb with mint color
         this.thumb = document.createElement('div');
         this.thumb.className = 'custom-scrollbar-thumb';
         this.thumb.style.cssText = `
             height: 100%;
-            background: linear-gradient(90deg, #4a9eff, #007bff);
+            background: linear-gradient(90deg, #7ECEC5, #5FBFB3);
             border-radius: 4px;
             position: absolute;
             cursor: grab;
             transition: all 0.2s ease;
             min-width: 40px;
-            box-shadow: 0 2px 8px rgba(74, 158, 255, 0.3);
+            box-shadow: 0 2px 8px rgba(126, 206, 197, 0.3);
             top: 0;
             left: 0;
         `;
@@ -1215,10 +1215,10 @@ function createTestScrollbar() {
         position: relative;
         width: calc(100% - 6em);
         height: 12px;
-        background-color: rgba(255, 255, 255, 0.2);
+        background-color: #E3E8EE;
         border-radius: 6px;
         margin: 15px 3em;
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        border: 1px solid #E3E8EE;
         z-index: 1000;
     `;
     
@@ -1227,13 +1227,13 @@ function createTestScrollbar() {
     testThumb.style.cssText = `
         height: 100%;
         width: 100px;
-        background: linear-gradient(90deg, #4a9eff, #007bff);
+        background: linear-gradient(90deg, #7ECEC5, #5FBFB3);
         border-radius: 6px;
         position: absolute;
         top: 0;
         left: 0;
         cursor: grab;
-        box-shadow: 0 2px 8px rgba(74, 158, 255, 0.3);
+        box-shadow: 0 2px 8px rgba(126, 206, 197, 0.3);
     `;
     
     testScrollbar.appendChild(testThumb);
