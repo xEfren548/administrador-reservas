@@ -1,167 +1,490 @@
 {{#if reservation}}
-<div class="container bg-light my-font">
+<style>
+    /* Custom styles for paraUsuarios */
+    .hero-carousel {
+        position: relative;
+        border-radius: 0 0 24px 24px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    }
+    
+    .hero-carousel .carousel-item > div {
+        height: 50vh;
+        min-height: 350px;
+    }
+    
+    .hero-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0,0,0,0.6));
+        padding: 2rem;
+        z-index: 10;
+    }
+    
+    .property-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        margin: 0;
+    }
+    
+    .info-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #E3E8EE;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    
+    .info-card-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .info-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+    
+    .icon-mint { background: rgba(126, 206, 197, 0.15); color: #7ECEC5; }
+    .icon-coral { background: rgba(255, 107, 107, 0.15); color: #FF6B6B; }
+    .icon-blue { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
+    .icon-success { background: rgba(16, 185, 129, 0.15); color: #10B981; }
+    
+    .info-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1A1A2E;
+    }
+    
+    .guest-card {
+        background: linear-gradient(135deg, #7ECEC5 0%, #5FBFB3 100%);
+        border-radius: 16px;
+        padding: 1.5rem;
+        color: #fff;
+    }
+    
+    .guest-avatar {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        border: 3px solid rgba(255,255,255,0.5);
+        object-fit: cover;
+    }
+    
+    .guest-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        color: #fff;
+    }
+    
+    .guest-email {
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+    
+    .notes-card {
+        background: #FFFBEB;
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid #FDE68A;
+    }
+    
+    .notes-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .notes-title {
+        font-weight: 600;
+        color: #92400E;
+        margin: 0;
+    }
+    
+    .note-item {
+        background: #fff;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-left: 3px solid #F59E0B;
+    }
+    
+    .weather-card {
+        background: linear-gradient(135deg, #7ECEC5 0%, #5FBFB3 100%);
+        border-radius: 16px;
+        padding: 1.5rem;
+        color: #fff;
+        text-align: center;
+    }
+    
+    .weather-temp {
+        font-size: 3rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+    
+    .weather-icon {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .weather-city {
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+    
+    .btn-checkin {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        border: none;
+        color: #fff;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+    
+    .btn-checkin:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        color: #fff;
+    }
+    
+    .btn-instructions {
+        background: #fff;
+        border: 2px solid #7ECEC5;
+        color: #7ECEC5;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-instructions:hover {
+        background: #7ECEC5;
+        color: #fff;
+    }
+    
+    .map-container {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .map-container iframe {
+        width: 100%;
+        height: 300px;
+        border: none;
+    }
+    
+    .description-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #E3E8EE;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1A1A2E;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-title i {
+        color: #7ECEC5;
+    }
+    
+    .checkin-done-badge {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        color: #fff;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+    
+    /* Modal styles */
+    .modal-content.update-info {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    }
+    
+    .modal-content.update-info .modal-header {
+        background: linear-gradient(135deg, #7ECEC5 0%, #5FBFB3 100%);
+        color: #fff;
+        border-radius: 20px 20px 0 0;
+        padding: 1.5rem;
+    }
+    
+    .modal-content.update-info .modal-title {
+        font-weight: 700;
+    }
+    
+    .modal-content.update-info .modal-body {
+        padding: 2rem;
+    }
+    
+    .modal-content.update-info .modal-footer {
+        padding: 1rem 2rem 2rem;
+        border: none;
+    }
+    
+    .signature .canvas {
+        position: relative;
+        border: 2px dashed #E3E8EE;
+        border-radius: 12px;
+        padding: 1rem;
+        background: #F7F9FB;
+    }
+    
+    .signature canvas {
+        border-radius: 8px;
+        background: #fff;
+        display: block;
+        margin: 0 auto;
+    }
+    
+    .delete-signature {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: #FF6B6B;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem;
+        cursor: pointer;
+        z-index: 10;
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #7ECEC5 0%, #5FBFB3 100%);
+        border: none;
+        color: #fff;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(126, 206, 197, 0.4);
+    }
+    
+    .checkbox-option {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .checkbox-option input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: #7ECEC5;
+    }
+</style>
 
-    <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
-        <ol class="carousel-indicators">
-            {{#each chalet.images}}
-            <li data-bs-target="#carouselExampleIndicators" data-bs-slide-to="{{@index}}" class="{{#if @first}}active{{/if}}">
-            </li>
-            {{/each}}
-        </ol>
-        <div class="carousel-inner">
-            {{#each chalet.images}}
-            <div class="carousel-item {{#if @first}}active{{/if}}">
-                <div class="d-block w-100" style="background-color: black; background-image: url('https://navarro.integradev.site/navarro/{{this}}'); background-repeat: no-repeat; background-size: cover; background-position: center; height: 60vh;"></div>
+<div class="bg-light min-vh-100">
+    <!-- Hero Carousel -->
+    <div class="hero-carousel">
+        <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+            <ol class="carousel-indicators">
+                {{#each chalet.images}}
+                <li data-bs-target="#carouselExampleIndicators" data-bs-slide-to="{{@index}}" class="{{#if @first}}active{{/if}}"></li>
+                {{/each}}
+            </ol>
+            <div class="carousel-inner">
+                {{#each chalet.images}}
+                <div class="carousel-item {{#if @first}}active{{/if}}">
+                    <div class="d-block w-100" style="background-image: url('https://navarro.integradev.site/navarro/{{this}}'); background-repeat: no-repeat; background-size: cover; background-position: center;"></div>
+                </div>
+                {{/each}}
             </div>
-            {{/each}}
+            <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </a>
+            <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </a>
+            <div class="hero-overlay">
+                <h1 class="property-title">{{chalet.propertyDetails.name}}</h1>
+                <p class="text-white mb-0 opacity-75"><i class="fa fa-map-marker me-2"></i>{{chalet.propertyDetails.propertyDetails}}</p>
+            </div>
         </div>
-        <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Previous</span>
-        </a>
-        <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Next</span>
-        </a>
     </div>
 
-
-    <h1 class="mt-3 mb-3 d-flex justify-content-center text-dark fs-1 text-center">{{chalet.propertyDetails.name}}</h1>
-
-    <div class="row text-dark">
-        <div class="col-md-6 col-xl-6 col-xs-12 col-sm-12">
-            <div class="row d-flex justify-content-center">
-                <div class="col-2 ">
-                    <img src="https://panel.hotelgest.com/files/media/male_profile_sm.jpg" id="profile-pic-alone"
-                        class="rounded-pill" style="width: 70px;">
+    <div class="container py-4">
+        <div class="row g-4">
+            <!-- Left Column -->
+            <div class="col-lg-7">
+                <!-- Guest Info Card -->
+                <div class="guest-card mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="https://panel.hotelgest.com/files/media/male_profile_sm.jpg" alt="Guest" class="guest-avatar">
+                        <div>
+                            <h4 class="guest-name">{{client.fullName}}</h4>
+                            <p class="guest-email mb-0"><i class="fa fa-envelope me-2"></i>{{client.email}}</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-6 ps-0">
-                    <h4 class="detailsRoom" style="margin-bottom: 5px;">{{chalet.propertyDetails.propertyDetails}}
-                    </h4>
-                    <p class="bold">
-                        <b class="fs-5 text-uppercase">{{client.fullName}}</b>
-                        <br>
-                        {{client.email}}
-                    </p>
-                    <hr>
+
+                <!-- Reservation Info Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="info-card text-center">
+                            <div class="info-card-icon icon-mint mx-auto mb-2">
+                                <i class="fa fa-sign-in"></i>
+                            </div>
+                            <div class="info-label">Llegada</div>
+                            <div class="info-value" id="arrivalDate">{{reservation.arrivalDate}}</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="info-card text-center">
+                            <div class="info-card-icon icon-coral mx-auto mb-2">
+                                <i class="fa fa-sign-out"></i>
+                            </div>
+                            <div class="info-label">Salida</div>
+                            <div class="info-value" id="departureDate">{{reservation.departureDate}}</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="info-card text-center">
+                            <div class="info-card-icon icon-blue mx-auto mb-2">
+                                <i class="fa fa-bed"></i>
+                            </div>
+                            <div class="info-label">Noches</div>
+                            <div class="info-value">{{reservation.nNights}}</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="info-card text-center">
+                            <div class="info-card-icon icon-success mx-auto mb-2">
+                                <i class="fa fa-calendar"></i>
+                            </div>
+                            <div class="info-label">Reservada</div>
+                            <div class="info-value" id="reservationDate">{{reservation.reservationDate}}</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="row d-flex justify-content-center">
-                <div class="col-8 ">
-                    <div class="text-center">
-                        <p style="max-width: 500px; word-wrap: break-word;" class="fs-5">{{chalet.accomodationDescription}}</p>
-                        <button type="button" class="btn btn-lg btn-outline-dark mb-2 mt-2">
-                            {{#if chalet.files}}
-                            <a href="https://navarro.integradev.site/navarro/{{chalet.files}}"
-                                style="text-decoration: none;">Ver instrucciones de llegada</a>
-                            {{else}}
-                            <a href="#">Ver instrucciones de llegada</a>
-                            {{/if}}
+
+                <!-- Description Card -->
+                <div class="description-card mb-4">
+                    <h5 class="section-title"><i class="fa fa-info-circle"></i> Acerca del alojamiento</h5>
+                    <p class="text-muted mb-3">{{chalet.accomodationDescription}}</p>
+                    
+                    <div class="d-flex flex-wrap gap-2">
+                        {{#if chalet.files}}
+                        <a href="https://navarro.integradev.site/navarro/{{chalet.files}}" class="btn btn-instructions">
+                            <i class="fa fa-map-signs me-2"></i>Instrucciones de llegada
+                        </a>
+                        {{else}}
+                        <button class="btn btn-instructions" disabled>
+                            <i class="fa fa-map-signs me-2"></i>Instrucciones no disponibles
                         </button>
+                        {{/if}}
+                        
                         <div class="some-div-1">
                             <div class="some-div-2">
                                 <add-to-calendar-button name="My Event" startDate="2022-04-15" endDate="2022-04-17"
-                                    options="['Google', 
-                                            'Apple', 
-                                            'Outlook.com', 
-                                            'Microsoft365', 
-                                            'MicrosoftTeams',
-                                            'Outlook.com', 
-                                            'Yahoo', 
-                                            'iCal']">
+                                    options="['Google', 'Apple', 'Outlook.com', 'Microsoft365', 'MicrosoftTeams', 'Yahoo', 'iCal']">
                                 </add-to-calendar-button>
                             </div>
                         </div>
-                        {{!-- <div id="map"></div> --}}
-                        <iframe src="https://www.google.com/maps?q={{chalet.location.latitude}},{{chalet.location.longitude}}&z=16&output=embed" width="600"
-                            height="450" style="border:0;" allowfullscreen="" loading="lazy">
-                        </iframe>
                     </div>
+                </div>
+
+                <!-- Map -->
+                <div class="map-container">
+                    <iframe src="https://www.google.com/maps?q={{chalet.location.latitude}},{{chalet.location.longitude}}&z=16&output=embed" 
+                            allowfullscreen="" loading="lazy">
+                    </iframe>
                 </div>
             </div>
 
-        </div>
+            <!-- Right Column -->
+            <div class="col-lg-5">
+                <!-- Weather Card -->
+                <div id="weather" class="mb-4"></div>
 
-        <div class="col-md-6 col-xl-6 col-xs-12 col-sm-12">
-            <div class="row">
-                <div class="col-6 text-center">
-                    <div class="col-xs-6 no-padding-left">
-                        <h4>Llegada</h4>
-                        <p class="font-bold"> <i class="fa fa-sign-in" aria-hidden="true"></i> <b
-                                id="arrivalDate">{{reservation.arrivalDate}}</b> </p>
-                    </div>
-                    <div class="col-xs-6 no-padding-left">
-                        <h4>Salida</h4>
-                        <p class="font-bold"> <i class="fa fa-sign-out" aria-hidden="true"></i> <b
-                                id="departureDate">{{reservation.departureDate}}</b> </p>
-                    </div>
-                    <div class="col-xs-6 no-padding-left">
-                        <h4>Origen</h4>
-                        <p class="font-bold"><b>Recepción</b> </p>
-                    </div>
-                </div>
-                <div class="col-6 text-center">
-                    <div class="col-xs-6 no-padding-left">
-                        <h4> Noches</h4>
-                        <p class="font-bold"> <i class="fa fa-moon" aria-hidden="true"></i>
-                            <b>{{reservation.nNights}}</b>
-                        </p>
-                    </div>
-                    <div class="col-xs-6 no-padding-left">
-                        <h4> Recibida</h4>
-                        <p class="font-bold"> <b id="reservationDate">{{reservation.reservationDate}}</b></p>
-                    </div>
-                </div>
-
-                <div id="weather" class="text-center mb-3"></div>
-
-                <div class="card-details m-3" style="background-color: #faf1d2; height: auto; width: 80%;">
-                    <div class="row">
-                        <div class="col-6">
-                            <a href="#" id="comentarios-btn" class="fw-bold" style="text-decoration: none !important;">
-                                <p style="color: black; text-decoration: none !important;">COMENTARIOS</p>
-                            </a>
-                        </div>
-
+                <!-- Notes Card -->
+                <div class="notes-card mb-4">
+                    <div class="notes-header">
+                        <i class="fa fa-sticky-note" style="color: #F59E0B;"></i>
+                        <h5 class="notes-title">Comentarios</h5>
                     </div>
                     {{#if reservation.notes}}
                     {{#each reservation.notes}}
-                    <div class="nota-container" style="display: block;">
-                        <p class="text-black fs-6">{{this.texto}}</p>
-                        <button class="btn btn-eliminar btn-sm" style="display: none;"
-                            onclick="eliminarNota('{{this._id}}')"><i class="fa fa-trash"
-                                aria-hidden="true"></i></button>
+                    <div class="note-item">
+                        <p class="mb-0 text-dark">{{this.texto}}</p>
                     </div>
                     {{/each}}
                     {{else}}
-                    <div class="nota-container" style="display: block;">
-                        <p class="text-black fs-6">No se han agregado notas para esta reserva</p>
+                    <div class="note-item">
+                        <p class="mb-0 text-muted">No se han agregado notas para esta reserva</p>
                     </div>
                     {{/if}}
                 </div>
 
-                {{#if reservation.madeCheckIn}}
-                <div class="row d-flex justify-content-center align-items-center" style="height: 100px;">
-                    <div class="col-12 text-center">
-                        <span
-                            class="btn btn-success"
-                            >Check In Realizado</span
-                        >
-                        
+                <!-- Check-in Section -->
+                <div class="info-card text-center">
+                    <h5 class="section-title justify-content-center"><i class="fa fa-check-circle"></i> Estado de Check-In</h5>
+                    {{#if reservation.madeCheckIn}}
+                    <div class="checkin-done-badge">
+                        <i class="fa fa-check"></i> Check In Realizado
                     </div>
+                    {{else}}
+                    <p class="text-muted mb-3">Realiza tu check-in para confirmar tu llegada</p>
+                    <button class="btn btn-checkin" id="checkin-btn" data-reservationid="{{reservation._id}}">
+                        <i class="fa fa-sign-in me-2"></i>Realizar Check In
+                    </button>
+                    {{/if}}
                 </div>
-                {{else}}
-                <div class="row d-flex justify-content-center align-items-center" style="height: 100px;">
-                    <div class="col-12 text-center">
-                        <a class="btn btn-info btn-lg " href="#" role="button" id="checkin-btn" data-reservationid="{{reservation._id}}">Realizar Check In</a>
-                    </div>
-                </div>
-                {{/if}}
             </div>
         </div>
     </div>
-
-
 
     <div class="form-item">
         <p id="txtSubmitReservationError" name="errMsg" class="error"></p>
@@ -280,10 +603,11 @@
 
                 // Generación del contenido HTML con iconos emoji
                 weatherDiv.innerHTML = `
-                <div style="background-image: linear-gradient(to bottom, #4f81bc, #283e51); padding: 20px; border-radius: 10px;">
-                    <h2 style="color: white;" class="fs-4">Temperatura actual en ${cityName}, ${country}</h2>
-                    <p style="color: white;"><strong>Temperature:</strong> ${temperature}°C ${weatherIconEmoji}</p>
-                    <p style="color: white;"><strong>Description:</strong> ${description}</p>
+                <div class="weather-card">
+                    <div class="weather-icon">${weatherIconEmoji}</div>
+                    <div class="weather-temp">${temperature}°C</div>
+                    <p class="mb-1">${description}</p>
+                    <p class="weather-city mb-0"><i class="fa fa-map-marker me-1"></i>${cityName}, ${country}</p>
                 </div>
             `;
             })
@@ -449,7 +773,9 @@
                     Swal.fire({
                         title: 'Check-in realizado!',
                         icon:'success',
-                        confirmButtonText: 'Aceptar'
+                        confirmButtonText: 'Aceptar',
+                        confirmButtonColor: '#7ECEC5',
+                        background: '#fff'
                     }).then((result) =>{
                         window.location.reload()
                     })
@@ -461,7 +787,9 @@
                         title: 'Error al realizar el check-in',
                         text: xhr.responseText,
                         icon: 'error',
-                        confirmButtonText: 'Cerrar'
+                        confirmButtonText: 'Cerrar',
+                        confirmButtonColor: '#FF6B6B',
+                        background: '#fff'
                     })
                 }
             })
