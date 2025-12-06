@@ -77,12 +77,12 @@ async function generateSideMenu(req, res, next) {
 
         const routes = privileges[req.session.privilege];
         var sideMenuContent =
-            `<div class="offcanvas-header">
-                <h6 class="offcanvas-title d-none d-sm-block text-white" id="offcanvas"></h6>
-                <button type="button" class="btn-close text-reset bg-light" data-bs-dismiss="offcanvas"
+            `<div class="offcanvas-header border-bottom">
+                <h6 class="offcanvas-title d-none d-sm-block text-gray-800" id="offcanvas"></h6>
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
                     aria-label="Close"></button>
             </div>
-            <div class="offcanvas-body px-0 bg-dark">
+            <div class="offcanvas-body px-0 bg-white">
                 <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-start" id="menu">`;
         routes.forEach(item => {
             for (const key in item) {
@@ -281,15 +281,15 @@ async function generateSideMenu(req, res, next) {
         });
         sideMenuContent +=
             `</ul>
-            <hr>
+            <hr class="text-gray-300">
             <div class="offcanvas-footer px-4 pt-5 pb-4 d-flex align-items-end justify-content-start">
                 <div class="dropdown mt-auto">
-                    <a href="#" class="d-flex align-items-center justify-content-center text-white text-decoration-none dropdown-toggle"
+                    <a href="#" class="d-flex align-items-center justify-content-center text-gray-800 text-decoration-none dropdown-toggle"
                         id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
                         <img src="${profileImg}" alt="hugenerd" width="30" height="30" class="rounded-circle">
                         <span class="d-none d-sm-inline mx-1">${req.session.firstName}</span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+                    <ul class="dropdown-menu text-small shadow">
                         <li><a class="dropdown-item" href="/api/perfil-usuario">Profile</a></li>
                         <li>
                             <hr class="dropdown-divider">

@@ -466,15 +466,27 @@ table.dataTable thead .sorting_desc:after {
 }
 
 /* ===========================================
-   Navbar / Sidebar
+   Navbar / Sidebar - Light Theme
    =========================================== */
 .offcanvas {
-    background: linear-gradient(180deg, var(--dark-blue) 0%, #1a252f 100%) !important;
-    border-right: none !important;
+    background-color: var(--white) !important;
+    border-right: 1px solid var(--border-light) !important;
+    box-shadow: var(--shadow-lg);
+}
+
+.offcanvas-header {
+    background-color: var(--white);
+    border-bottom: 1px solid var(--border-light);
+    padding: 1rem 1.25rem;
+}
+
+.offcanvas-title {
+    color: var(--dark-blue) !important;
+    font-weight: 600;
 }
 
 .offcanvas .nav-link {
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: var(--dark-blue) !important;
     font-family: 'Poppins', sans-serif;
     font-weight: 500;
     font-size: 0.9rem;
@@ -482,11 +494,13 @@ table.dataTable thead .sorting_desc:after {
     border-radius: var(--radius-md);
     transition: all var(--transition-fast);
     margin-bottom: 0.125rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
 }
 
 .offcanvas .nav-link:hover {
     background-color: rgba(126, 206, 197, 0.15) !important;
-    color: var(--mint) !important;
+    color: var(--mint-dark) !important;
     transform: translateX(5px);
 }
 
@@ -505,7 +519,7 @@ table.dataTable thead .sorting_desc:after {
 }
 
 .offcanvas .nav-link:hover i {
-    color: var(--mint-light);
+    color: var(--mint-dark);
 }
 
 .offcanvas .nav-link.active i,
@@ -517,27 +531,51 @@ table.dataTable thead .sorting_desc:after {
 .offcanvas .collapse .nav-link {
     padding-left: 2.5rem;
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: var(--grey) !important;
 }
 
 .offcanvas .collapse .nav-link:hover {
-    color: var(--mint) !important;
+    color: var(--mint-dark) !important;
     background-color: rgba(126, 206, 197, 0.1) !important;
 }
 
 /* Sidebar divider */
 .offcanvas hr {
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--border-light);
     margin: 1rem 0;
+}
+
+/* Sidebar Footer / User dropdown */
+.offcanvas-footer {
+    border-top: 1px solid var(--border-light);
+    background-color: var(--bg-light);
+}
+
+.offcanvas-footer .dropdown-toggle {
+    color: var(--dark-blue) !important;
+    font-weight: 500;
+}
+
+.offcanvas-footer .dropdown-toggle:hover {
+    color: var(--mint) !important;
+}
+
+.offcanvas-footer .dropdown-menu {
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-md);
+}
+
+.offcanvas-footer .dropdown-item:hover {
+    background-color: rgba(126, 206, 197, 0.15);
+    color: var(--mint-dark);
 }
 
 /* Sidebar Header */
 .sidebar-header {
     padding: 1.5rem 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-light);
     margin-bottom: 1rem;
 }
-
 
 .sidebar-brand {
     color: var(--mint);
@@ -548,7 +586,7 @@ table.dataTable thead .sorting_desc:after {
 /* Sidebar User Section */
 .sidebar-user {
     padding: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--border-light);
 }
 
 .sidebar-user img {
