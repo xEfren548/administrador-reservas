@@ -174,6 +174,98 @@ body {
     max-height: 100%;
 }
 
+/* Calendar page layout */
+.calendar-page-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+    background-color: var(--bg-light, #F7F9FB);
+    padding: 1.5rem;
+    gap: 1rem;
+}
+
+/* Tarjeta de acciones */
+.calendar-actions-card {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background-color: var(--bg-card, #FFFFFF);
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--border-light, #E3E8EE);
+}
+
+.btn-calendar-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: linear-gradient(135deg, var(--mint, #7ECEC5), var(--mint-dark, #5FBFB3));
+    color: white !important;
+    border: none;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(126, 206, 197, 0.3);
+}
+
+.btn-calendar-primary:hover {
+    background: linear-gradient(135deg, var(--mint-dark, #5FBFB3), var(--mint, #7ECEC5));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(126, 206, 197, 0.4);
+    color: white !important;
+}
+
+.btn-calendar-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background-color: transparent;
+    color: var(--dark-blue, #2C3E50) !important;
+    border: 2px solid var(--border-light, #E3E8EE);
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-calendar-outline:hover {
+    border-color: var(--mint, #7ECEC5);
+    background-color: rgba(126, 206, 197, 0.1);
+    color: var(--mint-dark, #5FBFB3) !important;
+}
+
+/* Contenedor del calendario (wrapper) */
+.calendar-wrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-card, #FFFFFF);
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--border-light, #E3E8EE);
+    padding: 1rem;
+    overflow: hidden;
+}
+
+.calendar-wrapper #calendar {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    margin: 0;
+    border-radius: 12px;
+    box-shadow: none;
+    border: none;
+}
+
 .calendar,
 .calendar-header {
     background-color: var(--bg-light, #F7F9FB);
@@ -192,6 +284,85 @@ body {
     margin: 1em 3em 0 3em;
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-light, #E3E8EE);
+}
+
+/* FullCalendar header toolbar styling */
+.fc .fc-toolbar {
+    background-color: var(--bg-light, #F7F9FB);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 0.75rem !important;
+}
+
+.fc .fc-toolbar-title {
+    color: var(--dark-blue, #2C3E50) !important;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.fc .fc-button {
+    background-color: var(--bg-card, #FFFFFF) !important;
+    border: 1px solid var(--border-light, #E3E8EE) !important;
+    color: var(--dark-blue, #2C3E50) !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.fc .fc-button:hover {
+    background-color: var(--mint-light, #A8DDD7) !important;
+    border-color: var(--mint, #7ECEC5) !important;
+    color: var(--dark-blue, #2C3E50) !important;
+}
+
+.fc .fc-button-active {
+    background: linear-gradient(135deg, var(--mint, #7ECEC5), var(--mint-dark, #5FBFB3)) !important;
+    border-color: var(--mint-dark, #5FBFB3) !important;
+    color: white !important;
+}
+
+.fc .fc-button:disabled,
+.fc .fc-button.fc-button-disabled {
+    background-color: var(--bg-light, #F7F9FB) !important;
+    border: 1px solid var(--border-light, #E3E8EE) !important;
+    color: var(--mint, #7ECEC5) !important;
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Context menu styling */
+#context-menu {
+    background-color: var(--bg-card, #FFFFFF);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border: 1px solid var(--border-light, #E3E8EE);
+    overflow: hidden;
+}
+
+#context-menu ul {
+    list-style: none;
+    padding: 0.5rem 0;
+    margin: 0;
+}
+
+#context-menu li {
+    padding: 0.625rem 1rem;
+    cursor: pointer;
+    color: var(--dark-blue, #2C3E50);
+    font-size: 0.9rem;
+    transition: all 0.15s ease;
+}
+
+#context-menu li:hover {
+    background-color: rgba(126, 206, 197, 0.15);
+    color: var(--mint-dark, #5FBFB3);
+}
+
+#context-menu li i {
+    color: var(--mint, #7ECEC5);
+    margin-right: 0.5rem;
+    width: 18px;
+    text-align: center;
 }
 
 /* Custom scrollbar positioned below calendar */
@@ -212,15 +383,34 @@ body {
     transform: scale(1.02);
 }
 
-/* Hide scrollbars but allow scrolling */
+/* Calendar scrollbar with mint color */
 #calendar::-webkit-scrollbar {
-    display: none;
-    /* Chrome, Safari, and Edge */
+    width: 10px;
+    height: 10px;
+}
+
+#calendar::-webkit-scrollbar-track {
+    background: var(--bg-light, #F7F9FB);
+    border-radius: 5px;
+}
+
+#calendar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--mint, #7ECEC5), var(--mint-dark, #5FBFB3));
+    border-radius: 5px;
+    border: 2px solid var(--bg-light, #F7F9FB);
+}
+
+#calendar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--mint-light, #A8DDD7), var(--mint, #7ECEC5));
+}
+
+#calendar::-webkit-scrollbar-corner {
+    background: var(--bg-light, #F7F9FB);
 }
 
 #calendar {
-    scrollbar-width: none;
-    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: var(--mint, #7ECEC5) var(--bg-light, #F7F9FB);
 }
 
 .fc-resource-area {
@@ -289,6 +479,8 @@ td {
 .fc .fc-scrollgrid {
     background-color: var(--bg-card, #FFFFFF) !important;
     border-color: var(--border-light, #E3E8EE) !important;
+    border-radius: 12px !important;
+    overflow: hidden;
 }
 
 .fc-scrollgrid-section-header {
@@ -297,6 +489,33 @@ td {
 
 .fc-scrollgrid-section-body {
     background-color: var(--bg-card, #FFFFFF) !important;
+}
+
+/* Smooth borders for calendar cells */
+.fc .fc-scrollgrid-section > td {
+    border-color: var(--border-light, #E3E8EE) !important;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th {
+    border-color: var(--border-light, #E3E8EE) !important;
+}
+
+/* First and last cell border radius */
+.fc .fc-scrollgrid-section:first-child > td:first-child {
+    border-top-left-radius: 12px;
+}
+
+.fc .fc-scrollgrid-section:first-child > td:last-child {
+    border-top-right-radius: 12px;
+}
+
+.fc .fc-scrollgrid-section:last-child > td:first-child {
+    border-bottom-left-radius: 12px;
+}
+
+.fc .fc-scrollgrid-section:last-child > td:last-child {
+    border-bottom-right-radius: 12px;
 }
 
 /* Resource group (tipologías) styling */
