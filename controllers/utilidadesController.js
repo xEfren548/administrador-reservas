@@ -5,6 +5,7 @@ const NotFoundError = require("../common/error/not-found-error");
 
 
 const usersController = require('./../controllers/usersController');
+const roomGroupService = require('../services/roomGroupService');
 const pagoController = require('./../controllers/pagoController');
 const Pago = require('./../models/Pago');
 const Habitacion = require('./../models/Habitacion');
@@ -322,7 +323,7 @@ async function generarComisionReserva(req, res) {
 
         const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
         if (!chalet) {
-            throw new NotFoundError('Chalet does not exist 2');
+            throw new NotFoundError('Chalet does not exist');
         }
 
         let utilidadChalet = totalSinComisiones - costoBase;
@@ -744,7 +745,7 @@ async function generarComisionReservaBackend(info) {
 
         const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
         if (!chalet) {
-            throw new NotFoundError('Chalet does not exist 2');
+            throw new NotFoundError('Chalet does not exist');
         }
 
         let utilidadChalet = totalSinComisiones - costoBase;

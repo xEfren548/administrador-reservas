@@ -89,28 +89,65 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 options.forEach(option => {
                     const dataBsId = option.getAttribute('data-bs-id');
+                    const dataBsIsGroup = option.getAttribute('data-bs-isgroup');
                     if (dataBsId) {
-                        dataBsIds.push(dataBsId);
+                        dataBsIds.push({ 
+                            id: dataBsId, 
+                            isGroup: dataBsIsGroup === 'true' 
+                        });
                     }
                 });
 
                 const results = [];
-                for (const idHabitacion of dataBsIds) {
-                    const response = await fetch(`/api/check-availability/?resourceId=${idHabitacion}&arrivalDate=${arrivalDate}&departureDate=${departureDate}`);
-                    const result = await response.json();
-                    results.push({ idHabitacion, available: result.available });
+                for (const item of dataBsIds) {
+                    let response;
+                    let result;
+                    
+                    if (item.isGroup) {
+                        // Es un grupo - extraer nombre del grupo (formato: "group:NombreGrupo")
+                        const groupName = item.id.replace('group:', '');
+                        response = await fetch(`/api/grupos-habitaciones/${encodeURIComponent(groupName)}/availability?arrivalDate=${arrivalDate}&departureDate=${departureDate}`);
+                        result = await response.json();
+                        // La respuesta del grupo tiene isAvailable
+                        results.push({ 
+                            id: item.id, 
+                            available: result.isAvailable,
+                            isGroup: true,
+                            availableCount: result.availableCount,
+                            totalRooms: result.totalRooms
+                        });
+                    } else {
+                        // Es una habitación individual
+                        response = await fetch(`/api/check-availability/?resourceId=${item.id}&arrivalDate=${arrivalDate}&departureDate=${departureDate}`);
+                        result = await response.json();
+                        results.push({ 
+                            id: item.id, 
+                            available: result.available,
+                            isGroup: false
+                        });
+                    }
                 }
 
 
                 results.forEach(result => {
-                    const option = document.querySelector(`option[data-bs-id="${result.idHabitacion}"]`);
-                    if (result.available) {
-                        option.style.backgroundColor = 'lightgreen'; // Marca las cabañas disponibles
-                        option.disabled = false;
-                    } else {
-                        // option.style.backgroundColor = 'lightcoral'; // Marca las cabañas no disponibles
-                        // option.disabled = true;
-                        option.style.display = 'none';
+                    const option = document.querySelector(`option[data-bs-id="${result.id}"]`);
+                    if (option) {
+                        if (result.available) {
+                            if (result.isGroup) {
+                                // Para grupos, mostrar cuántas habitaciones están disponibles
+                                option.style.backgroundColor = 'lightgreen';
+                                // Actualizar texto para mostrar disponibilidad
+                                const groupName = result.id.replace('group:', '');
+                                option.textContent = `${groupName} (Grupo - ${result.availableCount}/${result.totalRooms} disponibles)`;
+                            } else {
+                                option.style.backgroundColor = 'lightgreen'; // Marca las cabañas disponibles
+                            }
+                            option.disabled = false;
+                        } else {
+                            // option.style.backgroundColor = 'lightcoral'; // Marca las cabañas no disponibles
+                            // option.disabled = true;
+                            option.style.display = 'none';
+                        }
                     }
                 });
             }
@@ -247,6 +284,8 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log('Respuesta exitosa del servidor:', data);
 
             const reservationId = data.reservationId;
+            // Usar el nombre de la habitación asignada por el backend (importante para grupos)
+            const chaletNameParaComisiones = data.assignedChaletName || formData.chaletName;
 
             const comisionBody = {
                 precioMinimo: precioMinimoPermitido,
@@ -254,7 +293,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 costoBase: totalCostoBaseInput.value,
                 totalSinComisiones: totalSinComisiones.value,
                 precioAsignado: formData.total,
-                chaletName: formData.chaletName,
+                chaletName: chaletNameParaComisiones,
                 idReserva: reservationId,
                 arrivalDate: formData.arrivalDate,
                 departureDate: formData.departureDate,
@@ -343,8 +382,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedOption = tipologiaSelect.options[tipologiaSelect.selectedIndex];
         const pax = selectedOption.getAttribute('data-bs-pax');
         const idHabitacion = selectedOption.getAttribute('data-bs-id');
+        const isGroup = selectedOption.getAttribute('data-bs-isgroup') === 'true';
 
         console.log(pax);
+        console.log('Is Group:', isGroup);
 
         if (pax != undefined && pax != null && pax.trim() !== '') {
             ocupacionInput.value = pax;
@@ -352,7 +393,11 @@ document.addEventListener("DOMContentLoaded", function () {
             ocupacionInput.value = 0
         }
 
+        // Guardar el ID (puede ser habitación individual o grupo)
         idHabitacionInput.value = idHabitacion;
+        // Guardar si es grupo para usarlo después
+        idHabitacionInput.setAttribute('data-is-group', isGroup);
+        
         console.log(idHabitacionInput);
         console.log(idHabitacionInput.value);
 
@@ -400,11 +445,28 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log("Los 4 elementos tienen un valor. Ejecutar acción...");
             const fechas = obtenerRangoFechas(fechaInicio, fechaFin)
             const nNights = document.getElementById("event_nights").value.trim();
-            const habitacionId = idHabitacionInput.value
+            let habitacionId = idHabitacionInput.value;
+            const isGroup = idHabitacionInput.getAttribute('data-is-group') === 'true';
 
             const resultados = []
 
             try {
+                // Si es un grupo, obtener el ID de la habitación representativa
+                if (isGroup) {
+                    const groupName = habitacionId.replace('group:', '');
+                    const groupResponse = await fetch(`/api/grupos-habitaciones/${encodeURIComponent(groupName)}/details`);
+                    if (!groupResponse.ok) {
+                        throw new Error('Error al obtener información del grupo');
+                    }
+                    const groupData = await groupResponse.json();
+                    // Usar la primera habitación del grupo para consultar precios
+                    if (groupData.rooms && groupData.rooms.length > 0) {
+                        habitacionId = groupData.rooms[0]._id;
+                        console.log('Usando habitación representativa del grupo:', habitacionId);
+                    } else {
+                        throw new Error('El grupo no tiene habitaciones');
+                    }
+                }
 
                 for (const fecha of fechas) {
                     const year = fecha.getFullYear();

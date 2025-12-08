@@ -151,6 +151,17 @@ const reservaSchema = new Schema({
     isWebClientReservation: {
         type: Boolean,
         default: false
+    },
+    
+    // Campos para sistema de grupos de habitaciones (hotelería)
+    // Cuando se reserva un grupo, se asigna aleatoriamente una habitación disponible
+    roomGroup: {
+        type: String,
+        default: null  // Nombre del grupo (ej: "Milan") si fue asignada desde un grupo
+    },
+    assignedFromGroup: {
+        type: Boolean,
+        default: false  // true si la habitación fue asignada automáticamente de un grupo
     }
 });
 

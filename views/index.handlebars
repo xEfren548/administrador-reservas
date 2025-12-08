@@ -172,8 +172,8 @@
                                     {{#if chalets}}
                                     {{#each chalets}}
                                     <option value="{{this.name}}" data-bs-pax="{{this.pax}}" data-bs-id="{{this.id}}"
-                                        data-bs-tipologia="{{this.tipologia}}">
-                                        {{this.name}}</option>
+                                        data-bs-tipologia="{{this.tipologia}}" data-bs-isgroup="{{this.isGroup}}">
+                                        {{#if this.isGroup}}🏨 {{this.name}} (Grupo - {{this.totalRooms}} habitaciones){{else}}{{this.name}}{{/if}}</option>
                                     {{/each}}
                                     {{else}}
                                     <option value="0">No se encontraron cabañas</option>

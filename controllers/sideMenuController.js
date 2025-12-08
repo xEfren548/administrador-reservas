@@ -143,6 +143,13 @@ async function generateSideMenu(req, res, next) {
                                     </a>
 
                                 </li>
+                                <li>
+                                    <a href="/grupos-habitaciones" class="nav-link px-5" title="Grupos de Habitaciones">
+                                                <i class="fas fa-layer-group" aria-hidden="true"></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Grupos de Habitaciones</span>
+                                    </a>
+
+                                </li>
                             </ul>
                         </li>`;
                 }

@@ -26,6 +26,7 @@ const clienteController = require('../controllers/clientController');
 const pagoController = require('../controllers/pagoController');
 const sendEmail = require('../common/tasks/send-mails');
 const channexController = require('../controllers/channexController');
+const roomGroupService = require('../services/roomGroupService');
 
 
 const BadRequestError = require("../common/error/bad-request-error");
@@ -56,15 +57,23 @@ const createReservationValidators = [
         .notEmpty().withMessage('Number of nights is required')
         .isNumeric().withMessage('Number of nights must be a number'),
     check("chaletName")
-        .notEmpty().withMessage('Chalet name is required')
+        .notEmpty().withMessage('Chalet name or room group is required')
         .isLength({ max: 255 }).withMessage("Chalet name must be less than 255 characters")
         .custom(async (value, { req }) => {
+            // Primero intentar encontrar como habitación individual
             const chalet = await Habitacion.findOne({ "propertyDetails.name": value });
-            // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
-            if (!chalet) {
-                throw new NotFoundError('Chalet does not exist');
+            if (chalet) {
+                return true;
             }
-            return true;
+            
+            // Si no se encuentra como habitación, buscar como grupo
+            const groupRoom = await Habitacion.findOne({ roomGroup: value, isGrouped: true });
+            if (groupRoom) {
+                req.body.isRoomGroup = true; // Marcar que es un grupo
+                return true;
+            }
+            
+            throw new NotFoundError('Chalet or room group does not exist');
         }),
     check("maxOccupation")
         .notEmpty().withMessage('Max occupation is required')
@@ -1025,7 +1034,7 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
 
 async function createReservation(req, res, next) { // Reserva web (legacy)
-    const { clientFirstName, clientLastName, clientEmail, clientPhone, chaletName, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit } = req.body;
+    const { clientFirstName, clientLastName, clientEmail, clientPhone, chaletName, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit, isRoomGroup } = req.body;
     let newCliente = null;
     let client = null;
 
@@ -1048,6 +1057,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
 
         console.log("is depo: ", isDeposit);
         console.log("cliente email: ", clientEmail);
+        console.log("isRoomGroup: ", isRoomGroup);
 
         const fechaAjustada = new Date(arrivalDate);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
@@ -1068,18 +1078,64 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         console.log("Updated arrivalDateISO:", arrivalDateISO);
         console.log("Updated departureDateISO:", departureDateISO);
 
+        let chalet;
+        let assignedFromGroup = false;
+        let originalGroupName = null;
 
-
-        const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
-        console.log("chalet name: ", chaletName)
-        // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
-        if (!chalet) {
-            throw new NotFoundError('Chalet does not exist 2');
+        // Verificar si es un grupo de habitaciones o una habitación individual
+        if (isRoomGroup) {
+            // Es un grupo - buscar habitación disponible aleatoriamente
+            console.log(`Buscando habitación disponible en grupo: ${chaletName}`);
+            
+            const availableRoom = await roomGroupService.findAvailableRoomInGroup(
+                chaletName,
+                arrivalDate,
+                departureDate
+            );
+            
+            if (!availableRoom) {
+                return res.status(400).send({
+                    message: `No hay habitaciones disponibles en el grupo "${chaletName}" para las fechas seleccionadas.`,
+                });
+            }
+            
+            chalet = availableRoom;
+            assignedFromGroup = true;
+            originalGroupName = chaletName;
+            console.log(`Habitación asignada del grupo: ${chalet.propertyDetails.name} (${chalet.roomNumber})`);
+        } else {
+            // Habitación individual (comportamiento original)
+            chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
+            console.log("chalet name: ", chaletName)
+            
+            if (!chalet) {
+                // Intentar buscar como grupo (por si el validador no detectó correctamente)
+                const groupRoom = await Habitacion.findOne({ roomGroup: chaletName, isGrouped: true });
+                if (groupRoom) {
+                    const availableRoom = await roomGroupService.findAvailableRoomInGroup(
+                        chaletName,
+                        arrivalDate,
+                        departureDate
+                    );
+                    
+                    if (!availableRoom) {
+                        return res.status(400).send({
+                            message: `No hay habitaciones disponibles en el grupo "${chaletName}" para las fechas seleccionadas.`,
+                        });
+                    }
+                    
+                    chalet = availableRoom;
+                    assignedFromGroup = true;
+                    originalGroupName = chaletName;
+                } else {
+                    throw new NotFoundError('Chalet does not exist 2');
+                }
+            }
         }
 
         if (chalet.isActive === false) {
             return res.status(400).send({
-                message: `La habitación ${chaletName} ha sido desactivada.`,
+                message: `La habitación ${chalet.propertyDetails?.name || chaletName} ha sido desactivada.`,
             });
         }
 
@@ -1189,6 +1245,9 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         var message;
 
         const createdBy = new mongoose.Types.ObjectId(req.session.id);
+        
+        // Obtener el nombre real de la habitación asignada
+        const actualChaletName = chalet.propertyDetails?.name || chaletName;
 
         if (!isDeposit) {
             reservationToAdd = {
@@ -1204,9 +1263,14 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 discount: discount,
                 createdBy: createdBy,
                 comisionVendedor: comisionVendedor,
-                status: 'active'
+                status: 'active',
+                // Campos para grupos de habitaciones
+                roomGroup: assignedFromGroup ? originalGroupName : null,
+                assignedFromGroup: assignedFromGroup
             };
-            message = "Reservación agregada con éxito";
+            message = assignedFromGroup 
+                ? `Reservación agregada con éxito. Habitación asignada: ${actualChaletName}`
+                : "Reservación agregada con éxito";
         }
         else {
             console.log("Current date: ", format(Date.now(), "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es }));
@@ -1243,10 +1307,16 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 isDeposit: true,
                 paymentCancelation: paymentCancelation,
                 createdBy: createdBy,
-                comisionVendedor: comisionVendedor
+                comisionVendedor: comisionVendedor,
+                // Campos para grupos de habitaciones
+                roomGroup: assignedFromGroup ? originalGroupName : null,
+                assignedFromGroup: assignedFromGroup
             };
 
-            message = `Reservación agregada con éxito. Realice su pago antes de ${format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es })} o su reserva será cancelada`;
+            const assignedRoomMessage = assignedFromGroup 
+                ? ` Habitación asignada: ${actualChaletName}.`
+                : '';
+            message = `Reservación agregada con éxito.${assignedRoomMessage} Realice su pago antes de ${format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es })} o su reserva será cancelada`;
         }
 
         // const documento = await Documento.findOne();
@@ -1268,7 +1338,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         documentoToAdd.url = url;
         await documentoToAdd.save();
 
-        const descripcionLimpieza = 'Limpieza ' + chaletName;
+        const descripcionLimpieza = 'Limpieza ' + actualChaletName;
         const fechaLimpieza = new Date(arrivalDate);
         const checkInDate = new Date(arrivalDate)
         const checkOutDate = new Date(departureDate)
@@ -1391,7 +1461,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 });
         }
 
-        res.status(200).json({ success: true, reservationId: idReserva, message });
+        res.status(200).json({ success: true, reservationId: idReserva, message, assignedChaletName: actualChaletName });
 
 
     } catch (err) {
