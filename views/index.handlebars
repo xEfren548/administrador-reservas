@@ -1,4 +1,124 @@
 <style>
+/* IMPORTANTE: Resetear el layout padre para el calendario */
+body {
+    overflow: hidden !important;
+}
+
+.container-fluid,
+.container-fluid > .row,
+.container-fluid > .row > .col {
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+}
+
+/* Botón hamburguesa - posición absoluta */
+.btn-menu-toggle {
+    position: absolute !important;
+    top: 1rem;
+    left: 1rem;
+    z-index: 100;
+}
+
+/* Calendario - Full Height */
+.calendar-page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 0.75rem;
+    padding-top: 0.75rem;
+    padding-left: 4rem; /* Espacio para hamburguesa */
+    box-sizing: border-box;
+    background: #f5f7f6;
+}
+
+.calendar-actions-card {
+    flex-shrink: 0;
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.btn-calendar-primary {
+    background: linear-gradient(135deg, var(--mint) 0%, var(--mint-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.4rem 0.875rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-calendar-primary:hover {
+    background: linear-gradient(135deg, var(--mint-hover) 0%, var(--mint) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(126, 206, 197, 0.4);
+    color: white;
+}
+
+.btn-calendar-outline {
+    background: white;
+    color: var(--mint-dark);
+    border: 2px solid var(--mint);
+    border-radius: 8px;
+    padding: 0.4rem 0.875rem;
+    font-weight: 500;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-calendar-outline:hover {
+    background: var(--mint);
+    color: white;
+}
+
+.calendar-wrapper {
+    flex: 1;
+    min-height: 0;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    padding: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.calendar-wrapper #calendar {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* FullCalendar height fix */
+.calendar-wrapper .fc {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-wrapper .fc .fc-view-harness {
+    flex: 1;
+    min-height: 0;
+}
+
 /* Modal Reserva - Tema Menta */
 :root {
     --mint: #7ECEC5;
