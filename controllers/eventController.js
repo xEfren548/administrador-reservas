@@ -3081,7 +3081,6 @@ async function cotizadorChaletsyPrecios(req, res) {
             throw new Error('No se encontraron habitaciones');
         }
 
-
         let availableChalets = chalets;
 
         const fechaAjustada = moment(startDate).add(6, 'hours').toDate(); // Ajustar la hora a 00:00:00 UTC
@@ -3109,12 +3108,76 @@ async function cotizadorChaletsyPrecios(req, res) {
             }
         }
 
+        // ========== AGRUPAR HABITACIONES POR roomGroup ==========
+        // Separar habitaciones agrupadas de las individuales
+        const groupedChalets = {}; // { roomGroup: [chalets...] }
+        const individualChalets = [];
 
+        for (const chalet of availableChalets) {
+            if (chalet.isGrouped && chalet.roomGroup) {
+                // Habitación pertenece a un grupo
+                if (!groupedChalets[chalet.roomGroup]) {
+                    groupedChalets[chalet.roomGroup] = [];
+                }
+                groupedChalets[chalet.roomGroup].push(chalet);
+            } else {
+                // Habitación individual (no agrupada)
+                individualChalets.push(chalet);
+            }
+        }
 
-        const mappedChalets = availableChalets.map(chalet => ({
+        // Ordenar cada grupo por roomNumber para que la primera sea la "representante"
+        for (const groupName in groupedChalets) {
+            groupedChalets[groupName].sort((a, b) => (a.roomNumber || 0) - (b.roomNumber || 0));
+        }
 
+        // Crear array final combinando grupos (representados por primera habitación) e individuales
+        const chaletsToProcess = [];
+
+        // Agregar grupos (usando primera habitación como representante)
+        for (const groupName in groupedChalets) {
+            const groupRooms = groupedChalets[groupName];
+            const representativeChalet = groupRooms[0]; // Primera habitación del grupo
+            
+            // Agregar metadata del grupo al chalet representante
+            representativeChalet._groupInfo = {
+                isGroup: true,
+                groupName: groupName,
+                availableCount: groupRooms.length,
+                availableRoomIds: groupRooms.map(r => r._id),
+                allRooms: groupRooms.map(r => ({
+                    id: r._id,
+                    name: r.propertyDetails.name,
+                    roomNumber: r.roomNumber
+                }))
+            };
+            
+            chaletsToProcess.push(representativeChalet);
+        }
+
+        // Agregar habitaciones individuales
+        for (const chalet of individualChalets) {
+            chalet._groupInfo = {
+                isGroup: false,
+                groupName: null,
+                availableCount: 1,
+                availableRoomIds: [chalet._id],
+                allRooms: [{
+                    id: chalet._id,
+                    name: chalet.propertyDetails.name,
+                    roomNumber: null
+                }]
+            };
+            chaletsToProcess.push(chalet);
+        }
+
+        // ========== FIN AGRUPACIÓN ==========
+
+        const mappedChalets = chaletsToProcess.map(chalet => ({
             id: chalet._id,
             name: chalet.propertyDetails.name,
+            // Usar nombre del grupo si existe, sino nombre normal
+            displayName: chalet._groupInfo.isGroup ? chalet.roomGroup : chalet.propertyDetails.name,
             minPax: chalet.propertyDetails.minOccupancy,
             maxPax: chalet.propertyDetails.maxOccupancy,
             precioBase: chalet.others.basePrice,
@@ -3125,7 +3188,13 @@ async function cotizadorChaletsyPrecios(req, res) {
             accomodationFeatures: chalet.accommodationFeatures,
             accomodationDescription: chalet.accomodationDescription,
             nBeds: chalet.additionalInfo.nBeds,
-            nRestrooms: chalet.additionalInfo.nRestrooms
+            nRestrooms: chalet.additionalInfo.nRestrooms,
+            // Información del grupo
+            isGroup: chalet._groupInfo.isGroup,
+            groupName: chalet._groupInfo.groupName,
+            availableCount: chalet._groupInfo.availableCount,
+            availableRoomIds: chalet._groupInfo.availableRoomIds,
+            allAvailableRooms: chalet._groupInfo.allRooms
         }));
 
         const eventoParaReservar = {

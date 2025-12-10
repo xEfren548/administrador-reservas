@@ -321,7 +321,14 @@ async function generarComisionReserva(req, res) {
         // const chalets = await Habitacion.findOne();
         // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
 
-        const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
+        // Buscar chalet por ID primero (más confiable), si no por nombre
+        let chalet = null;
+        if (habitacionId) {
+            chalet = await Habitacion.findById(habitacionId).lean();
+        }
+        if (!chalet && chaletName) {
+            chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
+        }
         if (!chalet) {
             throw new NotFoundError('Chalet does not exist');
         }

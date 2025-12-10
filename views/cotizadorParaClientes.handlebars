@@ -268,6 +268,7 @@
                                     </div>
 
                                     <input type="hidden" id="nombre-habitacion-input">
+                                    <input type="hidden" id="habitacion-id-input">
                                     <input type="hidden" id="min-pax-input">
                                     <input type="hidden" id="max-pax-input">
                                     <input type="hidden" id="costo-total-input">
@@ -885,11 +886,29 @@
                 const contenido = document.createElement("div");
                 contenido.classList.add("p-4");
 
-                // Nombre de la habitación
+                // Nombre de la habitación (usar displayName para grupos)
                 const nombre = document.createElement("h3");
                 nombre.classList.add("text-xl", "font-semibold", "text-gray-900");
-                nombre.textContent = habitacion.name;
+                nombre.textContent = habitacion.displayName || habitacion.name;
                 contenido.appendChild(nombre);
+
+                // Badge de disponibilidad para grupos
+                if (habitacion.isGroup && habitacion.availableCount > 0) {
+                    const badgeDisponibilidad = document.createElement("span");
+                    badgeDisponibilidad.classList.add(
+                        "inline-block",
+                        "bg-green-100",
+                        "text-green-800",
+                        "text-xs",
+                        "font-medium",
+                        "px-2.5",
+                        "py-0.5",
+                        "rounded",
+                        "ml-2"
+                    );
+                    badgeDisponibilidad.textContent = `${habitacion.availableCount} disponible(s)`;
+                    nombre.appendChild(badgeDisponibilidad);
+                }
 
                 // Precio por noche
                 const precio = document.createElement("p");
@@ -1244,10 +1263,16 @@
                     botonReservar.dataset.arrivalDate = evento.fechaLlegada;
                     botonReservar.dataset.departureDate = evento.fechaSalida;
                     botonReservar.dataset.huespedes = evento.huespedes;
-                    botonReservar.dataset.nombreHabitacion = habitacion.name;
+                    botonReservar.dataset.nombreHabitacion = habitacion.displayName || habitacion.name;
                     botonReservar.dataset.minPax = habitacion.minPax;
                     botonReservar.dataset.maxPax = habitacion.maxPax;
                     botonReservar.dataset.precioTotalSinComisiones = habitacion.totalPriceNoComs;
+                    
+                    // Información del grupo
+                    botonReservar.dataset.isGroup = habitacion.isGroup || false;
+                    botonReservar.dataset.groupName = habitacion.groupName || '';
+                    botonReservar.dataset.availableCount = habitacion.availableCount || 1;
+                    botonReservar.dataset.availableRoomIds = JSON.stringify(habitacion.availableRoomIds || [habitacion.id]);
 
 
                     botonReservar.addEventListener("click", () => {
@@ -1296,6 +1321,7 @@
                 huespedesSpan.textContent = boton.dataset.huespedes;
                 nNightsInput.textContent = boton.dataset.nNights;
                 habitacionInput.value = boton.dataset.nombreHabitacion;
+                document.getElementById('habitacion-id-input').value = boton.dataset.habitacionId;
                 minPaxInput.value = boton.dataset.minPax;
                 maxPaxInput.value = boton.dataset.maxPax;
                 costoTotalInput.value = boton.dataset.costoTotal
