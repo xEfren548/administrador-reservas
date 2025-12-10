@@ -16,6 +16,75 @@ const sendEmail = require('../../common/tasks/send-mails');
 const rackLimpiezaController = require('../rackLimpiezaController');
 const SendMessages = require('../../common/tasks/send-messages');
 
+/**
+ * Agrupa las habitaciones por roomGroup, mostrando solo la primera habitación de cada grupo
+ * Las habitaciones individuales (sin grupo) se mantienen como están
+ * @param {Array} habitaciones - Array de habitaciones
+ * @returns {Array} Array de habitaciones agrupadas (solo representantes de grupos + individuales)
+ */
+function agruparHabitacionesPorGrupo(habitaciones) {
+    const groupedRooms = {}; // { roomGroup: [habitaciones...] }
+    const individualRooms = [];
+
+    for (const hab of habitaciones) {
+        if (hab.isGrouped && hab.roomGroup) {
+            // Habitación pertenece a un grupo
+            if (!groupedRooms[hab.roomGroup]) {
+                groupedRooms[hab.roomGroup] = [];
+            }
+            groupedRooms[hab.roomGroup].push(hab);
+        } else {
+            // Habitación individual (no agrupada)
+            individualRooms.push(hab);
+        }
+    }
+
+    // Ordenar cada grupo por roomNumber y tomar la primera como representante
+    const result = [];
+
+    for (const groupName in groupedRooms) {
+        const groupRooms = groupedRooms[groupName];
+        // Ordenar por roomNumber
+        groupRooms.sort((a, b) => (a.roomNumber || 0) - (b.roomNumber || 0));
+        
+        // Tomar la primera habitación como representante
+        const representative = groupRooms[0];
+        
+        // Agregar metadata del grupo
+        representative._groupInfo = {
+            isGroup: true,
+            groupName: groupName,
+            availableCount: groupRooms.length,
+            availableRoomIds: groupRooms.map(r => r._id),
+            allRooms: groupRooms.map(r => ({
+                id: r._id,
+                name: r.propertyDetails?.name || r.name,
+                roomNumber: r.roomNumber
+            }))
+        };
+        
+        result.push(representative);
+    }
+
+    // Agregar habitaciones individuales con su metadata
+    for (const hab of individualRooms) {
+        hab._groupInfo = {
+            isGroup: false,
+            groupName: null,
+            availableCount: 1,
+            availableRoomIds: [hab._id],
+            allRooms: [{
+                id: hab._id,
+                name: hab.propertyDetails?.name || hab.name,
+                roomNumber: null
+            }]
+        };
+        result.push(hab);
+    }
+
+    return result;
+}
+
 // Mapeo de dominios a nombres de costos en la base de datos
 const DOMAIN_TO_COST_NAME = {
     'cabanasmazamitlajalisco.com.mx': 'VENDEDOR VIRTUAL cabanasmazamitlajalisco',
@@ -171,7 +240,11 @@ async function mostrarUnaHabitacion(req, res) {
 async function mostrarTodasHabitaciones(req, res) {
     try {
         const habitaciones = await Habitacion.find({ isActive: true }).lean();
-        res.send(habitaciones);
+        
+        // Agrupar habitaciones por grupo (solo mostrar representante de cada grupo)
+        const habitacionesAgrupadas = agruparHabitacionesPorGrupo(habitaciones);
+        
+        res.send(habitacionesAgrupadas);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener habitaciones' });
@@ -553,9 +626,11 @@ async function cotizadorChaletsyPrecios(req, res) {
             checkOutDate
         );
 
+        // 12.5. Agrupar habitaciones por grupo (solo mostrar representante de cada grupo)
+        const habitacionesAgrupadas = agruparHabitacionesPorGrupo(habitacionesDisponibles);
 
         // 13. Calcular precios y verificar restricciones para cada habitación
-        const habitacionesConPrecios = await Promise.all(habitacionesDisponibles.map(async habitacion => {
+        const habitacionesConPrecios = await Promise.all(habitacionesAgrupadas.map(async habitacion => {
             const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
             const precios = await consultarPreciosPorFechas(checkInDate, checkOutDate, habitacion, guestsNumber, req);
 
@@ -564,6 +639,13 @@ async function cotizadorChaletsyPrecios(req, res) {
 
             return {
                 ...habitacion,
+                // Información del grupo
+                displayName: habitacion._groupInfo?.isGroup ? habitacion.roomGroup : (habitacion.propertyDetails?.name || habitacion.name),
+                isGroup: habitacion._groupInfo?.isGroup || false,
+                groupName: habitacion._groupInfo?.groupName || null,
+                availableCount: habitacion._groupInfo?.availableCount || 1,
+                availableRoomIds: habitacion._groupInfo?.availableRoomIds || [habitacion._id],
+                allAvailableRooms: habitacion._groupInfo?.allRooms || [],
                 precioCalculado: precios,
                 noches: nights,
                 fechaConsulta: {
