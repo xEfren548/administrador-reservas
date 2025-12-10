@@ -1679,6 +1679,29 @@ async function mostrarUtilidadesGlobales(req, res, next) {
                         utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`;
                         utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
 
+                        const concepto = utilidad.concepto;
+
+                        if (concepto.includes('Dueño de cabaña') || concepto.includes('inversionista')) {
+                            if (concepto.includes('inversionista')) {
+                                utilidad.tipoUsuario = 'Inversionista';
+                            } else if (concepto.includes('Dueño de cabaña')) {
+                                utilidad.tipoUsuario = 'Dueño de cabaña';
+                            }
+                        } else if (concepto.includes('limpieza') || concepto.includes('Limpieza')) {
+                            utilidad.tipoUsuario = 'Limpieza';
+                        } else if (concepto.includes('uso de sistema') || concepto.includes('NyN')) {
+                            utilidad.tipoUsuario = 'Sistema';
+                        } else if ((concepto.includes('administrador ligado de vendedor') || concepto.includes('Administrador ligado de vendedor'))) {
+                            utilidad.tipoUsuario = 'Administrador ligado de vendedor';
+                        } else if ((concepto.includes('administrador ligado de Cabaña') || concepto.includes('Administrador ligado de Cabaña'))) {
+                            utilidad.tipoUsuario = 'Administrador ligado de Cabaña';
+
+                            // } else if (concepto.includes('admnistrador ligado de vendedor') || concepto.includes('Administrador ligado de vendedor')) {
+                            //     comisionVendedor += monto;
+                        } else if (concepto.includes('Reservación')) {
+                            utilidad.tipoUsuario = 'Vendedor';
+                        }
+
                         // Sum the monto for each user
                         if (!userMontos[userId]) {
                             userMontos[userId] = { monto: 0, nombreUsuario: utilidad.nombreUsuario };

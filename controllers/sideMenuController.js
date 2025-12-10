@@ -31,7 +31,7 @@ async function generateSideMenu(req, res, next) {
                 { 'Clientes Web': ["/api/clientes/mostrar-clientes-web", "fas fa-users"] },
                 { 'Servicios adicionales': ["/api/servicios", "fas fa-spa"] },
                 { 'Limpieza': ["/racklimpieza", "fas fa-broom"] },
-                { 'Cabañas': [] },
+                { 'Propiedades': [] },
                 { 'Utilidades': [] },
                 { 'Finanzas': ["/finanzas", "fas fa-wallet"] },
                 { 'Solicitudes': ["/aprobaciones", "fas fa-check"] },
@@ -124,15 +124,15 @@ async function generateSideMenu(req, res, next) {
                                 </span></a>
                             <ul class="collapse nav flex-column ms-1" id="submenu2" data-bs-parent="#menu">
                                 <li class="w-100">
-                                    <a href="/api/cabanas" class="nav-link px-5" title="Alta Cabañas">
+                                    <a href="/api/cabanas" class="nav-link px-5" title="Alta Propiedades">
                                         <i class="fas fa-plus"></i><span class="d-none d-sm-inline"
-                                            style="margin-left: 8px;">Alta cabaña</span>
+                                            style="margin-left: 8px;">Alta propiedad</span>
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="/api/cabanas/editar-cabana" class="nav-link px-5" title="Editar Cabaña">
+                                    <a href="/api/cabanas/editar-cabana" class="nav-link px-5" title="Editar Propiedad">
                                         <i class="fas fa-pencil-alt "></i><span class="d-none d-sm-inline"
-                                            style="margin-left: 8px;">Editar cabaña</span>
+                                            style="margin-left: 8px;">Editar propiedad</span>
                                     </a>
 
                                 </li>
