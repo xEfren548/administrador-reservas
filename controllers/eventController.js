@@ -861,7 +861,7 @@ async function reservasDeDuenos(req, res, next) {
                 }
 
 
-
+                const paymentCancelation = evento.paymentCancelation ? momentTz(evento.paymentCancelation).format('DD-MM-YYYY, h:mm:ss a') : null;
 
                 // Retornar el evento con los pagos y las fechas formateadas
                 return {
