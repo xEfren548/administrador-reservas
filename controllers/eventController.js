@@ -492,7 +492,20 @@ async function obtenerEventosOptimizados(req, res) {
             } else {
                 for (const id of ownerChaletIds) scopeResourceIds.add(id);
             }
-        } else if (privilege === "Inversionistas") {
+        
+        } else if (privilege === "Colaborador dueño") {
+            const user = await Usuario.findById(req.session.userId).lean();
+            if (!user) {
+                return res.json([]);
+            }
+            const ownerChalets = await Habitacion.find({ 'others.owner': user.administrator }, { _id: 1 }).lean();
+            const ownerChaletIds = ownerChalets.map(h => h._id.toString());
+            if (chaletId) {
+                scopeResourceIds.add(chaletId.toString());
+            } else {
+                for (const id of ownerChaletIds) scopeResourceIds.add(id);
+            }
+        }else if (privilege === "Inversionistas") {
             const investorChalets = await Habitacion.find({ 
                 'others.investors.investor': req.session.userId 
             }, { _id: 1 }).lean();
@@ -502,6 +515,15 @@ async function obtenerEventosOptimizados(req, res) {
             } else {
                 for (const id of investorChaletIds) scopeResourceIds.add(id);
             }
+        } else if (privilege === "Administrador") {
+            if (chaletId) {
+                scopeResourceIds.add(chaletId.toString());
+            } else {
+                // Si es admin y no hay chaletId, incluir todos los recursos
+                const allChalets = await Habitacion.find({}, { _id: 1 }).lean();
+                allChalets.forEach(c => scopeResourceIds.add(c._id.toString()));
+            }
+
         } else if (chaletId) {
             scopeResourceIds.add(chaletId.toString());
         }
