@@ -25,7 +25,7 @@ jobs:
             git clone https://github.com/xEfren548/administrador-reservas
 
             # Copy local cert to repository
-            cp -r cert2 administrador-reservas/
+            cp -r cert3 administrador-reservas/
 
             # Install dependencies and start
             cd administrador-reservas
