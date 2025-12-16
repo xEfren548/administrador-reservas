@@ -3343,7 +3343,13 @@ async function obtenerHabitacionesDisponibles(req, res) {
                 filtro['others.owner'] = req.session.id;
             }
         } else if(habitacionId) {
-            filtro['_id'] = habitacionId;
+            // Verificar si es un ObjectId válido o un nombre de grupo
+            if (mongoose.Types.ObjectId.isValid(habitacionId) && habitacionId.length === 24) {
+                filtro['_id'] = habitacionId;
+            } else {
+                // Es un nombre de grupo
+                filtro['roomGroup'] = habitacionId;
+            }
         }
 
         console.log("filtro: ", filtro);
@@ -3355,11 +3361,14 @@ async function obtenerHabitacionesDisponibles(req, res) {
                 'propertyDetails.maxOccupancy': 1,
                 'propertyDetails.accomodationType': 1,
                 'others.basePrice': 1,
+                isGrouped: 1,
+                roomGroup: 1,
+                roomNumber: 1,
             })
             .lean();
         console.log("Chalets encontrados: ", chalets.length);
         if (!chalets || chalets.length === 0) {
-            return res.status(200).json({ rooms: [], meta: { nNights, total: 0 } });
+            return res.status(200).json({ availableRooms: [], roomGroups: [], meta: { nNights, totalIndividual: 0, totalGroups: 0 } });
         }
 
 
@@ -3391,20 +3400,63 @@ async function obtenerHabitacionesDisponibles(req, res) {
             if (!libre) continue;
 
 
-            // 4) Map a RoomOption
+            // 4) Agregar a disponibles con info de grupo
             disponibles.push({
                 id: chaletId,
                 nombre: c.propertyDetails?.name ?? 'Habitación',
                 ocMax: c.propertyDetails?.maxOccupancy ?? 0,
                 basePrice: c.others?.basePrice ?? 0,
                 tipo: c.propertyDetails?.accomodationType ?? 'N/D',
+                isGrouped: c.isGrouped ?? false,
+                roomGroup: c.roomGroup ?? null,
+                roomNumber: c.roomNumber ?? null
             });
         }
+
+        // Separar habitaciones individuales de agrupadas
+        const roomGroups = {};
+        const availableRooms = [];
+
+        for (const room of disponibles) {
+            if (room.isGrouped && room.roomGroup) {
+                // Es parte de un grupo
+                if (!roomGroups[room.roomGroup]) {
+                    roomGroups[room.roomGroup] = {
+                        groupName: room.roomGroup,
+                        rooms: [],
+                        maxOccupancy: room.ocMax,
+                        accomodationType: room.tipo,
+                        basePrice: room.basePrice
+                    };
+                }
+                roomGroups[room.roomGroup].rooms.push(room.nombre);
+            } else {
+                // Es habitación individual
+                availableRooms.push({
+                    id: room.id,
+                    nombre: room.nombre,
+                    ocMax: room.ocMax,
+                    tipo: room.tipo,
+                    basePrice: room.basePrice
+                });
+            }
+        }
+
+        const roomGroupsArray = Object.values(roomGroups);
+
         console.log("RESPUESTA: ")
-        console.log(JSON.stringify(disponibles));
+        console.log(JSON.stringify({ availableRooms, roomGroups: roomGroupsArray }));
+        
         return res.status(200).json({
-            rooms: disponibles,
-            meta: { nNights, total: disponibles.length, fechaLlegada: startDate, fechaSalida: endDate },
+            availableRooms,
+            roomGroups: roomGroupsArray,
+            meta: { 
+                nNights, 
+                totalIndividual: availableRooms.length,
+                totalGroups: roomGroupsArray.length,
+                fechaLlegada: startDate, 
+                fechaSalida: endDate 
+            },
         });
     } catch (err) {
         console.error('Error en obtenerHabitacionesDisponibles:', err);

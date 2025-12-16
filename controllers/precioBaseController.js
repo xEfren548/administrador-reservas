@@ -151,9 +151,9 @@ async function consultarPreciosPorFecha(req, res) {
 
 async function consultarPreciosPorFechas(req, res) {
     try {
-        const { fechaLlegada, fechaSalida, habitacionid, needSpecialPrice, pax } = req.query;
+        const { fechaLlegada, fechaSalida, habitacionid, habitacionName, needSpecialPrice, pax } = req.query;
 
-        console.log({ fechaLlegada, fechaSalida, habitacionid, needSpecialPrice, pax });
+        console.log({ fechaLlegada, fechaSalida, habitacionid, habitacionName, needSpecialPrice, pax });
 
         const nNights = Math.ceil((new Date(fechaSalida) - new Date(fechaLlegada)) / (1000 * 60 * 60 * 24));
 
@@ -206,10 +206,15 @@ async function consultarPreciosPorFechas(req, res) {
                 if (!precio) {
 
 
-                    const habitacion = await Habitacion.findById(habitacionid).lean();
+                    let habitacion = await Habitacion.findById(habitacionid).lean();
 
                     if (!habitacion) {
-                        throw new Error('Habitacion no encontrada');
+                        if (habitacionName) {
+                            habitacion = await Habitacion.findOne({ 'propertyDetails.name': habitacionName }).lean();
+                        }
+                        if (!habitacion) {
+                            throw new Error('Habitacion no encontrada');
+                        }
                     }
 
                     precio = {
