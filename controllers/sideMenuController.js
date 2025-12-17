@@ -115,12 +115,12 @@ async function generateSideMenu(req, res, next) {
                             </ul>
                         </li>`;
                 }
-                else if (key === "Cabañas") {
+                else if (key === "Propiedades") {
                     sideMenuContent +=
                         `<li class="nav-item py-2 py-sm-0">
-                            <a href="#submenu2" data-bs-toggle="collapse" class="nav-link px-4 align-middle " title="Cabañas">
+                            <a href="#submenu2" data-bs-toggle="collapse" class="nav-link px-4 align-middle " title="Propiedad">
                                 <i class="fs-5 fa fa-hotel" aria-hidden="true"></i><span
-                                    class="fs-5 ms-3 d-none d-sm-inline">Cabañas
+                                    class="fs-5 ms-3 d-none d-sm-inline">Propiedades
                                 </span></a>
                             <ul class="collapse nav flex-column ms-1" id="submenu2" data-bs-parent="#menu">
                                 <li class="w-100">
