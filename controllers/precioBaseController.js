@@ -190,46 +190,77 @@ async function consultarPreciosPorFechas(req, res) {
                 }
             }
 
-
-            if (needSpecialPrice === "true") {
-                precio = await PreciosEspeciales.findOne({ fecha: currentDate, habitacionId: habitacionid, noPersonas: pax })
+            precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: habitacionid, noPersonas: pax });
+            if (precio) {
+                precios.push(precio);
+                currentDate.setDate(currentDate.getDate() + 1);
+                continue;
             } else {
                 precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: habitacionid });
-
-            }
-
-
-            if (precio === null) {
-
-                precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: habitacionid });
-
-                if (!precio) {
-
-
+                if (precio) {
+                    precios.push(precio);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    continue;
+                } else {
                     let habitacion = await Habitacion.findById(habitacionid).lean();
 
                     if (!habitacion) {
-                        if (habitacionName) {
-                            habitacion = await Habitacion.findOne({ 'propertyDetails.name': habitacionName }).lean();
-                        }
+                        // if (habitacionName) {
+                        //     habitacion = await Habitacion.findOne({ 'propertyDetails.name': habitacionName }).lean();
+                        // }
                         if (!habitacion) {
                             throw new Error('Habitacion no encontrada');
                         }
                     }
-
                     precio = {
                         costo_base: habitacion.others.baseCost,
                         costo_base_2noches: habitacion.others.baseCost2nights,
                         precio_modificado: habitacion.others.basePrice,
                         precio_base_2noches: habitacion.others.basePrice2nights
                     }
-                    precios.push(precio);
-                    currentDate.setDate(currentDate.getDate() + 1);
-                    continue;
                 }
-
-
             }
+
+
+            // if (needSpecialPrice === "true") {
+            //     precio = await PreciosEspeciales.findOne({ fecha: currentDate, habitacionId: habitacionid, noPersonas: pax })
+            // } else {
+            //     precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: habitacionid });
+
+            // }
+
+
+            // if (precio === null) {
+
+            //     precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: habitacionid });
+
+            //     if (!precio) {
+
+
+            //         let habitacion = await Habitacion.findById(habitacionid).lean();
+
+            //         if (!habitacion) {
+            //             if (habitacionName) {
+            //                 habitacion = await Habitacion.findOne({ 'propertyDetails.name': habitacionName }).lean();
+            //             }
+            //             if (!habitacion) {
+            //                 throw new Error('Habitacion no encontrada');
+            //             }
+            //         }
+
+            //         precio = {
+            //             costo_base: habitacion.others.baseCost,
+            //             costo_base_2noches: habitacion.others.baseCost2nights,
+            //             precio_modificado: habitacion.others.basePrice,
+            //             precio_base_2noches: habitacion.others.basePrice2nights
+            //         }
+            //         precios.push(precio);
+            //         currentDate.setDate(currentDate.getDate() + 1);
+            //         continue;
+            //     }
+
+
+            // }
 
             precios.push(precio);
 
