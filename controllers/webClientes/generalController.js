@@ -234,7 +234,7 @@ async function mostrarTodasHabitaciones(req, res) {
     try {
         const habitaciones = await Habitacion.find({ isActive: true }).lean();
         
-        // Agrupar habitaciones por grupo (solo mostrar representante de cada grupo)
+        // Agrupar habitaciones por grupo (selecciona aleatoriamente una habitación de cada grupo)
         const habitacionesAgrupadas = agruparHabitacionesPorGrupo(habitaciones);
         
         res.send(habitacionesAgrupadas);
