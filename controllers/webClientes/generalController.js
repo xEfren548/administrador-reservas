@@ -29,7 +29,7 @@ const DOMAIN_TO_USER_ID = {
     'cabanasmazamitlajalisco.com.mx': '6642cfc347113ba5f87ce0a6', // ID del responsable de Jalisco
     'cabanasmazamitlanavarro.com.mx': '6642cff447113ba5f87ce0aa', // ID del responsable de Navarro MX
     'cabanasmazamitlanavarro.com': '6642cff447113ba5f87ce0aa', // ID del responsable de Navarro
-    'rentravel.com.mx': '6642cfc347113ba5f87ce0a6' // ID del responsable de RenTravel - FALTA ASIGNAR
+    'rentravel.com.mx': '671be608256c4d53c3f5e12f' // ID del responsable de RenTravel - FALTA ASIGNAR - de momento es Administracion NyN
 };
 
 // Mapeo de dominios a nombres legibles para logs
@@ -1388,7 +1388,7 @@ async function generarComisionReservaRentravel(habitacionId, pricing, idReserva,
         if (chaletType === "Bosque Imperial") {
             await utilidadesController.altaComisionReturn({
                 monto: utilidadChalet,
-                concepto: `Comisión administrador ligado de Cabaña ${nNights} noches`,
+                concepto: `Comisión administrador ligado de Cabaña ${nNights} noches (Utilidad Rentravel)`,
                 fecha: new Date(arrivalDate),
                 idUsuario: chaletAdmin._id.toString(),
                 idReserva: idReserva
@@ -1406,7 +1406,7 @@ async function generarComisionReservaRentravel(habitacionId, pricing, idReserva,
         } else {
             await utilidadesController.altaComisionReturn({
                 monto: utilidadChalet,
-                concepto: `Comisión administrador ligado de Cabaña ${chaletName} ${nNights} noches`,
+                concepto: `Comisión administrador ligado de Cabaña ${chaletName} ${nNights} noches (Utilidad Rentravel)`,
                 fecha: new Date(arrivalDate),
                 idUsuario: chaletAdmin._id.toString(),
                 idReserva: idReserva
