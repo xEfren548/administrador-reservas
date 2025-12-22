@@ -455,6 +455,7 @@ async function obtenerEventosOptimizados(req, res) {
             clientName: 1,
             clienteProvisional: 1,
             infoReservaExterna: 1,
+            paymentCancelation: 1,
             notes: 1
         }).lean();
 
@@ -541,6 +542,13 @@ async function obtenerEventosOptimizados(req, res) {
             : [];
         const clientesMap = new Map(clientes.map(c => [c._id.toString(), c]));
 
+        // ---------- Batch: Usuarios creadores (para colorUsuario) ----------
+        const creatorIds = [...new Set(reservas.map(e => e.createdBy).filter(Boolean))];
+        const usuarios = creatorIds.length
+            ? await Usuario.find({ _id: { $in: creatorIds } }, { color: 1, firstName: 1, lastName: 1 }).lean()
+            : [];
+        const usuariosMap = new Map(usuarios.map(u => [u._id.toString(), u]));
+
         // ---------- Batch: Pagos (agregación) ----------
         let pagosMap = new Map();
         if (typeof Pago !== 'undefined') {
@@ -570,6 +578,18 @@ async function obtenerEventosOptimizados(req, res) {
                         .toUpperCase();
                 }
             }
+            
+            // Color del usuario creador
+            let colorUsuario = null;
+            let creadaPor = null;
+            if (e.createdBy) {
+                const usuario = usuariosMap.get(e.createdBy.toString());
+                if (usuario) {
+                    colorUsuario = usuario.color;
+                    creadaPor = `${usuario.firstName} ${usuario.lastName}`;
+                }
+            }
+
             e.pagosTotales = typeof pagosMap.get(e._id.toString()) === 'number'
                 ? pagosMap.get(e._id.toString())
                 : 0;
@@ -579,6 +599,8 @@ async function obtenerEventosOptimizados(req, res) {
                 logs: logsPorReserva.get(e._id.toString()) || [],
                 isBlocked: false,    // <- unificado
                 blockType: null,     // <- unificado
+                colorUsuario: colorUsuario,  // <- agregado
+                creadaPor: creadaPor,        // <- agregado (opcional)
             };
         });
 
@@ -3644,6 +3666,7 @@ async function getIncomingReservations(req, res) {
             clientName: 1,
             tipoReserva: 1,
             infoReservaExterna: 1,
+            paymentCancelation: 1,
             notes: 1
         }).lean();
 
