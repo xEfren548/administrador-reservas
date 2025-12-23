@@ -1,5 +1,6 @@
 # Módulo de Finanzas (Splitwise) - Backend
 
+
 ## Descripción
 Módulo de gestión financiera tipo Splitwise integrado al PMS. Permite crear organizaciones, cuentas, gestionar transacciones y solicitudes de aprobación.
 
