@@ -1,5 +1,240 @@
 document.addEventListener('DOMContentLoaded', function () {
 
+    // Inyectar estilos personalizados para el calendario
+    const style = document.createElement('style');
+    style.textContent = `
+        /* Estilos generales del calendario */
+        #calendar {
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
+
+        /* Header del calendario */
+        .fc-toolbar {
+            padding: 15px 10px;
+            background: #ffffff;
+            border-radius: 10px;
+            margin-bottom: 20px !important;
+            border: 2px solid #20c997;
+            box-shadow: 0 2px 8px rgba(32, 201, 151, 0.1);
+        }
+
+        .fc-toolbar-title {
+            font-size: 1.5rem !important;
+            font-weight: 600 !important;
+            color: #2d3748 !important;
+            text-transform: capitalize;
+        }
+
+        .fc-button {
+            background: #20c997 !important;
+            border: 1px solid #20c997 !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            padding: 8px 16px !important;
+            font-weight: 500 !important;
+            text-transform: capitalize !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .fc-button:hover {
+            background: #1ba87e !important;
+            border-color: #1ba87e !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(32, 201, 151, 0.3);
+        }
+
+        .fc-button-active {
+            background: #1ba87e !important;
+            border-color: #1ba87e !important;
+            font-weight: 600 !important;
+        }
+
+        .fc-button:disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+        }
+
+        /* Encabezados de días */
+        .fc-col-header-cell {
+            background: #f8f9fa;
+            border: none !important;
+            padding: 12px 8px !important;
+            font-weight: 600 !important;
+            color: #495057 !important;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Celdas de días */
+        .fc-daygrid-day {
+            border: 1px solid #e9ecef !important;
+            transition: background-color 0.2s ease;
+        }
+
+        .fc-daygrid-day:hover {
+            background-color: #f8f9fa;
+        }
+
+        .fc-daygrid-day-number {
+            padding: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        /* Día actual */
+        .fc-day-today {
+            background: #f0fdf4 !important;
+            border: 2px solid #20c997 !important;
+        }
+
+        .fc-day-today .fc-daygrid-day-number {
+            background: #20c997;
+            color: white;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Eventos */
+        .fc-event {
+            border: none !important;
+            border-radius: 6px !important;
+            padding: 4px 6px !important;
+            margin: 2px 0 !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .fc-event:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        /* Días del mes anterior/siguiente */
+        .fc-daygrid-day.fc-day-other {
+            background: #fafafa;
+        }
+
+        .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
+            color: #adb5bd;
+        }
+
+        /* Botón "más eventos" */
+        .fc-daygrid-more-link {
+            color: #667eea !important;
+            font-weight: 600 !important;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(102, 126, 234, 0.1);
+            transition: background 0.2s ease;
+        }
+
+        .fc-daygrid-more-link:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        /* Popup de "más eventos" */
+        .fc-popover {
+            border-radius: 8px !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+            border: 1px solid #e9ecef !important;
+        }
+
+        .fc-popover-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            border-radius: 8px 8px 0 0 !important;
+            padding: 12px !important;
+            font-weight: 600 !important;
+        }
+
+        /* Indicador de día actual */
+        .fc-timegrid-now-indicator-line {
+            border-color: #f44336 !important;
+        }
+
+        /* Scrollbar personalizado */
+        .fc-scroller::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .fc-scroller::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .fc-scroller::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 4px;
+        }
+
+        .fc-scroller::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Menú contextual */
+        #context-menu {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            border: 1px solid #e9ecef;
+            padding: 8px;
+            min-width: 180px;
+        }
+
+        #context-menu a {
+            display: block;
+            padding: 10px 14px;
+            color: #495057;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        #context-menu a:hover {
+            background: #f8f9fa;
+            color: #667eea;
+            transform: translateX(4px);
+        }
+
+        /* Animación de carga */
+        .fc-loading {
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Función para determinar si un color es claro u oscuro
+    function isColorDark(hexColor) {
+        // Convertir hex a RGB
+        const hex = hexColor.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        
+        // Calcular luminosidad (fórmula estándar)
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+        
+        // Si la luminosidad es menor a 128, es un color oscuro
+        return luminance < 128;
+    }
+
     async function renderCalendar(idHabitacion) {
         const urlEventos = `/api/eventos/chalet/${idHabitacion}`;
         const urlHabitaciones = `/api/habitaciones/${idHabitacion}`;
@@ -93,11 +328,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 let total = info.event.extendedProps.total
                 let totalMsg = total === undefined ? `<div>Reserva de dueño/inversionista</div>` : `<div><b>Total: $ ${total}</b></div>`
 
+                // Determinar el color del texto basado en el color de fondo
+                const textColor = isColorDark(color) ? '#ffffff' : '#000000';
+
                 if ( clientName === "Fecha Bloqueada" ) {
                     return {
                         html: `
-                        <div class="p-1 rounded bg-gradient text-black" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: 'Overpass', sans-serif; background-color: ${color} !important;">
-                            <div class="font-weight-bold">${clientName}</div>
+                        <div class="p-2 rounded" style="
+                            overflow: hidden; 
+                            font-size: 11px; 
+                            position: relative; 
+                            cursor: pointer; 
+                            font-family: 'Poppins', sans-serif; 
+                            background: linear-gradient(135deg, ${color} 0%, ${color}dd 100%);
+                            color: ${textColor};
+                            border-left: 3px solid ${color}aa;
+                            font-weight: 600;
+                            text-align: center;
+                        ">
+                            <div style="font-size: 10px; opacity: 0.9;"><i class="fa fa-lock" aria-hidden="true"></i> ${clientName}</div>
                         </div>
                         `
                     }
@@ -105,10 +354,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 return {
                     html: `
-                    <div class="p-1 rounded bg-gradient text-black" style="overflow: hidden; font-size: 12px; position: relative;  cursor: pointer; font-family: 'Overpass', sans-serif; background-color: ${color} !important;">
-                        <div>${clientName}</div>
-                        ${totalMsg}
-                        <div><b>Creada por: ${creadaPor}</b></div>
+                    <div class="p-2 rounded" style="
+                        overflow: hidden; 
+                        font-size: 11px; 
+                        position: relative; 
+                        cursor: pointer; 
+                        font-family: 'Poppins', sans-serif; 
+                        background: linear-gradient(135deg, ${color} 0%, ${color}dd 100%);
+                        color: ${textColor};
+                        border-left: 3px solid ${color}aa;
+                        line-height: 1.4;
+                    ">
+                        <div style="font-weight: 600; margin-bottom: 3px; font-size: 11px;">${clientName}</div>
+                        ${totalMsg.replace('<div>', '<div style="font-size: 10px; opacity: 0.95;">').replace('</div>', '</div>')}
+                        <div style="font-size: 9px; opacity: 0.85; margin-top: 2px;"><i class="fa fa-user" aria-hidden="true"></i> ${creadaPor || 'Sistema'}</div>
                     </div>
                     `
                 };
@@ -121,14 +380,71 @@ document.addEventListener('DOMContentLoaded', function () {
                 let newElTitle = mouseEnterInfo.event.id;
                 let newElTotal = mouseEnterInfo.event.extendedProps.total;
                 let newElStatus = mouseEnterInfo.event.extendedProps.status;
+                let statusColor = '#6c757d';
+                let statusText = newElStatus;
+                
                 if (newElStatus === "pending"){
-                    newElStatus = "Por Depo"    
+                    statusText = "Por Depo";
+                    statusColor = '#ffc107';
+                } else if (newElStatus === "active") {
+                    statusColor = '#28a745';
+                } else if (newElStatus === "playground") {
+                    statusColor = '#17a2b8';
+                } else if (newElStatus === "cancelled") {
+                    statusColor = '#dc3545';
                 }
+                
                 newEl.innerHTML = `
-                    <div class="fc-hoverable-event" style="position: absolute; top: 100%; left: 0; width: 300px; height: auto; background-color: #FFFFFF; z-index: 100000000 !important; border: 1px solid #E3E8EE; border-radius: 0.5rem; padding: 0.75rem; font-size: 14px; font-family: 'Poppins', sans-serif; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); color: #2C3E50;">
-                        <strong>${newElTitle}</strong>
-                        <div>Total: $${newElTotal}</div>
-                        <div>Status: <b>${newElStatus.toUpperCase()}</b></div>
+                    <div class="fc-hoverable-event" style="
+                        position: absolute; 
+                        top: 100%; 
+                        left: 0; 
+                        width: 320px; 
+                        height: auto; 
+                        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+                        z-index: 100000000 !important; 
+                        border: 1px solid #e9ecef;
+                        border-radius: 12px;
+                        padding: 16px;
+                        font-size: 14px;
+                        font-family: 'Poppins', sans-serif;
+                        cursor: pointer;
+                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+                        color: #2C3E50;
+                    ">
+                        <div style="
+                            font-weight: 700;
+                            font-size: 16px;
+                            margin-bottom: 12px;
+                            color: #1a202c;
+                            border-bottom: 2px solid #e9ecef;
+                            padding-bottom: 8px;
+                        ">
+                            <i class="fa fa-hashtag" aria-hidden="true"></i> ${newElTitle}
+                        </div>
+                        <div style="
+                            display: flex;
+                            align-items: center;
+                            margin-bottom: 8px;
+                            font-size: 15px;
+                        ">
+                            <span style="color: #20c997; margin-right: 8px;"><i class="fa fa-usd" aria-hidden="true"></i></span>
+                            <strong>Total:</strong> 
+                            <span style="color: #2d3748; margin-left: 6px; font-weight: 600;">$${newElTotal}</span>
+                        </div>
+                        <div style="
+                            display: inline-block;
+                            background: ${statusColor};
+                            color: white;
+                            padding: 4px 12px;
+                            border-radius: 20px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                        ">
+                            ${statusText}
+                        </div>
                     </div>
                 `;
                 document.body.appendChild(newEl);
