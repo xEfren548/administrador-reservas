@@ -3447,6 +3447,13 @@ async function obtenerHabitacionesDisponibles(req, res) {
         }
 
         console.log("RESPUESTA: ", JSON.stringify(disponibles));
+
+        const privilege = req.session?.privilege; // "Vendedor" | "Dueño de cabañas" | "Administrador"
+
+                // Si es dueño o colaborador dueño, devuelve array directo
+        if (privilege === "Dueño de cabañas" || privilege === "Colaborador dueño") {
+            return res.status(200).json(disponibles);
+        }
         
         return res.status(200).json({
             availableRooms: disponibles,
@@ -3457,6 +3464,7 @@ async function obtenerHabitacionesDisponibles(req, res) {
                 fechaSalida: endDate 
             },
         });
+        // return res.status(200).json(disponibles);
     } catch (err) {
         console.error('Error en obtenerHabitacionesDisponibles:', err);
         return res.status(500).json({ message: 'Error al obtener disponibilidad: ' + err.message });

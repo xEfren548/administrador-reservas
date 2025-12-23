@@ -14,9 +14,24 @@ const Log = require('../models/Log');
 
 const validationRequest = require('../common/middlewares/validation-request');
 
+// ============ MIDDLEWARE DE DEBUG (TEMPORAL) ============
+router.use((req, res, next) => {
+    console.log('==================================');
+    console.log('RUTA RECIBIDA:', req.method, req.originalUrl);
+    console.log('PATH:', req.path);
+    console.log('BASE URL:', req.baseUrl);
+    console.log('QUERY:', req.query);
+    console.log('==================================');
+    next();
+});
+
+
 // Rutas estáticas
 router.get('/eventos', eventController.obtenerEventos);
 router.get('/eventos-opt', eventController.obtenerEventosOptimizados);
+// Ruta de disponibilidad (debe estar ANTES de rutas con parámetros dinámicos)
+router.get('/eventos/disponibilidad', eventController.obtenerHabitacionesDisponibles);
+router.get('/disponibilidad', eventController.obtenerHabitacionesDisponibles);
 
 router.get('/eventos/chalet/:id', eventController.obtenerEventosDeCabana);
 router.get('/eventos/route/:id', eventController.obtenerEventoPorIdRoute);
@@ -40,8 +55,6 @@ router.delete('/eventos/reserva-dueno/:id', eventController.deleteOwnerReservati
 router.delete('/notas', eventController.eliminarNota);
 router.delete('/eventos/:id/comentarios/:comentarioIndex', eventController.deleteCommentFromReservation);
 
-// Ruta de disponibilidad (debe estar ANTES de rutas con parámetros dinámicos)
-router.get('/eventos/disponibilidad', eventController.obtenerHabitacionesDisponibles);
 
 // Rutas con contenido dinamico de handlebars
 router.get('/eventos/:idevento', async (req, res) => {
