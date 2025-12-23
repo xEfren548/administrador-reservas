@@ -1,0 +1,1120 @@
+<style>
+    /* Grupos de Habitaciones View Styles */
+    .grupos-page-container {
+        background: #F7F9FB;
+        min-height: calc(100vh - 60px);
+        padding: 2rem;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2C3E50;
+        margin: 0;
+    }
+
+    .page-subtitle {
+        color: #6B7280;
+        margin-top: 0.25rem;
+    }
+
+    .action-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #E3E8EE;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-mint {
+        background: linear-gradient(135deg, #7ECEC5 0%, #5FBFB3 100%);
+        color: #fff;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .btn-mint:hover {
+        background: linear-gradient(135deg, #5FBFB3 0%, #4AA89F 100%);
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(126, 206, 197, 0.4);
+    }
+
+    .btn-mint-outline {
+        background: transparent;
+        color: #5FBFB3;
+        border: 2px solid #7ECEC5;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .btn-mint-outline:hover {
+        background: #7ECEC5;
+        color: #fff;
+    }
+
+    .grupo-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #E3E8EE;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .grupo-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+
+    .grupo-header {
+        background: linear-gradient(135deg, #7ECEC5 0%, #5FBFB3 100%);
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .grupo-name {
+        color: #fff;
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .grupo-badge {
+        background: rgba(255,255,255,0.25);
+        color: #fff;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .grupo-body {
+        padding: 1.5rem;
+    }
+
+    .room-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .room-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: #F7F9FB;
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
+        border: 1px solid #E3E8EE;
+    }
+
+    .room-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .room-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .room-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7ECEC5 0%, #5FBFB3 100%);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.875rem;
+    }
+
+    .room-name {
+        font-weight: 600;
+        color: #2C3E50;
+    }
+
+    .room-actions .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .grupo-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #E3E8EE;
+        background: #F7F9FB;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: #fff;
+        border-radius: 16px;
+        border: 2px dashed #E3E8EE;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #A8DDD7;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2C3E50;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state-text {
+        color: #6B7280;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #7ECEC5 0%, #5FBFB3 100%);
+        border-radius: 16px 16px 0 0;
+        padding: 1.25rem 1.5rem;
+        border: none;
+    }
+
+    .modal-title {
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #2C3E50;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        border: 2px solid #E3E8EE;
+        padding: 0.75rem 1rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .form-control:focus {
+        border-color: #7ECEC5;
+        box-shadow: 0 0 0 3px rgba(126, 206, 197, 0.2);
+    }
+
+    select.form-control {
+        width: 100%;
+        min-width: 100%;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.75rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+        background-color: #fff;
+        height: auto;
+        min-height: 48px;
+        line-height: 1.5;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+    }
+
+    select.form-control option {
+        padding: 0.5rem;
+        background-color: #fff;
+    }
+
+    #addRoomModal .modal-body {
+        overflow: visible;
+    }
+
+    #addRoomModal .mb-3 {
+        width: 100%;
+    }
+
+    #roomSelect {
+        width: 100%;
+        display: block;
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+
+    .habitacion-checkbox {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: #F7F9FB;
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .habitacion-checkbox:hover {
+        border-color: #A8DDD7;
+    }
+
+    .habitacion-checkbox.selected {
+        background: rgba(126, 206, 197, 0.15);
+        border-color: #7ECEC5;
+    }
+
+    .habitacion-checkbox input {
+        margin-right: 0.75rem;
+    }
+
+    .habitaciones-list {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 0.5rem;
+        border: 1px solid #E3E8EE;
+        border-radius: 10px;
+        background: #fff;
+    }
+
+    .search-box {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    .search-box input {
+        padding-left: 2.5rem;
+        border-radius: 10px;
+        border: 2px solid #E3E8EE;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        width: 100%;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .search-box input:focus {
+        border-color: #7ECEC5;
+        box-shadow: 0 0 0 3px rgba(126, 206, 197, 0.2);
+        outline: none;
+    }
+
+    .search-box .search-icon {
+        position: absolute;
+        left: 0.85rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #7ECEC5;
+        font-size: 0.9rem;
+    }
+
+    .search-box .clear-search {
+        position: absolute;
+        right: 0.85rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6B7280;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: none;
+    }
+
+    .search-box .clear-search:hover {
+        color: #EF4444;
+    }
+
+    .search-results-count {
+        font-size: 0.75rem;
+        color: #6B7280;
+        margin-bottom: 0.5rem;
+        padding-left: 0.25rem;
+    }
+
+    .habitacion-checkbox.hidden {
+        display: none;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: #6B7280;
+    }
+
+    .no-results i {
+        font-size: 2rem;
+        color: #A8DDD7;
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #E3E8EE;
+        padding: 1rem 1.5rem;
+    }
+
+    .alert-info-custom {
+        background: rgba(126, 206, 197, 0.15);
+        border: 1px solid #7ECEC5;
+        border-radius: 10px;
+        color: #2C3E50;
+        padding: 1rem;
+    }
+
+    .alert-info-custom i {
+        color: #5FBFB3;
+    }
+
+    .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem;
+    }
+
+    .spinner-mint {
+        color: #7ECEC5;
+    }
+</style>
+
+<div class="grupos-page-container ml-3 pt-0">
+    <!-- Header -->
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h1 class="page-title">
+                <i class="fas fa-layer-group me-2" style="color: #7ECEC5;"></i>
+                Grupos de Habitaciones
+            </h1>
+            <p class="page-subtitle">Administra grupos de habitaciones idénticas para asignación aleatoria</p>
+        </div>
+        <button class="btn btn-mint" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+            <i class="fas fa-plus me-2"></i>
+            Crear Nuevo Grupo
+        </button>
+    </div>
+
+    <!-- Info Alert -->
+    <div class="alert-info-custom mb-4">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>¿Qué son los grupos de habitaciones?</strong> 
+        Los grupos permiten agrupar habitaciones idénticas (como habitaciones de hotel del mismo tipo). 
+        Cuando un cliente reserva, el sistema asignará automáticamente una habitación disponible del grupo al azar.
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-spinner" id="loadingState">
+        <div class="spinner-border spinner-mint" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+
+    <!-- Grupos Grid -->
+    <div class="row" id="gruposContainer" style="display: none;"></div>
+
+    <!-- Empty State Template (hidden) -->
+    <div class="col-12" id="emptyState" style="display: none;">
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-layer-group"></i>
+            </div>
+            <h3 class="empty-state-title">No hay grupos creados</h3>
+            <p class="empty-state-text">Crea tu primer grupo de habitaciones para comenzar a usar la asignación aleatoria</p>
+            <button class="btn btn-mint" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+                <i class="fas fa-plus me-2"></i>
+                Crear Primer Grupo
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear Grupo -->
+<div class="modal fade" id="createGroupModal" tabindex="-1" aria-labelledby="createGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createGroupModalLabel">
+                    <i class="fas fa-layer-group me-2"></i>
+                    Crear Nuevo Grupo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createGroupForm">
+                    <div class="mb-4">
+                        <label for="groupName" class="form-label">Nombre del Grupo</label>
+                        <input type="text" class="form-control" id="groupName" 
+                               placeholder="Ej: Habitación Doble, Suite Ejecutiva" required>
+                        <small class="text-muted">Este nombre se mostrará a los clientes al reservar</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Selecciona las Habitaciones</label>
+                        <p class="text-muted small">Solo se muestran habitaciones que no están en ningún grupo</p>
+                        
+                        <!-- Buscador -->
+                        <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" id="searchHabitaciones" placeholder="Buscar cabaña..." autocomplete="off">
+                            <i class="fas fa-times clear-search" id="clearSearch" onclick="clearSearch()"></i>
+                        </div>
+                        <div class="search-results-count" id="searchResultsCount"></div>
+                        
+                        <div class="habitaciones-list" id="habitacionesList">
+                            <div class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm spinner-mint" role="status"></div>
+                                <span class="ms-2">Cargando habitaciones...</span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-mint" id="btnCreateGroup" onclick="createGroup()">
+                    <i class="fas fa-check me-2"></i>
+                    Crear Grupo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Agregar Habitación a Grupo -->
+<div class="modal fade" id="addRoomModal" tabindex="-1" aria-labelledby="addRoomModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addRoomModalLabel">
+                    <i class="fas fa-plus me-2"></i>
+                    Agregar Habitación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="addRoomGroupName">
+                <p>Agregar habitación al grupo: <strong id="addRoomGroupNameDisplay"></strong></p>
+                
+                <div class="mb-3">
+                    <label for="roomSelect" class="form-label">Selecciona una Habitación</label>
+                    <select class="form-control" id="roomSelect">
+                        <option value="">-- Cargando... --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-mint" onclick="addRoomToGroup()">
+                    <i class="fas fa-plus me-2"></i>
+                    Agregar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Nombre de Grupo -->
+<div class="modal fade" id="editGroupModal" tabindex="-1" aria-labelledby="editGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editGroupModalLabel">
+                    <i class="fas fa-edit me-2"></i>
+                    Editar Grupo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editGroupOldName">
+                <div class="mb-3">
+                    <label for="editGroupNewName" class="form-label">Nuevo Nombre del Grupo</label>
+                    <input type="text" class="form-control" id="editGroupNewName" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-mint" onclick="updateGroup()">
+                    <i class="fas fa-save me-2"></i>
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Data stores
+let grupos = [];
+let habitacionesDisponibles = [];
+
+// Initialize on DOM load
+document.addEventListener('DOMContentLoaded', function() {
+    loadData();
+});
+
+// Load all data from API
+async function loadData() {
+    try {
+        await Promise.all([
+            loadGrupos(),
+            loadHabitacionesDisponibles()
+        ]);
+    } catch (error) {
+        console.error('Error loading data:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al cargar los datos'
+        });
+    }
+}
+
+// Load groups from API
+async function loadGrupos() {
+    try {
+        const response = await fetch('/api/grupos-habitaciones');
+        if (!response.ok) throw new Error('Error fetching grupos');
+        
+        grupos = await response.json();
+        renderGrupos();
+    } catch (error) {
+        console.error('Error loading grupos:', error);
+        throw error;
+    }
+}
+
+// Load available rooms from API
+async function loadHabitacionesDisponibles() {
+    try {
+        const response = await fetch('/api/habitaciones');
+        if (!response.ok) throw new Error('Error fetching habitaciones');
+        
+        const allHabitaciones = await response.json();
+        // Filter only non-grouped rooms
+        habitacionesDisponibles = allHabitaciones.filter(h => !h.isGrouped);
+        
+        renderHabitacionesCheckboxes();
+        renderRoomSelect();
+    } catch (error) {
+        console.error('Error loading habitaciones:', error);
+        throw error;
+    }
+}
+
+// Render groups in the grid
+function renderGrupos() {
+    const container = document.getElementById('gruposContainer');
+    const loadingState = document.getElementById('loadingState');
+    const emptyState = document.getElementById('emptyState');
+    
+    loadingState.style.display = 'none';
+    
+    if (grupos.length === 0) {
+        container.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+    }
+    
+    emptyState.style.display = 'none';
+    container.style.display = 'flex';
+    
+    container.innerHTML = grupos.map(grupo => `
+        <div class="col-lg-6 col-xl-4 mb-4" data-group-name="${grupo.groupName}">
+            <div class="grupo-card">
+                <div class="grupo-header">
+                    <h3 class="grupo-name">${escapeHtml(grupo.groupName)}</h3>
+                    <span class="grupo-badge">${grupo.rooms.length} habitaciones</span>
+                </div>
+                <div class="grupo-body">
+                    <ul class="room-list">
+                        ${grupo.rooms.map(room => `
+                            <li class="room-item" data-room-id="${room._id}">
+                                <div class="room-info">
+                                    <span class="room-number">${room.roomNumber || '?'}</span>
+                                    <span class="room-name">${escapeHtml(room.propertyDetails?.name || room.name || 'Sin nombre')}</span>
+                                </div>
+                                <div class="room-actions">
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="removeFromGroup('${room._id}', '${escapeHtml(room.propertyDetails?.name || room.name || '')}')" 
+                                            title="Quitar del grupo">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                <div class="grupo-footer">
+                    <button class="btn btn-mint-outline btn-sm flex-grow-1" 
+                            onclick="openAddRoomModal('${escapeHtml(grupo.groupName)}')">
+                        <i class="fas fa-plus me-1"></i> Agregar
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" 
+                            onclick="editGroup('${escapeHtml(grupo.groupName)}')" 
+                            title="Editar nombre">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" 
+                            onclick="deleteGroup('${escapeHtml(grupo.groupName)}')" 
+                            title="Eliminar grupo">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Render habitaciones checkboxes in create modal
+function renderHabitacionesCheckboxes() {
+    const container = document.getElementById('habitacionesList');
+    
+    if (habitacionesDisponibles.length === 0) {
+        container.innerHTML = `
+            <p class="text-center text-muted py-3 mb-0">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                No hay habitaciones disponibles para agrupar
+            </p>
+        `;
+        updateSearchResultsCount();
+        return;
+    }
+    
+    container.innerHTML = habitacionesDisponibles.map(h => `
+        <label class="habitacion-checkbox" data-name="${escapeHtml(h.propertyDetails?.name || h.name || '').toLowerCase()}">
+            <input type="checkbox" name="habitaciones" value="${h._id}">
+            <span>${escapeHtml(h.propertyDetails?.name || h.name || 'Sin nombre')}</span>
+        </label>
+    `).join('');
+    
+    // Add click handlers for visual feedback
+    container.querySelectorAll('.habitacion-checkbox input').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            this.closest('.habitacion-checkbox').classList.toggle('selected', this.checked);
+        });
+    });
+    
+    // Initialize search functionality
+    initSearchHabitaciones();
+    updateSearchResultsCount();
+}
+
+// Initialize search functionality
+function initSearchHabitaciones() {
+    const searchInput = document.getElementById('searchHabitaciones');
+    const clearBtn = document.getElementById('clearSearch');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            filterHabitaciones(query);
+            
+            // Show/hide clear button
+            clearBtn.style.display = query ? 'block' : 'none';
+        });
+    }
+}
+
+// Filter habitaciones by search query
+function filterHabitaciones(query) {
+    const checkboxes = document.querySelectorAll('#habitacionesList .habitacion-checkbox');
+    let visibleCount = 0;
+    
+    checkboxes.forEach(checkbox => {
+        const name = checkbox.getAttribute('data-name') || '';
+        const matches = name.includes(query);
+        
+        checkbox.classList.toggle('hidden', !matches);
+        if (matches) visibleCount++;
+    });
+    
+    // Show no results message if needed
+    const noResultsEl = document.getElementById('noResultsMessage');
+    if (visibleCount === 0 && query) {
+        if (!noResultsEl) {
+            const container = document.getElementById('habitacionesList');
+            const noResults = document.createElement('div');
+            noResults.id = 'noResultsMessage';
+            noResults.className = 'no-results';
+            noResults.innerHTML = `
+                <i class="fas fa-search"></i>
+                <p>No se encontraron habitaciones con "${escapeHtml(query)}"</p>
+            `;
+            container.appendChild(noResults);
+        }
+    } else if (noResultsEl) {
+        noResultsEl.remove();
+    }
+    
+    updateSearchResultsCount(visibleCount, query);
+}
+
+// Update search results count
+function updateSearchResultsCount(visibleCount, query) {
+    const countEl = document.getElementById('searchResultsCount');
+    if (!countEl) return;
+    
+    const total = habitacionesDisponibles.length;
+    
+    if (query) {
+        countEl.textContent = `Mostrando ${visibleCount} de ${total} habitaciones`;
+    } else {
+        countEl.textContent = `${total} habitaciones disponibles`;
+    }
+}
+
+// Clear search
+function clearSearch() {
+    const searchInput = document.getElementById('searchHabitaciones');
+    const clearBtn = document.getElementById('clearSearch');
+    
+    if (searchInput) {
+        searchInput.value = '';
+        filterHabitaciones('');
+        clearBtn.style.display = 'none';
+        searchInput.focus();
+    }
+}
+
+// Render room select in add room modal
+function renderRoomSelect() {
+    const select = document.getElementById('roomSelect');
+    
+    if (habitacionesDisponibles.length === 0) {
+        select.innerHTML = '<option value="">-- No hay habitaciones disponibles --</option>';
+        return;
+    }
+    
+    select.innerHTML = `
+        <option value="">-- Seleccionar --</option>
+        ${habitacionesDisponibles.map(h => 
+            `<option value="${h._id}">${escapeHtml(h.propertyDetails?.name || h.name || 'Sin nombre')}</option>`
+        ).join('')}
+    `;
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Create a new group
+async function createGroup() {
+    const groupName = document.getElementById('groupName').value.trim();
+    const checkboxes = document.querySelectorAll('#habitacionesList input[name="habitaciones"]:checked');
+    const habitacionIds = Array.from(checkboxes).map(cb => cb.value);
+
+    if (!groupName) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campo requerido',
+            text: 'Por favor ingresa un nombre para el grupo'
+        });
+        return;
+    }
+
+    if (habitacionIds.length < 2) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Selección insuficiente',
+            text: 'Debes seleccionar al menos 2 habitaciones para crear un grupo'
+        });
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/grupos-habitaciones', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupName, habitacionIds })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('createGroupModal')).hide();
+            
+            // Reset form
+            document.getElementById('groupName').value = '';
+            document.querySelectorAll('#habitacionesList input[name="habitaciones"]').forEach(cb => {
+                cb.checked = false;
+                cb.closest('.habitacion-checkbox').classList.remove('selected');
+            });
+            
+            Swal.fire({
+                icon: 'success',
+                title: '¡Grupo creado!',
+                text: data.message,
+                showConfirmButton: false,
+                timer: 1500
+            });
+            
+            // Reload data
+            await loadData();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Error al crear el grupo'
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error de conexión'
+        });
+    }
+}
+
+// Open add room modal
+function openAddRoomModal(groupName) {
+    document.getElementById('addRoomGroupName').value = groupName;
+    document.getElementById('addRoomGroupNameDisplay').textContent = groupName;
+    const modal = new bootstrap.Modal(document.getElementById('addRoomModal'));
+    modal.show();
+}
+
+// Add room to existing group
+async function addRoomToGroup() {
+    const groupName = document.getElementById('addRoomGroupName').value;
+    const habitacionId = document.getElementById('roomSelect').value;
+
+    if (!habitacionId) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Selección requerida',
+            text: 'Por favor selecciona una habitación'
+        });
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/grupos-habitaciones/add-room', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupName, habitacionId })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('addRoomModal')).hide();
+            
+            Swal.fire({
+                icon: 'success',
+                title: '¡Agregada!',
+                text: data.message,
+                showConfirmButton: false,
+                timer: 1500
+            });
+            
+            await loadData();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error de conexión'
+        });
+    }
+}
+
+// Remove room from group
+async function removeFromGroup(habitacionId, habitacionName) {
+    const result = await Swal.fire({
+        title: '¿Quitar del grupo?',
+        text: `¿Estás seguro de quitar "${habitacionName}" del grupo?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#7ECEC5',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Sí, quitar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const response = await fetch(`/api/grupos-habitaciones/room/${habitacionId}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Removida!',
+                text: data.message,
+                showConfirmButton: false,
+                timer: 1500
+            });
+            
+            await loadData();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error de conexión'
+        });
+    }
+}
+
+// Open edit group modal
+function editGroup(groupName) {
+    document.getElementById('editGroupOldName').value = groupName;
+    document.getElementById('editGroupNewName').value = groupName;
+    const modal = new bootstrap.Modal(document.getElementById('editGroupModal'));
+    modal.show();
+}
+
+// Update group name
+async function updateGroup() {
+    const oldName = document.getElementById('editGroupOldName').value;
+    const newName = document.getElementById('editGroupNewName').value.trim();
+
+    if (!newName) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campo requerido',
+            text: 'Por favor ingresa un nombre para el grupo'
+        });
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/grupos-habitaciones/${encodeURIComponent(oldName)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newGroupName: newName })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('editGroupModal')).hide();
+            
+            Swal.fire({
+                icon: 'success',
+                title: '¡Actualizado!',
+                text: data.message,
+                showConfirmButton: false,
+                timer: 1500
+            });
+            
+            await loadData();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error de conexión'
+        });
+    }
+}
+
+// Delete entire group
+async function deleteGroup(groupName) {
+    const result = await Swal.fire({
+        title: '¿Eliminar grupo?',
+        html: `¿Estás seguro de eliminar el grupo "<strong>${escapeHtml(groupName)}</strong>"?<br><br>
+               <small class="text-muted">Las habitaciones no serán eliminadas, solo se quitarán del grupo.</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#EF4444',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const response = await fetch(`/api/grupos-habitaciones/${encodeURIComponent(groupName)}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Eliminado!',
+                text: data.message,
+                showConfirmButton: false,
+                timer: 1500
+            });
+            
+            await loadData();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error de conexión'
+        });
+    }
+}
+</script>

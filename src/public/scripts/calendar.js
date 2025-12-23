@@ -910,31 +910,9 @@ class CalendarScrollbar {
         
         // Wait for calendar to render then update scrollbar
         setTimeout(() => {
-            this.findTimelineElement();
+            this.rebindScrollElement();
             this.updateScrollbar();
         }, 2000);
-    }
-
-    findTimelineElement() {
-        // Try multiple selectors to find the scrollable timeline element
-        const selectors = [
-            '#calendar .fc-timeline-lane-frame',
-            '#calendar .fc-timeline-lane',
-            '#calendar .fc-timeline-slots',
-            '#calendar .fc-scroller-harness .fc-scroller',
-            '#calendar .fc-scroller'
-        ];
-        
-        for (const selector of selectors) {
-            this.timelineElement = document.querySelector(selector);
-            if (this.timelineElement) {
-                break;
-            }
-        }
-        
-        if (!this.timelineElement) {
-            setTimeout(() => this.findTimelineElement(), 1000);
-        }
     }
 
     createScrollbar() {
@@ -1017,19 +995,144 @@ class CalendarScrollbar {
         
         // Update scrollbar when calendar view changes
         this.calendar.on('datesSet', () => {
-            setTimeout(() => this.updateScrollbar(), 100);
+            setTimeout(() => {
+                this.rebindScrollElement();
+                this.updateScrollbar();
+            }, 100);
         });
         
-        // Listen for calendar scroll events
+        // Listen for resource expand/collapse - re-find element
+        this.calendar.on('resourcesSet', () => {
+            setTimeout(() => {
+                this.rebindScrollElement();
+                this.updateScrollbar();
+            }, 200);
+        });
+        
+        // Initial binding of scroll element
         setTimeout(() => {
-            this.timelineElement = document.querySelector('#calendar .fc-timeline-lane-frame');
-            if (this.timelineElement) {
-                this.timelineElement.addEventListener('scroll', this.onCalendarScroll.bind(this));
-            }
+            this.rebindScrollElement();
         }, 1000);
         
         // Update on window resize
         window.addEventListener('resize', this.onResize.bind(this));
+        
+        // MutationObserver to detect DOM changes when expanding/collapsing
+        this.setupMutationObserver();
+    }
+
+    setupMutationObserver() {
+        const calendarEl = document.getElementById('calendar');
+        if (!calendarEl) return;
+        
+        // Debounce function to prevent too many calls
+        let debounceTimer = null;
+        const debouncedRebind = () => {
+            if (debounceTimer) clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                this.rebindScrollElement();
+                this.updateScrollbar();
+            }, 150);
+        };
+        
+        const observer = new MutationObserver((mutations) => {
+            // Check if mutation affects the scroll structure
+            for (const mutation of mutations) {
+                // Check for added/removed nodes (expand/collapse)
+                if (mutation.type === 'childList') {
+                    debouncedRebind();
+                    return;
+                }
+                // Check for attribute changes on scroller elements
+                if (mutation.type === 'attributes') {
+                    const target = mutation.target;
+                    if (target.classList && 
+                        (target.classList.contains('fc-scroller') || 
+                         target.classList.contains('fc-resource'))) {
+                        debouncedRebind();
+                        return;
+                    }
+                }
+            }
+        });
+        
+        observer.observe(calendarEl, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class', 'style']
+        });
+        
+        // Also listen for click events on resource expanders
+        calendarEl.addEventListener('click', (e) => {
+            const expander = e.target.closest('.fc-datagrid-expander');
+            if (expander) {
+                // Wait for FullCalendar to update DOM then rebind
+                setTimeout(() => {
+                    this.rebindScrollElement();
+                    this.updateScrollbar();
+                }, 300);
+            }
+        });
+    }
+
+    rebindScrollElement() {
+        // Remove old listener if exists
+        if (this.timelineElement && this._scrollHandler) {
+            this.timelineElement.removeEventListener('scroll', this._scrollHandler);
+        }
+        
+        this.timelineElement = null;
+        
+        // PRIORITY 1: Find the fc-timeline-slots scroller (contains the actual slots/timeline)
+        // This is the main horizontal scroll area for the timeline
+        const timelineSlotsContainer = document.querySelector('#calendar .fc-timeline-slots');
+        if (timelineSlotsContainer) {
+            // Get the parent scroller
+            let parent = timelineSlotsContainer.parentElement;
+            while (parent && !parent.classList.contains('fc-scroller')) {
+                parent = parent.parentElement;
+            }
+            if (parent && parent.scrollWidth > parent.clientWidth + 10) {
+                this.timelineElement = parent;
+            }
+        }
+        
+        // PRIORITY 2: Look for fc-scroller-liquid-absolute which is the main scrollable container
+        if (!this.timelineElement) {
+            const liquidScrollers = document.querySelectorAll('#calendar .fc-scroller-liquid-absolute');
+            for (const scroller of liquidScrollers) {
+                if (scroller.scrollWidth > scroller.clientWidth + 10) {
+                    this.timelineElement = scroller;
+                    break;
+                }
+            }
+        }
+        
+        // PRIORITY 3: Any fc-scroller with horizontal overflow
+        if (!this.timelineElement) {
+            const allScrollers = document.querySelectorAll('#calendar .fc-scroller');
+            let bestScroller = null;
+            let maxOverflow = 0;
+            
+            for (const scroller of allScrollers) {
+                const overflow = scroller.scrollWidth - scroller.clientWidth;
+                if (overflow > maxOverflow) {
+                    maxOverflow = overflow;
+                    bestScroller = scroller;
+                }
+            }
+            
+            if (bestScroller && maxOverflow > 10) {
+                this.timelineElement = bestScroller;
+            }
+        }
+        
+        // Bind scroll handler
+        if (this.timelineElement) {
+            this._scrollHandler = this.onCalendarScroll.bind(this);
+            this.timelineElement.addEventListener('scroll', this._scrollHandler);
+        }
     }
 
     startDrag(e) {
@@ -1109,16 +1212,33 @@ class CalendarScrollbar {
     }
 
     syncCalendarScroll() {
-        if (!this.timelineElement) return;
-        
+        // Calculate scroll percentage from thumb position
         const scrollbarWidth = this.scrollbar.offsetWidth - this.thumb.offsetWidth;
         const thumbPosition = this.thumb.offsetLeft;
         const scrollPercentage = scrollbarWidth > 0 ? thumbPosition / scrollbarWidth : 0;
         
-        const timelineScrollWidth = this.timelineElement.scrollWidth - this.timelineElement.clientWidth;
-        const newScrollLeft = scrollPercentage * timelineScrollWidth;
+        // Find ALL horizontal scrollable elements in FullCalendar and sync them
+        // This includes both .fc-scroller AND .fc-scroller-liquid-absolute
+        const scrollSelectors = [
+            '#calendar .fc-scroller',
+            '#calendar .fc-scroller-liquid-absolute',
+            '#calendar .fc-timeline-body',
+            '#calendar .fc-datagrid-body'
+        ];
         
-        this.timelineElement.scrollLeft = newScrollLeft;
+        const syncedElements = new Set();
+        
+        scrollSelectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => {
+                // Only sync if element has horizontal overflow and hasn't been synced yet
+                if (!syncedElements.has(el) && el.scrollWidth > el.clientWidth + 10) {
+                    const maxScroll = el.scrollWidth - el.clientWidth;
+                    const newScrollLeft = scrollPercentage * maxScroll;
+                    el.scrollLeft = newScrollLeft;
+                    syncedElements.add(el);
+                }
+            });
+        });
     }
 
     onCalendarScroll() {
@@ -1127,28 +1247,32 @@ class CalendarScrollbar {
     }
 
     updateScrollbar() {
-        if (!this.timelineElement) {
-            this.findTimelineElement();
-            if (!this.timelineElement) {
-                // Show scrollbar anyway for testing
-                this.scrollbarContainer.style.display = 'block';
-                this.thumb.style.width = '100px';
-                this.thumb.style.left = '0px';
-                return;
+        // Find the best scroller with horizontal overflow
+        let bestScroller = null;
+        let maxScrollWidth = 0;
+        
+        const scrollers = document.querySelectorAll('#calendar .fc-scroller');
+        scrollers.forEach(scroller => {
+            const overflow = scroller.scrollWidth - scroller.clientWidth;
+            if (overflow > maxScrollWidth) {
+                maxScrollWidth = overflow;
+                bestScroller = scroller;
             }
-        }
+        });
         
-        const scrollLeft = this.timelineElement.scrollLeft || 0;
-        const scrollWidth = this.timelineElement.scrollWidth || 1000;
-        const clientWidth = this.timelineElement.clientWidth || 800;
-        
-        if (scrollWidth <= clientWidth) {
-            // For testing, always show the scrollbar
+        if (!bestScroller || maxScrollWidth <= 10) {
+            // No horizontal scroll needed, but show scrollbar for visual
             this.scrollbarContainer.style.display = 'block';
-            this.thumb.style.width = '60px';
+            this.thumb.style.width = '100%';
             this.thumb.style.left = '0px';
             return;
         }
+        
+        this.timelineElement = bestScroller;
+        
+        const scrollLeft = bestScroller.scrollLeft || 0;
+        const scrollWidth = bestScroller.scrollWidth || 1000;
+        const clientWidth = bestScroller.clientWidth || 800;
         
         this.scrollbarContainer.style.display = 'block';
         
@@ -1194,7 +1318,7 @@ function initializeCustomScrollbar() {
         
         // Force initial update after a delay
         setTimeout(() => {
-            customScrollbar.findTimelineElement();
+            customScrollbar.rebindScrollElement();
             customScrollbar.updateScrollbar();
         }, 3000);
     } else {

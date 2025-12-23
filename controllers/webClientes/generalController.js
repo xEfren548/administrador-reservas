@@ -16,6 +16,68 @@ const sendEmail = require('../../common/tasks/send-mails');
 const rackLimpiezaController = require('../rackLimpiezaController');
 const SendMessages = require('../../common/tasks/send-messages');
 
+/**
+ * Agrupa las habitaciones por roomGroup, seleccionando ALEATORIAMENTE una habitación de cada grupo disponible
+ * Las habitaciones individuales (sin grupo) se mantienen como están
+ * @param {Array} habitaciones - Array de habitaciones disponibles
+ * @returns {Array} Array con una habitación aleatoria por grupo + individuales
+ */
+function agruparHabitacionesPorGrupo(habitaciones) {
+    const groupedRooms = {}; // { roomGroup: [habitaciones...] }
+    const individualRooms = [];
+
+    // Separar habitaciones agrupadas e individuales
+    for (const hab of habitaciones) {
+        if (hab.isGrouped && hab.roomGroup) {
+            // Habitación pertenece a un grupo
+            if (!groupedRooms[hab.roomGroup]) {
+                groupedRooms[hab.roomGroup] = [];
+            }
+            groupedRooms[hab.roomGroup].push(hab);
+        } else {
+            // Habitación individual (no agrupada)
+            individualRooms.push(hab);
+        }
+    }
+
+    const result = [];
+
+    // Para cada grupo, seleccionar ALEATORIAMENTE una habitación disponible
+    for (const groupName in groupedRooms) {
+        const groupRooms = groupedRooms[groupName];
+        
+        if (groupRooms.length === 0) continue; // No hay habitaciones disponibles en este grupo
+        
+        // Seleccionar aleatoriamente una habitación del grupo
+        const randomIndex = Math.floor(Math.random() * groupRooms.length);
+        const selectedRoom = groupRooms[randomIndex];
+        
+        // Agregar metadata indicando que pertenece a un grupo
+        selectedRoom._groupInfo = {
+            isGroup: true,
+            groupName: groupName,
+            availableCount: groupRooms.length,
+            totalInGroup: groupRooms.length,
+            selectedRoomId: selectedRoom._id
+        };
+        
+        result.push(selectedRoom);
+    }
+
+    // Agregar habitaciones individuales con su metadata
+    for (const hab of individualRooms) {
+        hab._groupInfo = {
+            isGroup: false,
+            groupName: null,
+            availableCount: 1,
+            selectedRoomId: hab._id
+        };
+        result.push(hab);
+    }
+
+    return result;
+}
+
 // Mapeo de dominios a nombres de costos en la base de datos
 const DOMAIN_TO_COST_NAME = {
     'cabanasmazamitlajalisco.com.mx': 'VENDEDOR VIRTUAL cabanasmazamitlajalisco',
@@ -171,7 +233,11 @@ async function mostrarUnaHabitacion(req, res) {
 async function mostrarTodasHabitaciones(req, res) {
     try {
         const habitaciones = await Habitacion.find({ isActive: true }).lean();
-        res.send(habitaciones);
+        
+        // Agrupar habitaciones por grupo (selecciona aleatoriamente una habitación de cada grupo)
+        const habitacionesAgrupadas = agruparHabitacionesPorGrupo(habitaciones);
+        
+        res.send(habitacionesAgrupadas);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener habitaciones' });
@@ -553,9 +619,11 @@ async function cotizadorChaletsyPrecios(req, res) {
             checkOutDate
         );
 
+        // 12.5. Agrupar habitaciones por grupo (solo mostrar representante de cada grupo)
+        const habitacionesAgrupadas = agruparHabitacionesPorGrupo(habitacionesDisponibles);
 
         // 13. Calcular precios y verificar restricciones para cada habitación
-        const habitacionesConPrecios = await Promise.all(habitacionesDisponibles.map(async habitacion => {
+        const habitacionesConPrecios = await Promise.all(habitacionesAgrupadas.map(async habitacion => {
             const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
             const precios = await consultarPreciosPorFechas(checkInDate, checkOutDate, habitacion, guestsNumber, req);
 
@@ -564,6 +632,15 @@ async function cotizadorChaletsyPrecios(req, res) {
 
             return {
                 ...habitacion,
+                // Información de la habitación específica seleccionada
+                habitacionId: habitacion._id, // ID específico de la habitación seleccionada
+                displayName: habitacion._groupInfo?.isGroup 
+                    ? `${habitacion.roomGroup} (${habitacion._groupInfo.availableCount} disponibles)`
+                    : (habitacion.propertyDetails?.name || habitacion.name),
+                // Metadata del grupo (para referencia del frontend)
+                isGrouped: habitacion._groupInfo?.isGroup || false,
+                roomGroup: habitacion._groupInfo?.groupName || null,
+                availableCount: habitacion._groupInfo?.availableCount || 1,
                 precioCalculado: precios,
                 noches: nights,
                 fechaConsulta: {

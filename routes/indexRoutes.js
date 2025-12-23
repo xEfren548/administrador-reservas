@@ -42,6 +42,7 @@ const paymentsRoutes = require('./paymentsRoutes');
 const webhooksRoutes = require('./webhooksRoutes');
 const carteraDuenoRoutes = require('./carteraDuenoRoutes');
 const notasDuenoRoutes = require('./notasDuenoRoutes');
+const gruposHabitacionesRoutes = require('./gruposHabitacionesRoutes');
 
 // Nuevas rutas para clientes web
 const clientAuthRoutes = require('./authClientes/clientAuthRoutes');
@@ -140,6 +141,7 @@ router.use('/', rackLimpiezaRoutes);
 router.use('/', rackServiciosRoutes);
 router.use('/', tipologiasRoutes);
 router.use('/', preciosEspecialesRoutes);
+router.use('/', gruposHabitacionesRoutes);
 router.use('/modelar-encuesta', surveyModelingRoutes);
 router.use('/', rolesRoutes);
 

@@ -5,6 +5,7 @@ const NotFoundError = require("../common/error/not-found-error");
 
 
 const usersController = require('./../controllers/usersController');
+const roomGroupService = require('../services/roomGroupService');
 const pagoController = require('./../controllers/pagoController');
 const Pago = require('./../models/Pago');
 const Habitacion = require('./../models/Habitacion');
@@ -320,9 +321,16 @@ async function generarComisionReserva(req, res) {
         // const chalets = await Habitacion.findOne();
         // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
 
-        const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
+        // Buscar chalet por ID primero (más confiable), si no por nombre
+        let chalet = null;
+        if (habitacionId) {
+            chalet = await Habitacion.findById(habitacionId).lean();
+        }
+        if (!chalet && chaletName) {
+            chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
+        }
         if (!chalet) {
-            throw new NotFoundError('Chalet does not exist 2');
+            throw new NotFoundError('Chalet does not exist');
         }
 
         let utilidadChalet = totalSinComisiones - costoBase;
@@ -744,7 +752,7 @@ async function generarComisionReservaBackend(info) {
 
         const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
         if (!chalet) {
-            throw new NotFoundError('Chalet does not exist 2');
+            throw new NotFoundError('Chalet does not exist');
         }
 
         let utilidadChalet = totalSinComisiones - costoBase;
@@ -1670,6 +1678,29 @@ async function mostrarUtilidadesGlobales(req, res, next) {
                         // Asignar nombre del usuario y formatear fecha
                         utilidad.nombreUsuario = `${user.firstName} ${user.lastName}`;
                         utilidad.fecha = utilidadFecha.format('DD/MM/YYYY');
+
+                        const concepto = utilidad.concepto;
+
+                        if (concepto.includes('Dueño de cabaña') || concepto.includes('inversionista')) {
+                            if (concepto.includes('inversionista')) {
+                                utilidad.tipoUsuario = 'Inversionista';
+                            } else if (concepto.includes('Dueño de cabaña')) {
+                                utilidad.tipoUsuario = 'Dueño de cabaña';
+                            }
+                        } else if (concepto.includes('limpieza') || concepto.includes('Limpieza')) {
+                            utilidad.tipoUsuario = 'Limpieza';
+                        } else if (concepto.includes('uso de sistema') || concepto.includes('NyN')) {
+                            utilidad.tipoUsuario = 'Sistema';
+                        } else if ((concepto.includes('administrador ligado de vendedor') || concepto.includes('Administrador ligado de vendedor'))) {
+                            utilidad.tipoUsuario = 'Administrador ligado de vendedor';
+                        } else if ((concepto.includes('administrador ligado de Cabaña') || concepto.includes('Administrador ligado de Cabaña'))) {
+                            utilidad.tipoUsuario = 'Administrador ligado de Cabaña';
+
+                            // } else if (concepto.includes('admnistrador ligado de vendedor') || concepto.includes('Administrador ligado de vendedor')) {
+                            //     comisionVendedor += monto;
+                        } else if (concepto.includes('Reservación')) {
+                            utilidad.tipoUsuario = 'Vendedor';
+                        }
 
                         // Sum the monto for each user
                         if (!userMontos[userId]) {

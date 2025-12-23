@@ -1,3 +1,570 @@
+<style>
+/* IMPORTANTE: Resetear el layout padre para el calendario */
+body {
+    overflow: hidden !important;
+}
+
+.container-fluid,
+.container-fluid > .row,
+.container-fluid > .row > .col {
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+}
+
+/* Botón hamburguesa - posición absoluta */
+.btn-menu-toggle {
+    position: absolute !important;
+    top: 1rem;
+    left: 1rem;
+    z-index: 100;
+}
+
+/* Calendario - Full Height */
+.calendar-page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 0.75rem;
+    padding-top: 0.75rem;
+    padding-left: 4rem; /* Espacio para hamburguesa */
+    box-sizing: border-box;
+    background: #f5f7f6;
+}
+
+.calendar-actions-card {
+    flex-shrink: 0;
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.btn-calendar-primary {
+    background: linear-gradient(135deg, var(--mint) 0%, var(--mint-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.4rem 0.875rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-calendar-primary:hover {
+    background: linear-gradient(135deg, var(--mint-hover) 0%, var(--mint) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(126, 206, 197, 0.4);
+    color: white;
+}
+
+.btn-calendar-outline {
+    background: white;
+    color: var(--mint-dark);
+    border: 2px solid var(--mint);
+    border-radius: 8px;
+    padding: 0.4rem 0.875rem;
+    font-weight: 500;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-calendar-outline:hover {
+    background: var(--mint);
+    color: white;
+}
+
+.calendar-wrapper {
+    flex: 1;
+    min-height: 0;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    padding: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.calendar-wrapper #calendar {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* FullCalendar height fix */
+.calendar-wrapper .fc {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-wrapper .fc .fc-view-harness {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Modal Reserva - Tema Menta */
+:root {
+    --mint: #7ECEC5;
+    --mint-light: #A8DDD7;
+    --mint-dark: #5FBFB3;
+    --mint-pale: #E8F6F4;
+    --mint-hover: #6BC4BA;
+}
+
+.modal-reserva {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(126, 206, 197, 0.3);
+}
+
+.modal-header-mint {
+    background: linear-gradient(135deg, var(--mint) 0%, var(--mint-dark) 100%);
+    color: white;
+    border: none;
+    padding: 1.25rem 1.5rem;
+}
+
+.modal-header-mint .modal-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.modal-header-mint .modal-title i {
+    margin-right: 0.5rem;
+}
+
+.btn-close-mint {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-close-mint:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.05);
+}
+
+.modal-body-reserva {
+    padding: 1.5rem;
+    background: #fafcfb;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Progress Steps */
+.reservation-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    opacity: 0.5;
+    transition: all 0.3s;
+}
+
+.step.active {
+    opacity: 1;
+}
+
+.step.completed {
+    opacity: 1;
+}
+
+.step.completed .step-number {
+    background: var(--mint);
+    color: white;
+}
+
+.step-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.3s;
+}
+
+.step.active .step-number {
+    background: var(--mint);
+    color: white;
+    box-shadow: 0 4px 12px rgba(126, 206, 197, 0.4);
+}
+
+.step span {
+    font-size: 0.75rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.step.active span {
+    color: var(--mint-dark);
+}
+
+.step-line {
+    width: 40px;
+    height: 2px;
+    background: #e0e0e0;
+    margin: 0 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Sections */
+.reservation-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border: 1px solid #f0f0f0;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--mint-pale);
+}
+
+.section-header i {
+    color: var(--mint);
+    font-size: 1.1rem;
+}
+
+.section-header h6 {
+    margin: 0;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Form Elements */
+.form-label-mint {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.form-label-mint i {
+    color: var(--mint);
+    font-size: 0.8rem;
+}
+
+.form-control-mint,
+.form-select-mint {
+    border: 2px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    background: white;
+}
+
+.form-control-mint:focus,
+.form-select-mint:focus {
+    border-color: var(--mint);
+    box-shadow: 0 0 0 3px rgba(126, 206, 197, 0.15);
+    outline: none;
+}
+
+.form-control-mint:read-only {
+    background: var(--mint-pale);
+    color: #555;
+}
+
+.input-group-mint {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.input-group-mint .input-group-text {
+    background: var(--mint-pale);
+    border: 2px solid #e8e8e8;
+    border-right: none;
+    color: var(--mint-dark);
+    font-weight: 500;
+}
+
+.input-group-mint .form-control-mint {
+    border-left: none;
+}
+
+/* Buttons */
+.btn-mint-primary {
+    background: linear-gradient(135deg, var(--mint) 0%, var(--mint-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(126, 206, 197, 0.3);
+}
+
+.btn-mint-primary:hover {
+    background: linear-gradient(135deg, var(--mint-hover) 0%, var(--mint) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(126, 206, 197, 0.4);
+    color: white;
+}
+
+.btn-mint-primary:active {
+    transform: translateY(0);
+}
+
+.btn-mint-primary i {
+    margin-right: 0.5rem;
+}
+
+.btn-mint-outline {
+    background: white;
+    color: var(--mint-dark);
+    border: 2px solid var(--mint);
+    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-mint-outline:hover {
+    background: var(--mint);
+    color: white;
+}
+
+.btn-mint-outline i {
+    margin-right: 0.375rem;
+}
+
+/* Total Card */
+.total-card {
+    background: linear-gradient(135deg, var(--mint-pale) 0%, #fff 100%);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    border: 2px solid var(--mint-light);
+}
+
+.total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.total-row > span {
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.total-row > span i {
+    color: var(--mint);
+}
+
+.total-row .form-control-mint {
+    font-size: 1.1rem;
+}
+
+/* Loading Indicators */
+.loading-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--mint-dark);
+    font-size: 0.9rem;
+    padding: 0.5rem 0;
+}
+
+.loading-indicator i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
+/* Disponibilidad Badge */
+.disponibilidad-badge {
+    padding: 0.625rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.disponibilidad-badge.disponible {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.disponibilidad-badge.no-disponible {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Select Options (Dropdown personalizado) */
+.select-container {
+    position: relative;
+}
+
+.select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid var(--mint-light);
+    border-radius: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.select-option {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.select-option:last-child {
+    border-bottom: none;
+}
+
+.select-option:hover {
+    background: var(--mint-pale);
+}
+
+.select-option.selected {
+    background: var(--mint-light);
+}
+
+.select-option i {
+    color: var(--mint);
+    margin-right: 0.5rem;
+}
+
+.select-option small {
+    color: #888;
+}
+
+/* Modal Footer */
+.modal-footer-mint {
+    background: white;
+    border-top: 1px solid #f0f0f0;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Error Message */
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+/* Option Styles for Availability */
+#tipologia_habitacion option[data-available="true"] {
+    background-color: #d4edda;
+}
+
+#tipologia_habitacion option[data-available="false"] {
+    background-color: #f8d7da;
+    color: #999;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .reservation-steps {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .step-line {
+        display: none;
+    }
+    
+    .step {
+        flex: 0 0 auto;
+    }
+    
+    .modal-body-reserva {
+        padding: 1rem;
+    }
+}
+
+/* Scrollbar personalizado */
+.modal-body-reserva::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body-reserva::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 3px;
+}
+
+.modal-body-reserva::-webkit-scrollbar-thumb {
+    background: var(--mint-light);
+    border-radius: 3px;
+}
+
+.modal-body-reserva::-webkit-scrollbar-thumb:hover {
+    background: var(--mint);
+}
+</style>
+
 <div class="loader loader--hidden"></div>
 <div class="pre-loader"></div>
 
@@ -36,200 +603,260 @@
 <div class="modal fade" id="event_entry_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Crear reserva</h5>
-                <button type="button" class="close" onclick="$('#event_entry_modal').modal('hide');" aria-label="Close">
-                    &times;
+        <div class="modal-content modal-reserva">
+            <div class="modal-header modal-header-mint">
+                <h5 class="modal-title" id="modalLabel">
+                    <i class="fa fa-calendar-plus"></i> Nueva Reserva
+                </h5>
+                <button type="button" class="btn-close-mint" onclick="$('#event_entry_modal').modal('hide');" aria-label="Close">
+                    <i class="fa fa-times"></i>
+                </button>
             </div>
-            <div class="modal-body">
-                <div class="img-container">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="tipo-reserva-select">Selecciona un tipo:</label>
-                                <select id="tipo-reserva-select" name="tipo-reserva-select" class="form-select form-select-md" required>
-                                    <option value="por-depo" selected="true">Tentativa</option>
-                                    <option value="reserva">Reserva</option>
-                                </select>
-                            </div>
-                        </div>
+            <div class="modal-body modal-body-reserva">
+                <!-- Progress Steps -->
+                <div class="reservation-steps">
+                    <div class="step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <span>Cliente</span>
                     </div>
-                    <div class="row container-alta-cliente d-none">
-                        <div class="col-sm-8">
-                            <div class="form-group select-container">
-                                <label for="lblClient">Cliente</label>
-                                <input type="text" class="form-control form-select-search" 
-                                        id="lblClient" 
-                                        autocomplete="off"
-                                        placeholder="Buscar y seleccionar cliente..."
-                                        required>
-                                <div class="select-options">
-                                    {{#if clientes}}
-                                        {{#each clientes}}
-                                            <div class="select-option" data-value="{{this.email}}" data-label="{{this.firstName}} {{this.lastName}} ({{this.email}})">
-                                                {{this.firstName}} {{this.lastName}} ({{this.email}})
-                                            </div>
-                                        {{/each}}
-                                    {{else}}
-                                        <div class="select-option" data-value="0">No se encontraron clientes</div>
-                                    {{/if}}
-                                </div>
-                                <input type="hidden" name="lblClient" id="lblClientValue">
+                    <div class="step-line"></div>
+                    <div class="step" data-step="2">
+                        <div class="step-number">2</div>
+                        <span>Fechas</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step" data-step="3">
+                        <div class="step-number">3</div>
+                        <span>Habitación</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step" data-step="4">
+                        <div class="step-number">4</div>
+                        <span>Confirmar</span>
+                    </div>
+                </div>
 
-
-                            </div>
-                        </div>
-                                <div class="col-sm-3 d-flex align-items-center justify-content-center container-alta-cliente d-none">
-                                    <a name="" class="btn btn-info btn-sm m-3" href="#" role="button"
-                                    data-bs-toggle="modal" data-bs-target="#clientEntryModal">Alta de Cliente</a>
-                                </div>
+                <!-- Step 1: Cliente -->
+                <div class="reservation-section" id="section-cliente">
+                    <div class="section-header">
+                        <i class="fa fa-user"></i>
+                        <h6>Información del cliente</h6>
                     </div>
 
-                    <div class="row" id="container-alta-cliente-provisional">
-                        <h3>Cliente</h3>
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="searchClient">Nombre</label>
-                                <input type="text" id="nombre-cliente-provisional" class="form-control"
-                                    placeholder="Nombre de cliente">
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="searchClient">Apellido</label>
-                                <input type="text" id="apellido-cliente-provisional" class="form-control"
-                                    placeholder="Apellido de cliente...">
-                            </div>
-                        </div>
-                        <div class="col-sm-12">
-                            <div class="form-group">
-                                <label for="telefono-cliente-provisional">Teléfono (opcional)</label>
-                                <div class="input-group">
-                                    <select class="form-control" id="codigo-pais-select" style="max-width: 100px; background-color: white; color: #333;">
-                                        <option value="1">🇺🇸 +1</option>
-                                        <option value="52" selected>🇲🇽 +52</option>
-                                    </select>
-                                    <input type="tel" id="telefono-cliente-provisional" class="form-control"
-                                        placeholder="Número de teléfono..." maxlength="10" style="background-color: white; color: #333;">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <div class="row mt-2">
-                        <div class="col-sm-5">
-                            <div class="form-group">
-                                <label for="date_range">Rango de fechas</label>
-                                <input type="text" name="date_range" id="date_range" class="form-control"
-                                    placeholder="Selecciona un rango de fechas">
-                            </div>
-                        </div>
-                        <input type="hidden" name="event_start_date" id="event_start_date">
-                        <input type="hidden" name="event_end_date" id="event_end_date">
-                        <div class="col-sm-2">
-                            <div class="form-group">
-                                <label for="event_end_date">Noches: </label>
-                                <input type="number" name="event_nights" id="event_nights" class="form-control"
-                                    placeholder="" min="1" disabled>
-                            </div>
-                        </div>
-                    </div>
-                    <h3 class="mt-3">Habitación</h3>
-                    <div class="row">
-                        <div class="col-sm-4">
-                            <div class="form-group">
-                                <div class="mb-3">
-                                    <label for="" class="form-label">Filtrar por Tipología</label>
-                                    <select class="form-select form-select-md" name="" id="tipologia_select">
-                                        <option value="" selected>Mostrar todas</option>
-                                        {{#if tipologias}}
-                                        {{#each tipologias}}
-                                        <option value="{{this.tipologia}}">{{this.tipologia}}</option>
-                                        {{/each}}
-                                        {{else}}
-                                        <option value="0">No se encontraron tipologias</option>
-                                        {{/if}}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <p id="verificar-disponibilidad" style="display: none;">Verificando
-                                    disponibilidad...
-                                </p>
-
-                                <label for="tipologia_habitacion">Habitación</label>
-                                <select name="tipologia_habitacion" id="tipologia_habitacion"
-                                    class="form-select form-select-md" required disabled>
-                                    <option value="" selected="true" disabled="true"> Selecciona una habitación --
-                                    </option>
-                                    {{#if chalets}}
-                                    {{#each chalets}}
-                                    <option value="{{this.name}}" data-bs-pax="{{this.pax}}" data-bs-id="{{this.id}}"
-                                        data-bs-tipologia="{{this.tipologia}}">
-                                        {{this.name}}</option>
-                                    {{/each}}
-                                    {{else}}
-                                    <option value="0">No se encontraron cabañas</option>
-                                    {{/if}}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="col-sm-4">
-                            <div class="form-group">
-                                <label for="ocupacion_habitacion">Ocupación Máx.</label>
-                                <input type="number" name="ocupacion_habitacion" id="ocupacion_habitacion"
-                                    class="form-control" placeholder="Ocupación" readonly>
-                                <input type="hidden" id="id_cabana">
-                            </div>
-                        </div>
-                    </div> <!-- Cierre row -->
-
-                    <div class="row mt-2 mb-2">
-                        <div class="col-5">
-                            <label for="numero-personas">Numero de personas que se hospedarán: </label>
-                            <select name="numero-personas" id="numero-personas" class="form-select form-select-md"
-                                required>
-                                <option value="" selected disabled>Selecciona el número de personas --</option>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-mint">
+                                <i class="fa fa-tag"></i> Tipo de reserva
+                            </label>
+                            <select id="tipo-reserva-select" class="form-select form-select-mint" required>
+                                <option value="por-depo" selected>Tentativa (por depósito)</option>
+                                <option value="reserva">Reserva confirmada</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="row mt-2">
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="ocupacion_habitacion">Total</label>
-                                <p id="calculando-precios" style="display: none;">Calculando precios...</p>
-                                <div class="input-group ig-shopping-price mb-3">
-                                    <input type="number" class="form-control bg-light text-black fw-bold"
-                                        id="habitacion_total" aria-label="Amount (to the nearest dollar)" min="0.00"
-                                        placeholder="Total">
-                                    <input type="hidden" id="total-sin-comisiones">
-                                    <input type="hidden" id="total-costo-base">
-                                    <div class="input-group-append">
-                                        <span class="input-group-text">$ M.N.</span>
+                    <!-- Cliente existente -->
+                    <div class="container-alta-cliente d-none">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-9">
+                                <label class="form-label-mint">
+                                    <i class="fa fa-search"></i> Buscar cliente
+                                </label>
+                                <div class="select-container">
+                                    <input type="text" class="form-control form-control-mint form-select-search" 
+                                            id="lblClient" 
+                                            autocomplete="off"
+                                            placeholder="Escribe para buscar...">
+                                    <div class="select-options">
+                                        {{#if clientes}}
+                                            {{#each clientes}}
+                                            <div class="select-option" data-value="{{this.email}}" data-label="{{this.firstName}} {{this.lastName}} ({{this.email}})">
+                                                <i class="fa fa-user-circle"></i> {{this.firstName}} {{this.lastName}} <small>({{this.email}})</small>
+                                            </div>
+                                            {{/each}}
+                                        {{else}}
+                                            <div class="select-option" data-value="0">No hay clientes registrados</div>
+                                        {{/if}}
                                     </div>
+                                    <input type="hidden" id="lblClientValue">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-mint-outline w-100" data-bs-toggle="modal" data-bs-target="#clientEntryModal">
+                                    <i class="fa fa-user-plus"></i> Nuevo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cliente provisional (tentativa) -->
+                    <div id="container-alta-cliente-provisional">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label-mint">
+                                    <i class="fa fa-user"></i> Nombre
+                                </label>
+                                <input type="text" id="nombre-cliente-provisional" class="form-control form-control-mint"
+                                    placeholder="Nombre del cliente">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-mint">
+                                    <i class="fa fa-user"></i> Apellido
+                                </label>
+                                <input type="text" id="apellido-cliente-provisional" class="form-control form-control-mint"
+                                    placeholder="Apellido del cliente">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label-mint">
+                                    <i class="fa fa-phone"></i> Teléfono <small class="text-muted">(opcional)</small>
+                                </label>
+                                <div class="input-group input-group-mint">
+                                    <select class="form-select" id="codigo-pais-select" style="max-width: 110px;">
+                                        <option value="1">🇺🇸 +1</option>
+                                        <option value="52" selected>🇲🇽 +52</option>
+                                    </select>
+                                    <input type="tel" id="telefono-cliente-provisional" class="form-control form-control-mint"
+                                        placeholder="10 dígitos" maxlength="10">
                                 </div>
                             </div>
                         </div>
-                    </div> <!-- Cierre row -->
-                    <div class="form-item">
-                        <p id="txtReservationError" name="errMsg" class="error"></p>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="save-event-btn">
-                    <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
-                    <span class="spinner-text">Crear Reserva</span>
 
+                <!-- Step 2: Fechas y Filtro -->
+                <div class="reservation-section" id="section-fechas">
+                    <div class="section-header">
+                        <i class="fa fa-calendar-alt"></i>
+                        <h6>Selecciona las fechas</h6>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-mint">
+                                <i class="fa fa-calendar-week"></i> Rango de fechas
+                            </label>
+                            <input type="text" id="date_range" class="form-control form-control-mint"
+                                placeholder="Selecciona check-in y check-out">
+                            <input type="hidden" id="event_start_date">
+                            <input type="hidden" id="event_end_date">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label-mint">
+                                <i class="fa fa-moon"></i> Noches
+                            </label>
+                            <input type="number" id="event_nights" class="form-control form-control-mint" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label-mint">
+                                <i class="fa fa-filter"></i> Tipología
+                            </label>
+                            <select class="form-select form-select-mint" id="tipologia_select">
+                                <option value="" selected>Todas</option>
+                                {{#if tipologias}}
+                                {{#each tipologias}}
+                                <option value="{{this.tipologia}}">{{this.tipologia}}</option>
+                                {{/each}}
+                                {{/if}}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-12">
+                            <button type="button" class="btn btn-mint-outline w-100" id="btn-validar-disponibilidad">
+                                <i class="fa fa-search"></i> Buscar habitaciones disponibles
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Indicador de disponibilidad -->
+                    <div id="verificar-disponibilidad" class="loading-indicator" style="display: none;">
+                        <i class="fa fa-spinner fa-spin"></i> Verificando disponibilidad...
+                    </div>
+                    <div id="disponibilidad-status" class="disponibilidad-badge mt-3" style="display: none;">
+                        <span id="disponibilidad-text"></span>
+                    </div>
+                </div>
+
+                <!-- Step 3: Selección de Habitación (solo visible después de validar) -->
+                <div class="reservation-section" id="section-habitacion" style="display: none;">
+                    <div class="section-header">
+                        <i class="fa fa-bed"></i>
+                        <h6>Habitaciones disponibles</h6>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label-mint">
+                                <i class="fa fa-home"></i> Selecciona una habitación
+                            </label>
+                            <select name="tipologia_habitacion" id="tipologia_habitacion"
+                                class="form-select form-select-mint" required>
+                                <option value="" selected disabled>Primero busca disponibilidad</option>
+                                {{#if chalets}}
+                                {{#each chalets}}
+                                <option value="{{this.name}}" data-bs-pax="{{this.pax}}" data-bs-id="{{this.id}}"
+                                    data-bs-tipologia="{{this.tipologia}}" data-bs-isgroup="{{this.isGroup}}"
+                                    style="display: none;">
+                                    {{#if this.isGroup}}{{this.name}} (Grupo - {{this.totalRooms}} hab.){{else}}{{this.name}}{{/if}}</option>
+                                {{/each}}
+                                {{/if}}
+                            </select>
+                            <input type="hidden" id="id_cabana">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label-mint">
+                                <i class="fa fa-users"></i> Ocupación máx.
+                            </label>
+                            <input type="number" id="ocupacion_habitacion" class="form-control form-control-mint" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-mint">
+                                <i class="fa fa-user-friends"></i> Huéspedes
+                            </label>
+                            <select id="numero-personas" class="form-select form-select-mint" required>
+                                <option value="" selected disabled>Personas</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Resumen y Total -->
+                <div class="reservation-section" id="section-total">
+                    <div class="section-header">
+                        <i class="fa fa-receipt"></i>
+                        <h6>Resumen de la reserva</h6>
+                    </div>
+
+                    <div id="calculando-precios" class="loading-indicator" style="display: none;">
+                        <i class="fa fa-calculator fa-spin"></i> Calculando precio...
+                    </div>
+
+                    <div class="total-card">
+                        <div class="total-row">
+                            <span><i class="fa fa-money-bill-wave"></i> Total a cobrar</span>
+                            <div class="input-group input-group-mint" style="max-width: 200px;">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control form-control-mint text-end fw-bold"
+                                    id="habitacion_total" min="0" placeholder="0.00">
+                                <span class="input-group-text">MXN</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="total-sin-comisiones">
+                        <input type="hidden" id="total-costo-base">
+                    </div>
+                </div>
+
+                <div class="form-item">
+                    <p id="txtReservationError" name="errMsg" class="error-message"></p>
+                </div>
+            </div>
+            <div class="modal-footer modal-footer-mint">
+                <button type="button" class="btn btn-mint-primary btn-lg" id="save-event-btn">
+                    <i class="fa fa-check-circle"></i> Crear Reserva
                 </button>
             </div>
         </div>
@@ -240,84 +867,87 @@
 <!-- Modal alta cliente -->
 <div class="modal fade" id="clientEntryModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
     aria-hidden="true">
-    <form id="frmCreateClient" action="/api/clientes/crear-cliente" method="post" class="modal-dialog modal-lg"
+    <form id="frmCreateClient" action="/api/clientes/crear-cliente" method="post" class="modal-dialog modal-md"
         role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Alta de cliente</h5>
-                <button type="button" class="close" onclick="$('#clientEntryModal').modal('hide');" aria-label="Close"
-                    data-bs-target="#event_entry_modal" data-bs-toggle="modal">
-                    &times;
+        <div class="modal-content modal-reserva">
+            <div class="modal-header modal-header-mint">
+                <h5 class="modal-title">
+                    <i class="fa fa-user-plus"></i> Nuevo Cliente
+                </h5>
+                <button type="button" class="btn-close-mint" onclick="$('#clientEntryModal').modal('hide');" 
+                    data-bs-target="#event_entry_modal" data-bs-toggle="modal" aria-label="Close">
+                    <i class="fa fa-times"></i>
+                </button>
             </div>
-            <div class="modal-body">
-                <div class="img-container">
-                    <div class="row mt-2">
-                        <div class="col-sm-12 mb-2">
-                            <div class="form-group">
-                                <label for="txtClientName">Nombre</label>
-                                <input type="text" name="txtClientName" id="txtClientName"
-                                    class="form-control onlydatepicker" placeholder="Nombre">
-                            </div>
+            <div class="modal-body modal-body-reserva">
+                <div class="reservation-section">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-mint">
+                                <i class="fa fa-user"></i> Nombre
+                            </label>
+                            <input type="text" name="txtClientName" id="txtClientName"
+                                class="form-control form-control-mint" placeholder="Nombre">
                         </div>
-                        <div class="col-sm-12 mb-2">
-                            <div class="form-group">
-                                <label for="txtClientLastname">Apellido</label>
-                                <input type="text" name="txtClientLastname" id="txtClientLastname" class="form-control"
-                                    placeholder="Apellido">
-                            </div>
+                        <div class="col-md-6">
+                            <label class="form-label-mint">
+                                <i class="fa fa-user"></i> Apellido
+                            </label>
+                            <input type="text" name="txtClientLastname" id="txtClientLastname" 
+                                class="form-control form-control-mint" placeholder="Apellido">
                         </div>
-                        <div class="col-sm-12 mb-2">
-                            <div class="form-group">
-                                <label for="txtClientPhone">Teléfono</label>
-                                <input type="tel" name="txtClientPhone" id="txtClientPhone" class="form-control"
-                                    placeholder="Teléfono">
-                            </div>
+                        <div class="col-md-6">
+                            <label class="form-label-mint">
+                                <i class="fa fa-phone"></i> Teléfono
+                            </label>
+                            <input type="tel" name="txtClientPhone" id="txtClientPhone" 
+                                class="form-control form-control-mint" placeholder="Teléfono">
                         </div>
-                        <div class="col-sm-12 mb-2">
-                            <div class="form-group">
-                                <label for="txtClientAddress">Dirección</label>
-                                <input type="text" name="txtClientAddress" id="txtClientAddress" class="form-control"
-                                    placeholder="Dirección">
-                            </div>
+                        <div class="col-md-6">
+                            <label class="form-label-mint">
+                                <i class="fa fa-envelope"></i> Email
+                            </label>
+                            <input type="email" name="txtClientEmail" id="txtClientEmail" 
+                                class="form-control form-control-mint" placeholder="correo@ejemplo.com">
                         </div>
-                        <div class="col-sm-12 mb-2">
-                            <div class="form-group">
-                                <label for="txtClientEmail">Email</label>
-                                <input type="text" name="txtClientEmail" id="txtClientEmail" class="form-control"
-                                    placeholder="Email">
-                            </div>
+                        <div class="col-12">
+                            <label class="form-label-mint">
+                                <i class="fa fa-map-marker-alt"></i> Dirección
+                            </label>
+                            <input type="text" name="txtClientAddress" id="txtClientAddress" 
+                                class="form-control form-control-mint" placeholder="Dirección completa">
                         </div>
-                        <div class="row">
-                            <div class="col-8 mb-2">
-                                <label for="slctClientIdType" class="form-label">Tipo de identificación</label>
-                                <select name="slctClientIdType" id="slctClientIdType"
-                                    class="form-select form-select-md mb-2" required>
-                                    <option value="" selected disabled> Selecciona el tipo de identificación del
-                                        cliente
-                                    </option>
-                                    <option value="INE">INE</option>
-                                    <option value="Pasaporte">Pasaporte</option>
-                                    <option value="Licencia de conducir">Licencia de conducir</option>
-                                </select>
-                            </div>
+                        <div class="col-md-6">
+                            <label class="form-label-mint">
+                                <i class="fa fa-id-card"></i> Tipo de ID
+                            </label>
+                            <select name="slctClientIdType" id="slctClientIdType"
+                                class="form-select form-select-mint" required>
+                                <option value="" selected disabled>Selecciona...</option>
+                                <option value="INE">INE</option>
+                                <option value="Pasaporte">Pasaporte</option>
+                                <option value="Licencia de conducir">Licencia de conducir</option>
+                            </select>
                         </div>
-                        <div class="col-sm-12 mb-2">
-                            <div class="form-group">
-                                <label for="txtClientIdNumber">Número de identificación</label>
-                                <input type="text" name="txtClientIdNumber" id="txtClientIdNumber" class="form-control"
-                                    placeholder="Tipo de identificación">
-                            </div>
+                        <div class="col-md-6">
+                            <label class="form-label-mint">
+                                <i class="fa fa-hashtag"></i> Número de ID
+                            </label>
+                            <input type="text" name="txtClientIdNumber" id="txtClientIdNumber" 
+                                class="form-control form-control-mint" placeholder="Número de identificación">
                         </div>
                     </div>
                 </div>
+                <p id="txtInsertClientError" name="errMsg" class="error-message"></p>
             </div>
-            <div class="form-item">
-                <p id="txtInsertClientError" name="errMsg" class="error"></p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-target="#event_entry_modal" data-bs-toggle="modal"
-                    data-bs-dismiss="modal">Regresar</button>
-                <button type="button" class="btn btn-primary" id="btnSaveClient">Agregar Cliente</button>
+            <div class="modal-footer modal-footer-mint" style="justify-content: space-between;">
+                <button type="button" class="btn btn-mint-outline" data-bs-target="#event_entry_modal" data-bs-toggle="modal"
+                    data-bs-dismiss="modal">
+                    <i class="fa fa-arrow-left"></i> Regresar
+                </button>
+                <button type="button" class="btn btn-mint-primary" id="btnSaveClient">
+                    <i class="fa fa-save"></i> Guardar Cliente
+                </button>
             </div>
         </div>
     </form>
@@ -330,71 +960,21 @@
 <script src="/scripts/calendar.js"></script>
 <script src="/scripts/functions.js"></script>
 <script>
-    /** 
-    const searchInput = document.getElementById('searchClient');
-    const clientSelect = document.getElementById('lblClient');
-
-    searchInput.addEventListener('keyup', function (event) {
-        const searchTerm = event.target.value.toLowerCase();
-        Array.from(clientSelect.options).forEach(function (option) {
-            const text = `${option.text} ${option.value}`.toLowerCase();
-            if (text.includes(searchTerm)) {
-                option.style.display = 'block';
-            } else {
-                option.style.display = 'none';
-            }
-        });
-    });
-*/
-    const tipologiaSelect = document.getElementById('tipologia_select');
-    const tipologiaHabitacionSelect = document.getElementById('tipologia_habitacion');
-    const originalOptions = Array.from(tipologiaHabitacionSelect.options);
-
-    tipologiaSelect.addEventListener('change', function () {
-        const selectedTipologia = this.value;
-
-        // Remove all existing options in tipologiaHabitacionSelect
-        while (tipologiaHabitacionSelect.options.length > 1) {
-            tipologiaHabitacionSelect.remove(1);
-        }
-
-        // Filter and add matching options
-        originalOptions.forEach(option => {
-            if (selectedTipologia === '' || option.getAttribute('data-bs-tipologia') === selectedTipologia) {
-                tipologiaHabitacionSelect.appendChild(option.cloneNode(true));
-            }
-        });
-    });
-
+    // Fix para múltiples modales
     $(document).on('hidden.bs.modal', function (event) {
         if ($('.modal:visible').length) {
             $('body').addClass('modal-open');
         }
     });
 
+    // Preloader
     window.addEventListener("load", () => {
         const preloader = document.querySelector(".pre-loader");
         preloader.classList.add("loader--hidden");
         preloader.addEventListener("transitionend", () => {
             if (preloader) {
-                preloader.style.display = "none"; // Hide instead of removing
+                preloader.style.display = "none";
             }
         });
     });
-
-    document.getElementById('tipologia_habitacion').addEventListener('change', function () {
-        console.log('Cambia!')
-        const numeroPersonasSelect = document.getElementById('numero-personas');
-        const maxOccupancy = numeroPersonasSelect.getAttribute('data-pax');
-        numeroPersonasSelect.innerHTML = '<option value="" selected disabled>Selecciona el número de personas --</option>';
-        for (let i = 2; i < maxOccupancy; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = i;
-            numeroPersonasSelect.appendChild(option);
-        }
-
-    });
-
-
 </script>

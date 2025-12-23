@@ -40,6 +40,8 @@ router.delete('/eventos/reserva-dueno/:id', eventController.deleteOwnerReservati
 router.delete('/notas', eventController.eliminarNota);
 router.delete('/eventos/:id/comentarios/:comentarioIndex', eventController.deleteCommentFromReservation);
 
+// Ruta de disponibilidad (debe estar ANTES de rutas con parámetros dinámicos)
+router.get('/eventos/disponibilidad', eventController.obtenerHabitacionesDisponibles);
 
 // Rutas con contenido dinamico de handlebars
 router.get('/eventos/:idevento', async (req, res) => {
@@ -273,7 +275,6 @@ router.get('/check-availability', async (req, res) => {
     }
 })
 
-router.get('/disponibilidad', eventController.obtenerHabitacionesDisponibles);
 router.get('/reservas/entrantes', eventController.getIncomingReservations);
 
 router.post('/eventos/move-to-playground', eventController.moveToPlayground)

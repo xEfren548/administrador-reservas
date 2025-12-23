@@ -5,36 +5,37 @@
     </div>
 </div>
 
-<div class="row flex-nowrap justify-content-center mt-3" style="width: 95%;">
-    <div class="col-10">
-        <h1>Lista de usuarios</h1>
-        <div class="table-responsive">
+<div class="container-fluid mt-3 px-3 px-md-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-3">Lista de usuarios</h1>
+            <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
 
-            <table class="table table-dark table-hover" id="tablaUsuarios">
+            <table class="table table-dark table-hover table-sm" id="tablaUsuarios">
                 <thead class="table-light">
                     <tr>
-                        <th scope="col">Nombre</th>
-                        <th scope="col">Apellido</th>
-                        <th scope="col">Email</th>
-                        <th scope="col">Celular</th>
-                        <th scope="col">Privilegio</th>
-                        <th scope="col">Rol</th>
-                        <th scope="col">Administrador</th>
-                        <th scope="col">Acciones</th>
+                        <th scope="col" style="min-width: 80px;">Nombre</th>
+                        <th scope="col" style="min-width: 80px;">Apellido</th>
+                        <th scope="col" style="min-width: 120px;">Email</th>
+                        <th scope="col" style="min-width: 90px;">Celular</th>
+                        <th scope="col" style="min-width: 100px;">Privilegio</th>
+                        <th scope="col" style="min-width: 80px;">Rol</th>
+                        <th scope="col" style="min-width: 100px;">Administrador</th>
+                        <th scope="col" style="min-width: 90px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {{#each users}}
                     <tr>
-                        <td>{{firstName}}</td>
-                        <td>{{lastName}}</td>
-                        <td>{{email}}</td>
-                        <td>{{phone}}</td>
-                        <td>{{privilege}}</td>
-                        <td>{{roleName}}</td>
-                        <td>{{adminname}}</td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-primary" data-client-firstName="{{firstName}}"
+                        <td style="vertical-align: middle;">{{firstName}}</td>
+                        <td style="vertical-align: middle;">{{lastName}}</td>
+                        <td style="vertical-align: middle; word-break: break-word;"><small>{{email}}</small></td>
+                        <td style="vertical-align: middle;"><small>{{phone}}</small></td>
+                        <td style="vertical-align: middle;"><small>{{privilege}}</small></td>
+                        <td style="vertical-align: middle;"><small>{{roleName}}</small></td>
+                        <td style="vertical-align: middle;"><small>{{adminname}}</small></td>
+                        <td class="text-center" style="white-space: nowrap; vertical-align: middle;">
+                            <button type="button" class="btn btn-primary btn-sm" data-client-firstName="{{firstName}}"
                                 data-client-lastName="{{lastName}}" data-client-email="{{email}}" data-client-phone="{{phone}}"
                                 data-client-privilege="{{privilege}}" data-client-adminname="{{administrator}}"
                                 data-client-color="{{color}}" data-client-role="{{role}}" data-assigned-chalets="{{assignedChalets}}"
@@ -45,7 +46,7 @@
                                 data-bs-target="#modify-user_entry_modal" onclick="showClientEmail(this)">
                                 <i class="fa fa-pencil" aria-hidden="true"></i>
                             </button>
-                            <button type="button" class="btn btn-danger" data-client-email="{{email}}" onclick="deleteUser(this)">
+                            <button type="button" class="btn btn-danger btn-sm" data-client-email="{{email}}" onclick="deleteUser(this)">
                                 <i class="fa fa-trash" aria-hidden="true"></i>
                             </button>
                             <div class="form-item">
@@ -57,8 +58,8 @@
                 </tbody>
             </table>
         </div>
-
     </div>
+</div>
 </div>
 
 {{!-- Modals --}}

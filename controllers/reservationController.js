@@ -7,6 +7,7 @@ const TipologiasCabana = require('../models/TipologiasCabana');
 const NotFoundError = require("../common/error/not-found-error");
 const Roles = require("../models/Roles");
 const permissions = require('../models/permissions');
+const roomGroupService = require('../services/roomGroupService');
 
 
 const {check} = require("express-validator");
@@ -60,18 +61,53 @@ async function showReservationsView(req, res, next) {
 
 
         // console.log(data);
-        const chalets = habitaciones.map(chalet => {
+        
+        // Obtener grupos de habitaciones
+        const grupos = await roomGroupService.getAllGroups();
+        const habitacionesEnGrupos = new Set();
+        
+        // Recopilar IDs de habitaciones que están en grupos
+        grupos.forEach(grupo => {
+            grupo.rooms.forEach(room => {
+                habitacionesEnGrupos.add(room._id.toString());
+            });
+        });
+        
+        // Separar habitaciones: las que NO están en grupos
+        const habitacionesNoAgrupadas = habitaciones.filter(
+            h => !habitacionesEnGrupos.has(h._id.toString())
+        );
+        
+        // Crear lista de chalets no agrupados
+        const chalets = habitacionesNoAgrupadas.map(chalet => {
             return {
                 name: chalet.propertyDetails.name,
                 basePrice: chalet.others.basePrice,
                 pax: chalet.propertyDetails.maxOccupancy,
                 tipologia: chalet.propertyDetails.accomodationType,
-                id: chalet._id?.toString()
+                id: chalet._id?.toString(),
+                isGroup: false
             };
-        })
+        });
+        
+        // Crear lista de grupos para el select
+        const gruposParaSelect = grupos.map(grupo => {
+            return {
+                name: grupo.groupName,
+                basePrice: grupo.groupInfo.basePrice,
+                pax: grupo.groupInfo.maxOccupancy,
+                tipologia: grupo.groupInfo.accomodationType,
+                id: `group:${grupo.groupName}`, // Prefijo para identificar grupos
+                isGroup: true,
+                totalRooms: grupo.totalRooms
+            };
+        });
+        
+        // Combinar habitaciones no agrupadas con grupos
+        const chaletsYGrupos = [...chalets, ...gruposParaSelect];
 
         // Verify we still have valid chalets after filtering
-        if (!chalets.length) {
+        if (!chaletsYGrupos.length) {
             throw new Error("No hay información de cabañas o el usuario no tiene cabañas asignadas");
         }
         // console.log("Estos son los chalets: ", chalets);
@@ -89,7 +125,7 @@ async function showReservationsView(req, res, next) {
         console.log(req.session)
 
         res.render('index', {
-            chalets: chalets,
+            chalets: chaletsYGrupos,
             clientes: clientes,
             tipologias: tipologias
         });

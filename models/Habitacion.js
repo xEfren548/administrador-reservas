@@ -347,7 +347,23 @@ const preSchema = new mongoose.Schema({
     },
     channexPropertyId: { type: String, default: null },
     channexRoomId: { type: String, default: null },
-    channels: [channelsSchema]
+    channels: [channelsSchema],
+    
+    // Sistema de grupos de habitaciones (tipo hotelería)
+    // Permite agrupar habitaciones iguales (ej: Milan 1, Milan 2, Milan 3, Milan 4)
+    roomGroup: {
+        type: String,
+        default: null,
+        index: true  // Para búsquedas eficientes por grupo
+    },
+    roomNumber: {
+        type: Number,
+        default: null  // Número dentro del grupo (1, 2, 3, 4...)
+    },
+    isGrouped: {
+        type: Boolean,
+        default: false  // true si pertenece a un grupo
+    }
 });
 
 // const habitacionesSchema = new mongoose.Schema({

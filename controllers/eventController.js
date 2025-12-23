@@ -26,6 +26,7 @@ const clienteController = require('../controllers/clientController');
 const pagoController = require('../controllers/pagoController');
 const sendEmail = require('../common/tasks/send-mails');
 const channexController = require('../controllers/channexController');
+const roomGroupService = require('../services/roomGroupService');
 
 
 const BadRequestError = require("../common/error/bad-request-error");
@@ -55,15 +56,20 @@ const createReservationValidators = [
     check("nNights")
         .notEmpty().withMessage('Number of nights is required')
         .isNumeric().withMessage('Number of nights must be a number'),
-    check("chaletName")
-        .notEmpty().withMessage('Chalet name is required')
-        .isLength({ max: 255 }).withMessage("Chalet name must be less than 255 characters")
+    check("habitacionId")
+        .notEmpty().withMessage('Room ID is required')
         .custom(async (value, { req }) => {
-            const chalet = await Habitacion.findOne({ "propertyDetails.name": value });
-            // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === value);
-            if (!chalet) {
-                throw new NotFoundError('Chalet does not exist');
+            // Validar que es un ObjectId válido
+            if (!mongoose.Types.ObjectId.isValid(value)) {
+                throw new BadRequestError('Invalid room ID format');
             }
+            
+            // Validar que la habitación existe
+            const chalet = await Habitacion.findById(value);
+            if (!chalet) {
+                throw new NotFoundError('Room does not exist');
+            }
+            
             return true;
         }),
     check("maxOccupation")
@@ -449,6 +455,7 @@ async function obtenerEventosOptimizados(req, res) {
             clientName: 1,
             clienteProvisional: 1,
             infoReservaExterna: 1,
+            paymentCancelation: 1,
             notes: 1
         }).lean();
 
@@ -535,6 +542,13 @@ async function obtenerEventosOptimizados(req, res) {
             : [];
         const clientesMap = new Map(clientes.map(c => [c._id.toString(), c]));
 
+        // ---------- Batch: Usuarios creadores (para colorUsuario) ----------
+        const creatorIds = [...new Set(reservas.map(e => e.createdBy).filter(Boolean))];
+        const usuarios = creatorIds.length
+            ? await Usuario.find({ _id: { $in: creatorIds } }, { color: 1, firstName: 1, lastName: 1 }).lean()
+            : [];
+        const usuariosMap = new Map(usuarios.map(u => [u._id.toString(), u]));
+
         // ---------- Batch: Pagos (agregación) ----------
         let pagosMap = new Map();
         if (typeof Pago !== 'undefined') {
@@ -564,6 +578,18 @@ async function obtenerEventosOptimizados(req, res) {
                         .toUpperCase();
                 }
             }
+            
+            // Color del usuario creador
+            let colorUsuario = null;
+            let creadaPor = null;
+            if (e.createdBy) {
+                const usuario = usuariosMap.get(e.createdBy.toString());
+                if (usuario) {
+                    colorUsuario = usuario.color;
+                    creadaPor = `${usuario.firstName} ${usuario.lastName}`;
+                }
+            }
+
             e.pagosTotales = typeof pagosMap.get(e._id.toString()) === 'number'
                 ? pagosMap.get(e._id.toString())
                 : 0;
@@ -573,6 +599,8 @@ async function obtenerEventosOptimizados(req, res) {
                 logs: logsPorReserva.get(e._id.toString()) || [],
                 isBlocked: false,    // <- unificado
                 blockType: null,     // <- unificado
+                colorUsuario: colorUsuario,  // <- agregado
+                creadaPor: creadaPor,        // <- agregado (opcional)
             };
         });
 
@@ -874,7 +902,7 @@ async function reservasDeDuenos(req, res, next) {
                 }
 
 
-
+                const paymentCancelation = evento.paymentCancelation ? momentTz(evento.paymentCancelation).format('DD-MM-YYYY, h:mm:ss a') : null;
 
                 // Retornar el evento con los pagos y las fechas formateadas
                 return {
@@ -1047,7 +1075,7 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
 
 async function createReservation(req, res, next) { // Reserva web (legacy)
-    const { clientFirstName, clientLastName, clientEmail, clientPhone, chaletName, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit } = req.body;
+    const { clientFirstName, clientLastName, clientEmail, clientPhone, habitacionId, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit } = req.body;
     let newCliente = null;
     let client = null;
 
@@ -1068,8 +1096,13 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
             throw new Error("El total debe ser mayor a 0");
         }
 
+        if (!habitacionId) {
+            throw new Error("El ID de la habitación es requerido");
+        }
+
         console.log("is depo: ", isDeposit);
         console.log("cliente email: ", clientEmail);
+        console.log("habitacionId: ", habitacionId);
 
         const fechaAjustada = new Date(arrivalDate);
         fechaAjustada.setUTCHours(6); // Ajustar la hora a 06:00:00 UTC
@@ -1090,18 +1123,18 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         console.log("Updated arrivalDateISO:", arrivalDateISO);
         console.log("Updated departureDateISO:", departureDateISO);
 
-
-
-        const chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName }).lean();
-        console.log("chalet name: ", chaletName)
-        // const chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === chaletName);
+        // Buscar la habitación específica por ID (ya fue seleccionada en disponibilidad)
+        const chalet = await Habitacion.findById(habitacionId);
+        
         if (!chalet) {
-            throw new NotFoundError('Chalet does not exist 2');
+            throw new NotFoundError('La habitación no existe');
         }
+
+        console.log("Habitación encontrada: ", chalet.propertyDetails.name);
 
         if (chalet.isActive === false) {
             return res.status(400).send({
-                message: `La habitación ${chaletName} ha sido desactivada.`,
+                message: `La habitación ${chalet.propertyDetails?.name || chaletName} ha sido desactivada.`,
             });
         }
 
@@ -1211,6 +1244,11 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         var message;
 
         const createdBy = new mongoose.Types.ObjectId(req.session.id);
+        
+        // Obtener el nombre de la habitación
+        const actualChaletName = chalet.propertyDetails?.name || 'Habitación';
+        const displayName = chalet.isGrouped && chalet.roomGroup ? chalet.roomGroup : actualChaletName;
+        const isFromGroup = chalet.isGrouped && chalet.roomGroup;
 
         if (!isDeposit) {
             reservationToAdd = {
@@ -1228,7 +1266,9 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 comisionVendedor: comisionVendedor,
                 status: 'active'
             };
-            message = "Reservación agregada con éxito";
+            message = isFromGroup 
+                ? `Reservación agregada con éxito. Habitación asignada: ${actualChaletName}`
+                : "Reservación agregada con éxito";
         }
         else {
             console.log("Current date: ", format(Date.now(), "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es }));
@@ -1268,7 +1308,10 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 comisionVendedor: comisionVendedor
             };
 
-            message = `Reservación agregada con éxito. Realice su pago antes de ${format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es })} o su reserva será cancelada`;
+            const roomAssignedMessage = isFromGroup 
+                ? ` Habitación asignada: ${actualChaletName}.`
+                : '';
+            message = `Reservación agregada con éxito.${roomAssignedMessage} Realice su pago antes de ${format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es })} o su reserva será cancelada`;
         }
 
         // const documento = await Documento.findOne();
@@ -1290,7 +1333,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         documentoToAdd.url = url;
         await documentoToAdd.save();
 
-        const descripcionLimpieza = 'Limpieza ' + chaletName;
+        const descripcionLimpieza = 'Limpieza ' + actualChaletName;
         const fechaLimpieza = new Date(arrivalDate);
         const checkInDate = new Date(arrivalDate)
         const checkOutDate = new Date(departureDate)
@@ -1413,7 +1456,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 });
         }
 
-        res.status(200).json({ success: true, reservationId: idReserva, message });
+        res.status(200).json({ success: true, reservationId: idReserva, message, assignedChaletName: actualChaletName, displayName: displayName });
 
 
     } catch (err) {
@@ -3033,7 +3076,6 @@ async function cotizadorChaletsyPrecios(req, res) {
             throw new Error('No se encontraron habitaciones');
         }
 
-
         let availableChalets = chalets;
 
         const fechaAjustada = moment(startDate).add(6, 'hours').toDate(); // Ajustar la hora a 00:00:00 UTC
@@ -3061,12 +3103,76 @@ async function cotizadorChaletsyPrecios(req, res) {
             }
         }
 
+        // ========== AGRUPAR HABITACIONES POR roomGroup ==========
+        // Separar habitaciones agrupadas de las individuales
+        const groupedChalets = {}; // { roomGroup: [chalets...] }
+        const individualChalets = [];
 
+        for (const chalet of availableChalets) {
+            if (chalet.isGrouped && chalet.roomGroup) {
+                // Habitación pertenece a un grupo
+                if (!groupedChalets[chalet.roomGroup]) {
+                    groupedChalets[chalet.roomGroup] = [];
+                }
+                groupedChalets[chalet.roomGroup].push(chalet);
+            } else {
+                // Habitación individual (no agrupada)
+                individualChalets.push(chalet);
+            }
+        }
 
-        const mappedChalets = availableChalets.map(chalet => ({
+        // Ordenar cada grupo por roomNumber para que la primera sea la "representante"
+        for (const groupName in groupedChalets) {
+            groupedChalets[groupName].sort((a, b) => (a.roomNumber || 0) - (b.roomNumber || 0));
+        }
 
+        // Crear array final combinando grupos (representados por primera habitación) e individuales
+        const chaletsToProcess = [];
+
+        // Agregar grupos (usando primera habitación como representante)
+        for (const groupName in groupedChalets) {
+            const groupRooms = groupedChalets[groupName];
+            const representativeChalet = groupRooms[0]; // Primera habitación del grupo
+            
+            // Agregar metadata del grupo al chalet representante
+            representativeChalet._groupInfo = {
+                isGroup: true,
+                groupName: groupName,
+                availableCount: groupRooms.length,
+                availableRoomIds: groupRooms.map(r => r._id),
+                allRooms: groupRooms.map(r => ({
+                    id: r._id,
+                    name: r.propertyDetails.name,
+                    roomNumber: r.roomNumber
+                }))
+            };
+            
+            chaletsToProcess.push(representativeChalet);
+        }
+
+        // Agregar habitaciones individuales
+        for (const chalet of individualChalets) {
+            chalet._groupInfo = {
+                isGroup: false,
+                groupName: null,
+                availableCount: 1,
+                availableRoomIds: [chalet._id],
+                allRooms: [{
+                    id: chalet._id,
+                    name: chalet.propertyDetails.name,
+                    roomNumber: null
+                }]
+            };
+            chaletsToProcess.push(chalet);
+        }
+
+        // ========== FIN AGRUPACIÓN ==========
+
+        const mappedChalets = chaletsToProcess.map(chalet => ({
             id: chalet._id,
             name: chalet.propertyDetails.name,
+            // Usar nombre del grupo si existe, sino nombre normal
+            displayName: chalet._groupInfo.isGroup ? chalet.roomGroup : chalet.propertyDetails.name,
             minPax: chalet.propertyDetails.minOccupancy,
             maxPax: chalet.propertyDetails.maxOccupancy,
             precioBase: chalet.others.basePrice,
@@ -3077,7 +3183,13 @@ async function cotizadorChaletsyPrecios(req, res) {
             accomodationFeatures: chalet.accommodationFeatures,
             accomodationDescription: chalet.accomodationDescription,
             nBeds: chalet.additionalInfo.nBeds,
-            nRestrooms: chalet.additionalInfo.nRestrooms
+            nRestrooms: chalet.additionalInfo.nRestrooms,
+            // Información del grupo
+            isGroup: chalet._groupInfo.isGroup,
+            groupName: chalet._groupInfo.groupName,
+            availableCount: chalet._groupInfo.availableCount,
+            availableRoomIds: chalet._groupInfo.availableRoomIds,
+            allAvailableRooms: chalet._groupInfo.allRooms
         }));
 
         const eventoParaReservar = {
@@ -3181,7 +3293,7 @@ async function obtenerHabitacionesDisponibles(req, res) {
         // noches
         const nNights = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
         if (isNaN(nNights) || nNights <= 0) {
-            return res.status(400).json({ message: 'La fecha de salida debe ser posterior a la fecha de llegada' });
+            return res.status(400).json({ message: 'Rango de fechas inválido' });
         }
 
         // Filtro base (solo campos necesarios para performance)
@@ -3204,11 +3316,17 @@ async function obtenerHabitacionesDisponibles(req, res) {
                 filtro['others.owner'] = req.session.id;
             }
         } else if(habitacionId) {
-            filtro['_id'] = habitacionId;
+            // Verificar si es un ObjectId válido o un nombre de grupo
+            if (mongoose.Types.ObjectId.isValid(habitacionId) && habitacionId.length === 24) {
+                filtro['_id'] = habitacionId;
+            } else {
+                // Es un nombre de grupo
+                filtro['roomGroup'] = habitacionId;
+            }
         }
 
         console.log("filtro: ", filtro);
-        // Trae solo lo que usaremos → mapea a RoomOption
+        // Trae solo lo que usaremos
         const chalets = await Habitacion.find(filtro)
             .select({
                 _id: 1,
@@ -3216,56 +3334,128 @@ async function obtenerHabitacionesDisponibles(req, res) {
                 'propertyDetails.maxOccupancy': 1,
                 'propertyDetails.accomodationType': 1,
                 'others.basePrice': 1,
+                isGrouped: 1,
+                roomGroup: 1,
+                roomNumber: 1,
             })
             .lean();
         console.log("Chalets encontrados: ", chalets.length);
         if (!chalets || chalets.length === 0) {
-            return res.status(200).json({ rooms: [], meta: { nNights, total: 0 } });
+            return res.status(200).json({ availableRooms: [], meta: { nNights, total: 0 } });
         }
 
-
-        // Ajuste para consultas de bloqueos (tu código original usa 06:00 UTC)
+        // Ajuste para consultas de bloqueos
         const fechaAjustada = moment(startDate).utc().add(6, 'hours').toDate();
+
+        // ========== MANEJO DE GRUPOS ==========
+        // Agrupar habitaciones por roomGroup si están agrupadas
+        const groupedRooms = {}; // { roomGroup: [chalets...] }
+        const individualRooms = []; // Habitaciones sin grupo
+
+        for (const c of chalets) {
+            if (c.isGrouped && c.roomGroup) {
+                if (!groupedRooms[c.roomGroup]) {
+                    groupedRooms[c.roomGroup] = [];
+                }
+                groupedRooms[c.roomGroup].push(c);
+            } else {
+                individualRooms.push(c);
+            }
+        }
 
         const disponibles = [];
 
-        // Chequeo secuencial (puedes paralelizar con Promise.allSettled si lo deseas)
-        
-        for (const c of chalets) {
-            const chaletId = c._id;
-
+        // 1. Procesar habitaciones individuales (sin grupo)
+        for (const c of individualRooms) {
             if (!isForOwner) {
-                // 2) Restricción de noches mínimas (restriccion)
+                // Validar restricciones de noches mínimas
                 const nochesMin = await BloqueoFechas.findOne({
                     date: fechaAjustada,
-                    habitacionId: chaletId,
+                    habitacionId: c._id,
                     type: 'restriccion',
                 }).lean();
     
                 if (nochesMin && nNights < Number(nochesMin.min)) {
-                    continue; // no cumple noches mínimas
+                    continue; // No cumple noches mínimas
                 }
             }
     
-            // 3) Disponibilidad real en el rango
-            const libre = await getDisponibilidad(chaletId, startDate, endDate);
+            // Validar disponibilidad (no bloqueada y sin reservas superpuestas)
+            const libre = await getDisponibilidad(c._id, startDate, endDate);
             if (!libre) continue;
 
-
-            // 4) Map a RoomOption
+            // Agregar a disponibles
             disponibles.push({
-                id: chaletId,
-                nombre: c.propertyDetails?.name ?? 'Habitación',
-                ocMax: c.propertyDetails?.maxOccupancy ?? 0,
-                basePrice: c.others?.basePrice ?? 0,
-                tipo: c.propertyDetails?.accomodationType ?? 'N/D',
+                id: c._id.toString(),
+                name: c.propertyDetails.name,
+                displayName: c.propertyDetails.name, // Nombre normal para individuales
+                maxPax: c.propertyDetails.maxOccupancy,
+                basePrice: c.others.basePrice,
+                accomodationType: c.propertyDetails.accomodationType,
+                isGrouped: false,
+                roomGroup: null
             });
         }
-        console.log("RESPUESTA: ")
-        console.log(JSON.stringify(disponibles));
+
+        // 2. Procesar grupos de habitaciones
+        for (const groupName in groupedRooms) {
+            const roomsInGroup = groupedRooms[groupName];
+            const availableInGroup = [];
+
+            // Validar disponibilidad de CADA habitación del grupo
+            for (const c of roomsInGroup) {
+                if (!isForOwner) {
+                    // Validar restricciones de noches mínimas
+                    const nochesMin = await BloqueoFechas.findOne({
+                        date: fechaAjustada,
+                        habitacionId: c._id,
+                        type: 'restriccion',
+                    }).lean();
+        
+                    if (nochesMin && nNights < Number(nochesMin.min)) {
+                        continue; // Esta habitación no cumple
+                    }
+                }
+
+                // Validar disponibilidad
+                const libre = await getDisponibilidad(c._id, startDate, endDate);
+                if (libre) {
+                    availableInGroup.push(c);
+                }
+            }
+
+            // Si hay al menos una habitación disponible en el grupo
+            if (availableInGroup.length > 0) {
+                // Seleccionar UNA habitación aleatoriamente
+                const randomIndex = Math.floor(Math.random() * availableInGroup.length);
+                const selectedRoom = availableInGroup[randomIndex];
+
+                // Agregar SOLO el ID de esta habitación a la lista principal
+                // El frontend mostrará el nombre del grupo, pero aquí solo enviamos el ID
+                disponibles.push({
+                    id: selectedRoom._id.toString(),
+                    name: selectedRoom.propertyDetails.name,
+                    displayName: groupName, // Mostrar nombre del grupo en lugar del nombre individual
+                    maxPax: selectedRoom.propertyDetails.maxOccupancy,
+                    basePrice: selectedRoom.others.basePrice,
+                    accomodationType: selectedRoom.propertyDetails.accomodationType,
+                    isGrouped: true,
+                    roomGroup: groupName,
+                    availableCount: availableInGroup.length // Info adicional: cuántas hay disponibles
+                });
+            }
+        }
+
+        console.log("RESPUESTA: ", JSON.stringify(disponibles));
+        
         return res.status(200).json({
-            rooms: disponibles,
-            meta: { nNights, total: disponibles.length, fechaLlegada: startDate, fechaSalida: endDate },
+            availableRooms: disponibles,
+            meta: { 
+                nNights, 
+                total: disponibles.length,
+                fechaLlegada: startDate, 
+                fechaSalida: endDate 
+            },
         });
     } catch (err) {
         console.error('Error en obtenerHabitacionesDisponibles:', err);
@@ -3476,6 +3666,7 @@ async function getIncomingReservations(req, res) {
             clientName: 1,
             tipoReserva: 1,
             infoReservaExterna: 1,
+            paymentCancelation: 1,
             notes: 1
         }).lean();
 
