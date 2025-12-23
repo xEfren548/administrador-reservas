@@ -14,18 +14,6 @@ const Log = require('../models/Log');
 
 const validationRequest = require('../common/middlewares/validation-request');
 
-// ============ MIDDLEWARE DE DEBUG (TEMPORAL) ============
-router.use((req, res, next) => {
-    console.log('==================================');
-    console.log('RUTA RECIBIDA:', req.method, req.originalUrl);
-    console.log('PATH:', req.path);
-    console.log('BASE URL:', req.baseUrl);
-    console.log('QUERY:', req.query);
-    console.log('==================================');
-    next();
-});
-
-
 // Rutas estáticas
 router.get('/eventos', eventController.obtenerEventos);
 router.get('/eventos-opt', eventController.obtenerEventosOptimizados);
