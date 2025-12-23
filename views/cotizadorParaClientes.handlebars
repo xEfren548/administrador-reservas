@@ -1281,7 +1281,7 @@
 
                         abrirModal(botonReservar);
                     });
-                    botonReservar.textContent = "Reserva ahora";
+                    botonReservar.textContent = "Reservar";
                     contenido.appendChild(botonReservar);
                 }
 
@@ -1315,13 +1315,24 @@
                 console.log(boton);
                 //modalReserva.classList.remove("hidden");
                 console.log("Precio total: ", boton.dataset.precioTotal)
+                console.log("habitacionId del botón:", boton.dataset.habitacionId);
+                console.log("availableRoomIds del botón:", boton.dataset.availableRoomIds);
+                
+                // Si no hay habitacionId pero hay availableRoomIds, usar el primero
+                let habitacionId = boton.dataset.habitacionId;
+                if (!habitacionId && boton.dataset.availableRoomIds) {
+                    const roomIds = JSON.parse(boton.dataset.availableRoomIds);
+                    habitacionId = roomIds[0];
+                }
+                console.log("habitacionId final:", habitacionId);
+                
                 precioTotalInput.textContent = `$${boton.dataset.precioTotal}`
                 fechaLlegadaSpan.textContent = boton.dataset.arrivalDate;
                 fechaSalidaSpan.textContent = boton.dataset.departureDate;
                 huespedesSpan.textContent = boton.dataset.huespedes;
                 nNightsInput.textContent = boton.dataset.nNights;
                 habitacionInput.value = boton.dataset.nombreHabitacion;
-                document.getElementById('habitacion-id-input').value = boton.dataset.habitacionId;
+                document.getElementById('habitacion-id-input').value = habitacionId;
                 minPaxInput.value = boton.dataset.minPax;
                 maxPaxInput.value = boton.dataset.maxPax;
                 costoTotalInput.value = boton.dataset.costoTotal
@@ -1407,7 +1418,8 @@
                     maxOccupation: document.getElementById("max-pax-input").value,
                     total: total,
                     nNights: document.getElementById("nights-input").textContent,
-                    chaletName: document.getElementById("nombre-habitacion-input").value
+                    chaletName: document.getElementById("nombre-habitacion-input").value,
+                    habitacionId: document.getElementById('habitacion-id-input').value
                 }
 
                 const dataPorDepo = {
@@ -1420,7 +1432,8 @@
                     maxOccupation: document.getElementById("max-pax-input").value,
                     total: total,
                     nNights: document.getElementById('nights-input').textContent,
-                    chaletName: document.getElementById('nombre-habitacion-input').value
+                    chaletName: document.getElementById('nombre-habitacion-input').value,
+                    habitacionId: document.getElementById('habitacion-id-input').value
                 }
 
                 const data = (isDeposit) ? dataPorDepo : dataReserva;

@@ -1371,7 +1371,8 @@
                     maxOccupation: document.getElementById("max-pax-input").value,
                     total: total,
                     nNights: document.getElementById("nights-input").textContent,
-                    chaletName: document.getElementById("nombre-habitacion-input").value
+                    chaletName: document.getElementById("nombre-habitacion-input").value,
+                    habitacionId: document.getElementById('habitacion-id-input').value
                 }
 
                 const dataPorDepo = {
@@ -1384,7 +1385,8 @@
                     maxOccupation: document.getElementById("max-pax-input").value,
                     total: total,
                     nNights: document.getElementById('nights-input').textContent,
-                    chaletName: document.getElementById('nombre-habitacion-input').value
+                    chaletName: document.getElementById('nombre-habitacion-input').value,
+                    habitacionId: document.getElementById('habitacion-id-input').value
                 }
 
                 const data = (isDeposit) ? dataPorDepo : dataReserva;

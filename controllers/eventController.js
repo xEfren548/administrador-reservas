@@ -57,21 +57,42 @@ const createReservationValidators = [
         .notEmpty().withMessage('Number of nights is required')
         .isNumeric().withMessage('Number of nights must be a number'),
     check("habitacionId")
-        .notEmpty().withMessage('Room ID is required')
-        .custom(async (value, { req }) => {
+    .optional()
+    .custom(async (value, { req }) => {
+        const { habitacionId, chaletName } = req.body;
+        
+        // Si no viene ni habitacionId ni chaletName
+        if (!habitacionId && !chaletName) {
+            throw new BadRequestError('Room ID or Chalet name is required');
+        }
+        
+        let chalet = null;
+        
+        // Intentar buscar por habitacionId si viene
+        if (habitacionId) {
             // Validar que es un ObjectId válido
-            if (!mongoose.Types.ObjectId.isValid(value)) {
+            if (!mongoose.Types.ObjectId.isValid(habitacionId)) {
                 throw new BadRequestError('Invalid room ID format');
             }
             
-            // Validar que la habitación existe
-            const chalet = await Habitacion.findById(value);
-            if (!chalet) {
-                throw new NotFoundError('Room does not exist');
-            }
-            
-            return true;
-        }),
+            chalet = await Habitacion.findById(habitacionId);
+        }
+        
+        // Si no encontró por habitacionId, intentar por chaletName
+        if (!chalet && chaletName) {
+            chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName });
+        }
+        
+        // Si no encontró la habitación por ningún método
+        if (!chalet) {
+            throw new NotFoundError('Room does not exist');
+        }
+        
+        // Guardar el chalet en req para usarlo después si es necesario
+        req.body.habitacionId = chalet._id;
+        
+        return true;
+    }),
     check("maxOccupation")
         .notEmpty().withMessage('Max occupation is required')
         .isNumeric().withMessage('Max occupation must be a number'),
