@@ -162,6 +162,12 @@ async function consultarPreciosPorFechas(req, res) {
             nNights: nNights,
         });
 
+        let parsedPax = pax ? parseInt(pax, 10) : null;
+
+        if (parsedPax === null) {
+            return res.status(400).send({ mensaje: 'El número de personas es requerido' });
+        }
+
         console.log("comisionesss: ", comisiones);    
 
         let precio = null;
@@ -185,19 +191,22 @@ async function consultarPreciosPorFechas(req, res) {
             if (fechasBloqueadasPorCapacidad) {
                 console.log("current date: ", currentDate);
                 console.log("fechasBloqueadasPorCapacidad: ", fechasBloqueadasPorCapacidad);
-                if (pax < fechasBloqueadasPorCapacidad.min) {
+                if (parsedPax < fechasBloqueadasPorCapacidad.min) {
                     return res.status(400).send({ mensaje: `La capacidad minima es de ${fechasBloqueadasPorCapacidad.min} personas` });
                 }
             }
-
-            precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: habitacionid, noPersonas: pax });
+            console.log("Current date: ", currentDate);
+            console.log("no personas: ", parsedPax);
+            precio = await PreciosEspeciales.findOne({ fecha: currentDate, habitacionId: habitacionid, noPersonas: parsedPax });
             if (precio) {
+                console.log("Precio especial por pax encontrado: ", precio);
                 precios.push(precio);
                 currentDate.setDate(currentDate.getDate() + 1);
                 continue;
             } else {
                 precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: habitacionid });
                 if (precio) {
+                    console.log("Precio base por fecha encontrado: ", precio);
                     precios.push(precio);
                     currentDate.setDate(currentDate.getDate() + 1);
                     continue;
@@ -212,6 +221,7 @@ async function consultarPreciosPorFechas(req, res) {
                             throw new Error('Habitacion no encontrada');
                         }
                     }
+                    console.log("Usando precio por defecto de la habitacion: ", habitacion);
                     precio = {
                         costo_base: habitacion.others.baseCost,
                         costo_base_2noches: habitacion.others.baseCost2nights,
