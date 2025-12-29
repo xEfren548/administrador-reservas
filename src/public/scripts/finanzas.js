@@ -614,6 +614,100 @@ async function cambiarRolParticipanteOrg(usuarioId, nuevoRol) {
     }
 }
 
+// Ver detalles de una organización
+async function verCuentasOrganizacion(organizacionId) {
+    try {
+        mostrarSpinner();
+        
+        const response = await fetch(`/api/sw/organizaciones/${organizacionId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const org = data.data;
+            const participantes = org.participantes || [];
+            const participantesHTML = participantes.map(p => {
+                const rolBadge = p.rol === 'Administrador' 
+                    ? '<span class="badge bg-purple-600">Administrador</span>'
+                    : '<span class="badge bg-blue-600">Miembro</span>';
+                return `
+                    <div class="d-flex justify-content-between align-items-center p-2 bg-gray-50 rounded mb-2">
+                        <div>
+                            <strong>${p.usuario.firstName} ${p.usuario.lastName}</strong>
+                            <br><small class="text-muted">${p.usuario.email}</small>
+                        </div>
+                        <div>${rolBadge}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            Swal.fire({
+                title: `<i class="fas fa-building me-2"></i>${org.nombre}`,
+                html: `
+                    <div class="text-start">
+                        <div class="mb-3">
+                            <h6 class="text-muted">Descripción</h6>
+                            <p>${org.descripcion || 'Sin descripción'}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6 class="text-muted">Estado</h6>
+                            <span class="badge ${org.activa ? 'bg-success' : 'bg-danger'}">
+                                ${org.activa ? 'Activa' : 'Inactiva'}
+                            </span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6 class="text-muted">Estadísticas</h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="p-2 bg-light rounded text-center">
+                                        <div class="fs-4 fw-bold text-primary">${org.stats?.totalCuentas || 0}</div>
+                                        <small class="text-muted">Cuentas Totales</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2 bg-light rounded text-center">
+                                        <div class="fs-4 fw-bold text-success">${org.stats?.cuentasActivas || 0}</div>
+                                        <small class="text-muted">Cuentas Activas</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6 class="text-muted">Participantes (${participantes.length})</h6>
+                            <div style="max-height: 200px; overflow-y: auto;">
+                                ${participantesHTML || '<p class="text-muted">No hay participantes</p>'}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                Creada el ${new Date(org.createdAt).toLocaleDateString('es-MX', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                })}
+                            </small>
+                        </div>
+                    </div>
+                `,
+                width: '600px',
+                confirmButtonText: 'Cerrar',
+                confirmButtonColor: '#3b82f6'
+            });
+        } else {
+            mostrarError(data.message || 'Error al cargar detalles de la organización');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al cargar detalles de la organización');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
 // ===== CUENTAS =====
 async function cargarMisCuentas() {
     try {
@@ -654,65 +748,97 @@ function renderizarCuentas() {
         return;
     }
 
+    // Agrupar cuentas por organización
+    const cuentasPorOrg = {};
     cuentas.forEach(cuenta => {
-        const saldo = cuenta.puedeVerSaldo !== false 
-            ? formatearMoneda(cuenta.saldoActual || 0, cuenta.moneda)
-            : '***';
-        const icono = obtenerIconoCuenta(cuenta.tipoCuenta);
-        const colorSaldo = cuenta.saldoActual >= 0 ? 'text-green-600' : 'text-red-600';
+        const orgId = cuenta.organizacion?._id || cuenta.organizacion || 'sin-org';
+        const orgNombre = cuenta.organizacion?.nombre || 'Sin organización';
         
-        // Obtener nombre de organización
-        const nombreOrg = cuenta.organizacion?.nombre || 'Sin organización';
+        if (!cuentasPorOrg[orgId]) {
+            cuentasPorOrg[orgId] = {
+                nombre: orgNombre,
+                cuentas: []
+            };
+        }
+        cuentasPorOrg[orgId].cuentas.push(cuenta);
+    });
 
+    // Renderizar por grupos de organización
+    Object.keys(cuentasPorOrg).forEach(orgId => {
+        const grupo = cuentasPorOrg[orgId];
+        
+        // Separador de organización
         grid.append(`
-            <div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200 hover:border-teal-500 transition-colors cursor-pointer" onclick="verDetalleCuenta('${cuenta._id}')">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center">
-                        <div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center mr-3">
-                            <i class="fas ${icono} text-teal-600"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900">${cuenta.nombre}</h3>
-                            <p class="text-xs text-gray-500">${cuenta.tipoCuenta}</p>
-                            <p class="text-xs text-teal-600"><i class="fas fa-building me-1"></i>${nombreOrg}</p>
-                        </div>
+            <div class="col-span-full mt-4 mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="flex-grow border-t border-gray-300"></div>
+                    <div class="flex items-center gap-2 px-4 py-2 bg-teal-50 rounded-lg">
+                        <i class="fas fa-building text-teal-600"></i>
+                        <span class="font-semibold text-gray-800 text-lg">${grupo.nombre}</span>
+                        <span class="badge bg-teal-600 text-white">${grupo.cuentas.length}</span>
                     </div>
-                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-${cuenta.activa ? 'green' : 'red'}-900 text-${cuenta.activa ? 'green' : 'red'}-300">
-                        ${cuenta.activa ? 'Activa' : 'Inactiva'}
-                    </span>
-                </div>
-                
-                <div class="border-t border-gray-200 pt-4">
-                    <p class="text-sm text-gray-500 mb-1">Saldo Actual</p>
-                    ${cuenta.puedeVerSaldo !== false 
-                        ? `<p class="text-2xl font-bold ${colorSaldo}">${saldo}</p>`
-                        : `<p class="text-2xl font-bold text-gray-500"><i class="fas fa-lock me-2"></i>${saldo}</p>
-                           <p class="text-xs text-gray-500 mt-1">No tienes permiso para ver el saldo</p>`
-                    }
-                </div>
-
-                ${cuenta.descripcion ? `
-                    <div class="mt-4 pt-4 border-gray-200">
-                        <p class="text-sm text-gray-500">${cuenta.descripcion}</p>
-                    </div>
-                ` : ''}
-
-                <div class="mt-4 flex gap-2">
-                    ${cuenta.miRol === 'Propietario' ? `
-                        <button onclick="event.stopPropagation(); agregarTransaccion('${cuenta._id}')" class="btn btn-sm btn-primary flex-1" ${!cuenta.activa ? 'disabled' : ''}>
-                            <i class="fas fa-plus me-1"></i> Transacción
-                        </button>
-                        <button onclick="event.stopPropagation(); editarCuenta('${cuenta._id}')" class="btn btn-sm btn-warning">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                    ` : `
-                        <button onclick="event.stopPropagation(); verDetalleCuenta('${cuenta._id}')" class="btn btn-sm btn-info flex-1">
-                            <i class="fas fa-eye me-1"></i> Ver Detalle
-                        </button>
-                    `}
+                    <div class="flex-grow border-t border-gray-300"></div>
                 </div>
             </div>
         `);
+        
+        // Renderizar cuentas del grupo
+        grupo.cuentas.forEach(cuenta => {
+            const saldo = cuenta.puedeVerSaldo !== false 
+                ? formatearMoneda(cuenta.saldoActual || 0, cuenta.moneda)
+                : '***';
+            const icono = obtenerIconoCuenta(cuenta.tipoCuenta);
+            const colorSaldo = cuenta.saldoActual >= 0 ? 'text-green-600' : 'text-red-600';
+
+            grid.append(`
+                <div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200 hover:border-teal-500 transition-colors cursor-pointer" onclick="verDetalleCuenta('${cuenta._id}')">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas ${icono} text-teal-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">${cuenta.nombre}</h3>
+                                <p class="text-xs text-gray-500">${cuenta.tipoCuenta}</p>
+                            </div>
+                        </div>
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-${cuenta.activa ? 'green' : 'red'}-900 text-${cuenta.activa ? 'green' : 'red'}-300">
+                            ${cuenta.activa ? 'Activa' : 'Inactiva'}
+                        </span>
+                    </div>
+                    
+                    <div class="border-t border-gray-200 pt-4">
+                        <p class="text-sm text-gray-500 mb-1">Saldo Actual</p>
+                        ${cuenta.puedeVerSaldo !== false 
+                            ? `<p class="text-2xl font-bold ${colorSaldo}">${saldo}</p>`
+                            : `<p class="text-2xl font-bold text-gray-500"><i class="fas fa-lock me-2"></i>${saldo}</p>
+                               <p class="text-xs text-gray-500 mt-1">No tienes permiso para ver el saldo</p>`
+                        }
+                    </div>
+
+                    ${cuenta.descripcion ? `
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <p class="text-sm text-gray-500">${cuenta.descripcion}</p>
+                        </div>
+                    ` : ''}
+
+                    <div class="mt-4 flex gap-2">
+                        ${cuenta.miRol === 'Propietario' ? `
+                            <button onclick="event.stopPropagation(); agregarTransaccion('${cuenta._id}')" class="btn btn-sm btn-primary flex-1" ${!cuenta.activa ? 'disabled' : ''}>
+                                <i class="fas fa-plus me-1"></i> Transacción
+                            </button>
+                            <button onclick="event.stopPropagation(); editarCuenta('${cuenta._id}')" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        ` : `
+                            <button onclick="event.stopPropagation(); verDetalleCuenta('${cuenta._id}')" class="btn btn-sm btn-info flex-1">
+                                <i class="fas fa-eye me-1"></i> Ver Detalle
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `);
+        });
     });
 }
 
@@ -1634,6 +1760,17 @@ function mostrarError(mensaje) {
         background: '#ffffff',
         color: '#374151',
         confirmButtonColor: '#ef4444'
+    });
+}
+
+function mostrarInfo(mensaje) {
+    Swal.fire({
+        icon: 'info',
+        title: 'Información',
+        text: mensaje,
+        background: '#ffffff',
+        color: '#374151',
+        confirmButtonColor: '#3b82f6'
     });
 }
 
