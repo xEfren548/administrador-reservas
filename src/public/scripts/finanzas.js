@@ -6,6 +6,8 @@ let solicitudes = [];
 let cuentaSeleccionada = null;
 let usuarios = []; // Lista de usuarios disponibles
 let participantes = []; // Lista de participantes de la cuenta actual
+let participantesOrganizacion = []; // Lista temporal de participantes para nueva organización
+let organizacionSeleccionada = null; // Organización seleccionada para gestionar participantes
 
 // Funciones de spinner global
 function mostrarSpinner() {
@@ -45,6 +47,26 @@ function inicializarEventos() {
     $('#btnGuardarSolicitud').on('click', guardarSolicitud);
     $('#btnGuardarParticipante').on('click', guardarParticipante);
     $('#btnGuardarTransaccion').on('click', guardarTransaccion);
+
+    // Eventos para participantes de organización
+    $('#btnAgregarParticipanteOrg').on('click', agregarParticipanteOrganizacionTemporal);
+    $('#btnAgregarParticipanteOrgGestion').on('click', agregarParticipanteOrganizacion);
+
+    // Listener para cuando se abre el modal de organización
+    $('#modalOrganizacion').on('show.bs.modal', function(e) {
+        if ($(e.relatedTarget).attr('id') === 'btn-nueva-organizacion') {
+            $('#formOrganizacion')[0].reset();
+            $('#organizacion-id').val('');
+            $('#modalOrganizacionTitle').text('Nueva Organización');
+            participantesOrganizacion = []; // Resetear lista temporal
+            $('#organizacion-participantes-section').show();
+            $('#lista-participantes-org').empty();
+            cargarUsuariosParaOrganizacion();
+        } else {
+            // Si se está editando, ocultar la sección de participantes
+            $('#organizacion-participantes-section').hide();
+        }
+    });
 
     // Listener para cuando se abre el modal de cuenta
     $('#modalCuenta').on('show.bs.modal', function(e) {
@@ -121,8 +143,8 @@ function renderizarOrganizaciones() {
     if (organizaciones.length === 0) {
         tbody.html(`
             <tr>
-                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                    No hay organizaciones creadas
+                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                    No hay organizaciones creadas o no eres participante de ninguna
                 </td>
             </tr>
         `);
@@ -135,19 +157,33 @@ function renderizarOrganizaciones() {
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-900 text-green-300">Activa</span>' :
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-900 text-red-300">Inactiva</span>';
 
+        // Obtener información de participantes
+        const totalParticipantes = org.participantes?.length || 0;
+        const miParticipacion = org.participantes?.find(p => p.usuario._id === window.currentUserId);
+        const esAdmin = miParticipacion?.rol === 'Administrador';
+
         // Botones de acción según permisos
         let botones = `
             <button onclick="verCuentasOrganizacion('${org._id}')" class="btn btn-sm btn-info me-1" title="Ver cuentas">
                 <i class="fas fa-eye"></i>
             </button>
+            <button onclick="verParticipantesOrganizacion('${org._id}')" class="btn btn-sm btn-success me-1" title="Ver participantes">
+                <i class="fas fa-users"></i>
+            </button>
         `;
         
-        // Solo MASTER ADMIN puede editar y activar/desactivar organizaciones
-        if (window.isMasterAdmin) {
+        // Solo MASTER ADMIN o Administradores de la organización pueden editar
+        if (window.isMasterAdmin || esAdmin) {
             botones += `
                 <button onclick="editarOrganizacion('${org._id}')" class="btn btn-sm btn-warning me-1" title="Editar">
                     <i class="fas fa-edit"></i>
                 </button>
+            `;
+        }
+
+        // Solo MASTER ADMIN puede activar/desactivar
+        if (window.isMasterAdmin) {
+            botones += `
                 <button onclick="toggleOrganizacion('${org._id}', ${org.activa})" class="btn btn-sm btn-${org.activa ? 'danger' : 'success'}" title="${org.activa ? 'Desactivar' : 'Activar'}">
                     <i class="fas fa-${org.activa ? 'ban' : 'check'}"></i>
                 </button>
@@ -158,6 +194,12 @@ function renderizarOrganizaciones() {
             <tr class="border-b border-gray-200 hover:bg-gray-100">
                 <td class="px-6 py-4 font-medium text-gray-900">${org.nombre}</td>
                 <td class="px-6 py-4">${org.descripcion || '-'}</td>
+                <td class="px-6 py-4">
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-900 text-blue-300">
+                        <i class="fas fa-users me-1"></i>${totalParticipantes}
+                    </span>
+                    ${esAdmin ? '<span class="ms-1 px-2 py-1 text-xs font-semibold rounded-full bg-purple-900 text-purple-300">Admin</span>' : ''}
+                </td>
                 <td class="px-6 py-4">${estado}</td>
                 <td class="px-6 py-4">${fecha}</td>
                 <td class="px-6 py-4 text-center">
@@ -189,6 +231,11 @@ async function guardarOrganizacion() {
 
     const datos = { nombre, descripcion };
 
+    // Solo incluir participantes al crear (no al editar)
+    if (!id && participantesOrganizacion.length > 0) {
+        datos.participantes = participantesOrganizacion;
+    }
+
     try {
         const url = id ? `/api/sw/organizaciones/${id}` : '/api/sw/organizaciones';
         const method = id ? 'PUT' : 'POST';
@@ -205,6 +252,7 @@ async function guardarOrganizacion() {
             mostrarExito(id ? 'Organización actualizada' : 'Organización creada');
             $('#modalOrganizacion').modal('hide');
             $('#formOrganizacion')[0].reset();
+            participantesOrganizacion = [];
             cargarOrganizaciones();
         } else {
             mostrarError(data.message);
@@ -249,6 +297,320 @@ async function toggleOrganizacion(id, activa) {
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al actualizar organización');
+    }
+}
+
+// Cargar usuarios disponibles para agregar a organizaciones
+async function cargarUsuariosParaOrganizacion() {
+    try {
+        const response = await fetch('/api/usuarios/all');
+        
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            usuarios = data.data;
+            actualizarSelectUsuariosOrganizacion();
+        } else {
+            console.error('Error en la respuesta:', data.message);
+            mostrarError('Error al cargar usuarios');
+        }
+    } catch (error) {
+        console.error('Error al cargar usuarios:', error);
+        mostrarError('Error al cargar la lista de usuarios');
+    }
+}
+
+function actualizarSelectUsuariosOrganizacion() {
+    const select1 = $('#organizacion-nuevo-participante');
+    const select2 = $('#nuevo-participante-org-select');
+    
+    select1.empty().append('<option value="">Seleccione un usuario...</option>');
+    select2.empty().append('<option value="">Seleccione un usuario...</option>');
+    
+    // Filtrar usuarios que ya son participantes temporales o el usuario actual
+    const participantesIds = participantesOrganizacion.map(p => p.usuario);
+    const usuariosDisponibles = usuarios.filter(u => 
+        u._id !== window.currentUserId && !participantesIds.includes(u._id)
+    );
+    
+    usuariosDisponibles.forEach(usuario => {
+        const nombreCompleto = `${usuario.firstName} ${usuario.lastName} (${usuario.email})`;
+        const option = `<option value="${usuario._id}">${nombreCompleto}</option>`;
+        select1.append(option);
+        select2.append(option);
+    });
+}
+
+// Agregar participante temporal al crear organización
+function agregarParticipanteOrganizacionTemporal() {
+    const usuarioId = $('#organizacion-nuevo-participante').val();
+    const rol = $('#organizacion-rol-participante').val();
+    
+    if (!usuarioId) {
+        mostrarError('Seleccione un usuario');
+        return;
+    }
+    
+    const usuario = usuarios.find(u => u._id === usuarioId);
+    if (!usuario) return;
+    
+    // Agregar a la lista temporal
+    participantesOrganizacion.push({
+        usuario: usuarioId,
+        rol: rol
+    });
+    
+    // Actualizar vista
+    renderizarParticipantesOrganizacionTemporales();
+    actualizarSelectUsuariosOrganizacion();
+    
+    // Limpiar selección
+    $('#organizacion-nuevo-participante').val('');
+}
+
+function renderizarParticipantesOrganizacionTemporales() {
+    const container = $('#lista-participantes-org');
+    container.empty();
+    
+    if (participantesOrganizacion.length === 0) {
+        container.html('<p class="text-gray-500 text-sm">No hay participantes agregados</p>');
+        return;
+    }
+    
+    participantesOrganizacion.forEach((participante, index) => {
+        const usuario = usuarios.find(u => u._id === participante.usuario);
+        if (!usuario) return;
+        
+        const nombreCompleto = `${usuario.firstName} ${usuario.lastName}`;
+        const rolBadge = participante.rol === 'Administrador' 
+            ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-900 text-purple-300">Administrador</span>'
+            : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-900 text-blue-300">Miembro</span>';
+        
+        container.append(`
+            <div class="flex items-center justify-between p-2 bg-gray-50 rounded mb-2">
+                <div>
+                    <span class="font-semibold text-gray-900">${nombreCompleto}</span>
+                    <span class="text-gray-500 text-sm ms-2">${usuario.email}</span>
+                    <span class="ms-2">${rolBadge}</span>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="eliminarParticipanteOrganizacionTemporal(${index})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `);
+    });
+}
+
+function eliminarParticipanteOrganizacionTemporal(index) {
+    participantesOrganizacion.splice(index, 1);
+    renderizarParticipantesOrganizacionTemporales();
+    actualizarSelectUsuariosOrganizacion();
+}
+
+// Ver y gestionar participantes de una organización existente
+async function verParticipantesOrganizacion(id) {
+    try {
+        mostrarSpinner();
+        
+        organizacionSeleccionada = organizaciones.find(o => o._id === id);
+        if (!organizacionSeleccionada) {
+            mostrarError('Organización no encontrada');
+            return;
+        }
+        
+        // Cargar usuarios disponibles
+        await cargarUsuariosParaOrganizacion();
+        
+        $('#participantes-org-id').val(id);
+        renderizarParticipantesOrganizacionGestion();
+        
+        // Actualizar select con usuarios que no son participantes
+        const participantesIds = organizacionSeleccionada.participantes?.map(p => p.usuario._id) || [];
+        const select = $('#nuevo-participante-org-select');
+        select.empty().append('<option value="">Seleccione un usuario...</option>');
+        
+        usuarios.filter(u => !participantesIds.includes(u._id)).forEach(usuario => {
+            const nombreCompleto = `${usuario.firstName} ${usuario.lastName} (${usuario.email})`;
+            select.append(`<option value="${usuario._id}">${nombreCompleto}</option>`);
+        });
+        
+        $('#modalParticipantesOrganizacion').modal('show');
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al cargar participantes');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+function renderizarParticipantesOrganizacionGestion() {
+    const container = $('#lista-participantes-org-gestion');
+    container.empty();
+    
+    if (!organizacionSeleccionada || !organizacionSeleccionada.participantes || organizacionSeleccionada.participantes.length === 0) {
+        container.html('<p class="text-gray-500 text-sm">No hay participantes</p>');
+        return;
+    }
+    
+    const miParticipacion = organizacionSeleccionada.participantes.find(p => p.usuario._id === window.currentUserId);
+    const soyAdmin = miParticipacion?.rol === 'Administrador';
+    const esCreador = organizacionSeleccionada.createdBy._id === window.currentUserId;
+    
+    organizacionSeleccionada.participantes.forEach(participante => {
+        const usuario = participante.usuario;
+        const nombreCompleto = `${usuario.firstName} ${usuario.lastName}`;
+        const esCreadorDeOrg = organizacionSeleccionada.createdBy._id === usuario._id;
+        
+        const rolBadge = participante.rol === 'Administrador' 
+            ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-900 text-purple-300">Administrador</span>'
+            : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-900 text-blue-300">Miembro</span>';
+        
+        let acciones = '';
+        
+        // Solo administradores pueden modificar participantes
+        if (soyAdmin && !esCreadorDeOrg) {
+            acciones = `
+                <div class="flex gap-2">
+                    ${participante.rol === 'Miembro' ? `
+                        <button class="btn btn-sm btn-warning" onclick="cambiarRolParticipanteOrg('${usuario._id}', 'Administrador')" title="Promover a Administrador">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                    ` : `
+                        <button class="btn btn-sm btn-secondary" onclick="cambiarRolParticipanteOrg('${usuario._id}', 'Miembro')" title="Degradar a Miembro">
+                            <i class="fas fa-arrow-down"></i>
+                        </button>
+                    `}
+                    <button class="btn btn-sm btn-danger" onclick="eliminarParticipanteOrg('${usuario._id}')" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+        } else if (esCreadorDeOrg) {
+            acciones = '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-900 text-yellow-300">Creador</span>';
+        }
+        
+        container.append(`
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200 mb-2">
+                <div>
+                    <div class="font-semibold text-gray-900">${nombreCompleto}</div>
+                    <div class="text-gray-500 text-sm">${usuario.email}</div>
+                    <div class="mt-1">${rolBadge}</div>
+                </div>
+                <div>
+                    ${acciones}
+                </div>
+            </div>
+        `);
+    });
+}
+
+// Agregar participante a organización existente
+async function agregarParticipanteOrganizacion() {
+    const organizacionId = $('#participantes-org-id').val();
+    const usuarioId = $('#nuevo-participante-org-select').val();
+    const rol = $('#nuevo-participante-org-rol').val();
+    
+    if (!usuarioId) {
+        mostrarError('Seleccione un usuario');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/sw/organizaciones/${organizacionId}/participantes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuarioId, rol })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarExito('Participante agregado exitosamente');
+            // Actualizar organización en la lista
+            const index = organizaciones.findIndex(o => o._id === organizacionId);
+            if (index !== -1) {
+                organizaciones[index] = data.data;
+                organizacionSeleccionada = data.data;
+            }
+            renderizarParticipantesOrganizacionGestion();
+            renderizarOrganizaciones();
+            
+            // Limpiar selección
+            $('#nuevo-participante-org-select').val('');
+        } else {
+            mostrarError(data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al agregar participante');
+    }
+}
+
+// Eliminar participante de organización
+async function eliminarParticipanteOrg(usuarioId) {
+    if (!confirm('¿Está seguro de eliminar este participante?')) return;
+    
+    const organizacionId = $('#participantes-org-id').val();
+    
+    try {
+        const response = await fetch(`/api/sw/organizaciones/${organizacionId}/participantes/${usuarioId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarExito('Participante eliminado exitosamente');
+            // Actualizar organización en la lista
+            const index = organizaciones.findIndex(o => o._id === organizacionId);
+            if (index !== -1) {
+                organizaciones[index] = data.data;
+                organizacionSeleccionada = data.data;
+            }
+            renderizarParticipantesOrganizacionGestion();
+            renderizarOrganizaciones();
+        } else {
+            mostrarError(data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al eliminar participante');
+    }
+}
+
+// Cambiar rol de participante
+async function cambiarRolParticipanteOrg(usuarioId, nuevoRol) {
+    const organizacionId = $('#participantes-org-id').val();
+    
+    try {
+        const response = await fetch(`/api/sw/organizaciones/${organizacionId}/participantes/${usuarioId}/rol`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rol: nuevoRol })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarExito('Rol actualizado exitosamente');
+            // Actualizar organización en la lista
+            const index = organizaciones.findIndex(o => o._id === organizacionId);
+            if (index !== -1) {
+                organizaciones[index] = data.data;
+                organizacionSeleccionada = data.data;
+            }
+            renderizarParticipantesOrganizacionGestion();
+            renderizarOrganizaciones();
+        } else {
+            mostrarError(data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al actualizar rol');
     }
 }
 

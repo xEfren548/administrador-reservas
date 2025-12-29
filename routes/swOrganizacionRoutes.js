@@ -81,4 +81,34 @@ router.get(
     swOrganizacionController.getOrganizacionCuentas
 );
 
+/**
+ * @route   POST /api/sw/organizaciones/:id/participantes
+ * @desc    Agregar participante a una organización
+ * @access  Administrador de la organización
+ */
+router.post(
+    '/organizaciones/:id/participantes',
+    swOrganizacionController.addParticipante
+);
+
+/**
+ * @route   DELETE /api/sw/organizaciones/:id/participantes/:participanteId
+ * @desc    Eliminar participante de una organización
+ * @access  Administrador de la organización
+ */
+router.delete(
+    '/organizaciones/:id/participantes/:participanteId',
+    swOrganizacionController.removeParticipante
+);
+
+/**
+ * @route   PUT /api/sw/organizaciones/:id/participantes/:participanteId/rol
+ * @desc    Actualizar rol de un participante
+ * @access  Administrador de la organización
+ */
+router.put(
+    '/organizaciones/:id/participantes/:participanteId/rol',
+    swOrganizacionController.updateParticipanteRole
+);
+
 module.exports = router;

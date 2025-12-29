@@ -11,6 +11,26 @@ const swOrganizacionSchema = new Schema({
         type: String,
         trim: true
     },
+    participantes: [{
+        usuario: {
+            type: Schema.Types.ObjectId,
+            ref: 'Usuario',
+            required: true
+        },
+        rol: {
+            type: String,
+            enum: ['Administrador', 'Miembro'],
+            default: 'Miembro'
+        },
+        fechaIngreso: {
+            type: Date,
+            default: Date.now
+        },
+        agregadoPor: {
+            type: Schema.Types.ObjectId,
+            ref: 'Usuario'
+        }
+    }],
     activa: {
         type: Boolean,
         default: true
