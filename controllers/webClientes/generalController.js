@@ -91,7 +91,7 @@ const DOMAIN_TO_USER_ID = {
     'cabanasmazamitlajalisco.com.mx': '6642cfc347113ba5f87ce0a6', // ID del responsable de Jalisco
     'cabanasmazamitlanavarro.com.mx': '6642cff447113ba5f87ce0aa', // ID del responsable de Navarro MX
     'cabanasmazamitlanavarro.com': '6642cff447113ba5f87ce0aa', // ID del responsable de Navarro
-    'rentravel.com.mx': '671be608256c4d53c3f5e12f' // ID del responsable de RenTravel - FALTA ASIGNAR - de momento es Administracion NyN
+    'rentravel.com.mx': '694af08bd8037d02158b4a0d' // ID del responsable de RenTravel - (Cuenta Isra)
 };
 
 // Mapeo de dominios a nombres legibles para logs
