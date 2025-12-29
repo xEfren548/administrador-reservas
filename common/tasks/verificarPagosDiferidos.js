@@ -100,23 +100,23 @@ async function notificarCuotasProximas() {
  * Programar tareas de pagos diferidos
  */
 function iniciarCronPagosDiferidos() {
-    // Verificar cuotas vencidas todos los días a las 8:00 AM
-    cron.schedule('0 8 * * *', async () => {
+    // Verificar cuotas vencidas todos los días a las 6:30 AM
+    cron.schedule('30 6 * * *', async () => {
         console.log('[CRON] Ejecutando tarea de verificación de cuotas vencidas');
         await verificarCuotasVencidas();
     }, {
         timezone: "America/Mexico_City"
     });
     
-    // Notificar cuotas próximas todos los días a las 9:00 AM
-    cron.schedule('0 9 * * *', async () => {
+    // Notificar cuotas próximas todos los días a las 6:40 AM
+    cron.schedule('40 6 * * *', async () => {
         console.log('[CRON] Ejecutando tarea de notificación de cuotas próximas');
         await notificarCuotasProximas();
     }, {
         timezone: "America/Mexico_City"
     });
     
-    console.log('✓ Tareas programadas de pagos diferidos iniciadas (8:00 AM y 9:00 AM)');
+    console.log('✓ Tareas programadas de pagos diferidos iniciadas (6:30 AM y 6:40 AM)');
 }
 
 module.exports = {
