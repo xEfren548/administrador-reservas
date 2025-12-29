@@ -83,6 +83,15 @@ function inicializarEventos() {
         }
     });
 
+    // Listener para cuando se abre el modal de solicitud
+    $('#modalSolicitud').on('show.bs.modal', function(e) {
+        if ($(e.relatedTarget).attr('id') === 'btn-nueva-solicitud') {
+            $('#formSolicitud')[0].reset();
+            $('#solicitud-fecha').val(new Date().toISOString().split('T')[0]);
+            cargarCuentasParaSolicitudes();
+        }
+    });
+
     // Establecer fecha actual en el input de solicitud
     $('#solicitud-fecha').val(new Date().toISOString().split('T')[0]);
 }
@@ -1174,6 +1183,47 @@ function renderizarSolicitudes() {
     });
 }
 
+// Cargar cuentas de organizaciones donde el usuario es participante
+async function cargarCuentasParaSolicitudes() {
+    try {
+        mostrarSpinner();
+        const response = await fetch('/api/sw/cuentas/para-solicitudes');
+        const data = await response.json();
+        
+        if (data.success) {
+            const select = $('#solicitud-cuenta');
+            select.empty().append('<option value="">Seleccione una cuenta...</option>');
+            
+            // Agrupar por organización
+            const cuentasPorOrg = {};
+            data.data.forEach(cuenta => {
+                const orgNombre = cuenta.organizacion?.nombre || 'Sin organización';
+                if (!cuentasPorOrg[orgNombre]) {
+                    cuentasPorOrg[orgNombre] = [];
+                }
+                cuentasPorOrg[orgNombre].push(cuenta);
+            });
+            
+            // Agregar opciones agrupadas
+            Object.keys(cuentasPorOrg).sort().forEach(orgNombre => {
+                const optgroup = $(`<optgroup label="${orgNombre}"></optgroup>`);
+                cuentasPorOrg[orgNombre].forEach(cuenta => {
+                    const propietario = `${cuenta.propietario.firstName} ${cuenta.propietario.lastName}`;
+                    optgroup.append(`<option value="${cuenta._id}">${cuenta.nombre} (${cuenta.moneda}) - ${propietario}</option>`);
+                });
+                select.append(optgroup);
+            });
+        } else {
+            mostrarError('Error al cargar cuentas disponibles');
+        }
+    } catch (error) {
+        console.error('Error al cargar cuentas:', error);
+        mostrarError('Error al cargar cuentas disponibles');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
 async function guardarSolicitud() {
     const datos = {
         cuentaId: $('#solicitud-cuenta').val(),
@@ -1586,14 +1636,14 @@ function verDetalleSolicitud(solicitudId) {
                 </div>
             ` : ''}
             
-            ${solicitud.respuesta?.comprobanteConfirmacion ? `
+            ${solicitud.respuesta?.comprobanteConfirmacion?.url ? `
                 <div class="border-t border-gray-200 pt-4">
                     <p class="text-gray-500 text-sm mb-3">
                         <i class="fas fa-check-circle me-2"></i>Comprobante de Confirmación del Propietario
                     </p>
                     <div class="grid grid-cols-3 gap-3">
                         <div class="relative cursor-pointer" onclick="visualizarImagenCompleta('https://navarro.integradev.site/navarro/splitwise/${solicitud.respuesta.comprobanteConfirmacion.url}')">
-                            ${solicitud.respuesta.comprobanteConfirmacion.tipo.includes('pdf') ? `
+                            ${solicitud.respuesta.comprobanteConfirmacion.tipo && solicitud.respuesta.comprobanteConfirmacion.tipo.includes('pdf') ? `
                                 <div class="w-full h-24 bg-red-900 rounded-lg border border-gray-300 hover:border-teal-500 transition-colors flex items-center justify-center">
                                     <i class="fas fa-file-pdf text-4xl text-red-300"></i>
                                 </div>
@@ -2431,7 +2481,7 @@ async function verDetalleTransaccion(transaccionId) {
         }
 
         // Comprobante de confirmación del propietario
-        if (trans.comprobanteConfirmacion) {
+        if (trans.comprobanteConfirmacion?.url) {
             html += `
                 <div class="bg-gray-100 rounded-lg p-4 mb-4">
                     <h6 class="text-gray-600 mb-3"><i class="fas fa-check-circle me-2"></i>Comprobante de Confirmación del Propietario</h6>

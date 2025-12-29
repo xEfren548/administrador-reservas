@@ -708,6 +708,64 @@ const getCuentasValidasParaHabitacion = async (req, res) => {
     }
 };
 
+/**
+ * Obtener todas las cuentas activas del sistema
+ * Para crear solicitudes de transacción (cualquier usuario puede solicitar)
+ */
+const getCuentasParaSolicitudes = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+
+        // Obtener TODAS las cuentas activas del sistema
+        const cuentas = await SWCuenta.find({
+            activa: true
+        })
+            .populate('organizacion', 'nombre')
+            .populate('propietario', 'firstName lastName email')
+            .sort({ organizacion: 1, nombre: 1 });
+
+        // Filtrar cuentas donde el usuario NO es propietario
+        // (los propietarios deben crear transacciones directamente)
+        const cuentasFiltradas = cuentas.filter(cuenta => 
+            cuenta.propietario._id.toString() !== userId
+        );
+
+        // No mostrar saldos ni información sensible
+        const cuentasSinSaldo = cuentasFiltradas.map(cuenta => {
+            const cuentaObj = cuenta.toObject();
+            delete cuentaObj.saldoActual;
+            delete cuentaObj.saldoInicial;
+            delete cuentaObj.datosBancarios;
+            
+            return {
+                _id: cuentaObj._id,
+                nombre: cuentaObj.nombre,
+                tipoCuenta: cuentaObj.tipoCuenta,
+                moneda: cuentaObj.moneda,
+                descripcion: cuentaObj.descripcion,
+                organizacion: cuentaObj.organizacion,
+                propietario: {
+                    _id: cuentaObj.propietario._id,
+                    firstName: cuentaObj.propietario.firstName,
+                    lastName: cuentaObj.propietario.lastName
+                }
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data: cuentasSinSaldo
+        });
+    } catch (error) {
+        console.error('Error al obtener cuentas para solicitudes:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener cuentas',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     createCuentaValidators,
     updateCuentaValidators,
@@ -721,5 +779,6 @@ module.exports = {
     updateParticipantePermisos,
     getParticipantes,
     recalcularSaldo,
-    getCuentasValidasParaHabitacion
+    getCuentasValidasParaHabitacion,
+    getCuentasParaSolicitudes
 };

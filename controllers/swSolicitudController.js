@@ -1,6 +1,7 @@
 const SWSolicitudTransaccion = require('../models/SWSolicitudTransaccion');
 const SWCuenta = require('../models/SWCuenta');
 const SWParticipante = require('../models/SWParticipante');
+const SWOrganizacion = require('../models/SWOrganizacion');
 const { check, validationResult } = require('express-validator');
 const ftp = require('basic-ftp');
 const fs = require('fs');
@@ -57,7 +58,8 @@ const procesarSolicitudValidators = [
 ];
 
 /**
- * Crear solicitud de transacción (participantes no propietarios)
+ * Crear solicitud de transacción
+ * Cualquier usuario autenticado puede crear solicitudes para cualquier cuenta
  */
 const createSolicitud = async (req, res) => {
     try {
@@ -85,7 +87,7 @@ const createSolicitud = async (req, res) => {
 
         const userId = req.session.userId;
 
-        // Verificar que la cuenta existe
+        // Verificar que la cuenta existe y está activa
         const cuenta = await SWCuenta.findById(cuentaId);
         if (!cuenta) {
             return res.status(404).json({
@@ -94,22 +96,23 @@ const createSolicitud = async (req, res) => {
             });
         }
 
-        // Verificar que es participante activo de la cuenta
-        const participante = await SWParticipante.findOne({
+        if (!cuenta.activa) {
+            return res.status(400).json({
+                success: false,
+                message: 'No se pueden crear solicitudes para cuentas inactivas'
+            });
+        }
+
+        // Verificar si es propietario o participante de la cuenta
+        const esPropietario = cuenta.propietario.toString() === userId;
+        const participanteCuenta = await SWParticipante.findOne({
             cuenta: cuentaId,
             usuario: userId,
             activo: true
         });
 
-        if (!participante) {
-            return res.status(403).json({
-                success: false,
-                message: 'No es participante de esta cuenta'
-            });
-        }
-
-        // Si es propietario, debe crear transacciones directamente, no solicitudes
-        if (participante.rol === 'Propietario') {
+        // Si es propietario de la cuenta, debe crear transacciones directamente
+        if (esPropietario || (participanteCuenta && participanteCuenta.rol === 'Propietario')) {
             return res.status(400).json({
                 success: false,
                 message: 'Los propietarios deben crear transacciones directamente, no solicitudes'

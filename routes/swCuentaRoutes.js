@@ -41,6 +41,16 @@ router.get(
 );
 
 /**
+ * @route   GET /api/sw/cuentas/para-solicitudes
+ * @desc    Obtener todas las cuentas de organizaciones donde el usuario es participante (para crear solicitudes)
+ * @access  Autenticado
+ */
+router.get(
+    '/cuentas/para-solicitudes',
+    swCuentaController.getCuentasParaSolicitudes
+);
+
+/**
  * @route   GET /api/sw/cuentas/validas-habitacion
  * @desc    Obtener cuentas válidas para ligar a habitaciones (con datos bancarios completos)
  * @access  Autenticado

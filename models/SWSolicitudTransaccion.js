@@ -176,8 +176,8 @@ swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comenta
     
     const SWTransaccion = mongoose.model('SWTransaccion');
     
-    // Crear la transacción
-    const transaccion = new SWTransaccion({
+    // Preparar datos de la transacción
+    const transaccionData = {
         cuenta: this.cuenta,
         tipo: this.tipo,
         monto: this.monto,
@@ -194,20 +194,34 @@ swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comenta
         imagenes: this.imagenes,
         reservaAsociada: this.reservaAsociada,
         etiquetas: this.etiquetas,
-        notas: this.notas,
-        comprobanteConfirmacion: comprobanteConfirmacion
-    });
+        notas: this.notas
+    };
+    
+    // Solo agregar comprobante si existe
+    if (comprobanteConfirmacion && comprobanteConfirmacion.url) {
+        transaccionData.comprobanteConfirmacion = comprobanteConfirmacion;
+    }
+    
+    // Crear la transacción
+    const transaccion = new SWTransaccion(transaccionData);
     
     await transaccion.save();
     
-    // Actualizar la solicitud
-    this.estado = 'Aprobada';
-    this.respuesta = {
+    // Preparar respuesta de la solicitud
+    const respuestaData = {
         procesadaPor: usuarioId,
         fechaRespuesta: new Date(),
-        comentario: comentario,
-        comprobanteConfirmacion: comprobanteConfirmacion
+        comentario: comentario
     };
+    
+    // Solo agregar comprobante a la respuesta si existe
+    if (comprobanteConfirmacion && comprobanteConfirmacion.url) {
+        respuestaData.comprobanteConfirmacion = comprobanteConfirmacion;
+    }
+    
+    // Actualizar la solicitud
+    this.estado = 'Aprobada';
+    this.respuesta = respuestaData;
     this.transaccionCreada = transaccion._id;
     
     await this.save();
