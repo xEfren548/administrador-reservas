@@ -48,6 +48,9 @@
                 <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="solicitudes">
                     <i class="fas fa-clock me-1"></i> Solicitudes
                 </button>
+                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="recurrentes">
+                    <i class="fas fa-repeat me-1"></i> Recurrentes y Diferidos
+                </button>
             </nav>
         </div>
     </div>
@@ -428,6 +431,101 @@
             </div>
         </div>
 
+        <!-- Tab: Recurrentes y Diferidos -->
+        <div id="tab-recurrentes" class="tab-content hidden">
+            <!-- Sub-tabs -->
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <button class="nav-link active" onclick="mostrarSubtab('recurrentes')" id="subtab-btn-recurrentes">
+                        <i class="fas fa-sync-alt me-1"></i> Transacciones Recurrentes
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" onclick="mostrarSubtab('diferidos')" id="subtab-btn-diferidos">
+                        <i class="fas fa-calendar-alt me-1"></i> Pagos Diferidos
+                    </button>
+                </li>
+            </ul>
+
+            <div>
+                <!-- Tabla de recurrentes -->
+                <div id="subtab-recurrentes" class="subtab-content">
+                    <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                        <div class="p-4 sm:p-6 border-b border-gray-200">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <h2 class="text-xl font-semibold text-gray-900">Transacciones Recurrentes</h2>
+                                <div class="flex gap-2">
+                                    <button id="btn-nueva-recurrente" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTransaccionRecurrente">
+                                        <i class="fas fa-plus me-1"></i> Nueva Recurrente
+                                    </button>
+                                    <button id="btn-ejecutar-recurrentes-ahora" class="btn btn-warning btn-sm" title="Ejecutar ahora (para pruebas)">
+                                        <i class="fas fa-play me-1"></i> Ejecutar Ahora
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-600">
+                                <thead class="text-xs text-gray-500 uppercase bg-gray-100">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3">Concepto</th>
+                                        <th scope="col" class="px-6 py-3">Cuenta</th>
+                                        <th scope="col" class="px-6 py-3">Tipo</th>
+                                        <th scope="col" class="px-6 py-3 text-right">Monto</th>
+                                        <th scope="col" class="px-6 py-3">Frecuencia</th>
+                                        <th scope="col" class="px-6 py-3">Próxima Ejecución</th>
+                                        <th scope="col" class="px-6 py-3">Estado</th>
+                                        <th scope="col" class="px-6 py-3 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-recurrentes-body">
+                                    <!-- Se llenará dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de diferidos -->
+                <div id="subtab-diferidos" class="subtab-content hidden">
+                    <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                        <div class="p-4 sm:p-6 border-b border-gray-200">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <h2 class="text-xl font-semibold text-gray-900">Pagos Diferidos a Meses</h2>
+                                <div class="flex gap-2">
+                                    <button id="btn-nuevo-diferido" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalPagoDiferido">
+                                        <i class="fas fa-plus me-1"></i> Nuevo Pago Diferido
+                                    </button>
+                                    <button id="btn-verificar-cuotas-ahora" class="btn btn-warning btn-sm" title="Verificar cuotas ahora (para pruebas)">
+                                        <i class="fas fa-check me-1"></i> Verificar Cuotas
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-600">
+                                <thead class="text-xs text-gray-500 uppercase bg-gray-100">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3">Concepto</th>
+                                        <th scope="col" class="px-6 py-3">Cuenta</th>
+                                        <th scope="col" class="px-6 py-3 text-right">Monto Total</th>
+                                        <th scope="col" class="px-6 py-3 text-center">Cuotas</th>
+                                        <th scope="col" class="px-6 py-3 text-right">Pagadas</th>
+                                        <th scope="col" class="px-6 py-3">Progreso</th>
+                                        <th scope="col" class="px-6 py-3">Estado</th>
+                                        <th scope="col" class="px-6 py-3 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-diferidos-body">
+                                    <!-- Se llenará dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -727,6 +825,231 @@
     </div>
 </div>
 
+<!-- Modal: Nueva Transacción Recurrente -->
+<div class="modal fade" id="modalTransaccionRecurrente" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-white text-gray-800">
+            <div class="modal-header border-gray-200">
+                <h5 class="modal-title">Nueva Transacción Recurrente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formTransaccionRecurrente">
+                    <!-- Información básica -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="rec-cuenta" class="form-label">Cuenta *</label>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="rec-cuenta" required>
+                                <option value="">Seleccione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="rec-tipo" class="form-label">Tipo *</label>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="rec-tipo" required>
+                                <option value="Gasto">Gasto</option>
+                                <option value="Ingreso">Ingreso</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="rec-monto" class="form-label">Monto *</label>
+                            <input type="number" step="0.01" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="rec-monto" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="rec-concepto" class="form-label">Concepto *</label>
+                            <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="rec-concepto" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="rec-categoria" class="form-label">Categoría *</label>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="rec-categoria" required>
+                                <option value="Otro">Otro</option>
+                                <option value="Servicios">Servicios</option>
+                                <option value="Mantenimiento">Mantenimiento</option>
+                                <option value="Hogar">Hogar</option>
+                                <option value="Salario">Salario</option>
+                                <option value="Préstamo">Préstamo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="rec-descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control bg-gray-100 border-gray-300 text-gray-800" id="rec-descripcion" rows="2"></textarea>
+                    </div>
+
+                    <!-- Configuración de recurrencia -->
+                    <div class="border-top border-gray-300 pt-3 mt-3">
+                        <h6 class="text-gray-900 mb-3"><i class="fas fa-sync-alt me-2"></i>Configuración de Recurrencia</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="rec-frecuencia" class="form-label">
+                                    Frecuencia *
+                                    <i class="fas fa-info-circle ms-1 text-gray-400" title="Con qué frecuencia se repetirá esta transacción"></i>
+                                </label>
+                                <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="rec-frecuencia" required>
+                                    <option value="Diaria">Diaria</option>
+                                    <option value="Semanal">Semanal</option>
+                                    <option value="Quincenal">Quincenal</option>
+                                    <option value="Mensual" selected>Mensual</option>
+                                    <option value="Bimestral">Bimestral</option>
+                                    <option value="Trimestral">Trimestral</option>
+                                    <option value="Anual">Anual</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="rec-dia" class="form-label">
+                                    Día de ejecución
+                                    <i class="fas fa-info-circle ms-1 text-gray-400" title="Día del mes en que se ejecutará (ej: 1 para el primer día del mes)"></i>
+                                </label>
+                                <input type="number" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="rec-dia" min="1" max="31" placeholder="Opcional (1-31)">
+                                <small class="text-gray-500">Solo para frecuencia mensual</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="rec-fecha-inicio" class="form-label">Fecha de inicio *</label>
+                                <input type="date" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="rec-fecha-inicio" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="rec-fecha-fin" class="form-label">Fecha de fin (opcional)</label>
+                                <input type="date" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="rec-fecha-fin">
+                                <small class="text-gray-500">Dejar vacío para indefinido</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="rec-automatica">
+                            <label class="form-check-label text-gray-800" for="rec-automatica">
+                                <span class="d-flex align-items-center">
+                                    Ejecutar automáticamente (sin aprobación manual)
+                                    <i class="fas fa-info-circle ms-2 text-blue-500" 
+                                       title="✓ Marcado: Se ejecuta automáticamente en la fecha programada&#10;✗ Desmarcado: Requiere aprobación manual cada vez"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-html="true"></i>
+                                </span>
+                            </label>
+                            <small class="text-gray-600 d-block mt-1">
+                                <strong>Marcado:</strong> La transacción se procesa automáticamente (ideal para gastos fijos como renta o servicios)<br>
+                                <strong>Desmarcado:</strong> Recibirás un recordatorio y deberás aprobar manualmente (ideal para gastos variables)
+                            </small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="rec-notificar" class="form-label">
+                                Notificar con anticipación (días)
+                                <i class="fas fa-info-circle ms-1 text-gray-400" title="Cuántos días antes de la ejecución deseas recibir una notificación"></i>
+                            </label>
+                            <input type="number" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="rec-notificar" value="1" min="0">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-gray-200">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarRecurrente">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Nuevo Pago Diferido -->
+<div class="modal fade" id="modalPagoDiferido" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-white text-gray-800">
+            <div class="modal-header border-gray-200">
+                <h5 class="modal-title">Configurar Pago Diferido a Meses</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formPagoDiferido">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="dif-cuenta" class="form-label">Cuenta *</label>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="dif-cuenta" required>
+                                <option value="">Seleccione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="dif-monto-total" class="form-label">Monto Total *</label>
+                            <input type="number" step="0.01" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="dif-monto-total" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="dif-num-pagos" class="form-label">
+                                Número de Pagos (Meses) *
+                                <i class="fas fa-info-circle ms-1 text-gray-400" title="En cuántos meses dividirás el pago total (mínimo 2)"></i>
+                            </label>
+                            <input type="number" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="dif-num-pagos" min="2" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="dif-interes" class="form-label">
+                                Interés Mensual (%)
+                                <i class="fas fa-info-circle ms-1 text-gray-400" title="Tasa de interés mensual que se aplicará. Dejar en 0 para pagos sin intereses (meses sin intereses)"></i>
+                            </label>
+                            <input type="number" step="0.01" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="dif-interes" value="0" min="0" placeholder="0 = sin intereses">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="dif-fecha-inicio" class="form-label">
+                            Fecha del Primer Pago *
+                            <i class="fas fa-info-circle ms-1 text-gray-400" title="Fecha en que se realizará el primer pago. Los siguientes pagos serán un mes después de cada pago anterior"></i>
+                        </label>
+                        <input type="date" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="dif-fecha-inicio" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="dif-concepto" class="form-label">Concepto *</label>
+                            <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="dif-concepto" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="dif-categoria" class="form-label">Categoría</label>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="dif-categoria">
+                                <option value="Otro">Otro</option>
+                                <option value="Compras">Compras</option>
+                                <option value="Servicios">Servicios</option>
+                                <option value="Préstamo">Préstamo</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="dif-descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control bg-gray-100 border-gray-300 text-gray-800" id="dif-descripcion" rows="2"></textarea>
+                    </div>
+                    
+                    <!-- Preview de cuotas -->
+                    <div class="border-top border-gray-300 pt-3 mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-gray-900 mb-0"><i class="fas fa-calculator me-2"></i>Vista Previa de Cuotas</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="btnCalcularCuotas">
+                                <i class="fas fa-sync me-1"></i>Calcular
+                            </button>
+                        </div>
+                        <div id="preview-cuotas" class="table-responsive">
+                            <p class="text-gray-500 text-center py-3">Completa los datos y haz clic en "Calcular" para ver las cuotas</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-gray-200">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarDiferido">Crear Pago Diferido</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal: Detalle de Cuenta -->
 <div class="modal fade" id="modalDetalleCuenta" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
@@ -964,6 +1287,15 @@
     .tab-content.active {
         display: block;
     }
+    
+    /* Estilos para subtabs */
+    .subtab-content {
+        display: block;
+    }
+    .subtab-content.hidden {
+        display: none;
+    }
+    
     .scrollbar-hide::-webkit-scrollbar {
         display: none;
     }

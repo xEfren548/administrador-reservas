@@ -19,6 +19,8 @@ const logController = require('./controllers/logController');
 const NotFoundError = require('./common/error/not-found-error');
 const SendMessages = require('./common/tasks/send-messages');
 const backupController = require('./controllers/backupController');
+const { iniciarCronTransaccionesRecurrentes } = require('./common/tasks/ejecutarTransaccionesRecurrentes');
+const { iniciarCronPagosDiferidos } = require('./common/tasks/verificarPagosDiferidos');
 
 const passport = require('passport');
 const cookieSession = require('cookie-session');
@@ -211,6 +213,12 @@ mongoose.connect(db_url).then(async () => {
       scheduled: true,
       timezone: "America/Mexico_City"
     })
+
+    // Iniciar tareas programadas del módulo de finanzas
+    console.log('Inicializando tareas programadas del módulo de finanzas...');
+    iniciarCronTransaccionesRecurrentes();
+    iniciarCronPagosDiferidos();
+    console.log('✓ Todas las tareas programadas del módulo de finanzas iniciadas');
 
     
     

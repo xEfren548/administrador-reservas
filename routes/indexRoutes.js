@@ -54,6 +54,9 @@ const swCuentaRoutes = require('./swCuentaRoutes');
 const swTransaccionRoutes = require('./swTransaccionRoutes');
 const swSolicitudRoutes = require('./swSolicitudRoutes');
 const swDashboardRoutes = require('./swDashboardRoutes');
+const swTransaccionRecurrenteRoutes = require('./swTransaccionRecurrenteRoutes');
+const swPagoDiferidoRoutes = require('./swPagoDiferidoRoutes');
+const cronTasksRoutes = require('./cronTasksRoutes');
 const finanzasRoutes = require('./finanzasRoutes');
 
 const authMiddleware = require('../common/middlewares/authMiddleware');
@@ -135,6 +138,9 @@ router.use('/api/sw', swCuentaRoutes);
 router.use('/api/sw', swTransaccionRoutes);
 router.use('/api/sw', swSolicitudRoutes);
 router.use('/api/sw/dashboard', swDashboardRoutes);
+router.use('/api/sw', swTransaccionRecurrenteRoutes);
+router.use('/api/sw', swPagoDiferidoRoutes);
+router.use('/api/cron', cronTasksRoutes);
 
 // Additional routes
 router.use('/', rackLimpiezaRoutes);

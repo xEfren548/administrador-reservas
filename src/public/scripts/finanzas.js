@@ -122,6 +122,10 @@ function cambiarTab(tabName) {
         case 'solicitudes':
             cargarSolicitudes();
             break;
+        case 'recurrentes':
+            cargarTransaccionesRecurrentes();
+            cargarPagosDiferidos();
+            break;
     }
 }
 
@@ -3264,5 +3268,740 @@ $(document).ready(function() {
             }
         }
     });
+
+    // === EVENTOS PARA RECURRENTES Y DIFERIDOS ===
+    
+    // Botón para ejecutar recurrentes manualmente
+    $('#btn-ejecutar-recurrentes-ahora').click(async () => {
+        const result = await Swal.fire({
+            title: '¿Ejecutar transacciones recurrentes?',
+            text: 'Se procesarán todas las transacciones recurrentes pendientes',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, ejecutar',
+            cancelButtonText: 'Cancelar',
+            background: '#ffffff',
+            color: '#1f2937'
+        });
+
+        if (result.isConfirmed) {
+            await ejecutarRecurrentesManualmente();
+        }
+    });
+
+    // Botón para verificar cuotas manualmente
+    $('#btn-verificar-cuotas-ahora').click(async () => {
+        await verificarCuotasManualmente();
+    });
+
+    // Botón para guardar transacción recurrente
+    $('#btnGuardarRecurrente').click(async () => {
+        await guardarTransaccionRecurrente();
+    });
+
+    // Botón para calcular cuotas del pago diferido
+    $('#btnCalcularCuotas').click(() => {
+        calcularPreviewCuotas();
+    });
+
+    // Botón para guardar pago diferido
+    $('#btnGuardarDiferido').click(async () => {
+        await guardarPagoDiferido();
+    });
+
+    // Cargar cuentas en selects de recurrentes y diferidos
+    $('#modalTransaccionRecurrente').on('show.bs.modal', async function() {
+        await cargarCuentasEnSelect('#rec-cuenta');
+    });
+
+    $('#modalPagoDiferido').on('show.bs.modal', async function() {
+        await cargarCuentasEnSelect('#dif-cuenta');
+    });
 });
 
+// ==================== FUNCIONES PARA TRANSACCIONES RECURRENTES ====================
+
+async function cargarTransaccionesRecurrentes() {
+    try {
+        mostrarSpinner();
+        const response = await fetch('/api/sw/recurrentes');
+        const data = await response.json();
+
+        if (data.success) {
+            renderizarTransaccionesRecurrentes(data.data);
+        } else {
+            mostrarError('Error al cargar transacciones recurrentes');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al cargar transacciones recurrentes');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+function renderizarTransaccionesRecurrentes(recurrentes) {
+    const tbody = $('#tabla-recurrentes-body');
+    tbody.empty();
+
+    if (!recurrentes || recurrentes.length === 0) {
+        tbody.append(`
+            <tr>
+                <td colspan="8" class="text-center text-gray-500 py-4">
+                    No hay transacciones recurrentes registradas
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    recurrentes.forEach(rec => {
+        const estadoClass = rec.activa ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+        const estadoText = rec.activa ? 'Activa' : 'Pausada';
+        const tipoClass = rec.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+        const proximaEjecucion = new Date(rec.proximaEjecucion).toLocaleDateString('es-MX');
+
+        tbody.append(`
+            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                <td class="px-6 py-4">
+                    <div class="text-gray-900 font-medium">${rec.concepto}</div>
+                    ${rec.descripcion ? `<div class="text-gray-500 text-xs">${rec.descripcion}</div>` : ''}
+                </td>
+                <td class="px-6 py-4 text-gray-700">${rec.cuenta.nombre}</td>
+                <td class="px-6 py-4 ${tipoClass} font-medium">${rec.tipo}</td>
+                <td class="px-6 py-4 text-right font-medium text-gray-900">
+                    ${rec.cuenta.moneda} ${rec.monto.toFixed(2)}
+                </td>
+                <td class="px-6 py-4 text-gray-700">${rec.frecuencia}</td>
+                <td class="px-6 py-4 text-gray-700">${proximaEjecucion}</td>
+                <td class="px-6 py-4">
+                    <span class="px-2 py-1 text-xs font-medium rounded ${estadoClass}">${estadoText}</span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <div class="flex justify-center gap-2">
+                        <button class="btn btn-sm btn-success" onclick="ejecutarRecurrenteManual('${rec._id}')" title="Ejecutar ahora">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="btn btn-sm btn-${rec.activa ? 'warning' : 'info'}" onclick="toggleRecurrente('${rec._id}', ${rec.activa})" title="${rec.activa ? 'Pausar' : 'Reanudar'}">
+                            <i class="fas fa-${rec.activa ? 'pause' : 'play'}"></i>
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="verDetalleRecurrente('${rec._id}')" title="Ver detalle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="eliminarRecurrente('${rec._id}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `);
+    });
+}
+
+async function guardarTransaccionRecurrente() {
+    const datos = {
+        cuentaId: $('#rec-cuenta').val(),
+        tipo: $('#rec-tipo').val(),
+        monto: parseFloat($('#rec-monto').val()),
+        concepto: $('#rec-concepto').val().trim(),
+        categoria: $('#rec-categoria').val(),
+        descripcion: $('#rec-descripcion').val().trim(),
+        frecuencia: $('#rec-frecuencia').val(),
+        diaEjecucion: $('#rec-dia').val() ? parseInt($('#rec-dia').val()) : null,
+        fechaInicio: $('#rec-fecha-inicio').val(),
+        fechaFin: $('#rec-fecha-fin').val() || null,
+        notificarAntes: parseInt($('#rec-notificar').val()),
+        ejecutarAutomaticamente: $('#rec-automatica').is(':checked')
+    };
+
+    if (!datos.cuentaId || !datos.concepto || !datos.monto || !datos.fechaInicio) {
+        mostrarError('Complete todos los campos requeridos');
+        return;
+    }
+
+    try {
+        mostrarSpinner();
+        const response = await fetch('/api/sw/recurrentes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Transacción recurrente creada exitosamente');
+            $('#modalTransaccionRecurrente').modal('hide');
+            $('#formTransaccionRecurrente')[0].reset();
+            cargarTransaccionesRecurrentes();
+        } else {
+            mostrarError(data.message || 'Error al crear transacción recurrente');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al crear transacción recurrente');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function ejecutarRecurrenteManual(recurrenteId) {
+    const result = await Swal.fire({
+        title: '¿Ejecutar transacción ahora?',
+        text: 'Se creará una transacción inmediatamente',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, ejecutar',
+        cancelButtonText: 'Cancelar',
+        background: '#ffffff',
+        color: '#1f2937'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/recurrentes/${recurrenteId}/ejecutar`, {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Transacción ejecutada exitosamente');
+            cargarTransaccionesRecurrentes();
+            cargarTransacciones(); // Recargar transacciones también
+        } else {
+            mostrarError(data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al ejecutar transacción');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function toggleRecurrente(recurrenteId, estadoActual) {
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/recurrentes/${recurrenteId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ activa: !estadoActual })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito(`Transacción recurrente ${!estadoActual ? 'activada' : 'pausada'}`);
+            cargarTransaccionesRecurrentes();
+        } else {
+            mostrarError(data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al actualizar transacción recurrente');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function eliminarRecurrente(recurrenteId) {
+    const result = await Swal.fire({
+        title: '¿Eliminar transacción recurrente?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ef4444',
+        background: '#ffffff',
+        color: '#1f2937'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/recurrentes/${recurrenteId}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Transacción recurrente eliminada');
+            cargarTransaccionesRecurrentes();
+        } else {
+            mostrarError(data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al eliminar transacción recurrente');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function verDetalleRecurrente(recurrenteId) {
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/recurrentes/${recurrenteId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            const rec = data.data;
+            const ultimaEjecucion = rec.ultimaEjecucion ? new Date(rec.ultimaEjecucion).toLocaleString('es-MX') : 'Nunca';
+            const proximaEjecucion = new Date(rec.proximaEjecucion).toLocaleString('es-MX');
+
+            Swal.fire({
+                title: 'Detalle de Transacción Recurrente',
+                html: `
+                    <div class="text-left">
+                        <p><strong>Concepto:</strong> ${rec.concepto}</p>
+                        <p><strong>Cuenta:</strong> ${rec.cuenta.nombre}</p>
+                        <p><strong>Tipo:</strong> ${rec.tipo}</p>
+                        <p><strong>Monto:</strong> ${rec.cuenta.moneda} ${rec.monto.toFixed(2)}</p>
+                        <p><strong>Frecuencia:</strong> ${rec.frecuencia}</p>
+                        <p><strong>Última ejecución:</strong> ${ultimaEjecucion}</p>
+                        <p><strong>Próxima ejecución:</strong> ${proximaEjecucion}</p>
+                        <p><strong>Transacciones generadas:</strong> ${rec.transaccionesGeneradas.length}</p>
+                        <p><strong>Estado:</strong> ${rec.activa ? 'Activa' : 'Pausada'}</p>
+                    </div>
+                `,
+                width: 600,
+                background: '#ffffff',
+                color: '#1f2937'
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al obtener detalle');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function ejecutarRecurrentesManualmente() {
+    try {
+        mostrarSpinner();
+        const response = await fetch('/api/cron/ejecutar-recurrentes', {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito(`Se ejecutaron ${data.data.ejecutadas} transacciones recurrentes`);
+            cargarTransaccionesRecurrentes();
+            cargarTransacciones();
+        } else {
+            mostrarError(data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al ejecutar transacciones recurrentes');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+// ==================== FUNCIONES PARA PAGOS DIFERIDOS ====================
+
+async function cargarPagosDiferidos() {
+    try {
+        mostrarSpinner();
+        const response = await fetch('/api/sw/pagos-diferidos');
+        const data = await response.json();
+
+        if (data.success) {
+            renderizarPagosDiferidos(data.data);
+        } else {
+            mostrarError('Error al cargar pagos diferidos');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al cargar pagos diferidos');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+function renderizarPagosDiferidos(pagosDiferidos) {
+    const tbody = $('#tabla-diferidos-body');
+    tbody.empty();
+
+    if (!pagosDiferidos || pagosDiferidos.length === 0) {
+        tbody.append(`
+            <tr>
+                <td colspan="8" class="text-center text-gray-500 py-4">
+                    No hay pagos diferidos registrados
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    pagosDiferidos.forEach(pago => {
+        const estadoClass = pago.estado === 'Activo' ? 'bg-blue-100 text-blue-800' : 
+                          pago.estado === 'Completado' ? 'bg-green-100 text-green-800' : 
+                          'bg-gray-100 text-gray-800';
+        
+        const progreso = pago.progreso;
+
+        tbody.append(`
+            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                <td class="px-6 py-4">
+                    <div class="text-gray-900 font-medium">${pago.concepto}</div>
+                    ${pago.descripcion ? `<div class="text-gray-500 text-xs">${pago.descripcion}</div>` : ''}
+                </td>
+                <td class="px-6 py-4 text-gray-700">${pago.cuenta.nombre}</td>
+                <td class="px-6 py-4 text-right font-medium text-gray-900">
+                    ${pago.cuenta.moneda} ${pago.montoTotal.toFixed(2)}
+                </td>
+                <td class="px-6 py-4 text-center text-gray-700">${pago.numeroPagos}</td>
+                <td class="px-6 py-4 text-right text-gray-700">${progreso.pagadas}</td>
+                <td class="px-6 py-4">
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-teal-500 h-2 rounded-full" style="width: ${progreso.porcentaje}%"></div>
+                    </div>
+                    <small class="text-gray-500">${progreso.porcentaje}%</small>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="px-2 py-1 text-xs font-medium rounded ${estadoClass}">${pago.estado}</span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <div class="flex justify-center gap-2">
+                        <button class="btn btn-sm btn-primary" onclick="verDetallePagoDiferido('${pago._id}')" title="Ver detalle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${pago.estado === 'Activo' ? `
+                            <button class="btn btn-sm btn-danger" onclick="cancelarPagoDiferido('${pago._id}')" title="Cancelar">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `);
+    });
+}
+
+function calcularPreviewCuotas() {
+    const montoTotal = parseFloat($('#dif-monto-total').val());
+    const numeroPagos = parseInt($('#dif-num-pagos').val());
+    const interes = parseFloat($('#dif-interes').val()) || 0;
+    const fechaInicio = new Date($('#dif-fecha-inicio').val());
+
+    if (!montoTotal || !numeroPagos || !fechaInicio || isNaN(fechaInicio)) {
+        mostrarError('Complete los campos de monto, número de pagos y fecha de inicio');
+        return;
+    }
+
+    const tasaInteres = interes / 100;
+    let montoPorPago;
+    
+    if (tasaInteres > 0) {
+        montoPorPago = (montoTotal * tasaInteres * Math.pow(1 + tasaInteres, numeroPagos)) / 
+                       (Math.pow(1 + tasaInteres, numeroPagos) - 1);
+    } else {
+        montoPorPago = montoTotal / numeroPagos;
+    }
+
+    montoPorPago = Math.round(montoPorPago * 100) / 100;
+
+    let html = `
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Cuota</th>
+                    <th>Fecha</th>
+                    <th class="text-right">Monto</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    for (let i = 0; i < numeroPagos; i++) {
+        const fechaCuota = new Date(fechaInicio);
+        fechaCuota.setMonth(fechaCuota.getMonth() + i);
+        
+        html += `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${fechaCuota.toLocaleDateString('es-MX')}</td>
+                <td class="text-right">$${montoPorPago.toFixed(2)}</td>
+            </tr>
+        `;
+    }
+
+    html += `
+            </tbody>
+            <tfoot>
+                <tr class="font-weight-bold">
+                    <td colspan="2">Total</td>
+                    <td class="text-right">$${(montoPorPago * numeroPagos).toFixed(2)}</td>
+                </tr>
+            </tfoot>
+        </table>
+    `;
+
+    $('#preview-cuotas').html(html);
+}
+
+async function guardarPagoDiferido() {
+    const datos = {
+        cuentaId: $('#dif-cuenta').val(),
+        montoTotal: parseFloat($('#dif-monto-total').val()),
+        numeroPagos: parseInt($('#dif-num-pagos').val()),
+        concepto: $('#dif-concepto').val().trim(),
+        categoria: $('#dif-categoria').val(),
+        descripcion: $('#dif-descripcion').val().trim(),
+        fechaInicio: $('#dif-fecha-inicio').val(),
+        interes: parseFloat($('#dif-interes').val()) || 0
+    };
+
+    if (!datos.cuentaId || !datos.montoTotal || !datos.numeroPagos || !datos.concepto || !datos.fechaInicio) {
+        mostrarError('Complete todos los campos requeridos');
+        return;
+    }
+
+    try {
+        mostrarSpinner();
+        const response = await fetch('/api/sw/pagos-diferidos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Pago diferido creado exitosamente');
+            $('#modalPagoDiferido').modal('hide');
+            $('#formPagoDiferido')[0].reset();
+            $('#preview-cuotas').html('<p class="text-gray-500 text-center py-3">Completa los datos y haz clic en "Calcular" para ver las cuotas</p>');
+            cargarPagosDiferidos();
+        } else {
+            mostrarError(data.message || 'Error al crear pago diferido');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al crear pago diferido');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function verDetallePagoDiferido(pagoId) {
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/pagos-diferidos/${pagoId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            const pago = data.data;
+            const progreso = pago.progreso;
+            
+            let cuotasHtml = `
+                <table class="table table-sm mt-3">
+                    <thead>
+                        <tr>
+                            <th>Cuota</th>
+                            <th>Fecha Programada</th>
+                            <th class="text-right">Monto</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            pago.cuotas.forEach(cuota => {
+                const estadoClass = cuota.estado === 'Pagada' ? 'text-green-600' :
+                                  cuota.estado === 'Vencida' ? 'text-red-600' : 'text-gray-600';
+                const botonPagar = cuota.estado === 'Pendiente' || cuota.estado === 'Vencida' ?
+                    `<button class="btn btn-sm btn-success" onclick="pagarCuota('${pago._id}', ${cuota.numero})">Pagar</button>` :
+                    '<span class="text-success"><i class="fas fa-check"></i></span>';
+
+                cuotasHtml += `
+                    <tr>
+                        <td>${cuota.numero}</td>
+                        <td>${new Date(cuota.fechaProgramada).toLocaleDateString('es-MX')}</td>
+                        <td class="text-right">$${cuota.monto.toFixed(2)}</td>
+                        <td class="${estadoClass}">${cuota.estado}</td>
+                        <td>${botonPagar}</td>
+                    </tr>
+                `;
+            });
+
+            cuotasHtml += '</tbody></table>';
+
+            Swal.fire({
+                title: `Pago Diferido: ${pago.concepto}`,
+                html: `
+                    <div class="text-left">
+                        <p><strong>Cuenta:</strong> ${pago.cuenta.nombre}</p>
+                        <p><strong>Monto Total:</strong> ${pago.cuenta.moneda} ${pago.montoTotal.toFixed(2)}</p>
+                        <p><strong>Número de Pagos:</strong> ${pago.numeroPagos}</p>
+                        <p><strong>Monto por Pago:</strong> ${pago.cuenta.moneda} ${pago.montoPorPago.toFixed(2)}</p>
+                        ${pago.interes > 0 ? `<p><strong>Interés:</strong> ${pago.interes}% mensual</p>` : ''}
+                        <p><strong>Progreso:</strong> ${progreso.pagadas} de ${progreso.total} cuotas (${progreso.porcentaje}%)</p>
+                        <p><strong>Monto Pagado:</strong> ${pago.cuenta.moneda} ${progreso.montoPagado.toFixed(2)}</p>
+                        <p><strong>Monto Restante:</strong> ${pago.cuenta.moneda} ${progreso.montoRestante.toFixed(2)}</p>
+                        <p><strong>Estado:</strong> ${pago.estado}</p>
+                        <hr>
+                        <h6>Detalle de Cuotas</h6>
+                        ${cuotasHtml}
+                    </div>
+                `,
+                width: 800,
+                background: '#ffffff',
+                color: '#1f2937',
+                showConfirmButton: true,
+                confirmButtonText: 'Cerrar'
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al obtener detalle');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function pagarCuota(pagoId, cuotaNumero) {
+    const result = await Swal.fire({
+        title: `¿Pagar cuota ${cuotaNumero}?`,
+        text: 'Se creará una transacción de gasto en la cuenta',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, pagar',
+        cancelButtonText: 'Cancelar',
+        background: '#ffffff',
+        color: '#1f2937'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/pagos-diferidos/${pagoId}/cuotas/${cuotaNumero}/pagar`, {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Cuota pagada exitosamente');
+            cargarPagosDiferidos();
+            cargarTransacciones();
+            // Cerrar el modal actual y reabrir el detalle actualizado
+            Swal.close();
+            setTimeout(() => verDetallePagoDiferido(pagoId), 500);
+        } else {
+            mostrarError(data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al pagar cuota');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function cancelarPagoDiferido(pagoId) {
+    const result = await Swal.fire({
+        title: '¿Cancelar pago diferido?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No',
+        confirmButtonColor: '#ef4444',
+        background: '#ffffff',
+        color: '#1f2937'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/pagos-diferidos/${pagoId}/cancelar`, {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Pago diferido cancelado');
+            cargarPagosDiferidos();
+        } else {
+            mostrarError(data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al cancelar pago diferido');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function verificarCuotasManualmente() {
+    try {
+        mostrarSpinner();
+        const response = await fetch('/api/cron/verificar-cuotas', {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito(`Se marcaron ${data.data.cuotasVencidas} cuotas como vencidas`);
+            cargarPagosDiferidos();
+        } else {
+            mostrarError(data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al verificar cuotas');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function cargarCuentasEnSelect(selectId) {
+    try {
+        const response = await fetch('/api/sw/cuentas/mis-cuentas');
+        const data = await response.json();
+
+        if (data.success) {
+            const select = $(selectId);
+            select.empty();
+            select.append('<option value="">Seleccione...</option>');
+            
+            data.data.forEach(cuenta => {
+                select.append(`<option value="${cuenta._id}">${cuenta.nombre} (${cuenta.moneda})</option>`);
+            });
+        }
+    } catch (error) {
+        console.error('Error al cargar cuentas:', error);
+    }
+}
+
+// ==================== FUNCIÓN PARA MANEJAR SUBTABS ====================
+
+function mostrarSubtab(subtab) {
+    // Ocultar todos los subtabs
+    $('.subtab-content').addClass('hidden');
+    
+    // Remover clase active de todos los botones
+    $('#subtab-btn-recurrentes, #subtab-btn-diferidos').removeClass('active');
+    
+    // Mostrar el subtab seleccionado
+    $(`#subtab-${subtab}`).removeClass('hidden');
+    
+    // Activar el botón correspondiente
+    $(`#subtab-btn-${subtab}`).addClass('active');
+}
