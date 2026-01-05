@@ -138,7 +138,7 @@ router.get('/calendario-precios', async (req, res, next) => {
         // console.log(typeof habitaciones)
 
 
-        const allHabitaciones = await Habitacion.find().lean();
+        const allHabitaciones = await Habitacion.find().lean().sort({ 'propertyDetails.name': 1 });
         const habitaciones = allHabitaciones;
 
         // Crear un arreglo con las fechas correspondientes a cada día del año

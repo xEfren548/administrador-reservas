@@ -20,7 +20,7 @@ router.get('/calendario-bloqueofechasinversionistas', async (req, res, next) => 
         return next(new Error("El usuario no tiene permiso para ver este calendario."));
     }
 
-    const habitaciones = await Habitacion.find().lean();
+    const habitaciones = await Habitacion.find().lean().sort({ 'propertyDetails.name': 1 });
     if (!habitaciones) {
         return res.status(404).send('No rooms found');
     }

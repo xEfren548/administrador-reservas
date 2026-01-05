@@ -164,7 +164,7 @@ async function showUsersView(req, res, next){
             throw new NotFoundError("No roles found");
         }
 
-        const chalets = await Habitacion.find({}).lean();
+        const chalets = await Habitacion.find({}).lean().sort({ 'propertyDetails.name': 1 });
         if (!chalets) {
             throw new NotFoundError("No chalets found");
         }

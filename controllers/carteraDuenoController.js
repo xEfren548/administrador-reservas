@@ -13,7 +13,7 @@ async function obtenerCarteraDueno(req, res) {
         const { fechaInicio, fechaFin } = req.query;
 
         // Obtener habitaciones del dueño
-        const habitaciones = await Habitacion.find({ 'others.owner': duenoId }).lean();
+        const habitaciones = await Habitacion.find({ 'others.owner': duenoId }).lean().sort({ 'propertyDetails.name': 1 });
         const habitacionIds = habitaciones.map(h => h._id);
 
         if (habitacionIds.length === 0) {

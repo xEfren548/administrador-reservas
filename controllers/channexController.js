@@ -25,7 +25,7 @@ const channex = axios.create({
 
 /** Función para mapear las propiedades de NyN a Channex */
 async function mapProperties(req, res) {
-    const Habitaciones = await Habitacion.find({}).lean();
+    const Habitaciones = await Habitacion.find({}).lean().sort({ 'propertyDetails.name': 1 });
 
     const mappedHabitaciones = Habitaciones.map((hab) => {
         const { propertyDetails } = hab;
@@ -58,7 +58,7 @@ async function mapProperties(req, res) {
 
 async function getChannexProperties(channelId) {
     try {
-        const propiedades = await Habitacion.find().lean();
+        const propiedades = await Habitacion.find().lean().sort({ 'propertyDetails.name': 1 });
         const resp = await channex.get(`/api/v1/channels/${channelId}/action/listings`);
         // const chProps = resp.data.data.relationships.properties.data.map((prop) => prop.id);
         // const chProps = resp.data.data.relationships.properties.data;

@@ -121,7 +121,7 @@ router.get('/rackLimpieza-json', async (req, res) => {
         if (req.session.privilege === 'Limpieza') {
             services = await RackLimpieza.find({ idHabitacion: usuarioLogueado, status: { $ne: "Completado" } }).lean();
         } else if (req.session.privilege === 'Dueño de cabañas') {
-            const chalets = await Habitacion.find({ "others.owner": req.session.id }).lean();
+            const chalets = await Habitacion.find({ "others.owner": req.session.id }).lean().sort({ 'propertyDetails.name': 1 });
             const chaletIds = chalets.map(chalet => chalet._id);
             services = await RackLimpieza.find({ idHabitacion: { $in: chaletIds }, status: { $ne: "Completado" } }).lean();
         } else {
@@ -179,7 +179,7 @@ router.get('/rackLimpieza-json', async (req, res) => {
 });
 
 router.get('/racklimpieza-calendar', async (req, res) => {
-    const chalets = await Habitacion.find({ "others.janitor": req.session.id }).lean();
+    const chalets = await Habitacion.find({ "others.janitor": req.session.id }).lean().sort({ 'propertyDetails.name': 1 });
     const mappedChalets = chalets.map(chalet => ({
         id: chalet._id,
         name: chalet.propertyDetails.name

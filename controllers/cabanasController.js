@@ -363,7 +363,7 @@ const editChaletValidators = [
 
 async function showChaletsData(req, res, next) {
     try {
-        const chalets = await Habitacion.find({isActive: true})
+        const chalets = await Habitacion.find({isActive: true}).sort({ 'propertyDetails.name': 1 });
         res.send(chalets);
     } catch (error) {
         console.error(error);

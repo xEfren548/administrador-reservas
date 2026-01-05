@@ -11,9 +11,9 @@ async function obtenerHabitaciones(req, res) {
         
         if (privilege === "Vendedor") {
             const assignedChalets = req.session.assignedChalets;
-            habitaciones = await Habitacion.find({ _id: assignedChalets, isActive: true }).lean();
+            habitaciones = await Habitacion.find({ _id: assignedChalets, isActive: true }).lean().sort({ 'propertyDetails.name': 1 });
         } else if (privilege === "Limpieza") {
-            habitaciones = await Habitacion.find({ 'others.janitor': req.session.id, isActive: true }).lean();
+            habitaciones = await Habitacion.find({ 'others.janitor': req.session.id, isActive: true }).lean().sort({ 'propertyDetails.name': 1 });
         } else if (privilege === "Dueño de cabañas") {
             const ownerChalets = await Habitacion.find({ 'others.owner': req.session.id, isActive: true }).lean();
             const ownerChaletsIds = ownerChalets.map(chalet => chalet._id);

@@ -15,7 +15,7 @@ const {check} = require("express-validator");
 const showReservationsViewValidators = [
     check()
         .custom(async (value, { req }) => {
-            const habitaciones = await Habitacion.find({});
+            const habitaciones = await Habitacion.find({}).sort({ 'propertyDetails.name': 1 });
             if(!habitaciones){
                 throw new NotFoundError("No rooms found");
             }
