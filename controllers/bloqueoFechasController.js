@@ -138,6 +138,144 @@ async function crearFechaBloqueada(req, res){
     }
 }
 
+async function crearBloqueosRango(req, res){
+    const { dates, habitacionIds, motivo } = req.body;
+
+    try {
+        // Validaciones
+        if (!dates || !Array.isArray(dates) || dates.length === 0) {
+            return res.status(400).send({ message: 'Se requiere un array de rangos de fechas' });
+        }
+
+        if (!habitacionIds || !Array.isArray(habitacionIds) || habitacionIds.length === 0) {
+            return res.status(400).send({ message: 'Se requiere al menos una habitación' });
+        }
+
+        if (!req.session || !req.session.id) {
+            return res.status(401).send({ message: 'Usuario no autenticado' });
+        }
+
+        const creadoPorId = new mongoose.Types.ObjectId(req.session.id);
+        const ahora = new Date();
+
+        // Generar todas las fechas de todos los rangos
+        const todasLasFechas = [];
+        
+        for (const rango of dates) {
+            const { fechaInicio, fechaFin } = rango;
+
+            if (!fechaInicio || !fechaFin) {
+                return res.status(400).send({ message: 'Cada rango debe tener fechaInicio y fechaFin' });
+            }
+
+            const inicio = new Date(fechaInicio);
+            const fin = new Date(fechaFin);
+
+            if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) {
+                return res.status(400).send({ message: 'Fechas inválidas en el rango' });
+            }
+
+            if (inicio > fin) {
+                return res.status(400).send({ message: 'La fechaInicio no puede ser mayor que fechaFin' });
+            }
+
+            // Generar todas las fechas del rango (inclusive)
+            const fechaActual = new Date(inicio);
+            while (fechaActual <= fin) {
+                const fechaFormatted = new Date(fechaActual);
+                fechaFormatted.setUTCHours(17); // Ajustar la hora a 17:00:00 UTC
+                todasLasFechas.push(fechaFormatted);
+                
+                // Avanzar al siguiente día
+                fechaActual.setDate(fechaActual.getDate() + 1);
+            }
+        }
+
+        if (todasLasFechas.length === 0) {
+            return res.status(400).send({ message: 'No se generaron fechas válidas de los rangos proporcionados' });
+        }
+
+        const description = 'Fecha bloqueada';
+        const type = 'bloqueo';
+
+        // Contadores globales
+        let totalCreadas = 0;
+        let totalActualizadas = 0;
+        const resultadosPorHabitacion = [];
+
+        // Procesar cada habitación
+        for (const habitacionId of habitacionIds) {
+            const mongooseHabitacionId = new mongoose.Types.ObjectId(habitacionId);
+            const operaciones = [];
+            const fechasCreadas = [];
+            const fechasActualizadas = [];
+
+            // Procesar cada fecha para esta habitación
+            for (const fecha of todasLasFechas) {
+                const existeFecha = await BloqueoFechas.findOne({
+                    date: fecha,
+                    habitacionId: mongooseHabitacionId,
+                    type: 'bloqueo'
+                });
+
+                if (existeFecha) {
+                    // Actualizar fecha existente
+                    existeFecha.description = description;
+                    existeFecha.motivo = motivo || existeFecha.motivo;
+                    existeFecha.creadoPor = creadoPorId;
+                    existeFecha.fechaCreacion = ahora;
+                    existeFecha.horaCreacion = ahora;
+                    
+                    await existeFecha.save();
+                    fechasActualizadas.push(existeFecha);
+                } else {
+                    // Crear nueva fecha bloqueada
+                    const nuevoBloqueo = new BloqueoFechas({
+                        date: fecha,
+                        description,
+                        habitacionId: mongooseHabitacionId,
+                        type,
+                        motivo,
+                        creadoPor: creadoPorId,
+                        fechaCreacion: ahora,
+                        horaCreacion: ahora
+                    });
+
+                    operaciones.push(nuevoBloqueo);
+                }
+            }
+
+            // Insertar todas las nuevas fechas de esta habitación
+            if (operaciones.length > 0) {
+                const resultados = await BloqueoFechas.insertMany(operaciones);
+                fechasCreadas.push(...resultados);
+            }
+
+            totalCreadas += fechasCreadas.length;
+            totalActualizadas += fechasActualizadas.length;
+
+            resultadosPorHabitacion.push({
+                habitacionId,
+                creadas: fechasCreadas.length,
+                actualizadas: fechasActualizadas.length
+            });
+        }
+
+        res.status(200).send({
+            message: 'Bloqueos procesados exitosamente',
+            totalHabitaciones: habitacionIds.length,
+            totalFechas: todasLasFechas.length,
+            totalCreadas,
+            totalActualizadas,
+            detallePorHabitacion: resultadosPorHabitacion
+        });
+
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send({ message: error.message });
+    }
+}
+
 async function eliminarFechaBloqueada(req, res){
     try{
         const { fecha, habitacionId, type } = req.query;
@@ -191,5 +329,6 @@ module.exports = {
     obtenerFechasBloqueadas,
     crearFechaRestringida,
     crearFechaBloqueada,
+    crearBloqueosRango,
     eliminarFechaBloqueada
 }

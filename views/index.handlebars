@@ -575,6 +575,10 @@ body {
             data-bs-toggle="modal" data-bs-target="#event_entry_modal">
             <i class="fa fa-plus-circle"></i> Crear reserva
         </a>
+        <a id="bloquear-fechas-btn" class="btn btn-calendar-primary" href="#" role="button"
+            data-bs-toggle="modal" data-bs-target="#bloqueo_modal">
+            <i class="fa fa-plus-circle"></i> Bloquear fechas
+        </a>
         <a class="btn btn-calendar-outline" href="/api/cabanas/calendar" role="button">
             <i class="fa fa-building"></i> Ir a calendario de habitaciones
         </a>
@@ -954,6 +958,101 @@ body {
 </div>
 <!-- End Modal Alta cliente -->
 
+<!-- Modal Bloqueo de Fechas -->
+<div class="modal fade" id="bloqueo_modal" tabindex="-1" role="dialog" aria-labelledby="bloqueoModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content modal-reserva">
+            <div class="modal-header modal-header-mint">
+                <h5 class="modal-title" id="bloqueoModalLabel">
+                    <i class="fa fa-ban"></i> Bloquear fechas
+                </h5>
+                <button type="button" class="btn-close-mint" onclick="$('#bloqueo_modal').modal('hide');" aria-label="Close">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body modal-body-reserva">
+                <!-- Sección de habitaciones -->
+                <div class="reservation-section">
+                    <div class="section-header">
+                        <i class="fa fa-bed"></i>
+                        <h6>Selecciona las habitaciones</h6>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label-mint">
+                                <i class="fa fa-search"></i> Buscar habitaciones
+                            </label>
+                            <input type="text" id="search-habitaciones" class="form-control form-control-mint"
+                                placeholder="Escribe para buscar...">
+                        </div>
+                        <div class="col-12">
+                            <div id="habitaciones-list" class="habitaciones-checkbox-list" style="max-height: 200px; overflow-y: auto; border: 2px solid #e8e8e8; border-radius: 10px; padding: 0.75rem;">
+                                {{#if habitacionesIndividuales}}
+                                {{#each habitacionesIndividuales}}
+                                <div class="form-check habitacion-item" data-name="{{this.name}}">
+                                    <input class="form-check-input" type="checkbox" value="{{this.id}}" id="hab_{{this.id}}">
+                                    <label class="form-check-label" for="hab_{{this.id}}">
+                                        {{this.name}}{{#if this.tipologia}} ({{this.tipologia}}){{/if}}
+                                    </label>
+                                </div>
+                                {{/each}}
+                                {{else}}
+                                <p class="text-muted">No hay habitaciones disponibles</p>
+                                {{/if}}
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted" id="habitaciones-selected-count">0 habitaciones seleccionadas</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección de rangos de fechas -->
+                <div class="reservation-section">
+                    <div class="section-header">
+                        <i class="fa fa-calendar-alt"></i>
+                        <h6>Rangos de fechas a bloquear</h6>
+                    </div>
+                    <div id="rangos-container">
+                        <!-- Los rangos se agregarán aquí dinámicamente -->
+                    </div>
+                    <button type="button" class="btn btn-mint-outline w-100" id="btn-agregar-rango">
+                        <i class="fa fa-plus-circle"></i> Agregar rango de fechas
+                    </button>
+                </div>
+
+                <!-- Sección de motivo -->
+                <div class="reservation-section">
+                    <div class="section-header">
+                        <i class="fa fa-comment"></i>
+                        <h6>Motivo del bloqueo</h6>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label-mint">
+                                <i class="fa fa-pencil-alt"></i> Descripción <small class="text-muted">(opcional)</small>
+                            </label>
+                            <textarea id="motivo-bloqueo" class="form-control form-control-mint" rows="3"
+                                placeholder="Ej: Mantenimiento programado, Reparaciones, etc."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-item">
+                    <p id="txtBloqueoError" name="errMsg" class="error-message"></p>
+                </div>
+            </div>
+            <div class="modal-footer modal-footer-mint">
+                <button type="button" class="btn btn-mint-primary btn-lg" id="save-bloqueo-btn">
+                    <i class="fa fa-check-circle"></i> Crear Bloqueos
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Modal Bloqueo de Fechas -->
+
 
 
 <!-- Bootstrap JavaScript Libraries -->
@@ -976,5 +1075,253 @@ body {
                 preloader.style.display = "none";
             }
         });
+    });
+
+    // ===== MODAL BLOQUEO DE FECHAS =====
+    let rangoCounter = 0;
+    let flatpickrInstances = {};
+
+    // Agregar rango de fechas
+    document.getElementById('btn-agregar-rango').addEventListener('click', function() {
+        rangoCounter++;
+        const rangoId = `rango_${rangoCounter}`;
+        
+        const rangoHtml = `
+            <div class="rango-item mb-3" id="${rangoId}" style="border: 2px solid var(--mint-pale); border-radius: 10px; padding: 1rem; position: relative;">
+                <button type="button" class="btn btn-sm" style="position: absolute; top: 0.5rem; right: 0.5rem; background: #f8d7da; color: #721c24; border: none; border-radius: 50%; width: 30px; height: 30px; padding: 0;" onclick="eliminarRango('${rangoId}')">
+                    <i class="fa fa-times"></i>
+                </button>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label-mint">
+                            <i class="fa fa-calendar-week"></i> Rango ${rangoCounter}
+                        </label>
+                        <input type="text" class="form-control form-control-mint rango-fechas" id="fechas_${rangoId}" placeholder="Selecciona las fechas">
+                        <input type="hidden" class="fecha-inicio" id="inicio_${rangoId}">
+                        <input type="hidden" class="fecha-fin" id="fin_${rangoId}">
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('rangos-container').insertAdjacentHTML('beforeend', rangoHtml);
+        
+        // Inicializar flatpickr para este rango
+        flatpickrInstances[rangoId] = flatpickr(`#fechas_${rangoId}`, {
+            mode: "range",
+            dateFormat: "d-m-Y",
+            locale: {
+                rangeSeparator: " → "
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length === 1) {
+                    // Si solo hay una fecha, usarla para inicio y fin (mismo día)
+                    document.getElementById(`inicio_${rangoId}`).value = selectedDates[0].toISOString().split('T')[0];
+                    document.getElementById(`fin_${rangoId}`).value = selectedDates[0].toISOString().split('T')[0];
+                } else if (selectedDates.length === 2) {
+                    document.getElementById(`inicio_${rangoId}`).value = selectedDates[0].toISOString().split('T')[0];
+                    document.getElementById(`fin_${rangoId}`).value = selectedDates[1].toISOString().split('T')[0];
+                }
+            },
+            onClose: function(selectedDates, dateStr, instance) {
+                // Permitir bloqueo de un solo día
+                if (selectedDates.length === 1) {
+                    document.getElementById(`inicio_${rangoId}`).value = selectedDates[0].toISOString().split('T')[0];
+                    document.getElementById(`fin_${rangoId}`).value = selectedDates[0].toISOString().split('T')[0];
+                }
+            }
+        });
+    });
+
+    // Función global para eliminar rango
+    window.eliminarRango = function(rangoId) {
+        const rangoElement = document.getElementById(rangoId);
+        if (rangoElement) {
+            // Destruir instancia de flatpickr
+            if (flatpickrInstances[rangoId]) {
+                flatpickrInstances[rangoId].destroy();
+                delete flatpickrInstances[rangoId];
+            }
+            rangoElement.remove();
+        }
+    };
+
+    // Búsqueda de habitaciones
+    document.getElementById('search-habitaciones').addEventListener('input', function(e) {
+        const searchText = e.target.value.toLowerCase();
+        const habitacionItems = document.querySelectorAll('.habitacion-item');
+        
+        habitacionItems.forEach(item => {
+            const nombre = item.dataset.name.toLowerCase();
+            if (nombre.includes(searchText)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+
+    // Contador de habitaciones seleccionadas
+    document.getElementById('habitaciones-list').addEventListener('change', function() {
+        const checkedBoxes = document.querySelectorAll('#habitaciones-list input[type="checkbox"]:checked');
+        document.getElementById('habitaciones-selected-count').textContent = `${checkedBoxes.length} habitaciones seleccionadas`;
+    });
+
+    // Guardar bloqueos
+    document.getElementById('save-bloqueo-btn').addEventListener('click', async function() {
+        const spinner = document.querySelector('.loader');
+        const errorElement = document.getElementById('txtBloqueoError');
+        errorElement.textContent = '';
+
+        try {
+            spinner.classList.remove('loader--hidden');
+
+            // Obtener habitaciones seleccionadas
+            const habitacionesChecked = document.querySelectorAll('#habitaciones-list input[type="checkbox"]:checked');
+            
+            console.log('🔍 Debug - Checkboxes marcados:', habitacionesChecked.length);
+            habitacionesChecked.forEach((cb, index) => {
+                console.log(`  ${index + 1}. ID del checkbox: "${cb.id}", Value: "${cb.value}", Checked: ${cb.checked}`);
+            });
+            
+            const habitacionIds = Array.from(habitacionesChecked)
+                .map(cb => cb.value)
+                .filter(id => id && id.trim() !== ''); // Filtrar valores vacíos
+            
+            console.log('📋 IDs finales a enviar:', habitacionIds);
+
+            if (habitacionIds.length === 0) {
+                throw new Error('Debes seleccionar al menos una habitación');
+            }
+
+            // Obtener rangos de fechas
+            const rangoItems = document.querySelectorAll('.rango-item');
+            const dates = [];
+            
+            rangoItems.forEach(item => {
+                const rangoId = item.id;
+                const fechaInicio = document.getElementById(`inicio_${rangoId}`).value;
+                const fechaFin = document.getElementById(`fin_${rangoId}`).value;
+                
+                if (fechaInicio && fechaFin) {
+                    dates.push({
+                        fechaInicio,
+                        fechaFin
+                    });
+                }
+            });
+
+            if (dates.length === 0) {
+                throw new Error('Debes agregar al menos un rango de fechas');
+            }
+
+            // Validar que no se solapen los rangos
+            for (let i = 0; i < dates.length; i++) {
+                const inicio1 = new Date(dates[i].fechaInicio);
+                const fin1 = new Date(dates[i].fechaFin);
+                
+                // Validar que fecha fin >= fecha inicio
+                if (fin1 < inicio1) {
+                    throw new Error(`El rango ${i + 1} tiene fecha fin anterior a fecha inicio`);
+                }
+                
+                // Validar solapamiento con otros rangos
+                for (let j = i + 1; j < dates.length; j++) {
+                    const inicio2 = new Date(dates[j].fechaInicio);
+                    const fin2 = new Date(dates[j].fechaFin);
+                    
+                    // Verificar si se solapan
+                    if ((inicio1 <= fin2 && fin1 >= inicio2)) {
+                        throw new Error(`Los rangos ${i + 1} y ${j + 1} se solapan. Por favor ajusta las fechas.`);
+                    }
+                }
+            }
+
+            // Obtener motivo
+            const motivo = document.getElementById('motivo-bloqueo').value.trim();
+
+            // Preparar body
+            const bodyData = {
+                dates,
+                habitacionIds,
+                motivo
+            };
+
+            console.log('Enviando:', bodyData);
+
+            // Enviar a la API
+            const response = await fetch('/api/calendario-bloqueorango', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bodyData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al crear los bloqueos');
+            }
+
+            const data = await response.json();
+            console.log('Respuesta:', data);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Bloqueos creados',
+                html: `
+                    <p>${data.message}</p>
+                    <p><strong>Habitaciones:</strong> ${data.totalHabitaciones}</p>
+                    <p><strong>Fechas por habitación:</strong> ${data.totalFechas}</p>
+                    <p><strong>Nuevos bloqueos:</strong> ${data.totalCreadas}</p>
+                    <p><strong>Actualizados:</strong> ${data.totalActualizadas}</p>
+                `,
+                confirmButtonText: 'Aceptar'
+            }).then(() => {
+                $('#bloqueo_modal').modal('hide');
+                location.reload();
+            });
+
+        } catch (error) {
+            console.error('Error:', error);
+            errorElement.textContent = error.message;
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message,
+                confirmButtonText: 'Aceptar'
+            });
+        } finally {
+            spinner.classList.add('loader--hidden');
+        }
+    });
+
+    // Limpiar modal al cerrar
+    $('#bloqueo_modal').on('hidden.bs.modal', function() {
+        // Limpiar rangos
+        document.getElementById('rangos-container').innerHTML = '';
+        Object.values(flatpickrInstances).forEach(fp => fp.destroy());
+        flatpickrInstances = {};
+        rangoCounter = 0;
+        
+        // Limpiar habitaciones
+        document.querySelectorAll('#habitaciones-list input[type="checkbox"]').forEach(cb => cb.checked = false);
+        document.getElementById('habitaciones-selected-count').textContent = '0 habitaciones seleccionadas';
+        document.getElementById('search-habitaciones').value = '';
+        document.querySelectorAll('.habitacion-item').forEach(item => item.style.display = 'block');
+        
+        // Limpiar motivo
+        document.getElementById('motivo-bloqueo').value = '';
+        
+        // Limpiar error
+        document.getElementById('txtBloqueoError').textContent = '';
+    });
+
+    // Agregar primer rango al abrir el modal
+    $('#bloqueo_modal').on('shown.bs.modal', function() {
+        if (rangoCounter === 0) {
+            document.getElementById('btn-agregar-rango').click();
+        }
+    
     });
 </script>

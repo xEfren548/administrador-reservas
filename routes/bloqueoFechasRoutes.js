@@ -43,6 +43,7 @@ router.get('/calendario-bloqueofechas', async (req, res, next) => {
 router.get('/api/calendario-bloqueofechas', bloqueoFechasController.obtenerFechasBloqueadas);
 router.post('/api/calendario-bloqueofechas', bloqueoFechasController.crearFechaRestringida)
 router.post('/api/calendario-bloqueorealfechas', bloqueoFechasController.crearFechaBloqueada)
+router.post('/api/calendario-bloqueorango', bloqueoFechasController.crearBloqueosRango)
 router.delete('/api/calendario-bloqueofechas', bloqueoFechasController.eliminarFechaBloqueada);
 
 module.exports = router;

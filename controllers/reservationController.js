@@ -37,9 +37,9 @@ async function showReservationsView(req, res, next) {
         let habitaciones = [];
         if (privilege === "Vendedor"){
             const assignedChalets = req.session.assignedChalets;
-            habitaciones = await Habitacion.find({_id: assignedChalets, isActive: true}).lean();
+            habitaciones = await Habitacion.find({_id: assignedChalets, isActive: true}).lean().sort({ 'propertyDetails.name': 1 });
         } else {
-            habitaciones = await Habitacion.find( {isActive: true}).lean();
+            habitaciones = await Habitacion.find( {isActive: true}).lean().sort({ 'propertyDetails.name': 1 });
         }
         // const habitaciones = await Habitacion.find().lean();
         if(!habitaciones){
@@ -126,6 +126,11 @@ async function showReservationsView(req, res, next) {
 
         res.render('index', {
             chalets: chaletsYGrupos,
+            habitacionesIndividuales: habitaciones.map(h => ({
+                name: h.propertyDetails.name,
+                tipologia: h.propertyDetails.accomodationType,
+                id: h._id?.toString()
+            })),
             clientes: clientes,
             tipologias: tipologias
         });

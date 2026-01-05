@@ -18,6 +18,19 @@ const bloqueoFechasSchema = new Schema({
     type: {
         type: String,
         enum: ['bloqueo', 'restriccion', 'capacidad_minima']
+    },
+    motivo: {
+        type: String
+    },
+    creadoPor: {
+        type: Schema.Types.ObjectId,
+        ref: 'usuarios'
+    },
+    fechaCreacion: {
+        type: Date
+    },
+    horaCreacion: {
+        type: Date
     }
 });
 
