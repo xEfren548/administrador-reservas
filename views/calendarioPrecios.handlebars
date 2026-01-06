@@ -88,22 +88,27 @@
 			</div>
 			<div class="modal-body">
 				<div class="img-container">
-					<div class="row mt-2 mb-2">
-						<div class="col-8">
-							<label for="select-cabana"><b>Selecciona una o más habitaciones para modificar: </b></label>
+<div class="row mt-2 mb-3">
+					<div class="col-12">
+						<label for="select-cabana"><b>Selecciona una o más habitaciones para modificar: </b></label>
+						<input type="text" id="search-habitaciones-update" class="form-control mt-2"
+							placeholder="🔍 Buscar habitaciones...">
+						<div id="habitaciones-list-update" class="mt-2" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.25rem; padding: 0.75rem; background-color: #f8f9fa;">
+							{{#each habitaciones}}
+							<div class="form-check habitacion-item-update" data-name="{{this.propertyDetails.name}}" style="margin-bottom: 0.5rem;">
+								<input class="form-check-input checkboxes-chalets" type="checkbox" id="{{this._id}}" value="{{this._id}}"
+									name="chkb-{{this._id}}" data-precio-base="{{this.others.basePrice}}"
+									data-precio-base2+noches="{{this.others.basePrice2nights}}"
+									data-costo-base="{{this.others.baseCost}}"
+									data-costo-base2+noches="{{this.others.baseCost2nights}}" />
+								<label class="form-check-label" for="{{this._id}}">{{this.propertyDetails.name}}</label>
+							</div>
+							{{/each}}
 						</div>
-					</div> <!-- Cierre row -->
-					<div id="error-modal-persona" class="alert alert-danger" style="display: none;"></div>
-					{{#each habitaciones}}
-					<div class="form-check form-check-inline">
-						<input class="checkboxes-chalets" type="checkbox" id="{{this._id}}" value="{{this._id}}"
-							name="chkb-{{this._id}}" data-precio-base="{{this.others.basePrice}}"
-							data-precio-base2+noches="{{this.others.basePrice2nights}}"
-							data-costo-base="{{this.others.baseCost}}"
-							data-costo-base2+noches="{{this.others.baseCost2nights}}" />
-						<label class="form-check-label" for="chkb-{{this._id}}">{{this.propertyDetails.name}}</label>
+						<small class="text-muted" id="habitaciones-selected-count-update">0 habitaciones seleccionadas</small>
 					</div>
-					{{/each}}
+				</div>
+				<div id="error-modal-persona" class="alert alert-danger" style="display: none;"></div>
 
 
 
@@ -452,22 +457,27 @@
 				<div class="img-container">
 					<div id="error-modal" class="alert alert-danger" style="display: none;"></div>
 
-					<div class="row mt-2 mb-2">
-						<div class="col-8">
-							<label for="select-cabana">Habitación a modificar: </label>
+					<div class="row mt-2 mb-3">
+						<div class="col-12">
+							<label for="select-cabana"><b>Habitación a modificar: </b></label>
+							<input type="text" id="search-habitaciones-persona" class="form-control mt-2"
+								placeholder="🔍 Buscar habitaciones...">
+							<div id="habitaciones-list-persona" class="mt-2" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.25rem; padding: 0.75rem; background-color: #f8f9fa;">
+								{{#each habitaciones}}
+								<div class="form-check habitacion-item-persona" data-name="{{this.propertyDetails.name}}" style="margin-bottom: 0.5rem;">
+									<input class="form-check-input checkboxes-chalets-pp" type="checkbox" id="pp_{{this._id}}" value="{{this._id}}"
+										name="chkb-{{this._id}}\" data-pax="{{this.propertyDetails.maxOccupancy}}"
+										data-precio-base="{{this.others.basePrice}}"
+										data-precio-base2+noches="{{this.others.basePrice2nights}}"
+										data-costo-base="{{this.others.baseCost}}"
+										data-costo-base2+noches="{{this.others.baseCost2nights}}" />
+									<label class="form-check-label" for="pp_{{this._id}}">{{this.propertyDetails.name}}</label>
+								</div>
+								{{/each}}
+							</div>
+							<small class="text-muted" id="habitaciones-selected-count-persona">0 habitaciones seleccionadas</small>
 						</div>
-					</div> <!-- Cierre row -->
-					{{#each habitaciones}}
-					<div class="form-check form-check-inline">
-						<input class="checkboxes-chalets-pp" type="checkbox" id="{{this._id}}" value="{{this._id}}"
-							name="chkb-{{this._id}}" data-pax="{{this.propertyDetails.maxOccupancy}}"
-							data-precio-base="{{this.others.basePrice}}"
-							data-precio-base2+noches="{{this.others.basePrice2nights}}"
-							data-costo-base="{{this.others.baseCost}}"
-							data-costo-base2+noches="{{this.others.baseCost2nights}}" />
-						<label class="form-check-label" for="chkb-{{this._id}}">{{this.propertyDetails.name}}</label>
 					</div>
-					{{/each}}
 					{{!-- <select name="select-cabana" id="select-cabana-persona" class="form-select form-select-md"
 						required>
 						<option value="" selected disabled> Selecciona una cabaña para modificar --
@@ -2318,6 +2328,83 @@
 	document.addEventListener('DOMContentLoaded', function () {
 		const selectHabitacion = document.getElementById('habitacion-select');
 		const habitacionContainers = document.querySelectorAll('.habitacion-contenedor');
+
+		// ====== ORDENACIÓN ALFABÉTICA Y FUNCIONALIDAD DE BÚSQUEDA ======
+		
+		// Función para ordenar alfabéticamente las habitaciones en una lista
+		function ordenarHabitacionesAlfabeticamente(containerId) {
+			const container = document.getElementById(containerId);
+			if (!container) return;
+			
+			const items = Array.from(container.querySelectorAll('.form-check'));
+			items.sort((a, b) => {
+				const nameA = a.dataset.name.toLowerCase();
+				const nameB = b.dataset.name.toLowerCase();
+				return nameA.localeCompare(nameB, 'es');
+			});
+			
+			// Limpiar contenedor y agregar items ordenados
+			container.innerHTML = '';
+			items.forEach(item => container.appendChild(item));
+		}
+		
+		// Ordenar listas al cargar
+		ordenarHabitacionesAlfabeticamente('habitaciones-list-update');
+		ordenarHabitacionesAlfabeticamente('habitaciones-list-persona');
+		
+		// Búsqueda para modal de actualizar precios
+		const searchUpdate = document.getElementById('search-habitaciones-update');
+		if (searchUpdate) {
+			searchUpdate.addEventListener('input', function(e) {
+				const searchText = e.target.value.toLowerCase();
+				const items = document.querySelectorAll('.habitacion-item-update');
+				
+				items.forEach(item => {
+					const nombre = item.dataset.name.toLowerCase();
+					item.style.display = nombre.includes(searchText) ? 'block' : 'none';
+				});
+			});
+		}
+		
+		// Búsqueda para modal de precios por persona
+		const searchPersona = document.getElementById('search-habitaciones-persona');
+		if (searchPersona) {
+			searchPersona.addEventListener('input', function(e) {
+				const searchText = e.target.value.toLowerCase();
+				const items = document.querySelectorAll('.habitacion-item-persona');
+				
+				items.forEach(item => {
+					const nombre = item.dataset.name.toLowerCase();
+					item.style.display = nombre.includes(searchText) ? 'block' : 'none';
+				});
+			});
+		}
+		
+		// Contador de habitaciones seleccionadas - Modal actualizar precios
+		const listUpdate = document.getElementById('habitaciones-list-update');
+		if (listUpdate) {
+			listUpdate.addEventListener('change', function() {
+				const checked = document.querySelectorAll('#habitaciones-list-update input[type="checkbox"]:checked');
+				const counter = document.getElementById('habitaciones-selected-count-update');
+				if (counter) {
+					counter.textContent = `${checked.length} habitaciones seleccionadas`;
+				}
+			});
+		}
+		
+		// Contador de habitaciones seleccionadas - Modal precios por persona
+		const listPersona = document.getElementById('habitaciones-list-persona');
+		if (listPersona) {
+			listPersona.addEventListener('change', function() {
+				const checked = document.querySelectorAll('#habitaciones-list-persona input[type="checkbox"]:checked');
+				const counter = document.getElementById('habitaciones-selected-count-persona');
+				if (counter) {
+					counter.textContent = `${checked.length} habitaciones seleccionadas`;
+				}
+			});
+		}
+
+		// ====== FIN BÚSQUEDA Y ORDENACIÓN ======
 
 		// Oculta todos los contenedores de habitaciones al cargar la página
 		habitacionContainers.forEach(container => {
