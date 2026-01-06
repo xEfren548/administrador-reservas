@@ -85,6 +85,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     madeCheckIn: event.madeCheckIn,
                                     cleaningDetails: event.cleaningDetails,
                                     ota_name: event.channels?.ota_name,
+                                    motivo: event.motivo,
+                                    calendario: event.calendario,
+                                    creadaPor: event.creadaPor,
+                                    fechaCreacion: event.fechaCreacion,
+                                    horaCreacion: event.horaCreacion,
                                     allDay: true
                                 }
                             })
@@ -187,24 +192,60 @@ document.addEventListener('DOMContentLoaded', async function () {
             el.classList.add("relative");
 
             let newEl = document.createElement("div");
-            let newElTitle = mouseEnterInfo.event.id;
-            let newElTotal = mouseEnterInfo.event.extendedProps.total;
-            let newElStatus = mouseEnterInfo.event.extendedProps.status;
-            if (newElStatus === "pending") {
-                newElStatus = "Por Depo"
-            }
-            newEl.innerHTML = `
-            <div
-                class="fc-hoverable-event"
-                style="position: absolute; top: 100%; left: 0; width: 300px; height: auto; background-color: #FFFFFF; z-index: 100000000 !important; border: 1px solid #E3E8EE; border-radius: 0.5rem; padding: 0.75rem; font-size: 14px; font-family: 'Poppins', sans-serif; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); color: #2C3E50;"
-            >
-                <strong>${newElTitle}</strong>
-                <div>Total: $${newElTotal}</div>
-                <div>Status: <b>${newElStatus.toUpperCase()}<b></div>
+            const event = mouseEnterInfo.event;
+            const clientName = event.extendedProps.clientName || '';
+            
+            // Detectar si es un bloqueo
+            const isBlocked = 
+                event.extendedProps.type === 'blocked' ||
+                (event.title || '').toUpperCase() === 'FECHA BLOQUEADA' ||
+                clientName === 'Fecha Bloqueada';
 
-            </div>
-            `
-            document.body.appendChild(newEl); // Attach the popup directly to the body
+            let htmlContent = '';
+
+            if (isBlocked) {
+                // Información específica para bloqueos
+                const motivo = event.extendedProps.motivo || 'No especificado';
+                const calendario = event.extendedProps.calendario || 'N/A';
+                const creadaPor = event.extendedProps.creadaPor || 'Sistema';
+                const fechaCreacion = event.extendedProps.fechaCreacion || 'N/A';
+                const horaCreacion = event.extendedProps.horaCreacion || 'N/A';
+
+                htmlContent = `
+                <div
+                    class="fc-hoverable-event"
+                    style="position: absolute; top: 100%; left: 0; width: 300px; height: auto; background-color: #FFFFFF; z-index: 100000000 !important; border: 1px solid #E3E8EE; border-radius: 0.5rem; padding: 0.75rem; font-size: 14px; font-family: 'Poppins', sans-serif; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); color: #2C3E50;"
+                >
+                    <strong style="color: #e74c3c;">FECHA BLOQUEADA</strong>
+                    <div style="margin-top: 8px;"><strong>Motivo:</strong> ${motivo}</div>
+                    ${calendario !== 'N/A' ? `<div><strong>Calendario:</strong> ${calendario}</div>` : ''}
+                    <div><strong>Creado por:</strong> ${creadaPor}</div>
+                    <div><strong>Fecha creación:</strong> ${fechaCreacion}</div>
+                    <div><strong>Hora creación:</strong> ${horaCreacion}</div>
+                </div>
+                `;
+            } else {
+                // Información para reservas
+                let newElTitle = event.id;
+                let newElTotal = event.extendedProps.total;
+                let newElStatus = event.extendedProps.status;
+                if (newElStatus === "pending") {
+                    newElStatus = "Por Depo"
+                }
+                htmlContent = `
+                <div
+                    class="fc-hoverable-event"
+                    style="position: absolute; top: 100%; left: 0; width: 300px; height: auto; background-color: #FFFFFF; z-index: 100000000 !important; border: 1px solid #E3E8EE; border-radius: 0.5rem; padding: 0.75rem; font-size: 14px; font-family: 'Poppins', sans-serif; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); color: #2C3E50;"
+                >
+                    <strong>${newElTitle}</strong>
+                    <div>Total: $${newElTotal}</div>
+                    <div>Status: <b>${newElStatus.toUpperCase()}<b></div>
+                </div>
+                `;
+            }
+
+            newEl.innerHTML = htmlContent;
+            document.body.appendChild(newEl);
 
             const rect = el.getBoundingClientRect();
             const popupRect = newEl.firstElementChild.getBoundingClientRect();

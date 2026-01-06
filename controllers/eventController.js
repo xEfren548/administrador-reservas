@@ -167,6 +167,7 @@ const submitReservationValidators = [
         }),
 ];
 
+// Función para obtener eventos en la web (Legacy) 
 async function obtenerEventos(req, res) {
     // Quitamos chaletId de req.query como pediste
     const { start, end } = req.query;
@@ -232,6 +233,13 @@ async function obtenerEventos(req, res) {
             ).lean();
         }
 
+        // -------- Usuarios que crearon bloqueos (batch) --------
+        const creadoresBloqueosIds = [...new Set(bloqueos.map(b => b.creadoPor).filter(Boolean))];
+        const creadoresBloqueos = creadoresBloqueosIds.length
+            ? await Usuario.find({ _id: { $in: creadoresBloqueosIds } }, { firstName: 1, lastName: 1, color: 1 }).lean()
+            : [];
+        const creadoresBloqueosMap = new Map(creadoresBloqueos.map(u => [u._id.toString(), u]));
+
         // Convertimos bloqueos a “eventos” sintéticos con el MISMO shape que usabas
         const eventosBloqueo = bloqueos.map(fecha => {
             const arrivalDate = new Date(fecha.date);
@@ -240,6 +248,18 @@ async function obtenerEventos(req, res) {
             const departureDate = new Date(arrivalDate);
             departureDate.setUTCDate(departureDate.getUTCDate() + 1);
             departureDate.setUTCHours(12, 0, 0, 0);
+
+            const fechaCreacionUpd = fecha.fechaCreacion ? momentTz(fecha.fechaCreacion).tz('America/Mexico_City').format('DD-MM-YYYY') : null;
+            const horaCreacionUpd = fecha.horaCreacion ? momentTz(fecha.horaCreacion).tz('America/Mexico_City').format('HH:mm:ss') : null;
+
+            // Obtener información del usuario creador
+            let creadaPor = null;
+            if (fecha.creadoPor) {
+                const creador = creadoresBloqueosMap.get(fecha.creadoPor.toString());
+                if (creador) {
+                    creadaPor = `${creador.firstName} ${creador.lastName}`;
+                }
+            }
 
             return {
                 _id: new mongoose.Types.ObjectId(),
@@ -256,10 +276,15 @@ async function obtenerEventos(req, res) {
                 surveySubmitted: false,
                 isDeposit: false,
                 status: "n/a",
-                createdBy: "n/a",
+                createdBy: fecha.creadoPor || "n/a",
                 thanksSent: false,
                 colorUsuario: "#ff0000",
                 clientName: "Fecha Bloqueada",
+                motivo: fecha.motivo || "No especificado",
+                calendario: fecha.calendario || null,
+                fechaCreacion: fechaCreacionUpd,
+                horaCreacion: horaCreacionUpd,
+                creadaPor: creadaPor
             };
         });
 
