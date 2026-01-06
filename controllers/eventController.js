@@ -3027,6 +3027,7 @@ function groupLocationsByMunicipality(locations) {
     return groupedByMunicipality;
 }
 
+// Cotizador WEB 
 async function cotizadorChaletsyPrecios(req, res) {
     try {
         const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles, isForClient, noVendedor } = req.body;
@@ -3235,7 +3236,9 @@ async function cotizadorChaletsyPrecios(req, res) {
             groupName: chalet._groupInfo.groupName,
             availableCount: chalet._groupInfo.availableCount,
             availableRoomIds: chalet._groupInfo.availableRoomIds,
-            allAvailableRooms: chalet._groupInfo.allRooms
+            allAvailableRooms: chalet._groupInfo.allRooms,
+            latitude: chalet.location.latitude,
+            longitude: chalet.location.longitude,
         }));
 
         const eventoParaReservar = {
