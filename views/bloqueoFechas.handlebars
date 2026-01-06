@@ -73,23 +73,23 @@
                 <div class="img-container">
                     <div id="error-modal-persona" class="alert alert-danger" style="display: none;"></div>
 
-                    <div class="row mt-2 mb-2">
-                        <div class="col-8">
-                            <label for="select-cabana"><b>Selecciona una o más habitaciones: </b></label>
+                    <div class="row mt-2 mb-3">
+                        <div class="col-12">
+                            <label for="select-cabana"><b>Habitación a modificar: </b></label>
+                            <input type="text" id="search-habitaciones-restriccion" class="form-control mt-2"
+                                placeholder="🔍 Buscar habitaciones...">
+                            <div id="habitaciones-list-restriccion" class="mt-2" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.25rem; padding: 0.75rem; background-color: #f8f9fa;">
+                                {{#each chalets}}
+                                <div class="form-check habitacion-item-restriccion" data-name="{{this.name}}" style="margin-bottom: 0.5rem;">
+                                    <input class="form-check-input checkboxes-chalets" type="checkbox" id="{{this.id}}" value="{{this.id}}"
+                                        name="chkb-{{this.id}}" />
+                                    <label class="form-check-label" for="{{this.id}}">{{this.name}}</label>
+                                </div>
+                                {{/each}}
+                            </div>
+                            <small class="text-muted" id="habitaciones-selected-count-restriccion">0 habitaciones seleccionadas</small>
                         </div>
                     </div> <!-- Cierre row -->
-                    {{#each chalets}}
-                    <div class="form-check form-check-inline">
-						<input
-							class="checkboxes-chalets"
-							type="checkbox"
-							id="{{this.id}}"
-							value="{{this.id}}"
-							name="chkb-{{this.id}}"
-						/>
-						<label class="form-check-label" for="chkb-{{this.id}}">{{this.name}}</label>
-					</div>
-                    {{/each}}
                     <div class="row">
 
                         <div class="col-12 mb-2 mt-2">
@@ -179,6 +179,16 @@
                     </div>
 
                     <div class="row mt-2">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="motivo-restriccion" class="form-label">Motivo (opcional):</label>
+                                <textarea class="form-control" id="motivo-restriccion" rows="2" 
+                                    placeholder="Ej: Temporada alta, Evento especial, Mantenimiento..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-2">
                         <small>IMPORTANTE: Este será el nuevo registro, por lo que si hay alguno anterior para esas
                             fechas, se
                             eliminará.</small>
@@ -211,23 +221,23 @@
                 <div class="img-container">
                     <div id="error-modal-persona" class="alert alert-danger" style="display: none;"></div>
 
-                    <div class="row mt-2 mb-2">
-                        <div class="col-8">
-                            <label for="select-cabana"><b>Selecciona una o más habitaciones: </b></label>
+                    <div class="row mt-2 mb-3">
+                        <div class="col-12">
+                            <label for="select-cabana"><b>Habitación a modificar: </b></label>
+                            <input type="text" id="search-habitaciones-bloqueo" class="form-control mt-2"
+                                placeholder="🔍 Buscar habitaciones...">
+                            <div id="habitaciones-list-bloqueo" class="mt-2" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.25rem; padding: 0.75rem; background-color: #f8f9fa;">
+                                {{#each chalets}}
+                                <div class="form-check habitacion-item-bloqueo" data-name="{{this.name}}" style="margin-bottom: 0.5rem;">
+                                    <input class="form-check-input checkboxes-chalets-block" type="checkbox" id="blk_{{this.id}}" value="{{this.id}}"
+                                        name="chkb-{{this.id}}" />
+                                    <label class="form-check-label" for="blk_{{this.id}}">{{this.name}}</label>
+                                </div>
+                                {{/each}}
+                            </div>
+                            <small class="text-muted" id="habitaciones-selected-count-bloqueo">0 habitaciones seleccionadas</small>
                         </div>
                     </div> <!-- Cierre row -->
-                    {{#each chalets}}
-                    <div class="form-check form-check-inline">
-						<input
-							class="checkboxes-chalets-block"
-							type="checkbox"
-							id="{{this.id}}"
-							value="{{this.id}}"
-							name="chkb-{{this.id}}"
-						/>
-						<label class="form-check-label" for="chkb-{{this.id}}">{{this.name}}</label>
-					</div>
-                    {{/each}}
                     <div class="row">
 
                         <div class="col-12 mb-2 mt-2">
@@ -295,6 +305,16 @@
                     </div>
 
                     <div class="row mt-2">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="motivo-bloqueo" class="form-label">Motivo (opcional):</label>
+                                <textarea class="form-control" id="motivo-bloqueo" rows="2" 
+                                    placeholder="Ej: Mantenimiento, Reserva privada, Reparaciones..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-2">
                         <small>IMPORTANTE: Este será el nuevo registro, por lo que si hay alguno anterior para esas
                             fechas, se
                             eliminará.</small>
@@ -327,23 +347,23 @@
                 <div class="img-container">
                     <div id="error-modal-persona" class="alert alert-danger" style="display: none;"></div>
 
-                    <div class="row mt-2 mb-2">
-                        <div class="col-8">
-                            <label for="select-cabana"><b>Selecciona una o más habitaciones: </b></label>
+                    <div class="row mt-2 mb-3">
+                        <div class="col-12">
+                            <label for="select-cabana"><b>Habitación a modificar: </b></label>
+                            <input type="text" id="search-habitaciones-capacidad" class="form-control mt-2"
+                                placeholder="🔍 Buscar habitaciones...">
+                            <div id="habitaciones-list-capacidad" class="mt-2" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.25rem; padding: 0.75rem; background-color: #f8f9fa;">
+                                {{#each chalets}}
+                                <div class="form-check habitacion-item-capacidad" data-name="{{this.name}}" style="margin-bottom: 0.5rem;">
+                                    <input class="form-check-input checkboxes-chalets-block" type="checkbox" id="cap_{{this.id}}" value="{{this.id}}"
+                                        name="chkb-{{this.id}}" />
+                                    <label class="form-check-label" for="cap_{{this.id}}">{{this.name}}</label>
+                                </div>
+                                {{/each}}
+                            </div>
+                            <small class="text-muted" id="habitaciones-selected-count-capacidad">0 habitaciones seleccionadas</small>
                         </div>
                     </div> <!-- Cierre row -->
-                    {{#each chalets}}
-                    <div class="form-check form-check-inline">
-						<input
-							class="checkboxes-chalets-block"
-							type="checkbox"
-							id="{{this.id}}"
-							value="{{this.id}}"
-							name="chkb-{{this.id}}"
-						/>
-						<label class="form-check-label" for="chkb-{{this.id}}">{{this.name}}</label>
-					</div>
-                    {{/each}}
                     <div class="row">
 
                         <div class="col-12 mb-2 mt-2">
@@ -434,6 +454,16 @@
 
                         </div>
 
+                    </div>
+
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="motivo-capacidad" class="form-label">Motivo (opcional):</label>
+                                <textarea class="form-control" id="motivo-capacidad" rows="2" 
+                                    placeholder="Ej: Promoción grupos, Evento corporativo..."></textarea>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row mt-2">
@@ -663,6 +693,103 @@
     })
 
     document.addEventListener('DOMContentLoaded', function() {
+        // ====== ORDENACIÓN ALFABÉTICA Y FUNCIONALIDAD DE BÚSQUEDA ======
+        
+        // Función para ordenar alfabéticamente las habitaciones en una lista
+        function ordenarHabitacionesAlfabeticamente(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const items = Array.from(container.querySelectorAll('.form-check'));
+            items.sort((a, b) => {
+                const nameA = a.dataset.name.toLowerCase();
+                const nameB = b.dataset.name.toLowerCase();
+                return nameA.localeCompare(nameB, 'es');
+            });
+            
+            container.innerHTML = '';
+            items.forEach(item => container.appendChild(item));
+        }
+        
+        // Ordenar listas al cargar
+        ordenarHabitacionesAlfabeticamente('habitaciones-list-restriccion');
+        ordenarHabitacionesAlfabeticamente('habitaciones-list-bloqueo');
+        ordenarHabitacionesAlfabeticamente('habitaciones-list-capacidad');
+        
+        // Búsqueda para modal de restricción
+        const searchRestriccion = document.getElementById('search-habitaciones-restriccion');
+        if (searchRestriccion) {
+            searchRestriccion.addEventListener('input', function(e) {
+                const searchText = e.target.value.toLowerCase();
+                const items = document.querySelectorAll('.habitacion-item-restriccion');
+                
+                items.forEach(item => {
+                    const nombre = item.dataset.name.toLowerCase();
+                    item.style.display = nombre.includes(searchText) ? 'block' : 'none';
+                });
+            });
+        }
+        
+        // Búsqueda para modal de bloqueo
+        const searchBloqueo = document.getElementById('search-habitaciones-bloqueo');
+        if (searchBloqueo) {
+            searchBloqueo.addEventListener('input', function(e) {
+                const searchText = e.target.value.toLowerCase();
+                const items = document.querySelectorAll('.habitacion-item-bloqueo');
+                
+                items.forEach(item => {
+                    const nombre = item.dataset.name.toLowerCase();
+                    item.style.display = nombre.includes(searchText) ? 'block' : 'none';
+                });
+            });
+        }
+        
+        // Búsqueda para modal de capacidad
+        const searchCapacidad = document.getElementById('search-habitaciones-capacidad');
+        if (searchCapacidad) {
+            searchCapacidad.addEventListener('input', function(e) {
+                const searchText = e.target.value.toLowerCase();
+                const items = document.querySelectorAll('.habitacion-item-capacidad');
+                
+                items.forEach(item => {
+                    const nombre = item.dataset.name.toLowerCase();
+                    item.style.display = nombre.includes(searchText) ? 'block' : 'none';
+                });
+            });
+        }
+        
+        // Contador para modal restricción
+        const checkboxesRestriccion = document.querySelectorAll('#habitaciones-list-restriccion .checkboxes-chalets');
+        const counterRestriccion = document.getElementById('habitaciones-selected-count-restriccion');
+        checkboxesRestriccion.forEach(cb => {
+            cb.addEventListener('change', function() {
+                const count = document.querySelectorAll('#habitaciones-list-restriccion .checkboxes-chalets:checked').length;
+                counterRestriccion.textContent = `${count} habitaciones seleccionadas`;
+            });
+        });
+        
+        // Contador para modal bloqueo
+        const checkboxesBloqueo = document.querySelectorAll('#habitaciones-list-bloqueo .checkboxes-chalets-block');
+        const counterBloqueo = document.getElementById('habitaciones-selected-count-bloqueo');
+        checkboxesBloqueo.forEach(cb => {
+            cb.addEventListener('change', function() {
+                const count = document.querySelectorAll('#habitaciones-list-bloqueo .checkboxes-chalets-block:checked').length;
+                counterBloqueo.textContent = `${count} habitaciones seleccionadas`;
+            });
+        });
+        
+        // Contador para modal capacidad
+        const checkboxesCapacidad = document.querySelectorAll('#habitaciones-list-capacidad .checkboxes-chalets-block');
+        const counterCapacidad = document.getElementById('habitaciones-selected-count-capacidad');
+        checkboxesCapacidad.forEach(cb => {
+            cb.addEventListener('change', function() {
+                const count = document.querySelectorAll('#habitaciones-list-capacidad .checkboxes-chalets-block:checked').length;
+                counterCapacidad.textContent = `${count} habitaciones seleccionadas`;
+            });
+        });
+        
+        // ====== SELECCIÓN DE HABITACIÓN EN CALENDARIO ======
+        
         const selectHabitacion = document.getElementById('habitacion-select');
         const calendarContainers = document.querySelectorAll('[id^="calendar-container-"]');
         const namesContainers = document.querySelectorAll('.names-container')

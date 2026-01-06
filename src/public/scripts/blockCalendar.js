@@ -257,6 +257,7 @@ agregarFechasBtn.addEventListener("click", async (e) => {
     
                 // const {date, description, min, habitacionId} = req.body;
                 const estanciaMinima = document.querySelector('#estancia-minima-select')
+                const motivo = document.querySelector('#motivo-restriccion').value;
                 const habitacionId = chaletId;
     
                 for (const fecha of fechas) {
@@ -265,7 +266,8 @@ agregarFechasBtn.addEventListener("click", async (e) => {
                         date: fecha,
                         min: estanciaMinima.value,
                         habitacionId: habitacionId,
-                        type: 'restriccion'
+                        type: 'restriccion',
+                        motivo: motivo
                     }
     
                     const response = await fetch('/api/calendario-bloqueofechas', {
@@ -552,6 +554,7 @@ addBloqueadas2btn.addEventListener('click', async (e) => {
                 console.log('ejecutando fetch repetido...');
     
                 // const {date, description, min, habitacionId} = req.body;
+                const motivo = document.querySelector('#motivo-bloqueo').value;
                 const habitacionId = habitacionesAmodificar;
     
                 for (const fecha of fechas) {
@@ -559,7 +562,8 @@ addBloqueadas2btn.addEventListener('click', async (e) => {
                     const jsonBody = {
                         date: fecha,
                         habitacionId: habitacionId,
-                        type: 'bloqueo'
+                        type: 'bloqueo',
+                        motivo: motivo
                     }
     
                     const response = await fetch('/api/calendario-bloqueorealfechas', {
@@ -718,6 +722,7 @@ addBloqueadasCapacidadBtn.addEventListener('click', async (e) => {
                 // const {date, description, min, habitacionId} = req.body;
                 const habitacionId = chaletId;
                 const min = document.querySelector('#capacidad-minima-select').value
+                const motivo = document.querySelector('#motivo-capacidad').value;
     
                 for (const fecha of fechas) {
     
@@ -725,7 +730,8 @@ addBloqueadasCapacidadBtn.addEventListener('click', async (e) => {
                         date: fecha,
                         habitacionId: habitacionId,
                         type: 'capacidad_minima',
-                        min: min
+                        min: min,
+                        motivo: motivo
                     }
     
                     const response = await fetch('/api/calendario-bloqueorealfechas', {

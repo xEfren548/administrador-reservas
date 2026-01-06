@@ -13,7 +13,7 @@ async function obtenerFechasBloqueadas(req, res){
 }
 
 async function crearFechaRestringida(req, res){
-    const {date, min, habitacionId, type} = req.body;
+    const {date, min, habitacionId, type, motivo} = req.body;
 
     console.log(req.body);
 
@@ -32,6 +32,8 @@ async function crearFechaRestringida(req, res){
         const mongooseHabitacionId = new mongoose.Types.ObjectId(habitacionId);
     
         const description = `Estancia mínima de ${min} noches.`
+        const creadoPorId = req.session && req.session.id ? new mongoose.Types.ObjectId(req.session.id) : null;
+        const ahora = new Date();
     
     
         const existeFecha = await BloqueoFechas.findOne({date: date, habitacionId: mongooseHabitacionId, type: 'restriccion'});
@@ -39,6 +41,10 @@ async function crearFechaRestringida(req, res){
             // edit the existe fecha to the new description and min
             existeFecha.description = description;
             existeFecha.min = min;
+            existeFecha.motivo = motivo || existeFecha.motivo;
+            existeFecha.creadoPor = creadoPorId;
+            existeFecha.fechaCreacion = ahora;
+            existeFecha.horaCreacion = ahora;
             await existeFecha.save();
             return res.status(201).send({ message: 'Date modified successfully', date: existeFecha});
     
@@ -49,7 +55,11 @@ async function crearFechaRestringida(req, res){
             description,
             min,
             type,
-            habitacionId: new mongoose.Types.ObjectId(habitacionId)
+            habitacionId: new mongoose.Types.ObjectId(habitacionId),
+            motivo,
+            creadoPor: creadoPorId,
+            fechaCreacion: ahora,
+            horaCreacion: ahora
         })
     
         const agregarFecha = await newFechaBloqueada.save();
@@ -64,7 +74,7 @@ async function crearFechaRestringida(req, res){
 }
 
 async function crearFechaBloqueada(req, res){
-    const { habitacionId, type, min} = req.body;
+    const { habitacionId, type, min, motivo} = req.body;
     let {date} = req.body;
     console.log("date: ", date);
 
@@ -82,7 +92,9 @@ async function crearFechaBloqueada(req, res){
         fechaFormatted.setUTCHours(17); // Ajustar la hora a 17:00:00 UTC
         const mongooseHabitacionId = new mongoose.Types.ObjectId(habitacionId);
     
-        const description = (type === "bloqueo") ? `Fecha bloqueada` : `Capacidad mínima de ${min} personas.`
+        const description = (type === "bloqueo") ? `Fecha bloqueada` : `Capacidad mínima de ${min} personas.`
+        const creadoPorId = req.session && req.session.id ? new mongoose.Types.ObjectId(req.session.id) : null;
+        const ahora = new Date();
     
         if (type === "bloqueo") {
             date = fechaFormatted
@@ -92,6 +104,10 @@ async function crearFechaBloqueada(req, res){
         if (existeFecha){
             // edit the existe fecha to the new description and min
             existeFecha.description = description;
+            existeFecha.motivo = motivo || existeFecha.motivo;
+            existeFecha.creadoPor = creadoPorId;
+            existeFecha.fechaCreacion = ahora;
+            existeFecha.horaCreacion = ahora;
             if (type === "capacidad_minima") {
                 existeFecha.min = min;
             } else if (type === "bloqueo") {
@@ -109,14 +125,22 @@ async function crearFechaBloqueada(req, res){
                 description,
                 habitacionId: new mongoose.Types.ObjectId(habitacionId),
                 type: 'capacidad_minima',
-                min: min
+                min: min,
+                motivo,
+                creadoPor: creadoPorId,
+                fechaCreacion: ahora,
+                horaCreacion: ahora
             })
         } else if (type === "bloqueo") {
             newFechaBloqueada = new BloqueoFechas({
                 date: fechaFormatted,
                 description,
                 habitacionId: new mongoose.Types.ObjectId(habitacionId),
-                type: 'bloqueo'
+                type: 'bloqueo',
+                motivo,
+                creadoPor: creadoPorId,
+                fechaCreacion: ahora,
+                horaCreacion: ahora
             })
         } else {
             newFechaBloqueada = null

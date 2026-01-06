@@ -1081,10 +1081,12 @@
 	});
 	
 	**/
-	const chaletsCheckboxes = document.querySelectorAll('.checkboxes-chalets-pp');
+	
+	// Función para obtener el mayor valor de data-pax de los checkboxes seleccionados
 	function obtenerMayorPax() {
 		let mayorPax = 0;
-
+		const chaletsCheckboxes = document.querySelectorAll('.checkboxes-chalets-pp');
+		
 		chaletsCheckboxes.forEach(checkbox => {
 			if (checkbox.checked) {
 				const paxValue = parseInt(checkbox.getAttribute('data-pax'));
@@ -1097,22 +1099,26 @@
 		return mayorPax;
 	}
 
-	chaletsCheckboxes.forEach(checkbox => {
-		checkbox.addEventListener('change', () => {
-			const mayorPax = obtenerMayorPax();
-			console.log(`El mayor valor de data-pax seleccionado es: ${mayorPax}`);
-			// Aquí puedes agregar la lógica que necesitas utilizando el mayorPax
-			const numeroPersonasSelect = document.getElementById('numero-personas');
-			numeroPersonasSelect.innerHTML = '<option value="" selected disabled>Selecciona el número de personas --</option>';
+	// Usar delegación de eventos en el contenedor padre
+	const habitacionesListPersona = document.getElementById('habitaciones-list-persona');
+	if (habitacionesListPersona) {
+		habitacionesListPersona.addEventListener('change', (e) => {
+			if (e.target.classList.contains('checkboxes-chalets-pp')) {
+				const mayorPax = obtenerMayorPax();
+				console.log(`El mayor valor de data-pax seleccionado es: ${mayorPax}`);
+				
+				const numeroPersonasSelect = document.getElementById('numero-personas');
+				numeroPersonasSelect.innerHTML = '<option value="" selected disabled>Selecciona el número de personas --</option>';
 
-			for (let i = 2; i < mayorPax; i++) {
-				const option = document.createElement('option');
-				option.value = i;
-				option.textContent = i;
-				numeroPersonasSelect.appendChild(option);
+				for (let i = 2; i <= mayorPax; i++) {
+					const option = document.createElement('option');
+					option.value = i;
+					option.textContent = i;
+					numeroPersonasSelect.appendChild(option);
+				}
 			}
 		});
-	});
+	}
 	/** 
 	document.getElementById('select-cabana-persona').addEventListener('change', function () {
 		const numeroPersonasSelect = document.getElementById('numero-personas');
@@ -1237,7 +1243,7 @@
 				const resultados = [];
 				console.log('ejecutando fetch repetido...');
 
-				const idHabitacion = habitacionAmodificar.id;
+				const idHabitacion = habitacionAmodificar.value;
 				const accionPrecios = document.querySelector('#accion-precios').value;
 
 				const precioBase = habitacionAmodificar.getAttribute('data-precio-base');
@@ -1751,10 +1757,7 @@
 					const resultados = [];
 					console.log('ejecutando fetch repetido...');
 
-					const idHabitacion = habitacionAmodificar.id;
-
-
-
+				const idHabitacion = habitacionAmodificar.value;
 					const noPersonas = document.querySelector('#numero-personas').value;
 
 					if (idHabitacion == '' || idHabitacion === null) {
