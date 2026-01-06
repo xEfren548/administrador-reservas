@@ -280,7 +280,7 @@ async function obtenerEventos(req, res) {
                 thanksSent: false,
                 colorUsuario: "#ff0000",
                 clientName: "Fecha Bloqueada",
-                motivo: fecha.motivo || "No especificado",
+                motivo: fecha.motivo || " ",
                 calendario: fecha.calendario || null,
                 fechaCreacion: fechaCreacionUpd,
                 horaCreacion: horaCreacionUpd,

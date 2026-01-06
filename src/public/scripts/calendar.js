@@ -108,10 +108,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                 event.extendedProps.clientName === 'Fecha Bloqueada';
 
             if (isBlocked) {
+                const motivo = event.extendedProps.motivo || 'Sin especificar';
                 return {
                     html: `
-                        <div class="fc-event-card fc-event-blocked" title="Fecha bloqueada">
-                        FECHA BLOQUEADA
+                        <div class="fc-event-card fc-event-blocked" title="Fecha bloqueada" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <div style="font-weight: 600;">FECHA BLOQUEADA</div>
+                        <div style="font-size: 0.7em; opacity: 0.8; margin-top: 2px; text-align: center;">${motivo}</div>
                         </div>`
                 };
             }
@@ -205,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (isBlocked) {
                 // Información específica para bloqueos
-                const motivo = event.extendedProps.motivo || 'No especificado';
+                const motivo = event.extendedProps.motivo || '';
                 const calendario = event.extendedProps.calendario || 'N/A';
                 const creadaPor = event.extendedProps.creadaPor || 'Sistema';
                 const fechaCreacion = event.extendedProps.fechaCreacion || 'N/A';
