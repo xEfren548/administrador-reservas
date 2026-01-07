@@ -179,7 +179,14 @@ router.get('/rackLimpieza-json', async (req, res) => {
 });
 
 router.get('/racklimpieza-calendar', async (req, res) => {
-    const chalets = await Habitacion.find({ "others.janitor": req.session.id }).lean().sort({ 'propertyDetails.name': 1 });
+    const chalets = await Habitacion.find({ 
+        $or: [
+            { "others.janitor": req.session.id },
+            { "others.maintenance": req.session.id }
+        ],
+        isActive: true
+        }).lean().sort({ 'propertyDetails.name': 1 });
+
     const mappedChalets = chalets.map(chalet => ({
         id: chalet._id,
         name: chalet.propertyDetails.name

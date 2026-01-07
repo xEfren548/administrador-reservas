@@ -921,6 +921,20 @@
             </select>
         </div>
         <div class="input-group third">
+            <label for="slctMaintenance">Personal de mantenimiento</label>
+            <select id="slctMaintenance" name="slctMaintenance" class="form-select form-select-md">
+                {{#if ../janitors}}
+                <option value="{{others.janitors.[0]}}" selected disabled style="background-color: darkgrey;">
+                    {{others.janitors.[1]}}</option>
+                {{#each ../janitors}}
+                <option value="{{this.email}}">{{this.firstName}} {{this.lastName}}</option>
+                {{/each}}
+                {{else}}
+                <option value="0">No se encontraró el personal de limpieza/mantenimiento</option>
+                {{/if}}
+            </select>
+        </div>
+        <div class="input-group third">
             <div class="mb-3">
                 <label for="chalet-owner" class="form-label">Dueño de cabaña: </label>
                 <select class="form-select form-select-md w-100" name="chalet-owner" id="chalet-owner-select">
@@ -1429,6 +1443,7 @@
                         departureTime: form.querySelector("#txtDepartureTime").value.trim(),
                         admin: form.querySelector("#slctAdmin").value.trim(),
                         janitor: form.querySelector("#slctJanitor").value.trim(),
+                        maintenance: form.querySelector("#slctMaintenance").value.trim(),
                         owner: form.querySelector("#chalet-owner-select").value.trim(),
                         investors: investors,
                         cuentaFinanciera: form.querySelector('[name="cuenta-financiera"]')?.value || null

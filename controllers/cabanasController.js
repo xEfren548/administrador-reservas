@@ -475,6 +475,11 @@ async function createChalet(req, res, next) {
             return next(new BadRequestError("Owner not found"));  ;
         }
 
+        let maintenance = null;
+        if (others.maintenance) {
+            maintenance = await Usuario.findOne({ email: others.maintenance, privilege: "Limpieza" });
+        }
+
         const platforms = await Plataformas.find({ _id: { $in: activePlatforms } });
         if (!platforms) {
             return next(new BadRequestError("Platforms not found"));  ;
@@ -524,6 +529,7 @@ async function createChalet(req, res, next) {
                 admin: admin._id,
                 janitor: janitor._id,
                 owner: owner._id,
+                maintenance: maintenance._id,
                 investors: others.investors,
                 cuentaFinanciera: others.cuentaFinanciera || null
             },
@@ -887,16 +893,18 @@ async function editChalet(req, res, next) {
     const adminDbg = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
 
     try {
-        const [admin, janitor, owner] = await Promise.all([
+        const [admin, janitor, owner, maintenance] = await Promise.all([
             Usuario.findOne({ email: others.admin, $or: [{ privilege: "Administrador" }, { privilege: "Dueño de cabañas" }] }),
             Usuario.findOne({ email: others.janitor, privilege: "Limpieza" }),
-            Usuario.findOne({ _id: others.owner})
+            Usuario.findOne({ _id: others.owner}),
+            Usuario.findOne({ email: others.maintenance, privilege: "Limpieza" })
         ]);
         
 
         if (!admin) throw new NotFoundError("Admin not found");
         if (!janitor) throw new NotFoundError("Janitor not found");
         if (!owner) throw new NotFoundError("Owner not found");
+        if (!maintenance) throw new NotFoundError("Maintenance not found");
 
         const platforms = await Plataformas.find({ _id: { $in: activePlatforms } });
         if (!platforms) {
@@ -961,6 +969,7 @@ async function editChalet(req, res, next) {
                 admin: admin._id,
                 janitor: janitor._id,
                 owner: owner._id,
+                maintenance: maintenance._id,
                 investors: newInvestors,
                 cuentaFinanciera: others.cuentaFinanciera || null
             },
