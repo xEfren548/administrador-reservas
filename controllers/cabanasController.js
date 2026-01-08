@@ -904,7 +904,7 @@ async function editChalet(req, res, next) {
         if (!admin) throw new NotFoundError("Admin not found");
         if (!janitor) throw new NotFoundError("Janitor not found");
         if (!owner) throw new NotFoundError("Owner not found");
-        if (!maintenance) throw new NotFoundError("Maintenance not found");
+        // if (!maintenance) throw new NotFoundError("Maintenance not found");
 
         const platforms = await Plataformas.find({ _id: { $in: activePlatforms } });
         if (!platforms) {
@@ -969,7 +969,7 @@ async function editChalet(req, res, next) {
                 admin: admin._id,
                 janitor: janitor._id,
                 owner: owner._id,
-                maintenance: maintenance._id,
+                maintenance: maintenance ? maintenance._id : null,
                 investors: newInvestors,
                 cuentaFinanciera: others.cuentaFinanciera || null
             },
@@ -1015,9 +1015,9 @@ async function renderCalendarPerChalet(req, res, next) {
 
         if (privilege === "Vendedor") {
             const assignedChalets = req.session.assignedChalets;
-            habitaciones = await Habitacion.find({ _id: assignedChalets, isActive: true }).lean();
+            habitaciones = await Habitacion.find({ _id: assignedChalets, isActive: true }).lean().sort({ 'propertyDetails.name': 1 });
         } else {
-            habitaciones = await Habitacion.find({ isActive: true }).lean();
+            habitaciones = await Habitacion.find({ isActive: true }).lean().sort({ 'propertyDetails.name': 1 });
         }
         if (!habitaciones) {
             throw new NotFoundError("No hay información de las cabañas o el usuario no tiene cabañas asignadas.");
