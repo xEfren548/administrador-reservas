@@ -2491,8 +2491,19 @@ async function moveToPlayground(req, res) {
         }
 
         const permittedRole = "MODIFY_RESERVATION_STATUS";
+        
+        // Solo los dueños de cabañas o usuarios con el permiso específico pueden marcar como no-show
+        if (status === "no-show") {
+            if (req.session.privilege !== "Dueño de cabañas" && !userPermissions.permissions.includes(permittedRole)) {
+                throw new Error("Solo los dueños de cabañas o usuarios con el permiso correspondiente pueden marcar reservas como no-show");
+            }
+        }
+
+        // Verificación general de permisos para otros cambios
         if (!userPermissions.permissions.includes(permittedRole)) {
-            throw new Error("El usuario no tiene permiso para modificar reservas");
+            if (req.session.privilege !== "Dueño de cabañas") {
+                throw new Error("El usuario no tiene permiso para modificar reservas");
+            }
         }
 
         const evento = await Documento.findById(idReserva);
