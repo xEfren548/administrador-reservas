@@ -185,7 +185,7 @@ async function obtenerEventos(req, res) {
         // -------- Filtro base (mismos criterios que tu versión) --------
         // Busca reservas que se solapen con el rango solicitado
         const filtro = {
-            status: { $nin: ["no-show", "cancelled"] },
+            status: { $nin: ["cancelled"] },
             $and: [
                 { arrivalDate: { $lt: endDate } },      // Llega antes de que termine el rango
                 { departureDate: { $gt: startDate } }   // Sale después de que empiece el rango
@@ -401,7 +401,7 @@ async function obtenerEventosOptimizados(req, res) {
         // - La reserva empieza antes del fin del rango Y
         // - La reserva termina después del inicio del rango
         const filtro = {
-            status: { $nin: ["no-show", "cancelled"] },
+            status: { $nin: ["cancelled"] },
             $and: [
                 { arrivalDate: { $lt: endDate } },      // Llega antes de que termine el rango
                 { departureDate: { $gt: startDate } }   // Sale después de que empiece el rango
