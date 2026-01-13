@@ -57,42 +57,42 @@ const createReservationValidators = [
         .notEmpty().withMessage('Number of nights is required')
         .isNumeric().withMessage('Number of nights must be a number'),
     check("habitacionId")
-    .optional()
-    .custom(async (value, { req }) => {
-        const { habitacionId, chaletName } = req.body;
-        
-        // Si no viene ni habitacionId ni chaletName
-        if (!habitacionId && !chaletName) {
-            throw new BadRequestError('Room ID or Chalet name is required');
-        }
-        
-        let chalet = null;
-        
-        // Intentar buscar por habitacionId si viene
-        if (habitacionId) {
-            // Validar que es un ObjectId válido
-            if (!mongoose.Types.ObjectId.isValid(habitacionId)) {
-                throw new BadRequestError('Invalid room ID format');
+        .optional()
+        .custom(async (value, { req }) => {
+            const { habitacionId, chaletName } = req.body;
+
+            // Si no viene ni habitacionId ni chaletName
+            if (!habitacionId && !chaletName) {
+                throw new BadRequestError('Room ID or Chalet name is required');
             }
-            
-            chalet = await Habitacion.findById(habitacionId);
-        }
-        
-        // Si no encontró por habitacionId, intentar por chaletName
-        if (!chalet && chaletName) {
-            chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName });
-        }
-        
-        // Si no encontró la habitación por ningún método
-        if (!chalet) {
-            throw new NotFoundError('Room does not exist');
-        }
-        
-        // Guardar el chalet en req para usarlo después si es necesario
-        req.body.habitacionId = chalet._id;
-        
-        return true;
-    }),
+
+            let chalet = null;
+
+            // Intentar buscar por habitacionId si viene
+            if (habitacionId) {
+                // Validar que es un ObjectId válido
+                if (!mongoose.Types.ObjectId.isValid(habitacionId)) {
+                    throw new BadRequestError('Invalid room ID format');
+                }
+
+                chalet = await Habitacion.findById(habitacionId);
+            }
+
+            // Si no encontró por habitacionId, intentar por chaletName
+            if (!chalet && chaletName) {
+                chalet = await Habitacion.findOne({ "propertyDetails.name": chaletName });
+            }
+
+            // Si no encontró la habitación por ningún método
+            if (!chalet) {
+                throw new NotFoundError('Room does not exist');
+            }
+
+            // Guardar el chalet en req para usarlo después si es necesario
+            req.body.habitacionId = chalet._id;
+
+            return true;
+        }),
     check("maxOccupation")
         .notEmpty().withMessage('Max occupation is required')
         .isNumeric().withMessage('Max occupation must be a number'),
@@ -205,8 +205,8 @@ async function obtenerEventos(req, res) {
                 return res.send([]);
             }
         } else if (privilege === "Inversionistas") {
-            const investorChalets = await Habitacion.find({ 
-                'others.investors.investor': req.session.userId 
+            const investorChalets = await Habitacion.find({
+                'others.investors.investor': req.session.userId
             }, { _id: 1 }).lean();
             const investorChaletIds = investorChalets.map(h => h._id);
             if (investorChaletIds.length > 0) {
@@ -453,8 +453,8 @@ async function obtenerEventosOptimizados(req, res) {
             }
 
         } else if (privilege === "Inversionistas") {
-            const investorChalets = await Habitacion.find({ 
-                'others.investors.investor': req.session.userId 
+            const investorChalets = await Habitacion.find({
+                'others.investors.investor': req.session.userId
             }, { _id: 1 }).lean();
             const investorChaletIds = investorChalets.map(h => h._id);
 
@@ -474,7 +474,7 @@ async function obtenerEventosOptimizados(req, res) {
             } else {
                 filtro.resourceId = { $in: investorChaletIds };
             }
-        
+
         } else if (chaletId) {
             filtro.resourceId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
         }
@@ -545,7 +545,7 @@ async function obtenerEventosOptimizados(req, res) {
             } else {
                 for (const id of ownerChaletIds) scopeResourceIds.add(id);
             }
-        
+
         } else if (privilege === "Colaborador dueño") {
             const user = await Usuario.findById(req.session.userId).lean();
             if (!user) {
@@ -558,9 +558,9 @@ async function obtenerEventosOptimizados(req, res) {
             } else {
                 for (const id of ownerChaletIds) scopeResourceIds.add(id);
             }
-        }else if (privilege === "Inversionistas") {
-            const investorChalets = await Habitacion.find({ 
-                'others.investors.investor': req.session.userId 
+        } else if (privilege === "Inversionistas") {
+            const investorChalets = await Habitacion.find({
+                'others.investors.investor': req.session.userId
             }, { _id: 1 }).lean();
             const investorChaletIds = investorChalets.map(h => h._id.toString());
             if (chaletId) {
@@ -624,7 +624,7 @@ async function obtenerEventosOptimizados(req, res) {
                         .toUpperCase();
                 }
             }
-            
+
             // Color del usuario creador
             let colorUsuario = null;
             let creadaPor = null;
@@ -662,8 +662,16 @@ async function obtenerEventosOptimizados(req, res) {
                     type: "bloqueo",
                     date: { $gte: startDate, $lte: endDate }
                 },
-                { habitacionId: 1, date: 1 }
+                { habitacionId: 1, date: 1, creadoPor: 1, motivo: 1, fechaCreacion: 1, horaCreacion: 1 }
             ).lean();
+
+            // -------- Usuarios que crearon bloqueos (batch) --------
+            const creadoresBloqueosIds = [...new Set(bloqueos.map(b => b.creadoPor).filter(Boolean))];
+            const creadoresBloqueos = creadoresBloqueosIds.length
+                ? await Usuario.find({ _id: { $in: creadoresBloqueosIds } }, { firstName: 1, lastName: 1, color: 1 }).lean()
+                : [];
+            const creadoresBloqueosMap = new Map(creadoresBloqueos.map(u => [u._id.toString(), u]));
+
 
             // Normaliza BLOQUEOS a eventos
             eventosBloqueo = bloqueos.map(b => {
@@ -675,6 +683,16 @@ async function obtenerEventosOptimizados(req, res) {
                 departureDate.setUTCDate(departureDate.getUTCDate() + 1);
                 departureDate.setUTCHours(12, 0, 0, 0);
 
+                const fechaCreacionUpd = b.fechaCreacion ? momentTz(b.fechaCreacion).tz('America/Mexico_City').format('DD-MM-YYYY') : null;
+                const horaCreacionUpd = b.horaCreacion ? momentTz(b.horaCreacion).tz('America/Mexico_City').format('HH:mm:ss') : null;
+
+                let creadaPor = null;
+                if (b.creadoPor) {
+                    const creador = creadoresBloqueosMap.get(b.creadoPor.toString());
+                    if (creador) {
+                        creadaPor = `${creador.firstName} ${creador.lastName}`;
+                    }
+                }
                 return {
                     _id: new ObjectId(),
                     client: "N/A",
@@ -697,6 +715,11 @@ async function obtenerEventosOptimizados(req, res) {
                     pagosTotales: 0,
                     isBlocked: true,            // <- unificado
                     blockType: "bloqueo",       // <- unificado
+
+                    motivo: b.motivo || " ",
+                    fechaCreacion: fechaCreacionUpd,
+                    horaCreacion: horaCreacionUpd,
+                    creadaPor: creadaPor
                 };
             });
         }
@@ -704,7 +727,7 @@ async function obtenerEventosOptimizados(req, res) {
         // ---------- Respuesta unificada ----------
         // Puedes ordenar si lo deseas (ej. por arrivalDate)
         const eventos = [...eventosReservas, ...eventosBloqueo];
-        console.log('Eventos: ', eventos);
+        console.log('Eventos: ', eventosBloqueo);
         // eventos.sort((a, b) => new Date(a.arrivalDate) - new Date(b.arrivalDate));
         res.send(eventos);
 
@@ -1171,7 +1194,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
 
         // Buscar la habitación específica por ID (ya fue seleccionada en disponibilidad)
         const chalet = await Habitacion.findById(habitacionId);
-        
+
         if (!chalet) {
             throw new NotFoundError('La habitación no existe');
         }
@@ -1290,7 +1313,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         var message;
 
         const createdBy = new mongoose.Types.ObjectId(req.session.id);
-        
+
         // Obtener el nombre de la habitación
         const actualChaletName = chalet.propertyDetails?.name || 'Habitación';
         const displayName = chalet.isGrouped && chalet.roomGroup ? chalet.roomGroup : actualChaletName;
@@ -1312,7 +1335,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 comisionVendedor: comisionVendedor,
                 status: 'active'
             };
-            message = isFromGroup 
+            message = isFromGroup
                 ? `Reservación agregada con éxito. Habitación asignada: ${actualChaletName}`
                 : "Reservación agregada con éxito";
         }
@@ -1354,7 +1377,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 comisionVendedor: comisionVendedor
             };
 
-            const roomAssignedMessage = isFromGroup 
+            const roomAssignedMessage = isFromGroup
                 ? ` Habitación asignada: ${actualChaletName}.`
                 : '';
             message = `Reservación agregada con éxito.${roomAssignedMessage} Realice su pago antes de ${format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es })} o su reserva será cancelada`;
@@ -1413,7 +1436,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         const agenteQueReserva = await Usuario.findById(createdBy);
 
 
-        
+
         // if (client.phone) {
         //     SendMessages.sendReservationConfirmation(client, chalet, reservationToAdd);
         //     console.log("SendMessages.sendReminders");
@@ -1425,7 +1448,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
             const cancelationHour = format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es });
             if (chalet.others.cuentaFinanciera) {
                 if (client.phone) {
-                    
+
                     await SendMessages.sendReservationInstructions(client, chalet, documentoToAdd, cancelationHour, agenteQueReserva?.phone);
                 }
                 if (agenteQueReserva && agenteQueReserva.phone) {
@@ -1449,7 +1472,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 await sendEmail(agenteQueReserva.email, idReserva);
             }
         }
-                
+
 
 
         // if (agenteQueReserva) {
@@ -2491,7 +2514,7 @@ async function moveToPlayground(req, res) {
         }
 
         const permittedRole = "MODIFY_RESERVATION_STATUS";
-        
+
         // Solo los dueños de cabañas o usuarios con el permiso específico pueden marcar como no-show
         if (status === "no-show") {
             if (req.session.privilege !== "Dueño de cabañas" && !userPermissions.permissions.includes(permittedRole)) {
@@ -3191,7 +3214,7 @@ async function cotizadorChaletsyPrecios(req, res) {
         for (const groupName in groupedChalets) {
             const groupRooms = groupedChalets[groupName];
             const representativeChalet = groupRooms[0]; // Primera habitación del grupo
-            
+
             // Agregar metadata del grupo al chalet representante
             representativeChalet._groupInfo = {
                 isGroup: true,
@@ -3204,7 +3227,7 @@ async function cotizadorChaletsyPrecios(req, res) {
                     roomNumber: r.roomNumber
                 }))
             };
-            
+
             chaletsToProcess.push(representativeChalet);
         }
 
@@ -3375,7 +3398,7 @@ async function obtenerHabitacionesDisponibles(req, res) {
             } else {
                 filtro['others.owner'] = req.session.id;
             }
-        } else if(habitacionId) {
+        } else if (habitacionId) {
             // Verificar si es un ObjectId válido o un nombre de grupo
             if (mongoose.Types.ObjectId.isValid(habitacionId) && habitacionId.length === 24) {
                 filtro['_id'] = habitacionId;
@@ -3434,12 +3457,12 @@ async function obtenerHabitacionesDisponibles(req, res) {
                     habitacionId: c._id,
                     type: 'restriccion',
                 }).lean();
-    
+
                 if (nochesMin && nNights < Number(nochesMin.min)) {
                     continue; // No cumple noches mínimas
                 }
             }
-    
+
             // Validar disponibilidad (no bloqueada y sin reservas superpuestas)
             const libre = await getDisponibilidad(c._id, startDate, endDate);
             if (!libre) continue;
@@ -3471,7 +3494,7 @@ async function obtenerHabitacionesDisponibles(req, res) {
                         habitacionId: c._id,
                         type: 'restriccion',
                     }).lean();
-        
+
                     if (nochesMin && nNights < Number(nochesMin.min)) {
                         continue; // Esta habitación no cumple
                     }
@@ -3510,18 +3533,18 @@ async function obtenerHabitacionesDisponibles(req, res) {
 
         const privilege = req.session?.privilege; // "Vendedor" | "Dueño de cabañas" | "Administrador"
 
-                // Si es dueño o colaborador dueño, devuelve array directo
+        // Si es dueño o colaborador dueño, devuelve array directo
         if (privilege === "Dueño de cabañas" || privilege === "Colaborador dueño") {
             return res.status(200).json(disponibles);
         }
-        
+
         return res.status(200).json({
             availableRooms: disponibles,
-            meta: { 
-                nNights, 
+            meta: {
+                nNights,
                 total: disponibles.length,
-                fechaLlegada: startDate, 
-                fechaSalida: endDate 
+                fechaLlegada: startDate,
+                fechaSalida: endDate
             },
         });
         // return res.status(200).json(disponibles);
@@ -3666,7 +3689,7 @@ async function getIncomingReservations(req, res) {
             ).lean();
 
             allowedResourceIds = new Set(ownedChalets.map(c => c._id.toString()));
-        
+
         } else if (privilege === "Administrador") {
             allowedResourceIds = null; // sin restricción
         } else if (privilege === "Inversionistas") {
@@ -3878,17 +3901,17 @@ async function createOwnerExternalReservation(req, res) {
 
         // Validar que solo dueños puedan crear reservas externas
         if (privilege !== 'Dueño de cabañas' && privilege !== 'Colaborador dueño') {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'Solo los dueños pueden crear reservas externas' 
+            return res.status(403).json({
+                success: false,
+                message: 'Solo los dueños pueden crear reservas externas'
             });
         }
 
         // Validar campos requeridos (precio puede ser 0)
         if (!plataforma || precioExternoNoche === undefined || precioExternoNoche === null || !metodoCobro || !estadoPago) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Faltan campos requeridos de la reserva externa' 
+            return res.status(400).json({
+                success: false,
+                message: 'Faltan campos requeridos de la reserva externa'
             });
         }
 
@@ -3898,15 +3921,15 @@ async function createOwnerExternalReservation(req, res) {
         }
 
         // Obtener habitación
-        const chalet = await Habitacion.findOne({ 
+        const chalet = await Habitacion.findOne({
             "propertyDetails.name": chaletName,
-            "others.owner": duenoId 
+            "others.owner": duenoId
         });
 
         if (!chalet) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Habitación no encontrada o no pertenece al dueño' 
+            return res.status(404).json({
+                success: false,
+                message: 'Habitación no encontrada o no pertenece al dueño'
             });
         }
 
@@ -3954,14 +3977,14 @@ async function createOwnerExternalReservation(req, res) {
             clienteProvisional: clienteProvisional || `Cliente ${plataforma}`,
             createdBy: duenoId,
             url: `https://${process.env.URL}/api/eventos/temp`,
-            
+
             // Campos de reserva externa
             tipoReserva: 'reserva-externa',
             esReservaExterna: true,
             status: 'reserva de dueño',
             total: precioTotalNum,
             discount: 0,
-            
+
             infoReservaExterna: {
                 plataforma,
                 precioExternoNoche: precioNocheNum,
@@ -3973,7 +3996,7 @@ async function createOwnerExternalReservation(req, res) {
                 comisionPlataforma: comisionNum,
                 gananciaNetaDueno
             },
-            
+
             // Agregar comentario si se proporciona
             notes: comentario && comentario.trim() ? [{
                 texto: comentario.trim()
@@ -4057,9 +4080,9 @@ async function editOwnerExternalReservation(req, res) {
 
         // Validar que solo dueños puedan editar reservas externas
         if (privilege !== 'Dueño de cabañas' && privilege !== 'Colaborador dueño') {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'Solo los dueños pueden editar reservas externas' 
+            return res.status(403).json({
+                success: false,
+                message: 'Solo los dueños pueden editar reservas externas'
             });
         }
 
@@ -4071,9 +4094,9 @@ async function editOwnerExternalReservation(req, res) {
         }
 
         if (reserva.tipoReserva !== 'reserva-externa') {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Solo se pueden editar reservas externas' 
+            return res.status(400).json({
+                success: false,
+                message: 'Solo se pueden editar reservas externas'
             });
         }
 
@@ -4082,9 +4105,9 @@ async function editOwnerExternalReservation(req, res) {
         if (!chalet || chalet.others.owner.toString() !== duenoId?.toString()) {
             console.log("chalet: ", chalet);
             console.log("duenoId: ", duenoId);
-            return res.status(403).json({ 
-                success: false, 
-                message: 'No tienes permisos para editar esta reserva' 
+            return res.status(403).json({
+                success: false,
+                message: 'No tienes permisos para editar esta reserva'
             });
         }
 
@@ -4161,12 +4184,12 @@ async function editOwnerExternalReservation(req, res) {
             if (infoReservaExterna.estadoPago) {
                 const Utilidades = require('../models/Utilidades');
                 reserva.infoReservaExterna.estadoPago = infoReservaExterna.estadoPago;
-                
+
                 if (infoReservaExterna.estadoPago === 'Pagado') {
                     reserva.infoReservaExterna.fechaPago = new Date();
-                    
+
                     // Crear/actualizar utilidad
-                    const utilidadExistente = await Utilidades.findOne({ 
+                    const utilidadExistente = await Utilidades.findOne({
                         idReserva: reserva._id
                     });
 
@@ -4232,18 +4255,18 @@ async function deleteOwnerReservation(req, res) {
         if (privilege === "Colaborador dueño") {
             const user = await Usuario.findById(req.session.id).lean();
             if (!user) {
-                return res.status(403).json({ 
-                    success: false, 
-                    message: 'No tienes permisos para eliminar esta reserva' 
+                return res.status(403).json({
+                    success: false,
+                    message: 'No tienes permisos para eliminar esta reserva'
                 });
             }
             duenoId = user.administrator;
         }
 
         if (privilege !== 'Dueño de cabañas' && privilege !== 'Colaborador dueño') {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'Solo los dueños pueden eliminar reservas de dueño o externas' 
+            return res.status(403).json({
+                success: false,
+                message: 'Solo los dueños pueden eliminar reservas de dueño o externas'
             });
         }
 
@@ -4255,25 +4278,25 @@ async function deleteOwnerReservation(req, res) {
 
         // Validar que sea reserva de dueño o externa
         if (!['reserva-dueno', 'reserva-externa'].includes(reserva.tipoReserva) && reserva.status !== 'reserva de dueño') {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Solo se pueden eliminar reservas de dueño o externas' 
+            return res.status(400).json({
+                success: false,
+                message: 'Solo se pueden eliminar reservas de dueño o externas'
             });
         }
 
         // Validar permisos
         const chalet = await Habitacion.findById(reserva.resourceId);
         if (!chalet || chalet.others.owner.toString() !== duenoId?.toString()) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'No tienes permisos para eliminar esta reserva' 
+            return res.status(403).json({
+                success: false,
+                message: 'No tienes permisos para eliminar esta reserva'
             });
         }
 
         // Eliminar utilidades asociadas si es externa
         if (reserva.tipoReserva === 'reserva-externa') {
             const Utilidades = require('../models/Utilidades');
-            await Utilidades.deleteMany({ 
+            await Utilidades.deleteMany({
                 idReserva: reserva._id
             });
         }
@@ -4314,18 +4337,18 @@ async function updateOwnerReservation(req, res) {
         if (privilege === "Colaborador dueño") {
             const user = await Usuario.findById(req.session.id).lean();
             if (!user) {
-                return res.status(403).json({ 
-                    success: false, 
-                    message: 'No tienes permisos para editar esta reserva' 
+                return res.status(403).json({
+                    success: false,
+                    message: 'No tienes permisos para editar esta reserva'
                 });
             }
             duenoId = user.administrator;
         }
 
         if (privilege !== 'Dueño de cabañas' && privilege !== 'Colaborador dueño') {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'Solo los dueños pueden editar reservas de dueño' 
+            return res.status(403).json({
+                success: false,
+                message: 'Solo los dueños pueden editar reservas de dueño'
             });
         }
 
@@ -4337,18 +4360,18 @@ async function updateOwnerReservation(req, res) {
 
         // Validar que sea reserva de dueño
         if (reserva.tipoReserva !== 'reserva-dueno' && reserva.status !== 'reserva de dueño') {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Solo se pueden editar reservas de dueño' 
+            return res.status(400).json({
+                success: false,
+                message: 'Solo se pueden editar reservas de dueño'
             });
         }
 
         // Validar permisos
         const chalet = await Habitacion.findById(reserva.resourceId);
         if (!chalet || chalet.others.owner.toString() !== duenoId?.toString()) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'No tienes permisos para editar esta reserva' 
+            return res.status(403).json({
+                success: false,
+                message: 'No tienes permisos para editar esta reserva'
             });
         }
 
@@ -4423,9 +4446,9 @@ async function addCommentToReservation(req, res) {
         const userId = req.session.id;
 
         if (!texto || texto.trim().length === 0) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'El comentario no puede estar vacío' 
+            return res.status(400).json({
+                success: false,
+                message: 'El comentario no puede estar vacío'
             });
         }
 
