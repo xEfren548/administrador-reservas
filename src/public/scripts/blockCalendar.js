@@ -215,7 +215,7 @@ agregarFechasBtn.addEventListener("click", async (e) => {
             diasSeleccionados.push(checkbox.value);
         }
     });
-    const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
+    const fechas = obtenerRangoFechas(fechaInicio, fechaFin, diasSeleccionados);
     console.log(fechaInicio)
     console.log(fechaFin)   
     console.log(fechas)
@@ -497,7 +497,7 @@ addBloqueadas2btn.addEventListener('click', async (e) => {
             diasSeleccionados.push(checkbox.value);
         }
     });
-    const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
+    const fechas = obtenerRangoFechas(fechaInicio, fechaFin, diasSeleccionados);
     console.log(fechaInicio)
     console.log(fechaFin)   
     console.log(fechas)
@@ -673,13 +673,13 @@ addBloqueadasCapacidadBtn.addEventListener('click', async (e) => {
     const fechaFin = new Date(`${fechaFinString}T00:00:00`); // Agregar la hora en formato UTC
     
     const diasSeleccionados = [];
-    const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-general-block');
+    const checkboxes = document.querySelectorAll('input[type="checkbox"].chk-general-block-cap');
     checkboxes.forEach(function (checkbox) {
         if (checkbox.checked) {
             diasSeleccionados.push(checkbox.value);
         }
     });
-    const fechas = obtenerRangoFechas(fechaInicio, fechaFin);
+    const fechas = obtenerRangoFechas(fechaInicio, fechaFin, diasSeleccionados);
     console.log(fechaInicio)
     console.log(fechaFin)   
     console.log(fechas)
