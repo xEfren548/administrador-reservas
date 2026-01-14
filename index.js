@@ -190,11 +190,33 @@ mongoose.connect(db_url).then(async () => {
     });
 
     
-    // const job = schedule.scheduleJob('* * * * *', async () => {         
+    // const job = schedule.scheduleJob('* * * * *', async () => {       
+    
+    // Se ejecuta todos los minutos, todos los dias
     const job = schedule.scheduleJob('* * * * *', async () => {         
         await SendMessages.sendReminders();
         await SendMessages.sendThanks();
         await SendMessages.cancelReservation();
+    });
+
+    // Recordatorio de check-in 1 día antes - Se ejecuta a las 10:00 AM
+    // cron.schedule('00 10 * * *', async () => {
+    cron.schedule('00 10 * * *', async () => {
+        console.log('Ejecutando recordatorio de check-in (1 día antes)...');
+        await SendMessages.sendCheckInReminderDayBefore();
+    }, {
+        scheduled: true,
+        timezone: "America/Mexico_City"
+    });
+
+    // Recordatorio de check-in mismo día - Se ejecuta a las 8:00 AM
+    // cron.schedule('00 08 * * *', async () => {
+    cron.schedule('00 08 * * *', async () => {
+        console.log('Ejecutando recordatorio de check-in (mismo día)...');
+        await SendMessages.sendCheckInReminderSameDay();
+    }, {
+        scheduled: true,
+        timezone: "America/Mexico_City"
     });
 
     const quarterlyJob = schedule.scheduleJob('0 0 1 */3 *', async () => {

@@ -313,6 +313,7 @@ async function sendThanks() {
 
 }
 
+// Mensajes a caseta Bosque Imperial
 async function sendCheckInMessage() {
     console.log("Enviando mensajes de check in");
 
@@ -394,6 +395,155 @@ async function sendCheckInMessage() {
 
     }
     // sendTemplateMsg(clientInfo, template, params, buttons = [])
+}
+
+// Recordatorio de check in para el cliente - 1 día antes
+async function sendCheckInReminderDayBefore() {
+    console.log("Enviando recordatorios de check-in (1 día antes)");
+
+    moment.locale('es');
+
+    // Buscar reservas cuya fecha de llegada (solo día, sin hora) sea MAÑANA en zona horaria de México
+    const reservas = await Evento.find({ 
+        status: "active",
+        madeCheckIn: false
+    });
+
+    const tomorrowDateStr = moment.tz("America/Mexico_City").add(1, 'day').format('YYYY-MM-DD');
+    console.log(`Buscando reservas para mañana: ${tomorrowDateStr}`);
+
+    let count = 0;
+    for (const reserva of reservas) {
+        // Convertir arrivalDate a fecha de México (solo día)
+        const arrivalDateStr = moment.tz(reserva.arrivalDate, "America/Mexico_City").format('YYYY-MM-DD');
+        
+        // Si la fecha de llegada NO es mañana, saltar
+        if (arrivalDateStr !== tomorrowDateStr) {
+            continue;
+        }
+        
+        count++;
+        try {
+            const client = await Cliente.findById(reserva.client);
+            if (!client) {
+                if (reserva.status !== "reserva de dueño") {
+                    console.log(`Cliente ${reserva.client} no existe.`);
+                    continue;
+                }
+            }
+
+            if (!client || !client.phone) {
+                console.log(`Cliente ${reserva.client} no tiene teléfono registrado.`);
+                continue;
+            }
+
+            const clientName = `${client.firstName} ${client.lastName}`;
+            const chalet = await Habitacion.findOne({ _id: reserva.resourceId }).select('propertyDetails others');
+            
+            if (!chalet) {
+                console.log(`Cabaña ${reserva.resourceId} no existe.`);
+                continue;
+            }
+
+            const formattedArrivalDate = moment(reserva.arrivalDate).format("DD [de] MMMM");
+            const arrivalTime = moment.tz(chalet.others?.arrivalTime || "15:00", "HH:mm", "America/Mexico_City").format("HH:mm");
+
+            // Template para 1 día antes
+            const whatsappResponse = await sendTemplateMsg(client, 'recordatorio_checkin_dia_antes', [
+                client.firstName,
+                formattedArrivalDate,
+                arrivalTime,
+                chalet.propertyDetails.name
+            ],
+            [
+                { text: reserva._id.toString() }
+            ]);
+
+            if (whatsappResponse.success) {
+                console.log(`Recordatorio (1 día antes) enviado a ${clientName} (${client.phone}) para reserva ${reserva._id}`);
+            } else {
+                console.log(`Error al enviar recordatorio (1 día antes) a ${clientName}: ${whatsappResponse.error}`);
+            }
+        } catch (error) {
+            console.error(`Error procesando reserva ${reserva._id} (1 día antes):`, error);
+        }
+    }
+    
+    console.log(`Total de recordatorios (1 día antes) enviados: ${count}`);
+}
+
+// Recordatorio de check in para el cliente - mismo día
+async function sendCheckInReminderSameDay() {
+    console.log("Enviando recordatorios de check-in (mismo día)");
+
+    moment.locale('es');
+
+    // Buscar reservas cuya fecha de llegada (solo día, sin hora) sea HOY en zona horaria de México
+    const reservas = await Evento.find({ 
+        status: "active",
+        madeCheckIn: false
+    });
+
+    const todayDateStr = moment.tz("America/Mexico_City").format('YYYY-MM-DD');
+    console.log(`Buscando reservas para hoy: ${todayDateStr}`);
+
+    let count = 0;
+    for (const reserva of reservas) {
+        // Convertir arrivalDate a fecha de México (solo día)
+        const arrivalDateStr = moment.tz(reserva.arrivalDate, "America/Mexico_City").format('YYYY-MM-DD');
+        
+        // Si la fecha de llegada NO es hoy, saltar
+        if (arrivalDateStr !== todayDateStr) {
+            continue;
+        }
+        
+        count++;
+        
+        try {
+            const client = await Cliente.findById(reserva.client);
+            if (!client) {
+                if (reserva.status !== "reserva de dueño") {
+                    console.log(`Cliente ${reserva.client} no existe.`);
+                    continue;
+                }
+            }
+
+            if (!client || !client.phone) {
+                console.log(`Cliente ${reserva.client} no tiene teléfono registrado.`);
+                continue;
+            }
+
+            const clientName = `${client.firstName} ${client.lastName}`;
+            const chalet = await Habitacion.findOne({ _id: reserva.resourceId }).select('propertyDetails others');
+            
+            if (!chalet) {
+                console.log(`Cabaña ${reserva.resourceId} no existe.`);
+                continue;
+            }
+
+            const arrivalTime = moment.tz(chalet.others?.arrivalTime || "15:00", "HH:mm", "America/Mexico_City").format("HH:mm");
+
+            // Template para mismo día
+            const whatsappResponse = await sendTemplateMsg(client, 'recordatorio_checkin_mismo_dia', [
+                client.firstName,
+                arrivalTime,
+                chalet.propertyDetails.name
+            ],
+            [
+                { text: reserva._id.toString() }
+            ]);
+
+            if (whatsappResponse.success) {
+                console.log(`Recordatorio (mismo día) enviado a ${clientName} (${client.phone}) para reserva ${reserva._id}`);
+            } else {
+                console.log(`Error al enviar recordatorio (mismo día) a ${clientName}: ${whatsappResponse.error}`);
+            }
+        } catch (error) {
+            console.error(`Error procesando reserva ${reserva._id} (mismo día):`, error);
+        }
+    }
+    
+    console.log(`Total de recordatorios (mismo día) enviados: ${count}`);
 }
 
 
@@ -530,5 +680,7 @@ module.exports = {
     sendReminders,
     sendThanks,
     cancelReservation,
-    sendCheckInMessage
+    sendCheckInMessage,
+    sendCheckInReminderDayBefore,
+    sendCheckInReminderSameDay
 };
