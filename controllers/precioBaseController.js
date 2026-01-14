@@ -86,6 +86,12 @@ async function consultarPreciosPorFecha(req, res) {
     try {
         const { fecha, habitacionid, needSpecialPrice, pax } = req.query;
 
+        console.log("pax: ", pax);
+
+        if (!pax) {
+            return res.status(400).send({ mensaje: 'El número de personas es requerido' });
+        }
+
         let precio = null;
         // Convertir la fecha a un objeto Date y ajustar la hora a 06:00:00
         const fechaAjustada = new Date(fecha);
@@ -104,12 +110,16 @@ async function consultarPreciosPorFecha(req, res) {
         }
 
 
-        if (needSpecialPrice === "true") {
-            precio = await PreciosEspeciales.findOne({ fecha: fechaAjustada, habitacionId: habitacionid, noPersonas: pax })
-        } else {
-            precio = await PrecioBaseXDia.findOne({ fecha: fechaAjustada, habitacionId: habitacionid });
+        // if (needSpecialPrice === "true") {
+        //     precio = await PreciosEspeciales.findOne({ fecha: fechaAjustada, habitacionId: habitacionid, noPersonas: pax })
+        // } else {
+        //     precio = await PrecioBaseXDia.findOne({ fecha: fechaAjustada, habitacionId: habitacionid });
 
-        }
+        // }
+
+        precio = await PreciosEspeciales.findOne({ fecha: fechaAjustada, habitacionId: habitacionid, noPersonas: pax });
+
+        console.log("precio especial por pax: ", precio);
 
 
         if (precio === null) {

@@ -1798,7 +1798,8 @@
             comisionVendedor: {{ evento.comisionVendedor }},
             resourceId: '{{ evento.resourceId }}',
             totalServicios: parseFloat(document.querySelector('#total-servicios').value || 0),
-            chaletName: '{{habitacion.propertyDetails.name}}'
+            chaletName: '{{habitacion.propertyDetails.name}}',
+            pax: '{{evento.pax}}'
         };
     }
 
@@ -1811,6 +1812,8 @@
     }
 
     async function calculateNewTotal(data, formattedDates) {
+        console.log("data: ", data);
+        const pax = data.pax ? parseInt(data.pax) : null;
         const nuevoTotal = data.isReservaDueno 
             ? {} 
             : await obtenerNuevoTotal(
@@ -1818,7 +1821,9 @@
                 formattedDates.eventDateStart, 
                 formattedDates.eventDateEnd, 
                 data.comisionVendedor, 
-                data.nightsInput
+                data.nightsInput,
+                pax
+
             );
         
         // Add additional properties to the total object
@@ -2091,7 +2096,7 @@
         }
     }
 
-    async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisionVendedor, nNights) {
+    async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisionVendedor, nNights, pax) {
         console.log('obtener total ');
         console.log("arrrivalDate: " + arrivalDate);
         console.log("departureDate: " + departureDate);
@@ -2132,7 +2137,7 @@
                     const day = fecha.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
                     const formatedDate = `${year}-${month}-${day}`;
 
-                    const response = await fetch(`/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}`);
+                    const response = await fetch(`/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}&pax=${pax}`);
 
                     // Verificar el estado de la respuesta
                     if (!response.ok) {
