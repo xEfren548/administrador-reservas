@@ -526,8 +526,8 @@ async function sendCheckInReminderSameDay() {
             // Template para mismo día
             const whatsappResponse = await sendTemplateMsg(client, 'recordatorio_checkin_mismo_dia', [
                 client.firstName,
-                arrivalTime,
-                chalet.propertyDetails.name
+                chalet.propertyDetails.name,
+                arrivalTime
             ],
             [
                 { text: reserva._id.toString() }
