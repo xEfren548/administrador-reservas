@@ -403,11 +403,14 @@ async function sendCheckInReminderDayBefore() {
 
     moment.locale('es');
 
-    // Calcular rango de fechas para MAÑANA en zona horaria de México
-    const tomorrowStart = moment.tz("America/Mexico_City").add(1, 'day').startOf('day').toDate();
-    const tomorrowEnd = moment.tz("America/Mexico_City").add(1, 'day').endOf('day').toDate();
+    // Calcular rango de fechas para MAÑANA en UTC (las fechas en MongoDB se guardan en UTC)
+    // Usamos la fecha de México pero convertimos a rango UTC para la consulta
+    const tomorrowInMexico = moment.tz("America/Mexico_City").add(1, 'day');
+    const tomorrowStart = moment.utc(tomorrowInMexico.format('YYYY-MM-DD')).startOf('day').toDate();
+    const tomorrowEnd = moment.utc(tomorrowInMexico.format('YYYY-MM-DD')).endOf('day').toDate();
     
-    console.log(`Buscando reservas para mañana: ${moment(tomorrowStart).format('YYYY-MM-DD')}`);
+    console.log(`Buscando reservas para mañana: ${tomorrowInMexico.format('YYYY-MM-DD')}`);
+    console.log(`Rango UTC: ${tomorrowStart.toISOString()} - ${tomorrowEnd.toISOString()}`);
 
     // Consulta más eficiente directamente en la base de datos
     const reservas = await Evento.find({ 
@@ -486,11 +489,14 @@ async function sendCheckInReminderSameDay() {
 
     moment.locale('es');
 
-    // Calcular rango de fechas para HOY en zona horaria de México
-    const todayStart = moment.tz("America/Mexico_City").startOf('day').toDate();
-    const todayEnd = moment.tz("America/Mexico_City").endOf('day').toDate();
+    // Calcular rango de fechas para HOY en UTC (las fechas en MongoDB se guardan en UTC)
+    // Usamos la fecha de México pero convertimos a rango UTC para la consulta
+    const todayInMexico = moment.tz("America/Mexico_City");
+    const todayStart = moment.utc(todayInMexico.format('YYYY-MM-DD')).startOf('day').toDate();
+    const todayEnd = moment.utc(todayInMexico.format('YYYY-MM-DD')).endOf('day').toDate();
 
-    console.log(`Buscando reservas para hoy: ${moment(todayStart).format('YYYY-MM-DD')}`);
+    console.log(`Buscando reservas para hoy: ${todayInMexico.format('YYYY-MM-DD')}`);
+    console.log(`Rango UTC: ${todayStart.toISOString()} - ${todayEnd.toISOString()}`);
 
     // Consulta más eficiente directamente en la base de datos
     const reservas = await Evento.find({ 
