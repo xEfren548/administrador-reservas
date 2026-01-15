@@ -1221,12 +1221,88 @@
                         }
                     });
 
+                    // Agregar sección de ubicación si hay coordenadas
+                    if (habitacion.latitude && habitacion.longitude) {
+                        const locationContainer = document.createElement("div");
+                        locationContainer.classList.add("mb-4", "border-t", "border-gray-200", "pt-3");
+
+                        const locationTitle = document.createElement("h5");
+                        locationTitle.classList.add("text-gray-600", "text-sm", "font-medium", "mb-2");
+                        locationTitle.textContent = "Ubicación";
+                        locationContainer.appendChild(locationTitle);
+
+                        // Crear contenedor para el mapa
+                        const mapContainer = document.createElement("div");
+                        mapContainer.classList.add("leaflet-map-container", "mb-2");
+                        const mapId = `map-${habitacion.id}`;
+                        mapContainer.id = mapId;
+                        locationContainer.appendChild(mapContainer);
+
+                        // Botón de Google Maps
+                        const googleMapsBtn = document.createElement("a");
+                        googleMapsBtn.href = `https://www.google.com/maps?q=${habitacion.latitude},${habitacion.longitude}`;
+                        googleMapsBtn.target = "_blank";
+                        googleMapsBtn.rel = "noopener noreferrer";
+                        googleMapsBtn.classList.add(
+                            "inline-flex",
+                            "items-center",
+                            "gap-2",
+                            "bg-blue-500",
+                            "text-white",
+                            "px-4",
+                            "py-2",
+                            "rounded-md",
+                            "text-sm",
+                            "hover:bg-blue-600",
+                            "transition-colors"
+                        );
+                        googleMapsBtn.innerHTML = `
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            </svg>
+                            Abrir en Google Maps
+                        `;
+                        locationContainer.appendChild(googleMapsBtn);
+
+                        featuresDetails.appendChild(locationContainer);
+                        hasVisibleCategories = true;
+                    }
+
                     if (hasVisibleCategories) {
                         // Evento para mostrar/ocultar características
                         toggleButton.addEventListener("click", () => {
                             if (featuresDetails.classList.contains("hidden")) {
                                 featuresDetails.classList.remove("hidden");
                                 toggleButton.innerHTML = `Ocultar características <span class="ml-1">▲</span>`;
+                                
+                                // Inicializar mapa de Leaflet si existe y no ha sido inicializado
+                                if (habitacion.latitude && habitacion.longitude) {
+                                    const mapId = `map-${habitacion.id}`;
+                                    const mapElement = document.getElementById(mapId);
+                                    
+                                    // Esperar a que Leaflet esté disponible y el contenedor visible
+                                    setTimeout(() => {
+                                        if (typeof L !== 'undefined' && mapElement && !mapElement._leaflet_id) {
+                                            try {
+                                                const map = L.map(mapId).setView([habitacion.latitude, habitacion.longitude], 15);
+                                                
+                                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                }).addTo(map);
+                                                
+                                                L.marker([habitacion.latitude, habitacion.longitude])
+                                                    .addTo(map)
+                                                    .bindPopup(habitacion.displayName || habitacion.name)
+                                                    .openPopup();
+                                                
+                                                // Invalidar el tamaño del mapa después de renderizar
+                                                setTimeout(() => map.invalidateSize(), 100);
+                                            } catch (error) {
+                                                console.error('Error al inicializar el mapa:', error);
+                                            }
+                                        }
+                                    }, 300);
+                                }
                             } else {
                                 featuresDetails.classList.add("hidden");
                                 toggleButton.innerHTML = `Ver características <span class="ml-1">▼</span>`;
@@ -1868,11 +1944,26 @@
     }
 
     function addCarouselStyles() {
+        // Add Leaflet CSS
+        const leafletCSS = document.createElement('link');
+        leafletCSS.rel = 'stylesheet';
+        leafletCSS.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        leafletCSS.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+        leafletCSS.crossOrigin = '';
+        document.head.appendChild(leafletCSS);
+
+        // Add Leaflet JS
+        const leafletJS = document.createElement('script');
+        leafletJS.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        leafletJS.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+        leafletJS.crossOrigin = '';
+        document.head.appendChild(leafletJS);
+
         const style = document.createElement('style');
         style.textContent = `
             .image-slider {
                 position: relative;
-                height: auto;
+                overflow: hidden;
             }
             .carousel-btn {
                 z-index: 10;
@@ -1882,15 +1973,16 @@
             .carousel-btn:hover {
                 background-color: rgba(0,0,0,0.7);
             }
-            @media (min-width: 768px) {
-                .image-slider {
-                    height: auto;
-                }
+            /* Leaflet map styles */
+            .leaflet-map-container {
+                height: 250px;
+                width: 100%;
+                border-radius: 0.5rem;
+                overflow: hidden;
             }
-            
-            @media (min-width: 1024px) {
-                .image-slider {
-                    height: auto;
+            @media (min-width: 640px) {
+                .leaflet-map-container {
+                    height: 300px;
                 }
             }
         `;
