@@ -403,37 +403,43 @@ async function sendCheckInReminderDayBefore() {
 
     moment.locale('es');
 
-    // Buscar reservas cuya fecha de llegada (solo día, sin hora) sea MAÑANA en zona horaria de México
+    // Calcular rango de fechas para MAÑANA en zona horaria de México
+    const tomorrowStart = moment.tz("America/Mexico_City").add(1, 'day').startOf('day').toDate();
+    const tomorrowEnd = moment.tz("America/Mexico_City").add(1, 'day').endOf('day').toDate();
+    
+    console.log(`Buscando reservas para mañana: ${moment(tomorrowStart).format('YYYY-MM-DD')}`);
+
+    // Consulta más eficiente directamente en la base de datos
     const reservas = await Evento.find({ 
         status: "active",
-        madeCheckIn: false
+        madeCheckIn: false,
+        arrivalDate: { $gte: tomorrowStart, $lte: tomorrowEnd }
     });
 
-    const tomorrowDateStr = moment.tz("America/Mexico_City").add(1, 'day').format('YYYY-MM-DD');
-    console.log(`Buscando reservas para mañana: ${tomorrowDateStr}`);
+    console.log(`Encontradas ${reservas.length} reservas para mañana`);
 
-    let count = 0;
+    let countEnviados = 0;
+    let countOmitidos = 0;
+
     for (const reserva of reservas) {
-        // Convertir arrivalDate a fecha de México (solo día)
-        const arrivalDateStr = moment.tz(reserva.arrivalDate, "America/Mexico_City").format('YYYY-MM-DD');
-        
-        // Si la fecha de llegada NO es mañana, saltar
-        if (arrivalDateStr !== tomorrowDateStr) {
-            continue;
-        }
-        
-        count++;
         try {
-            const client = await Cliente.findById(reserva.client);
-            if (!client) {
-                if (reserva.status !== "reserva de dueño") {
-                    console.log(`Cliente ${reserva.client} no existe.`);
-                    continue;
-                }
+            // Saltar reservas de dueño (no tienen cliente asociado normalmente)
+            if (reserva.status === "reserva de dueño") {
+                console.log(`Reserva ${reserva._id} es de dueño, omitiendo.`);
+                countOmitidos++;
+                continue;
             }
 
-            if (!client || !client.phone) {
-                console.log(`Cliente ${reserva.client} no tiene teléfono registrado.`);
+            const client = await Cliente.findById(reserva.client);
+            if (!client) {
+                console.log(`Cliente ${reserva.client} no existe para reserva ${reserva._id}.`);
+                countOmitidos++;
+                continue;
+            }
+
+            if (!client.phone) {
+                console.log(`Cliente ${client.firstName} no tiene teléfono registrado.`);
+                countOmitidos++;
                 continue;
             }
 
@@ -442,6 +448,7 @@ async function sendCheckInReminderDayBefore() {
             
             if (!chalet) {
                 console.log(`Cabaña ${reserva.resourceId} no existe.`);
+                countOmitidos++;
                 continue;
             }
 
@@ -460,6 +467,7 @@ async function sendCheckInReminderDayBefore() {
             ]);
 
             if (whatsappResponse.success) {
+                countEnviados++;
                 console.log(`Recordatorio (1 día antes) enviado a ${clientName} (${client.phone}) para reserva ${reserva._id}`);
             } else {
                 console.log(`Error al enviar recordatorio (1 día antes) a ${clientName}: ${whatsappResponse.error}`);
@@ -469,7 +477,7 @@ async function sendCheckInReminderDayBefore() {
         }
     }
     
-    console.log(`Total de recordatorios (1 día antes) enviados: ${count}`);
+    console.log(`Total de recordatorios (1 día antes) enviados: ${countEnviados}, omitidos: ${countOmitidos}`);
 }
 
 // Recordatorio de check in para el cliente - mismo día
@@ -478,38 +486,43 @@ async function sendCheckInReminderSameDay() {
 
     moment.locale('es');
 
-    // Buscar reservas cuya fecha de llegada (solo día, sin hora) sea HOY en zona horaria de México
+    // Calcular rango de fechas para HOY en zona horaria de México
+    const todayStart = moment.tz("America/Mexico_City").startOf('day').toDate();
+    const todayEnd = moment.tz("America/Mexico_City").endOf('day').toDate();
+
+    console.log(`Buscando reservas para hoy: ${moment(todayStart).format('YYYY-MM-DD')}`);
+
+    // Consulta más eficiente directamente en la base de datos
     const reservas = await Evento.find({ 
         status: "active",
-        madeCheckIn: false
+        madeCheckIn: false,
+        arrivalDate: { $gte: todayStart, $lte: todayEnd }
     });
 
-    const todayDateStr = moment.tz("America/Mexico_City").format('YYYY-MM-DD');
-    console.log(`Buscando reservas para hoy: ${todayDateStr}`);
+    console.log(`Encontradas ${reservas.length} reservas para hoy`);
 
-    let count = 0;
+    let countEnviados = 0;
+    let countOmitidos = 0;
+
     for (const reserva of reservas) {
-        // Convertir arrivalDate a fecha de México (solo día)
-        const arrivalDateStr = moment.tz(reserva.arrivalDate, "America/Mexico_City").format('YYYY-MM-DD');
-        
-        // Si la fecha de llegada NO es hoy, saltar
-        if (arrivalDateStr !== todayDateStr) {
-            continue;
-        }
-        
-        count++;
-        
         try {
-            const client = await Cliente.findById(reserva.client);
-            if (!client) {
-                if (reserva.status !== "reserva de dueño") {
-                    console.log(`Cliente ${reserva.client} no existe.`);
-                    continue;
-                }
+            // Saltar reservas de dueño (no tienen cliente asociado normalmente)
+            if (reserva.status === "reserva de dueño") {
+                console.log(`Reserva ${reserva._id} es de dueño, omitiendo.`);
+                countOmitidos++;
+                continue;
             }
 
-            if (!client || !client.phone) {
-                console.log(`Cliente ${reserva.client} no tiene teléfono registrado.`);
+            const client = await Cliente.findById(reserva.client);
+            if (!client) {
+                console.log(`Cliente ${reserva.client} no existe para reserva ${reserva._id}.`);
+                countOmitidos++;
+                continue;
+            }
+
+            if (!client.phone) {
+                console.log(`Cliente ${client.firstName} no tiene teléfono registrado.`);
+                countOmitidos++;
                 continue;
             }
 
@@ -518,6 +531,7 @@ async function sendCheckInReminderSameDay() {
             
             if (!chalet) {
                 console.log(`Cabaña ${reserva.resourceId} no existe.`);
+                countOmitidos++;
                 continue;
             }
 
@@ -534,6 +548,7 @@ async function sendCheckInReminderSameDay() {
             ]);
 
             if (whatsappResponse.success) {
+                countEnviados++;
                 console.log(`Recordatorio (mismo día) enviado a ${clientName} (${client.phone}) para reserva ${reserva._id}`);
             } else {
                 console.log(`Error al enviar recordatorio (mismo día) a ${clientName}: ${whatsappResponse.error}`);
@@ -543,7 +558,7 @@ async function sendCheckInReminderSameDay() {
         }
     }
     
-    console.log(`Total de recordatorios (mismo día) enviados: ${count}`);
+    console.log(`Total de recordatorios (mismo día) enviados: ${countEnviados}, omitidos: ${countOmitidos}`);
 }
 
 

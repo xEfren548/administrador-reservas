@@ -201,7 +201,7 @@ mongoose.connect(db_url).then(async () => {
 
     // Recordatorio de check-in 1 día antes - Se ejecuta a las 10:00 AM
     // cron.schedule('00 10 * * *', async () => {
-    cron.schedule('00 10 * * *', async () => {
+    cron.schedule('28 11 * * *', async () => {
         console.log('Ejecutando recordatorio de check-in (1 día antes)...');
         await SendMessages.sendCheckInReminderDayBefore();
     }, {
@@ -211,7 +211,7 @@ mongoose.connect(db_url).then(async () => {
 
     // Recordatorio de check-in mismo día - Se ejecuta a las 8:00 AM
     // cron.schedule('00 08 * * *', async () => {
-    cron.schedule('00 08 * * *', async () => {
+    cron.schedule('26 11 * * *', async () => {
         console.log('Ejecutando recordatorio de check-in (mismo día)...');
         await SendMessages.sendCheckInReminderSameDay();
     }, {
