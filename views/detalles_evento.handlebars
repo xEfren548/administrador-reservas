@@ -735,25 +735,38 @@
                                     <option value="Transferencia">Transferencia</option>
                                 </select>
                             </div>
-
                         </div>
-
-                        <div class="row mt-2">
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label for="codigo-operacion-pago">Código de operación</label>
-                                    <input type="text" name="codigo-operacion-pago"
-                                        id="codigo-operacion-pago-habitacion" class="form-control" placeholder="001122">
-                                    <span class="help-text" style="color: gray;font-size: 14px;">No es obligatorio
-                                        pero
-                                        puede servir de referencia.</span>
-
-                                </div>
+                    </div> <!-- Cierre row método de pago -->
+                    
+                    <!-- Sección de comprobante (aparece solo con Transferencia) -->
+                    <div class="row mt-2" id="comprobante-section" style="display: none;">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="comprobante-pago" class="form-label">
+                                    Comprobante de pago
+                                </label>
+                                <input type="file" name="comprobante-pago" id="comprobante-pago" 
+                                    class="form-control" accept="image/*,.pdf">
+                                <span class="help-text" style="color: gray; font-size: 14px;">
+                                    Recomendado para transferencias. Formatos permitidos: imágenes y PDF.
+                                </span>
                             </div>
                         </div>
+                    </div> <!-- Cierre row comprobante -->
 
+                    <div class="row mt-2">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="codigo-operacion-pago">Código de operación</label>
+                                <input type="text" name="codigo-operacion-pago"
+                                    id="codigo-operacion-pago-habitacion" class="form-control" placeholder="001122">
+                                <span class="help-text" style="color: gray;font-size: 14px;">No es obligatorio
+                                    pero
+                                    puede servir de referencia.</span>
 
-                    </div> <!-- Cierre row -->
+                            </div>
+                        </div>
+                    </div> <!-- Cierre row código operación -->
 
                     <div class="row">
                         <div class="ml-2">
@@ -763,7 +776,7 @@
 
 
                         </div>
-                    </div>
+                    </div> <!-- Cierre row notas -->
 
 
 
@@ -1414,6 +1427,20 @@
     let isClientUpdated = false;
     const modificarClienteModal = new bootstrap.Modal(document.getElementById('modifyClientEntryModal'));
 
+    // Mostrar/ocultar sección de comprobante según método de pago
+    const paymentMethodSelect = document.querySelector('#payment_method');
+    const comprobanteSection = document.querySelector('#comprobante-section');
+    const comprobanteInput = document.querySelector('#comprobante-pago');
+
+    paymentMethodSelect.addEventListener('change', function() {
+        if (this.value === 'Transferencia') {
+            comprobanteSection.style.display = 'block';
+        } else {
+            comprobanteSection.style.display = 'none';
+            comprobanteInput.value = ''; // Limpiar el archivo seleccionado
+        }
+    });
+
 
     addPaymentBtn.addEventListener('click', async function (event) {
         event.preventDefault();
@@ -1451,6 +1478,7 @@
             const codigoOperacion = document.querySelector('#codigo-operacion-pago-habitacion').value;
             const notas = document.querySelector('#payment-notes').value;
             const reservacionId = document.querySelector('#reservacion_id').value;
+            const comprobanteFile = document.querySelector('#comprobante-pago').files[0];
 
             // Validación de la fecha de pago
             if (!fechaPago || fechaPago === undefined) {
@@ -1467,23 +1495,22 @@
                 throw new Error('Método de pago no puede estar vacío.');
             }
 
-
-            const bodyNuevoPago = {
-                fechaPago: new Date(fechaPago),
-                importe: importe,
-                metodoPago: metodoPago,
-                codigoOperacion: codigoOperacion,
-                reservacionId: reservacionId,
-                notas: notas
-            };
-
+            // Usar FormData para enviar archivo
+            const formData = new FormData();
+            formData.append('fechaPago', new Date(fechaPago).toISOString());
+            formData.append('importe', importe);
+            formData.append('metodoPago', metodoPago);
+            formData.append('codigoOperacion', codigoOperacion);
+            formData.append('reservacionId', reservacionId);
+            formData.append('notas', notas);
+            
+            if (comprobanteFile) {
+                formData.append('comprobante', comprobanteFile);
+            }
 
             const response = await fetch(`/api/pagos`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(bodyNuevoPago)
+                body: formData // No establecer Content-Type, el navegador lo hace automáticamente con boundary
             });
 
             Swal.close(); // Close the loading indicator

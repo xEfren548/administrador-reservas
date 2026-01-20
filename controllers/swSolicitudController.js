@@ -26,7 +26,7 @@ const createSolicitudValidators = [
         .isIn([
             'Alimentación', 'Transporte', 'Servicios', 'Mantenimiento',
             'Compras', 'Salud', 'Entretenimiento', 'Educación', 'Hogar',
-            'Salario', 'Venta', 'Inversión', 'Préstamo', 'Reembolso', 'Otro'
+            'Salario', 'Venta', 'Inversión', 'Préstamo', 'Reembolso', 'Reserva', 'Otro'
         ]).withMessage('Categoría inválida'),
     check('fecha')
         .optional()
@@ -62,9 +62,18 @@ const procesarSolicitudValidators = [
  * Cualquier usuario autenticado puede crear solicitudes para cualquier cuenta
  */
 const createSolicitud = async (req, res) => {
+    const client = new ftp.Client();
+    
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            // Limpiar archivo temporal si existe
+            if (req.file) {
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            }
+            
             return res.status(400).json({ 
                 success: false, 
                 errors: errors.array() 
@@ -82,7 +91,8 @@ const createSolicitud = async (req, res) => {
             etiquetas,
             notas,
             imagenes,
-            reservaAsociada
+            reservaAsociada,
+            bypassValidacion // Flag para permitir creación desde registro de pago
         } = req.body;
 
         const userId = req.session.userId;
@@ -90,6 +100,13 @@ const createSolicitud = async (req, res) => {
         // Verificar que la cuenta existe y está activa
         const cuenta = await SWCuenta.findById(cuentaId);
         if (!cuenta) {
+            // Limpiar archivo temporal si existe
+            if (req.file) {
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            }
+            
             return res.status(404).json({
                 success: false,
                 message: 'Cuenta no encontrada'
@@ -97,26 +114,86 @@ const createSolicitud = async (req, res) => {
         }
 
         if (!cuenta.activa) {
+            // Limpiar archivo temporal si existe
+            if (req.file) {
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            }
+            
             return res.status(400).json({
                 success: false,
                 message: 'No se pueden crear solicitudes para cuentas inactivas'
             });
         }
 
-        // Verificar si es propietario o participante de la cuenta
-        const esPropietario = cuenta.propietario.toString() === userId;
-        const participanteCuenta = await SWParticipante.findOne({
-            cuenta: cuentaId,
-            usuario: userId,
-            activo: true
-        });
-
-        // Si es propietario de la cuenta, debe crear transacciones directamente
-        if (esPropietario || (participanteCuenta && participanteCuenta.rol === 'Propietario')) {
-            return res.status(400).json({
-                success: false,
-                message: 'Los propietarios deben crear transacciones directamente, no solicitudes'
+        // Solo validar propietario/participante si NO viene de un registro de pago
+        if (!bypassValidacion) {
+            // Verificar si es propietario o participante de la cuenta
+            const esPropietario = cuenta.propietario.toString() === userId;
+            const participanteCuenta = await SWParticipante.findOne({
+                cuenta: cuentaId,
+                usuario: userId,
+                activo: true
             });
+
+            // Si es propietario de la cuenta, debe crear transacciones directamente
+            if (esPropietario || (participanteCuenta && participanteCuenta.rol === 'Propietario')) {
+                // Limpiar archivo temporal si existe
+                if (req.file) {
+                    fs.unlink(req.file.path, (err) => {
+                        if (err) console.error('Error al eliminar archivo temporal:', err);
+                    });
+                }
+                
+                return res.status(400).json({
+                    success: false,
+                    message: 'Los propietarios deben crear transacciones directamente, no solicitudes'
+                });
+            }
+        }
+
+        // Procesar comprobante si se subió
+        let rutaComprobante = null;
+        
+        if (req.file) {
+            try {
+                // Conectar al servidor FTP
+                await client.access({
+                    host: 'integradev.site',
+                    user: process.env.FTP_USER,
+                    password: process.env.FTP_PASSWORD,
+                    secure: false
+                });
+
+                await client.ensureDir('splitwise');
+                
+                const fileName = `comprobante_${Date.now()}_${req.file.originalname}`;
+                const remotePath = `/splitwise/${fileName}`;
+                
+                await client.uploadFrom(req.file.path, remotePath);
+                
+                // Guardar solo el nombre del archivo
+                rutaComprobante = fileName;
+                
+                console.log('Comprobante subido exitosamente:', rutaComprobante);
+            } catch (ftpError) {
+                console.error('Error al subir comprobante a FTP:', ftpError);
+                throw new Error('Error al subir el comprobante: ' + ftpError.message);
+            } finally {
+                client.close();
+                
+                // Eliminar archivo temporal
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            }
+        }
+
+        // Combinar imágenes existentes con el comprobante nuevo
+        const imagenesFinales = imagenes || [];
+        if (rutaComprobante) {
+            imagenesFinales.push(rutaComprobante);
         }
 
         const solicitud = new SWSolicitudTransaccion({
@@ -131,7 +208,7 @@ const createSolicitud = async (req, res) => {
             propietarioCuenta: cuenta.propietario,
             etiquetas,
             notas,
-            imagenes: imagenes || [],
+            imagenes: imagenesFinales,
             reservaAsociada
         });
 
@@ -149,6 +226,14 @@ const createSolicitud = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al crear solicitud:', error);
+        
+        // Limpiar archivo temporal si existe
+        if (req.file) {
+            fs.unlink(req.file.path, (err) => {
+                if (err) console.error('Error al eliminar archivo temporal:', err);
+            });
+        }
+        
         res.status(500).json({
             success: false,
             message: 'Error al crear la solicitud',

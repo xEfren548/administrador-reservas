@@ -19,6 +19,7 @@ router.use(ensureAuthenticated);
  */
 router.post(
     '/solicitudes',
+    upload.single('comprobante'),
     swSolicitudController.createSolicitudValidators,
     validationRequest,
     swSolicitudController.createSolicitud

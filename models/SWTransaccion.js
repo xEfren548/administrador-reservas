@@ -43,6 +43,7 @@ const swTransaccionSchema = new Schema({
             'Inversión',
             'Préstamo',
             'Reembolso',
+            'Reserva',
             'Otro'
         ],
         required: true,

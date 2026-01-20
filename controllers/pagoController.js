@@ -7,6 +7,10 @@ const Habitacion = require('../models/Habitacion');
 const Documento = require('../models/Evento');
 const Roles = require('../models/Roles');
 const moment = require('moment');
+const SWSolicitudTransaccion = require('../models/SWSolicitudTransaccion');
+const SWCuenta = require('../models/SWCuenta');
+const ftp = require('basic-ftp');
+const fs = require('fs');
 
 async function obtenerPagos(idReservacion) {
     try {
@@ -45,37 +49,75 @@ async function obtenerPagosDeReservas(req, res) {
 }
 
 async function registrarPago(req, res, next) {
+    const client = new ftp.Client();
+    
     try {
         const userRole = req.session.role;
 
         const userPermissions = await Roles.findById(userRole);
         if(!userPermissions){
-            // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
+            // Limpiar archivo temporal si existe
+            if (req.file) {
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            }
+            
             return res.status(403).json({ mensaje: 'El usuario no tiene un rol definido, contacte al administrador' });
         }
 
         const permittedRole = "ADD_PAYMENTS";
         if (!userPermissions.permissions.includes(permittedRole)) {
-            // throw new Error("El usuario no tiene permiso para ver utilidades globales.");
+            // Limpiar archivo temporal si existe
+            if (req.file) {
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            }
+            
             return res.status(403).json({ mensaje: 'El usuario no tiene permiso para agregar pagos.' });
         }
 
         const { fechaPago, importe, metodoPago, codigoOperacion, reservacionId, notas } = req.body;
 
         if (req.session.privilege !== "Administrador") {
+            // Limpiar archivo temporal si existe
+            if (req.file) {
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error('Error al eliminar archivo temporal:', err);
+                });
+            }
+            
             return res.status(403).json({ mensaje: 'No tienes permiso para registrar un pago.' });
         }
 
-        // const allReservations = await Documento.findOne();
-        // const reservacion = allReservations.events.find(event => event._id.toString() === reservacionId);
         const reservacion = await Documento.findById(reservacionId).lean();
-
         const chaletId = reservacion.resourceId;
 
-        // const allChalets = await Habitacion.findOne();
-        // const chalet = allChalets.resources.find(chalet => chalet._id.toString() === chaletId.toString());
         const chalet = await Habitacion.findById(chaletId).lean();
         const chaletOwner = chalet.others.owner;
+
+        // VALIDAR ANTES DE CREAR EL PAGO: Si el método es "Transferencia" y la habitación tiene cuenta financiera, validar comprobante
+        if (metodoPago === "Transferencia" && chalet.others.cuentaFinanciera) {
+            // Verificar que la cuenta existe
+            const cuenta = await SWCuenta.findById(chalet.others.cuentaFinanciera);
+            
+            if (cuenta && cuenta.activa) {
+                // Validar que se haya subido el comprobante
+                if (!req.file) {
+                    // Limpiar archivo temporal si existe
+                    if (req.file) {
+                        fs.unlink(req.file.path, (err) => {
+                            if (err) console.error('Error al eliminar archivo temporal:', err);
+                        });
+                    }
+                    
+                    return res.status(400).json({ 
+                        mensaje: 'El comprobante es obligatorio para transferencias cuando la habitación tiene una cuenta financiera ligada.' 
+                    });
+                }
+            }
+        }
 
         console.log("chalet id: ", chaletId);
         const pago = new Pago({
@@ -88,6 +130,7 @@ async function registrarPago(req, res, next) {
         });
         await pago.save();
 
+        // Si el método de pago es "Recibio dueño", crear comisión negativa
         if (metodoPago === "Recibio dueño"){
             await altaComisionReturnC({
                 monto: -importe ,
@@ -96,6 +139,86 @@ async function registrarPago(req, res, next) {
                 idUsuario: chaletOwner,
                 idReserva: reservacionId
             })
+        }
+
+        // Si el método es "Transferencia" y la habitación tiene cuenta financiera, crear solicitud
+        if (metodoPago === "Transferencia" && chalet.others.cuentaFinanciera) {
+            try {
+                // Verificar que la cuenta existe
+                const cuenta = await SWCuenta.findById(chalet.others.cuentaFinanciera);
+                
+                if (cuenta && cuenta.activa) {
+                    // Procesar comprobante
+                    let rutaComprobante = null;
+                    
+                    try {
+                        // Conectar al servidor FTP
+                        await client.access({
+                            host: 'integradev.site',
+                            user: process.env.FTP_USER,
+                            password: process.env.FTP_PASSWORD,
+                            secure: false
+                        });
+
+                        await client.ensureDir('splitwise');
+                        
+                        const fileName = `comprobante_pago_${Date.now()}_${req.file.originalname}`;
+                        const remotePath = `/splitwise/${fileName}`;
+                        
+                        await client.uploadFrom(req.file.path, remotePath);
+                        
+                        // Guardar solo el nombre del archivo
+                        rutaComprobante = fileName;
+                        
+                        console.log('Comprobante subido exitosamente:', rutaComprobante);
+                    } catch (ftpError) {
+                        console.error('Error al subir comprobante a FTP:', ftpError);
+                        throw new Error('Error al subir el comprobante: ' + ftpError.message);
+                    } finally {
+                        client.close();
+                        
+                        // Eliminar archivo temporal
+                        fs.unlink(req.file.path, (err) => {
+                            if (err) console.error('Error al eliminar archivo temporal:', err);
+                        });
+                    }
+
+                    // Obtener información del cliente
+                    const Cliente = require('../models/Cliente');
+                    let nombreCliente = 'Cliente no identificado';
+                    
+                    if (reservacion.client) {
+                        const cliente = await Cliente.findById(reservacion.client).lean();
+                        if (cliente) {
+                            nombreCliente = `${cliente.firstName || ''} ${cliente.lastName || ''}`.trim() || cliente.email || 'Cliente no identificado';
+                        }
+                    }
+
+                    // Crear la solicitud de transacción
+                    const solicitud = new SWSolicitudTransaccion({
+                        cuenta: chalet.others.cuentaFinanciera,
+                        tipo: 'Ingreso',
+                        monto: parseFloat(importe),
+                        concepto: `Pago de reserva - ${chalet.propertyDetails.name} - ${nombreCliente} - ID reserva: ${reservacionId}`,
+                        descripcion: notas || 'Pago registrado desde el sistema de reservas',
+                        categoria: 'Reserva',
+                        fecha: new Date(fechaPago),
+                        solicitadoPor: req.session.id,
+                        propietarioCuenta: cuenta.propietario,
+                        reservaAsociada: reservacionId,
+                        imagenes: rutaComprobante ? [rutaComprobante] : [],
+                        notas: `Código de operación: ${codigoOperacion || 'N/A'}\nMétodo: ${metodoPago}`
+                    });
+
+                    await solicitud.save();
+                    console.log('Solicitud de transacción creada exitosamente:', solicitud._id);
+                } else {
+                    console.log('La cuenta financiera no existe o no está activa');
+                }
+            } catch (solicitudError) {
+                console.error('Error al crear solicitud de transacción:', solicitudError);
+                // No fallar el registro del pago si falla la solicitud
+            }
         }
 
         const logBody = {
@@ -111,6 +234,14 @@ async function registrarPago(req, res, next) {
         res.status(201).json({ mensaje: 'Pago registrado correctamente.', payment: pago  });
     } catch (error) {
         console.error(error);
+        
+        // Limpiar archivo temporal si existe
+        if (req.file) {
+            fs.unlink(req.file.path, (err) => {
+                if (err) console.error('Error al eliminar archivo temporal:', err);
+            });
+        }
+        
         res.status(500).json({ mensaje: error.message });
     }
 }
