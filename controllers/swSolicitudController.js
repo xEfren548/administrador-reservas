@@ -581,6 +581,20 @@ const procesarSolicitud = async (req, res) => {
             
             resultado = await solicitud.aprobar(userId, comentario, comprobanteConfirmacion);
             
+            // NUEVO: Si es una solicitud de pago de reserva, aplicar el pago
+            if (solicitud.reservaAsociada) {
+                const Pago = require('../models/Pago');
+                const pagoActualizado = await Pago.findOneAndUpdate(
+                    { solicitudId: solicitud._id },
+                    { status: 'Aplicado' },
+                    { new: true }
+                );
+                
+                if (pagoActualizado) {
+                    console.log(`Pago ${pagoActualizado._id} aplicado automáticamente tras aprobar solicitud`);
+                }
+            }
+            
             res.status(200).json({
                 success: true,
                 message: 'Solicitud aprobada exitosamente',
@@ -593,6 +607,20 @@ const procesarSolicitud = async (req, res) => {
             });
         } else if (accion === 'rechazar') {
             resultado = await solicitud.rechazar(userId, motivoRechazo || comentario);
+            
+            // NUEVO: Si es una solicitud de pago de reserva, rechazar el pago
+            if (solicitud.reservaAsociada) {
+                const Pago = require('../models/Pago');
+                const pagoRechazado = await Pago.findOneAndUpdate(
+                    { solicitudId: solicitud._id },
+                    { status: 'Rechazado' },
+                    { new: true }
+                );
+                
+                if (pagoRechazado) {
+                    console.log(`Pago ${pagoRechazado._id} rechazado automáticamente tras rechazar solicitud`);
+                }
+            }
             
             res.status(200).json({
                 success: true,

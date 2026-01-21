@@ -105,20 +105,108 @@ async function registrarPago(req, res, next) {
             if (cuenta && cuenta.activa) {
                 // Validar que se haya subido el comprobante
                 if (!req.file) {
-                    // Limpiar archivo temporal si existe
-                    if (req.file) {
-                        fs.unlink(req.file.path, (err) => {
-                            if (err) console.error('Error al eliminar archivo temporal:', err);
-                        });
-                    }
-                    
                     return res.status(400).json({ 
                         mensaje: 'El comprobante es obligatorio para transferencias cuando la habitación tiene una cuenta financiera ligada.' 
                     });
                 }
+
+                // NUEVO FLUJO: Crear pago pendiente + solicitud SW
+                let rutaComprobante = null;
+                
+                try {
+                    // Conectar al servidor FTP y subir comprobante
+                    await client.access({
+                        host: 'integradev.site',
+                        user: process.env.FTP_USER,
+                        password: process.env.FTP_PASSWORD,
+                        secure: false
+                    });
+
+                    await client.ensureDir('splitwise');
+                    
+                    const fileName = `comprobante_pago_${Date.now()}_${req.file.originalname}`;
+                    const remotePath = `/splitwise/${fileName}`;
+                    
+                    await client.uploadFrom(req.file.path, remotePath);
+                    
+                    // Guardar solo el nombre del archivo
+                    rutaComprobante = fileName;
+                    
+                    console.log('Comprobante subido exitosamente:', rutaComprobante);
+                } catch (ftpError) {
+                    console.error('Error al subir comprobante a FTP:', ftpError);
+                    throw new Error('Error al subir el comprobante: ' + ftpError.message);
+                } finally {
+                    client.close();
+                    
+                    // Eliminar archivo temporal
+                    fs.unlink(req.file.path, (err) => {
+                        if (err) console.error('Error al eliminar archivo temporal:', err);
+                    });
+                }
+
+                // Obtener información del cliente
+                const Cliente = require('../models/Cliente');
+                let nombreCliente = 'Cliente no identificado';
+                
+                if (reservacion.client) {
+                    const cliente = await Cliente.findById(reservacion.client).lean();
+                    if (cliente) {
+                        nombreCliente = `${cliente.firstName || ''} ${cliente.lastName || ''}`.trim() || cliente.email || 'Cliente no identificado';
+                    }
+                }
+
+                // Crear la solicitud de transacción
+                const solicitud = new SWSolicitudTransaccion({
+                    cuenta: chalet.others.cuentaFinanciera,
+                    tipo: 'Ingreso',
+                    monto: parseFloat(importe),
+                    concepto: `Pago de reserva - ${chalet.propertyDetails.name} - ${nombreCliente} - ID reserva: ${reservacionId}`,
+                    descripcion: notas || 'Pago registrado desde el sistema de reservas',
+                    categoria: 'Reserva',
+                    fecha: new Date(fechaPago),
+                    solicitadoPor: req.session.id,
+                    propietarioCuenta: cuenta.propietario,
+                    reservaAsociada: reservacionId,
+                    imagenes: rutaComprobante ? [rutaComprobante] : [],
+                    notas: `Código de operación: ${codigoOperacion || 'N/A'}\nMétodo: ${metodoPago}`
+                });
+
+                await solicitud.save();
+                console.log('Solicitud de transacción creada exitosamente:', solicitud._id);
+
+                // Crear el pago con status PENDIENTE y ligado a la solicitud
+                const pago = new Pago({
+                    fechaPago: new Date(fechaPago),
+                    importe,
+                    metodoPago,
+                    codigoOperacion,
+                    reservacionId: reservacionId.toString(),
+                    notas,
+                    status: 'Pendiente',
+                    solicitudId: solicitud._id
+                });
+                await pago.save();
+
+                const logBody = {
+                    fecha: Date.now(),
+                    idUsuario: req.session.id,
+                    type: 'reservation',
+                    idReserva: reservacionId,
+                    acciones: `Pago pendiente de aprobación registrado por ${req.session.firstName} ${req.session.lastName}. IdReserva: ${reservacionId}`,
+                    nombreUsuario: `${req.session.firstName} ${req.session.lastName}`
+                }
+                
+                await logController.createBackendLog(logBody);
+                return res.status(201).json({ 
+                    mensaje: 'Pago registrado y enviado para aprobación.', 
+                    payment: pago,
+                    requiresApproval: true
+                });
             }
         }
 
+        // FLUJO NORMAL: Crear pago directo con status APLICADO
         console.log("chalet id: ", chaletId);
         const pago = new Pago({
             fechaPago: new Date(fechaPago),
@@ -126,7 +214,8 @@ async function registrarPago(req, res, next) {
             metodoPago,
             codigoOperacion,
             reservacionId: reservacionId.toString(),
-            notas
+            notas,
+            status: 'Aplicado'
         });
         await pago.save();
 
@@ -139,86 +228,6 @@ async function registrarPago(req, res, next) {
                 idUsuario: chaletOwner,
                 idReserva: reservacionId
             })
-        }
-
-        // Si el método es "Transferencia" y la habitación tiene cuenta financiera, crear solicitud
-        if (metodoPago === "Transferencia" && chalet.others.cuentaFinanciera) {
-            try {
-                // Verificar que la cuenta existe
-                const cuenta = await SWCuenta.findById(chalet.others.cuentaFinanciera);
-                
-                if (cuenta && cuenta.activa) {
-                    // Procesar comprobante
-                    let rutaComprobante = null;
-                    
-                    try {
-                        // Conectar al servidor FTP
-                        await client.access({
-                            host: 'integradev.site',
-                            user: process.env.FTP_USER,
-                            password: process.env.FTP_PASSWORD,
-                            secure: false
-                        });
-
-                        await client.ensureDir('splitwise');
-                        
-                        const fileName = `comprobante_pago_${Date.now()}_${req.file.originalname}`;
-                        const remotePath = `/splitwise/${fileName}`;
-                        
-                        await client.uploadFrom(req.file.path, remotePath);
-                        
-                        // Guardar solo el nombre del archivo
-                        rutaComprobante = fileName;
-                        
-                        console.log('Comprobante subido exitosamente:', rutaComprobante);
-                    } catch (ftpError) {
-                        console.error('Error al subir comprobante a FTP:', ftpError);
-                        throw new Error('Error al subir el comprobante: ' + ftpError.message);
-                    } finally {
-                        client.close();
-                        
-                        // Eliminar archivo temporal
-                        fs.unlink(req.file.path, (err) => {
-                            if (err) console.error('Error al eliminar archivo temporal:', err);
-                        });
-                    }
-
-                    // Obtener información del cliente
-                    const Cliente = require('../models/Cliente');
-                    let nombreCliente = 'Cliente no identificado';
-                    
-                    if (reservacion.client) {
-                        const cliente = await Cliente.findById(reservacion.client).lean();
-                        if (cliente) {
-                            nombreCliente = `${cliente.firstName || ''} ${cliente.lastName || ''}`.trim() || cliente.email || 'Cliente no identificado';
-                        }
-                    }
-
-                    // Crear la solicitud de transacción
-                    const solicitud = new SWSolicitudTransaccion({
-                        cuenta: chalet.others.cuentaFinanciera,
-                        tipo: 'Ingreso',
-                        monto: parseFloat(importe),
-                        concepto: `Pago de reserva - ${chalet.propertyDetails.name} - ${nombreCliente} - ID reserva: ${reservacionId}`,
-                        descripcion: notas || 'Pago registrado desde el sistema de reservas',
-                        categoria: 'Reserva',
-                        fecha: new Date(fechaPago),
-                        solicitadoPor: req.session.id,
-                        propietarioCuenta: cuenta.propietario,
-                        reservaAsociada: reservacionId,
-                        imagenes: rutaComprobante ? [rutaComprobante] : [],
-                        notas: `Código de operación: ${codigoOperacion || 'N/A'}\nMétodo: ${metodoPago}`
-                    });
-
-                    await solicitud.save();
-                    console.log('Solicitud de transacción creada exitosamente:', solicitud._id);
-                } else {
-                    console.log('La cuenta financiera no existe o no está activa');
-                }
-            } catch (solicitudError) {
-                console.error('Error al crear solicitud de transacción:', solicitudError);
-                // No fallar el registro del pago si falla la solicitud
-            }
         }
 
         const logBody = {

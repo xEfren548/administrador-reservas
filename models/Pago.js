@@ -23,6 +23,15 @@ const paymentSchema = new mongoose.Schema({
     },
     notas: {
         type: String
+    },
+    status: {
+        type: String,
+        enum: ['Pendiente', 'Aplicado', 'Rechazado'],
+        default: 'Aplicado'
+    },
+    solicitudId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'SWSolicitudTransaccion'
     }
 });
 

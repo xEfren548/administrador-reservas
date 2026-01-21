@@ -324,7 +324,7 @@ async function obtenerEventos(req, res) {
 
         if (typeof Pago !== 'undefined') {
             const pagosAgg = await Pago.aggregate([
-                { $match: { reservacionId: { $in: eventoIds } } },
+                { $match: { reservacionId: { $in: eventoIds }, $or: [{ status: 'Aplicado' }, { status: { $exists: false } }] } },
                 { $group: { _id: "$reservacionId", total: { $sum: "$importe" } } }
             ]);
             pagosMap = new Map(pagosAgg.map(p => [p._id.toString(), p.total || 0]));
@@ -333,7 +333,7 @@ async function obtenerEventos(req, res) {
             const pagosArray = await Promise.all(eventoIds.map(async (id) => {
                 try {
                     const pagos = await pagoController.obtenerPagos(id);
-                    const total = (pagos || []).reduce((acc, p) => acc + (p.importe || 0), 0);
+                    const total = (pagos || []).filter(p => p.status === 'Aplicado').reduce((acc, p) => acc + (p.importe || 0), 0);
                     return { id: id.toString(), total };
                 } catch {
                     return { id: id.toString(), total: 0 };
@@ -599,7 +599,7 @@ async function obtenerEventosOptimizados(req, res) {
         let pagosMap = new Map();
         if (typeof Pago !== 'undefined') {
             const pagosAgg = await Pago.aggregate([
-                { $match: { reservacionId: { $in: reservaIds } } },
+                { $match: { reservacionId: { $in: reservaIds }, $or: [{ status: 'Aplicado' }, { status: { $exists: false } }] } },
                 { $group: { _id: "$reservacionId", total: { $sum: "$importe" } } }
             ]);
             pagosMap = new Map(pagosAgg.map(p => [p._id.toString(), p.total || 0]));
@@ -787,7 +787,10 @@ async function obtenerEventosDeCabana(req, res) {
                 const pagosReserva = await pagoController.obtenerPagos(evento._id);
                 let pagoTotal = 0
                 pagosReserva.forEach(pago => {
-                    pagoTotal += pago.importe;
+                    // Solo sumar pagos aplicados o sin status (pagos antiguos)
+                    if (pago.status === 'Aplicado' || !pago.status) {
+                        pagoTotal += pago.importe;
+                    }
                 })
                 const totalReserva = evento.total;
                 // let precioBaseTotal = 0
@@ -936,7 +939,10 @@ async function reservasDeDuenos(req, res, next) {
                 const pagos = await pagoController.obtenerPagos(evento._id);
                 let pagoTotal = 0
                 pagos.forEach(pago => {
-                    pagoTotal += pago.importe;
+                    // Solo sumar pagos aplicados o sin status (pagos antiguos)
+                    if (pago.status === 'Aplicado' || !pago.status) {
+                        pagoTotal += pago.importe;
+                    }
                 })
 
                 let subtotal = evento.total;
@@ -2605,7 +2611,10 @@ async function moveToPlayground(req, res) {
             const pagos = await pagoController.obtenerPagos(idReserva);
             let pagoTotal = 0
             pagos.forEach(pago => {
-                pagoTotal += pago.importe;
+                // Solo sumar pagos aplicados
+                if (pago.status === 'Aplicado') {
+                    pagoTotal += pago.importe;
+                }
             })
             const totalReserva = evento.total;
             const montoPendiente = totalReserva - pagoTotal;
@@ -2731,7 +2740,10 @@ async function moveToPlayground(req, res) {
             const pagos = await pagoController.obtenerPagos(idReserva);
             let pagoTotal = 0
             pagos.forEach(pago => {
-                pagoTotal += pago.importe;
+                // Solo sumar pagos aplicados o sin status (pagos antiguos)
+                if (pago.status === 'Aplicado' || !pago.status) {
+                    pagoTotal += pago.importe;
+                }
             })
             const totalReserva = evento.total;
             const montoPendiente = totalReserva - pagoTotal;
@@ -3804,7 +3816,7 @@ async function getIncomingReservations(req, res) {
         let pagosMap = new Map();
         if (typeof Pago !== 'undefined') {
             const pagosAgg = await Pago.aggregate([
-                { $match: { reservacionId: { $in: reservaIds } } },
+                { $match: { reservacionId: { $in: reservaIds }, $or: [{ status: 'Aplicado' }, { status: { $exists: false } }] } },
                 { $group: { _id: "$reservacionId", total: { $sum: "$importe" } } }
             ]);
             pagosMap = new Map(pagosAgg.map(p => [p._id.toString(), p.total || 0]));

@@ -502,6 +502,7 @@
                         <th>Nº Op.</th>
                         <th>Fecha</th>
                         <th>Importe</th>
+                        <th>Status</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -517,6 +518,15 @@
                         </td>
                         <td>{{this.fechaPago}}</td>
                         <td>${{this.importe}}</td>
+                        <td>
+                            {{#if (eq this.status "Pendiente")}}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                            {{else if (eq this.status "Rechazado")}}
+                            <span class="badge bg-danger">Rechazado</span>
+                            {{else}}
+                            <span class="badge bg-success">Aplicado</span>
+                            {{/if}}
+                        </td>
                         <td class="text-center">
                             <button type="button" class="btn" data-bs-toggle="modal"
                                 data-bs-target="#edit_payment_modal" data-payment-id="{{this._id}}">
@@ -528,7 +538,7 @@
                         </td>
                         {{/each}}
                         {{else}}
-                        <td colspan="4" class="text-center">No se han agregado pagos</td>
+                        <td colspan="5" class="text-center">No se han agregado pagos</td>
                         {{/if}}
                     </tr>
                 </tbody>

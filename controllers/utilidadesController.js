@@ -1635,7 +1635,7 @@ async function mostrarUtilidadesGlobales(req, res, next) {
         for (let reserva of reservasMap) {
             const pagos = await pagoController.obtenerPagos(reserva.id);
 
-            let pagadoReserva = pagos.reduce((total, pago) => total + pago.importe, 0);
+            let pagadoReserva = pagos.filter(p => p.status === 'Aplicado' || !p.status).reduce((total, pago) => total + pago.importe, 0);
             let restanteReserva = reserva.total - pagadoReserva;
 
             reserva.totalReserva = reserva.total;
@@ -1851,10 +1851,11 @@ async function vistaParaReporte(req, res, next) {
 
 
             const pagosReserva = pagos.filter(pago => pago.reservacionId.toString() === reserva._id.toString())
-            const pagosNoLiquidaEfectivoFilter = pagosReserva.filter(pago => pago.metodoPago !== "Recibio dueño")
+            const pagosAplicados = pagosReserva.filter(pago => pago.status === 'Aplicado' || !pago.status)
+            const pagosNoLiquidaEfectivoFilter = pagosAplicados.filter(pago => pago.metodoPago !== "Recibio dueño")
             const pagosNoLiquidaEfectivo = pagosNoLiquidaEfectivoFilter.reduce((total, pago) => total + pago.importe, 0);
 
-            const totalPagosReserva = pagosReserva.reduce((total, pago) => total + pago.importe, 0);
+            const totalPagosReserva = pagosAplicados.reduce((total, pago) => total + pago.importe, 0);
             reserva.pagosCliente = totalPagosReserva !== NaN ? totalPagosReserva : "N/A"
             reserva.pagosNoLiquidaEfectivo = pagosNoLiquidaEfectivo !== NaN ? pagosNoLiquidaEfectivo : "N/A"
 
@@ -2216,11 +2217,12 @@ async function reporteTodoEnUno(req, res) {
             });
 
             // Calcular totales de pagos
-            const totalPagado = pagosReserva.reduce((sum, pago) => sum + (pago.importe || 0), 0);
-            const pagosNoEfectivo = pagosReserva
+            const pagosAplicados = pagosReserva.filter(p => p.status === 'Aplicado' || !p.status);
+            const totalPagado = pagosAplicados.reduce((sum, pago) => sum + (pago.importe || 0), 0);
+            const pagosNoEfectivo = pagosAplicados
                 .filter(p => p.metodoPago !== 'Recibio dueño')
                 .reduce((sum, pago) => sum + (pago.importe || 0), 0);
-            const liquidaEfectivo = pagosReserva
+            const liquidaEfectivo = pagosAplicados
                 .filter(p => p.metodoPago === 'Recibio dueño')
                 .reduce((sum, pago) => sum + (pago.importe || 0), 0);
 

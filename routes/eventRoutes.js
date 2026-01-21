@@ -94,7 +94,10 @@ router.get('/eventos/:idevento', async (req, res) => {
         let pagoTotal = 0
         pagos.forEach(pago => {
             pago.fechaPago = moment.utc(pago.fechaPago).format('DD/MM/YYYY');
-            pagoTotal += pago.importe;
+            // Solo sumar pagos aplicados o sin status (pagos antiguos)
+            if (pago.status === 'Aplicado' || !pago.status) {
+                pagoTotal += pago.importe;
+            }
         })
 
         eventoObjeto.pagoTotal = pagoTotal
@@ -218,7 +221,10 @@ router.get('/eventos/f/:idevento', async (req, res) => {
             const pagosReserva = await pagoController.obtenerPagos(evento._id);
             let pagoTotal = 0
             pagosReserva.forEach(pago => {
-                pagoTotal += pago.importe;
+                // Solo sumar pagos aplicados o sin status (pagos antiguos)
+                if (pago.status === 'Aplicado' || !pago.status) {
+                    pagoTotal += pago.importe;
+                }
             })
             const totalReserva = evento.total;
             // let precioBaseTotal = 0
