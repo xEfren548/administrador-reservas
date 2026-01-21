@@ -1270,6 +1270,9 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         if (clientEmail) {
             client = await Cliente.findOne({ email: clientEmail });
             console.log("Client initial")
+            if (!client && clientPhone) {
+                client = await Cliente.findOne({ phone: clientPhone });
+            }
 
         }
         if (!client) {
@@ -1340,8 +1343,8 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 : "Reservación agregada con éxito";
         }
         else {
-            console.log("Current date: ", format(Date.now(), "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es }));
-            console.log("Arrival date: ", format(arrivalDate, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es }));
+            console.log("Current date: ", format(Date.now(), "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'hrs'", { locale: es }));
+            console.log("Arrival date: ", format(arrivalDate, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'hrs'", { locale: es }));
 
             const timeToArrive = (arrivalDate - new Date()) / (1000 * 60 * 60 * 24);
             var paymentCancelation;
@@ -1358,7 +1361,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 paymentCancelation = new Date(Date.now() + 1 * 60 * 60 * 1000);
             }
 
-            console.log("Cancelation date: ", format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es }));
+            console.log("Cancelation date: ", format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'hrs'", { locale: es }));
 
             reservationToAdd = {
                 client: client._id,
@@ -1380,7 +1383,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
             const roomAssignedMessage = isFromGroup
                 ? ` Habitación asignada: ${actualChaletName}.`
                 : '';
-            message = `Reservación agregada con éxito.${roomAssignedMessage} Realice su pago antes de ${format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es })} o su reserva será cancelada`;
+            message = `Reservación agregada con éxito.${roomAssignedMessage} Realice su pago antes de ${format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'hrs'", { locale: es })} o su reserva será cancelada`;
         }
 
         // const documento = await Documento.findOne();
@@ -1445,15 +1448,16 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
 
         // Si es por depo, envia instrucciones de pago
         if (isDeposit) {
-            const cancelationHour = format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'GMT'", { locale: es });
+            const cancelationHour = format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'hrs'", { locale: es });
             if (chalet.others.cuentaFinanciera) {
                 if (client.phone) {
-
+                    documentoToAdd.total = (total/2).toFixed(2);
                     await SendMessages.sendReservationInstructions(client, chalet, documentoToAdd, cancelationHour, agenteQueReserva?.phone);
                 }
                 if (agenteQueReserva && agenteQueReserva.phone) {
                     console.log("Enviando mensaje al agente que reserva: ");
                     console.log(agenteQueReserva);
+                    documentoToAdd.total = (total/2).toFixed(2);
                     await SendMessages.sendReservationInstructions(agenteQueReserva, chalet, documentoToAdd, cancelationHour, agenteQueReserva?.phone);
                 }
             } else {
