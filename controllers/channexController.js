@@ -1383,7 +1383,7 @@ async function validatePropertyBooking(req, res) {
 
 
 async function createPropertyWebhook(propertyId) {
-    const base_url = process.env.NODE_ENV === 'development' ? 'https://e7e377bc9a31.ngrok-free.app/api/channex/webhooks' : `https://${process.env.URL}/api/channex/webhooks`;
+    const base_url = process.env.NODE_ENV === 'development' ? 'https://e7e377bc9a31.ngrok-free.app/api/channex/webhooks' : `${process.env.URL}/api/channex/webhooks`;
     try {
 
         const habitacion = await Habitacion.findOne({ channexPropertyId: propertyId });

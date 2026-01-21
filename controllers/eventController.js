@@ -1328,7 +1328,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 maxOccupation: maxOccupation,
                 pax: pax,
                 nNights: nNights,
-                url: `https://${process.env.URL}/api/eventos/${chalet._id}`,
+                url: `${process.env.URL}/api/eventos/${chalet._id}`,
                 total: total,
                 discount: discount,
                 createdBy: createdBy,
@@ -1368,7 +1368,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 maxOccupation: maxOccupation,
                 pax: pax,
                 nNights: nNights,
-                url: `https://${process.env.URL}/api/eventos/${chalet._id}`,
+                url: `${process.env.URL}/api/eventos/${chalet._id}`,
                 total: total,
                 discount: discount,
                 isDeposit: true,
@@ -1395,7 +1395,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
 
         // const idReserva = documento.events[documento.events.length - 1]._id.toString();
         const idReserva = documentoToAdd._id.toString();
-        const url = `https://${process.env.URL}/api/eventos/${idReserva}`;
+        const url = `${process.env.URL}/api/eventos/${idReserva}`;
         console.log("url: ", url)
         // const evento = await Documento.findById(idReserva);
 
@@ -1684,7 +1684,7 @@ async function createOTAReservation(data) {
             maxOccupation: maxOccupation,
             pax: pax,
             nNights: nNights,
-            url: `https://${process.env.URL}/api/eventos/${chalet._id}`,
+            url: `${process.env.URL}/api/eventos/${chalet._id}`,
             total: total,
             createdBy: createdBy,
             comisionVendedor: comisionVendedor,
@@ -1707,7 +1707,7 @@ async function createOTAReservation(data) {
 
         // const idReserva = documento.events[documento.events.length - 1]._id.toString();
         const idReserva = documentoToAdd._id.toString();
-        const url = `https://${process.env.URL}/api/eventos/${idReserva}`;
+        const url = `${process.env.URL}/api/eventos/${idReserva}`;
         // const evento = await Documento.findById(idReserva);
 
         documentoToAdd.url = url;
@@ -1925,7 +1925,7 @@ async function createOwnerReservation(req, res, next) {
             maxOccupation: maxOccupation,
             nNights: nNights,
             status: 'reserva de dueño',
-            url: `https://${process.env.URL}/api/eventos/${chalet._id}`,
+            url: `${process.env.URL}/api/eventos/${chalet._id}`,
             createdBy: createdBy,
             clienteProvisional: clienteProvisional,
             total: 0
@@ -1944,7 +1944,7 @@ async function createOwnerReservation(req, res, next) {
         // const documento2 = await Documento.findOne()
 
         const idReserva = newReservation._id.toString();
-        const url = `https://${process.env.URL}/api/eventos/${idReserva}`;
+        const url = `${process.env.URL}/api/eventos/${idReserva}`;
         // const evento = documento2.events.find(habitacion => habitacion.id === idReserva);
 
         newReservation.url = url;
@@ -3976,7 +3976,7 @@ async function createOwnerExternalReservation(req, res) {
             nNights: nochesNum,
             clienteProvisional: clienteProvisional || `Cliente ${plataforma}`,
             createdBy: duenoId,
-            url: `https://${process.env.URL}/api/eventos/temp`,
+            url: `${process.env.URL}/api/eventos/temp`,
 
             // Campos de reserva externa
             tipoReserva: 'reserva-externa',
@@ -4006,7 +4006,7 @@ async function createOwnerExternalReservation(req, res) {
         await reservaExterna.save();
 
         // Actualizar URL
-        reservaExterna.url = `https://${process.env.URL}/api/eventos/${reservaExterna._id}`;
+        reservaExterna.url = `${process.env.URL}/api/eventos/${reservaExterna._id}`;
         await reservaExterna.save();
 
         // Crear servicio de limpieza

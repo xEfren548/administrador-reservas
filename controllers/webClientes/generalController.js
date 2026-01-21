@@ -1271,7 +1271,7 @@ async function createReservationForClient(reservationData, status, paymentStatus
 
         const idReserva = newReservation._id;
 
-        newReservation.url = `https://${process.env.URL}/api/eventos/${idReserva}`;
+        newReservation.url = `${process.env.URL}/api/eventos/${idReserva}`;
         await newReservation.save();
 
 
