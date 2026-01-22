@@ -399,6 +399,11 @@ async function sendCheckInMessage() {
 
 // Recordatorio de check in para el cliente - 1 día antes
 async function sendCheckInReminderDayBefore() {
+
+    if (process.env.NODE_ENV !== 'production') {
+        console.log("No se envían recordatorios de check-in en entorno de desarrollo.");
+        return;
+    }
     console.log("Enviando recordatorios de check-in (1 día antes)");
 
     moment.locale('es');
@@ -485,6 +490,10 @@ async function sendCheckInReminderDayBefore() {
 
 // Recordatorio de check in para el cliente - mismo día
 async function sendCheckInReminderSameDay() {
+    if (process.env.NODE_ENV !== 'production') {
+        console.log("No se envían recordatorios de check-in en entorno de desarrollo.");
+        return;
+    }
     console.log("Enviando recordatorios de check-in (mismo día)");
 
     moment.locale('es');
