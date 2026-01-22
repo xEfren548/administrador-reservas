@@ -250,6 +250,7 @@ router.get('/eventos/f/:idevento', async (req, res) => {
             chaletName: chaletName,
             montoPendiente: montoPendiente,
             pagosTotales: pagosTotales,
+            cuentaFinancieraHabitacion: habitacion.others.cuentaFinanciera || null,
             imagenReserva: Array.isArray(habitacion.images) ? habitacion.images[0] : '',
             logs: logs || []
         };
