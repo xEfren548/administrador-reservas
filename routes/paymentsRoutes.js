@@ -48,18 +48,54 @@ function mapPaymentMethodType(type) {
  * Retorna la clave pública de Stripe para el frontend
  */
 router.get('/config', (req, res) => {
-    const isProduction = process.env.NODE_ENV === 'production';
-    const publishableKey = isProduction 
-        ? process.env.STRIPE_PUBLISHABLE_KEY 
-        : process.env.DEV_STRIPE_PUBLISHABLE_KEY;
+    const { stripeAccount } = req.query;
+    const accountRef = stripeAccount || 'ISRA';
+    
+    const { getPublishableKey } = require('../lib/stripe');
     
     res.json({
-        publishableKey,
+        publishableKey: getPublishableKey(accountRef),
         // Métodos de pago habilitados
         paymentMethods: ['card', 'oxxo'],
         // Porcentaje requerido para reservar (50%)
-        depositPercentage: 50
+        depositPercentage: 50,
+        stripeAccount: accountRef
     });
+});
+
+/**
+ * GET /api/payments/stripe-config/:cuentaId
+ * Retorna la configuración de Stripe de una cuenta (endpoint público para checkout)
+ */
+router.get('/stripe-config/:cuentaId', async (req, res) => {
+    console.log('🔍 [STRIPE-CONFIG] Request recibido');
+    console.log('🔍 [STRIPE-CONFIG] Params:', req.params);
+    console.log('🔍 [STRIPE-CONFIG] Headers:', req.headers);
+    
+    try {
+        const SWCuenta = require('../models/SWCuenta');
+        const cuentaId = req.params.cuentaId;
+        
+        console.log('🔍 [STRIPE-CONFIG] Buscando cuenta:', cuentaId);
+        
+        const cuenta = await SWCuenta.findById(cuentaId);
+        
+        if (!cuenta) {
+            console.log('❌ [STRIPE-CONFIG] Cuenta no encontrada');
+            return res.status(404).json({ error: 'Cuenta no encontrada' });
+        }
+        
+        console.log('✅ [STRIPE-CONFIG] Cuenta encontrada:', cuenta.nombre);
+        console.log('✅ [STRIPE-CONFIG] stripeAccountRef:', cuenta.stripeAccountRef);
+        
+        res.json({
+            stripeAccountRef: cuenta.stripeAccountRef || 'Ninguna',
+            hasStripe: cuenta.stripeAccountRef && cuenta.stripeAccountRef !== 'Ninguna'
+        });
+    } catch (error) {
+        console.error('❌ [STRIPE-CONFIG] Error:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 /**
@@ -96,6 +132,27 @@ router.post('/create-payment-intent', async (req, res) => {
         // Calcular el 50% para el depósito
         const depositAmount = Math.ceil(totalAmount * 0.50);
         const remainingAmount = totalAmount - depositAmount;
+
+        // Obtener configuración de Stripe según la habitación
+        const Habitacion = require('../models/Habitacion');
+        const SWCuenta = require('../models/SWCuenta');
+        const { getStripeInstance } = require('../lib/stripe');
+        
+        let stripeAccountRef = 'ISRA'; // Por defecto
+        let stripe = require('../lib/stripe'); // Instancia por defecto
+        let cuentaFinancieraId = null;
+
+        const habitacion = await Habitacion.findById(reservationData.cabinId);
+        if (habitacion?.others?.cuentaFinanciera) {
+            const cuenta = await SWCuenta.findById(habitacion.others.cuentaFinanciera);
+            if (cuenta?.stripeAccountRef && cuenta.stripeAccountRef !== 'Ninguna') {
+                stripeAccountRef = cuenta.stripeAccountRef;
+                stripe = getStripeInstance(stripeAccountRef);
+                cuentaFinancieraId = cuenta._id;
+            }
+        }
+
+        console.log('Stripe Account:', stripeAccountRef, 'Cuenta Financiera:', cuentaFinancieraId);
 
         // Validar que la habitación esté disponible en las fechas solicitadas
         const validarDisponibilidadYPrecio = await cotizarReserva(
@@ -200,7 +257,9 @@ router.post('/create-payment-intent', async (req, res) => {
                     phone: customerData.phone_number || customerData.phone
                 }),
                 clienteWebId: clienteWebId || '',
-                depositPercentage: '50'
+                depositPercentage: '50',
+                stripeAccountRef: stripeAccountRef,
+                cuentaFinancieraId: cuentaFinancieraId ? cuentaFinancieraId.toString() : null
             },
             // Métodos de pago permitidos
             payment_method_types: paymentMethodTypes || ['card'],
@@ -237,6 +296,10 @@ router.post('/create-payment-intent', async (req, res) => {
             raw: { paymentIntentId: paymentIntent.id }
         });
 
+        console.log('✅ Retornando respuesta con cuenta:', stripeAccountRef);
+
+        const { getPublishableKey } = require('../lib/stripe');
+
         return res.json({
             ok: true,
             clientSecret: paymentIntent.client_secret,
@@ -245,7 +308,9 @@ router.post('/create-payment-intent', async (req, res) => {
             depositAmount,
             remainingAmount,
             totalAmount,
-            orderId: tempOrderId
+            orderId: tempOrderId,
+            stripeAccountRef: stripeAccountRef, // Incluir la cuenta usada
+            publishableKey: getPublishableKey(stripeAccountRef) // Incluir la clave pública
         });
 
     } catch (error) {
@@ -271,20 +336,30 @@ router.post('/create-payment-intent', async (req, res) => {
  */
 router.post('/confirm-payment', async (req, res) => {
     try {
-        const { paymentIntentId, reservationData, customerData, clienteWebId } = req.body;
+        const { paymentIntentId, reservationData, customerData, clienteWebId, stripeAccountRef } = req.body;
         
         if (!paymentIntentId) {
             return res.status(400).json({ error: 'paymentIntentId es requerido' });
         }
 
         console.log('Confirming payment:', paymentIntentId);
+        console.log('Using Stripe account:', stripeAccountRef || 'ISRA (default)');
 
-        // Obtener el PaymentIntent de Stripe con charges expandidos
-        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId, {
+        // Obtener la instancia correcta de Stripe
+        const { getStripeInstance } = require('../lib/stripe');
+        const accountRef = stripeAccountRef || 'ISRA';
+        const stripeInstance = getStripeInstance(accountRef);
+
+        // Obtener el PaymentIntent completo con la instancia correcta
+        const paymentIntent = await stripeInstance.paymentIntents.retrieve(paymentIntentId, {
             expand: ['payment_method', 'customer', 'latest_charge']
         });
 
         console.log('PaymentIntent status:', paymentIntent.status);
+
+        // Extraer metadata para obtener cuentaFinancieraId
+        const metadata = paymentIntent.metadata || {};
+        const cuentaFinancieraId = metadata.cuentaFinancieraId;
 
         const status = mapStripeStatus(paymentIntent.status);
 
@@ -297,19 +372,17 @@ router.post('/confirm-payment', async (req, res) => {
 
         // Si ya tiene reserva asociada, significa que ya fue procesado
         if (payment.reservation) {
-            const reserva = await Reserva.findById(payment.reservation);
             return res.json({
                 ok: true,
                 alreadyProcessed: true,
                 reservationId: payment.reservation,
                 paymentId: payment._id,
-                status: payment.status,
-                reservaFolio: reserva?.folio
+                status: payment.status
             });
         }
 
-        // Extraer metadata
-        const metadata = paymentIntent.metadata || {};
+        // Extraer metadata del PaymentIntent completo
+        // (ya tenemos metadata inicial de paymentIntentBasic, ahora usamos el completo)
         const storedReservationData = metadata.reservationData ? JSON.parse(metadata.reservationData) : {};
         const storedCustomerData = metadata.customerData ? JSON.parse(metadata.customerData) : {};
         
@@ -423,16 +496,44 @@ router.post('/confirm-payment', async (req, res) => {
             payment.raw = paymentIntent;
             await payment.save();
 
-            // Crear pago en la tabla Pagos
+            // Crear pago en la tabla Pagos con status 'Aplicado'
             const pagos = await new Pagos({
                 fechaPago: moment().toDate(),
                 importe: depositAmount,
                 metodoPago: paymentMethodType === 'oxxo' ? 'OXXO' : 'Pasarela de pago (Stripe)',
                 codigoOperacion: paymentIntent.id,
                 reservacionId: nuevaReserva._id,
-                notas: `Depósito 50% - Pendiente: $${remainingAmount.toFixed(2)} MXN al llegar`
+                notas: `Depósito 50% - Pendiente: $${remainingAmount.toFixed(2)} MXN al llegar`,
+                status: 'Aplicado' // Los pagos de Stripe se aplican automáticamente
             });
             await pagos.save();
+
+            // Crear transacción en Splitwise (solo si hay cuenta financiera asociada)
+            if (cuentaFinancieraId) {
+                const SWTransaccion = require('../models/SWTransaccion');
+                const SWCuenta = require('../models/SWCuenta');
+                
+                const cuenta = await SWCuenta.findById(cuentaFinancieraId);
+                
+                if (cuenta) {
+                    const reservaId = nuevaReserva._id.toString();
+                    const transaccion = new SWTransaccion({
+                        cuenta: cuentaFinancieraId,
+                        tipo: 'Ingreso',
+                        monto: depositAmount,
+                        concepto: `Depósito Stripe - Reserva ${reservaId}`,
+                        descripcion: `Procesado automáticamente - ${paymentMethodType === 'oxxo' ? 'OXXO' : 'Tarjeta'} ${cardLast4}`,
+                        categoria: 'Reserva',
+                        fecha: moment().toDate(),
+                        creadoPor: cuenta.propietario, // Usar el propietario de la cuenta
+                        aprobada: true, // Los pagos de Stripe se aprueban automáticamente
+                        aprobadaPor: cuenta.propietario,
+                        fechaAprobacion: moment().toDate()
+                    });
+                    await transaccion.save();
+                    console.log('SWTransaccion creada:', transaccion._id);
+                }
+            }
 
             // Vincular pago a la reserva
             nuevaReserva.payments.push(payment._id);
@@ -443,7 +544,6 @@ router.post('/confirm-payment', async (req, res) => {
             return res.json({
                 ok: true,
                 reservationId: nuevaReserva._id,
-                reservaFolio: nuevaReserva.folio,
                 paymentId: payment._id,
                 status: payment.status,
                 depositPaid: depositAmount,
@@ -532,6 +632,29 @@ router.post('/create-oxxo-payment', async (req, res) => {
             });
         }
 
+        // Detectar la cuenta de Stripe a usar (igual lógica que create-payment-intent)
+        const Habitacion = require('../models/Habitacion');
+        const SWCuenta = require('../models/SWCuenta');
+        
+        const habitacion = await Habitacion.findById(reservationData.cabinId);
+        
+        let stripeAccountRef = 'ISRA'; // Default
+        let cuentaFinancieraId = null;
+        
+        if (habitacion && habitacion.others?.cuentaFinanciera) {
+            cuentaFinancieraId = habitacion.others.cuentaFinanciera;
+            const cuenta = await SWCuenta.findById(cuentaFinancieraId);
+            if (cuenta && cuenta.stripeAccountRef && cuenta.stripeAccountRef !== 'Ninguna') {
+                stripeAccountRef = cuenta.stripeAccountRef;
+            }
+        }
+        
+        console.log('Using Stripe account for OXXO:', stripeAccountRef);
+        
+        // Obtener la instancia correcta de Stripe
+        const { getStripeInstance } = require('../lib/stripe');
+        const stripe = getStripeInstance(stripeAccountRef);
+
         const tempOrderId = `oxxo_${Math.floor(Date.now() / 1000)}_${Math.random().toString(36).substr(2, 5)}`;
 
         // Buscar o crear cliente
@@ -576,7 +699,9 @@ router.post('/create-oxxo-payment', async (req, res) => {
                 }),
                 customerData: JSON.stringify(customerData),
                 clienteWebId: clienteWebId || '',
-                paymentMethod: 'oxxo'
+                paymentMethod: 'oxxo',
+                stripeAccountRef: stripeAccountRef,
+                cuentaFinancieraId: cuentaFinancieraId ? cuentaFinancieraId.toString() : null
             }
         });
 
@@ -598,6 +723,8 @@ router.post('/create-oxxo-payment', async (req, res) => {
             description: paymentIntent.description
         });
 
+        const { getPublishableKey } = require('../lib/stripe');
+
         return res.json({
             ok: true,
             clientSecret: paymentIntent.client_secret,
@@ -605,7 +732,9 @@ router.post('/create-oxxo-payment', async (req, res) => {
             depositAmount,
             remainingAmount,
             totalAmount,
-            expiresInDays: 3
+            expiresInDays: 3,
+            stripeAccountRef: stripeAccountRef, // Incluir la cuenta usada
+            publishableKey: getPublishableKey(stripeAccountRef) // Incluir la clave pública
         });
 
     } catch (error) {

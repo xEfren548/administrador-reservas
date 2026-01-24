@@ -70,6 +70,11 @@ const swCuentaSchema = new Schema({
         type: Boolean,
         default: true
     },
+    stripeAccountRef: {
+        type: String,
+        enum: ['Ninguna', 'ISRA', 'FERNANDO', 'CARLOS'],
+        default: 'Ninguna'
+    },
     createdAt: {
         type: Date,
         default: Date.now

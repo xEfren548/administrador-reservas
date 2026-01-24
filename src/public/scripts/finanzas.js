@@ -74,6 +74,7 @@ function inicializarEventos() {
         if ($(e.relatedTarget).attr('id') === 'btn-nueva-cuenta') {
             $('#formCuenta')[0].reset();
             $('#cuenta-id').val('');
+            $('#cuenta-stripe-account').val('Ninguna'); // Resetear selector de Stripe
             $('#cuenta-saldo-inicial').prop('readonly', false).css({
                 'background-color': '',
                 'color': '',
@@ -893,7 +894,8 @@ async function guardarCuenta() {
             clabe: $('#cuenta-clabe').val().trim(),
             numeroCuenta: $('#cuenta-numero').val().trim(),
             referencia: $('#cuenta-referencia').val().trim()
-        }
+        },
+        stripeAccountRef: $('#cuenta-stripe-account').val() || 'Ninguna'
     };
 
     // Solo incluir organización y saldoInicial al crear (no al editar)
@@ -960,6 +962,9 @@ function editarCuenta(id) {
         $('#cuenta-numero').val(cuenta.datosBancarios.numeroCuenta || '');
         $('#cuenta-referencia').val(cuenta.datosBancarios.referencia || '');
     }
+
+    // Cuenta de Stripe
+    $('#cuenta-stripe-account').val(cuenta.stripeAccountRef || 'Ninguna');
 
     $('#modalCuentaTitle').text('Editar Cuenta');
     $('#modalCuenta').modal('show');

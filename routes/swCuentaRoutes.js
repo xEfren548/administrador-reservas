@@ -13,7 +13,33 @@ const {
     requireRemoveParticipants
 } = require('../common/middlewares/authPrivileges/authSW');
 
-// Todas las rutas requieren autenticación
+/**
+ * @route   GET /api/sw/cuentas/:id/stripe-config
+ * @desc    Obtener configuración de Stripe de una cuenta (público para checkout)
+ * @access  Público
+ */
+router.get(
+    '/cuentas/:id/stripe-config',
+    async (req, res) => {
+        try {
+            const SWCuenta = require('../models/SWCuenta');
+            const cuenta = await SWCuenta.findById(req.params.id);
+            
+            if (!cuenta) {
+                return res.status(404).json({ error: 'Cuenta no encontrada' });
+            }
+            
+            res.json({
+                stripeAccountRef: cuenta.stripeAccountRef || 'Ninguna',
+                hasStripe: cuenta.stripeAccountRef && cuenta.stripeAccountRef !== 'Ninguna'
+            });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+);
+
+// Todas las demás rutas requieren autenticación
 router.use(ensureAuthenticated);
 
 /**

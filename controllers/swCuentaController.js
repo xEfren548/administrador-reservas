@@ -344,7 +344,7 @@ const updateCuenta = async (req, res) => {
         }
 
         const { id } = req.params;
-        const { nombre, descripcion, activa, datosBancarios } = req.body;
+        const { nombre, descripcion, activa, datosBancarios, stripeAccountRef } = req.body;
 
         const cuenta = await SWCuenta.findById(id);
 
@@ -358,6 +358,7 @@ const updateCuenta = async (req, res) => {
         if (nombre !== undefined) cuenta.nombre = nombre;
         if (descripcion !== undefined) cuenta.descripcion = descripcion;
         if (activa !== undefined) cuenta.activa = activa;
+        if (stripeAccountRef !== undefined) cuenta.stripeAccountRef = stripeAccountRef;
 
         // Actualizar datos bancarios si se proporcionan
         if (datosBancarios !== undefined) {

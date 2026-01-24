@@ -729,6 +729,21 @@
                             <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="cuenta-referencia">
                         </div>
                     </div>
+
+                    <!-- Integración con Stripe -->
+                    <div class="border-top border-gray-200 pt-3 mt-3">
+                        <h6 class="text-gray-600 mb-3">Integración con Stripe (Opcional)</h6>
+                        <div class="mb-3">
+                            <label for="cuenta-stripe-account" class="form-label">Cuenta de Stripe</label>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="cuenta-stripe-account">
+                                <option value="Ninguna">Ninguna</option>
+                                <option value="ISRA">ISRA</option>
+                                <option value="FERNANDO">FERNANDO</option>
+                                <option value="CARLOS">CARLOS</option>
+                            </select>
+                            <small class="text-muted">Selecciona la cuenta de Stripe que recibirá los pagos de esta cuenta financiera</small>
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer border-gray-200">
