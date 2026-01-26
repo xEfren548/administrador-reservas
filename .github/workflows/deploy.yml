@@ -42,6 +42,8 @@ jobs:
             DEV_STRIPE_SECRET_KEY=${{ secrets.DEV_STRIPE_SECRET_KEY }}
             DEV_STRIPE_WEBHOOK_SECRET=${{ secrets.DEV_STRIPE_WEBHOOK_SECRET }}
             STRIPE_SECRET_KEY_ISRA=${{ secrets.STRIPE_SECRET_KEY_ISRA }}
+            STRIPE_SECRET_KEY_FERNANDO=${{ secrets.STRIPE_SECRET_KEY_FERNANDO }}
+            STRIPE_SECRET_KEY_CARLOS=${{ secrets.STRIPE_SECRET_KEY_CARLOS }}
 
             EOL
             
