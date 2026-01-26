@@ -117,7 +117,8 @@ const createCuenta = async (req, res) => {
             moneda, 
             saldoInicial, 
             organizacion,
-            datosBancarios
+            datosBancarios,
+            stripeAccountRef
         } = req.body;
 
         // El propietario es el usuario autenticado
@@ -161,7 +162,8 @@ const createCuenta = async (req, res) => {
             saldoActual: saldoInicial || 0,
             organizacion,
             propietario: userId, // Usuario autenticado
-            datosBancarios: datosBancarios || {}
+            datosBancarios: datosBancarios || {},
+            stripeAccountRef: stripeAccountRef || 'Ninguna'
         });
 
         await cuenta.save();
