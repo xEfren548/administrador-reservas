@@ -238,7 +238,7 @@ router.post('/create-payment-intent', async (req, res) => {
             amount: Math.round(depositAmount * 100), // Stripe usa centavos
             currency: 'mxn',
             customer: customer.id,
-            description: `Depósito 50% - Reserva ${reservationData.cabinId} - ${customerData.name || 'Cliente'}`,
+            description: `Depósito 50% - Habitación ${reservationData.cabinId} - ${customerData.name || 'Cliente'}`,
             metadata: {
                 orderId: tempOrderId,
                 reservationData: JSON.stringify({
@@ -477,6 +477,20 @@ router.post('/confirm-payment', async (req, res) => {
 
             // Actualizar orderId con el ID real de la reserva
             const finalOrderId = `res_${nuevaReserva._id}_${Math.floor(Date.now() / 1000)}`;
+
+            // Actualizar la descripción del PaymentIntent en Stripe con el ID de la reserva
+            try {
+                await stripeInstance.paymentIntents.update(paymentIntentId, {
+                    description: `Depósito 50% - Reserva ${nuevaReserva._id}`,
+                    metadata: {
+                        ...paymentIntent.metadata,
+                        reservationId: nuevaReserva._id.toString()
+                    }
+                });
+                console.log('✅ PaymentIntent actualizado con ID de reserva:', nuevaReserva._id);
+            } catch (updateError) {
+                console.error('⚠️ Error actualizando PaymentIntent (no crítico):', updateError.message);
+            }
 
             // Actualizar el Payment
             payment.reservation = nuevaReserva._id;
