@@ -2447,8 +2447,11 @@ async function modificarEvento(req, res) {
 }
 
 async function checkAvailability(resourceId, arrivalDate, departureDate, eventId = null, nNights, isForOwner = false) {
+    // Arrival date and departure date are in YYYY-MM-DD format
     console.log("nNights: ", nNights);
     console.log("isForOwner: ", isForOwner);
+    console.log("Arrival date: ", arrivalDate);
+    console.log("Departure date: ", departureDate);
     const newResourceId = new mongoose.Types.ObjectId(resourceId);
     const arrivalDateObj = new Date(`${arrivalDate}T00:00:00`);
     const departureDateObj = new Date(`${departureDate}T00:00:00`);
@@ -2586,6 +2589,15 @@ async function moveToPlayground(req, res) {
 
         if (evento.status === 'playground' && status === 'active') {
             const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
+
+            // Agregar validación para evitar cambiar a active cuando ya hay una reserva para esas fechas
+            const arrivalDateAjustado = moment.utc(evento.arrivalDate).format('YYYY-MM-DD');
+            const departureDateAjustado = moment.utc(evento.departureDate).format('YYYY-MM-DD');
+            // resourceId, arrivalDate, departureDate, eventId = null, nNights, isForOwner = false
+            const isAvailable = await checkAvailability(evento.resourceId, arrivalDateAjustado, departureDateAjustado, evento._id, evento.nNights, false);
+            if (!isAvailable) {
+                throw new Error("No se puede cambiar el estatus a activo porque la habitación no está disponible en esas fechas.");
+            }
 
 
             const newComisiones = comisionesReserva.map(comisiones => {
