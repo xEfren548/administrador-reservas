@@ -7,6 +7,8 @@ router.get('/mostrar-utilidades', utilidadesController.mostrarUtilidadesPorUsuar
 router.get('/mostrar-utilidades-json', utilidadesController.mostrarUtilidadesPorUsuarioJson)
 
 router.get('/mostrar-utilidades-globales', utilidadesController.mostrarUtilidadesGlobales)
+router.get('/mostrar-utilidades-globales-v2', utilidadesController.mostrarUtilidadesGlobalesV2)
+router.get('/utilidades-globales-json', utilidadesController.obtenerUtilidadesGlobalesJson)
 router.get('/reportes', utilidadesController.vistaParaReporte)
 
 router.post('/utilidades', utilidadesController.altaComision);

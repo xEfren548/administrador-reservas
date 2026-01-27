@@ -1,0 +1,619 @@
+<div class="container-fluid mt-4" style="width: 95%;">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Utilidades Globales v2</h1>
+            
+            <!-- Filtros -->
+            <div class="card mb-4 bg-dark text-light">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Filtros de búsqueda</h5>
+                    <form id="filtrosForm">
+                        <div class="row g-3">
+                            <!-- Fecha Inicio -->
+                            <div class="col-md-2">
+                                <label for="fechaInicio" class="form-label">Fecha Inicio:</label>
+                                <input type="date" class="form-control bg-dark text-light" id="fechaInicio" name="fechaInicio">
+                            </div>
+                            
+                            <!-- Fecha Fin -->
+                            <div class="col-md-2">
+                                <label for="fechaFin" class="form-label">Fecha Fin:</label>
+                                <input type="date" class="form-control bg-dark text-light" id="fechaFin" name="fechaFin">
+                            </div>
+                            
+                            <!-- Usuarios (múltiple) -->
+                            <div class="col-md-3">
+                                <label for="selectUsuarios" class="form-label">Usuarios:</label>
+                                <select class="form-select bg-dark text-light" id="selectUsuarios" name="usuarios" multiple>
+                                    {{#if usuarios}}
+                                    {{#each usuarios}}
+                                    <option value="{{this.id}}">{{this.nombre}}</option>
+                                    {{/each}}
+                                    {{/if}}
+                                </select>
+                                <small class="form-text text-muted">Busca y selecciona usuarios</small>
+                            </div>
+                            
+                            <!-- ID Reserva -->
+                            <div class="col-md-2">
+                                <label for="idReserva" class="form-label">ID Reserva:</label>
+                                <input type="text" class="form-control bg-dark text-light" id="idReserva" name="idReserva" placeholder="ID de reserva">
+                            </div>
+                            
+                            <!-- Botones -->
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fa fa-search"></i> Buscar
+                                </button>
+                                <button type="button" id="btnLimpiarFiltros" class="btn btn-secondary">
+                                    <i class="fa fa-eraser"></i> Limpiar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Resumen -->
+            <div class="card mb-4 bg-dark text-light">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h5>Total de registros:</h5>
+                            <h3 id="totalRegistros">0</h3>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Utilidades del período:</h5>
+                            <h3 id="totalUtilidades">$0.00</h3>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Página actual:</h5>
+                            <h3 id="paginaActual">-</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla -->
+            <div class="table-responsive">
+                <table class="table table-dark table-hover text-center nowrap" id="tablaUtilidades">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Habitación</th>
+                            <th scope="col">Admin Ligado</th>
+                            <th scope="col">Concepto</th>
+                            <th scope="col">ID Reserva</th>
+                            <th scope="col">Monto</th>
+                            <th scope="col">Noches</th>
+                            <th scope="col">Check In</th>
+                            <th scope="col">Check Out</th>
+                            <th scope="col">Estatus</th>
+                            <th scope="col">Usuario</th>
+                            <th scope="col">Tipo Usuario</th>
+                            <th scope="col">Total Reserva</th>
+                            <th scope="col">Pagado</th>
+                            <th scope="col">Pendiente</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaBody">
+                        <tr>
+                            <td colspan="14" class="text-center">
+                                <p class="mt-3 mb-3">Aplica filtros para cargar datos</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div>
+                    <label for="pageSize" class="me-2">Registros por página:</label>
+                    <select id="pageSize" class="form-select form-select-sm d-inline-block w-auto bg-dark text-light">
+                        <option value="25">25</option>
+                        <option value="50" selected>50</option>
+                        <option value="100">100</option>
+                        <option value="200">200</option>
+                    </select>
+                </div>
+                
+                <nav>
+                    <ul class="pagination mb-0" id="pagination">
+                        <!-- Se genera dinámicamente -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-select[multiple] {
+        height: auto !important;
+        min-height: 38px;
+    }
+    
+    /* Mejorar contraste en inputs y selects oscuros */
+    .bg-dark.form-control,
+    .bg-dark.form-select {
+        background-color: #212529 !important;
+        color: #fff !important;
+        border-color: #495057 !important;
+    }
+    
+    .bg-dark.form-control:focus,
+    .bg-dark.form-select:focus {
+        background-color: #212529 !important;
+        color: #fff !important;
+        border-color: #86b7fe !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    }
+    
+    /* Opciones del select con buen contraste */
+    .bg-dark.form-select option {
+        background-color: #212529;
+        color: #fff;
+    }
+    
+    /* Labels y texto en cards oscuros */
+    .card.bg-dark .form-label,
+    .card.bg-dark h5,
+    .card.bg-dark h3,
+    .card.bg-dark .form-text {
+        color: #fff !important;
+    }
+    
+    .card.bg-dark .text-muted {
+        color: #adb5bd !important;
+    }
+    
+    #tablaUtilidades {
+        font-size: 0.9rem;
+    }
+    
+    .pagination .page-link {
+        background-color: #343a40;
+        border-color: #454d55;
+        color: #fff;
+    }
+    
+    .pagination .page-link:hover {
+        background-color: #454d55;
+        border-color: #545b62;
+        color: #fff;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    .pagination .page-item.disabled .page-link {
+        background-color: #212529;
+        border-color: #32383e;
+    }
+
+    /* Estilos mejorados para Select2 con tema oscuro */
+    .select2-container--bootstrap-5 .select2-selection {
+        background-color: #212529 !important;
+        border-color: #495057 !important;
+        color: #fff !important;
+        min-height: 38px !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--multiple {
+        background-color: #212529 !important;
+        border-color: #495057 !important;
+        padding: 0.25rem !important;
+    }
+
+    /* Chips de usuarios seleccionados mejorados con buen contraste */
+    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+        background-color: #0d6efd !important;
+        border: 1px solid #0a58ca !important;
+        color: #fff !important;
+        padding: 0.35rem 0.6rem !important;
+        margin: 0.25rem !important;
+        border-radius: 0.25rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice:hover {
+        background-color: #0b5ed7 !important;
+    }
+
+    /* Botón de eliminar individual (X) dentro de cada chip */
+    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove {
+        color: #fff !important;
+        margin-right: 0.4rem !important;
+        margin-left: 0 !important;
+        font-weight: 700 !important;
+        order: -1 !important;
+        padding: 0.2rem 0.4rem !important;
+        background: rgba(0, 0, 0, 0.2) !important;
+        border: none !important;
+        border-radius: 3px !important;
+        opacity: 1 !important;
+        line-height: 1 !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove:hover {
+        color: #fff !important;
+        background: rgba(0, 0, 0, 0.4) !important;
+        border-radius: 3px !important;
+        opacity: 1 !important;
+    }
+
+    /* Botón de limpiar todo (X a la derecha) */
+    .select2-container--bootstrap-5 .select2-selection__clear {
+        color: #fff !important;
+        margin-right: 0.5rem !important;
+        float: right !important;
+        font-size: 1.2rem !important;
+        background: none !important;
+        border: none !important;
+        cursor: pointer !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection__clear:hover {
+        color: #dc3545 !important;
+    }
+
+    /* Dropdown */
+    .select2-container--bootstrap-5 .select2-dropdown {
+        background-color: #212529 !important;
+        border-color: #495057 !important;
+        border-radius: 0.25rem !important;
+    }
+
+    /* Opciones en el dropdown */
+    .select2-container--bootstrap-5 .select2-results__option {
+        background-color: #212529 !important;
+        color: #fff !important;
+        padding: 0.5rem 1rem !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-results__option--highlighted {
+        background-color: #495057 !important;
+        color: #fff !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-results__option--selected {
+        background-color: #343a40 !important;
+        color: #fff !important;
+    }
+
+    /* Campo de búsqueda */
+    .select2-container--bootstrap-5 .select2-search__field {
+        background-color: transparent !important;
+        color: #fff !important;
+        border: none !important;
+        outline: none !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-search--inline .select2-search__field {
+        margin-top: 0.25rem !important;
+        padding: 0.25rem !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--multiple .select2-search__field::placeholder {
+        color: #6c757d !important;
+    }
+
+    /* Campo de búsqueda en dropdown */
+    .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
+        background-color: #343a40 !important;
+        color: #fff !important;
+        border: 1px solid #495057 !important;
+        border-radius: 0.25rem !important;
+        padding: 0.375rem 0.75rem !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field:focus {
+        border-color: #86b7fe !important;
+        outline: none !important;
+    }
+</style>
+
+<script>
+    let currentPage = 1;
+    let currentFilters = {};
+    let currentPageSize = 50;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar Select2 en el dropdown de usuarios
+        $('#selectUsuarios').select2({
+            placeholder: 'Buscar y seleccionar usuarios...',
+            allowClear: true,
+            width: '100%',
+            theme: 'bootstrap-5',
+            language: {
+                noResults: function() {
+                    return "No se encontraron resultados";
+                },
+                searching: function() {
+                    return "Buscando...";
+                }
+            }
+        });
+
+        // Eventos
+        document.getElementById('filtrosForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentPage = 1;
+            cargarDatos();
+        });
+
+        document.getElementById('btnLimpiarFiltros').addEventListener('click', function() {
+            document.getElementById('filtrosForm').reset();
+            $('#selectUsuarios').val(null).trigger('change'); // Limpiar Select2
+            currentFilters = {};
+            currentPage = 1;
+            limpiarTabla();
+        });
+
+        document.getElementById('pageSize').addEventListener('change', function() {
+            currentPageSize = parseInt(this.value);
+            currentPage = 1;
+            if (Object.keys(currentFilters).length > 0) {
+                cargarDatos();
+            }
+        });
+    });
+
+    function obtenerFiltros() {
+        const filtros = {};
+        
+        const fechaInicio = document.getElementById('fechaInicio').value;
+        const fechaFin = document.getElementById('fechaFin').value;
+        const idReserva = document.getElementById('idReserva').value.trim();
+        const selectUsuarios = document.getElementById('selectUsuarios');
+        const usuariosSeleccionados = Array.from(selectUsuarios.selectedOptions)
+            .map(opt => opt.value)
+            .filter(val => val !== '');
+
+        if (fechaInicio) filtros.fechaInicio = fechaInicio;
+        if (fechaFin) filtros.fechaFin = fechaFin;
+        if (idReserva) filtros.idReserva = idReserva;
+        if (usuariosSeleccionados.length > 0) filtros.usuarios = usuariosSeleccionados;
+
+        return filtros;
+    }
+
+    async function cargarDatos() {
+        try {
+            currentFilters = obtenerFiltros();
+            
+            // Construir query params
+            const params = new URLSearchParams({
+                page: currentPage,
+                limit: currentPageSize,
+                ...currentFilters
+            });
+
+            // Si hay múltiples usuarios, agregarlos correctamente
+            if (currentFilters.usuarios && Array.isArray(currentFilters.usuarios)) {
+                // Remover el parámetro usuarios que se agregó arriba
+                params.delete('usuarios');
+                // Agregar cada usuario individualmente
+                currentFilters.usuarios.forEach(userId => {
+                    params.append('usuarios', userId);
+                });
+            }
+
+            mostrarCargando();
+
+            const response = await fetch(`/api/utilidades-globales-json?${params.toString()}`);
+            
+            if (!response.ok) {
+                throw new Error('Error al cargar los datos');
+            }
+
+            const data = await response.json();
+            
+            if (data.success) {
+                renderizarTabla(data.data);
+                renderizarPaginacion(data.pagination);
+                actualizarResumen(data.pagination, data.summary);
+            } else {
+                throw new Error(data.error || 'Error desconocido');
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarError(error.message);
+        }
+    }
+
+    function mostrarCargando() {
+        const tbody = document.getElementById('tablaBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="14" class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando datos...</p>
+                </td>
+            </tr>
+        `;
+    }
+
+    function mostrarError(mensaje) {
+        const tbody = document.getElementById('tablaBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="14" class="text-center text-danger">
+                    <i class="fa fa-exclamation-triangle fa-2x mb-2"></i>
+                    <p>${mensaje}</p>
+                </td>
+            </tr>
+        `;
+    }
+
+    function limpiarTabla() {
+        const tbody = document.getElementById('tablaBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="14" class="text-center">
+                    <p class="mt-3 mb-3">Aplica filtros para cargar datos</p>
+                </td>
+            </tr>
+        `;
+        document.getElementById('totalRegistros').textContent = '0';
+        document.getElementById('totalUtilidades').textContent = '$0.00';
+        document.getElementById('paginaActual').textContent = '-';
+        document.getElementById('pagination').innerHTML = '';
+    }
+
+    function renderizarTabla(utilidades) {
+        const tbody = document.getElementById('tablaBody');
+        
+        if (!utilidades || utilidades.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="14" class="text-center">
+                        <p class="mt-3 mb-3">No se encontraron resultados</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = utilidades.map(u => {
+            let statusClass = '';
+            let statusText = u.statusReserva || 'N/A';
+            
+            switch(u.statusReserva) {
+                case 'ACTIVE':
+                    statusClass = 'text-success';
+                    statusText = 'Activa';
+                    break;
+                case 'CANCELLED':
+                    statusClass = 'text-danger';
+                    statusText = 'Cancelada';
+                    break;
+                case 'PENDING':
+                    statusClass = 'text-warning';
+                    statusText = 'Pendiente';
+                    break;
+                case 'NO-SHOW':
+                    statusClass = 'text-muted';
+                    statusText = 'No Show';
+                    break;
+                case 'PLAYGROUND':
+                    statusClass = 'text-info';
+                    statusText = 'Playground';
+                    break;
+            }
+
+            return `
+                <tr>
+                    <td>${u.nombreHabitacion || 'N/A'}</td>
+                    <td>${u.chaletAdmin || 'N/A'}</td>
+                    <td>${u.concepto || 'N/A'}</td>
+                    <td>${u.idReserva || 'N/A'}</td>
+                    <td>$${(u.monto || 0).toFixed(2)}</td>
+                    <td>${u.nochesReservadas || 0}</td>
+                    <td>${u.fecha || 'N/A'}</td>
+                    <td>${u.checkOut || 'N/A'}</td>
+                    <td class="${statusClass}">${statusText}</td>
+                    <td>${u.nombreUsuario || 'N/A'}</td>
+                    <td>${u.tipoUsuario || 'N/A'}</td>
+                    <td>$${(u.totalReserva || 0).toFixed(2)}</td>
+                    <td>$${(u.pagadoReserva || 0).toFixed(2)}</td>
+                    <td>$${(u.restanteReserva || 0).toFixed(2)}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderizarPaginacion(pagination) {
+        const paginationEl = document.getElementById('pagination');
+        
+        if (!pagination || pagination.totalPages <= 1) {
+            paginationEl.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+
+        // Botón anterior
+        html += `
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="cambiarPagina(${currentPage - 1}); return false;">
+                    Anterior
+                </a>
+            </li>
+        `;
+
+        // Páginas
+        const maxPagesToShow = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+        let endPage = Math.min(pagination.totalPages, startPage + maxPagesToShow - 1);
+
+        if (endPage - startPage < maxPagesToShow - 1) {
+            startPage = Math.max(1, endPage - maxPagesToShow + 1);
+        }
+
+        if (startPage > 1) {
+            html += `
+                <li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPagina(1); return false;">1</a>
+                </li>
+            `;
+            if (startPage > 2) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            html += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="cambiarPagina(${i}); return false;">${i}</a>
+                </li>
+            `;
+        }
+
+        if (endPage < pagination.totalPages) {
+            if (endPage < pagination.totalPages - 1) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+            html += `
+                <li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPagina(${pagination.totalPages}); return false;">
+                        ${pagination.totalPages}
+                    </a>
+                </li>
+            `;
+        }
+
+        // Botón siguiente
+        html += `
+            <li class="page-item ${currentPage === pagination.totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="cambiarPagina(${currentPage + 1}); return false;">
+                    Siguiente
+                </a>
+            </li>
+        `;
+
+        paginationEl.innerHTML = html;
+    }
+
+    function cambiarPagina(page) {
+        if (page < 1 || !currentFilters || Object.keys(currentFilters).length === 0) return;
+        currentPage = page;
+        cargarDatos();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function actualizarResumen(pagination, summary) {
+        document.getElementById('totalRegistros').textContent = pagination.totalRecords.toLocaleString();
+        document.getElementById('totalUtilidades').textContent = '$' + (summary.totalEarnings || 0).toFixed(2);
+        document.getElementById('paginaActual').textContent = 
+            `${pagination.currentPage} de ${pagination.totalPages}`;
+    }
+</script>

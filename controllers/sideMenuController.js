@@ -202,6 +202,10 @@ async function generateSideMenu(req, res, next) {
                                         <i class="fas fa-globe"></i></i><span class="d-none d-sm-inline"
                                             style="margin-left: 8px;">Utilidades globales</span>
                                     </a>
+                                    <a href="/api/mostrar-utilidades-globales-v2" class="nav-link px-5" title="Utilidades globales">
+                                        <i class="fas fa-globe"></i></i><span class="d-none d-sm-inline"
+                                            style="margin-left: 8px;">Utilidades globales v2</span>
+                                    </a>
 
                                 </li>
                             </ul>
