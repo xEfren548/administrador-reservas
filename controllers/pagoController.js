@@ -80,16 +80,16 @@ async function registrarPago(req, res, next) {
 
         const { fechaPago, importe, metodoPago, codigoOperacion, reservacionId, notas } = req.body;
 
-        if (req.session.privilege !== "Administrador") {
-            // Limpiar archivo temporal si existe
-            if (req.file) {
-                fs.unlink(req.file.path, (err) => {
-                    if (err) console.error('Error al eliminar archivo temporal:', err);
-                });
-            }
+        // if (req.session.privilege !== "Administrador") {
+        //     // Limpiar archivo temporal si existe
+        //     if (req.file) {
+        //         fs.unlink(req.file.path, (err) => {
+        //             if (err) console.error('Error al eliminar archivo temporal:', err);
+        //         });
+        //     }
             
-            return res.status(403).json({ mensaje: 'No tienes permiso para registrar un pago.' });
-        }
+        //     return res.status(403).json({ mensaje: 'No tienes permiso para registrar un pago.' });
+        // }
 
         const reservacion = await Documento.findById(reservacionId).lean();
         const chaletId = reservacion.resourceId;
@@ -98,7 +98,18 @@ async function registrarPago(req, res, next) {
         const chaletOwner = chalet.others.owner;
 
         // VALIDAR ANTES DE CREAR EL PAGO: Si el método es "Transferencia" y la habitación tiene cuenta financiera, validar comprobante
-        if (metodoPago === "Transferencia" && chalet.others.cuentaFinanciera) {
+        if (metodoPago === "Transferencia") {
+            if (!chalet.others || !chalet.others.cuentaFinanciera) {
+                // Limpiar archivo temporal si existe
+                if (req.file) {
+                    fs.unlink(req.file.path, (err) => {
+                        if (err) console.error('Error al eliminar archivo temporal:', err);
+                    });
+                }
+                return res.status(400).json({ 
+                    mensaje: 'La habitación no tiene una cuenta financiera ligada para transferencias.' 
+                });
+            }
             // Verificar que la cuenta existe
             const cuenta = await SWCuenta.findById(chalet.others.cuentaFinanciera);
             
