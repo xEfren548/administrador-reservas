@@ -60,6 +60,7 @@ async function generateSideMenu(req, res, next) {
                 // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
                 { 'Calendario': ["/api/calendar/duenos", "fs-5 fa fa-calendar"] },
                 { 'Mis Utilidades': ["/api/mostrar-utilidades", "fas fa-hand-holding-usd"] },
+                { 'Finanzas': ["/finanzas", "fas fa-wallet"] },
             ],
             'Colaborador dueño': [
                 // { 'Dashboard': ["/api/dashboard", "fs-5 fa fa-chart-bar"] },
