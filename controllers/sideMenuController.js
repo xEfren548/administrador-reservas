@@ -34,6 +34,7 @@ async function generateSideMenu(req, res, next) {
                 { 'Propiedades': [] },
                 { 'Utilidades': [] },
                 { 'Finanzas': ["/finanzas", "fas fa-wallet"] },
+                { 'Cupones y Referidos': ["/cupones/dashboard", "fas fa-ticket-alt"] },
                 { 'Solicitudes': ["/aprobaciones", "fas fa-check"] },
                 { 'Encuestas': [] },
                 { 'Logs': ["/logs", "fas fa-cogs"] },

@@ -1,0 +1,713 @@
+<!-- Spinner Global de Carga -->
+<div id="globalSpinner" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 hidden">
+    <div class="bg-white rounded-lg shadow-2xl p-4 border border-gray-200">
+        <div class="flex items-center space-x-3">
+            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+            <p class="text-gray-900 text-sm font-medium">Cargando...</p>
+        </div>
+    </div>
+</div>
+
+<div class="min-h-screen bg-gray-50 text-gray-800">
+    <!-- Header con acciones principales -->
+    <div class="bg-white border-b border-gray-200 px-4 py-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Cupones y Referidos</h1>
+                <p class="mt-1 text-sm text-gray-500">Gestiona cupones de descuento y sistema de referidos</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button id="btn-nuevo-cupon" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCupon">
+                    <i class="fas fa-ticket-alt me-1"></i> Nuevo Cupón
+                </button>
+                <button id="btn-exportar-cupones" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel me-1"></i> Exportar CSV
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs de navegación -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <nav class="flex space-x-4 overflow-x-auto scrollbar-hide" aria-label="Tabs">
+                <button class="tab-button active whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-purple-500 text-purple-600" data-tab="dashboard">
+                    <i class="fas fa-chart-line me-1"></i> Dashboard
+                </button>
+                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="cupones">
+                    <i class="fas fa-ticket-alt me-1"></i> Gestión de Cupones
+                </button>
+                <button class="tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="referidos">
+                    <i class="fas fa-user-friends me-1"></i> Referidos
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Contenido de tabs -->
+    <div class="px-4 py-6 sm:px-6 lg:px-8">
+        
+        <!-- Tab: Dashboard -->
+        <div id="tab-dashboard" class="tab-content active">
+            <!-- Filtro de Fechas -->
+            <div class="mb-6 flex flex-wrap gap-4">
+                <div class="flex gap-2 items-center">
+                    <label class="text-gray-600 text-sm">Desde:</label>
+                    <input type="date" id="dashboard-fecha-desde" class="form-control form-control-sm bg-gray-100 border-gray-300 text-gray-700 w-auto">
+                    <label class="text-gray-600 text-sm">Hasta:</label>
+                    <input type="date" id="dashboard-fecha-hasta" class="form-control form-control-sm bg-gray-100 border-gray-300 text-gray-700 w-auto">
+                    <button id="btn-aplicar-filtro-dashboard" class="btn btn-primary btn-sm">
+                        <i class="fas fa-filter me-1"></i> Aplicar
+                    </button>
+                    <button id="btn-limpiar-filtro-dashboard" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-times me-1"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Resumen General</h2>
+            
+            <!-- Tarjetas de Resumen -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-purple-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Cupones</p>
+                            <p id="dashboard-total-cupones" class="text-3xl font-bold text-gray-900 mt-2">0</p>
+                        </div>
+                        <div class="bg-purple-100 rounded-full p-3">
+                            <i class="fas fa-ticket-alt text-purple-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Cupones Activos</p>
+                            <p id="dashboard-cupones-activos" class="text-3xl font-bold text-gray-900 mt-2">0</p>
+                        </div>
+                        <div class="bg-green-100 rounded-full p-3">
+                            <i class="fas fa-check-circle text-green-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-blue-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Usos</p>
+                            <p id="dashboard-total-usos" class="text-3xl font-bold text-gray-900 mt-2">0</p>
+                        </div>
+                        <div class="bg-blue-100 rounded-full p-3">
+                            <i class="fas fa-shopping-cart text-blue-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-orange-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Descuentos</p>
+                            <p id="dashboard-total-descuentos" class="text-3xl font-bold text-gray-900 mt-2">$0.00</p>
+                        </div>
+                        <div class="bg-orange-100 rounded-full p-3">
+                            <i class="fas fa-dollar-sign text-orange-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficas -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Gráfica de Usos por Mes -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Usos de Cupones por Mes</h3>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="chart-usos-mes"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráfica de Descuentos por Mes -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Descuentos por Mes</h3>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="chart-descuentos-mes"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cupones Más Populares -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Cupones Más Populares</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usos</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Descuentos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-cupones-populares" class="bg-white divide-y divide-gray-200">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Gestión de Cupones -->
+        <div id="tab-cupones" class="tab-content hidden">
+            <!-- Filtros y búsqueda -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="text" id="buscar-cupon" placeholder="Buscar por código o nombre..." class="form-control">
+                    
+                    <select id="filtro-tipo" class="form-select">
+                        <option value="">Todos los tipos</option>
+                        <option value="percentage">Porcentaje</option>
+                        <option value="fixed_amount">Monto Fijo</option>
+                        <option value="nights_free">Noches Gratis</option>
+                    </select>
+
+                    <select id="filtro-activo" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="true">Activos</option>
+                        <option value="false">Inactivos</option>
+                    </select>
+
+                    <select id="filtro-vigente" class="form-select">
+                        <option value="">Todas las vigencias</option>
+                        <option value="true">Solo vigentes</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tabla de Cupones -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usos</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vigencia</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-cupones" class="bg-white divide-y divide-gray-200">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <div class="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <button id="btn-prev-mobile" class="btn btn-secondary btn-sm">Anterior</button>
+                        <button id="btn-next-mobile" class="btn btn-secondary btn-sm">Siguiente</button>
+                    </div>
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                Mostrando <span id="showing-from">0</span> a <span id="showing-to">0</span> de <span id="total-cupones">0</span> cupones
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" id="pagination-controls">
+                                <!-- Se llena dinámicamente -->
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Referidos -->
+        <div id="tab-referidos" class="tab-content hidden">
+            <!-- Botones de Acción -->
+            <div class="mb-6 flex flex-wrap gap-4">
+                <button id="btn-nueva-cuenta-referido" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Nueva Cuenta de Referido
+                </button>
+
+                <div class="flex gap-2 items-center ms-auto">
+                    <select id="filtro-tipo-cuenta" class="form-select w-auto">
+                        <option value="">Todos los tipos</option>
+                        <option value="influencer">Influencer</option>
+                        <option value="marca">Marca</option>
+                        <option value="afiliado">Afiliado</option>
+                        <option value="otro">Otro</option>
+                    </select>
+
+                    <select id="filtro-activo-cuenta" class="form-select w-auto">
+                        <option value="">Todos los estados</option>
+                        <option value="true">Activos</option>
+                        <option value="false">Inactivos</option>
+                    </select>
+
+                    <button id="btn-exportar-cuentas" class="btn btn-success btn-sm">
+                        <i class="fas fa-file-excel me-1"></i> Exportar CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-indigo-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Cuentas</p>
+                            <p id="stats-total-cuentas" class="text-3xl font-bold text-gray-900 mt-2">0</p>
+                        </div>
+                        <div class="bg-indigo-100 rounded-full p-3">
+                            <i class="fas fa-users text-indigo-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Cuentas Activas</p>
+                            <p id="stats-cuentas-activas" class="text-3xl font-bold text-gray-900 mt-2">0</p>
+                        </div>
+                        <div class="bg-green-100 rounded-full p-3">
+                            <i class="fas fa-check-circle text-green-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-yellow-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Usos Totales</p>
+                            <p id="stats-usos-totales" class="text-3xl font-bold text-gray-900 mt-2">0</p>
+                        </div>
+                        <div class="bg-yellow-100 rounded-full p-3">
+                            <i class="fas fa-ticket-alt text-yellow-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-pink-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Comisión Total</p>
+                            <p id="stats-comision-total" class="text-3xl font-bold text-gray-900 mt-2">$0.00</p>
+                        </div>
+                        <div class="bg-pink-100 rounded-full p-3">
+                            <i class="fas fa-hand-holding-usd text-pink-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Cuentas de Referidos -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 px-6 pt-6 pb-4">Cuentas de Referidos</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Celular</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código Cupón</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comisión</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usos</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comisión Total</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-cuentas-referidos" class="bg-white divide-y divide-gray-200">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tabla de Historial de Cupones de Referido -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <h3 class="text-lg font-semibold text-gray-900 px-6 pt-6 pb-4">Historial de Usos de Cupones de Referido</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuenta Referido</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código Cupón</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Habitación</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Original</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descuento</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Final</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-historial-referidos" class="bg-white divide-y divide-gray-200">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Crear/Editar Cupón -->
+<div class="modal fade" id="modalCupon" tabindex="-1" aria-labelledby="modalCuponLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCuponLabel">Nuevo Cupón</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-cupon">
+                    <input type="hidden" id="cupon-id">
+                    
+                    <div class="row">
+                        <!-- Información Básica -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nombre del Cupón *</label>
+                            <input type="text" id="cupon-nombre" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Código *</label>
+                            <input type="text" id="cupon-codigo" class="form-control" required style="text-transform: uppercase;">
+                            <small class="text-muted">Se convertirá a mayúsculas automáticamente</small>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tipo de Descuento *</label>
+                            <select id="cupon-tipo" class="form-select" required>
+                                <option value="percentage">Porcentaje (%)</option>
+                                <option value="fixed_amount">Monto Fijo ($)</option>
+                                <option value="nights_free">Noches Gratis (3x2)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Valor *</label>
+                            <input type="number" id="cupon-valor" class="form-control" min="0" step="0.01" required>
+                            <small id="valor-help" class="text-muted">Porcentaje: 1-100</small>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Aplica a *</label>
+                            <select id="cupon-aplicable-a" class="form-select" required>
+                                <option value="all">Todos</option>
+                                <option value="owner_only">Solo Dueño</option>
+                                <option value="except_owner">Excepto Dueño</option>
+                            </select>
+                        </div>
+
+                        <!-- Fechas de Vigencia -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha de Inicio *</label>
+                            <input type="date" id="cupon-fecha-inicio" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha de Fin *</label>
+                            <input type="date" id="cupon-fecha-fin" class="form-control" required>
+                        </div>
+
+                        <!-- Límites -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Usos Limitados</label>
+                            <input type="number" id="cupon-usos-limitados" class="form-control" min="1" placeholder="Dejar vacío para ilimitado">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Monto Mínimo de Compra</label>
+                            <input type="number" id="cupon-monto-minimo" class="form-control" min="0" step="0.01" value="0">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Descuento Máximo</label>
+                            <input type="number" id="cupon-descuento-maximo" class="form-control" min="0" step="0.01" placeholder="Sin límite">
+                        </div>
+
+                        <!-- Habitaciones -->
+                        <div class="col-12 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" id="cupon-todas-cabanas" class="form-check-input" checked>
+                                <label class="form-check-label" for="cupon-todas-cabanas">
+                                    Aplicable a todas las cabañas
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mb-3" id="selector-habitaciones" style="display: none;">
+                            <label class="form-label">Seleccionar Habitaciones</label>
+                            <select id="cupon-habitaciones" class="form-select" multiple size="5">
+                                <!-- Se llena dinámicamente -->
+                            </select>
+                            <small class="text-muted">Mantén Ctrl/Cmd para seleccionar múltiples</small>
+                        </div>
+
+                        <!-- Restricciones -->
+                        <div class="col-12 mb-3">
+                            <h6 class="text-muted">Restricciones (Opcional)</h6>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Noches Mínimas</label>
+                            <input type="number" id="cupon-noches-minimas" class="form-control" min="1" placeholder="Sin restricción">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Noches Máximas</label>
+                            <input type="number" id="cupon-noches-maximas" class="form-control" min="1" placeholder="Sin restricción">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" id="cupon-solo-nuevos" class="form-check-input">
+                                <label class="form-check-label" for="cupon-solo-nuevos">
+                                    Solo para clientes nuevos
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" id="cupon-solo-web" class="form-check-input">
+                                <label class="form-check-label" for="cupon-solo-web">
+                                    Solo para reservas web
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea id="cupon-descripcion" class="form-control" rows="3" maxlength="500"></textarea>
+                            <small class="text-muted">Máximo 500 caracteres</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btn-guardar-cupon" class="btn btn-primary">Guardar Cupón</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Ver Estadísticas de Cupón -->
+<div class="modal fade" id="modalEstadisticas" tabindex="-1" aria-labelledby="modalEstadisticasLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEstadisticasLabel">Estadísticas del Cupón</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="contenido-estadisticas">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Incluir Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- Modal: Nueva Cuenta de Referido -->
+<div class="modal fade" id="modalCuentaReferido" tabindex="-1" aria-labelledby="modalCuentaReferidoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCuentaReferidoLabel">Nueva Cuenta de Referido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-cuenta-referido">
+                    <input type="hidden" id="cuenta-id">
+                    
+                    <!-- Sección: Información de la Cuenta -->
+                    <h6 class="mb-3 text-purple-600 font-semibold">Información de la Cuenta</h6>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nombre *</label>
+                            <input type="text" id="cuenta-nombre" class="form-control" required maxlength="100">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Celular</label>
+                            <input type="text" id="cuenta-celular" class="form-control" maxlength="20">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Tipo *</label>
+                            <select id="cuenta-tipo" class="form-select" required>
+                                <option value="influencer">Influencer</option>
+                                <option value="marca">Marca</option>
+                                <option value="afiliado">Afiliado</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Notas</label>
+                            <textarea id="cuenta-notas" class="form-control" rows="2" maxlength="500"></textarea>
+                            <small class="text-muted">Máximo 500 caracteres</small>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Configuración de Comisión -->
+                    <h6 class="mb-3 text-purple-600 font-semibold">Configuración de Comisión del Referidor</h6>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tipo de Comisión *</label>
+                            <select id="comision-tipo" class="form-select" required>
+                                <option value="percentage">Porcentaje del Monto Original</option>
+                                <option value="fixed_amount">Monto Fijo por Uso</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Valor *</label>
+                            <input type="number" id="comision-valor" class="form-control" required min="0" step="0.01">
+                            <small id="comision-hint" class="text-muted">Ejemplo: 10 para 10% o $100 por uso</small>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Datos del Cupón -->
+                    <h6 class="mb-3 text-purple-600 font-semibold">Cupón Asociado</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Código del Cupón *</label>
+                            <input type="text" id="cupon-referido-codigo" class="form-control" required style="text-transform: uppercase;">
+                            <small class="text-muted">Se convertirá a mayúsculas automáticamente</small>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Tipo de Descuento *</label>
+                            <select id="cupon-referido-tipo" class="form-select" required>
+                                <option value="percentage">Porcentaje</option>
+                                <option value="fixed_amount">Monto Fijo</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Valor *</label>
+                            <input type="number" id="cupon-referido-valor" class="form-control" required min="0" step="0.01">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Aplicable a</label>
+                            <select id="cupon-referido-aplicable" class="form-select">
+                                <option value="all">Todo</option>
+                                <option value="cabanas">Solo Cabañas</option>
+                                <option value="servicios">Solo Servicios</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Fecha Inicio *</label>
+                            <input type="date" id="cupon-referido-fecha-inicio" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Fecha Fin</label>
+                            <input type="date" id="cupon-referido-fecha-fin" class="form-control">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Usos Limitados</label>
+                            <input type="number" id="cupon-referido-usos" class="form-control" min="1" placeholder="Ilimitado">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Monto Mínimo de Compra ($)</label>
+                            <input type="number" id="cupon-referido-monto-min" class="form-control" min="0" step="0.01" value="0">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Descuento Máximo ($)</label>
+                            <input type="number" id="cupon-referido-descuento-max" class="form-control" min="0" step="0.01" placeholder="Sin límite">
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Descripción del Cupón</label>
+                            <textarea id="cupon-referido-descripcion" class="form-control" rows="2" maxlength="500"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btn-guardar-cuenta-referido" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Crear Cuenta y Cupón
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script principal -->
+<script src="/scripts/cupones.js"></script>
+
+<style>
+    .tab-button.active {
+        border-bottom-color: #9333ea;
+        color: #9333ea;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-success {
+        background-color: #10b981;
+        color: white;
+    }
+
+    .badge-danger {
+        background-color: #ef4444;
+        color: white;
+    }
+
+    .badge-warning {
+        background-color: #f59e0b;
+        color: white;
+    }
+
+    .badge-info {
+        background-color: #3b82f6;
+        color: white;
+    }
+</style>

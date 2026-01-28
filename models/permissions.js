@@ -45,5 +45,14 @@ module.exports = {
     DELETE_TRANSACTIONS: "Eliminar transacciones",
     VIEW_TRANSACTIONS: "Ver transacciones",
     EXPORT_TRANSACTIONS: "Exportar transacciones a CSV",
+    
+    // Permisos del módulo de Cupones y Referidos
+    CREATE_CUPONES: "Crear cupones",
+    VIEW_CUPONES: "Ver cupones",
+    EDIT_CUPONES: "Editar cupones",
+    DELETE_CUPONES: "Eliminar cupones",
+    EXPORT_CUPONES: "Exportar cupones a CSV",
+    VIEW_REFERIDOS: "Ver referidos",
+    MANAGE_REFERIDOS_CONFIG: "Gestionar configuración de referidos",
 
 };

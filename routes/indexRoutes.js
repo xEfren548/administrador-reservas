@@ -59,6 +59,10 @@ const swPagoDiferidoRoutes = require('./swPagoDiferidoRoutes');
 const cronTasksRoutes = require('./cronTasksRoutes');
 const finanzasRoutes = require('./finanzasRoutes');
 
+// Rutas del módulo de Cupones y Referidos
+const cuponesRoutes = require('./cuponesRoutes');
+const referidosRoutes = require('./referidosRoutes');
+
 const authMiddleware = require('../common/middlewares/authMiddleware');
 
 // Privileges middlewares authentication
@@ -141,6 +145,10 @@ router.use('/api/sw/dashboard', swDashboardRoutes);
 router.use('/api/sw', swTransaccionRecurrenteRoutes);
 router.use('/api/sw', swPagoDiferidoRoutes);
 router.use('/api/cron', cronTasksRoutes);
+
+// Rutas del módulo de Cupones y Referidos
+router.use('/', cuponesRoutes);
+router.use('/', referidosRoutes);
 
 // Additional routes
 router.use('/', rackLimpiezaRoutes);

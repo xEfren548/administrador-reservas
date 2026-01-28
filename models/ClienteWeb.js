@@ -130,6 +130,15 @@ const clienteWebSchema = new mongoose.Schema({
     clienteRef: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Cliente'
+    },
+    
+    // Código de referido único para sistema de referidos
+    codigoReferido: {
+        type: String,
+        unique: true,
+        sparse: true,
+        uppercase: true,
+        trim: true
     }
 }, {
     timestamps: true
