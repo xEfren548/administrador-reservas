@@ -18,19 +18,19 @@ router.post(
     cuponesController.crearCupon
 );
 
-// Listar cupones con filtros
-router.get('/api/cupones', cuponesController.listarCupones);
-
-// Obtener datos del dashboard
+// Obtener datos del dashboard (ANTES de rutas con :id)
 router.get('/api/cupones/dashboard/datos', cuponesController.obtenerDatosDashboard);
 
-// Exportar cupones a CSV
+// Exportar cupones a CSV (ANTES de rutas con :id)
 router.get('/api/cupones/exportar-csv', cuponesController.exportarCuponesCSV);
 
-// Exportar usos de cupones a CSV
+// Exportar usos de cupones a CSV (ANTES de rutas con :id)
 router.get('/api/cupones/usos/exportar-csv', cuponesController.exportarUsosCuponesCSV);
 
-// Validar cupón (para aplicarlo en reserva)
+// Obtener lista de usos (ANTES de rutas con :id)
+router.get('/api/cupones/usos', cuponesController.listarUsosCupones);
+
+// Validar cupón (para aplicarlo en reserva) (ANTES de rutas con :id)
 router.post(
     '/api/cupones/validar',
     cuponesController.validarCuponValidators,
@@ -38,7 +38,10 @@ router.post(
     cuponesController.validarCupon
 );
 
-// Obtener cupón por ID
+// Listar cupones con filtros
+router.get('/api/cupones', cuponesController.listarCupones);
+
+// Obtener cupón por ID (DESPUÉS de rutas específicas)
 router.get('/api/cupones/:id', cuponesController.obtenerCupon);
 
 // Obtener estadísticas de un cupón

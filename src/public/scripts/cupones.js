@@ -97,6 +97,12 @@ function inicializarEventos() {
     // Modal cupón
     document.getElementById('cupon-tipo')?.addEventListener('change', actualizarHelpTextoValor);
     document.getElementById('cupon-todas-cabanas')?.addEventListener('change', toggleSelectorHabitaciones);
+    document.getElementById('buscar-habitaciones-cupon')?.addEventListener('input', filtrarHabitacionesCupon);
+
+    // Modal cupón referido
+    document.getElementById('cupon-referido-tipo')?.addEventListener('change', actualizarHelpTextoValorReferido);
+    document.getElementById('cupon-referido-todas-cabanas')?.addEventListener('change', toggleSelectorHabitacionesReferido);
+    document.getElementById('buscar-habitaciones-referido')?.addEventListener('input', filtrarHabitacionesReferido);
 
     // Cambio de tipo de comisión
     document.getElementById('comision-tipo')?.addEventListener('change', function() {
@@ -362,7 +368,7 @@ function actualizarTablaCupones(cupones) {
         const valorTexto = cupon.tipo === 'percentage' ? `${cupon.valor}%` : 
                           cupon.tipo === 'fixed_amount' ? `$${cupon.valor}` : cupon.valor;
         const usosTexto = cupon.usosLimitados ? `${cupon.usosActuales}/${cupon.usosLimitados}` : cupon.usosActuales;
-        const vigenciaTexto = `${new Date(cupon.fechaInicio).toLocaleDateString('es-MX')} - ${new Date(cupon.fechaFin).toLocaleDateString('es-MX')}`;
+        const vigenciaTexto = `${moment.utc(cupon.fechaInicio).format('D/M/YYYY')} - ${moment.utc(cupon.fechaFin).format('D/M/YYYY')}`;
         
         return `
             <tr>
@@ -474,6 +480,11 @@ function abrirModalNuevoCupon() {
     document.getElementById('cupon-todas-cabanas').checked = true;
     document.getElementById('selector-habitaciones').style.display = 'none';
     
+    // Limpiar checkboxes de habitaciones
+    const checkboxes = document.querySelectorAll('.checkbox-habitacion-cupon');
+    checkboxes.forEach(cb => cb.checked = false);
+    actualizarContadorHabitaciones();
+    
     const modal = new bootstrap.Modal(document.getElementById('modalCupon'));
     modal.show();
 }
@@ -504,16 +515,15 @@ async function editarCupon(id) {
             if (cupon.restricciones) {
                 document.getElementById('cupon-noches-minimas').value = cupon.restricciones.nochesMinimas || '';
                 document.getElementById('cupon-noches-maximas').value = cupon.restricciones.nochesMaximas || '';
-                document.getElementById('cupon-solo-nuevos').checked = cupon.restricciones.soloNuevosClientes || false;
-                document.getElementById('cupon-solo-web').checked = cupon.restricciones.soloReservasWeb || false;
             }
 
             if (!cupon.todasCabanas) {
                 document.getElementById('selector-habitaciones').style.display = 'block';
-                const select = document.getElementById('cupon-habitaciones');
-                Array.from(select.options).forEach(option => {
-                    option.selected = cupon.habitaciones.some(h => h._id === option.value);
+                const checkboxes = document.querySelectorAll('.checkbox-habitacion-cupon');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = cupon.habitaciones.some(h => h._id === checkbox.value);
                 });
+                actualizarContadorHabitaciones();
             }
 
             document.getElementById('modalCuponLabel').textContent = 'Editar Cupón';
@@ -546,9 +556,7 @@ async function guardarCupon() {
             montoMinimoCompra: parseFloat(document.getElementById('cupon-monto-minimo').value) || 0,
             restricciones: {
                 nochesMinimas: parseInt(document.getElementById('cupon-noches-minimas').value) || null,
-                nochesMaximas: parseInt(document.getElementById('cupon-noches-maximas').value) || null,
-                soloNuevosClientes: document.getElementById('cupon-solo-nuevos').checked,
-                soloReservasWeb: document.getElementById('cupon-solo-web').checked
+                nochesMaximas: parseInt(document.getElementById('cupon-noches-maximas').value) || null
             }
         };
 
@@ -561,8 +569,8 @@ async function guardarCupon() {
         }
 
         if (!todasCabanas) {
-            const select = document.getElementById('cupon-habitaciones');
-            data.habitaciones = Array.from(select.selectedOptions).map(opt => opt.value);
+            const checkboxes = document.querySelectorAll('.checkbox-habitacion-cupon:checked');
+            data.habitaciones = Array.from(checkboxes).map(cb => cb.value);
         }
 
         if (id) {
@@ -888,6 +896,13 @@ function abrirModalNuevaCuentaReferido() {
     const hoy = new Date().toISOString().split('T')[0];
     document.getElementById('cupon-referido-fecha-inicio').value = hoy;
     
+    // Resetear checkboxes
+    document.getElementById('cupon-referido-todas-cabanas').checked = true;
+    document.getElementById('selector-habitaciones-referido').style.display = 'none';
+    
+    // Cargar habitaciones
+    cargarHabitacionesReferido();
+    
     const modal = new bootstrap.Modal(document.getElementById('modalCuentaReferido'));
     modal.show();
 }
@@ -898,6 +913,19 @@ async function guardarCuentaReferido() {
         if (!form.checkValidity()) {
             form.reportValidity();
             return;
+        }
+
+        // Obtener habitaciones seleccionadas si no son todas
+        const todasCabanas = document.getElementById('cupon-referido-todas-cabanas').checked;
+        let habitaciones = [];
+        if (!todasCabanas) {
+            const checkboxes = document.querySelectorAll('.checkbox-habitacion-referido:checked');
+            habitaciones = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (habitaciones.length === 0) {
+                mostrarToast('Debe seleccionar al menos una habitación si no aplica a todas las cabañas', 'error');
+                return;
+            }
         }
 
         const data = {
@@ -911,16 +939,22 @@ async function guardarCuentaReferido() {
                 valor: parseFloat(document.getElementById('comision-valor').value)
             },
             // Datos de cupón
+            nombreCupon: document.getElementById('cupon-referido-nombre').value,
             codigoCupon: document.getElementById('cupon-referido-codigo').value,
             tipoCupon: document.getElementById('cupon-referido-tipo').value,
             valorCupon: parseFloat(document.getElementById('cupon-referido-valor').value),
             aplicableA: document.getElementById('cupon-referido-aplicable').value,
             fechaInicio: document.getElementById('cupon-referido-fecha-inicio').value,
-            fechaFin: document.getElementById('cupon-referido-fecha-fin').value || null,
+            fechaFin: document.getElementById('cupon-referido-fecha-fin').value,
             usosLimitados: parseInt(document.getElementById('cupon-referido-usos').value) || null,
             montoMinimoCompra: parseFloat(document.getElementById('cupon-referido-monto-min').value) || 0,
             descuentoMaximo: parseFloat(document.getElementById('cupon-referido-descuento-max').value) || null,
-            todasCabanas: true,
+            todasCabanas: todasCabanas,
+            habitaciones: habitaciones,
+            restricciones: {
+                nochesMinimas: parseInt(document.getElementById('cupon-referido-noches-minimas').value) || null,
+                nochesMaximas: parseInt(document.getElementById('cupon-referido-noches-maximas').value) || null
+            },
             descripcionCupon: document.getElementById('cupon-referido-descripcion').value
         };
 
@@ -1039,16 +1073,97 @@ async function cargarHabitaciones() {
 
         if (result.success || Array.isArray(result)) {
             habitaciones = Array.isArray(result) ? result : result.data;
-            const select = document.getElementById('cupon-habitaciones');
-            if (select) {
-                select.innerHTML = habitaciones.map(hab => `
-                    <option value="${hab._id}">${hab.name}</option>
+            const container = document.getElementById('cupon-habitaciones-list');
+            if (container) {
+                container.innerHTML = habitaciones.map(hab => `
+                    <div class="form-check habitacion-item-cupon" data-name="${hab.propertyDetails?.name || hab.name || 'Sin nombre'}" style="margin-bottom: 0.5rem;">
+                        <input class="form-check-input checkbox-habitacion-cupon" type="checkbox" id="hab-${hab._id}" value="${hab._id}" />
+                        <label class="form-check-label" for="hab-${hab._id}">${hab.propertyDetails?.name || hab.name || 'Sin nombre'}</label>
+                    </div>
                 `).join('');
+                
+                // Event listeners para actualizar contador
+                const checkboxes = container.querySelectorAll('.checkbox-habitacion-cupon');
+                checkboxes.forEach(cb => {
+                    cb.addEventListener('change', actualizarContadorHabitaciones);
+                });
             }
         }
     } catch (error) {
         console.error('Error al cargar habitaciones:', error);
     }
+}
+
+async function cargarHabitacionesReferido() {
+    try {
+        const response = await fetch('/api/habitaciones');
+        const result = await response.json();
+
+        if (result.success || Array.isArray(result)) {
+            const habitacionesData = Array.isArray(result) ? result : result.data;
+            const container = document.getElementById('cupon-referido-habitaciones-list');
+            if (container) {
+                container.innerHTML = habitacionesData.map(hab => `
+                    <div class="form-check habitacion-item-referido" data-name="${hab.propertyDetails?.name || hab.name || 'Sin nombre'}" style="margin-bottom: 0.5rem;">
+                        <input class="form-check-input checkbox-habitacion-referido" type="checkbox" id="hab-ref-${hab._id}" value="${hab._id}" />
+                        <label class="form-check-label" for="hab-ref-${hab._id}">${hab.propertyDetails?.name || hab.name || 'Sin nombre'}</label>
+                    </div>
+                `).join('');
+                
+                // Event listeners para actualizar contador
+                const checkboxes = container.querySelectorAll('.checkbox-habitacion-referido');
+                checkboxes.forEach(cb => {
+                    cb.addEventListener('change', actualizarContadorHabitacionesReferido);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error al cargar habitaciones:', error);
+    }
+}
+
+function actualizarContadorHabitaciones() {
+    const checkboxes = document.querySelectorAll('.checkbox-habitacion-cupon:checked');
+    const contador = document.getElementById('habitaciones-selected-count-cupon');
+    if (contador) {
+        contador.textContent = `${checkboxes.length} habitaciones seleccionadas`;
+    }
+}
+
+function actualizarContadorHabitacionesReferido() {
+    const checkboxes = document.querySelectorAll('.checkbox-habitacion-referido:checked');
+    const contador = document.getElementById('habitaciones-selected-count-referido');
+    if (contador) {
+        contador.textContent = `${checkboxes.length} habitaciones seleccionadas`;
+    }
+}
+
+function filtrarHabitacionesCupon() {
+    const searchTerm = document.getElementById('buscar-habitaciones-cupon').value.toLowerCase();
+    const items = document.querySelectorAll('.habitacion-item-cupon');
+    
+    items.forEach(item => {
+        const name = item.getAttribute('data-name').toLowerCase();
+        if (name.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+function filtrarHabitacionesReferido() {
+    const searchTerm = document.getElementById('buscar-habitaciones-referido').value.toLowerCase();
+    const items = document.querySelectorAll('.habitacion-item-referido');
+    
+    items.forEach(item => {
+        const name = item.getAttribute('data-name').toLowerCase();
+        if (name.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
 }
 
 function toggleSelectorHabitaciones() {
@@ -1059,9 +1174,30 @@ function toggleSelectorHabitaciones() {
     }
 }
 
+function toggleSelectorHabitacionesReferido() {
+    const todasCabanas = document.getElementById('cupon-referido-todas-cabanas').checked;
+    const selector = document.getElementById('selector-habitaciones-referido');
+    if (selector) {
+        selector.style.display = todasCabanas ? 'none' : 'block';
+    }
+}
+
 function actualizarHelpTextoValor() {
     const tipo = document.getElementById('cupon-tipo').value;
     const help = document.getElementById('valor-help');
+    
+    if (tipo === 'percentage') {
+        help.textContent = 'Porcentaje: 1-100';
+    } else if (tipo === 'fixed_amount') {
+        help.textContent = 'Monto en pesos';
+    } else if (tipo === 'nights_free') {
+        help.textContent = 'Noches gratis (ej: 1 para 3x2)';
+    }
+}
+
+function actualizarHelpTextoValorReferido() {
+    const tipo = document.getElementById('cupon-referido-tipo').value;
+    const help = document.getElementById('valor-help-referido');
     
     if (tipo === 'percentage') {
         help.textContent = 'Porcentaje: 1-100';

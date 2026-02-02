@@ -51,7 +51,7 @@ const cuponUsageSchema = new mongoose.Schema({
     },
     habitacion: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Habitacion',
+        ref: 'habitaciones',
         default: null
     },
     noches: {

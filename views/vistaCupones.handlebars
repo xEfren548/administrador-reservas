@@ -449,10 +449,11 @@
 
                         <div class="col-12 mb-3" id="selector-habitaciones" style="display: none;">
                             <label class="form-label">Seleccionar Habitaciones</label>
-                            <select id="cupon-habitaciones" class="form-select" multiple size="5">
+                            <input type="text" id="buscar-habitaciones-cupon" class="form-control mb-2" placeholder="🔍 Buscar habitaciones...">
+                            <div id="cupon-habitaciones-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.25rem; padding: 0.75rem; background-color: #f8f9fa;">
                                 <!-- Se llena dinámicamente -->
-                            </select>
-                            <small class="text-muted">Mantén Ctrl/Cmd para seleccionar múltiples</small>
+                            </div>
+                            <small class="text-muted" id="habitaciones-selected-count-cupon">0 habitaciones seleccionadas</small>
                         </div>
 
                         <!-- Restricciones -->
@@ -468,24 +469,6 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Noches Máximas</label>
                             <input type="number" id="cupon-noches-maximas" class="form-control" min="1" placeholder="Sin restricción">
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <div class="form-check">
-                                <input type="checkbox" id="cupon-solo-nuevos" class="form-check-input">
-                                <label class="form-check-label" for="cupon-solo-nuevos">
-                                    Solo para clientes nuevos
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <div class="form-check">
-                                <input type="checkbox" id="cupon-solo-web" class="form-check-input">
-                                <label class="form-check-label" for="cupon-solo-web">
-                                    Solo para reservas web
-                                </label>
-                            </div>
                         </div>
 
                         <!-- Descripción -->
@@ -594,56 +577,98 @@
                             <small class="text-muted">Se convertirá a mayúsculas automáticamente</small>
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nombre del Cupón *</label>
+                            <input type="text" id="cupon-referido-nombre" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Tipo de Descuento *</label>
                             <select id="cupon-referido-tipo" class="form-select" required>
-                                <option value="percentage">Porcentaje</option>
-                                <option value="fixed_amount">Monto Fijo</option>
+                                <option value="percentage">Porcentaje (%)</option>
+                                <option value="fixed_amount">Monto Fijo ($)</option>
+                                <option value="nights_free">Noches Gratis (3x2)</option>
                             </select>
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Valor *</label>
                             <input type="number" id="cupon-referido-valor" class="form-control" required min="0" step="0.01">
+                            <small id="valor-help-referido" class="text-muted">Porcentaje: 1-100</small>
                         </div>
 
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Aplicable a</label>
-                            <select id="cupon-referido-aplicable" class="form-select">
-                                <option value="all">Todo</option>
-                                <option value="cabanas">Solo Cabañas</option>
-                                <option value="servicios">Solo Servicios</option>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Aplica a *</label>
+                            <select id="cupon-referido-aplicable" class="form-select" required>
+                                <option value="all">Todos</option>
+                                <option value="owner_only">Solo Dueño</option>
+                                <option value="except_owner">Excepto Dueño</option>
                             </select>
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Fecha Inicio *</label>
                             <input type="date" id="cupon-referido-fecha-inicio" class="form-control" required>
                         </div>
 
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Fecha Fin</label>
-                            <input type="date" id="cupon-referido-fecha-fin" class="form-control">
-                        </div>
-
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Usos Limitados</label>
-                            <input type="number" id="cupon-referido-usos" class="form-control" min="1" placeholder="Ilimitado">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha Fin *</label>
+                            <input type="date" id="cupon-referido-fecha-fin" class="form-control" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Monto Mínimo de Compra ($)</label>
+                            <label class="form-label">Usos Limitados</label>
+                            <input type="number" id="cupon-referido-usos" class="form-control" min="1" placeholder="Dejar vacío para ilimitado">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Monto Mínimo de Compra</label>
                             <input type="number" id="cupon-referido-monto-min" class="form-control" min="0" step="0.01" value="0">
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Descuento Máximo ($)</label>
+                            <label class="form-label">Descuento Máximo</label>
                             <input type="number" id="cupon-referido-descuento-max" class="form-control" min="0" step="0.01" placeholder="Sin límite">
                         </div>
 
+                        <!-- Habitaciones -->
                         <div class="col-12 mb-3">
-                            <label class="form-label">Descripción del Cupón</label>
-                            <textarea id="cupon-referido-descripcion" class="form-control" rows="2" maxlength="500"></textarea>
+                            <div class="form-check">
+                                <input type="checkbox" id="cupon-referido-todas-cabanas" class="form-check-input" checked>
+                                <label class="form-check-label" for="cupon-referido-todas-cabanas">
+                                    Aplicable a todas las cabañas
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mb-3" id="selector-habitaciones-referido" style="display: none;">
+                            <label class="form-label">Seleccionar Habitaciones</label>
+                            <input type="text" id="buscar-habitaciones-referido" class="form-control mb-2" placeholder="🔍 Buscar habitaciones...">
+                            <div id="cupon-referido-habitaciones-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.25rem; padding: 0.75rem; background-color: #f8f9fa;">
+                                <!-- Se llena dinámicamente -->
+                            </div>
+                            <small class="text-muted" id="habitaciones-selected-count-referido">0 habitaciones seleccionadas</small>
+                        </div>
+
+                        <!-- Restricciones -->
+                        <div class="col-12 mb-3">
+                            <h6 class="text-muted">Restricciones (Opcional)</h6>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Noches Mínimas</label>
+                            <input type="number" id="cupon-referido-noches-minimas" class="form-control" min="1" placeholder="Sin restricción">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Noches Máximas</label>
+                            <input type="number" id="cupon-referido-noches-maximas" class="form-control" min="1" placeholder="Sin restricción">
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea id="cupon-referido-descripcion" class="form-control" rows="3" maxlength="500"></textarea>
+                            <small class="text-muted">Máximo 500 caracteres</small>
                         </div>
                     </div>
                 </form>

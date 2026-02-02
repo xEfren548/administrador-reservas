@@ -477,6 +477,7 @@ async function createChalet(req, res, next) {
 
         let maintenance = null;
         if (others.maintenance) {
+            console.log("others.maintenance", others.maintenance);
             maintenance = await Usuario.findOne({ email: others.maintenance, privilege: "Limpieza" });
         }
 
@@ -529,7 +530,7 @@ async function createChalet(req, res, next) {
                 admin: admin._id,
                 janitor: janitor._id,
                 owner: owner._id,
-                maintenance: maintenance._id,
+                maintenance: maintenance ? maintenance._id : null,
                 investors: others.investors,
                 cuentaFinanciera: others.cuentaFinanciera || null
             },

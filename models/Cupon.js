@@ -75,7 +75,7 @@ const cuponSchema = new mongoose.Schema({
     },
     habitaciones: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Habitacion'
+        ref: 'habitaciones'
     }],
     restricciones: {
         nochesMinimas: {
@@ -124,7 +124,7 @@ const cuponSchema = new mongoose.Schema({
 });
 
 // Índices para búsquedas eficientes
-cuponSchema.index({ codigo: 1 });
+// Nota: 'codigo' ya tiene índice único por la propiedad unique: true
 cuponSchema.index({ activo: 1, fechaInicio: 1, fechaFin: 1 });
 cuponSchema.index({ creadoPor: 1 });
 cuponSchema.index({ esReferido: 1 });

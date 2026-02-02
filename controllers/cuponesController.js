@@ -1,5 +1,6 @@
 const { check } = require('express-validator');
 const { Parser } = require('json2csv');
+const moment = require('moment');
 const Cupon = require('../models/Cupon');
 const CuponUsage = require('../models/CuponUsage');
 const Habitacion = require('../models/Habitacion');
@@ -202,8 +203,8 @@ const crearCupon = async (req, res) => {
             montoMinimoCompra,
             descuentoMaximo,
             usosLimitados,
-            fechaInicio: new Date(fechaInicio),
-            fechaFin: new Date(fechaFin),
+            fechaInicio: moment.utc(fechaInicio).startOf('day').toDate(),
+            fechaFin: moment.utc(fechaFin).endOf('day').toDate(),
             todasCabanas: todasCabanas !== false,
             habitaciones: todasCabanas ? [] : habitaciones,
             restricciones: restricciones || {},
@@ -447,8 +448,10 @@ const editarCupon = async (req, res) => {
         // Actualizar solo los campos enviados
         camposPermitidos.forEach(campo => {
             if (req.body[campo] !== undefined) {
-                if (campo === 'fechaInicio' || campo === 'fechaFin') {
-                    cupon[campo] = new Date(req.body[campo]);
+                if (campo === 'fechaInicio') {
+                    cupon[campo] = moment.utc(req.body[campo]).startOf('day').toDate();
+                } else if (campo === 'fechaFin') {
+                    cupon[campo] = moment.utc(req.body[campo]).endOf('day').toDate();
                 } else {
                     cupon[campo] = req.body[campo];
                 }
@@ -1155,6 +1158,61 @@ const obtenerDatosDashboard = async (req, res) => {
     }
 };
 
+/**
+ * Listar usos de cupones con filtros
+ */
+const listarUsosCupones = async (req, res) => {
+    try {
+        const userRole = req.session.role;
+        const userPermissions = await Roles.findById(userRole);
+        
+        if (!userPermissions || !userPermissions.permissions.includes('VIEW_CUPONES')) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tiene permiso para ver usos de cupones'
+            });
+        }
+
+        const { esReferido, limit = 100 } = req.query;
+        const filtro = {};
+
+        // Si se pide solo cupones de referidos
+        if (esReferido === 'true') {
+            const cuponesReferidos = await Cupon.find({ esReferido: true }).select('_id').lean();
+            const idsCupones = cuponesReferidos.map(c => c._id);
+            filtro.cupon = { $in: idsCupones };
+        }
+
+        const usos = await CuponUsage.find(filtro)
+            .populate({
+                path: 'cupon',
+                populate: {
+                    path: 'cuentaReferido',
+                    select: 'nombre tipo'
+                }
+            })
+            .populate('cliente', 'firstName lastName email')
+            .populate('clienteWeb', 'firstName lastName email')
+            .populate('habitacion', 'propertyDetails.name')
+            .sort({ fechaUso: -1 })
+            .limit(parseInt(limit))
+            .lean();
+
+        res.json({
+            success: true,
+            data: usos
+        });
+
+    } catch (error) {
+        console.error('Error al listar usos de cupones:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al listar usos de cupones',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     // Validadores
     crearCuponValidators,
@@ -1165,6 +1223,7 @@ module.exports = {
     // Controladores
     crearCupon,
     listarCupones,
+    listarUsosCupones,
     obtenerCupon,
     editarCupon,
     toggleActivoCupon,

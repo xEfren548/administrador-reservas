@@ -63,6 +63,7 @@ const crearCuentaReferido = async (req, res) => {
             comisionReferidor,
             notas,
             // Datos del cupón
+            nombreCupon,
             codigoCupon,
             tipoCupon,
             valorCupon,
@@ -93,7 +94,7 @@ const crearCuentaReferido = async (req, res) => {
 
         // Crear cupón asociado
         const nuevoCupon = new Cupon({
-            nombre: `Referido: ${nombre}`,
+            nombre: nombreCupon || `Referido: ${nombre}`,
             codigo: codigoCupon.toUpperCase(),
             tipo: tipoCupon,
             valor: valorCupon,
