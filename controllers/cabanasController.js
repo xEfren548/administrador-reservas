@@ -529,7 +529,7 @@ async function createChalet(req, res, next) {
                 admin: admin._id,
                 janitor: janitor._id,
                 owner: owner._id,
-                maintenance: maintenance._id,
+                maintenance: maintenance ? maintenance._id : null,
                 investors: others.investors,
                 cuentaFinanciera: others.cuentaFinanciera || null
             },
