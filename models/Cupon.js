@@ -25,8 +25,22 @@ const cuponSchema = new mongoose.Schema({
     },
     valor: {
         type: Number,
-        required: [true, 'El valor del cupón es requerido'],
-        min: [0, 'El valor no puede ser negativo']
+        required: function() {
+            return this.tipo !== 'nights_free';
+        },
+        min: [0, 'El valor no puede ser negativo'],
+        default: null
+    },
+    // Campos específicos para nights_free
+    nochesRecibidas: {
+        type: Number,
+        default: null,
+        min: [1, 'Las noches recibidas deben ser al menos 1']
+    },
+    nochesPagadas: {
+        type: Number,
+        default: null,
+        min: [1, 'Las noches pagadas deben ser al menos 1']
     },
     aplicableA: {
         type: String,

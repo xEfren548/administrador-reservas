@@ -512,6 +512,15 @@ async function editarCupon(id) {
             document.getElementById('cupon-todas-cabanas').checked = cupon.todasCabanas;
             document.getElementById('cupon-descripcion').value = cupon.descripcion || '';
 
+            // Cargar campos de noches gratis si aplica
+            if (cupon.tipo === 'nights_free') {
+                document.getElementById('cupon-noches-recibidas').value = cupon.nochesRecibidas || '';
+                document.getElementById('cupon-noches-pagadas').value = cupon.nochesPagadas || '';
+            }
+
+            // Actualizar visibilidad de campos según tipo
+            actualizarHelpTextoValor();
+
             if (cupon.restricciones) {
                 document.getElementById('cupon-noches-minimas').value = cupon.restricciones.nochesMinimas || '';
                 document.getElementById('cupon-noches-maximas').value = cupon.restricciones.nochesMaximas || '';
@@ -542,12 +551,13 @@ async function guardarCupon() {
     try {
         const id = document.getElementById('cupon-id').value;
         const todasCabanas = document.getElementById('cupon-todas-cabanas').checked;
+        const tipo = document.getElementById('cupon-tipo').value;
         
         const data = {
             nombre: document.getElementById('cupon-nombre').value,
             codigo: document.getElementById('cupon-codigo').value.toUpperCase(),
-            tipo: document.getElementById('cupon-tipo').value,
-            valor: parseFloat(document.getElementById('cupon-valor').value),
+            tipo: tipo,
+            valor: tipo === 'nights_free' ? 0 : parseFloat(document.getElementById('cupon-valor').value),
             aplicableA: document.getElementById('cupon-aplicable-a').value,
             fechaInicio: document.getElementById('cupon-fecha-inicio').value,
             fechaFin: document.getElementById('cupon-fecha-fin').value,
@@ -559,6 +569,12 @@ async function guardarCupon() {
                 nochesMaximas: parseInt(document.getElementById('cupon-noches-maximas').value) || null
             }
         };
+
+        // Agregar campos específicos para nights_free
+        if (data.tipo === 'nights_free') {
+            data.nochesRecibidas = parseInt(document.getElementById('cupon-noches-recibidas').value) || null;
+            data.nochesPagadas = parseInt(document.getElementById('cupon-noches-pagadas').value) || null;
+        }
 
         if (document.getElementById('cupon-usos-limitados').value) {
             data.usosLimitados = parseInt(document.getElementById('cupon-usos-limitados').value);
@@ -595,7 +611,13 @@ async function guardarCupon() {
             bootstrap.Modal.getInstance(document.getElementById('modalCupon')).hide();
             cargarCupones(paginaActual);
         } else {
-            mostrarToast(result.message || 'Error al guardar cupón', 'error');
+            // Manejar errores de validación
+            if (result.error && Array.isArray(result.error)) {
+                const errores = result.error.map(e => e.message).join(', ');
+                mostrarToast(errores, 'error');
+            } else {
+                mostrarToast(result.message || 'Error al guardar cupón', 'error');
+            }
         }
     } catch (error) {
         console.error('Error al guardar cupón:', error);
@@ -942,7 +964,7 @@ async function guardarCuentaReferido() {
             nombreCupon: document.getElementById('cupon-referido-nombre').value,
             codigoCupon: document.getElementById('cupon-referido-codigo').value,
             tipoCupon: document.getElementById('cupon-referido-tipo').value,
-            valorCupon: parseFloat(document.getElementById('cupon-referido-valor').value),
+            valorCupon: parseFloat(document.getElementById('cupon-referido-valor').value) || 0,
             aplicableA: document.getElementById('cupon-referido-aplicable').value,
             fechaInicio: document.getElementById('cupon-referido-fecha-inicio').value,
             fechaFin: document.getElementById('cupon-referido-fecha-fin').value,
@@ -957,6 +979,13 @@ async function guardarCuentaReferido() {
             },
             descripcionCupon: document.getElementById('cupon-referido-descripcion').value
         };
+
+        // Agregar campos específicos para nights_free
+        const tipoCupon = document.getElementById('cupon-referido-tipo').value;
+        if (tipoCupon === 'nights_free') {
+            data.nochesRecibidas = parseInt(document.getElementById('cupon-referido-noches-recibidas').value) || null;
+            data.nochesPagadas = parseInt(document.getElementById('cupon-referido-noches-pagadas').value) || null;
+        }
 
         mostrarSpinner();
         const response = await fetch('/api/referidos/cuentas', {
@@ -1185,26 +1214,68 @@ function toggleSelectorHabitacionesReferido() {
 function actualizarHelpTextoValor() {
     const tipo = document.getElementById('cupon-tipo').value;
     const help = document.getElementById('valor-help');
+    const campoNochesRecibidas = document.getElementById('campo-noches-recibidas');
+    const campoNochesPagadas = document.getElementById('campo-noches-pagadas');
+    const campoValor = document.getElementById('cupon-valor').parentElement;
     
     if (tipo === 'percentage') {
         help.textContent = 'Porcentaje: 1-100';
+        campoNochesRecibidas.style.display = 'none';
+        campoNochesPagadas.style.display = 'none';
+        campoValor.style.display = 'block';
+        document.getElementById('cupon-valor').required = true;
+        document.getElementById('cupon-noches-recibidas').required = false;
+        document.getElementById('cupon-noches-pagadas').required = false;
     } else if (tipo === 'fixed_amount') {
         help.textContent = 'Monto en pesos';
+        campoNochesRecibidas.style.display = 'none';
+        campoNochesPagadas.style.display = 'none';
+        campoValor.style.display = 'block';
+        document.getElementById('cupon-valor').required = true;
+        document.getElementById('cupon-noches-recibidas').required = false;
+        document.getElementById('cupon-noches-pagadas').required = false;
     } else if (tipo === 'nights_free') {
-        help.textContent = 'Noches gratis (ej: 1 para 3x2)';
+        help.textContent = 'Noches gratis';
+        campoNochesRecibidas.style.display = 'block';
+        campoNochesPagadas.style.display = 'block';
+        campoValor.style.display = 'none';
+        document.getElementById('cupon-valor').required = false;
+        document.getElementById('cupon-noches-recibidas').required = true;
+        document.getElementById('cupon-noches-pagadas').required = true;
     }
 }
 
 function actualizarHelpTextoValorReferido() {
     const tipo = document.getElementById('cupon-referido-tipo').value;
     const help = document.getElementById('valor-help-referido');
+    const campoNochesRecibidas = document.getElementById('campo-noches-recibidas-referido');
+    const campoNochesPagadas = document.getElementById('campo-noches-pagadas-referido');
+    const campoValor = document.getElementById('cupon-referido-valor').parentElement;
     
     if (tipo === 'percentage') {
         help.textContent = 'Porcentaje: 1-100';
+        campoNochesRecibidas.style.display = 'none';
+        campoNochesPagadas.style.display = 'none';
+        campoValor.style.display = 'block';
+        document.getElementById('cupon-referido-valor').required = true;
+        document.getElementById('cupon-referido-noches-recibidas').required = false;
+        document.getElementById('cupon-referido-noches-pagadas').required = false;
     } else if (tipo === 'fixed_amount') {
         help.textContent = 'Monto en pesos';
+        campoNochesRecibidas.style.display = 'none';
+        campoNochesPagadas.style.display = 'none';
+        campoValor.style.display = 'block';
+        document.getElementById('cupon-referido-valor').required = true;
+        document.getElementById('cupon-referido-noches-recibidas').required = false;
+        document.getElementById('cupon-referido-noches-pagadas').required = false;
     } else if (tipo === 'nights_free') {
-        help.textContent = 'Noches gratis (ej: 1 para 3x2)';
+        help.textContent = 'Noches gratis';
+        campoNochesRecibidas.style.display = 'block';
+        campoNochesPagadas.style.display = 'block';
+        campoValor.style.display = 'none';
+        document.getElementById('cupon-referido-valor').required = false;
+        document.getElementById('cupon-referido-noches-recibidas').required = true;
+        document.getElementById('cupon-referido-noches-pagadas').required = true;
     }
 }
 

@@ -182,7 +182,9 @@ const crearCupon = async (req, res) => {
             todasCabanas,
             habitaciones,
             restricciones,
-            descripcion
+            descripcion,
+            nochesRecibidas,
+            nochesPagadas
         } = req.body;
 
         // Validar que si no son todas las cabañas, se especifiquen habitaciones
@@ -193,12 +195,28 @@ const crearCupon = async (req, res) => {
             });
         }
 
+        // Validar campos específicos para nights_free
+        if (tipo === 'nights_free') {
+            if (!nochesRecibidas || !nochesPagadas) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Para cupones de noches gratis debe especificar noches recibidas y noches pagadas'
+                });
+            }
+            if (nochesPagadas >= nochesRecibidas) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Las noches pagadas deben ser menores a las noches recibidas'
+                });
+            }
+        }
+
         // Crear cupón
         const nuevoCupon = new Cupon({
             nombre,
             codigo: codigo.toUpperCase(),
             tipo,
-            valor,
+            valor: tipo === 'nights_free' ? 0 : valor,
             aplicableA,
             montoMinimoCompra,
             descuentoMaximo,
@@ -209,6 +227,8 @@ const crearCupon = async (req, res) => {
             habitaciones: todasCabanas ? [] : habitaciones,
             restricciones: restricciones || {},
             descripcion,
+            nochesRecibidas: tipo === 'nights_free' ? nochesRecibidas : null,
+            nochesPagadas: tipo === 'nights_free' ? nochesPagadas : null,
             creadoPor: userId
         });
 
@@ -442,7 +462,9 @@ const editarCupon = async (req, res) => {
             'todasCabanas',
             'habitaciones',
             'restricciones',
-            'descripcion'
+            'descripcion',
+            'nochesRecibidas',
+            'nochesPagadas'
         ];
 
         // Actualizar solo los campos enviados
@@ -457,6 +479,22 @@ const editarCupon = async (req, res) => {
                 }
             }
         });
+
+        // Validar campos específicos para nights_free
+        if (cupon.tipo === 'nights_free') {
+            if (!cupon.nochesRecibidas || !cupon.nochesPagadas) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Para cupones de noches gratis debe especificar noches recibidas y noches pagadas'
+                });
+            }
+            if (cupon.nochesPagadas >= cupon.nochesRecibidas) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Las noches pagadas deben ser menores a las noches recibidas'
+                });
+            }
+        }
 
         // Validar que si no son todas las cabañas, se especifiquen habitaciones
         if (!cupon.todasCabanas && (!cupon.habitaciones || cupon.habitaciones.length === 0)) {

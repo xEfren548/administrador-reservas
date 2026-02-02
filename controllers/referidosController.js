@@ -76,8 +76,26 @@ const crearCuentaReferido = async (req, res) => {
             todasCabanas,
             habitaciones,
             restricciones,
-            descripcionCupon
+            descripcionCupon,
+            nochesRecibidas,
+            nochesPagadas
         } = req.body;
+
+        // Validar campos específicos para nights_free
+        if (tipoCupon === 'nights_free') {
+            if (!nochesRecibidas || !nochesPagadas) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Para cupones de noches gratis debe especificar noches recibidas y noches pagadas'
+                });
+            }
+            if (nochesPagadas >= nochesRecibidas) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Las noches pagadas deben ser menores a las noches recibidas'
+                });
+            }
+        }
 
         // Crear cuenta de referido
         const nuevaCuenta = new CuentaReferido({
@@ -97,7 +115,7 @@ const crearCuentaReferido = async (req, res) => {
             nombre: nombreCupon || `Referido: ${nombre}`,
             codigo: codigoCupon.toUpperCase(),
             tipo: tipoCupon,
-            valor: valorCupon,
+            valor: tipoCupon === 'nights_free' ? 0 : valorCupon,
             aplicableA: aplicableA || 'all',
             fechaInicio,
             fechaFin,
@@ -109,6 +127,8 @@ const crearCuentaReferido = async (req, res) => {
             habitaciones: todasCabanas ? [] : (habitaciones || []),
             restricciones: restricciones || {},
             descripcion: descripcionCupon || '',
+            nochesRecibidas: tipoCupon === 'nights_free' ? nochesRecibidas : null,
+            nochesPagadas: tipoCupon === 'nights_free' ? nochesPagadas : null,
             activo: true,
             esReferido: true,
             cuentaReferido: nuevaCuenta._id,
