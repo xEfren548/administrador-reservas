@@ -99,6 +99,16 @@ router.use('/webhooks', webhooksRoutes);
 // Rutas de autenticación para clientes web
 router.use('/client/auth', clientAuthRoutes);
 
+// Ruta pública para validar cupones
+const cuponesController = require('../controllers/cuponesController');
+const validationRequest = require('../common/middlewares/validation-request');
+router.post(
+    '/api/cupones/validar',
+    cuponesController.validarCuponValidators,
+    validationRequest,
+    cuponesController.validarCupon
+);
+
 // Rutas de favoritos para clientes web
 router.use('/client/favorites', clientFavoritesRoutes);
 

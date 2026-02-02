@@ -30,13 +30,7 @@ router.get('/api/cupones/usos/exportar-csv', cuponesController.exportarUsosCupon
 // Obtener lista de usos (ANTES de rutas con :id)
 router.get('/api/cupones/usos', cuponesController.listarUsosCupones);
 
-// Validar cupón (para aplicarlo en reserva) (ANTES de rutas con :id)
-router.post(
-    '/api/cupones/validar',
-    cuponesController.validarCuponValidators,
-    validationRequest,
-    cuponesController.validarCupon
-);
+// NOTA: La ruta /api/cupones/validar está definida como PÚBLICA en indexRoutes.js
 
 // Listar cupones con filtros
 router.get('/api/cupones', cuponesController.listarCupones);

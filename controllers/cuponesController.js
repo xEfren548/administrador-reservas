@@ -729,10 +729,16 @@ const validarCupon = async (req, res) => {
             } else if (cupon.tipo === 'fixed_amount') {
                 descuentoCalculado = cupon.valor;
             } else if (cupon.tipo === 'nights_free') {
-                // Para 3x2: valor = 1 (noche gratis)
+                // Para 3x2: nochesRecibidas = 3, nochesPagadas = 2
+                // Noches gratis = nochesRecibidas - nochesPagadas = 1
                 // Descuento = (monto / noches) * nochesGratis
-                if (noches && noches > cupon.valor) {
-                    descuentoCalculado = (montoReserva / noches) * cupon.valor;
+                if (noches && cupon.nochesRecibidas && cupon.nochesPagadas) {
+                    const nochesGratis = cupon.nochesRecibidas - cupon.nochesPagadas;
+                    // Verificar que la reserva tenga al menos las noches requeridas
+                    if (noches >= cupon.nochesRecibidas) {
+                        const precioPorNoche = montoReserva / noches;
+                        descuentoCalculado = precioPorNoche * nochesGratis;
+                    }
                 }
             }
 
@@ -757,6 +763,8 @@ const validarCupon = async (req, res) => {
                     nombre: cupon.nombre,
                     tipo: cupon.tipo,
                     valor: cupon.valor,
+                    nochesRecibidas: cupon.nochesRecibidas,
+                    nochesPagadas: cupon.nochesPagadas,
                     aplicableA: cupon.aplicableA,
                     descripcion: cupon.descripcion
                 },
