@@ -103,7 +103,7 @@ const swTransaccionSchema = new Schema({
     // Para asociar con reservas del PMS si aplica
     reservaAsociada: {
         type: Schema.Types.ObjectId,
-        ref: 'documentos'
+        ref: 'Documento'
     },
     etiquetas: [{
         type: String,

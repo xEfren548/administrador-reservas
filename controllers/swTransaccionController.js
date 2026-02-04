@@ -1,6 +1,8 @@
 const SWTransaccion = require('../models/SWTransaccion');
 const SWCuenta = require('../models/SWCuenta');
 const SWParticipante = require('../models/SWParticipante');
+const Evento = require('../models/Evento');
+const Habitacion = require('../models/Habitacion');
 const { check, validationResult } = require('express-validator');
 const { Parser } = require('json2csv');
 const ftp = require('basic-ftp');
@@ -188,6 +190,14 @@ const getTransacciones = async (req, res) => {
         const transacciones = await SWTransaccion.find(filter)
             .populate('creadoPor', 'firstName lastName email')
             .populate('aprobadaPor', 'firstName lastName')
+            .populate({
+                path: 'reservaAsociada',
+                select: 'arrivalDate departureDate resourceId',
+                populate: {
+                    path: 'resourceId',
+                    select: 'propertyDetails'
+                }
+            })
             .sort({ fecha: -1 })
             .skip(skip)
             .limit(parseInt(limit));
@@ -225,7 +235,15 @@ const getTransaccionById = async (req, res) => {
             .populate('cuenta', 'nombre')
             .populate('creadoPor', 'firstName lastName email')
             .populate('aprobadaPor', 'firstName lastName email')
-            .populate('solicitudOriginal');
+            .populate('solicitudOriginal')
+            .populate({
+                path: 'reservaAsociada',
+                select: 'arrivalDate departureDate resourceId',
+                populate: {
+                    path: 'resourceId',
+                    select: 'propertyDetails'
+                }
+            });
 
         if (!transaccion) {
             return res.status(404).json({
