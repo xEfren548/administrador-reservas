@@ -1605,6 +1605,34 @@ function verDetalleSolicitud(solicitudId) {
                 </div>
             ` : ''}
             
+            ${solicitud.reservaAsociada ? `
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <p class="text-gray-700 text-sm font-semibold mb-2">
+                        <i class="fas fa-hotel me-2"></i>Reserva Asociada
+                    </p>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <p class="text-gray-500 text-xs">Habitación</p>
+                            <p class="text-gray-900 text-sm">
+                                <i class="fas fa-bed me-1"></i>${solicitud.reservaAsociada.resourceId?.propertyDetails?.name || 'N/A'}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-xs">Fecha de llegada</p>
+                            <p class="text-gray-900 text-sm">
+                                <i class="fas fa-sign-in-alt me-1"></i>${solicitud.reservaAsociada.arrivalDate ? new Date(solicitud.reservaAsociada.arrivalDate).toLocaleDateString('es-MX') : 'N/A'}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-xs">Fecha de salida</p>
+                            <p class="text-gray-900 text-sm">
+                                <i class="fas fa-sign-out-alt me-1"></i>${solicitud.reservaAsociada.departureDate ? new Date(solicitud.reservaAsociada.departureDate).toLocaleDateString('es-MX') : 'N/A'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
+            
             <div>
                 <p class="text-gray-500 text-sm">Solicitado por</p>
                 <p class="text-gray-900">${solicitud.solicitadoPor?.firstName || 'N/A'} ${solicitud.solicitadoPor?.lastName || ''}</p>

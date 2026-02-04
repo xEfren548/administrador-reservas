@@ -88,7 +88,7 @@ const swSolicitudTransaccionSchema = new Schema({
     // Para asociar con reservas del PMS si aplica
     reservaAsociada: {
         type: Schema.Types.ObjectId,
-        ref: 'documentos'
+        ref: 'Documento'
     },
     etiquetas: [{
         type: String,
@@ -303,6 +303,14 @@ swSolicitudTransaccionSchema.statics.obtenerPorUsuario = async function(usuarioI
         .populate('cuenta', 'nombre propietario')
         .populate('solicitadoPor', 'firstName lastName')
         .populate('propietarioCuenta', 'firstName lastName')
+        .populate({
+            path: 'reservaAsociada',
+            select: 'arrivalDate departureDate resourceId',
+            populate: {
+                path: 'resourceId',
+                select: 'propertyDetails'
+            }
+        })
         .sort({ createdAt: -1 });
 };
 

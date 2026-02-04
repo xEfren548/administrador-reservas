@@ -195,7 +195,7 @@ const getTransacciones = async (req, res) => {
                 select: 'arrivalDate departureDate resourceId',
                 populate: {
                     path: 'resourceId',
-                    select: 'propertyDetails.name'
+                    select: 'propertyDetails'
                 }
             })
             .sort({ fecha: -1 })
@@ -241,7 +241,7 @@ const getTransaccionById = async (req, res) => {
                 select: 'arrivalDate departureDate resourceId',
                 populate: {
                     path: 'resourceId',
-                    select: 'propertyDetails.name'
+                    select: 'propertyDetails'
                 }
             });
 
