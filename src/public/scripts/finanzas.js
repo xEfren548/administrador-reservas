@@ -2434,6 +2434,43 @@ async function verDetalleTransaccion(transaccionId) {
             `;
         }
 
+        // Reserva Asociada
+        if (trans.reservaAsociada) {
+            const llegada = trans.reservaAsociada.arrivalDate ? 
+                new Date(trans.reservaAsociada.arrivalDate).toLocaleDateString('es-MX', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                }) : 'N/A';
+            const salida = trans.reservaAsociada.departureDate ? 
+                new Date(trans.reservaAsociada.departureDate).toLocaleDateString('es-MX', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                }) : 'N/A';
+            const habitacion = trans.reservaAsociada.resourceId?.propertyDetails?.name || 'N/A';
+            
+            html += `
+                <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                    <h6 class="text-gray-600 mb-2"><i class="fas fa-hotel me-2"></i>Reserva Asociada</h6>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <p class="text-gray-500 mb-1 text-sm">Habitación</p>
+                            <p class="text-gray-900 mb-0"><i class="fas fa-bed me-2"></i>${habitacion}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="text-gray-500 mb-1 text-sm">Fecha de llegada</p>
+                            <p class="text-gray-900 mb-0"><i class="fas fa-sign-in-alt me-2"></i>${llegada}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="text-gray-500 mb-1 text-sm">Fecha de salida</p>
+                            <p class="text-gray-900 mb-0"><i class="fas fa-sign-out-alt me-2"></i>${salida}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         // Etiquetas
         if (trans.etiquetas && trans.etiquetas.length > 0) {
             html += `
