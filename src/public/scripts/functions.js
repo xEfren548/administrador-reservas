@@ -75,6 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let precioMinimoPermitido = 0
     let comisionesReserva = 0
     let disponibilidadValidada = false; // Flag para evitar doble validación
+    let costoBaseAjustadoGlobal = null; // Para guardar el costo base ajustado cuando hay cupón
 
     const totalCostoBaseInput = document.querySelector("#total-costo-base")
     let totalSinComisiones = document.querySelector("#total-sin-comisiones")
@@ -374,9 +375,11 @@ document.addEventListener("DOMContentLoaded", function () {
             // Usar el nombre de la habitación asignada
             const chaletNameParaComisiones = data.assignedChaletName || 'Habitación';
 
+            console.log("\n========== PREPARANDO BODY DE COMISIONES ==========");
             const comisionBody = {
                 precioMinimo: precioMinimoPermitido,
                 precioMaximo: preciosTotalesGlobal,
+                // SIEMPRE enviar el costo base ORIGINAL - el backend calculará el ajuste si hay cupón
                 costoBase: totalCostoBaseInput.value,
                 totalSinComisiones: totalSinComisiones.value,
                 precioAsignado: formData.total,
@@ -387,6 +390,32 @@ document.addEventListener("DOMContentLoaded", function () {
                 departureDate: formData.departureDate,
                 nNights: formData.nNights
             }
+            
+            console.log("Datos base para comisiones:");
+            console.log("  - Precio Mínimo:", comisionBody.precioMinimo);
+            console.log("  - Precio Máximo:", comisionBody.precioMaximo);
+            console.log("  - Costo Base (ORIGINAL):", comisionBody.costoBase);
+            console.log("  - Total Sin Comisiones:", comisionBody.totalSinComisiones);
+            console.log("  - Precio Asignado:", comisionBody.precioAsignado);
+            console.log("  - Noches:", comisionBody.nNights);
+
+            // Agregar datos del cupón si existe
+            if (cuponAplicado) {
+                comisionBody.cupon = {
+                    cuponId: cuponAplicado.cuponId,
+                    codigo: cuponAplicado.codigo,
+                    tipo: cuponAplicado.tipo,
+                    valor: cuponAplicado.valor,
+                    descuentoTotal: cuponAplicado.descuentoTotal,
+                    aplicableA: cuponAplicado.aplicableA,
+                    clienteId: formData.clientEmail ? null : undefined, // Se puede agregar si es necesario
+                    clienteWebId: undefined // Se puede agregar si es necesario
+                };
+                console.log('Cupón incluido en comisionBody:', comisionBody.cupon);
+            } else {
+                console.log('Sin cupón aplicado');
+            }
+            console.log("===================================================\n");
 
             const agregarComisiones = await fetch('/api/utilidades/reserva', {
                 method: 'POST',
@@ -426,6 +455,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (result.isConfirmed) {
                     clearModal(document.getElementById("event_entry_modal"));
                     $('#event_entry_modal').modal('hide');
+                    // Resetear variables globales del cupón
+                    cuponAplicado = null;
+                    costoBaseAjustadoGlobal = null;
+                    precioOriginalSinCupon.valor = 0;
                     window.location.href = `/api/eventos/${data.reservationId}`;
                 }
             });
@@ -616,10 +649,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 totalSinComisiones.value = totalPrecios;
 
                 // Asignar comisiones
-                const comisionUsuarios = await obtenerComisiones(nNights, habitacionId)
+                console.log("\n========== OBTENIENDO COMISIONES (FRONTEND) ==========");
+                console.log("Noches:", nNights);
+                console.log("Habitación ID:", habitacionId);
+                console.log("Total sin comisiones:", totalPrecios);
+                console.log("Costo base:", totalCostoBase);
+                const comisionUsuarios = await obtenerComisiones(nNights, habitacionId, null, totalPrecios, totalCostoBase)
+                console.log("Comisiones recibidas del servidor:");
+                console.log("  - minComission:", comisionUsuarios.minComission);
+                console.log("  - finalComission:", comisionUsuarios.finalComission);
+                
                 precioMinimoPermitido = comisionUsuarios.minComission + totalPrecios // Sumar comisiones al precio minimo
                 totalPrecios += comisionUsuarios.finalComission // Precio maximo permitido
-                console.log("Total máximo permitido con comisiones: ", totalPrecios)
+                
+                console.log("Cálculos finales:");
+                console.log("  - Precio Mínimo Permitido:", precioMinimoPermitido, `(${comisionUsuarios.minComission} + ${totalPrecios - comisionUsuarios.finalComission})`);
+                console.log("  - Total Máximo Permitido:", totalPrecios);
+                console.log("======================================================\n");
 
                 const totalInput = document.getElementById('habitacion_total') // Subtotal 
                 totalInput.value = precioMinimoPermitido // Mostrar el minimo permitido
@@ -630,7 +676,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 console.log('Total maximo permitido: ', preciosTotalesGlobal)
 
-
+                // Mostrar sección de cupón después de calcular el precio
+                mostrarSeccionCupon();
+                // Guardar precio sin cupón para referencia
+                precioOriginalSinCupon.valor = precioMinimoPermitido;
 
             } catch (error) {
                 console.error('Ha ocurrido un error: ', error.message);
@@ -652,17 +701,38 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    async function obtenerComisiones(nNights, habitacionId) {
+    async function obtenerComisiones(nNights, habitacionId, cuponData = null, totalSinComisiones = 0, costoBase = 0) {
         try {
-            const response = await fetch(`/api/utilidades?nnights=${nNights}&habitacionid=${habitacionId}`);
+            let url = `/api/utilidades?nnights=${nNights}&habitacionid=${habitacionId}`;
+            
+            // Si hay cupón, agregar parámetros adicionales
+            if (cuponData) {
+                const cuponParam = encodeURIComponent(JSON.stringify(cuponData));
+                url += `&cupon=${cuponParam}&totalsincomisiones=${totalSinComisiones}&costobase=${costoBase}`;
+                console.log("Llamando a calcularComisiones CON cupón:", { nNights, habitacionId, cuponData, totalSinComisiones, costoBase });
+                console.log("URL completa:", url);
+            } else {
+                console.log("Llamando a calcularComisiones SIN cupón:", { nNights, habitacionId });
+            }
+            
+            const response = await fetch(url);
             const data = await response.json();
-            const minComission = data.minComission
-            const finalComission = data.finalComission
-            const comisiones = { minComission: minComission, finalComission: finalComission }
-            return comisiones
+            
+            // El backend ahora devuelve más información cuando hay cupón
+            const resultado = {
+                minComission: data.minComission,
+                finalComission: data.finalComission,
+                costoBaseAjustado: data.costoBaseAjustado,
+                utilidadAjustada: data.utilidadAjustada,
+                precioBaseAjustado: data.precioBaseAjustado,
+                precioTotalFinal: data.precioTotalFinal
+            };
+            
+            console.log("Respuesta completa del servidor:", resultado);
+            return resultado;
 
         } catch (error) {
-            console.log(error.message);
+            console.log("Error al obtener comisiones:", error.message);
         }
     }
 
@@ -939,5 +1009,313 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         disponibilidadValidada = false;
     });
+
+    // ========== FUNCIONES PARA CUPONES ==========
+    let cuponAplicado = null; // Objeto con datos del cupón aplicado
+    
+    // Mostrar sección de cupón después de calcular precio
+    function mostrarSeccionCupon() {
+        const sectionCupon = document.getElementById('section-cupon');
+        if (sectionCupon) {
+            sectionCupon.style.display = 'block';
+        }
+    }
+
+    // Actualizar precio original (llamar desde obtenerTotalReserva)
+    const precioOriginalSinCupon = { valor: 0 };
+
+    // Aplicar cupón
+    const btnAplicarCupon = document.getElementById('btn-aplicar-cupon');
+    if (btnAplicarCupon) {
+        btnAplicarCupon.addEventListener('click', async function() {
+            const codigoCupon = document.getElementById('input-codigo-cupon').value.trim();
+            
+            if (!codigoCupon) {
+                mostrarEstadoCupon('invalido', 'Por favor ingresa un código de cupón');
+                return;
+            }
+
+            // Validar que haya precio calculado
+            const total = parseFloat(document.getElementById('habitacion_total').value) || 0;
+            if (total === 0) {
+                mostrarEstadoCupon('invalido', 'Primero debes seleccionar una habitación y huéspedes');
+                return;
+            }
+
+            try {
+                mostrarEstadoCupon('validando', 'Validando cupón...');
+                document.getElementById('validando-cupon').style.display = 'block';
+                btnAplicarCupon.disabled = true;
+
+                const habitacionId = document.getElementById('id_cabana').value;
+                const noches = parseInt(document.getElementById('event_nights').value) || 0;
+                const clienteId = document.getElementById('lblClientValue').value || null;
+
+                const response = await fetch('/api/cupones/validar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        codigo: codigoCupon,
+                        montoReserva: total,
+                        habitacionId: habitacionId,
+                        noches: noches,
+                        clienteId: clienteId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    mostrarEstadoCupon('invalido', data.message || 'Cupón inválido');
+                    return;
+                }
+
+                // Cupón válido - guardar datos y mostrar detalle
+                cuponAplicado = {
+                    cuponId: data.data.cupon.id,
+                    codigo: data.data.cupon.codigo,
+                    nombre: data.data.cupon.nombre,
+                    descripcion: data.data.cupon.descripcion,
+                    tipo: data.data.cupon.tipo,
+                    valor: data.data.cupon.valor,
+                    aplicableA: data.data.cupon.aplicableA,
+                    descuentoTotal: data.data.descuento,
+                    descuentoOwner: data.data.descuentoOwner,
+                    descuentoUsuarios: data.data.descuentoUsuarios,
+                    montoFinal: data.data.montoFinal
+                };
+
+                // Guardar precio original
+                precioOriginalSinCupon.valor = total;
+
+                mostrarEstadoCupon('valido', 'Cupón aplicado correctamente');
+                mostrarDetalleCupon(cuponAplicado);
+                aplicarDescuentoCupon(cuponAplicado);
+
+                // Deshabilitar input y botón aplicar
+                document.getElementById('input-codigo-cupon').disabled = true;
+                btnAplicarCupon.disabled = true;
+
+            } catch (error) {
+                console.error('Error al validar cupón:', error);
+                mostrarEstadoCupon('invalido', 'Error al validar el cupón');
+            } finally {
+                document.getElementById('validando-cupon').style.display = 'none';
+                btnAplicarCupon.disabled = false;
+            }
+        });
+    }
+
+    // Remover cupón
+    const btnRemoverCupon = document.getElementById('btn-remover-cupon');
+    if (btnRemoverCupon) {
+        btnRemoverCupon.addEventListener('click', function() {
+            removerCupon();
+        });
+    }
+
+    function mostrarEstadoCupon(tipo, mensaje) {
+        const badge = document.getElementById('cupon-estado-badge');
+        if (!badge) return;
+
+        badge.style.display = 'inline-flex';
+        badge.className = `cupon-estado-badge ${tipo}`;
+        
+        let icono = '';
+        if (tipo === 'validando') icono = '<i class="fa fa-spinner fa-spin"></i>';
+        else if (tipo === 'valido') icono = '<i class="fa fa-check-circle"></i>';
+        else if (tipo === 'invalido') icono = '<i class="fa fa-times-circle"></i>';
+
+        badge.innerHTML = `${icono} ${mensaje}`;
+
+        // Ocultar badge después de 3 segundos si es error
+        if (tipo === 'invalido') {
+            setTimeout(() => {
+                badge.style.display = 'none';
+            }, 3000);
+        }
+    }
+
+    function mostrarDetalleCupon(cupon) {
+        const detalleCard = document.getElementById('cupon-detalle');
+        if (!detalleCard) return;
+
+        document.getElementById('cupon-nombre').textContent = cupon.nombre;
+        document.getElementById('cupon-descripcion').textContent = cupon.descripcion || '';
+        
+        let descuentoTexto = '';
+        if (cupon.tipo === 'percentage') {
+            descuentoTexto = `Descuento: ${cupon.valor}% (-$${cupon.descuentoTotal.toFixed(2)} MXN)`;
+        } else if (cupon.tipo === 'fixed_amount') {
+            descuentoTexto = `Descuento: $${cupon.descuentoTotal.toFixed(2)} MXN`;
+        } else if (cupon.tipo === 'nights_free') {
+            descuentoTexto = `Descuento: $${cupon.descuentoTotal.toFixed(2)} MXN (noches gratis)`;
+        }
+        document.getElementById('cupon-descuento').textContent = descuentoTexto;
+
+        let aplicableTexto = '';
+        if (cupon.aplicableA === 'all') {
+            aplicableTexto = 'Aplica a: Owner y comisiones (distribución proporcional)';
+        } else if (cupon.aplicableA === 'owner_only') {
+            aplicableTexto = 'Aplica a: Solo owner (costo base)';
+        } else if (cupon.aplicableA === 'except_owner') {
+            aplicableTexto = 'Aplica a: Solo comisiones (excepto owner)';
+        }
+        document.getElementById('cupon-aplicable').textContent = aplicableTexto;
+
+        detalleCard.style.display = 'block';
+    }
+
+    async function aplicarDescuentoCupon(cupon) {
+        console.log("\n========== APLICANDO DESCUENTO CUPÓN (FRONTEND) ==========");
+        console.log("Cupón:", cupon);
+        
+        const subtotalMonto = document.getElementById('subtotal-monto');
+        const descuentoMonto = document.getElementById('descuento-monto');
+        const totalInput = document.getElementById('habitacion_total');
+        
+        const rowSubtotal = document.getElementById('row-subtotal');
+        const rowDescuento = document.getElementById('row-descuento');
+        const separator = document.getElementById('separator-descuento');
+
+        // Recalcular comisiones con el cupón usando la nueva lógica de pools
+        console.log("Recalculando comisiones con cupón...");
+        const habitacionId = document.getElementById('id_cabana').value;
+        const nNights = parseInt(document.getElementById('event_nights').value) || 0;
+        const totalSinComisionesOriginal = parseFloat(totalSinComisiones.value) || 0;
+        const costoBaseOriginal = parseFloat(totalCostoBaseInput.value) || 0;
+        
+        // Obtener comisiones originales primero
+        const comisionesOriginales = await obtenerComisiones(nNights, habitacionId, null, totalSinComisionesOriginal, costoBaseOriginal);
+        
+        // Calcular componentes usando la nueva lógica de pools
+        const F = 35; // NyN siempre fijo
+        const utilidadOriginal = totalSinComisionesOriginal - costoBaseOriginal;
+        
+        // T = Total original
+        const T = precioOriginalSinCupon.valor;
+        
+        // T' = Total nuevo (después del descuento)
+        const Tprima = T - cupon.descuentoTotal;
+        
+        // V' = Pool variable nuevo (todo menos NyN)
+        const Vprima = Tprima - F;
+        
+        console.log("=== Cálculo con nueva lógica de pools ===");
+        console.log("Total original (T):", T);
+        console.log("Descuento:", cupon.descuentoTotal);
+        console.log("Total nuevo (T'):", Tprima);
+        console.log("NyN (fijo):", F);
+        console.log("Pool variable (V'):", Vprima);
+        
+        // Calcular costo base ajustado según regla de absorción
+        let costoBaseAjustado = costoBaseOriginal;
+        
+        if (cupon.aplicableA === 'owner_only') {
+            // Regla 1: Solo el dueño absorbe
+            // Owner' = V' - (Util + comisiones ajustables)
+            // Las comisiones NO cambian (se les restará al pool para obtener el nuevo owner)
+            costoBaseAjustado = Vprima - (utilidadOriginal + comisionesOriginales.minComission - F);
+            console.log("OWNER_ONLY: Solo el dueño absorbe");
+            console.log("  Costo base ajustado:", costoBaseAjustado);
+            
+        } else if (cupon.aplicableA === 'except_owner') {
+            // Regla 2: Todos menos el dueño
+            // Owner queda fijo, resto se escala
+            costoBaseAjustado = costoBaseOriginal; // No cambia
+            console.log("EXCEPT_OWNER: Owner fijo, resto se escala");
+            console.log("  Costo base (sin cambio):", costoBaseAjustado);
+            
+        } else if (cupon.aplicableA === 'all') {
+            // Regla 3: Todos absorben
+            // Todo se escala proporcionalmente
+            const Vall = costoBaseOriginal + utilidadOriginal + (comisionesOriginales.minComission - F);
+            const factor = Vprima / Vall;
+            
+            costoBaseAjustado = costoBaseOriginal * factor;
+            console.log("ALL: Todos absorben");
+            console.log("  Pool total variable (Vall):", Vall);
+            console.log("  Factor:", factor.toFixed(4));
+            console.log("  Costo base ajustado:", costoBaseAjustado);
+        }
+        
+        console.log("=========================================");
+        
+        const cuponData = {
+            descuentoTotal: cupon.descuentoTotal,
+            aplicableA: cupon.aplicableA
+        };
+        
+        const comisionesConCupon = await obtenerComisiones(nNights, habitacionId, cuponData, totalSinComisionesOriginal, costoBaseAjustado);
+        console.log("Comisiones recalculadas con cupón:", comisionesConCupon);
+        
+        // El servidor ahora regresa el precio base ajustado y el precio total final
+        // Usamos precioBaseAjustado en lugar de totalSinComisionesOriginal
+        const precioBaseNuevo = comisionesConCupon.precioBaseAjustado || totalSinComisionesOriginal;
+        const precioTotalCalculado = comisionesConCupon.precioTotalFinal || (precioBaseNuevo + comisionesConCupon.minComission);
+        
+        // Guardar el costo base ajustado en variable global para usarlo al crear la reserva
+        costoBaseAjustadoGlobal = comisionesConCupon.costoBaseAjustado || costoBaseOriginal;
+        
+        precioMinimoPermitido = precioTotalCalculado;
+        
+        console.log("========== RESUMEN FINAL CON CUPÓN ==========");
+        console.log("Precio Base Original:", totalSinComisionesOriginal);
+        console.log("Precio Base Ajustado:", precioBaseNuevo);
+        console.log("Comisiones Ajustadas:", comisionesConCupon.minComission);
+        console.log("Precio Total Final:", precioTotalCalculado);
+        console.log("Verificación T':", Tprima);
+        console.log("=============================================");
+        
+        // Mostrar filas de subtotal y descuento
+        rowSubtotal.style.display = 'flex';
+        rowDescuento.style.display = 'flex';
+        separator.style.display = 'block';
+
+        // Actualizar valores
+        subtotalMonto.textContent = `$${precioOriginalSinCupon.valor.toFixed(2)} MXN`;
+        descuentoMonto.textContent = `-$${cupon.descuentoTotal.toFixed(2)} MXN`;
+        totalInput.value = cupon.montoFinal.toFixed(2);
+        
+        console.log("Precio original sin cupón:", precioOriginalSinCupon.valor);
+        console.log("Descuento total:", cupon.descuentoTotal);
+        console.log("Monto final:", cupon.montoFinal);
+        console.log("========== FIN APLICAR DESCUENTO CUPÓN ==========\n");
+    }
+
+    function removerCupon() {
+        console.log("\n========== REMOVIENDO CUPÓN ==========");
+        // Restaurar precio original
+        if (precioOriginalSinCupon.valor > 0) {
+            document.getElementById('habitacion_total').value = precioOriginalSinCupon.valor;
+            console.log("Precio restaurado a:", precioOriginalSinCupon.valor);
+        }
+
+        // Ocultar filas de descuento
+        document.getElementById('row-subtotal').style.display = 'none';
+        document.getElementById('row-descuento').style.display = 'none';
+        document.getElementById('separator-descuento').style.display = 'none';
+
+        // Ocultar detalle y badge
+        document.getElementById('cupon-detalle').style.display = 'none';
+        document.getElementById('cupon-estado-badge').style.display = 'none';
+
+        // Limpiar input y habilitar
+        document.getElementById('input-codigo-cupon').value = '';
+        document.getElementById('input-codigo-cupon').disabled = false;
+        document.getElementById('btn-aplicar-cupon').disabled = false;
+
+        // Limpiar datos del cupón
+        cuponAplicado = null;
+        costoBaseAjustadoGlobal = null; // Resetear el costo base ajustado
+        precioOriginalSinCupon.valor = 0;
+
+        console.log("Cupón removido, recalculando precios...");
+        // Recalcular precio mínimo sin cupón
+        obtenerTotalReserva();
+        console.log("========== FIN REMOVER CUPÓN ==========\n");
+    }
 
 });

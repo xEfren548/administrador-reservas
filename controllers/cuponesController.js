@@ -720,7 +720,7 @@ const validarCupon = async (req, res) => {
             }
         }
 
-        // Calcular descuento (básico - la lógica completa se hará en Parte 3)
+        // Calcular descuento total
         let descuentoCalculado = 0;
         
         if (montoReserva) {
@@ -753,6 +753,30 @@ const validarCupon = async (req, res) => {
             }
         }
 
+        // Calcular distribución del descuento según aplicableA
+        // NOTA: La distribución real se hará en el backend al crear utilidades
+        // Aquí solo marcamos cómo se debe aplicar
+        let descuentoOwner = 0;
+        let descuentoUsuarios = 0;
+
+        if (descuentoCalculado > 0) {
+            if (cupon.aplicableA === 'owner_only') {
+                // Todo el descuento lo absorbe el owner (costo base)
+                descuentoOwner = descuentoCalculado;
+                descuentoUsuarios = 0;
+            } else if (cupon.aplicableA === 'except_owner') {
+                // Todo el descuento lo absorben los usuarios (comisiones)
+                descuentoOwner = 0;
+                descuentoUsuarios = descuentoCalculado;
+            } else if (cupon.aplicableA === 'all') {
+                // El descuento se distribuye proporcionalmente
+                // La proporción exacta se calculará en el backend con los datos reales
+                // Aquí marcamos que se distribuye entre ambos
+                descuentoOwner = descuentoCalculado * 0.5; // Placeholder
+                descuentoUsuarios = descuentoCalculado * 0.5; // Placeholder
+            }
+        }
+
         res.json({
             success: true,
             message: 'Cupón válido',
@@ -769,6 +793,8 @@ const validarCupon = async (req, res) => {
                     descripcion: cupon.descripcion
                 },
                 descuento: descuentoCalculado,
+                descuentoOwner: descuentoOwner,
+                descuentoUsuarios: descuentoUsuarios,
                 montoFinal: montoReserva ? montoReserva - descuentoCalculado : null
             }
         });

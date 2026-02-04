@@ -62,6 +62,22 @@ const cuponUsageSchema = new mongoose.Schema({
         type: String,
         trim: true,
         maxlength: [500, 'Las notas no pueden exceder 500 caracteres']
+    },
+    // Distribución del descuento según aplicableA
+    aplicableA: {
+        type: String,
+        enum: ['all', 'owner_only', 'except_owner'],
+        default: 'all'
+    },
+    descuentoOwner: {
+        type: Number,
+        default: 0,
+        min: [0, 'El descuento owner no puede ser negativo']
+    },
+    descuentoUsuarios: {
+        type: Number,
+        default: 0,
+        min: [0, 'El descuento usuarios no puede ser negativo']
     }
 }, {
     timestamps: true

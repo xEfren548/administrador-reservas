@@ -451,6 +451,61 @@ body {
     border: 1px solid #f5c6cb;
 }
 
+/* Cupón Badge */
+.cupon-estado-badge {
+    padding: 0.625rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cupon-estado-badge.validando {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.cupon-estado-badge.valido {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.cupon-estado-badge.invalido {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Cupón Detalle Card */
+.cupon-detalle-card {
+    background: linear-gradient(135deg, #e8f8f5 0%, #d1f2eb 100%);
+    border: 2px solid var(--mint-light);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 1rem;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cupon-detalle-card h6 {
+    color: var(--mint);
+    font-weight: 600;
+}
+
 /* Select Options (Dropdown personalizado) */
 .select-container {
     position: relative;
@@ -828,8 +883,60 @@ body {
                     </div>
                 </div>
 
+                <!-- Step 3.5: Cupón de descuento -->
+                <div class="reservation-section" id="section-cupon" style="display: none;">
+                    <div class="section-header">
+                        <i class="fa fa-tag"></i>
+                        <h6>Cupón de descuento</h6>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label-mint">
+                                <i class="fa fa-ticket-alt"></i> Código de cupón
+                            </label>
+                            <div class="input-group">
+                                <input type="text" id="input-codigo-cupon" class="form-control form-control-mint" 
+                                    placeholder="Ingresa el código del cupón" style="text-transform: uppercase;">
+                                <button type="button" id="btn-aplicar-cupon" class="btn btn-mint">
+                                    <i class="fa fa-check"></i> Aplicar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <span id="cupon-estado-badge" class="cupon-estado-badge" style="display: none;"></span>
+                        </div>
+                    </div>
+
+                    <div id="validando-cupon" class="loading-indicator" style="display: none;">
+                        <i class="fa fa-spinner fa-spin"></i> Validando cupón...
+                    </div>
+
+                    <div id="cupon-detalle" class="cupon-detalle-card" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1" id="cupon-nombre"></h6>
+                                <p class="mb-1 text-muted small" id="cupon-descripcion"></p>
+                                <p class="mb-0 fw-bold text-success" id="cupon-descuento"></p>
+                                <p class="mb-0 text-muted small" id="cupon-aplicable"></p>
+                            </div>
+                            <button type="button" id="btn-remover-cupon" class="btn btn-sm btn-outline-danger">
+                                <i class="fa fa-times"></i> Quitar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields para datos del cupón -->
+                    <input type="hidden" id="cupon-id">
+                    <input type="hidden" id="cupon-descuento-total">
+                    <input type="hidden" id="cupon-tipo">
+                    <input type="hidden" id="cupon-valor">
+                    <input type="hidden" id="cupon-aplicable-a">
+                </div>
+
                 <!-- Step 4: Resumen y Total -->
-                <div class="reservation-section" id="section-total">
+                <div class="reservation-section" id="section-total"
+>
                     <div class="section-header">
                         <i class="fa fa-receipt"></i>
                         <h6>Resumen de la reserva</h6>
@@ -840,8 +947,24 @@ body {
                     </div>
 
                     <div class="total-card">
+                        <!-- Subtotal (solo visible cuando hay cupón) -->
+                        <div class="total-row" id="row-subtotal" style="display: none;">
+                            <span class="text-muted"><i class="fa fa-calculator"></i> Subtotal</span>
+                            <span class="fw-bold" id="subtotal-monto">$0.00 MXN</span>
+                        </div>
+
+                        <!-- Descuento (solo visible cuando hay cupón) -->
+                        <div class="total-row text-success" id="row-descuento" style="display: none;">
+                            <span><i class="fa fa-tag"></i> Descuento</span>
+                            <span class="fw-bold" id="descuento-monto">-$0.00 MXN</span>
+                        </div>
+
+                        <!-- Línea separadora (solo visible cuando hay cupón) -->
+                        <hr id="separator-descuento" style="display: none; margin: 1rem 0;">
+
+                        <!-- Total final -->
                         <div class="total-row">
-                            <span><i class="fa fa-money-bill-wave"></i> Total a cobrar</span>
+                            <span><i class="fa fa-money-bill-wave"></i> <span id="label-total">Total a cobrar</span></span>
                             <div class="input-group input-group-mint" style="max-width: 200px;">
                                 <span class="input-group-text">$</span>
                                 <input type="number" class="form-control form-control-mint text-end fw-bold"
