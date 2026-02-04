@@ -637,6 +637,14 @@ body {
         <a class="btn btn-calendar-outline" href="/api/cabanas/calendar" role="button">
             <i class="fa fa-building"></i> Ir a calendario de habitaciones
         </a>
+        <div class="d-flex align-items-center gap-2" style="margin-left: auto;">
+            <input type="text" id="input-buscar-reserva" class="form-control form-control-sm" 
+                placeholder="ID de reserva..." 
+                style="width: 220px; border: 2px solid var(--mint-light); border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.8rem;">
+            <button type="button" class="btn btn-calendar-primary" id="btn-buscar-reserva" title="Ir a reserva">
+                <i class="fa fa-search"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Contenedor del calendario -->
@@ -1446,5 +1454,49 @@ body {
             document.getElementById('btn-agregar-rango').click();
         }
     
+    });
+
+    // ===== BUSCAR RESERVA POR ID =====
+    function validarMongoObjectId(id) {
+        // ObjectId de MongoDB: 24 caracteres hexadecimales
+        const regex = /^[0-9a-fA-F]{24}$/;
+        return regex.test(id);
+    }
+
+    document.getElementById('btn-buscar-reserva').addEventListener('click', function() {
+        const reservaId = document.getElementById('input-buscar-reserva').value.trim();
+        
+        if (!reservaId) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'ID requerido',
+                text: 'Por favor ingresa un ID de reserva',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+        
+        if (!validarMongoObjectId(reservaId)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'ID inválido',
+                text: 'El ID debe tener 24 caracteres hexadecimales (ejemplo: 6970319f9b5ea0748b529dbb)',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+        
+        // Abrir en nueva pestaña
+        window.open(`/api/eventos/${reservaId}`, '_blank');
+        
+        // Limpiar el input
+        document.getElementById('input-buscar-reserva').value = '';
+    });
+
+    // Permitir buscar con Enter
+    document.getElementById('input-buscar-reserva').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('btn-buscar-reserva').click();
+        }
     });
 </script>

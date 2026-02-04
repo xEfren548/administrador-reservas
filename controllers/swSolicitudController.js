@@ -318,6 +318,14 @@ const getSolicitudes = async (req, res) => {
             .populate('solicitadoPor', 'firstName lastName email')
             .populate('propietarioCuenta', 'firstName lastName')
             .populate('respuesta.procesadaPor', 'firstName lastName')
+            .populate({
+                path: 'reservaAsociada',
+                select: 'arrivalDate departureDate resourceId',
+                populate: {
+                    path: 'resourceId',
+                    select: 'propertyDetails'
+                }
+            })
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(parseInt(limit));
@@ -379,6 +387,14 @@ const getMisSolicitudes = async (req, res) => {
             solicitudes = await SWSolicitudTransaccion.find(filter)
                 .populate('cuenta', 'nombre')
                 .populate('propietarioCuenta', 'firstName lastName')
+                .populate({
+                    path: 'reservaAsociada',
+                    select: 'arrivalDate departureDate resourceId',
+                    populate: {
+                        path: 'resourceId',
+                        select: 'propertyDetails'
+                    }
+                })
                 .sort({ createdAt: -1 });
         } else {
             solicitudes = await SWSolicitudTransaccion.obtenerPorUsuario(userId, estado);
@@ -411,7 +427,15 @@ const getSolicitudById = async (req, res) => {
             .populate('solicitadoPor', 'firstName lastName email')
             .populate('propietarioCuenta', 'firstName lastName email')
             .populate('respuesta.procesadaPor', 'firstName lastName')
-            .populate('transaccionCreada');
+            .populate('transaccionCreada')
+            .populate({
+                path: 'reservaAsociada',
+                select: 'arrivalDate departureDate resourceId',
+                populate: {
+                    path: 'resourceId',
+                    select: 'propertyDetails'
+                }
+            });
 
         if (!solicitud) {
             return res.status(404).json({
