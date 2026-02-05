@@ -76,6 +76,18 @@ document.addEventListener("DOMContentLoaded", function () {
     let comisionesReserva = 0
     let disponibilidadValidada = false; // Flag para evitar doble validación
     let costoBaseAjustadoGlobal = null; // Para guardar el costo base ajustado cuando hay cupón
+    
+    // Variables para cupones
+    let cuponAplicado = null;
+    const precioOriginalSinCupon = { valor: 0 };
+    
+    // Función para mostrar sección de cupón
+    function mostrarSeccionCupon() {
+        const sectionCupon = document.getElementById('section-cupon');
+        if (sectionCupon) {
+            sectionCupon.style.display = 'block';
+        }
+    }
 
     const totalCostoBaseInput = document.querySelector("#total-costo-base")
     let totalSinComisiones = document.querySelector("#total-sin-comisiones")
@@ -1011,23 +1023,17 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // ========== FUNCIONES PARA CUPONES ==========
-    let cuponAplicado = null; // Objeto con datos del cupón aplicado
     
-    // Mostrar sección de cupón después de calcular precio
-    function mostrarSeccionCupon() {
-        const sectionCupon = document.getElementById('section-cupon');
-        if (sectionCupon) {
-            sectionCupon.style.display = 'block';
-        }
-    }
-
-    // Actualizar precio original (llamar desde obtenerTotalReserva)
-    const precioOriginalSinCupon = { valor: 0 };
-
     // Aplicar cupón
     const btnAplicarCupon = document.getElementById('btn-aplicar-cupon');
     if (btnAplicarCupon) {
         btnAplicarCupon.addEventListener('click', async function() {
+            // Verificar si ya hay un cupón aplicado
+            if (cuponAplicado !== null) {
+                mostrarEstadoCupon('invalido', 'Ya hay un cupón aplicado. Debes quitarlo primero.');
+                return;
+            }
+            
             const codigoCupon = document.getElementById('input-codigo-cupon').value.trim();
             
             if (!codigoCupon) {
@@ -1042,10 +1048,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
+            // Deshabilitar inmediatamente para prevenir doble click
+            btnAplicarCupon.disabled = true;
+            document.getElementById('input-codigo-cupon').disabled = true;
+            
             try {
                 mostrarEstadoCupon('validando', 'Validando cupón...');
                 document.getElementById('validando-cupon').style.display = 'block';
-                btnAplicarCupon.disabled = true;
 
                 const habitacionId = document.getElementById('id_cabana').value;
                 const noches = parseInt(document.getElementById('event_nights').value) || 0;
@@ -1069,6 +1078,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (!response.ok || !data.success) {
                     mostrarEstadoCupon('invalido', data.message || 'Cupón inválido');
+                    // Restaurar estado para permitir reintentar
+                    btnAplicarCupon.disabled = false;
+                    document.getElementById('input-codigo-cupon').disabled = false;
                     return;
                 }
 
@@ -1092,18 +1104,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 mostrarEstadoCupon('valido', 'Cupón aplicado correctamente');
                 mostrarDetalleCupon(cuponAplicado);
-                aplicarDescuentoCupon(cuponAplicado);
+                
+                // Mostrar indicador de recálculo antes de llamar a aplicarDescuentoCupon
+                mostrarEstadoCupon('validando', 'Recalculando comisiones...');
+                await aplicarDescuentoCupon(cuponAplicado);
+                mostrarEstadoCupon('valido', 'Cupón aplicado correctamente');
 
-                // Deshabilitar input y botón aplicar
+                // Deshabilitar input y botón aplicar (ya están deshabilitados, confirmar)
                 document.getElementById('input-codigo-cupon').disabled = true;
                 btnAplicarCupon.disabled = true;
 
             } catch (error) {
                 console.error('Error al validar cupón:', error);
                 mostrarEstadoCupon('invalido', 'Error al validar el cupón');
+                // Restaurar estado si hay error
+                btnAplicarCupon.disabled = false;
+                document.getElementById('input-codigo-cupon').disabled = false;
             } finally {
                 document.getElementById('validando-cupon').style.display = 'none';
-                btnAplicarCupon.disabled = false;
+                // NO restaurar btnAplicarCupon aquí si el cupón fue aplicado exitosamente
             }
         });
     }
@@ -1172,13 +1191,19 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("\n========== APLICANDO DESCUENTO CUPÓN (FRONTEND) ==========");
         console.log("Cupón:", cupon);
         
-        const subtotalMonto = document.getElementById('subtotal-monto');
-        const descuentoMonto = document.getElementById('descuento-monto');
-        const totalInput = document.getElementById('habitacion_total');
+        // Deshabilitar botón de crear reserva durante recálculo
+        const btnCrearReserva = document.getElementById('save-event-btn');
+        const btnCrearReservaOriginalState = btnCrearReserva.disabled;
+        btnCrearReserva.disabled = true;
         
-        const rowSubtotal = document.getElementById('row-subtotal');
-        const rowDescuento = document.getElementById('row-descuento');
-        const separator = document.getElementById('separator-descuento');
+        try {
+            const subtotalMonto = document.getElementById('subtotal-monto');
+            const descuentoMonto = document.getElementById('descuento-monto');
+            const totalInput = document.getElementById('habitacion_total');
+            
+            const rowSubtotal = document.getElementById('row-subtotal');
+            const rowDescuento = document.getElementById('row-descuento');
+            const separator = document.getElementById('separator-descuento');
 
         // Recalcular comisiones con el cupón usando la nueva lógica de pools
         console.log("Recalculando comisiones con cupón...");
@@ -1283,6 +1308,11 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("Descuento total:", cupon.descuentoTotal);
         console.log("Monto final:", cupon.montoFinal);
         console.log("========== FIN APLICAR DESCUENTO CUPÓN ==========\n");
+        
+        } finally {
+            // Restaurar estado del botón de crear reserva
+            btnCrearReserva.disabled = btnCrearReservaOriginalState;
+        }
     }
 
     function removerCupon() {
