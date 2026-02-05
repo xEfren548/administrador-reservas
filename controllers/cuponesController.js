@@ -632,7 +632,7 @@ const eliminarCupon = async (req, res) => {
  */
 const validarCupon = async (req, res) => {
     try {
-        const { codigo, montoReserva, habitacionId, noches, clienteId, clienteWebId } = req.body;
+        const { codigo, montoReserva, habitacionId, noches, clienteId, clienteWebId, totalSinComisiones, costoBase } = req.body;
 
         const cupon = await Cupon.findOne({ codigo: codigo.toUpperCase() });
 
@@ -729,15 +729,50 @@ const validarCupon = async (req, res) => {
             } else if (cupon.tipo === 'fixed_amount') {
                 descuentoCalculado = cupon.valor;
             } else if (cupon.tipo === 'nights_free') {
-                // Para 3x2: nochesRecibidas = 3, nochesPagadas = 2
-                // Noches gratis = nochesRecibidas - nochesPagadas = 1
-                // Descuento = (monto / noches) * nochesGratis
+                // Para cupones de noches gratis (ej: 3x2)
+                // nochesRecibidas = 3 (noches que recibe el cliente)
+                // nochesPagadas = 2 (noches que paga)
+                // Noches gratis = 1 (3 - 2)
+                
                 if (noches && cupon.nochesRecibidas && cupon.nochesPagadas) {
                     const nochesGratis = cupon.nochesRecibidas - cupon.nochesPagadas;
+                    
                     // Verificar que la reserva tenga al menos las noches requeridas
                     if (noches >= cupon.nochesRecibidas) {
-                        const precioPorNoche = montoReserva / noches;
-                        descuentoCalculado = precioPorNoche * nochesGratis;
+                        // Para calcular correctamente el descuento de noches gratis,
+                        // necesitamos trabajar con el precio base (totalSinComisiones)
+                        const baseParaCalculo = totalSinComisiones || montoReserva;
+                        const precioPorNoche = baseParaCalculo / noches;
+                        
+                        // El descuento es el precio de las noches gratis
+                        // Esto se aplicará sobre el TOTAL (incluidas comisiones)
+                        // La distribución según aplicableA determinará cómo se reparte
+                        const descuentoBase = precioPorNoche * nochesGratis;
+                        
+                        // Si tenemos las comisiones, calcular el descuento proporcional total
+                        if (totalSinComisiones && montoReserva) {
+                            const proporcionTotal = montoReserva / totalSinComisiones;
+                            descuentoCalculado = descuentoBase * proporcionTotal;
+                        } else {
+                            descuentoCalculado = descuentoBase;
+                        }
+                        
+                        console.log("========== CÁLCULO NOCHES GRATIS ==========");
+                        console.log("Noches reservadas:", noches);
+                        console.log("Noches recibidas:", cupon.nochesRecibidas);
+                        console.log("Noches pagadas:", cupon.nochesPagadas);
+                        console.log("Noches gratis:", nochesGratis);
+                        console.log("Precio por noche (base):", precioPorNoche.toFixed(2));
+                        console.log("Total sin comisiones:", totalSinComisiones);
+                        console.log("Monto total reserva:", montoReserva);
+                        console.log("Descuento calculado:", descuentoCalculado.toFixed(2));
+                        console.log("===========================================");
+                    } else {
+                        // No cumple con las noches mínimas para el cupón
+                        return res.status(400).json({
+                            success: false,
+                            message: `Este cupón requiere al menos ${cupon.nochesRecibidas} noches (promoción ${cupon.nochesRecibidas}x${cupon.nochesPagadas})`
+                        });
                     }
                 }
             }

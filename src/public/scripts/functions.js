@@ -269,6 +269,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         try {
+            // Validar que el precio haya sido calculado
+            const precioTotal = parseFloat(document.getElementById('habitacion_total').value);
+            if (!precioTotal || precioTotal === 0) {
+                throw new Error("Debes calcular el precio de la reserva primero");
+            }
+            
+            // Validar que las noches calculadas coincidan con las fechas seleccionadas
+            const nochesCalculadas = parseInt(document.getElementById('event_nights').value) || 0;
+            const fechaInicio = new Date(document.getElementById('event_start_date').value);
+            const fechaFin = new Date(document.getElementById('event_end_date').value);
+            const nochesReales = Math.ceil((fechaFin - fechaInicio) / (1000 * 60 * 60 * 24));
+            
+            if (nochesCalculadas !== nochesReales) {
+                throw new Error(`Las fechas han cambiado. Por favor, vuelve a calcular el precio para ${nochesReales} noche(s)`);
+            }
 
             // Esperar a que obtenerComisiones() se resuelva            
             comisionesReserva = document.getElementById('habitacion_total').value.trim() - precioMinimoPermitido; // 3250 - 3000
@@ -567,11 +582,11 @@ document.addEventListener("DOMContentLoaded", function () {
     async function obtenerTotalReserva() {
         const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
         const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
+        const calculandoPreciosElement = document.getElementById('calculando-precios');
 
         console.log('pax: ', selectedPax.value);
         if (arrivalDate.value && departureDate.value && tipologiaSelect.value && selectedPax.value !== "") {
 
-            const calculandoPreciosElement = document.getElementById('calculando-precios');
             calculandoPreciosElement.style.display = 'block';
             // Aquí puedes ejecutar la acción deseada
             console.log("Los 4 elementos tienen un valor. Ejecutar acción...");
@@ -690,6 +705,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 // Mostrar sección de cupón después de calcular el precio
                 mostrarSeccionCupon();
+                
+                // Mostrar sección de total/resumen
+                const sectionTotal = document.getElementById('section-total');
+                if (sectionTotal) {
+                    sectionTotal.style.display = 'block';
+                }
+                
                 // Guardar precio sin cupón para referencia
                 precioOriginalSinCupon.valor = precioMinimoPermitido;
 
@@ -851,6 +873,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 // Resetear flag de validación cuando cambian las fechas
                 disponibilidadValidada = false;
+
+                // Limpiar precio calculado y comisiones
+                document.getElementById('habitacion_total').value = '';
+                totalSinComisiones.value = 0;
+                totalCostoBaseInput.value = 0;
+                preciosTotalesGlobal = 0;
+                precioMinimoPermitido = 0;
+                
+                // Limpiar cupón aplicado si existe
+                if (cuponAplicado !== null) {
+                    removerCupon();
+                }
+                
+                // Ocultar sección de cupón
+                const sectionCupon = document.getElementById('section-cupon');
+                if (sectionCupon) {
+                    sectionCupon.style.display = 'none';
+                }
+                
+                // Ocultar sección de total
+                const sectionTotal = document.getElementById('section-total');
+                if (sectionTotal) {
+                    sectionTotal.style.display = 'none';
+                }
 
                 // Ocultar sección de habitación hasta nueva validación
                 const sectionHabitacion = document.getElementById('section-habitacion');
@@ -1059,6 +1105,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 const habitacionId = document.getElementById('id_cabana').value;
                 const noches = parseInt(document.getElementById('event_nights').value) || 0;
                 const clienteId = document.getElementById('lblClientValue').value || null;
+                const totalSinComisionesVal = parseFloat(totalSinComisiones.value) || 0;
+                const costoBaseVal = parseFloat(totalCostoBaseInput.value) || 0;
 
                 const response = await fetch('/api/cupones/validar', {
                     method: 'POST',
@@ -1070,7 +1118,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         montoReserva: total,
                         habitacionId: habitacionId,
                         noches: noches,
-                        clienteId: clienteId
+                        clienteId: clienteId,
+                        totalSinComisiones: totalSinComisionesVal,
+                        costoBase: costoBaseVal
                     })
                 });
 

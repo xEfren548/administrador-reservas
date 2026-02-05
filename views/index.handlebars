@@ -891,6 +891,12 @@ body {
                     </div>
                 </div>
 
+                <!-- Loading indicator para cálculo de precios -->
+                <div id="calculando-precios" class="loading-indicator" style="display: none; margin: 1.5rem 0; padding: 1rem; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                    <i class="fa fa-spinner fa-spin" style="font-size: 1.2rem; color: #00796b;"></i>
+                    <span style="margin-left: 0.5rem; color: #00796b; font-weight: 500;">Calculando precio...</span>
+                </div>
+
                 <!-- Step 3.5: Cupón de descuento -->
                 <div class="reservation-section" id="section-cupon" style="display: none;">
                     <div class="section-header">
@@ -948,10 +954,6 @@ body {
                     <div class="section-header">
                         <i class="fa fa-receipt"></i>
                         <h6>Resumen de la reserva</h6>
-                    </div>
-
-                    <div id="calculando-precios" class="loading-indicator" style="display: none;">
-                        <i class="fa fa-calculator fa-spin"></i> Calculando precio...
                     </div>
 
                     <div class="total-card">
