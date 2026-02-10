@@ -272,11 +272,20 @@ async function calcularComisiones(req, res) {
         if (cuponData && cuponData.descuentoTotal > 0) {
             // Aplicar el factor según la regla de absorción
             if (cuponData.aplicableA === 'owner_only') {
-                // Solo el dueño absorbe - calcular nuevo costo base
-                // Owner' = V' - (utilidad + comisiones ajustadas)
+                // Solo el dueño absorbe - utilidad NO cambia, costo base se reduce
+                const utilidadOriginal = totalSinComisiones - costoBase;
                 const Tprima = totalSinComisiones + minComission - cuponData.descuentoTotal;
-                costoBaseAjustado = Tprima - utilidadAjustada - minComission;
+                costoBaseAjustado = Tprima - utilidadOriginal - minComission;
+                utilidadAjustada = utilidadOriginal; // Se mantiene intacta
                 precioBaseAjustado = costoBaseAjustado + utilidadAjustada;
+                
+                console.log("========== AJUSTE OWNER_ONLY ==========");
+                console.log("Utilidad Original (NO cambia):", utilidadOriginal);
+                console.log("Total nuevo (T'):", Tprima, `= ${totalSinComisiones} + ${minComission} - ${cuponData.descuentoTotal}`);
+                console.log("Costo Base Nuevo:", costoBaseAjustado, `= ${Tprima} - ${utilidadOriginal} - ${minComission}`);
+                console.log("Utilidad Ajustada (igual):", utilidadAjustada);
+                console.log("Precio Base Ajustado:", precioBaseAjustado);
+                console.log("=============================================");
                 
             } else if (cuponData.aplicableA === 'except_owner') {
                 // Todos menos el dueño - costo base no cambia, utilidad se ajusta
@@ -493,7 +502,8 @@ async function generarComisionReserva(req, res) {
         console.log("Total Sin Comisiones:", totalSinComisiones);
         console.log("ID Reserva:", idReserva);
         console.log("Noches:", nNights);
-        console.log("Cupón:", cupon ? 'SÍ' : 'NO');
+        console.log("Cupón recibido:", cupon ? 'SÍ' : 'NO');
+        console.log("Cupón completo:", JSON.stringify(cupon, null, 2));
         
         // Obtener costos ANTES (necesarios para el cálculo del cupón)
         const costosGerente = await Costos.findOne({ category: "Gerente" });
@@ -514,14 +524,23 @@ async function generarComisionReserva(req, res) {
         
         // Si hay cupón aplicado, preparar datos
         if (cupon && cupon.cuponId && cupon.descuentoTotal > 0) {
+            console.log("\n========== CUPÓN DETECTADO Y VALIDADO ==========");
             console.log("Cupón aplicado:", cupon);
             console.log("Descuento total:", cupon.descuentoTotal);
             console.log("Aplicable a:", cupon.aplicableA);
+            console.log("=================================================\n");
             
             cuponData = {
                 descuentoTotal: cupon.descuentoTotal,
                 aplicableA: cupon.aplicableA
             };
+        } else {
+            console.log("\n========== CUPÓN NO VALIDADO ==========");
+            console.log("Razón:");
+            if (!cupon) console.log("  - cupon es null/undefined");
+            else if (!cupon.cuponId) console.log("  - cupon.cuponId falta o es falsy:", cupon.cuponId);
+            else if (!(cupon.descuentoTotal > 0)) console.log("  - cupon.descuentoTotal no es mayor a 0:", cupon.descuentoTotal);
+            console.log("========================================\n");
         }
 
         // Eliminar comisiones previas si es que existian
@@ -664,11 +683,17 @@ async function generarComisionReserva(req, res) {
             
             // Ajustar costo base según regla de absorción
             if (cuponData.aplicableA === 'owner_only') {
-                // Solo el dueño absorbe - calcular nuevo costo base
+                // Solo el dueño absorbe - costo base se reduce, utilidad NO cambia
+                const utilidadOwner = totalSinComisiones - costoBase;
                 const Tprima = totalSinComisiones + comisionesQueSuman + F - cuponData.descuentoTotal;
-                // Aquí necesitamos calcular con las comisiones ajustadas (que serían iguales porque factor=1)
                 const comisionesAjustadas = comisionesQueSuman * factorAjusteComisiones + F;
                 costoBaseAjustado = Tprima - utilidadOwner - comisionesAjustadas;
+                
+                console.log(`  → OWNER_ONLY - Ajuste de Costo Base:`);
+                console.log(`     Utilidad Owner (NO cambia): ${utilidadOwner}`);
+                console.log(`     T' (Total nuevo): ${Tprima}`);
+                console.log(`     Comisiones + NyN: ${comisionesAjustadas}`);
+                console.log(`     Costo Base Nuevo: ${Tprima} - ${utilidadOwner} - ${comisionesAjustadas} = ${costoBaseAjustado}`);
                 
             } else if (cuponData.aplicableA === 'except_owner') {
                 // Todos menos el dueño - costo base no cambia
@@ -693,16 +718,22 @@ async function generarComisionReserva(req, res) {
         
         // Ajustar utilidad según regla de absorción si hay cupón
         if (cuponData && cuponData.descuentoTotal > 0) {
-            if (cuponData.aplicableA === 'except_owner') {
+            if (cuponData.aplicableA === 'owner_only') {
+                // Solo el dueño absorbe - utilidad NO cambia, costo base se redujo
+                const utilidadOriginal = totalSinComisiones - costoBase;
+                utilidadChalet = utilidadOriginal; // Se mantiene intacta
+                console.log(`→ Utilidad Chalet (OWNER_ONLY - NO cambia): ${utilidadChalet}`);
+            } else if (cuponData.aplicableA === 'except_owner') {
                 // Costo base no cambia, utilidad se ajusta con el factor
                 const utilidadOriginal = totalSinComisiones - costoBase;
                 utilidadChalet = utilidadOriginal * factorAjusteComisiones;
+                console.log(`→ Utilidad Chalet (EXCEPT_OWNER): ${utilidadOriginal} × ${factorAjusteComisiones.toFixed(4)} = ${utilidadChalet}`);
             } else if (cuponData.aplicableA === 'all') {
                 // Ambos se ajustan con el factor
                 const utilidadOriginal = totalSinComisiones - costoBase;
                 utilidadChalet = utilidadOriginal * factorAjusteComisiones;
+                console.log(`→ Utilidad Chalet (ALL): ${utilidadOriginal} × ${factorAjusteComisiones.toFixed(4)} = ${utilidadChalet}`);
             }
-            // owner_only: la utilidad no cambia, solo el costo base
         }
         
         utilidadChalet = Math.round(utilidadChalet * 100) / 100;
@@ -851,6 +882,14 @@ async function generarComisionReserva(req, res) {
         if (!chaletAdmin) {
             throw new Error("No chalet admin found.")
         }
+        
+        // Calcular limpieza ajustada si hay cupón con aplicableA === 'all'
+        let limpiezaAjustada = chalet.additionalInfo.extraCleaningCost;
+        if (cuponData && cuponData.aplicableA === 'all') {
+            limpiezaAjustada = chalet.additionalInfo.extraCleaningCost * factorAjusteComisiones;
+            limpiezaAjustada = Math.round(limpiezaAjustada * 100) / 100;
+            console.log(`Limpieza ajustada con cupón 'all': ${chalet.additionalInfo.extraCleaningCost} × ${factorAjusteComisiones.toFixed(4)} = ${limpiezaAjustada}`);
+        }
 
         // Utilidad
         if (chaletType === "Bosque Imperial") {
@@ -881,9 +920,9 @@ async function generarComisionReserva(req, res) {
             })
         }
 
-        // Comisión de limpieza
+        // Comisión de limpieza (ajustada si aplica cupón 'all')
         await altaComisionReturn({
-            monto: chalet.additionalInfo.extraCleaningCost,
+            monto: limpiezaAjustada,
             concepto: `Comisión limpieza`,
             fecha: new Date(arrivalDate),
             idUsuario: chaletJanitor,
@@ -910,11 +949,12 @@ async function generarComisionReserva(req, res) {
         //     idReserva: idReserva
         // })
 
-        // Comisión de dueño de cabañas (NUEVA) - Usar costoBaseAjustado si hay cupón
-        let nuevoCostoBase = costoBaseAjustado - chalet.additionalInfo.extraCleaningCost
+        // Comisión de dueño de cabañas (NUEVA) - Usar costoBaseAjustado y limpiezaAjustada
+        let nuevoCostoBase = costoBaseAjustado - limpiezaAjustada;
         console.log("\n---------- DISTRIBUCIÓN OWNER/INVERSIONISTAS ----------");
         console.log('Costo Base Ajustado:', costoBaseAjustado);
-        console.log('Costo Limpieza:', chalet.additionalInfo.extraCleaningCost);
+        console.log('Costo Limpieza Original:', chalet.additionalInfo.extraCleaningCost);
+        console.log('Costo Limpieza Ajustada:', limpiezaAjustada);
         console.log('Nuevo Costo Base (después de limpieza):', nuevoCostoBase);
         let cuantosInversionistas = chaletInvestors?.length
         console.log('Cantidad de Inversionistas:', cuantosInversionistas);
@@ -1368,7 +1408,7 @@ async function generarComisionReservaBackend(info) {
             })
         }
 
-        // Comisión de limpieza
+        // Comisión de limpieza (sin ajustar en generarComisionReservaBackend - no recibe cupón)
         await altaComisionReturn({
             monto: chalet.additionalInfo.extraCleaningCost,
             concepto: `Comisión limpieza`,

@@ -219,6 +219,42 @@ document.addEventListener("DOMContentLoaded", function () {
                 
                 tipologiaHabitacionInput.appendChild(option);
             });
+            
+            // Resetear el select a vacío para que no tenga ninguna opción seleccionada por defecto
+            tipologiaHabitacionInput.value = '';
+            
+            // Limpiar campos de precio, ocupación y huéspedes
+            document.getElementById('ocupacion_habitacion').value = '';
+            document.getElementById('numero-personas').innerHTML = '<option value="" selected disabled>Personas</option>';
+            document.getElementById('habitacion_total').value = '';
+            totalSinComisiones.value = 0;
+            totalCostoBaseInput.value = 0;
+            preciosTotalesGlobal = 0;
+            precioMinimoPermitido = 0;
+            
+            // Limpiar cupón aplicado si existe
+            if (cuponAplicado !== null) {
+                cuponAplicado = null;
+                costoBaseAjustadoGlobal = null;
+                precioOriginalSinCupon.valor = 0;
+                
+                // Limpiar UI del cupón
+                document.getElementById('input-codigo-cupon').value = '';
+                document.getElementById('input-codigo-cupon').disabled = false;
+                document.getElementById('btn-aplicar-cupon').disabled = false;
+                document.getElementById('cupon-detalle').style.display = 'none';
+                document.getElementById('cupon-estado-badge').style.display = 'none';
+            }
+            
+            // Ocultar secciones de cupón y total
+            const sectionCupon = document.getElementById('section-cupon');
+            if (sectionCupon) {
+                sectionCupon.style.display = 'none';
+            }
+            const sectionTotal = document.getElementById('section-total');
+            if (sectionTotal) {
+                sectionTotal.style.display = 'none';
+            }
 
             // Mostrar badge de disponibilidad
             if (disponibilidadStatus && disponibilidadText) {
@@ -427,6 +463,8 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log("  - Noches:", comisionBody.nNights);
 
             // Agregar datos del cupón si existe
+            console.log("\n========== VERIFICACIÓN CUPÓN (FRONTEND) ==========");
+            console.log("cuponAplicado:", cuponAplicado);
             if (cuponAplicado) {
                 comisionBody.cupon = {
                     cuponId: cuponAplicado.cuponId,
@@ -438,9 +476,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     clienteId: formData.clientEmail ? null : undefined, // Se puede agregar si es necesario
                     clienteWebId: undefined // Se puede agregar si es necesario
                 };
-                console.log('Cupón incluido en comisionBody:', comisionBody.cupon);
+                console.log('✓ Cupón incluido en comisionBody:', comisionBody.cupon);
             } else {
-                console.log('Sin cupón aplicado');
+                console.log('✗ Sin cupón aplicado - cuponAplicado es:', cuponAplicado);
             }
             console.log("===================================================\n");
 
@@ -553,11 +591,50 @@ document.addEventListener("DOMContentLoaded", function () {
             option.textContent = i;
             numeroPersonasSelect.appendChild(option);
         }
+        
+        // Limpiar precios calculados previamente
+        document.getElementById('habitacion_total').value = '';
+        totalSinComisiones.value = 0;
+        totalCostoBaseInput.value = 0;
+        preciosTotalesGlobal = 0;
+        precioMinimoPermitido = 0;
+        
+        // Limpiar cupón aplicado si existe
+        if (cuponAplicado !== null) {
+            cuponAplicado = null;
+            costoBaseAjustadoGlobal = null;
+            precioOriginalSinCupon.valor = 0;
+            
+            // Limpiar UI del cupón
+            document.getElementById('input-codigo-cupon').value = '';
+            document.getElementById('input-codigo-cupon').disabled = false;
+            document.getElementById('btn-aplicar-cupon').disabled = false;
+            document.getElementById('cupon-detalle').style.display = 'none';
+            document.getElementById('cupon-estado-badge').style.display = 'none';
+            
+            // Ocultar filas de descuento
+            document.getElementById('row-subtotal').style.display = 'none';
+            document.getElementById('row-descuento').style.display = 'none';
+            const separadorDescuento = document.getElementById('separator-descuento');
+            if (separadorDescuento) {
+                separadorDescuento.style.display = 'none';
+            }
+        }
+        
+        // Ocultar secciones de cupón y total
+        const sectionCupon = document.getElementById('section-cupon');
+        if (sectionCupon) {
+            sectionCupon.style.display = 'none';
+        }
+        const sectionTotal = document.getElementById('section-total');
+        if (sectionTotal) {
+            sectionTotal.style.display = 'none';
+        }
 
         // Actualizar paso visual
         updateProgressStep(3);
 
-        // Calcular precios con el ID específico
+        // Calcular precios con el ID específico (esto mostrará las secciones nuevamente)
         obtenerTotalReserva();
     });
 
@@ -567,6 +644,28 @@ document.addEventListener("DOMContentLoaded", function () {
     // departureDate.addEventListener('change', obtenerTotalReserva);
 
     selectedPax.addEventListener('change', function() {
+        // Limpiar cupón aplicado si existe (el número de huéspedes puede cambiar el precio)
+        if (cuponAplicado !== null) {
+            cuponAplicado = null;
+            costoBaseAjustadoGlobal = null;
+            precioOriginalSinCupon.valor = 0;
+            
+            // Limpiar UI del cupón
+            document.getElementById('input-codigo-cupon').value = '';
+            document.getElementById('input-codigo-cupon').disabled = false;
+            document.getElementById('btn-aplicar-cupon').disabled = false;
+            document.getElementById('cupon-detalle').style.display = 'none';
+            document.getElementById('cupon-estado-badge').style.display = 'none';
+            
+            // Ocultar filas de descuento
+            document.getElementById('row-subtotal').style.display = 'none';
+            document.getElementById('row-descuento').style.display = 'none';
+            const separadorDescuento = document.getElementById('separator-descuento');
+            if (separadorDescuento) {
+                separadorDescuento.style.display = 'none';
+            }
+        }
+        
         obtenerTotalReserva();
         // Actualizar paso a "Confirmar" cuando se selecciona pax
         updateProgressStep(4);
@@ -907,6 +1006,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (disponibilidadStatus) {
                     disponibilidadStatus.style.display = 'none';
                 }
+                
+                // Limpiar select de habitaciones
+                const tipologiaHabitacionInput = document.querySelector('#tipologia_habitacion');
+                if (tipologiaHabitacionInput) {
+                    tipologiaHabitacionInput.value = '';
+                    // Ocultar/deshabilitar todas las opciones excepto la primera vacía
+                    const options = tipologiaHabitacionInput.querySelectorAll('option');
+                    options.forEach(option => {
+                        if (option.value !== '') {
+                            option.style.display = 'none';
+                            option.disabled = true;
+                            option.removeAttribute('data-available');
+                        }
+                    });
+                }
+                
+                // Limpiar campos de ocupación y huéspedes
+                document.getElementById('ocupacion_habitacion').value = '';
+                document.getElementById('numero-personas').innerHTML = '<option value="" selected disabled>Personas</option>';
 
                 calculateNightDifference();
             }
@@ -1053,7 +1171,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Listener para filtro de tipología - solo oculta la sección de habitación hasta nueva búsqueda
+    // Listener para filtro de tipología - oculta sección de habitación y limpia precios/cupones
     const tipologiaFilterSelectElement = document.getElementById('tipologia_select');
     tipologiaFilterSelectElement.addEventListener('change', function() {
         // Ocultar sección de habitación hasta que se vuelva a validar
@@ -1066,6 +1184,56 @@ document.addEventListener("DOMContentLoaded", function () {
             disponibilidadStatus.style.display = 'none';
         }
         disponibilidadValidada = false;
+        
+        // Limpiar select de habitaciones
+        const tipologiaHabitacionInput = document.querySelector('#tipologia_habitacion');
+        if (tipologiaHabitacionInput) {
+            tipologiaHabitacionInput.value = '';
+            // Ocultar/deshabilitar todas las opciones excepto la primera vacía
+            const options = tipologiaHabitacionInput.querySelectorAll('option');
+            options.forEach(option => {
+                if (option.value !== '') {
+                    option.style.display = 'none';
+                    option.disabled = true;
+                    option.removeAttribute('data-available');
+                }
+            });
+        }
+        
+        // Limpiar campos de ocupación y huéspedes
+        document.getElementById('ocupacion_habitacion').value = '';
+        document.getElementById('numero-personas').innerHTML = '<option value="" selected disabled>Personas</option>';
+        
+        // Limpiar precios y cupones también
+        document.getElementById('habitacion_total').value = '';
+        totalSinComisiones.value = 0;
+        totalCostoBaseInput.value = 0;
+        preciosTotalesGlobal = 0;
+        precioMinimoPermitido = 0;
+        
+        // Limpiar cupón aplicado si existe
+        if (cuponAplicado !== null) {
+            cuponAplicado = null;
+            costoBaseAjustadoGlobal = null;
+            precioOriginalSinCupon.valor = 0;
+            
+            // Limpiar UI del cupón
+            document.getElementById('input-codigo-cupon').value = '';
+            document.getElementById('input-codigo-cupon').disabled = false;
+            document.getElementById('btn-aplicar-cupon').disabled = false;
+            document.getElementById('cupon-detalle').style.display = 'none';
+            document.getElementById('cupon-estado-badge').style.display = 'none';
+        }
+        
+        // Ocultar secciones de cupón y total
+        const sectionCupon = document.getElementById('section-cupon');
+        if (sectionCupon) {
+            sectionCupon.style.display = 'none';
+        }
+        const sectionTotal = document.getElementById('section-total');
+        if (sectionTotal) {
+            sectionTotal.style.display = 'none';
+        }
     });
 
     // ========== FUNCIONES PARA CUPONES ==========
