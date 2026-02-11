@@ -177,7 +177,7 @@ mongoose.connect(db_url).then(async () => {
   } else {
     // For production, run on HTTPS
     const sslOptions = {
-      key: fs.readFileSync(path.join(__dirname, 'cert3', 'key.pem')),
+      key: fs.readFileSync(path.join(__dirname, 'cert3', 'key.pem')), // En realidad es privkey.pem, pero lo renombramos para evitar confusiones
       // cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem'))
       cert: fs.readFileSync(path.join(__dirname, 'cert3', 'fullchain.pem'))
     };
