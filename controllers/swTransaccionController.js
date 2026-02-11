@@ -15,7 +15,7 @@ const createTransaccionValidators = [
         .isMongoId().withMessage('ID de cuenta inválido'),
     check('tipo')
         .notEmpty().withMessage('El tipo es requerido')
-        .isIn(['Ingreso', 'Gasto']).withMessage('Tipo inválido'),
+        .isIn(['Ingreso', 'Gasto', 'Transferencia']).withMessage('Tipo inválido'),
     check('monto')
         .notEmpty().withMessage('El monto es requerido')
         .isFloat({ min: 0.01 }).withMessage('El monto debe ser mayor a 0'),
@@ -24,12 +24,16 @@ const createTransaccionValidators = [
         .isLength({ min: 3, max: 200 }).withMessage('El concepto debe tener entre 3 y 200 caracteres')
         .trim(),
     check('categoria')
-        .notEmpty().withMessage('La categoría es requerida')
+        .optional()
         .isIn([
             'Alimentación', 'Transporte', 'Servicios', 'Mantenimiento',
             'Compras', 'Salud', 'Entretenimiento', 'Educación', 'Hogar',
-            'Salario', 'Venta', 'Inversión', 'Préstamo', 'Reembolso', 'Otro'
+            'Salario', 'Venta', 'Inversión', 'Préstamo', 'Reembolso', 'Transferencia', 'Otro'
         ]).withMessage('Categoría inválida'),
+    check('cuentaDestinoId')
+        .if(check('tipo').equals('Transferencia'))
+        .notEmpty().withMessage('La cuenta destino es requerida para transferencias')
+        .isMongoId().withMessage('ID de cuenta destino inválido'),
     check('fecha')
         .optional()
         .isISO8601().withMessage('Fecha inválida'),
@@ -190,6 +194,8 @@ const getTransacciones = async (req, res) => {
         const transacciones = await SWTransaccion.find(filter)
             .populate('creadoPor', 'firstName lastName email')
             .populate('aprobadaPor', 'firstName lastName')
+            .populate('transferenciaVinculada', '_id concepto monto fecha tipo')
+            .populate('cuentaDestino', 'nombre moneda')
             .populate({
                 path: 'reservaAsociada',
                 select: 'arrivalDate departureDate resourceId',
@@ -236,6 +242,8 @@ const getTransaccionById = async (req, res) => {
             .populate('creadoPor', 'firstName lastName email')
             .populate('aprobadaPor', 'firstName lastName email')
             .populate('solicitudOriginal')
+            .populate('transferenciaVinculada', '_id concepto monto fecha tipo cuenta')
+            .populate('cuentaDestino', 'nombre moneda')
             .populate({
                 path: 'reservaAsociada',
                 select: 'arrivalDate departureDate resourceId',
@@ -793,9 +801,61 @@ const deleteTransaccionImage = async (req, res) => {
     }
 };
 
+/**
+ * Crear transferencia entre cuentas
+ */
+const createTransferencia = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ 
+                success: false, 
+                errors: errors.array() 
+            });
+        }
+
+        const { 
+            cuentaId, 
+            cuentaDestinoId,
+            monto, 
+            concepto, 
+            descripcion
+        } = req.body;
+
+        const userId = req.session.userId;
+
+        // Crear la transferencia usando el método estático del modelo
+        const resultado = await SWTransaccion.crearTransferencia(
+            cuentaId,
+            cuentaDestinoId,
+            monto,
+            concepto,
+            descripcion,
+            userId
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Transferencia creada exitosamente',
+            data: {
+                transaccionOrigen: resultado.origen,
+                transaccionDestino: resultado.destino
+            }
+        });
+    } catch (error) {
+        console.error('Error al crear transferencia:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error al crear la transferencia',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     createTransaccionValidators,
     createTransaccion,
+    createTransferencia,
     getTransacciones,
     getTransaccionById,
     updateTransaccionNotas,

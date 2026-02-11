@@ -95,6 +95,46 @@ function inicializarEventos() {
 
     // Establecer fecha actual en el input de solicitud
     $('#solicitud-fecha').val(new Date().toISOString().split('T')[0]);
+    
+    // Listener para cambio de tipo en transacción (para manejar transferencias)
+    $('#transaccion-tipo').on('change', function() {
+        const tipo = $(this).val();
+        const cuentaOrigenId = $('#transaccion-cuenta-id').val();
+        
+        if (tipo === 'Transferencia') {
+            // Mostrar campo de cuenta destino
+            $('#campo-cuenta-destino').show();
+            // Ocultar campo de categoría e imágenes
+            $('#campo-categoria').hide();
+            $('#campo-imagenes').hide();
+            // Cargar cuentas disponibles para transferencia
+            if (cuentaOrigenId) {
+                cargarCuentasParaTransferencia(cuentaOrigenId);
+            }
+        } else {
+            // Ocultar campo de cuenta destino
+            $('#campo-cuenta-destino').hide();
+            // Mostrar campo de categoría e imágenes
+            $('#campo-categoria').show();
+            $('#campo-imagenes').show();
+            // Limpiar selección de cuenta destino
+            $('#transaccion-cuenta-destino').val('');
+            $('#saldo-cuenta-destino').text('-');
+        }
+    });
+    
+    // Listener para cambio en cuenta destino (mostrar saldo)
+    $('#transaccion-cuenta-destino').on('change', function() {
+        const cuentaDestinoId = $(this).val();
+        if (cuentaDestinoId) {
+            const cuenta = cuentas.find(c => c._id === cuentaDestinoId);
+            if (cuenta) {
+                $('#saldo-cuenta-destino').text(formatearMoneda(cuenta.saldoActual, cuenta.moneda));
+            }
+        } else {
+            $('#saldo-cuenta-destino').text('-');
+        }
+    });
 }
 
 function cambiarTab(tabName) {
@@ -1233,6 +1273,59 @@ async function cargarCuentasParaSolicitudes() {
     }
 }
 
+/**
+ * Cargar cuentas disponibles para hacer transferencias
+ * Excluye la cuenta origen y solo muestra cuentas con la misma moneda
+ */
+async function cargarCuentasParaTransferencia(cuentaOrigenId) {
+    try {
+        const select = $('#transaccion-cuenta-destino');
+        select.empty().append('<option value="">Seleccione cuenta destino...</option>');
+        
+        // Obtener la cuenta origen para conocer su moneda
+        const cuentaOrigen = cuentas.find(c => c._id === cuentaOrigenId);
+        if (!cuentaOrigen) {
+            mostrarError('Cuenta origen no encontrada');
+            return;
+        }
+        
+        // Filtrar cuentas: excluir cuenta origen y solo misma moneda
+        const cuentasDisponibles = cuentas.filter(cuenta => 
+            cuenta._id !== cuentaOrigenId && 
+            cuenta.moneda === cuentaOrigen.moneda &&
+            cuenta.activa
+        );
+        
+        if (cuentasDisponibles.length === 0) {
+            select.append('<option value="" disabled>No hay cuentas disponibles con la misma moneda</option>');
+            return;
+        }
+        
+        // Agrupar por organización
+        const cuentasPorOrg = {};
+        cuentasDisponibles.forEach(cuenta => {
+            const orgNombre = cuenta.organizacion?.nombre || 'Sin organización';
+            if (!cuentasPorOrg[orgNombre]) {
+                cuentasPorOrg[orgNombre] = [];
+            }
+            cuentasPorOrg[orgNombre].push(cuenta);
+        });
+        
+        // Agregar opciones agrupadas
+        Object.keys(cuentasPorOrg).sort().forEach(orgNombre => {
+            const optgroup = $(`<optgroup label="${orgNombre}"></optgroup>`);
+            cuentasPorOrg[orgNombre].forEach(cuenta => {
+                const saldo = formatearMoneda(cuenta.saldoActual, cuenta.moneda);
+                optgroup.append(`<option value="${cuenta._id}">${cuenta.nombre} - Saldo: ${saldo}</option>`);
+            });
+            select.append(optgroup);
+        });
+    } catch (error) {
+        console.error('Error al cargar cuentas para transferencia:', error);
+        mostrarError('Error al cargar cuentas disponibles');
+    }
+}
+
 async function guardarSolicitud() {
     const datos = {
         cuentaId: $('#solicitud-cuenta').val(),
@@ -1470,21 +1563,44 @@ function agregarTransaccion(cuentaId) {
     $('#formTransaccion')[0].reset();
     $('#transaccion-fecha').val(new Date().toISOString().split('T')[0]);
     $('#preview-imagenes').empty();
+    
+    // Resetear a estado de transacción normal (no transferencia)
+    $('#transaccion-tipo').val('Gasto');
+    $('#campo-cuenta-destino').hide();
+    $('#campo-categoria').show();
+    $('#campo-imagenes').show();
+    $('#transaccion-cuenta-destino').val('');
+    $('#saldo-cuenta-destino').text('-');
+    
     $('#modalTransaccion').modal('show');
 }
 
 async function guardarTransaccion() {
     const cuentaId = $('#transaccion-cuenta-id').val();
+    const tipo = $('#transaccion-tipo').val();
+    
     const datos = {
         cuentaId: cuentaId,
-        tipo: $('#transaccion-tipo').val(),
+        tipo: tipo,
         monto: parseFloat($('#transaccion-monto').val()),
         concepto: $('#transaccion-concepto').val().trim(),
-        categoria: $('#transaccion-categoria').val(),
         descripcion: $('#transaccion-descripcion').val().trim(),
         fecha: $('#transaccion-fecha').val(),
         notas: $('#transaccion-notas').val().trim()
     };
+    
+    // Si es transferencia, agregar cuenta destino
+    if (tipo === 'Transferencia') {
+        datos.cuentaDestinoId = $('#transaccion-cuenta-destino').val();
+        
+        if (!datos.cuentaDestinoId) {
+            mostrarError('Debe seleccionar una cuenta destino para la transferencia');
+            return;
+        }
+    } else {
+        // Solo para transacciones normales, agregar categoría
+        datos.categoria = $('#transaccion-categoria').val();
+    }
 
     if (!datos.cuentaId || !datos.concepto || !datos.monto) {
         mostrarError('Complete todos los campos requeridos');
@@ -1499,8 +1615,11 @@ async function guardarTransaccion() {
     try {
         mostrarSpinner();
         
-        // Crear la transacción primero
-        const response = await fetch('/api/sw/transacciones', {
+        // Determinar el endpoint según el tipo
+        const endpoint = tipo === 'Transferencia' ? '/api/sw/transferencias' : '/api/sw/transacciones';
+        
+        // Crear la transacción/transferencia
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datos)
@@ -1508,7 +1627,7 @@ async function guardarTransaccion() {
 
         if (!response.ok) {
             if (response.status === 403) {
-                mostrarError('No tienes permiso para crear transacciones en esta cuenta');
+                mostrarError('No tienes permiso para realizar esta operación');
                 return;
             }
             const data = await response.json();
@@ -1518,29 +1637,39 @@ async function guardarTransaccion() {
         const data = await response.json();
 
         if (data.success) {
-            const transaccionId = data.data._id;
-            
-            // Si hay imágenes seleccionadas, subirlas
-            const archivosInput = document.getElementById('transaccion-imagenes');
-            if (archivosInput && archivosInput.files.length > 0) {
-                try {
-                    await subirImagenesTransaccion(transaccionId, archivosInput.files);
-                    mostrarExito('Transacción e imágenes guardadas exitosamente');
-                } catch (errorImg) {
-                    console.error('Error al subir imágenes:', errorImg);
-                    mostrarError('Transacción creada, pero hubo un error al subir las imágenes');
-                }
+            // Para transferencias, manejo especial
+            if (tipo === 'Transferencia') {
+                mostrarExito('Transferencia creada exitosamente');
+                $('#modalTransaccion').modal('hide');
+                $('#formTransaccion')[0].reset();
+                cargarMisCuentas(); // Actualizar saldos de ambas cuentas
+                await cargarTransacciones();
             } else {
-                mostrarExito('Transacción creada exitosamente');
+                // Para transacciones normales, manejar imágenes
+                const transaccionId = data.data._id;
+                
+                // Si hay imágenes seleccionadas, subirlas
+                const archivosInput = document.getElementById('transaccion-imagenes');
+                if (archivosInput && archivosInput.files.length > 0) {
+                    try {
+                        await subirImagenesTransaccion(transaccionId, archivosInput.files);
+                        mostrarExito('Transacción e imágenes guardadas exitosamente');
+                    } catch (errorImg) {
+                        console.error('Error al subir imágenes:', errorImg);
+                        mostrarError('Transacción creada, pero hubo un error al subir las imágenes');
+                    }
+                } else {
+                    mostrarExito('Transacción creada exitosamente');
+                }
+                
+                $('#modalTransaccion').modal('hide');
+                $('#formTransaccion')[0].reset();
+                $('#preview-imagenes').empty();
+                cargarMisCuentas(); // Actualizar saldos
+                
+                // Recargar transacciones para mostrar la nueva con sus imágenes
+                await cargarTransacciones();
             }
-            
-            $('#modalTransaccion').modal('hide');
-            $('#formTransaccion')[0].reset();
-            $('#preview-imagenes').empty();
-            cargarMisCuentas(); // Actualizar saldos
-            
-            // Recargar transacciones para mostrar la nueva con sus imágenes
-            await cargarTransacciones();
         } else {
             mostrarError(data.message || 'Error al crear transacción');
         }
@@ -1777,7 +1906,18 @@ function renderizarTransacciones() {
     transacciones.forEach(trans => {
         const fecha = new Date(trans.fecha).toLocaleDateString('es-MX');
         const monto = formatearMoneda(trans.monto, 'MXN');
-        const tipoColor = trans.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+        
+        // Determinar color y tipo según si es transferencia
+        let tipoTexto = trans.tipo;
+        let tipoColor = 'text-gray-600';
+        
+        if (trans.tipo === 'Transferencia') {
+            tipoColor = 'text-purple-600';
+            tipoTexto = '<i class="fas fa-exchange-alt me-1"></i>Transferencia';
+        } else {
+            tipoColor = trans.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+        }
+        
         const estadoBadge = trans.aprobada ? 
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-900 text-green-300">Aprobada</span>' :
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-900 text-yellow-300">Pendiente</span>';
@@ -1787,11 +1927,21 @@ function renderizarTransacciones() {
         const iconoImagenes = cantidadImagenes > 0 ? 
             `<i class="fas fa-paperclip text-teal-600" title="${cantidadImagenes} imagen(es)"></i>` : '';
 
+        // Para transferencias, mostrar cuenta relacionada en el concepto
+        let conceptoMostrar = trans.concepto;
+        if (trans.tipo === 'Transferencia') {
+            if (trans.cuentaDestino) {
+                conceptoMostrar += ` <small class="text-gray-500">(→ ${trans.cuentaDestino.nombre})</small>`;
+            } else if (trans.transferenciaVinculada?.cuenta) {
+                conceptoMostrar += ` <small class="text-gray-500">(← Transferencia)</small>`;
+            }
+        }
+
         tbody.append(`
             <tr class="border-b border-gray-200 hover:bg-gray-100">
                 <td class="px-6 py-4">${fecha} ${iconoImagenes}</td>
-                <td class="px-6 py-4 ${tipoColor}">${trans.tipo}</td>
-                <td class="px-6 py-4 font-medium text-gray-900">${trans.concepto}</td>
+                <td class="px-6 py-4 ${tipoColor}">${tipoTexto}</td>
+                <td class="px-6 py-4 font-medium text-gray-900">${conceptoMostrar}</td>
                 <td class="px-6 py-4">${trans.categoria}</td>
                 <td class="px-6 py-4 text-right font-semibold ${tipoColor}">${monto}</td>
                 <td class="px-6 py-4">${estadoBadge}</td>
@@ -2377,10 +2527,18 @@ async function verDetalleTransaccion(transaccionId) {
             day: 'numeric'
         });
         const monto = formatearMoneda(trans.monto, trans.cuenta?.moneda || 'MXN');
-        const tipoColor = trans.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
-        const tipoBadge = trans.tipo === 'Ingreso' ? 
-            '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-900 text-green-300"><i class="fas fa-arrow-up me-1"></i>Ingreso</span>' :
-            '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-red-900 text-red-300"><i class="fas fa-arrow-down me-1"></i>Gasto</span>';
+        
+        let tipoColor, tipoBadge;
+        if (trans.tipo === 'Transferencia') {
+            tipoColor = 'text-purple-600';
+            tipoBadge = '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-purple-900 text-purple-300"><i class="fas fa-exchange-alt me-1"></i>Transferencia</span>';
+        } else {
+            tipoColor = trans.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+            tipoBadge = trans.tipo === 'Ingreso' ? 
+                '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-900 text-green-300"><i class="fas fa-arrow-up me-1"></i>Ingreso</span>' :
+                '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-red-900 text-red-300"><i class="fas fa-arrow-down me-1"></i>Gasto</span>';
+        }
+        
         const estadoBadge = trans.aprobada ? 
             '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-900 text-green-300"><i class="fas fa-check-circle me-1"></i>Aprobada</span>' :
             '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-yellow-900 text-yellow-300"><i class="fas fa-clock me-1"></i>Pendiente</span>';
@@ -2421,6 +2579,52 @@ async function verDetalleTransaccion(transaccionId) {
                 </div>
             </div>
         `;
+
+        // Información de Transferencia
+        if (trans.tipo === 'Transferencia') {
+            html += `
+                <div class="bg-purple-100 border-l-4 border-purple-500 rounded-lg p-4 mb-4">
+                    <h6 class="text-purple-800 mb-3"><i class="fas fa-exchange-alt me-2"></i>Detalles de Transferencia</h6>
+                    <div class="row g-3">
+            `;
+            
+            if (trans.cuentaDestino) {
+                // Esta es la transacción de origen (salida)
+                html += `
+                        <div class="col-md-6">
+                            <p class="text-purple-700 mb-1 text-sm">Transferencia desde</p>
+                            <p class="text-gray-900 mb-0 font-semibold"><i class="fas fa-wallet me-2"></i>${trans.cuenta?.nombre || 'N/A'}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-purple-700 mb-1 text-sm">Transferencia hacia</p>
+                            <p class="text-gray-900 mb-0 font-semibold"><i class="fas fa-wallet me-2"></i>${trans.cuentaDestino?.nombre || 'N/A'}</p>
+                        </div>
+                `;
+            } else if (trans.transferenciaVinculada) {
+                // Esta es la transacción de destino (entrada)
+                html += `
+                        <div class="col-md-12">
+                            <p class="text-purple-700 mb-1 text-sm">Transferencia recibida en</p>
+                            <p class="text-gray-900 mb-0 font-semibold"><i class="fas fa-wallet me-2"></i>${trans.cuenta?.nombre || 'N/A'}</p>
+                        </div>
+                `;
+            }
+            
+            if (trans.transferenciaVinculada) {
+                html += `
+                        <div class="col-md-12">
+                            <button onclick="verDetalleTransaccion('${trans.transferenciaVinculada._id}')" class="btn btn-sm btn-outline-purple">
+                                <i class="fas fa-link me-1"></i> Ver transacción vinculada
+                            </button>
+                        </div>
+                `;
+            }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+        }
 
         // Descripción
         if (trans.descripcion) {

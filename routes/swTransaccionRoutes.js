@@ -28,6 +28,18 @@ router.post(
 );
 
 /**
+ * @route   POST /api/sw/transferencias
+ * @desc    Crear transferencia entre cuentas
+ * @access  Propietario de ambas cuentas
+ */
+router.post(
+    '/transferencias',
+    swTransaccionController.createTransaccionValidators,
+    validationRequest,
+    swTransaccionController.createTransferencia
+);
+
+/**
  * @route   GET /api/sw/transacciones/cuenta/:cuentaId
  * @desc    Obtener transacciones de una cuenta
  * @access  Permiso VIEW_TRANSACTIONS o MASTER ADMIN + Participante de la cuenta
