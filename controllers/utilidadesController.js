@@ -682,6 +682,7 @@ async function generarComisionReserva(req, res) {
             }
             
             // Ajustar costo base según regla de absorción
+            // NOTA: La limpieza SIEMPRE se mantiene intacta, el costo base absorbe ese descuento
             if (cuponData.aplicableA === 'owner_only') {
                 // Solo el dueño absorbe - costo base se reduce, utilidad NO cambia
                 const utilidadOwner = totalSinComisiones - costoBase;
@@ -701,7 +702,12 @@ async function generarComisionReserva(req, res) {
                 
             } else if (cuponData.aplicableA === 'all') {
                 // Todos absorben - costo base se ajusta proporcionalmente
+                // La limpieza se mantiene íntegra, el costo base solo se ajusta con su factor
                 costoBaseAjustado = costoBase * factorAjusteComisiones;
+                
+                console.log(`  → ALL - Ajuste de Costo Base (limpieza intacta):`);
+                console.log(`     Costo Base Ajustado: ${costoBase} × ${factorAjusteComisiones.toFixed(4)} = ${costoBaseAjustado.toFixed(2)}`);
+                console.log(`     Limpieza (íntegra): ${chalet.additionalInfo.extraCleaningCost}`);
             }
             
             // Redondear a 2 decimales
@@ -713,10 +719,9 @@ async function generarComisionReserva(req, res) {
             console.log("=================================================\n");
         }
         
-        // Calcular utilidad del chalet DESPUÉS de tener el factor y costo base ajustado
-        let utilidadChalet = totalSinComisiones - costoBaseAjustado;
+        // Calcular utilidad del chalet según regla de absorción
+        let utilidadChalet;
         
-        // Ajustar utilidad según regla de absorción si hay cupón
         if (cuponData && cuponData.descuentoTotal > 0) {
             if (cuponData.aplicableA === 'owner_only') {
                 // Solo el dueño absorbe - utilidad NO cambia, costo base se redujo
@@ -734,6 +739,9 @@ async function generarComisionReserva(req, res) {
                 utilidadChalet = utilidadOriginal * factorAjusteComisiones;
                 console.log(`→ Utilidad Chalet (ALL): ${utilidadOriginal} × ${factorAjusteComisiones.toFixed(4)} = ${utilidadChalet}`);
             }
+        } else {
+            // Sin cupón, calcular normalmente
+            utilidadChalet = totalSinComisiones - costoBase;
         }
         
         utilidadChalet = Math.round(utilidadChalet * 100) / 100;
@@ -883,13 +891,10 @@ async function generarComisionReserva(req, res) {
             throw new Error("No chalet admin found.")
         }
         
-        // Calcular limpieza ajustada si hay cupón con aplicableA === 'all'
-        let limpiezaAjustada = chalet.additionalInfo.extraCleaningCost;
-        if (cuponData && cuponData.aplicableA === 'all') {
-            limpiezaAjustada = chalet.additionalInfo.extraCleaningCost * factorAjusteComisiones;
-            limpiezaAjustada = Math.round(limpiezaAjustada * 100) / 100;
-            console.log(`Limpieza ajustada con cupón 'all': ${chalet.additionalInfo.extraCleaningCost} × ${factorAjusteComisiones.toFixed(4)} = ${limpiezaAjustada}`);
-        }
+        // La limpieza SIEMPRE se asigna íntegra (sin ajustar por cupón)
+        // El costo base absorbe el descuento que antes se aplicaba a la limpieza
+        const limpiezaAjustada = chalet.additionalInfo.extraCleaningCost;
+        console.log(`Limpieza (siempre intacta): ${limpiezaAjustada}`);
 
         // Utilidad
         if (chaletType === "Bosque Imperial") {
@@ -953,8 +958,7 @@ async function generarComisionReserva(req, res) {
         let nuevoCostoBase = costoBaseAjustado - limpiezaAjustada;
         console.log("\n---------- DISTRIBUCIÓN OWNER/INVERSIONISTAS ----------");
         console.log('Costo Base Ajustado:', costoBaseAjustado);
-        console.log('Costo Limpieza Original:', chalet.additionalInfo.extraCleaningCost);
-        console.log('Costo Limpieza Ajustada:', limpiezaAjustada);
+        console.log('Costo Limpieza (ÍNTEGRA - sin ajuste):', limpiezaAjustada);
         console.log('Nuevo Costo Base (después de limpieza):', nuevoCostoBase);
         let cuantosInversionistas = chaletInvestors?.length
         console.log('Cantidad de Inversionistas:', cuantosInversionistas);
