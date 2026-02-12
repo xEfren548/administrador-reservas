@@ -76,32 +76,29 @@
             fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch'
                 },
                 body: JSON.stringify(data)                
             })
-            .then(response => {
+            .then(async (response) => {
                 Swal.close(); // Close the loading indicator
                 if (!response.ok) {
-                    response.json().then(errorData => {
-                        const errors = errorData.error;
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: "Error en la solicitud: " + errors[0].message.toLowerCase() + ".",
-                            confirmButtonText: 'Aceptar'
-                        });   
-                    });                    
-                    throw new Error('Error en la solicitud');
+                const errorData = await response.json().catch(() => null);
+                const message = errorData?.error?.[0]?.message || 'Error en la solicitud';
+                throw new Error(message);
                 }
-                window.location.href = response.url;
+
+              const result = await response.json().catch(() => null);
+              const redirectTo = result?.redirectTo || '/api/dashboard';
+              window.location.href = redirectTo;
             })
             .catch(error => {
                 Swal.close(); // Close the loading indicator
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Error al enviar la solicitud: ' + error,
+                text: 'Error al enviar la solicitud: ' + error.message,
                     confirmButtonText: 'Aceptar'
                 }); 
             });

@@ -36,10 +36,15 @@ const validators = [
 
 async function login(req, res, next) {
     const { email, password } = req.body;
+    const isFetchRequest = req.get('X-Requested-With') === 'fetch';
+    const isJsonRequest = req.is('application/json');
+    const shouldReturnJson = isFetchRequest || isJsonRequest;
     console.log("Login attempt with email:", email);
 
     try {
-        const user = await Usuario.findOne({ email });
+        const user = await Usuario.findOne({ email })
+            .select('_id password firstName lastName email privilege profileImageUrl role assignedChalets')
+            .lean();
         if (!user) {
             return next(new BadRequestError("Wrong credentials"));
         }
@@ -60,7 +65,6 @@ async function login(req, res, next) {
             email: user.email,
             privilege: user.privilege,
             id: user._id,
-            privilege: user.privilege,
             userId: user._id.toString(),
             profileImageUrl: user.profileImageUrl,
             role: user.role,
@@ -75,17 +79,21 @@ async function login(req, res, next) {
         const redirectToUtilities = ['Inversionistas', 'Limpieza', 'Servicios adicionales']
 
         const userPrivilege = req.session.privilege;
+        let redirectTo = '/api/dashboard';
 
         if (redirectToCalendar.includes(userPrivilege)) {
-            res.redirect('/');
+            redirectTo = '/';
         } else if (redirectToTheirChalets.includes(userPrivilege)) {
-            res.redirect('/api/calendar/duenos')
+            redirectTo = '/api/calendar/duenos';
         } else if (redirectToUtilities.includes(userPrivilege)) {
-            res.redirect('/api/mostrar-utilidades')
-        } else {
-            res.redirect('/api/dashboard');
-
+            redirectTo = '/api/mostrar-utilidades';
         }
+
+        if (shouldReturnJson) {
+            return res.status(200).json({ redirectTo });
+        }
+
+        return res.redirect(redirectTo);
 
 
         // Uncomment the following line in order to test it on Postman.
