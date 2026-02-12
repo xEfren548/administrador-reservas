@@ -96,11 +96,15 @@ function inicializarEventos() {
 
     // Modal cupón
     document.getElementById('cupon-tipo')?.addEventListener('change', actualizarHelpTextoValor);
+    document.getElementById('cupon-tipo')?.addEventListener('change', verificarAdvertenciaExceptOwner);
+    document.getElementById('cupon-aplicable-a')?.addEventListener('change', verificarAdvertenciaExceptOwner);
     document.getElementById('cupon-todas-cabanas')?.addEventListener('change', toggleSelectorHabitaciones);
     document.getElementById('buscar-habitaciones-cupon')?.addEventListener('input', filtrarHabitacionesCupon);
 
     // Modal cupón referido
     document.getElementById('cupon-referido-tipo')?.addEventListener('change', actualizarHelpTextoValorReferido);
+    document.getElementById('cupon-referido-tipo')?.addEventListener('change', verificarAdvertenciaExceptOwnerReferido);
+    document.getElementById('cupon-referido-aplicable')?.addEventListener('change', verificarAdvertenciaExceptOwnerReferido);
     document.getElementById('cupon-referido-todas-cabanas')?.addEventListener('change', toggleSelectorHabitacionesReferido);
     document.getElementById('buscar-habitaciones-referido')?.addEventListener('input', filtrarHabitacionesReferido);
 
@@ -485,6 +489,9 @@ function abrirModalNuevoCupon() {
     checkboxes.forEach(cb => cb.checked = false);
     actualizarContadorHabitaciones();
     
+    // Ocultar advertencia inicialmente
+    verificarAdvertenciaExceptOwner();
+    
     const modal = new bootstrap.Modal(document.getElementById('modalCupon'));
     modal.show();
 }
@@ -520,6 +527,7 @@ async function editarCupon(id) {
 
             // Actualizar visibilidad de campos según tipo
             actualizarHelpTextoValor();
+            verificarAdvertenciaExceptOwner();
 
             if (cupon.restricciones) {
                 document.getElementById('cupon-noches-minimas').value = cupon.restricciones.nochesMinimas || '';
@@ -925,6 +933,9 @@ function abrirModalNuevaCuentaReferido() {
     // Cargar habitaciones
     cargarHabitacionesReferido();
     
+    // Ocultar advertencia inicialmente
+    verificarAdvertenciaExceptOwnerReferido();
+    
     const modal = new bootstrap.Modal(document.getElementById('modalCuentaReferido'));
     modal.show();
 }
@@ -1242,6 +1253,32 @@ function actualizarHelpTextoValor() {
         document.getElementById('cupon-valor').required = false;
         document.getElementById('cupon-noches-recibidas').required = true;
         document.getElementById('cupon-noches-pagadas').required = true;
+    }
+}
+
+function verificarAdvertenciaExceptOwner() {
+    const tipo = document.getElementById('cupon-tipo').value;
+    const aplicableA = document.getElementById('cupon-aplicable-a').value;
+    const warningDiv = document.getElementById('warning-noches-except-owner');
+    
+    // Mostrar advertencia solo si es "Noches Gratis" Y "Excepto Dueño"
+    if (tipo === 'nights_free' && aplicableA === 'except_owner') {
+        warningDiv.style.display = 'block';
+    } else {
+        warningDiv.style.display = 'none';
+    }
+}
+
+function verificarAdvertenciaExceptOwnerReferido() {
+    const tipo = document.getElementById('cupon-referido-tipo').value;
+    const aplicableA = document.getElementById('cupon-referido-aplicable').value;
+    const warningDiv = document.getElementById('warning-noches-except-owner-referido');
+    
+    // Mostrar advertencia solo si es "Noches Gratis" Y "Excepto Dueño"
+    if (tipo === 'nights_free' && aplicableA === 'except_owner') {
+        warningDiv.style.display = 'block';
+    } else {
+        warningDiv.style.display = 'none';
     }
 }
 
