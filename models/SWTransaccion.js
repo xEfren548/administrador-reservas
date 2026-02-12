@@ -316,7 +316,7 @@ swTransaccionSchema.statics.obtenerPorCategoria = async function(cuentaId, fecha
 };
 
 // Método estático para crear transferencia entre cuentas
-swTransaccionSchema.statics.crearTransferencia = async function(cuentaOrigenId, cuentaDestinoId, monto, concepto, descripcion, userId) {
+swTransaccionSchema.statics.crearTransferencia = async function(cuentaOrigenId, cuentaDestinoId, monto, concepto, descripcion, userId, skipAccessValidation = false) {
     const SWCuenta = mongoose.model('SWCuenta');
     const SWParticipante = mongoose.model('SWParticipante');
     const session = await mongoose.startSession();
@@ -345,31 +345,34 @@ swTransaccionSchema.statics.crearTransferencia = async function(cuentaOrigenId, 
             throw new Error(`No se puede transferir entre cuentas con diferentes monedas (${cuentaOrigen.moneda} → ${cuentaDestino.moneda})`);
         }
         
-        // Verificar acceso del usuario a cuenta origen
-        const participanteOrigen = await SWParticipante.findOne({
-            cuenta: cuentaOrigenId,
-            usuario: userId,
-            activo: true
-        }).session(session);
-        
-        if (!participanteOrigen) {
-            throw new Error('No tiene acceso a la cuenta de origen');
-        }
-        
-        // Solo el propietario puede hacer transferencias
-        if (participanteOrigen.rol !== 'Propietario' && cuentaOrigen.propietario.toString() !== userId.toString()) {
-            throw new Error('Solo el propietario puede realizar transferencias');
-        }
-        
-        // Verificar acceso del usuario a cuenta destino
-        const participanteDestino = await SWParticipante.findOne({
-            cuenta: cuentaDestinoId,
-            usuario: userId,
-            activo: true
-        }).session(session);
-        
-        if (!participanteDestino) {
-            throw new Error('No tiene acceso a la cuenta de destino');
+        // Solo validar permisos si NO se omiten las validaciones de acceso
+        if (!skipAccessValidation) {
+            // Verificar acceso del usuario a cuenta origen
+            const participanteOrigen = await SWParticipante.findOne({
+                cuenta: cuentaOrigenId,
+                usuario: userId,
+                activo: true
+            }).session(session);
+            
+            if (!participanteOrigen) {
+                throw new Error('No tiene acceso a la cuenta de origen');
+            }
+            
+            // Solo el propietario puede hacer transferencias
+            if (participanteOrigen.rol !== 'Propietario' && cuentaOrigen.propietario.toString() !== userId.toString()) {
+                throw new Error('Solo el propietario puede realizar transferencias');
+            }
+            
+            // Verificar acceso del usuario a cuenta destino
+            const participanteDestino = await SWParticipante.findOne({
+                cuenta: cuentaDestinoId,
+                usuario: userId,
+                activo: true
+            }).session(session);
+            
+            if (!participanteDestino) {
+                throw new Error('No tiene acceso a la cuenta de destino');
+            }
         }
         
         // Validar saldo suficiente

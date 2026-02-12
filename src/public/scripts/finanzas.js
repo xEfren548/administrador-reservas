@@ -89,6 +89,12 @@ function inicializarEventos() {
         if ($(e.relatedTarget).attr('id') === 'btn-nueva-solicitud') {
             $('#formSolicitud')[0].reset();
             $('#solicitud-fecha').val(new Date().toISOString().split('T')[0]);
+            // Resetear UI de transferencia
+            $('#solicitud-campo-cuenta-origen').hide();
+            $('#solicitud-campo-categoria').show();
+            $('#solicitud-campo-imagenes').show();
+            $('#solicitud-cuenta-origen').val('');
+            $('#solicitud-saldo-origen').text('');
             cargarCuentasParaSolicitudes();
         }
     });
@@ -133,6 +139,56 @@ function inicializarEventos() {
             }
         } else {
             $('#saldo-cuenta-destino').text('-');
+        }
+    });
+    
+    // Listener para cambio de tipo en solicitud (para manejar transferencias)
+    $('#solicitud-tipo').on('change', function() {
+        const tipo = $(this).val();
+        const cuentaDestinoId = $('#solicitud-cuenta').val();
+        
+        if (tipo === 'Transferencia') {
+            // Mostrar campo de cuenta origen (mis cuentas propias)
+            $('#solicitud-campo-cuenta-origen').show();
+            // Ocultar campo de categoría e imágenes
+            $('#solicitud-campo-categoria').hide();
+            $('#solicitud-campo-imagenes').hide();
+            // Cargar mis cuentas propias para la cuenta origen
+            if (cuentaDestinoId) {
+                cargarMisCuentasParaTransferenciaSolicitud(cuentaDestinoId);
+            }
+        } else {
+            // Ocultar campo de cuenta origen
+            $('#solicitud-campo-cuenta-origen').hide();
+            // Mostrar campo de categoría e imágenes
+            $('#solicitud-campo-categoria').show();
+            $('#solicitud-campo-imagenes').show();
+            // Limpiar selección de cuenta origen
+            $('#solicitud-cuenta-origen').val('');
+            $('#solicitud-saldo-origen').text('');
+        }
+    });
+    
+    // Listener para cambio en cuenta destino de solicitud (cuando es transferencia, cargar mis cuentas)
+    $('#solicitud-cuenta').on('change', function() {
+        const tipo = $('#solicitud-tipo').val();
+        const cuentaDestinoId = $(this).val();
+        
+        if (tipo === 'Transferencia' && cuentaDestinoId) {
+            cargarMisCuentasParaTransferenciaSolicitud(cuentaDestinoId);
+        }
+    });
+    
+    // Listener para cambio en cuenta origen de solicitud (mostrar saldo)
+    $('#solicitud-cuenta-origen').on('change', function() {
+        const cuentaOrigenId = $(this).val();
+        if (cuentaOrigenId && cuentas) {
+            const cuenta = cuentas.find(c => c._id === cuentaOrigenId);
+            if (cuenta) {
+                $('#solicitud-saldo-origen').text(`Saldo actual: ${formatearMoneda(cuenta.saldoActual, cuenta.moneda)}`);
+            }
+        } else {
+            $('#solicitud-saldo-origen').text('');
         }
     });
 }
@@ -291,6 +347,7 @@ async function guardarOrganizacion() {
     }
 
     try {
+        mostrarSpinner();
         const url = id ? `/api/sw/organizaciones/${id}` : '/api/sw/organizaciones';
         const method = id ? 'PUT' : 'POST';
 
@@ -314,6 +371,8 @@ async function guardarOrganizacion() {
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al guardar organización');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -574,6 +633,7 @@ async function agregarParticipanteOrganizacion() {
     }
     
     try {
+        mostrarSpinner();
         const response = await fetch(`/api/sw/organizaciones/${organizacionId}/participantes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -601,6 +661,8 @@ async function agregarParticipanteOrganizacion() {
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al agregar participante');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -611,6 +673,7 @@ async function eliminarParticipanteOrg(usuarioId) {
     const organizacionId = $('#participantes-org-id').val();
     
     try {
+        mostrarSpinner();
         const response = await fetch(`/api/sw/organizaciones/${organizacionId}/participantes/${usuarioId}`, {
             method: 'DELETE'
         });
@@ -633,7 +696,10 @@ async function eliminarParticipanteOrg(usuarioId) {
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al eliminar participante');
+    } finally {
+        ocultarSpinner();
     }
+        mostrarError('Error al eliminar participante');
 }
 
 // Cambiar rol de participante
@@ -950,6 +1016,7 @@ async function guardarCuenta() {
     }
 
     try {
+        mostrarSpinner();
         const url = id ? `/api/sw/cuentas/${id}` : '/api/sw/cuentas';
         const method = id ? 'PUT' : 'POST';
 
@@ -965,13 +1032,15 @@ async function guardarCuenta() {
             mostrarExito(id ? 'Cuenta actualizada' : 'Cuenta creada');
             $('#modalCuenta').modal('hide');
             $('#formCuenta')[0].reset();
-            cargarMisCuentas();
+            await cargarMisCuentas();
         } else {
             mostrarError(data.message);
         }
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al guardar cuenta');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -1167,7 +1236,15 @@ function renderizarSolicitudes() {
     solicitudes.forEach(sol => {
         const fecha = new Date(sol.fecha).toLocaleDateString('es-MX');
         const monto = formatearMoneda(sol.monto, 'MXN');
-        const tipoColor = sol.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+        let tipoColor = sol.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+        let tipoIcono = sol.tipo === 'Ingreso' ? '↑' : '↓';
+        
+        // Para transferencias, usar color y símbolo especial
+        if (sol.tipo === 'Transferencia') {
+            tipoColor = 'text-purple-600';
+            tipoIcono = '⇄';
+        }
+        
         const estadoBadge = obtenerBadgeEstado(sol.estado);
         const nombreCuenta = sol.cuenta?.nombre || 'N/A';
         
@@ -1205,6 +1282,13 @@ function renderizarSolicitudes() {
                 </button>
             `;
         }
+        
+        // Construir descripción del concepto
+        let conceptoHtml = sol.concepto;
+        if (sol.tipo === 'Transferencia' && sol.cuentaDestino) {
+            const nombreDestino = sol.cuentaDestino?.nombre || 'N/A';
+            conceptoHtml += `<br><small class="text-gray-600">→ ${nombreDestino}</small>`;
+        }
 
         tbody.append(`
             <tr class="border-b border-gray-200 hover:bg-gray-100">
@@ -1214,9 +1298,9 @@ function renderizarSolicitudes() {
                         <i class="fas fa-wallet me-1"></i>${nombreCuenta}
                     </span>
                 </td>
-                <td class="px-6 py-4 ${tipoColor}">${sol.tipo}</td>
+                <td class="px-6 py-4 ${tipoColor}"><span style="font-size: 1.2em;">${tipoIcono}</span> ${sol.tipo}</td>
                 <td class="px-6 py-4 font-medium text-gray-900">
-                    ${sol.concepto}
+                    ${conceptoHtml}
                     ${sol.imagenes && sol.imagenes.length > 0 ? `
                         <i class="fas fa-paperclip text-gray-500 ms-2" title="${sol.imagenes.length} imagen(es)"></i>
                     ` : ''}
@@ -1243,6 +1327,9 @@ async function cargarCuentasParaSolicitudes() {
             const select = $('#solicitud-cuenta');
             select.empty().append('<option value="">Seleccione una cuenta...</option>');
             
+            // Guardar cuentas en variable global para uso posterior
+            window.cuentasParaSolicitudes = data.data;
+            
             // Agrupar por organización
             const cuentasPorOrg = {};
             data.data.forEach(cuenta => {
@@ -1253,12 +1340,12 @@ async function cargarCuentasParaSolicitudes() {
                 cuentasPorOrg[orgNombre].push(cuenta);
             });
             
-            // Agregar opciones agrupadas
+            // Agregar opciones agrupadas con data-attributes
             Object.keys(cuentasPorOrg).sort().forEach(orgNombre => {
                 const optgroup = $(`<optgroup label="${orgNombre}"></optgroup>`);
                 cuentasPorOrg[orgNombre].forEach(cuenta => {
                     const propietario = `${cuenta.propietario.firstName} ${cuenta.propietario.lastName}`;
-                    optgroup.append(`<option value="${cuenta._id}">${cuenta.nombre} (${cuenta.moneda}) - ${propietario}</option>`);
+                    optgroup.append(`<option value="${cuenta._id}" data-moneda="${cuenta.moneda}" data-activa="${cuenta.activa}">${cuenta.nombre} (${cuenta.moneda}) - ${propietario}</option>`);
                 });
                 select.append(optgroup);
             });
@@ -1326,16 +1413,101 @@ async function cargarCuentasParaTransferencia(cuentaOrigenId) {
     }
 }
 
+async function cargarMisCuentasParaTransferenciaSolicitud(cuentaDestinoId) {
+    try {
+        const select = $('#solicitud-cuenta-origen');
+        select.empty().append('<option value="">Seleccione su cuenta...</option>');
+        
+        // Verificar que tengamos las cuentas del propietario (para solicitudes)
+        if (!window.cuentasParaSolicitudes || window.cuentasParaSolicitudes.length === 0) {
+            mostrarError('No hay cuentas disponibles. Por favor recarga la página.');
+            return;
+        }
+        
+        // Obtener la cuenta destino para conocer su moneda
+        const cuentaDestino = window.cuentasParaSolicitudes.find(c => c._id === cuentaDestinoId);
+        if (!cuentaDestino) {
+            mostrarError('Cuenta destino no encontrada');
+            return;
+        }
+        
+        // Obtener MIS cuentas propias (donde soy propietario)
+        if (!cuentas || cuentas.length === 0) {
+            mostrarError('No tienes cuentas propias disponibles');
+            return;
+        }
+        
+        // Filtrar: solo mis cuentas con la misma moneda que la cuenta destino
+        const misCuentasDisponibles = cuentas.filter(cuenta => 
+            cuenta.moneda === cuentaDestino.moneda &&
+            cuenta.activa &&
+            cuenta.miRol === 'Propietario' // Asegurar que soy propietario
+        );
+        
+        if (misCuentasDisponibles.length === 0) {
+            select.append('<option value="" disabled>No tienes cuentas propias con la misma moneda</option>');
+            return;
+        }
+        
+        // Agrupar por organización
+        const cuentasPorOrg = {};
+        misCuentasDisponibles.forEach(cuenta => {
+            const orgNombre = cuenta.organizacion?.nombre || 'Sin organización';
+            if (!cuentasPorOrg[orgNombre]) {
+                cuentasPorOrg[orgNombre] = [];
+            }
+            cuentasPorOrg[orgNombre].push(cuenta);
+        });
+        
+        // Agregar opciones agrupadas
+        Object.keys(cuentasPorOrg).sort().forEach(orgNombre => {
+            const optgroup = $(`<optgroup label="${orgNombre}"></optgroup>`);
+            cuentasPorOrg[orgNombre].forEach(cuenta => {
+                const saldo = formatearMoneda(cuenta.saldoActual, cuenta.moneda);
+                optgroup.append(`<option value="${cuenta._id}">${cuenta.nombre} - Saldo: ${saldo}</option>`);
+            });
+            select.append(optgroup);
+        });
+    } catch (error) {
+        console.error('Error al cargar mis cuentas para transferencia en solicitud:', error);
+        mostrarError('Error al cargar tus cuentas disponibles');
+    }
+}
+
 async function guardarSolicitud() {
-    const datos = {
-        cuentaId: $('#solicitud-cuenta').val(),
-        tipo: $('#solicitud-tipo').val(),
+    const tipo = $('#solicitud-tipo').val();
+    let datos = {
+        tipo: tipo,
         monto: parseFloat($('#solicitud-monto').val()),
         concepto: $('#solicitud-concepto').val().trim(),
         categoria: $('#solicitud-categoria').val(),
         descripcion: $('#solicitud-descripcion').val().trim(),
         fecha: $('#solicitud-fecha').val()
     };
+    
+    // Si es transferencia, la lógica es diferente
+    if (tipo === 'Transferencia') {
+        const cuentaOrigenId = $('#solicitud-cuenta-origen').val(); // Mi cuenta propia
+        const cuentaDestinoId = $('#solicitud-cuenta').val(); // Cuenta del propietario
+        
+        if (!cuentaOrigenId) {
+            mostrarError('Debe seleccionar su cuenta de origen para la transferencia');
+            return;
+        }
+        if (!cuentaDestinoId) {
+            mostrarError('Debe seleccionar la cuenta destino para la transferencia');
+            return;
+        }
+        
+        // Para solicitudes de transferencia:
+        // - cuenta = cuenta DESTINO (para que le aparezca al propietario de destino para aprobar)
+        // - cuentaDestino = cuenta ORIGEN (de donde sale el dinero)
+        datos.cuentaId = cuentaDestinoId; // Cuenta del propietario (quien debe aprobar)
+        datos.cuentaDestinoId = cuentaOrigenId; // Mi cuenta (de donde sale el dinero)
+    } else {
+        // Para Ingreso/Gasto normal
+        datos.cuentaId = $('#solicitud-cuenta').val(); // Cuenta del propietario
+    }
 
     if (!datos.cuentaId || !datos.concepto || !datos.monto) {
         mostrarError('Complete todos los campos requeridos');
@@ -1374,7 +1546,11 @@ async function guardarSolicitud() {
             $('#modalSolicitud').modal('hide');
             $('#formSolicitud')[0].reset();
             $('#preview-solicitud-imagenes').empty();
-            cargarSolicitudes();
+            // Resetear UI de transferencia
+            $('#solicitud-campo-cuenta-origen').hide();
+            $('#solicitud-campo-categoria').show();
+            $('#solicitud-campo-imagenes').show();
+            await cargarSolicitudes();
         } else {
             mostrarError(data.message);
         }
@@ -1420,6 +1596,7 @@ async function aprobarSolicitud(solicitudId) {
 
     if (result.isConfirmed) {
         try {
+            mostrarSpinner();
             const formData = new FormData();
             formData.append('accion', 'aprobar');
             formData.append('comentario', result.value.comentario || '');
@@ -1446,14 +1623,17 @@ async function aprobarSolicitud(solicitudId) {
 
             if (data.success) {
                 mostrarExito('Solicitud aprobada exitosamente');
-                cargarSolicitudes();
-                cargarMisCuentas(); // Actualizar saldos
+                // Esperar a que se carguen las solicitudes y cuentas SECUENCIALMENTE
+                await cargarSolicitudes();
+                await cargarMisCuentas(); // Actualizar saldos
             } else {
                 mostrarError(data.message || 'Error al aprobar solicitud');
             }
         } catch (error) {
             console.error('Error:', error);
             mostrarError(error.message || 'Error al aprobar solicitud');
+        } finally {
+            ocultarSpinner();
         }
     }
 }
@@ -1481,6 +1661,7 @@ async function rechazarSolicitud(solicitudId) {
 
     if (result.isConfirmed) {
         try {
+            mostrarSpinner();
             const response = await fetch(`/api/sw/solicitudes/${solicitudId}/procesar`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1503,13 +1684,15 @@ async function rechazarSolicitud(solicitudId) {
 
             if (data.success) {
                 mostrarExito('Solicitud rechazada');
-                cargarSolicitudes();
+                await cargarSolicitudes();
             } else {
                 mostrarError(data.message || 'Error al rechazar solicitud');
             }
         } catch (error) {
             console.error('Error:', error);
             mostrarError(error.message || 'Error al rechazar solicitud');
+        } finally {
+            ocultarSpinner();
         }
     }
 }
@@ -1529,6 +1712,7 @@ async function cancelarSolicitud(solicitudId) {
 
     if (result.isConfirmed) {
         try {
+            mostrarSpinner();
             const response = await fetch(`/api/sw/solicitudes/${solicitudId}/cancelar`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
@@ -1547,13 +1731,15 @@ async function cancelarSolicitud(solicitudId) {
 
             if (data.success) {
                 mostrarExito('Solicitud cancelada');
-                cargarSolicitudes();
+                await cargarSolicitudes();
             } else {
                 mostrarError(data.message || 'Error al cancelar solicitud');
             }
         } catch (error) {
             console.error('Error:', error);
             mostrarError(error.message || 'Error al cancelar solicitud');
+        } finally {
+            ocultarSpinner();
         }
     }
 }
@@ -1642,7 +1828,7 @@ async function guardarTransaccion() {
                 mostrarExito('Transferencia creada exitosamente');
                 $('#modalTransaccion').modal('hide');
                 $('#formTransaccion')[0].reset();
-                cargarMisCuentas(); // Actualizar saldos de ambas cuentas
+                await cargarMisCuentas(); // Actualizar saldos de ambas cuentas
                 await cargarTransacciones();
             } else {
                 // Para transacciones normales, manejar imágenes
@@ -1665,7 +1851,7 @@ async function guardarTransaccion() {
                 $('#modalTransaccion').modal('hide');
                 $('#formTransaccion')[0].reset();
                 $('#preview-imagenes').empty();
-                cargarMisCuentas(); // Actualizar saldos
+                await cargarMisCuentas(); // Actualizar saldos
                 
                 // Recargar transacciones para mostrar la nueva con sus imágenes
                 await cargarTransacciones();
@@ -2220,6 +2406,7 @@ async function eliminarParticipante(cuentaId, usuarioId) {
     if (!confirm('¿Está seguro de eliminar este participante?')) return;
 
     try {
+        mostrarSpinner();
         const response = await fetch(`/api/sw/cuentas/${cuentaId}/participantes/${usuarioId}`, {
             method: 'DELETE'
         });
@@ -2244,6 +2431,8 @@ async function eliminarParticipante(cuentaId, usuarioId) {
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al eliminar participante');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -3707,7 +3896,7 @@ async function guardarTransaccionRecurrente() {
             mostrarExito('Transacción recurrente creada exitosamente');
             $('#modalTransaccionRecurrente').modal('hide');
             $('#formTransaccionRecurrente')[0].reset();
-            cargarTransaccionesRecurrentes();
+            await cargarTransaccionesRecurrentes();
         } else {
             mostrarError(data.message || 'Error al crear transacción recurrente');
         }
@@ -3743,8 +3932,9 @@ async function ejecutarRecurrenteManual(recurrenteId) {
 
         if (data.success) {
             mostrarExito('Transacción ejecutada exitosamente');
-            cargarTransaccionesRecurrentes();
-            cargarTransacciones(); // Recargar transacciones también
+            await cargarTransaccionesRecurrentes();
+            await cargarTransacciones(); // Recargar transacciones también
+            await cargarMisCuentas(); // Actualizar saldos
         } else {
             mostrarError(data.message);
         }
@@ -3769,7 +3959,7 @@ async function toggleRecurrente(recurrenteId, estadoActual) {
 
         if (data.success) {
             mostrarExito(`Transacción recurrente ${!estadoActual ? 'activada' : 'pausada'}`);
-            cargarTransaccionesRecurrentes();
+            await cargarTransaccionesRecurrentes();
         } else {
             mostrarError(data.message);
         }
@@ -3806,7 +3996,7 @@ async function eliminarRecurrente(recurrenteId) {
 
         if (data.success) {
             mostrarExito('Transacción recurrente eliminada');
-            cargarTransaccionesRecurrentes();
+            await cargarTransaccionesRecurrentes();
         } else {
             mostrarError(data.message);
         }
@@ -3868,8 +4058,9 @@ async function ejecutarRecurrentesManualmente() {
 
         if (data.success) {
             mostrarExito(`Se ejecutaron ${data.data.ejecutadas} transacciones recurrentes`);
-            cargarTransaccionesRecurrentes();
-            cargarTransacciones();
+            await cargarTransaccionesRecurrentes();
+            await cargarTransacciones();
+            await cargarMisCuentas(); // Actualizar saldos
         } else {
             mostrarError(data.message);
         }
@@ -4169,8 +4360,9 @@ async function pagarCuota(pagoId, cuotaNumero) {
 
         if (data.success) {
             mostrarExito('Cuota pagada exitosamente');
-            cargarPagosDiferidos();
-            cargarTransacciones();
+            await cargarPagosDiferidos();
+            await cargarTransacciones();
+            await cargarMisCuentas(); // Actualizar saldos
             // Cerrar el modal actual y reabrir el detalle actualizado
             Swal.close();
             setTimeout(() => verDetallePagoDiferido(pagoId), 500);

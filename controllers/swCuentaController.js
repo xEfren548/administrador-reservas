@@ -223,6 +223,9 @@ const getMisCuentas = async (req, res) => {
             .populate('propietario', 'firstName lastName email')
             .sort({ createdAt: -1 });
 
+        // Recalcular saldos antes de enviar (garantiza datos actualizados)
+        await Promise.all(cuentas.map(cuenta => cuenta.calcularSaldo()));
+
         // Agregar rol del usuario en cada cuenta y ocultar saldo si no tiene permiso
         const cuentasConRol = cuentas.map(cuenta => {
             const participacion = participaciones.find(

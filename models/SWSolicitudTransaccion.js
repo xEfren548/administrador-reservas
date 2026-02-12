@@ -9,7 +9,7 @@ const swSolicitudTransaccionSchema = new Schema({
     },
     tipo: {
         type: String,
-        enum: ['Ingreso', 'Gasto'],
+        enum: ['Ingreso', 'Gasto', 'Transferencia'],
         required: true
     },
     monto: {
@@ -44,10 +44,16 @@ const swSolicitudTransaccionSchema = new Schema({
             'Préstamo',
             'Reembolso',
             'Reserva',
+            'Transferencia',
             'Otro'
         ],
         required: true,
         default: 'Otro'
+    },
+    // Para transferencias: cuenta destino (solo para solicitudes de tipo Transferencia)
+    cuentaDestino: {
+        type: Schema.Types.ObjectId,
+        ref: 'SWCuenta'
     },
     fecha: {
         type: Date,
@@ -176,37 +182,97 @@ swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comenta
     }
     
     const SWTransaccion = mongoose.model('SWTransaccion');
+    const SWCuenta = mongoose.model('SWCuenta');
+    let transaccion;
     
-    // Preparar datos de la transacción
-    const transaccionData = {
-        cuenta: this.cuenta,
-        tipo: this.tipo,
-        monto: this.monto,
-        concepto: this.concepto,
-        descripcion: this.descripcion,
-        categoria: this.categoria,
-        fecha: this.fecha,
-        creadoPor: this.solicitadoPor,
-        aprobada: true,
-        aprobadaPor: usuarioId,
-        fechaAprobacion: new Date(),
-        solicitudOriginal: this._id,
-        archivosAdjuntos: this.archivosAdjuntos,
-        imagenes: this.imagenes,
-        reservaAsociada: this.reservaAsociada,
-        etiquetas: this.etiquetas,
-        notas: this.notas
-    };
-    
-    // Solo agregar comprobante si existe
-    if (comprobanteConfirmacion && comprobanteConfirmacion.url) {
-        transaccionData.comprobanteConfirmacion = comprobanteConfirmacion;
+    // Si es transferencia, usar el método especial
+    if (this.tipo === 'Transferencia') {
+        if (!this.cuentaDestino) {
+            throw new Error('La cuenta origen es requerida para transferencias');
+        }
+        
+        // En solicitudes de transferencia:
+        // - this.cuenta = cuenta DESTINO (donde se aprueba)
+        // - this.cuentaDestino = cuenta ORIGEN (de donde sale el dinero)
+        // - this.solicitadoPor = usuario que creó la solicitud (propietario de cuenta origen)
+        // Usar el ID del solicitante para crear la transferencia, ya que él tiene acceso a la cuenta origen
+        // Omitir validaciones de acceso porque el solicitante no tiene acceso a la cuenta destino
+        const resultado = await SWTransaccion.crearTransferencia(
+            this.cuentaDestino,  // Cuenta ORIGEN (de donde sale)
+            this.cuenta,         // Cuenta DESTINO (a donde llega)
+            this.monto,
+            this.concepto,
+            this.descripcion,
+            this.solicitadoPor,  // Usuario solicitante (propietario de cuenta origen)
+            true                 // Omitir validaciones de acceso (solicitud ya fue validada)
+        );
+        
+        // La transacción de origen es la que vinculamos con la solicitud
+        transaccion = resultado.origen;
+        
+        // Actualizar las transacciones creadas para reflejar quién aprobó
+        await SWTransaccion.updateOne(
+            { _id: resultado.origen._id },
+            { aprobadaPor: usuarioId, solicitudOriginal: this._id }
+        );
+        await SWTransaccion.updateOne(
+            { _id: resultado.destino._id },
+            { aprobadaPor: usuarioId, solicitudOriginal: this._id }
+        );
+        
+        // Recalcular saldos de AMBAS cuentas después de las actualizaciones
+        const cuentaOrigen = await SWCuenta.findById(this.cuentaDestino);
+        const cuentaDestino = await SWCuenta.findById(this.cuenta);
+        
+        if (cuentaOrigen) {
+            await cuentaOrigen.calcularSaldo();
+            await cuentaOrigen.save();
+        }
+        if (cuentaDestino) {
+            await cuentaDestino.calcularSaldo();
+            await cuentaDestino.save();
+        }
+        
+        // Vincular la solicitud con la transacción de origen
+        this.transaccionCreada = transaccion._id;
+    } else {
+        // Transacción normal (Ingreso o Gasto)
+        const transaccionData = {
+            cuenta: this.cuenta,
+            tipo: this.tipo,
+            monto: this.monto,
+            concepto: this.concepto,
+            descripcion: this.descripcion,
+            categoria: this.categoria,
+            fecha: this.fecha,
+            creadoPor: this.solicitadoPor,
+            aprobada: true,
+            aprobadaPor: usuarioId,
+            fechaAprobacion: new Date(),
+            solicitudOriginal: this._id,
+            archivosAdjuntos: this.archivosAdjuntos,
+            imagenes: this.imagenes,
+            reservaAsociada: this.reservaAsociada,
+            etiquetas: this.etiquetas,
+            notas: this.notas
+        };
+        
+        // Solo agregar comprobante si existe
+        if (comprobanteConfirmacion && comprobanteConfirmacion.url) {
+            transaccionData.comprobanteConfirmacion = comprobanteConfirmacion;
+        }
+        
+        // Crear la transacción
+        transaccion = new SWTransaccion(transaccionData);
+        await transaccion.save();
+        
+        // Actualizar el saldo de la cuenta
+        const cuenta = await SWCuenta.findById(this.cuenta);
+        if (cuenta) {
+            await cuenta.calcularSaldo();
+            await cuenta.save();
+        }
     }
-    
-    // Crear la transacción
-    const transaccion = new SWTransaccion(transaccionData);
-    
-    await transaccion.save();
     
     // Preparar respuesta de la solicitud
     const respuestaData = {
@@ -226,14 +292,6 @@ swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comenta
     this.transaccionCreada = transaccion._id;
     
     await this.save();
-    
-    // Actualizar el saldo de la cuenta
-    const SWCuenta = mongoose.model('SWCuenta');
-    const cuenta = await SWCuenta.findById(this.cuenta);
-    if (cuenta) {
-        await cuenta.calcularSaldo();
-        await cuenta.save();
-    }
     
     return transaccion;
 };
@@ -276,6 +334,7 @@ swSolicitudTransaccionSchema.statics.obtenerPendientesPorCuenta = function(cuent
         estado: 'Pendiente'
     })
     .populate('solicitadoPor', 'firstName lastName email')
+    .populate('cuentaDestino', 'nombre moneda')
     .sort({ createdAt: -1 });
 };
 

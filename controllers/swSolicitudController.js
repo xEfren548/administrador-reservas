@@ -13,7 +13,7 @@ const createSolicitudValidators = [
         .isMongoId().withMessage('ID de cuenta inválido'),
     check('tipo')
         .notEmpty().withMessage('El tipo es requerido')
-        .isIn(['Ingreso', 'Gasto']).withMessage('Tipo inválido'),
+        .isIn(['Ingreso', 'Gasto', 'Transferencia']).withMessage('Tipo inválido'),
     check('monto')
         .notEmpty().withMessage('El monto es requerido')
         .isFloat({ min: 0.01 }).withMessage('El monto debe ser mayor a 0'),
@@ -22,12 +22,16 @@ const createSolicitudValidators = [
         .isLength({ min: 3, max: 200 }).withMessage('El concepto debe tener entre 3 y 200 caracteres')
         .trim(),
     check('categoria')
-        .notEmpty().withMessage('La categoría es requerida')
+        .optional()
         .isIn([
             'Alimentación', 'Transporte', 'Servicios', 'Mantenimiento',
             'Compras', 'Salud', 'Entretenimiento', 'Educación', 'Hogar',
-            'Salario', 'Venta', 'Inversión', 'Préstamo', 'Reembolso', 'Reserva', 'Otro'
+            'Salario', 'Venta', 'Inversión', 'Préstamo', 'Reembolso', 'Reserva', 'Transferencia', 'Otro'
         ]).withMessage('Categoría inválida'),
+    check('cuentaDestinoId')
+        .if(check('tipo').equals('Transferencia'))
+        .notEmpty().withMessage('La cuenta destino es requerida para transferencias')
+        .isMongoId().withMessage('ID de cuenta destino inválido'),
     check('fecha')
         .optional()
         .isISO8601().withMessage('Fecha inválida'),
@@ -92,6 +96,7 @@ const createSolicitud = async (req, res) => {
             notas,
             imagenes,
             reservaAsociada,
+            cuentaDestinoId, // Para transferencias
             bypassValidacion // Flag para permitir creación desde registro de pago
         } = req.body;
 
@@ -127,29 +132,115 @@ const createSolicitud = async (req, res) => {
             });
         }
 
-        // Solo validar propietario/participante si NO viene de un registro de pago
-        if (!bypassValidacion) {
-            // Verificar si es propietario o participante de la cuenta
-            const esPropietario = cuenta.propietario.toString() === userId;
-            const participanteCuenta = await SWParticipante.findOne({
-                cuenta: cuentaId,
-                usuario: userId,
-                activo: true
-            });
-
-            // Si es propietario de la cuenta, debe crear transacciones directamente
-            if (esPropietario || (participanteCuenta && participanteCuenta.rol === 'Propietario')) {
-                // Limpiar archivo temporal si existe
+        // Validaciones adicionales para transferencias
+        if (tipo === 'Transferencia') {
+            if (!cuentaDestinoId) {
                 if (req.file) {
                     fs.unlink(req.file.path, (err) => {
                         if (err) console.error('Error al eliminar archivo temporal:', err);
                     });
                 }
-                
                 return res.status(400).json({
                     success: false,
-                    message: 'Los propietarios deben crear transacciones directamente, no solicitudes'
+                    message: 'La cuenta destino es requerida para transferencias'
                 });
+            }
+
+            // Verificar que la cuenta destino existe
+            const cuentaDestino = await SWCuenta.findById(cuentaDestinoId);
+            if (!cuentaDestino) {
+                if (req.file) {
+                    fs.unlink(req.file.path, (err) => {
+                        if (err) console.error('Error al eliminar archivo temporal:', err);
+                    });
+                }
+                return res.status(404).json({
+                    success: false,
+                    message: 'Cuenta destino no encontrada'
+                });
+            }
+
+            // Verificar que las cuentas tengan la misma moneda
+            if (cuenta.moneda !== cuentaDestino.moneda) {
+                if (req.file) {
+                    fs.unlink(req.file.path, (err) => {
+                        if (err) console.error('Error al eliminar archivo temporal:', err);
+                    });
+                }
+                return res.status(400).json({
+                    success: false,
+                    message: `No se puede transferir entre cuentas con diferentes monedas (${cuenta.moneda} → ${cuentaDestino.moneda})`
+                });
+            }
+
+            // Verificar que no sea la misma cuenta
+            if (cuentaId === cuentaDestinoId) {
+                if (req.file) {
+                    fs.unlink(req.file.path, (err) => {
+                        if (err) console.error('Error al eliminar archivo temporal:', err);
+                    });
+                }
+                return res.status(400).json({
+                    success: false,
+                    message: 'No se puede transferir a la misma cuenta'
+                });
+            }
+        }
+
+        // Solo validar propietario/participante si NO viene de un registro de pago
+        if (!bypassValidacion) {
+            // Para transferencias, la validación es diferente
+            if (tipo === 'Transferencia') {
+                // En transferencias: cuenta = destino, cuentaDestino = origen
+                // Verificar que SOY propietario de la cuenta ORIGEN (cuentaDestinoId)
+                const cuentaOrigen = await SWCuenta.findById(cuentaDestinoId);
+                if (!cuentaOrigen) {
+                    if (req.file) {
+                        fs.unlink(req.file.path, (err) => {
+                            if (err) console.error('Error al eliminar archivo temporal:', err);
+                        });
+                    }
+                    return res.status(404).json({
+                        success: false,
+                        message: 'Cuenta origen no encontrada'
+                    });
+                }
+                
+                const esPropietarioOrigen = cuentaOrigen.propietario.toString() === userId;
+                if (!esPropietarioOrigen) {
+                    if (req.file) {
+                        fs.unlink(req.file.path, (err) => {
+                            if (err) console.error('Error al eliminar archivo temporal:', err);
+                        });
+                    }
+                    return res.status(403).json({
+                        success: false,
+                        message: 'Solo puedes crear solicitudes de transferencia desde tus cuentas propias'
+                    });
+                }
+            } else {
+                // Para Ingreso/Gasto: verificar si es propietario o participante de la cuenta
+                const esPropietario = cuenta.propietario.toString() === userId;
+                const participanteCuenta = await SWParticipante.findOne({
+                    cuenta: cuentaId,
+                    usuario: userId,
+                    activo: true
+                });
+
+                // Si es propietario de la cuenta, debe crear transacciones directamente
+                if (esPropietario || (participanteCuenta && participanteCuenta.rol === 'Propietario')) {
+                    // Limpiar archivo temporal si existe
+                    if (req.file) {
+                        fs.unlink(req.file.path, (err) => {
+                            if (err) console.error('Error al eliminar archivo temporal:', err);
+                        });
+                    }
+                    
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Los propietarios deben crear transacciones directamente, no solicitudes'
+                    });
+                }
             }
         }
 
@@ -209,7 +300,8 @@ const createSolicitud = async (req, res) => {
             etiquetas,
             notas,
             imagenes: imagenesFinales,
-            reservaAsociada
+            reservaAsociada,
+            cuentaDestino: cuentaDestinoId || undefined // Solo para transferencias
         });
 
         await solicitud.save();
@@ -318,6 +410,7 @@ const getSolicitudes = async (req, res) => {
             .populate('solicitadoPor', 'firstName lastName email')
             .populate('propietarioCuenta', 'firstName lastName')
             .populate('respuesta.procesadaPor', 'firstName lastName')
+            .populate('cuentaDestino', 'nombre moneda')
             .populate({
                 path: 'reservaAsociada',
                 select: 'arrivalDate departureDate resourceId',
@@ -619,13 +712,18 @@ const procesarSolicitud = async (req, res) => {
                 }
             }
             
+            // Recargar la solicitud con todos los datos actualizados
+            const solicitudActualizada = await SWSolicitudTransaccion.findById(id)
+                .populate('solicitadoPor', 'firstName lastName')
+                .populate('cuenta', 'nombre saldoActual moneda')
+                .populate('cuentaDestino', 'nombre saldoActual moneda')
+                .populate('transaccionCreada');
+            
             res.status(200).json({
                 success: true,
                 message: 'Solicitud aprobada exitosamente',
                 data: {
-                    solicitud: await SWSolicitudTransaccion.findById(id)
-                        .populate('solicitadoPor', 'firstName lastName')
-                        .populate('transaccionCreada'),
+                    solicitud: solicitudActualizada,
                     transaccion: resultado
                 }
             });

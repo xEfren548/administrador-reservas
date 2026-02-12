@@ -776,6 +776,7 @@
                             <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="solicitud-tipo" required>
                                 <option value="Gasto">Gasto</option>
                                 <option value="Ingreso">Ingreso</option>
+                                <option value="Transferencia">Transferencia</option>
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
@@ -784,12 +785,23 @@
                         </div>
                     </div>
 
+                    <!-- Campo cuenta origen (solo para transferencias - mis cuentas propias) -->
+                    <div class="row" id="solicitud-campo-cuenta-origen" style="display: none;">
+                        <div class="col-md-12 mb-3">
+                            <label for="solicitud-cuenta-origen" class="form-label">Cuenta Origen (mi cuenta) *</label>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="solicitud-cuenta-origen">
+                                <option value="">Seleccione su cuenta...</option>
+                            </select>
+                            <small class="text-gray-600" id="solicitud-saldo-origen"></small>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-8 mb-3">
                             <label for="solicitud-concepto" class="form-label">Concepto *</label>
                             <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="solicitud-concepto" required>
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-4 mb-3" id="solicitud-campo-categoria">
                             <label for="solicitud-categoria" class="form-label">Categoría *</label>
                             <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="solicitud-categoria" required>
                                 <option value="Otro">Otro</option>
@@ -821,7 +833,7 @@
                         <input type="date" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="solicitud-fecha">
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3" id="solicitud-campo-imagenes">
                         <label class="form-label">
                             Comprobantes/Tickets 
                             <small class="text-gray-500">(Opcional, máx. 3 imágenes)</small>
