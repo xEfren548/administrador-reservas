@@ -912,8 +912,15 @@ body {
                             <label class="form-label-mint">
                                 <i class="fa fa-phone"></i> Teléfono
                             </label>
-                            <input type="tel" name="txtClientPhone" id="txtClientPhone" 
-                                class="form-control form-control-mint" placeholder="Teléfono">
+                            <div class="input-group input-group-mint">
+                                <select class="form-select" id="slctClientCountryCode" style="max-width: 110px;">
+                                    <option value="+52" selected>🇲🇽 +52</option>
+                                    <option value="+1">🇺🇸 +1</option>
+                                </select>
+                                <input type="tel" name="txtClientPhone" id="txtClientPhone"
+                                    class="form-control form-control-mint" placeholder="10 dígitos" maxlength="10" inputmode="numeric">
+                            </div>
+                            <small class="text-muted">Ingresa 10 dígitos locales; se enviará con el prefijo seleccionado.</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-mint">

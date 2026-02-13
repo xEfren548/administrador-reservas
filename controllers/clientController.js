@@ -7,6 +7,31 @@ const { check } = require("express-validator");
 const Roles = require("../models/Roles");
 const permissions = require('../models/permissions');
 
+const normalizeClientPhone = (phone) => {
+    if (phone === undefined || phone === null) return phone;
+
+    let value = String(phone).trim();
+    if (!value) return value;
+
+    value = value.replace(/\D/g, '');
+
+    if (value.startsWith('00') && value.length > 2) {
+        value = value.slice(2);
+    }
+
+    if (/^\d{10}$/.test(value)) {
+        return `52${value}`;
+    }
+
+    if (/^(52|1)\d{10}$/.test(value)) {
+        return value;
+    }
+
+    return value;
+};
+
+const isValidMxUsPhone = (phone) => /^(52|1)\d{10}$/.test(String(phone || ''));
+
 const createClientValidators = [
     check('firstName')
         .notEmpty().withMessage('First name is required')
@@ -16,8 +41,13 @@ const createClientValidators = [
         .isLength({ max: 255 }).withMessage("Last name must be less than 255 characters"),
     check('phone')
         .notEmpty().withMessage('Phone is required')
-        .matches(/^\+?[0-9]{10,15}$/).withMessage('Invalid phone number format')
-        .isLength({ min: 10, max: 15 }).withMessage('Phone number must be between 10 and 15 digits'),
+        .customSanitizer(normalizeClientPhone)
+        .custom((value) => {
+            if (!isValidMxUsPhone(value)) {
+                throw new BadRequestError('Phone must use 52 or 1 with 10 digits');
+            }
+            return true;
+        }),
     check('address')
         .notEmpty().withMessage('Address is required')
         .isLength({ max: 255 }).withMessage('Address must be less than 255 characters'),
@@ -48,8 +78,13 @@ const editClientValidators = [
         .isLength({ max: 255 }).withMessage("Last name must be less than 255 characters"),
     check('phone')
         .optional({ checkFalsy: true })
-        .matches(/^\+?[0-9]{10,15}$/).withMessage('Invalid phone number format')
-        .isLength({ min: 10, max: 15 }).withMessage('Phone number must be between 10 and 15 digits'),
+        .customSanitizer(normalizeClientPhone)
+        .custom((value) => {
+            if (!isValidMxUsPhone(value)) {
+                throw new BadRequestError('Phone must use 52 or 1 with 10 digits');
+            }
+            return true;
+        }),
     check('address')
         .optional({ checkFalsy: true })
         .isLength({ max: 255 }).withMessage('Address must be less than 255 characters'),
@@ -143,6 +178,7 @@ async function createClient(req, res, next) {
             throw new BadRequestError("El usuario no tiene permiso para crear clientes");
         }
         const { firstName, lastName, phone, address, email, identificationType, identificationNumber } = req.body;
+        const normalizedPhone = normalizeClientPhone(phone);
         if (email !== null) {
             const client = await Cliente.findOne({ email: email });
             if (client) {
@@ -153,7 +189,7 @@ async function createClient(req, res, next) {
         const clienteToAdd = new Cliente({
             firstName,
             lastName,
-            phone,
+            phone: normalizedPhone,
             address,
             email: email || null,
             identificationType,
@@ -182,8 +218,10 @@ async function createClientLocal(firstName, lastName, cellphone, reqUser) {
     console.log("Entrando a la funcion")
     console.log(firstName, lastName, cellphone, reqUser)
 
-    if (cellphone !== undefined) {
-        const existingClient = await Cliente.findOne({ phone: cellphone });
+    const normalizedCellphone = normalizeClientPhone(cellphone);
+
+    if (normalizedCellphone !== undefined) {
+        const existingClient = await Cliente.findOne({ phone: normalizedCellphone });
         if (existingClient) {
             console.log("Cliente ya existe")
             return existingClient;
@@ -194,7 +232,7 @@ async function createClientLocal(firstName, lastName, cellphone, reqUser) {
     const clienteToAdd = new Cliente({
         firstName: firstName,
         lastName: lastName,
-        phone: cellphone,
+        phone: normalizedCellphone,
     });
 
     console.log(clienteToAdd)
@@ -227,7 +265,7 @@ async function editClient(req, res, next) {
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
     if (email) { updateFields.email = email; }
-    if (phone) { updateFields.phone = phone; }
+    if (phone) { updateFields.phone = normalizeClientPhone(phone); }
     if (address) { updateFields.address = address; }
     if (identificationType) { updateFields.identificationType = identificationType; }
     if (identificationNumber) { updateFields.identificationNumber = identificationNumber; }
@@ -275,7 +313,7 @@ async function editClientById(req, res, next) {
     const updateFields = {};
     if (firstName) { updateFields.firstName = firstName; }
     if (lastName) { updateFields.lastName = lastName; }
-    if (phone) { updateFields.phone = phone; }
+    if (phone) { updateFields.phone = normalizeClientPhone(phone); }
     if (address) { updateFields.address = address; }
     if (email) { updateFields.email = email; }
     if (identificationType) { updateFields.identificationType = identificationType; }
