@@ -402,14 +402,21 @@
         <div id="tab-solicitudes" class="tab-content hidden">
             <div class="bg-white rounded-lg shadow-xl overflow-hidden">
                 <div class="p-4 sm:p-6 border-b border-gray-200">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <h2 class="text-xl font-semibold text-gray-900">Solicitudes Pendientes</h2>
-                        <button id="btn-nueva-solicitud" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalSolicitud">
-                            <i class="fas fa-plus me-1"></i> Nueva Solicitud
-                        </button>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <h2 class="text-xl font-semibold text-gray-900">Solicitudes Pendientes</h2>
+                            <button id="btn-nueva-solicitud" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalSolicitud">
+                                <i class="fas fa-plus me-1"></i> Nueva Solicitud
+                            </button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="btn-vista-solicitudes-cuenta" class="btn btn-primary btn-sm">Solicitudes por Cuenta</button>
+                            <button id="btn-vista-solicitudes-organizacion" class="btn btn-secondary btn-sm">Solicitudes por Organización</button>
+                        </div>
                     </div>
                 </div>
-                <div class="overflow-x-auto">
+
+                <div id="solicitudes-vista-cuenta" class="overflow-x-auto">
                     <table class="w-full text-sm text-left text-gray-600">
                         <thead class="text-xs text-gray-500 uppercase bg-gray-100">
                             <tr>
@@ -427,6 +434,37 @@
                             <!-- Se llenará dinámicamente -->
                         </tbody>
                     </table>
+                </div>
+
+                <div id="solicitudes-vista-organizacion" class="hidden">
+                    <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                        <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                            <label for="filtro-solicitudes-organizacion" class="text-sm text-gray-700">Organización:</label>
+                            <select id="filtro-solicitudes-organizacion" class="form-select form-select-sm bg-gray-100 border-gray-300 text-gray-800 w-auto">
+                                <option value="">Seleccione...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="text-xs text-gray-500 uppercase bg-gray-100">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">Fecha</th>
+                                    <th scope="col" class="px-6 py-3">Organización</th>
+                                    <th scope="col" class="px-6 py-3">Cuenta</th>
+                                    <th scope="col" class="px-6 py-3">Tipo</th>
+                                    <th scope="col" class="px-6 py-3">Concepto</th>
+                                    <th scope="col" class="px-6 py-3">Solicitante</th>
+                                    <th scope="col" class="px-6 py-3 text-right">Monto</th>
+                                    <th scope="col" class="px-6 py-3">Estado</th>
+                                    <th scope="col" class="px-6 py-3 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-solicitudes-organizacion-body">
+                                <!-- Se llenará dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -766,6 +804,22 @@
                 <form id="formSolicitud">
                     <div class="row">
                         <div class="col-md-6 mb-3">
+                            <label for="solicitud-modo" class="form-label">Modo de Solicitud *</label>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="solicitud-modo" required>
+                                <option value="cuenta">Por cuenta</option>
+                                <option value="organizacion">Por organización</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3" id="solicitud-campo-organizacion" style="display: none;">
+                            <label for="solicitud-organizacion" class="form-label">Organización *</label>
+                            <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="solicitud-organizacion">
+                                <option value="">Seleccione...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                             <label for="solicitud-cuenta" class="form-label">Cuenta *</label>
                             <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="solicitud-cuenta" required>
                                 <option value="">Seleccione...</option>
@@ -788,7 +842,7 @@
                     <!-- Campo cuenta origen (solo para transferencias - mis cuentas propias) -->
                     <div class="row" id="solicitud-campo-cuenta-origen" style="display: none;">
                         <div class="col-md-12 mb-3">
-                            <label for="solicitud-cuenta-origen" class="form-label">Cuenta Origen (mi cuenta) *</label>
+                            <label for="solicitud-cuenta-origen" class="form-label" id="solicitud-cuenta-origen-label">Cuenta Origen (mi cuenta) *</label>
                             <select class="form-select bg-gray-100 border-gray-300 text-gray-800" id="solicitud-cuenta-origen">
                                 <option value="">Seleccione su cuenta...</option>
                             </select>

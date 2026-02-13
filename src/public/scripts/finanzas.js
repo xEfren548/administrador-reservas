@@ -3,11 +3,13 @@ let organizaciones = [];
 let cuentas = [];
 let transacciones = [];
 let solicitudes = [];
+let solicitudesOrganizacion = [];
 let cuentaSeleccionada = null;
 let usuarios = []; // Lista de usuarios disponibles
 let participantes = []; // Lista de participantes de la cuenta actual
 let participantesOrganizacion = []; // Lista temporal de participantes para nueva organización
 let organizacionSeleccionada = null; // Organización seleccionada para gestionar participantes
+let vistaSolicitudesActiva = 'cuenta';
 
 // Funciones de spinner global
 function mostrarSpinner() {
@@ -29,6 +31,7 @@ function ocultarSpinner() {
 // Inicialización
 $(document).ready(function() {
     inicializarEventos();
+    cambiarVistaSolicitudes('cuenta');
     cargarOrganizaciones();
     cargarMisCuentas();
 });
@@ -51,6 +54,27 @@ function inicializarEventos() {
     // Eventos para participantes de organización
     $('#btnAgregarParticipanteOrg').on('click', agregarParticipanteOrganizacionTemporal);
     $('#btnAgregarParticipanteOrgGestion').on('click', agregarParticipanteOrganizacion);
+
+    // Switch de vistas en tab de solicitudes
+    $('#btn-vista-solicitudes-cuenta').on('click', () => cambiarVistaSolicitudes('cuenta'));
+    $('#btn-vista-solicitudes-organizacion').on('click', async () => {
+        cambiarVistaSolicitudes('organizacion');
+        await cargarSolicitudesOrganizacion();
+    });
+    $('#filtro-solicitudes-organizacion').on('change', async function() {
+        const organizacionId = $(this).val();
+        await cargarSolicitudesOrganizacion(organizacionId);
+    });
+
+    // Modal de solicitudes híbrido
+    $('#solicitud-modo').on('change', async function() {
+        await actualizarModoSolicitud($(this).val());
+    });
+
+    $('#solicitud-organizacion').on('change', async function() {
+        const organizacionId = $(this).val();
+        await cargarCuentasPorOrganizacionParaSolicitud(organizacionId);
+    });
 
     // Listener para cuando se abre el modal de organización
     $('#modalOrganizacion').on('show.bs.modal', function(e) {
@@ -89,13 +113,17 @@ function inicializarEventos() {
         if ($(e.relatedTarget).attr('id') === 'btn-nueva-solicitud') {
             $('#formSolicitud')[0].reset();
             $('#solicitud-fecha').val(new Date().toISOString().split('T')[0]);
+            $('#solicitud-modo').val('cuenta');
+            $('#solicitud-organizacion').val('');
             // Resetear UI de transferencia
             $('#solicitud-campo-cuenta-origen').hide();
             $('#solicitud-campo-categoria').show();
             $('#solicitud-campo-imagenes').show();
             $('#solicitud-cuenta-origen').val('');
             $('#solicitud-saldo-origen').text('');
-            cargarCuentasParaSolicitudes();
+            $('#solicitud-cuenta-origen-label').text('Cuenta Origen (mi cuenta) *');
+            actualizarSelectOrganizacionesSolicitud();
+            actualizarModoSolicitud('cuenta');
         }
     });
 
@@ -145,17 +173,26 @@ function inicializarEventos() {
     // Listener para cambio de tipo en solicitud (para manejar transferencias)
     $('#solicitud-tipo').on('change', function() {
         const tipo = $(this).val();
-        const cuentaDestinoId = $('#solicitud-cuenta').val();
+        const cuentaSeleccionadaId = $('#solicitud-cuenta').val();
+        const modoSolicitud = $('#solicitud-modo').val();
         
         if (tipo === 'Transferencia') {
-            // Mostrar campo de cuenta origen (mis cuentas propias)
+            // Mostrar campo auxiliar para transferencia
             $('#solicitud-campo-cuenta-origen').show();
             // Ocultar campo de categoría e imágenes
             $('#solicitud-campo-categoria').hide();
             $('#solicitud-campo-imagenes').hide();
-            // Cargar mis cuentas propias para la cuenta origen
-            if (cuentaDestinoId) {
-                cargarMisCuentasParaTransferenciaSolicitud(cuentaDestinoId);
+
+            if (modoSolicitud === 'organizacion') {
+                $('#solicitud-cuenta-origen-label').text('Cuenta Destino *');
+                if (cuentaSeleccionadaId) {
+                    cargarCuentasDestinoTransferenciaOrganizacion(cuentaSeleccionadaId);
+                }
+            } else {
+                $('#solicitud-cuenta-origen-label').text('Cuenta Origen (mi cuenta) *');
+                if (cuentaSeleccionadaId) {
+                    cargarMisCuentasParaTransferenciaSolicitud(cuentaSeleccionadaId);
+                }
             }
         } else {
             // Ocultar campo de cuenta origen
@@ -172,10 +209,15 @@ function inicializarEventos() {
     // Listener para cambio en cuenta destino de solicitud (cuando es transferencia, cargar mis cuentas)
     $('#solicitud-cuenta').on('change', function() {
         const tipo = $('#solicitud-tipo').val();
-        const cuentaDestinoId = $(this).val();
+        const cuentaSeleccionadaId = $(this).val();
+        const modoSolicitud = $('#solicitud-modo').val();
         
-        if (tipo === 'Transferencia' && cuentaDestinoId) {
-            cargarMisCuentasParaTransferenciaSolicitud(cuentaDestinoId);
+        if (tipo === 'Transferencia' && cuentaSeleccionadaId) {
+            if (modoSolicitud === 'organizacion') {
+                cargarCuentasDestinoTransferenciaOrganizacion(cuentaSeleccionadaId);
+            } else {
+                cargarMisCuentasParaTransferenciaSolicitud(cuentaSeleccionadaId);
+            }
         }
     });
     
@@ -218,6 +260,7 @@ function cambiarTab(tabName) {
             break;
         case 'solicitudes':
             cargarSolicitudes();
+            cargarSolicitudesOrganizacion();
             break;
         case 'recurrentes':
             cargarTransaccionesRecurrentes();
@@ -237,6 +280,8 @@ async function cargarOrganizaciones() {
             organizaciones = data.data;
             renderizarOrganizaciones();
             actualizarSelectOrganizaciones();
+            actualizarSelectOrganizacionesSolicitud();
+            actualizarFiltroSolicitudesOrganizacion();
         }
     } catch (error) {
         console.error('Error al cargar organizaciones:', error);
@@ -1200,6 +1245,133 @@ function mostrarDetalleCuenta(cuenta) {
 }
 
 // ===== SOLICITUDES =====
+function cambiarVistaSolicitudes(vista) {
+    vistaSolicitudesActiva = vista;
+
+    if (vista === 'organizacion') {
+        $('#solicitudes-vista-cuenta').addClass('hidden');
+        $('#solicitudes-vista-organizacion').removeClass('hidden');
+        $('#btn-vista-solicitudes-cuenta').removeClass('btn-primary').addClass('btn-secondary');
+        $('#btn-vista-solicitudes-organizacion').removeClass('btn-secondary').addClass('btn-primary');
+    } else {
+        $('#solicitudes-vista-organizacion').addClass('hidden');
+        $('#solicitudes-vista-cuenta').removeClass('hidden');
+        $('#btn-vista-solicitudes-organizacion').removeClass('btn-primary').addClass('btn-secondary');
+        $('#btn-vista-solicitudes-cuenta').removeClass('btn-secondary').addClass('btn-primary');
+    }
+}
+
+function actualizarSelectOrganizacionesSolicitud() {
+    const select = $('#solicitud-organizacion');
+    if (!select.length) return;
+
+    const currentValue = select.val();
+    select.empty().append('<option value="">Seleccione...</option>');
+
+    organizaciones.forEach(org => {
+        select.append(`<option value="${org._id}">${org.nombre}</option>`);
+    });
+
+    if (currentValue) {
+        select.val(currentValue);
+    }
+}
+
+function actualizarFiltroSolicitudesOrganizacion() {
+    const select = $('#filtro-solicitudes-organizacion');
+    if (!select.length) return;
+
+    const currentValue = select.val();
+    select.empty().append('<option value="">Seleccione...</option>');
+
+    organizaciones.forEach(org => {
+        select.append(`<option value="${org._id}">${org.nombre}</option>`);
+    });
+
+    const nuevoValor = currentValue || organizaciones[0]?._id;
+    if (nuevoValor) {
+        select.val(nuevoValor);
+    }
+}
+
+async function actualizarModoSolicitud(modo) {
+    const tipo = $('#solicitud-tipo').val();
+    $('#solicitud-cuenta').empty().append('<option value="">Seleccione...</option>');
+    $('#solicitud-cuenta-origen').empty().append('<option value="">Seleccione...</option>');
+    $('#solicitud-saldo-origen').text('');
+
+    if (modo === 'organizacion') {
+        $('#solicitud-campo-organizacion').show();
+        if (!$('#solicitud-organizacion').val() && organizaciones.length > 0) {
+            $('#solicitud-organizacion').val(organizaciones[0]._id);
+        }
+        await cargarCuentasPorOrganizacionParaSolicitud($('#solicitud-organizacion').val());
+    } else {
+        $('#solicitud-campo-organizacion').hide();
+        await cargarCuentasParaSolicitudes();
+    }
+
+    if (tipo === 'Transferencia') {
+        $('#solicitud-campo-cuenta-origen').show();
+        $('#solicitud-campo-categoria').hide();
+        $('#solicitud-campo-imagenes').hide();
+        if (modo === 'organizacion') {
+            $('#solicitud-cuenta-origen-label').text('Cuenta Destino *');
+        } else {
+            $('#solicitud-cuenta-origen-label').text('Cuenta Origen (mi cuenta) *');
+        }
+    } else {
+        $('#solicitud-campo-cuenta-origen').hide();
+        $('#solicitud-campo-categoria').show();
+        $('#solicitud-campo-imagenes').show();
+    }
+}
+
+async function cargarCuentasPorOrganizacionParaSolicitud(organizacionId) {
+    const select = $('#solicitud-cuenta');
+    select.empty().append('<option value="">Seleccione una cuenta...</option>');
+    window.cuentasSolicitudOrganizacion = [];
+
+    if (!organizacionId) return;
+
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/organizaciones/${organizacionId}/cuentas`);
+        const data = await response.json();
+
+        if (data.success) {
+            window.cuentasSolicitudOrganizacion = (data.data || []).filter(cuenta => cuenta.activa);
+            window.cuentasSolicitudOrganizacion.forEach(cuenta => {
+                select.append(`<option value="${cuenta._id}" data-moneda="${cuenta.moneda}">${cuenta.nombre} (${cuenta.moneda})</option>`);
+            });
+        }
+    } catch (error) {
+        console.error('Error al cargar cuentas por organización:', error);
+        mostrarError('Error al cargar cuentas de la organización');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function cargarCuentasDestinoTransferenciaOrganizacion(cuentaOrigenId) {
+    const select = $('#solicitud-cuenta-origen');
+    select.empty().append('<option value="">Seleccione cuenta destino...</option>');
+
+    const cuentaOrigen = (window.cuentasSolicitudOrganizacion || []).find(cuenta => cuenta._id === cuentaOrigenId);
+    if (!cuentaOrigen) return;
+
+    const cuentasDisponibles = (cuentas || []).filter(cuenta =>
+        cuenta._id !== cuentaOrigenId &&
+        cuenta.activa &&
+        cuenta.moneda === cuentaOrigen.moneda
+    );
+
+    cuentasDisponibles.forEach(cuenta => {
+        const etiquetaOrg = cuenta.organizacion?.nombre ? ` - ${cuenta.organizacion.nombre}` : '';
+        select.append(`<option value="${cuenta._id}">${cuenta.nombre}${etiquetaOrg}</option>`);
+    });
+}
+
 async function cargarSolicitudes() {
     try {
         mostrarSpinner();
@@ -1314,6 +1486,228 @@ function renderizarSolicitudes() {
             </tr>
         `);
     });
+}
+
+async function cargarSolicitudesOrganizacion(organizacionId) {
+    try {
+        const filtroOrganizacionId = organizacionId || $('#filtro-solicitudes-organizacion').val();
+
+        if (!filtroOrganizacionId) {
+            solicitudesOrganizacion = [];
+            renderizarSolicitudesOrganizacion();
+            return;
+        }
+
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/solicitudes-organizacion/organizacion/${filtroOrganizacionId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            solicitudesOrganizacion = data.data || [];
+            renderizarSolicitudesOrganizacion();
+        } else {
+            mostrarError(data.message || 'Error al cargar solicitudes organizacionales');
+        }
+    } catch (error) {
+        console.error('Error al cargar solicitudes organizacionales:', error);
+        mostrarError('Error al cargar solicitudes organizacionales');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+function renderizarSolicitudesOrganizacion() {
+    const tbody = $('#tabla-solicitudes-organizacion-body');
+    if (!tbody.length) return;
+
+    tbody.empty();
+
+    if (solicitudesOrganizacion.length === 0) {
+        tbody.html(`
+            <tr>
+                <td colspan="9" class="px-6 py-4 text-center text-gray-500">
+                    No hay solicitudes organizacionales
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    const organizacionId = $('#filtro-solicitudes-organizacion').val();
+    const organizacion = organizaciones.find(org => org._id === organizacionId);
+    const miParticipacion = organizacion?.participantes?.find(p => p.usuario?._id === window.currentUserId);
+    const soyAdmin = miParticipacion?.rol === 'Administrador';
+    const totalAdmins = (organizacion?.participantes || []).filter(p => p.rol === 'Administrador').length;
+
+    solicitudesOrganizacion.forEach(sol => {
+        const fecha = new Date(sol.fecha).toLocaleDateString('es-MX');
+        const monto = formatearMoneda(sol.monto, sol.cuenta?.moneda || 'MXN');
+        let tipoColor = sol.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+        let tipoIcono = sol.tipo === 'Ingreso' ? '↑' : '↓';
+
+        if (sol.tipo === 'Transferencia') {
+            tipoColor = 'text-purple-600';
+            tipoIcono = '⇄';
+        }
+
+        const estadoBadge = obtenerBadgeEstado(sol.estado);
+        const solicitanteId = sol.solicitadoPor?._id || sol.solicitadoPor;
+        const esSolicitante = solicitanteId === window.currentUserId;
+
+        let botonesAccion = `
+            <button onclick="verDetalleSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-info" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+            </button>
+        `;
+
+        const bloqueoAutoAprobacion = esSolicitante && sol.rolSolicitante === 'Administrador' && totalAdmins >= 2;
+
+        if (sol.estado === 'Pendiente' && soyAdmin && !bloqueoAutoAprobacion) {
+            botonesAccion += `
+                <button onclick="aprobarSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-success ms-1" title="Aprobar">
+                    <i class="fas fa-check"></i>
+                </button>
+                <button onclick="rechazarSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-danger ms-1" title="Rechazar">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+        }
+
+        if (sol.estado === 'Pendiente' && esSolicitante) {
+            botonesAccion += `
+                <button onclick="cancelarSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-warning ms-1" title="Cancelar">
+                    <i class="fas fa-ban"></i>
+                </button>
+            `;
+        }
+
+        let conceptoHtml = sol.concepto;
+        if (sol.tipo === 'Transferencia' && sol.cuentaDestino) {
+            const nombreDestino = sol.cuentaDestino?.nombre || 'N/A';
+            conceptoHtml += `<br><small class="text-gray-600">→ ${nombreDestino}</small>`;
+        }
+
+        tbody.append(`
+            <tr class="border-b border-gray-200 hover:bg-gray-100">
+                <td class="px-6 py-4">${fecha}</td>
+                <td class="px-6 py-4">${sol.organizacion?.nombre || 'N/A'}</td>
+                <td class="px-6 py-4">${sol.cuenta?.nombre || 'N/A'}</td>
+                <td class="px-6 py-4 ${tipoColor}"><span style="font-size: 1.2em;">${tipoIcono}</span> ${sol.tipo}</td>
+                <td class="px-6 py-4 font-medium text-gray-900">${conceptoHtml}</td>
+                <td class="px-6 py-4">${sol.solicitadoPor?.firstName || 'N/A'} ${sol.solicitadoPor?.lastName || ''}</td>
+                <td class="px-6 py-4 text-right font-semibold ${tipoColor}">${monto}</td>
+                <td class="px-6 py-4">${estadoBadge}</td>
+                <td class="px-6 py-4 text-center">${botonesAccion}</td>
+            </tr>
+        `);
+    });
+}
+
+async function aprobarSolicitudOrganizacion(solicitudId) {
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/solicitudes-organizacion/${solicitudId}/procesar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accion: 'aprobar', comentario: '' })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Solicitud organizacional aprobada exitosamente');
+            await cargarSolicitudesOrganizacion();
+            await cargarMisCuentas();
+        } else {
+            mostrarError(data.message || 'Error al aprobar solicitud organizacional');
+        }
+    } catch (error) {
+        console.error('Error al aprobar solicitud organizacional:', error);
+        mostrarError('Error al aprobar solicitud organizacional');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function rechazarSolicitudOrganizacion(solicitudId) {
+    const result = await Swal.fire({
+        title: '¿Rechazar solicitud organizacional?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        input: 'textarea',
+        inputLabel: 'Motivo del rechazo *',
+        inputPlaceholder: 'Explica por qué se rechaza la solicitud...',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Debes especificar un motivo';
+            }
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Rechazar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ef4444',
+        background: '#ffffff',
+        color: '#1f2937'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/solicitudes-organizacion/${solicitudId}/procesar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accion: 'rechazar', motivoRechazo: result.value })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Solicitud organizacional rechazada');
+            await cargarSolicitudesOrganizacion();
+        } else {
+            mostrarError(data.message || 'Error al rechazar solicitud organizacional');
+        }
+    } catch (error) {
+        console.error('Error al rechazar solicitud organizacional:', error);
+        mostrarError('Error al rechazar solicitud organizacional');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function cancelarSolicitudOrganizacion(solicitudId) {
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/solicitudes-organizacion/${solicitudId}/cancelar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Solicitud organizacional cancelada');
+            await cargarSolicitudesOrganizacion();
+        } else {
+            mostrarError(data.message || 'Error al cancelar solicitud organizacional');
+        }
+    } catch (error) {
+        console.error('Error al cancelar solicitud organizacional:', error);
+        mostrarError('Error al cancelar solicitud organizacional');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+function verDetalleSolicitudOrganizacion(solicitudId) {
+    const solicitud = solicitudesOrganizacion.find(s => s._id === solicitudId);
+    if (!solicitud) {
+        mostrarError('Solicitud organizacional no encontrada');
+        return;
+    }
+
+    mostrarDetalleSolicitudGeneral(solicitud, 'organizacion');
 }
 
 // Cargar cuentas de organizaciones donde el usuario es participante
@@ -1475,6 +1869,7 @@ async function cargarMisCuentasParaTransferenciaSolicitud(cuentaDestinoId) {
 }
 
 async function guardarSolicitud() {
+    const modo = $('#solicitud-modo').val();
     const tipo = $('#solicitud-tipo').val();
     let datos = {
         tipo: tipo,
@@ -1485,28 +1880,48 @@ async function guardarSolicitud() {
         fecha: $('#solicitud-fecha').val()
     };
     
-    // Si es transferencia, la lógica es diferente
-    if (tipo === 'Transferencia') {
-        const cuentaOrigenId = $('#solicitud-cuenta-origen').val(); // Mi cuenta propia
-        const cuentaDestinoId = $('#solicitud-cuenta').val(); // Cuenta del propietario
-        
-        if (!cuentaOrigenId) {
-            mostrarError('Debe seleccionar su cuenta de origen para la transferencia');
+    const cuentaPrincipal = $('#solicitud-cuenta').val();
+    const cuentaAuxiliar = $('#solicitud-cuenta-origen').val();
+
+    if (modo === 'organizacion') {
+        datos.organizacionId = $('#solicitud-organizacion').val();
+
+        if (!datos.organizacionId) {
+            mostrarError('Debe seleccionar la organización');
             return;
         }
-        if (!cuentaDestinoId) {
-            mostrarError('Debe seleccionar la cuenta destino para la transferencia');
-            return;
+
+        if (tipo === 'Transferencia') {
+            if (!cuentaPrincipal || !cuentaAuxiliar) {
+                mostrarError('Debe seleccionar cuenta origen y cuenta destino');
+                return;
+            }
+
+            datos.cuentaId = cuentaPrincipal;
+            datos.cuentaDestinoId = cuentaAuxiliar;
+        } else {
+            datos.cuentaId = cuentaPrincipal;
         }
-        
-        // Para solicitudes de transferencia:
-        // - cuenta = cuenta DESTINO (para que le aparezca al propietario de destino para aprobar)
-        // - cuentaDestino = cuenta ORIGEN (de donde sale el dinero)
-        datos.cuentaId = cuentaDestinoId; // Cuenta del propietario (quien debe aprobar)
-        datos.cuentaDestinoId = cuentaOrigenId; // Mi cuenta (de donde sale el dinero)
     } else {
-        // Para Ingreso/Gasto normal
-        datos.cuentaId = $('#solicitud-cuenta').val(); // Cuenta del propietario
+        // Flujo legacy por cuenta
+        if (tipo === 'Transferencia') {
+            const cuentaOrigenId = cuentaAuxiliar;
+            const cuentaDestinoId = cuentaPrincipal;
+
+            if (!cuentaOrigenId) {
+                mostrarError('Debe seleccionar su cuenta de origen para la transferencia');
+                return;
+            }
+            if (!cuentaDestinoId) {
+                mostrarError('Debe seleccionar la cuenta destino para la transferencia');
+                return;
+            }
+
+            datos.cuentaId = cuentaDestinoId;
+            datos.cuentaDestinoId = cuentaOrigenId;
+        } else {
+            datos.cuentaId = cuentaPrincipal;
+        }
     }
 
     if (!datos.cuentaId || !datos.concepto || !datos.monto) {
@@ -1517,8 +1932,10 @@ async function guardarSolicitud() {
     try {
         mostrarSpinner();
         
+        const endpoint = modo === 'organizacion' ? '/api/sw/solicitudes-organizacion' : '/api/sw/solicitudes';
+
         // Crear la solicitud primero
-        const response = await fetch('/api/sw/solicitudes', {
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datos)
@@ -1531,13 +1948,21 @@ async function guardarSolicitud() {
             
             // Si hay imágenes seleccionadas, subirlas
             const archivosInput = document.getElementById('solicitud-imagenes');
-            if (archivosInput && archivosInput.files.length > 0) {
+            if (modo === 'cuenta' && archivosInput && archivosInput.files.length > 0) {
                 try {
                     await subirImagenesSolicitud(solicitudId, archivosInput.files);
                     mostrarExito('Solicitud e imágenes guardadas exitosamente');
                 } catch (errorImg) {
                     console.error('Error al subir imágenes:', errorImg);
                     mostrarError('Solicitud creada, pero hubo un error al subir las imágenes');
+                }
+            } else if (modo === 'organizacion' && archivosInput && archivosInput.files.length > 0) {
+                try {
+                    await subirImagenesSolicitudOrganizacion(solicitudId, archivosInput.files);
+                    mostrarExito('Solicitud organizacional e imágenes guardadas exitosamente');
+                } catch (errorImg) {
+                    console.error('Error al subir imágenes organizacionales:', errorImg);
+                    mostrarError('Solicitud organizacional creada, pero hubo un error al subir las imágenes');
                 }
             } else {
                 mostrarExito('Solicitud creada exitosamente');
@@ -1550,7 +1975,10 @@ async function guardarSolicitud() {
             $('#solicitud-campo-cuenta-origen').hide();
             $('#solicitud-campo-categoria').show();
             $('#solicitud-campo-imagenes').show();
+            $('#solicitud-campo-organizacion').hide();
+            $('#solicitud-modo').val('cuenta');
             await cargarSolicitudes();
+            await cargarSolicitudesOrganizacion();
         } else {
             mostrarError(data.message);
         }
@@ -1812,11 +2240,23 @@ async function guardarTransaccion() {
         });
 
         if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+
             if (response.status === 403) {
+                if (data.requiredAction === 'CREAR_SOLICITUD_ORGANIZACION') {
+                    mostrarError('No tienes permiso para realizar transacciones directamente. Debes crear una solicitud de transacción en la pestaña de Solicitudes > Nueva Solicitud > Solicitud de organización para este caso específico.');
+                    return;
+                }
+
+                if (data.message) {
+                    mostrarError(data.message);
+                    return;
+                }
+
                 mostrarError('No tienes permiso para realizar esta operación');
                 return;
             }
-            const data = await response.json();
+
             throw new Error(data.message || `Error HTTP: ${response.status}`);
         }
 
@@ -1875,13 +2315,28 @@ function verDetalleSolicitud(solicitudId) {
         return;
     }
     
+    mostrarDetalleSolicitudGeneral(solicitud, 'cuenta');
+}
+
+function mostrarDetalleSolicitudGeneral(solicitud, modo = 'cuenta') {
     const fecha = new Date(solicitud.fecha).toLocaleDateString('es-MX');
     const monto = formatearMoneda(solicitud.monto, solicitud.cuenta?.moneda || 'MXN');
-    const tipoColor = solicitud.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
-    
+    let tipoColor = solicitud.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+    if (solicitud.tipo === 'Transferencia') {
+        tipoColor = 'text-purple-600';
+    }
+
+    const fechaRespuesta = solicitud.respuesta?.fechaRespuesta || solicitud.respuesta?.fechaProcesada;
+
     let detalleHtml = `
         <div class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
+                ${modo === 'organizacion' ? `
+                    <div>
+                        <p class="text-gray-500 text-sm">Organización</p>
+                        <p class="text-gray-900 font-semibold">${solicitud.organizacion?.nombre || 'N/A'}</p>
+                    </div>
+                ` : ''}
                 <div>
                     <p class="text-gray-500 text-sm">Cuenta</p>
                     <p class="text-gray-900 font-semibold">${solicitud.cuenta?.nombre || 'N/A'}</p>
@@ -1904,7 +2359,7 @@ function verDetalleSolicitud(solicitudId) {
                 </div>
                 <div>
                     <p class="text-gray-500 text-sm">Categoría</p>
-                    <p class="text-gray-900">${solicitud.categoria}</p>
+                    <p class="text-gray-900">${solicitud.categoria || '-'}</p>
                 </div>
             </div>
             
@@ -1958,8 +2413,8 @@ function verDetalleSolicitud(solicitudId) {
                     <p class="text-gray-500 text-sm">Respuesta del propietario</p>
                     <p class="text-gray-900">${solicitud.respuesta.comentario}</p>
                     <p class="text-gray-500 text-xs mt-2">
-                        ${solicitud.respuesta.procesadaPor?.firstName || ''} - 
-                        ${new Date(solicitud.respuesta.fechaProcesada).toLocaleString('es-MX')}
+                        ${solicitud.respuesta.procesadaPor?.firstName || ''} 
+                        ${fechaRespuesta ? `- ${new Date(fechaRespuesta).toLocaleString('es-MX')}` : ''}
                     </p>
                 </div>
             ` : ''}
@@ -1976,7 +2431,7 @@ function verDetalleSolicitud(solicitudId) {
                                 <div class="relative group cursor-pointer" onclick="visualizarImagenCompleta('${imagenUrl}')">
                                     <img src="${imagenUrl}" alt="Imagen adjunta" class="w-full h-24 object-cover rounded-lg border border-gray-300 hover:border-teal-500 transition-colors">
                                     ${solicitud.estado === 'Pendiente' ? `
-                                        <button onclick="event.stopPropagation(); eliminarImagenSolicitud('${solicitud._id}', '${imagen}')" 
+                                        <button onclick="event.stopPropagation(); eliminarImagenSolicitud('${solicitud._id}', '${imagen}', '${modo}')" 
                                                 class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-gray-900 rounded-full p-1 w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                             <i class="fas fa-times text-xs"></i>
                                         </button>
@@ -2011,7 +2466,7 @@ function verDetalleSolicitud(solicitudId) {
     `;
     
     Swal.fire({
-        title: 'Detalle de Solicitud',
+        title: modo === 'organizacion' ? 'Detalle de Solicitud Organizacional' : 'Detalle de Solicitud',
         html: detalleHtml,
         width: 600,
         showCloseButton: true,
@@ -3056,8 +3511,28 @@ async function subirImagenesSolicitud(solicitudId, files) {
     return await response.json();
 }
 
+async function subirImagenesSolicitudOrganizacion(solicitudId, files) {
+    const formData = new FormData();
+
+    Array.from(files).forEach(file => {
+        formData.append('imagenes', file);
+    });
+
+    const response = await fetch(`/api/sw/solicitudes-organizacion/${solicitudId}/imagenes`, {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Error al subir imágenes');
+    }
+
+    return await response.json();
+}
+
 // Eliminar una imagen de solicitud
-async function eliminarImagenSolicitud(solicitudId, imagenNombre) {
+async function eliminarImagenSolicitud(solicitudId, imagenNombre, modo = 'cuenta') {
     const result = await Swal.fire({
         title: '¿Eliminar imagen?',
         text: 'Esta acción no se puede deshacer',
@@ -3074,7 +3549,11 @@ async function eliminarImagenSolicitud(solicitudId, imagenNombre) {
 
     try {
         mostrarSpinner();
-        const response = await fetch(`/api/sw/solicitudes/${solicitudId}/imagenes/${imagenNombre}`, {
+        const endpoint = modo === 'organizacion'
+            ? `/api/sw/solicitudes-organizacion/${solicitudId}/imagenes/${imagenNombre}`
+            : `/api/sw/solicitudes/${solicitudId}/imagenes/${imagenNombre}`;
+
+        const response = await fetch(endpoint, {
             method: 'DELETE'
         });
 
@@ -3083,7 +3562,11 @@ async function eliminarImagenSolicitud(solicitudId, imagenNombre) {
         if (data.success) {
             mostrarExito('Imagen eliminada exitosamente');
             // Recargar solicitudes para actualizar la lista
-            await cargarSolicitudes();
+            if (modo === 'organizacion') {
+                await cargarSolicitudesOrganizacion();
+            } else {
+                await cargarSolicitudes();
+            }
         } else {
             mostrarError(data.message);
         }

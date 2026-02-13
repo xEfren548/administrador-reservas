@@ -1,6 +1,7 @@
 const SWTransaccion = require('../models/SWTransaccion');
 const SWCuenta = require('../models/SWCuenta');
 const SWParticipante = require('../models/SWParticipante');
+const SWOrganizacion = require('../models/SWOrganizacion');
 const Evento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const { check, validationResult } = require('express-validator');
@@ -49,6 +50,46 @@ const createTransaccionValidators = [
         .isString().withMessage('Cada imagen debe ser una ruta de texto')
 ];
 
+const evaluarGobernanzaOrganizacion = async (cuenta, userId) => {
+    if (!cuenta?.organizacion) {
+        return { requiereSolicitudOrganizacion: false };
+    }
+
+    const organizacion = await SWOrganizacion.findById(cuenta.organizacion).select('participantes');
+
+    if (!organizacion || !Array.isArray(organizacion.participantes) || organizacion.participantes.length === 0) {
+        return { requiereSolicitudOrganizacion: false };
+    }
+
+    const participante = organizacion.participantes.find(
+        (item) => item.usuario.toString() === userId.toString()
+    );
+
+    if (!participante) {
+        return { requiereSolicitudOrganizacion: false };
+    }
+
+    const totalAdmins = organizacion.participantes.filter(
+        (item) => item.rol === 'Administrador'
+    ).length;
+
+    if (participante.rol === 'Miembro') {
+        return {
+            requiereSolicitudOrganizacion: true,
+            message: 'Como miembro de organización, debe crear una solicitud organizacional para este movimiento'
+        };
+    }
+
+    if (participante.rol === 'Administrador' && totalAdmins > 1) {
+        return {
+            requiereSolicitudOrganizacion: true,
+            message: 'La organización tiene múltiples administradores. Este movimiento debe enviarse como solicitud organizacional para aprobación'
+        };
+    }
+
+    return { requiereSolicitudOrganizacion: false };
+};
+
 /**
  * Crear transacción directa (solo propietario puede aprobar directamente)
  */
@@ -92,6 +133,15 @@ const createTransaccion = async (req, res) => {
             return res.status(403).json({
                 success: false,
                 message: 'Solo el propietario puede crear transacciones directamente'
+            });
+        }
+
+        const politica = await evaluarGobernanzaOrganizacion(cuenta, userId);
+        if (politica.requiereSolicitudOrganizacion) {
+            return res.status(403).json({
+                success: false,
+                message: politica.message,
+                requiredAction: 'CREAR_SOLICITUD_ORGANIZACION'
             });
         }
 
@@ -823,6 +873,23 @@ const createTransferencia = async (req, res) => {
         } = req.body;
 
         const userId = req.session.userId;
+
+        const cuentaOrigen = await SWCuenta.findById(cuentaId);
+        if (!cuentaOrigen) {
+            return res.status(404).json({
+                success: false,
+                message: 'Cuenta de origen no encontrada'
+            });
+        }
+
+        const politica = await evaluarGobernanzaOrganizacion(cuentaOrigen, userId);
+        if (politica.requiereSolicitudOrganizacion) {
+            return res.status(403).json({
+                success: false,
+                message: politica.message,
+                requiredAction: 'CREAR_SOLICITUD_ORGANIZACION'
+            });
+        }
 
         // Crear la transferencia usando el método estático del modelo
         const resultado = await SWTransaccion.crearTransferencia(
