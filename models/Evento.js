@@ -34,6 +34,21 @@ const infoReservaExternaSchema = new Schema({
     gananciaNetaDueno: { type: Number, default: 0 }
 });
 
+const cuponInfoSchema = new Schema({
+    usado: { type: Boolean, default: false },
+    cuponId: { type: mongoose.Schema.Types.ObjectId, ref: 'Cupon', default: null },
+    codigo: { type: String, default: null },
+    tipo: { type: String, default: null },
+    promocion: { type: String, default: null },
+    aplicableA: { type: String, default: null },
+    valor: { type: Number, default: null },
+    descuentoTotal: { type: Number, default: 0 },
+    montoOriginal: { type: Number, default: null },
+    montoFinal: { type: Number, default: null },
+    totalSinComisiones: { type: Number, default: null },
+    costoBase: { type: Number, default: null }
+}, { _id: false });
+
 const reservaSchema = new Schema({
     client: {
         type: mongoose.Schema.Types.ObjectId,
@@ -151,6 +166,10 @@ const reservaSchema = new Schema({
     isWebClientReservation: {
         type: Boolean,
         default: false
+    },
+    cuponInfo: {
+        type: cuponInfoSchema,
+        default: () => ({ usado: false })
     }
 });
 

@@ -402,6 +402,28 @@ document.addEventListener("DOMContentLoaded", function () {
                 throw new Error(`No puedes dar un precio menor al establecido ($${precioMinimoPermitido})`); //
             }
 
+            const totalSinComisionesReserva = Number(totalSinComisiones.value || 0);
+            const costoBaseReserva = Number(totalCostoBaseInput.value || 0);
+            const totalOriginalReserva = cuponAplicado
+                ? Number(precioOriginalSinCupon.valor || formData.total || 0)
+                : Number(formData.total || 0);
+
+            formData.totalOriginal = totalOriginalReserva;
+            formData.totalSinComisiones = totalSinComisionesReserva;
+            formData.costoBase = costoBaseReserva;
+
+            if (cuponAplicado) {
+                formData.cupon = {
+                    cuponId: cuponAplicado.cuponId,
+                    codigo: cuponAplicado.codigo,
+                    nombre: cuponAplicado.nombre,
+                    tipo: cuponAplicado.tipo,
+                    valor: cuponAplicado.valor,
+                    aplicableA: cuponAplicado.aplicableA,
+                    descuentoTotal: cuponAplicado.descuentoTotal
+                };
+            }
+
 
             const response = await fetch('/api/eventos', {
                 method: 'POST',

@@ -1645,10 +1645,12 @@
                 const tipoReservaChk = document.getElementById("toggleReserva");
                 const isDeposit = (!tipoReservaChk.checked) ? true : false;
                 let totalEl = document.getElementById("precio-total").textContent;
-                let total = totalEl;
-                if (totalEl.startsWith("$")) {
-                    total = total.slice(1);
-                }
+                const total = Number((totalEl || '').replace('$', '').replace(/,/g, '').trim() || 0);
+                const totalOriginalReserva = cuponAplicadoCotizador
+                    ? Number(precioOriginalCotizador.valor || total)
+                    : total;
+                const totalSinComisionesReserva = Number(document.getElementById('precio-total-nocoms-input').value || 0);
+                const costoBaseReserva = Number(document.getElementById('costo-total-input').value || 0);
 
                 const fechaLlegada = document.getElementById("fecha-llegada-input").textContent
                 const fechaSalida = document.getElementById("fecha-salida-input").textContent
@@ -1668,7 +1670,10 @@
                     total: total,
                     nNights: document.getElementById("nights-input").textContent,
                     chaletName: document.getElementById("nombre-habitacion-input").value,
-                    habitacionId: document.getElementById('habitacion-id-input').value
+                    habitacionId: document.getElementById('habitacion-id-input').value,
+                    totalOriginal: totalOriginalReserva,
+                    totalSinComisiones: totalSinComisionesReserva,
+                    costoBase: costoBaseReserva
                 }
 
                 const dataPorDepo = {
@@ -1682,10 +1687,26 @@
                     total: total,
                     nNights: document.getElementById('nights-input').textContent,
                     chaletName: document.getElementById('nombre-habitacion-input').value,
-                    habitacionId: document.getElementById('habitacion-id-input').value
+                    habitacionId: document.getElementById('habitacion-id-input').value,
+                    totalOriginal: totalOriginalReserva,
+                    totalSinComisiones: totalSinComisionesReserva,
+                    costoBase: costoBaseReserva
                 }
 
                 const data = (isDeposit) ? dataPorDepo : dataReserva;
+
+                if (cuponAplicadoCotizador) {
+                    data.cupon = {
+                        cuponId: cuponAplicadoCotizador.cuponId,
+                        codigo: cuponAplicadoCotizador.codigo,
+                        nombre: cuponAplicadoCotizador.nombre,
+                        tipo: cuponAplicadoCotizador.tipo,
+                        valor: cuponAplicadoCotizador.valor,
+                        aplicableA: cuponAplicadoCotizador.aplicableA,
+                        descuentoTotal: cuponAplicadoCotizador.descuentoTotal
+                    };
+                }
+
                 console.log(data);
                 if (isDeposit) {
                     if (dataPorDepo.clientFirstName == "" || dataPorDepo.clientLastName == "") {

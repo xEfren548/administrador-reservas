@@ -1150,9 +1150,54 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
 
 async function createReservation(req, res, next) { // Reserva web (legacy)
-    const { clientFirstName, clientLastName, clientEmail, clientPhone, habitacionId, arrivalDate, departureDate, maxOccupation, pax, nNights, total, discount, isDeposit } = req.body;
+    const {
+        clientFirstName,
+        clientLastName,
+        clientEmail,
+        clientPhone,
+        habitacionId,
+        arrivalDate,
+        departureDate,
+        maxOccupation,
+        pax,
+        nNights,
+        total,
+        discount,
+        isDeposit,
+        cupon,
+        totalOriginal,
+        totalSinComisiones,
+        costoBase
+    } = req.body;
     let newCliente = null;
     let client = null;
+
+    const toNumberOrNull = (value) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+    };
+
+    const totalFinalNum = toNumberOrNull(total);
+    const totalOriginalNum = toNumberOrNull(totalOriginal);
+    const descuentoPayloadNum = toNumberOrNull(cupon?.descuentoTotal);
+    const descuentoCalculado = (totalOriginalNum !== null && totalFinalNum !== null)
+        ? Math.max(totalOriginalNum - totalFinalNum, 0)
+        : null;
+
+    const cuponInfo = {
+        usado: !!cupon,
+        cuponId: cupon?.cuponId || null,
+        codigo: cupon?.codigo || null,
+        tipo: cupon?.tipo || null,
+        promocion: cupon?.promocion || null,
+        aplicableA: cupon?.aplicableA || null,
+        valor: toNumberOrNull(cupon?.valor),
+        descuentoTotal: descuentoPayloadNum ?? descuentoCalculado ?? 0,
+        montoOriginal: totalOriginalNum,
+        montoFinal: totalFinalNum,
+        totalSinComisiones: toNumberOrNull(totalSinComisiones),
+        costoBase: toNumberOrNull(costoBase)
+    };
 
     try {
         const userRole = req.session.role;
@@ -1342,7 +1387,8 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 discount: discount,
                 createdBy: createdBy,
                 comisionVendedor: comisionVendedor,
-                status: 'active'
+                status: 'active',
+                cuponInfo
             };
             message = isFromGroup
                 ? `Reservación agregada con éxito. Habitación asignada: ${actualChaletName}`
@@ -1383,7 +1429,8 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 isDeposit: true,
                 paymentCancelation: paymentCancelation,
                 createdBy: createdBy,
-                comisionVendedor: comisionVendedor
+                comisionVendedor: comisionVendedor,
+                cuponInfo
             };
 
             const roomAssignedMessage = isFromGroup
