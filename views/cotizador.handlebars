@@ -279,6 +279,40 @@
                                 <h3 class="text-2xl font-bold text-gray-900 mb-4 mt-4 text-center">Precio total: <span
                                         id="precio-total" class="text-blue-500 font-bold text-2xl"></span></h3>
 
+                                <div class="mt-4">
+                                    <label class="block text-sm font-medium text-gray-500">Cupón de descuento</label>
+                                    <div class="flex gap-2 mt-2">
+                                        <input type="text" id="input-codigo-cupon-cotizador"
+                                            class="flex-1 p-2 bg-white border border-gray-200 rounded-md text-gray-900"
+                                            placeholder="Ingresa el código del cupón" style="text-transform: uppercase;">
+                                        <button type="button" id="btn-aplicar-cupon-cotizador"
+                                            class="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600">
+                                            Aplicar
+                                        </button>
+                                        <button type="button" id="btn-remover-cupon-cotizador"
+                                            class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600" style="display: none;">
+                                            Quitar
+                                        </button>
+                                    </div>
+
+                                    <div id="validando-cupon-cotizador" class="loading-indicator" style="display: none;">
+                                        <i class="fa fa-spinner fa-spin"></i> Validando cupón...
+                                    </div>
+
+                                    <span id="cupon-estado-badge-cotizador" class="cupon-estado-badge" style="display: none; margin-top: 0.5rem;"></span>
+
+                                    <div id="cupon-detalle-cotizador" class="cupon-detalle-card" style="display: none; margin-top: 0.75rem;">
+                                        <div class="flex justify-between items-start gap-3">
+                                            <div>
+                                                <h6 class="mb-1" id="cupon-nombre-cotizador"></h6>
+                                                <p class="mb-1 text-gray-600 text-sm" id="cupon-descripcion-cotizador"></p>
+                                                <p class="mb-0 font-bold text-green-600" id="cupon-descuento-cotizador"></p>
+                                                <p class="mb-0 text-gray-500 text-sm" id="cupon-aplicable-cotizador"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 
@@ -481,6 +515,15 @@
 
     // FUNCIONES PARA CATEGORIAS DESPLEGABLES
     document.addEventListener("DOMContentLoaded", function () {
+        let cuponAplicadoCotizador = null;
+        const precioOriginalCotizador = { valor: 0 };
+        const reservaCotizadorActual = {
+            habitacionId: null,
+            nNights: 0,
+            totalSinComisiones: 0,
+            costoBase: 0
+        };
+
         // Evita que el formulario se recargue
         document.querySelector("form").addEventListener("submit", function (event) {
             event.preventDefault();
@@ -1385,12 +1428,174 @@
             const costoTotalInput = document.getElementById("costo-total-input");
             const precioTotalNoComs = document.getElementById("precio-total-nocoms-input");
 
+            const inputCodigoCuponCotizador = document.getElementById('input-codigo-cupon-cotizador');
+            const btnAplicarCuponCotizador = document.getElementById('btn-aplicar-cupon-cotizador');
+            const btnRemoverCuponCotizador = document.getElementById('btn-remover-cupon-cotizador');
+
+            function obtenerComisionesCotizador(nNights, habitacionId, cuponData = null, totalSinComisiones = 0, costoBase = 0) {
+                let url = `/api/utilidades?nnights=${nNights}&habitacionid=${habitacionId}`;
+                if (cuponData) {
+                    const cuponParam = encodeURIComponent(JSON.stringify(cuponData));
+                    url += `&cupon=${cuponParam}&totalsincomisiones=${totalSinComisiones}&costobase=${costoBase}`;
+                }
+                return fetch(url).then(r => r.json());
+            }
+
+            function mostrarEstadoCuponCotizador(tipo, mensaje) {
+                const badge = document.getElementById('cupon-estado-badge-cotizador');
+                if (!badge) return;
+
+                badge.style.display = 'inline-flex';
+                badge.className = `cupon-estado-badge ${tipo}`;
+
+                let icono = '';
+                if (tipo === 'validando') icono = '<i class="fa fa-spinner fa-spin"></i>';
+                else if (tipo === 'valido') icono = '<i class="fa fa-check-circle"></i>';
+                else if (tipo === 'invalido') icono = '<i class="fa fa-times-circle"></i>';
+
+                badge.innerHTML = `${icono} ${mensaje}`;
+
+                if (tipo === 'invalido') {
+                    setTimeout(() => {
+                        badge.style.display = 'none';
+                    }, 3500);
+                }
+            }
+
+            function mostrarDetalleCuponCotizador(cupon) {
+                const detalle = document.getElementById('cupon-detalle-cotizador');
+                if (!detalle) return;
+
+                document.getElementById('cupon-nombre-cotizador').textContent = cupon.nombre || cupon.codigo || 'Cupón aplicado';
+                document.getElementById('cupon-descripcion-cotizador').textContent = cupon.descripcion || '';
+
+                let descuentoTexto = '';
+                if (cupon.tipo === 'percentage') {
+                    descuentoTexto = `Descuento: ${cupon.valor}% (-$${Number(cupon.descuentoTotal || 0).toFixed(2)} MXN)`;
+                } else if (cupon.tipo === 'fixed_amount') {
+                    descuentoTexto = `Descuento: -$${Number(cupon.descuentoTotal || 0).toFixed(2)} MXN`;
+                } else {
+                    descuentoTexto = `Descuento aplicado: -$${Number(cupon.descuentoTotal || 0).toFixed(2)} MXN`;
+                }
+                document.getElementById('cupon-descuento-cotizador').textContent = descuentoTexto;
+
+                let aplicableTexto = '';
+                if (cupon.aplicableA === 'all') aplicableTexto = 'Aplica a: Owner y comisiones (distribución proporcional)';
+                else if (cupon.aplicableA === 'owner_only') aplicableTexto = 'Aplica a: Solo owner';
+                else if (cupon.aplicableA === 'except_owner') aplicableTexto = 'Aplica a: Excepto owner';
+                document.getElementById('cupon-aplicable-cotizador').textContent = aplicableTexto;
+
+                detalle.style.display = 'block';
+            }
+
+            function resetCuponCotizadorUI() {
+                cuponAplicadoCotizador = null;
+                inputCodigoCuponCotizador.value = '';
+                inputCodigoCuponCotizador.disabled = false;
+                btnAplicarCuponCotizador.disabled = false;
+                btnRemoverCuponCotizador.style.display = 'none';
+
+                const badge = document.getElementById('cupon-estado-badge-cotizador');
+                if (badge) badge.style.display = 'none';
+
+                const detalle = document.getElementById('cupon-detalle-cotizador');
+                if (detalle) detalle.style.display = 'none';
+
+                if (precioOriginalCotizador.valor > 0) {
+                    precioTotalInput.textContent = `$${precioOriginalCotizador.valor.toFixed(2)}`;
+                }
+            }
+
+            async function aplicarCuponCotizador() {
+                if (cuponAplicadoCotizador) {
+                    mostrarEstadoCuponCotizador('invalido', 'Ya hay un cupón aplicado. Quita el actual primero.');
+                    return;
+                }
+
+                const codigo = (inputCodigoCuponCotizador.value || '').trim();
+                if (!codigo) {
+                    mostrarEstadoCuponCotizador('invalido', 'Ingresa un código de cupón.');
+                    return;
+                }
+
+                if (!reservaCotizadorActual.habitacionId || !reservaCotizadorActual.nNights) {
+                    mostrarEstadoCuponCotizador('invalido', 'Selecciona una habitación antes de aplicar cupón.');
+                    return;
+                }
+
+                btnAplicarCuponCotizador.disabled = true;
+                inputCodigoCuponCotizador.disabled = true;
+                document.getElementById('validando-cupon-cotizador').style.display = 'flex';
+                mostrarEstadoCuponCotizador('validando', 'Validando cupón...');
+
+                try {
+                    const response = await fetch('/api/cupones/validar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            codigo,
+                            montoReserva: precioOriginalCotizador.valor,
+                            habitacionId: reservaCotizadorActual.habitacionId,
+                            noches: reservaCotizadorActual.nNights,
+                            clienteId: null,
+                            totalSinComisiones: reservaCotizadorActual.totalSinComisiones,
+                            costoBase: reservaCotizadorActual.costoBase
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'Cupón inválido');
+                    }
+
+                    cuponAplicadoCotizador = {
+                        cuponId: data.data.cupon.id,
+                        codigo: data.data.cupon.codigo,
+                        nombre: data.data.cupon.nombre,
+                        descripcion: data.data.cupon.descripcion,
+                        tipo: data.data.cupon.tipo,
+                        valor: data.data.cupon.valor,
+                        aplicableA: data.data.cupon.aplicableA,
+                        descuentoTotal: data.data.descuento,
+                        montoFinal: data.data.montoFinal
+                    };
+
+                    const comisionesAjustadas = await obtenerComisionesCotizador(
+                        reservaCotizadorActual.nNights,
+                        reservaCotizadorActual.habitacionId,
+                        cuponAplicadoCotizador,
+                        reservaCotizadorActual.totalSinComisiones,
+                        reservaCotizadorActual.costoBase
+                    );
+
+                    const totalFinal = Number(comisionesAjustadas?.precioTotalFinal || cuponAplicadoCotizador.montoFinal || precioOriginalCotizador.valor);
+                    precioTotalInput.textContent = `$${totalFinal.toFixed(2)}`;
+
+                    mostrarDetalleCuponCotizador(cuponAplicadoCotizador);
+                    mostrarEstadoCuponCotizador('valido', 'Cupón aplicado correctamente');
+
+                    btnRemoverCuponCotizador.style.display = 'inline-block';
+                    btnAplicarCuponCotizador.disabled = true;
+                    inputCodigoCuponCotizador.disabled = true;
+                } catch (error) {
+                    mostrarEstadoCuponCotizador('invalido', error.message || 'Error al validar cupón');
+                    btnAplicarCuponCotizador.disabled = false;
+                    inputCodigoCuponCotizador.disabled = false;
+                } finally {
+                    document.getElementById('validando-cupon-cotizador').style.display = 'none';
+                }
+            }
+
+            btnAplicarCuponCotizador.addEventListener('click', aplicarCuponCotizador);
+            btnRemoverCuponCotizador.addEventListener('click', resetCuponCotizadorUI);
+
             // Función para abrir el modal
             function abrirModal(boton) {
                 console.log(boton);
                 modalReserva.classList.remove("hidden");
                 console.log("Precio total: ", boton.dataset.precioTotal)
-                precioTotalInput.textContent = `$${boton.dataset.precioTotal}`
+                precioOriginalCotizador.valor = parseFloat(boton.dataset.precioTotal) || 0;
+                precioTotalInput.textContent = `$${precioOriginalCotizador.valor.toFixed(2)}`
                 fechaLlegadaSpan.textContent = boton.dataset.arrivalDate;
                 fechaSalidaSpan.textContent = boton.dataset.departureDate;
                 huespedesSpan.textContent = boton.dataset.huespedes;
@@ -1401,6 +1606,13 @@
                 maxPaxInput.value = boton.dataset.maxPax;
                 costoTotalInput.value = boton.dataset.costoTotal
                 precioTotalNoComs.value = boton.dataset.precioTotalSinComisiones;
+
+                reservaCotizadorActual.habitacionId = boton.dataset.habitacionId;
+                reservaCotizadorActual.nNights = parseInt(boton.dataset.nNights) || 0;
+                reservaCotizadorActual.totalSinComisiones = parseFloat(boton.dataset.precioTotalSinComisiones) || 0;
+                reservaCotizadorActual.costoBase = parseFloat(boton.dataset.costoTotal) || 0;
+
+                resetCuponCotizadorUI();
             };
 
 
@@ -1567,6 +1779,18 @@
                         departureDate: data.departureDate,
                         nNights: data.nNights
 
+                    }
+
+                    if (cuponAplicadoCotizador) {
+                        comisionBody.cupon = {
+                            cuponId: cuponAplicadoCotizador.cuponId,
+                            codigo: cuponAplicadoCotizador.codigo,
+                            tipo: cuponAplicadoCotizador.tipo,
+                            valor: cuponAplicadoCotizador.valor,
+                            descuentoTotal: cuponAplicadoCotizador.descuentoTotal,
+                            aplicableA: cuponAplicadoCotizador.aplicableA,
+                            clienteId: null
+                        };
                     }
 
                     const agregarComisiones = await fetch('/api/utilidades/reserva', {

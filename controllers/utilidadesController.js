@@ -345,7 +345,18 @@ async function calcularComisionesInternas(info) {
     try {
         const loggedUserId = info.userId;
         const nNights = info.nNights;
-        console.log("nnights: ", nNights)
+        const totalSinComisiones = parseFloat(info.totalSinComisiones) || 0;
+        const costoBase = parseFloat(info.costoBase) || 0;
+        
+        // Datos del cupón (opcionales)
+        const cuponData = info.cupon || null;
+        
+        console.log("========== CALCULAR COMISIONES INTERNAS - INICIO ==========");
+        console.log("User ID:", loggedUserId);
+        console.log("Noches:", nNights);
+        console.log("Total Sin Comisiones:", totalSinComisiones);
+        console.log("Costo Base:", costoBase);
+        console.log("Cupón:", cuponData ? 'SÍ' : 'NO');
 
         const costosGerente = await Costos.findOne({ category: "Gerente" }); // amount
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
@@ -354,6 +365,113 @@ async function calcularComisionesInternas(info) {
         if (!costosGerente) { throw new Error("No se encontró costos para gerente. Favor de agregar.") }
         if (!costosVendedor) { throw new Error("No se encontró costos para vendedor. Favor de agregar.") }
         if (!costosAdministrador) { throw new Error("No se encontró costos para administrador. Favor de agregar.") }
+
+        // Calcular factor de ajuste para comisiones si hay cupón
+        // Nueva lógica: NyN siempre fijo ($35), el resto se distribuye según reglas
+        let factorAjusteComisiones = 1;
+        
+        if (cuponData && cuponData.descuentoTotal > 0) {
+            console.log("Calculando factor de ajuste con cupón...");
+            
+            // Paso 0: Simular el while loop original para determinar qué comisiones se van a cobrar
+            let tempUser = await usersController.obtenerUsuarioPorIdMongo(loggedUserId);
+            let tempCounter = 0;
+            let comisionesQueSuman = 0;
+            const visitedUsers = new Set(); // Prevenir loops infinitos
+            
+            while (tempUser && !visitedUsers.has(tempUser._id.toString())) {
+                visitedUsers.add(tempUser._id.toString());
+                console.log(`[SIMULACIÓN] Procesando usuario: ${tempUser._id.toString()}, Privilege: ${tempUser.privilege}`);
+                
+                if (tempUser.privilege === 'Administrador') {
+                    tempCounter += 1;
+                    
+                    if (tempUser.administrator && tempUser.administrator.toString() === tempUser._id.toString()) {
+                        // Master admin - cobra comisión de administrador
+                        comisionesQueSuman += costosAdministrador.amount * nNights;
+                        console.log(`  + Comisión Master Admin: ${costosAdministrador.amount * nNights}`);
+                        break;
+                    } else if (tempUser.administrator) {
+                        // Administrador con superior - cobra como VENDEDOR
+                        comisionesQueSuman += costosVendedor.amount * nNights;
+                        console.log(`  + Comisión Admin (como vendedor): ${costosVendedor.amount * nNights}`);
+                        tempUser = await usersController.obtenerUsuarioPorIdMongo(tempUser.administrator);
+                    } else {
+                        break;
+                    }
+                } else {
+                    tempCounter += 1;
+                    if (tempCounter >= 2 && tempUser.privilege !== "Administrador") {
+                        tempUser.privilege = "Gerente";
+                    }
+                    
+                    if (tempUser.privilege === "Vendedor") {
+                        comisionesQueSuman += costosVendedor.amount * nNights;
+                        console.log(`  + Comisión Vendedor: ${costosVendedor.amount * nNights}`);
+                    } else if (tempUser.privilege === "Gerente") {
+                        comisionesQueSuman += costosGerente.amount * nNights;
+                        console.log(`  + Comisión Gerente: ${costosGerente.amount * nNights}`);
+                    }
+                    
+                    if (tempUser.administrator && !visitedUsers.has(tempUser.administrator.toString())) {
+                        tempUser = await usersController.obtenerUsuarioPorIdMongo(tempUser.administrator);
+                    } else {
+                        break;
+                    }
+                }
+            }
+            
+            console.log(`[SIMULACIÓN] Total comisiones calculadas: ${comisionesQueSuman}`);
+            
+            const utilidadOwner = totalSinComisiones - costoBase;
+            const F = 35; // NyN siempre fijo (por estancia, no por noche)
+            
+            // T = Total original COMPLETO (totalSinComisiones + comisiones que realmente aplican)
+            const T = totalSinComisiones + comisionesQueSuman + F;
+            
+            // T' = Total nuevo (después del descuento)
+            const Tprima = T - cuponData.descuentoTotal;
+            
+            // V' = Pool variable nuevo (todo menos NyN)
+            const Vprima = Tprima - F;
+            
+            console.log(`Total original (T): ${T} = ${totalSinComisiones} + ${comisionesQueSuman} (comisiones) + ${F} (NyN)`);
+            console.log(`Total nuevo (T'): ${Tprima}`);
+            console.log(`Pool variable (V'): ${Vprima}`);
+            console.log(`NyN (fijo): ${F}`);
+            
+            if (cuponData.aplicableA === 'owner_only') {
+                // Regla 1: Solo el dueño absorbe
+                // Owner' = V' - (Util + comisiones reales)
+                // Util y comisiones mantienen sus valores → factor = 1
+                factorAjusteComisiones = 1;
+                console.log("  → OWNER_ONLY: Solo el dueño absorbe, comisiones sin cambio (factor = 1)");
+                
+            } else if (cuponData.aplicableA === 'except_owner') {
+                // Regla 2: Todos menos el dueño absorben
+                // Owner fijo, resto se escala
+                const VnoOwner = utilidadOwner + comisionesQueSuman;
+                const VnoOwnerPrima = Vprima - costoBase;
+                
+                factorAjusteComisiones = VnoOwnerPrima / VnoOwner;
+                console.log(`  → EXCEPT_OWNER: Todos menos dueño absorben`);
+                console.log(`     Pool sin owner original: ${VnoOwner} = ${utilidadOwner} (utilidad) + ${comisionesQueSuman} (comisiones)`);
+                console.log(`     Pool sin owner nuevo: ${VnoOwnerPrima}`);
+                console.log(`     Factor: ${VnoOwnerPrima} / ${VnoOwner} = ${factorAjusteComisiones.toFixed(4)}`);
+                
+            } else if (cuponData.aplicableA === 'all') {
+                // Regla 3: Todos absorben (incluido el dueño)
+                const Vall = costoBase + utilidadOwner + comisionesQueSuman;
+                
+                factorAjusteComisiones = Vprima / Vall;
+                console.log(`  → ALL: Todos absorben`);
+                console.log(`     Pool total variable: ${Vall} = ${costoBase} (costo base) + ${utilidadOwner} (utilidad) + ${comisionesQueSuman} (comisiones)`);
+                console.log(`     Pool nuevo: ${Vprima}`);
+                console.log(`     Factor: ${Vprima} / ${Vall} = ${factorAjusteComisiones.toFixed(4)}`);
+            }
+        }
+        
+        console.log("Factor de ajuste final:", factorAjusteComisiones);
 
         let counter = 0
 
@@ -393,18 +511,20 @@ async function calcularComisionesInternas(info) {
 
                 if (user.administrator.toString() === user._id.toString()) {
                     if (costosGerente.commission === "Aumento por costo fijo") {
-                        finalComission += costosAdministrador.amount * nNights;
-                        minComission += costosAdministrador.amount * nNights;
-                        console.log('comision master admin: ', costosAdministrador.amount * nNights, user._id.toString());
+                        const montoAdmin = (costosAdministrador.amount * nNights) * factorAjusteComisiones;
+                        finalComission += montoAdmin;
+                        minComission += montoAdmin;
+                        console.log('comision master admin: ', montoAdmin, user._id.toString());
 
                     }
                     break;
                 } else {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
-                        finalComission += costosVendedor.amount * nNights;
-                        minComission += costosVendedor.amount * nNights;
+                        const montoVendedor = (costosVendedor.amount * nNights) * factorAjusteComisiones;
+                        finalComission += montoVendedor;
+                        minComission += montoVendedor;
 
-                        console.log('comision admin vendedor: ', costosVendedor.amount * nNights, user._id.toString());
+                        console.log('comision admin vendedor: ', montoVendedor, user._id.toString());
                         user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
                     }
                 }
@@ -421,18 +541,19 @@ async function calcularComisionesInternas(info) {
 
                 if (user.privilege === "Vendedor") {
                     if (costosVendedor.commission === "Aumento por costo fijo") {
-                        finalComission += costosVendedor.amount * nNights;
+                        const montoVendedor = (costosVendedor.amount * nNights) * factorAjusteComisiones;
+                        finalComission += montoVendedor;
+                        minComission += montoVendedor;
 
-                        minComission += costosVendedor.amount * nNights;
-
-                        console.log('comision vendedor: ', costosVendedor.amount * nNights, user._id.toString())
+                        console.log('comision vendedor: ', montoVendedor, user._id.toString())
                     }
                 } else if (user.privilege === "Gerente") {
                     if (costosGerente.commission === "Aumento por costo fijo") {
-                        finalComission += costosGerente.amount * nNights;
-                        minComission += costosGerente.amount * nNights;
+                        const montoGerente = (costosGerente.amount * nNights) * factorAjusteComisiones;
+                        finalComission += montoGerente;
+                        minComission += montoGerente;
 
-                        console.log('comision gerente: ', costosGerente.amount * nNights, user._id.toString())
+                        console.log('comision gerente: ', montoGerente, user._id.toString())
                     }
 
                 }
@@ -443,18 +564,23 @@ async function calcularComisionesInternas(info) {
 
                 user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
                 if (!user) {
-                    res.status(400).send({ message: "user not found" })
+                    throw new Error("User not found in hierarchy");
                 }
 
 
             }
         }
 
-        minComission += 35; // Comision Administracion NyN
-        finalComission += 35; // Comision Administracion NyN
+        // Comisión NyN siempre es $35, nunca se ajusta por cupón
+        const comisionNyN = 35;
+        minComission += comisionNyN; // Comision Administracion NyN
+        finalComission += comisionNyN; // Comision Administracion NyN
 
-        console.log("min comission", minComission)
-        console.log("max comission", finalComission)
+        console.log("========== RESULTADO CALCULAR COMISIONES INTERNAS ==========");
+        console.log("Comisión Mínima:", minComission);
+        console.log("Comisión Final (Máxima):", finalComission);
+        console.log("Factor de ajuste aplicado:", factorAjusteComisiones);
+        console.log("=============================================================");
         return finalComission;
     } catch (err) {
         console.log(err.message);
