@@ -576,6 +576,49 @@ async function calcularComisionesInternas(info) {
         minComission += comisionNyN; // Comision Administracion NyN
         finalComission += comisionNyN; // Comision Administracion NyN
 
+        if (info.returnBreakdown) {
+            let costoBaseAjustado = costoBase;
+            let utilidadAjustada = totalSinComisiones - costoBase;
+            let precioBaseAjustado = totalSinComisiones;
+
+            if (cuponData && cuponData.descuentoTotal > 0) {
+                if (cuponData.aplicableA === 'owner_only') {
+                    const utilidadOriginal = totalSinComisiones - costoBase;
+                    const Tprima = totalSinComisiones + minComission - cuponData.descuentoTotal;
+                    costoBaseAjustado = Tprima - utilidadOriginal - minComission;
+                    utilidadAjustada = utilidadOriginal;
+                    precioBaseAjustado = costoBaseAjustado + utilidadAjustada;
+                } else if (cuponData.aplicableA === 'except_owner') {
+                    costoBaseAjustado = costoBase;
+                    utilidadAjustada = utilidadAjustada * factorAjusteComisiones;
+                    precioBaseAjustado = costoBaseAjustado + utilidadAjustada;
+                } else if (cuponData.aplicableA === 'all') {
+                    costoBaseAjustado = costoBase * factorAjusteComisiones;
+                    utilidadAjustada = utilidadAjustada * factorAjusteComisiones;
+                    precioBaseAjustado = costoBaseAjustado + utilidadAjustada;
+                }
+            }
+
+            const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+            const minComissionRedondeada = round2(minComission);
+            const finalComissionRedondeada = round2(finalComission);
+
+            costoBaseAjustado = round2(costoBaseAjustado);
+            utilidadAjustada = round2(utilidadAjustada);
+            precioBaseAjustado = round2(precioBaseAjustado);
+            const precioTotalFinal = round2(precioBaseAjustado + minComissionRedondeada);
+
+            return {
+                minComission: minComissionRedondeada,
+                finalComission: finalComissionRedondeada,
+                costoBaseAjustado,
+                utilidadAjustada,
+                precioBaseAjustado,
+                precioTotalFinal,
+                factorAjusteComisiones
+            };
+        }
+
         console.log("========== RESULTADO CALCULAR COMISIONES INTERNAS ==========");
         console.log("Comisión Mínima:", minComission);
         console.log("Comisión Final (Máxima):", finalComission);

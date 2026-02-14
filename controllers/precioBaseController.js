@@ -161,24 +161,26 @@ async function consultarPreciosPorFecha(req, res) {
 
 async function consultarPreciosPorFechas(req, res) {
     try {
-        const { fechaLlegada, fechaSalida, habitacionid, habitacionName, needSpecialPrice, pax } = req.query;
+        const { fechaLlegada, fechaSalida, habitacionid, habitacionName, needSpecialPrice, pax, cupon } = req.query;
 
-        console.log({ fechaLlegada, fechaSalida, habitacionid, habitacionName, needSpecialPrice, pax });
+        console.log({ fechaLlegada, fechaSalida, habitacionid, habitacionName, needSpecialPrice, pax, cupon });
 
         const nNights = Math.ceil((new Date(fechaSalida) - new Date(fechaLlegada)) / (1000 * 60 * 60 * 24));
 
-        const comisiones = await utilidadesController.calcularComisionesInternas({
-            userId: req.session.id,
-            nNights: nNights,
-        });
+        let cuponData = null;
+        if (cupon) {
+            try {
+                cuponData = typeof cupon === 'string' ? JSON.parse(cupon) : cupon;
+            } catch (error) {
+                return res.status(400).json({ mensaje: 'Formato de cupón inválido. Debe enviarse como JSON válido.' });
+            }
+        }
 
         let parsedPax = pax ? parseInt(pax, 10) : null;
 
         if (parsedPax === null) {
             return res.status(400).send({ mensaje: 'El número de personas es requerido' });
         }
-
-        console.log("comisionesss: ", comisiones);    
 
         let precio = null;
         console.log("fechas llegada y salida: ", fechaLlegada, fechaSalida);    
@@ -289,10 +291,60 @@ async function consultarPreciosPorFechas(req, res) {
         console.log(precios);
         const twoOrMoreNights = precios.length > 1;
         const costoBaseFinal = twoOrMoreNights ? precios.reduce((total, precio) => total + precio.costo_base_2noches, 0) : precios[0].costo_base;
-        let precioBaseFinal = twoOrMoreNights ? precios.reduce((total, precio) => total + precio.precio_base_2noches, 0) : precios[0].precio_modificado;
-        const precioTotalSinComision = precioBaseFinal;
-        precioBaseFinal += comisiones;
-        res.json({precios, costoBaseFinal, precioBaseFinal, precioTotalSinComision});
+        const precioTotalSinComision = twoOrMoreNights ? precios.reduce((total, precio) => total + precio.precio_base_2noches, 0) : precios[0].precio_modificado;
+
+        // Calcular cotización ORIGINAL (sin cupón) para referencia del frontend
+        const comisionesOriginales = await utilidadesController.calcularComisionesInternas({
+            userId: req.session.id,
+            nNights: nNights,
+            totalSinComisiones: precioTotalSinComision,
+            costoBase: costoBaseFinal,
+            returnBreakdown: true
+        });
+
+        if (!comisionesOriginales) {
+            throw new Error('No fue posible calcular las comisiones originales para la cotización.');
+        }
+
+        const totalCotizadoOriginal = Number(comisionesOriginales.precioTotalFinal || (precioTotalSinComision + comisionesOriginales.minComission));
+
+        const comisionesResultado = await utilidadesController.calcularComisionesInternas({
+            userId: req.session.id,
+            nNights: nNights,
+            totalSinComisiones: precioTotalSinComision,
+            costoBase: costoBaseFinal,
+            cupon: cuponData,
+            returnBreakdown: true
+        });
+
+        if (!comisionesResultado) {
+            throw new Error('No fue posible calcular las comisiones para la cotización.');
+        }
+
+        const minComission = Number(comisionesResultado.minComission || 0);
+        const finalComission = Number(comisionesResultado.finalComission || minComission);
+        const precioBaseFinal = Number(comisionesResultado.precioTotalFinal || (precioTotalSinComision + minComission));
+
+        res.json({
+            precios,
+            costoBaseFinal,
+            precioBaseFinal,
+            precioTotalSinComision,
+            minComission,
+            finalComission,
+            costoBaseAjustado: comisionesResultado.costoBaseAjustado,
+            utilidadAjustada: comisionesResultado.utilidadAjustada,
+            precioBaseAjustado: comisionesResultado.precioBaseAjustado,
+            precioTotalFinal: comisionesResultado.precioTotalFinal,
+            factorAjusteComisiones: comisionesResultado.factorAjusteComisiones,
+            totalCotizadoOriginal,
+            cuponAplicado: cuponData ? {
+                descuentoTotal: cuponData.descuentoTotal,
+                aplicableA: cuponData.aplicableA,
+                codigo: cuponData.codigo,
+                tipo: cuponData.tipo
+            } : null
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ mensaje: 'Hubo un error al consultar los precios base.' });
