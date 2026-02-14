@@ -3,11 +3,13 @@ let organizaciones = [];
 let cuentas = [];
 let transacciones = [];
 let solicitudes = [];
+let solicitudesOrganizacion = [];
 let cuentaSeleccionada = null;
 let usuarios = []; // Lista de usuarios disponibles
 let participantes = []; // Lista de participantes de la cuenta actual
 let participantesOrganizacion = []; // Lista temporal de participantes para nueva organización
 let organizacionSeleccionada = null; // Organización seleccionada para gestionar participantes
+let vistaSolicitudesActiva = 'cuenta';
 
 // Funciones de spinner global
 function mostrarSpinner() {
@@ -29,6 +31,7 @@ function ocultarSpinner() {
 // Inicialización
 $(document).ready(function() {
     inicializarEventos();
+    cambiarVistaSolicitudes('cuenta');
     cargarOrganizaciones();
     cargarMisCuentas();
 });
@@ -51,6 +54,27 @@ function inicializarEventos() {
     // Eventos para participantes de organización
     $('#btnAgregarParticipanteOrg').on('click', agregarParticipanteOrganizacionTemporal);
     $('#btnAgregarParticipanteOrgGestion').on('click', agregarParticipanteOrganizacion);
+
+    // Switch de vistas en tab de solicitudes
+    $('#btn-vista-solicitudes-cuenta').on('click', () => cambiarVistaSolicitudes('cuenta'));
+    $('#btn-vista-solicitudes-organizacion').on('click', async () => {
+        cambiarVistaSolicitudes('organizacion');
+        await cargarSolicitudesOrganizacion();
+    });
+    $('#filtro-solicitudes-organizacion').on('change', async function() {
+        const organizacionId = $(this).val();
+        await cargarSolicitudesOrganizacion(organizacionId);
+    });
+
+    // Modal de solicitudes híbrido
+    $('#solicitud-modo').on('change', async function() {
+        await actualizarModoSolicitud($(this).val());
+    });
+
+    $('#solicitud-organizacion').on('change', async function() {
+        const organizacionId = $(this).val();
+        await cargarCuentasPorOrganizacionParaSolicitud(organizacionId);
+    });
 
     // Listener para cuando se abre el modal de organización
     $('#modalOrganizacion').on('show.bs.modal', function(e) {
@@ -89,12 +113,126 @@ function inicializarEventos() {
         if ($(e.relatedTarget).attr('id') === 'btn-nueva-solicitud') {
             $('#formSolicitud')[0].reset();
             $('#solicitud-fecha').val(new Date().toISOString().split('T')[0]);
-            cargarCuentasParaSolicitudes();
+            $('#solicitud-modo').val('cuenta');
+            $('#solicitud-organizacion').val('');
+            // Resetear UI de transferencia
+            $('#solicitud-campo-cuenta-origen').hide();
+            $('#solicitud-campo-categoria').show();
+            $('#solicitud-campo-imagenes').show();
+            $('#solicitud-cuenta-origen').val('');
+            $('#solicitud-saldo-origen').text('');
+            $('#solicitud-cuenta-origen-label').text('Cuenta Origen (mi cuenta) *');
+            actualizarSelectOrganizacionesSolicitud();
+            actualizarModoSolicitud('cuenta');
         }
     });
 
     // Establecer fecha actual en el input de solicitud
     $('#solicitud-fecha').val(new Date().toISOString().split('T')[0]);
+    
+    // Listener para cambio de tipo en transacción (para manejar transferencias)
+    $('#transaccion-tipo').on('change', function() {
+        const tipo = $(this).val();
+        const cuentaOrigenId = $('#transaccion-cuenta-id').val();
+        
+        if (tipo === 'Transferencia') {
+            // Mostrar campo de cuenta destino
+            $('#campo-cuenta-destino').show();
+            // Ocultar campo de categoría e imágenes
+            $('#campo-categoria').hide();
+            $('#campo-imagenes').hide();
+            // Cargar cuentas disponibles para transferencia
+            if (cuentaOrigenId) {
+                cargarCuentasParaTransferencia(cuentaOrigenId);
+            }
+        } else {
+            // Ocultar campo de cuenta destino
+            $('#campo-cuenta-destino').hide();
+            // Mostrar campo de categoría e imágenes
+            $('#campo-categoria').show();
+            $('#campo-imagenes').show();
+            // Limpiar selección de cuenta destino
+            $('#transaccion-cuenta-destino').val('');
+            $('#saldo-cuenta-destino').text('-');
+        }
+    });
+    
+    // Listener para cambio en cuenta destino (mostrar saldo)
+    $('#transaccion-cuenta-destino').on('change', function() {
+        const cuentaDestinoId = $(this).val();
+        if (cuentaDestinoId) {
+            const cuenta = cuentas.find(c => c._id === cuentaDestinoId);
+            if (cuenta) {
+                $('#saldo-cuenta-destino').text(formatearMoneda(cuenta.saldoActual, cuenta.moneda));
+            }
+        } else {
+            $('#saldo-cuenta-destino').text('-');
+        }
+    });
+    
+    // Listener para cambio de tipo en solicitud (para manejar transferencias)
+    $('#solicitud-tipo').on('change', function() {
+        const tipo = $(this).val();
+        const cuentaSeleccionadaId = $('#solicitud-cuenta').val();
+        const modoSolicitud = $('#solicitud-modo').val();
+        
+        if (tipo === 'Transferencia') {
+            // Mostrar campo auxiliar para transferencia
+            $('#solicitud-campo-cuenta-origen').show();
+            // Ocultar campo de categoría e imágenes
+            $('#solicitud-campo-categoria').hide();
+            $('#solicitud-campo-imagenes').hide();
+
+            if (modoSolicitud === 'organizacion') {
+                $('#solicitud-cuenta-origen-label').text('Cuenta Destino *');
+                if (cuentaSeleccionadaId) {
+                    cargarCuentasDestinoTransferenciaOrganizacion(cuentaSeleccionadaId);
+                }
+            } else {
+                $('#solicitud-cuenta-origen-label').text('Cuenta Origen (mi cuenta) *');
+                if (cuentaSeleccionadaId) {
+                    cargarMisCuentasParaTransferenciaSolicitud(cuentaSeleccionadaId);
+                }
+            }
+        } else {
+            // Ocultar campo de cuenta origen
+            $('#solicitud-campo-cuenta-origen').hide();
+            // Mostrar campo de categoría e imágenes
+            $('#solicitud-campo-categoria').show();
+            $('#solicitud-campo-imagenes').show();
+            // Limpiar selección de cuenta origen
+            $('#solicitud-cuenta-origen').val('');
+            $('#solicitud-saldo-origen').text('');
+        }
+    });
+    
+    // Listener para cambio en cuenta destino de solicitud (cuando es transferencia, cargar mis cuentas)
+    $('#solicitud-cuenta').on('change', function() {
+        const tipo = $('#solicitud-tipo').val();
+        const cuentaSeleccionadaId = $(this).val();
+        const modoSolicitud = $('#solicitud-modo').val();
+        
+        if (tipo === 'Transferencia' && cuentaSeleccionadaId) {
+            if (modoSolicitud === 'organizacion') {
+                cargarCuentasDestinoTransferenciaOrganizacion(cuentaSeleccionadaId);
+            } else {
+                cargarMisCuentasParaTransferenciaSolicitud(cuentaSeleccionadaId);
+            }
+        }
+    });
+    
+    // Listener para cambio en cuenta origen de solicitud (mostrar saldo)
+    $('#solicitud-cuenta-origen').on('change', function() {
+        const cuentaOrigenId = $(this).val();
+        if (cuentaOrigenId && cuentas) {
+            const cuenta = cuentas.find(c => c._id === cuentaOrigenId);
+            if (cuenta) {
+                $('#solicitud-saldo-origen').text(`Saldo actual: ${formatearMoneda(cuenta.saldoActual, cuenta.moneda)}`);
+            }
+        } else {
+            $('#solicitud-saldo-origen').text('');
+        }
+    });
 }
 
 function cambiarTab(tabName) {
@@ -122,6 +260,7 @@ function cambiarTab(tabName) {
             break;
         case 'solicitudes':
             cargarSolicitudes();
+            cargarSolicitudesOrganizacion();
             break;
         case 'recurrentes':
             cargarTransaccionesRecurrentes();
@@ -141,6 +280,8 @@ async function cargarOrganizaciones() {
             organizaciones = data.data;
             renderizarOrganizaciones();
             actualizarSelectOrganizaciones();
+            actualizarSelectOrganizacionesSolicitud();
+            actualizarFiltroSolicitudesOrganizacion();
         }
     } catch (error) {
         console.error('Error al cargar organizaciones:', error);
@@ -251,6 +392,7 @@ async function guardarOrganizacion() {
     }
 
     try {
+        mostrarSpinner();
         const url = id ? `/api/sw/organizaciones/${id}` : '/api/sw/organizaciones';
         const method = id ? 'PUT' : 'POST';
 
@@ -274,6 +416,8 @@ async function guardarOrganizacion() {
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al guardar organización');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -534,6 +678,7 @@ async function agregarParticipanteOrganizacion() {
     }
     
     try {
+        mostrarSpinner();
         const response = await fetch(`/api/sw/organizaciones/${organizacionId}/participantes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -561,6 +706,8 @@ async function agregarParticipanteOrganizacion() {
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al agregar participante');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -571,6 +718,7 @@ async function eliminarParticipanteOrg(usuarioId) {
     const organizacionId = $('#participantes-org-id').val();
     
     try {
+        mostrarSpinner();
         const response = await fetch(`/api/sw/organizaciones/${organizacionId}/participantes/${usuarioId}`, {
             method: 'DELETE'
         });
@@ -593,7 +741,10 @@ async function eliminarParticipanteOrg(usuarioId) {
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al eliminar participante');
+    } finally {
+        ocultarSpinner();
     }
+        mostrarError('Error al eliminar participante');
 }
 
 // Cambiar rol de participante
@@ -910,6 +1061,7 @@ async function guardarCuenta() {
     }
 
     try {
+        mostrarSpinner();
         const url = id ? `/api/sw/cuentas/${id}` : '/api/sw/cuentas';
         const method = id ? 'PUT' : 'POST';
 
@@ -925,13 +1077,15 @@ async function guardarCuenta() {
             mostrarExito(id ? 'Cuenta actualizada' : 'Cuenta creada');
             $('#modalCuenta').modal('hide');
             $('#formCuenta')[0].reset();
-            cargarMisCuentas();
+            await cargarMisCuentas();
         } else {
             mostrarError(data.message);
         }
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al guardar cuenta');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -1091,6 +1245,133 @@ function mostrarDetalleCuenta(cuenta) {
 }
 
 // ===== SOLICITUDES =====
+function cambiarVistaSolicitudes(vista) {
+    vistaSolicitudesActiva = vista;
+
+    if (vista === 'organizacion') {
+        $('#solicitudes-vista-cuenta').addClass('hidden');
+        $('#solicitudes-vista-organizacion').removeClass('hidden');
+        $('#btn-vista-solicitudes-cuenta').removeClass('btn-primary').addClass('btn-secondary');
+        $('#btn-vista-solicitudes-organizacion').removeClass('btn-secondary').addClass('btn-primary');
+    } else {
+        $('#solicitudes-vista-organizacion').addClass('hidden');
+        $('#solicitudes-vista-cuenta').removeClass('hidden');
+        $('#btn-vista-solicitudes-organizacion').removeClass('btn-primary').addClass('btn-secondary');
+        $('#btn-vista-solicitudes-cuenta').removeClass('btn-secondary').addClass('btn-primary');
+    }
+}
+
+function actualizarSelectOrganizacionesSolicitud() {
+    const select = $('#solicitud-organizacion');
+    if (!select.length) return;
+
+    const currentValue = select.val();
+    select.empty().append('<option value="">Seleccione...</option>');
+
+    organizaciones.forEach(org => {
+        select.append(`<option value="${org._id}">${org.nombre}</option>`);
+    });
+
+    if (currentValue) {
+        select.val(currentValue);
+    }
+}
+
+function actualizarFiltroSolicitudesOrganizacion() {
+    const select = $('#filtro-solicitudes-organizacion');
+    if (!select.length) return;
+
+    const currentValue = select.val();
+    select.empty().append('<option value="">Seleccione...</option>');
+
+    organizaciones.forEach(org => {
+        select.append(`<option value="${org._id}">${org.nombre}</option>`);
+    });
+
+    const nuevoValor = currentValue || organizaciones[0]?._id;
+    if (nuevoValor) {
+        select.val(nuevoValor);
+    }
+}
+
+async function actualizarModoSolicitud(modo) {
+    const tipo = $('#solicitud-tipo').val();
+    $('#solicitud-cuenta').empty().append('<option value="">Seleccione...</option>');
+    $('#solicitud-cuenta-origen').empty().append('<option value="">Seleccione...</option>');
+    $('#solicitud-saldo-origen').text('');
+
+    if (modo === 'organizacion') {
+        $('#solicitud-campo-organizacion').show();
+        if (!$('#solicitud-organizacion').val() && organizaciones.length > 0) {
+            $('#solicitud-organizacion').val(organizaciones[0]._id);
+        }
+        await cargarCuentasPorOrganizacionParaSolicitud($('#solicitud-organizacion').val());
+    } else {
+        $('#solicitud-campo-organizacion').hide();
+        await cargarCuentasParaSolicitudes();
+    }
+
+    if (tipo === 'Transferencia') {
+        $('#solicitud-campo-cuenta-origen').show();
+        $('#solicitud-campo-categoria').hide();
+        $('#solicitud-campo-imagenes').hide();
+        if (modo === 'organizacion') {
+            $('#solicitud-cuenta-origen-label').text('Cuenta Destino *');
+        } else {
+            $('#solicitud-cuenta-origen-label').text('Cuenta Origen (mi cuenta) *');
+        }
+    } else {
+        $('#solicitud-campo-cuenta-origen').hide();
+        $('#solicitud-campo-categoria').show();
+        $('#solicitud-campo-imagenes').show();
+    }
+}
+
+async function cargarCuentasPorOrganizacionParaSolicitud(organizacionId) {
+    const select = $('#solicitud-cuenta');
+    select.empty().append('<option value="">Seleccione una cuenta...</option>');
+    window.cuentasSolicitudOrganizacion = [];
+
+    if (!organizacionId) return;
+
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/organizaciones/${organizacionId}/cuentas`);
+        const data = await response.json();
+
+        if (data.success) {
+            window.cuentasSolicitudOrganizacion = (data.data || []).filter(cuenta => cuenta.activa);
+            window.cuentasSolicitudOrganizacion.forEach(cuenta => {
+                select.append(`<option value="${cuenta._id}" data-moneda="${cuenta.moneda}">${cuenta.nombre} (${cuenta.moneda})</option>`);
+            });
+        }
+    } catch (error) {
+        console.error('Error al cargar cuentas por organización:', error);
+        mostrarError('Error al cargar cuentas de la organización');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function cargarCuentasDestinoTransferenciaOrganizacion(cuentaOrigenId) {
+    const select = $('#solicitud-cuenta-origen');
+    select.empty().append('<option value="">Seleccione cuenta destino...</option>');
+
+    const cuentaOrigen = (window.cuentasSolicitudOrganizacion || []).find(cuenta => cuenta._id === cuentaOrigenId);
+    if (!cuentaOrigen) return;
+
+    const cuentasDisponibles = (cuentas || []).filter(cuenta =>
+        cuenta._id !== cuentaOrigenId &&
+        cuenta.activa &&
+        cuenta.moneda === cuentaOrigen.moneda
+    );
+
+    cuentasDisponibles.forEach(cuenta => {
+        const etiquetaOrg = cuenta.organizacion?.nombre ? ` - ${cuenta.organizacion.nombre}` : '';
+        select.append(`<option value="${cuenta._id}">${cuenta.nombre}${etiquetaOrg}</option>`);
+    });
+}
+
 async function cargarSolicitudes() {
     try {
         mostrarSpinner();
@@ -1127,7 +1408,15 @@ function renderizarSolicitudes() {
     solicitudes.forEach(sol => {
         const fecha = new Date(sol.fecha).toLocaleDateString('es-MX');
         const monto = formatearMoneda(sol.monto, 'MXN');
-        const tipoColor = sol.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+        let tipoColor = sol.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+        let tipoIcono = sol.tipo === 'Ingreso' ? '↑' : '↓';
+        
+        // Para transferencias, usar color y símbolo especial
+        if (sol.tipo === 'Transferencia') {
+            tipoColor = 'text-purple-600';
+            tipoIcono = '⇄';
+        }
+        
         const estadoBadge = obtenerBadgeEstado(sol.estado);
         const nombreCuenta = sol.cuenta?.nombre || 'N/A';
         
@@ -1165,6 +1454,13 @@ function renderizarSolicitudes() {
                 </button>
             `;
         }
+        
+        // Construir descripción del concepto
+        let conceptoHtml = sol.concepto;
+        if (sol.tipo === 'Transferencia' && sol.cuentaDestino) {
+            const nombreDestino = sol.cuentaDestino?.nombre || 'N/A';
+            conceptoHtml += `<br><small class="text-gray-600">→ ${nombreDestino}</small>`;
+        }
 
         tbody.append(`
             <tr class="border-b border-gray-200 hover:bg-gray-100">
@@ -1174,9 +1470,9 @@ function renderizarSolicitudes() {
                         <i class="fas fa-wallet me-1"></i>${nombreCuenta}
                     </span>
                 </td>
-                <td class="px-6 py-4 ${tipoColor}">${sol.tipo}</td>
+                <td class="px-6 py-4 ${tipoColor}"><span style="font-size: 1.2em;">${tipoIcono}</span> ${sol.tipo}</td>
                 <td class="px-6 py-4 font-medium text-gray-900">
-                    ${sol.concepto}
+                    ${conceptoHtml}
                     ${sol.imagenes && sol.imagenes.length > 0 ? `
                         <i class="fas fa-paperclip text-gray-500 ms-2" title="${sol.imagenes.length} imagen(es)"></i>
                     ` : ''}
@@ -1192,6 +1488,228 @@ function renderizarSolicitudes() {
     });
 }
 
+async function cargarSolicitudesOrganizacion(organizacionId) {
+    try {
+        const filtroOrganizacionId = organizacionId || $('#filtro-solicitudes-organizacion').val();
+
+        if (!filtroOrganizacionId) {
+            solicitudesOrganizacion = [];
+            renderizarSolicitudesOrganizacion();
+            return;
+        }
+
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/solicitudes-organizacion/organizacion/${filtroOrganizacionId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            solicitudesOrganizacion = data.data || [];
+            renderizarSolicitudesOrganizacion();
+        } else {
+            mostrarError(data.message || 'Error al cargar solicitudes organizacionales');
+        }
+    } catch (error) {
+        console.error('Error al cargar solicitudes organizacionales:', error);
+        mostrarError('Error al cargar solicitudes organizacionales');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+function renderizarSolicitudesOrganizacion() {
+    const tbody = $('#tabla-solicitudes-organizacion-body');
+    if (!tbody.length) return;
+
+    tbody.empty();
+
+    if (solicitudesOrganizacion.length === 0) {
+        tbody.html(`
+            <tr>
+                <td colspan="9" class="px-6 py-4 text-center text-gray-500">
+                    No hay solicitudes organizacionales
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    const organizacionId = $('#filtro-solicitudes-organizacion').val();
+    const organizacion = organizaciones.find(org => org._id === organizacionId);
+    const miParticipacion = organizacion?.participantes?.find(p => p.usuario?._id === window.currentUserId);
+    const soyAdmin = miParticipacion?.rol === 'Administrador';
+    const totalAdmins = (organizacion?.participantes || []).filter(p => p.rol === 'Administrador').length;
+
+    solicitudesOrganizacion.forEach(sol => {
+        const fecha = new Date(sol.fecha).toLocaleDateString('es-MX');
+        const monto = formatearMoneda(sol.monto, sol.cuenta?.moneda || 'MXN');
+        let tipoColor = sol.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+        let tipoIcono = sol.tipo === 'Ingreso' ? '↑' : '↓';
+
+        if (sol.tipo === 'Transferencia') {
+            tipoColor = 'text-purple-600';
+            tipoIcono = '⇄';
+        }
+
+        const estadoBadge = obtenerBadgeEstado(sol.estado);
+        const solicitanteId = sol.solicitadoPor?._id || sol.solicitadoPor;
+        const esSolicitante = solicitanteId === window.currentUserId;
+
+        let botonesAccion = `
+            <button onclick="verDetalleSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-info" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+            </button>
+        `;
+
+        const bloqueoAutoAprobacion = esSolicitante && sol.rolSolicitante === 'Administrador' && totalAdmins >= 2;
+
+        if (sol.estado === 'Pendiente' && soyAdmin && !bloqueoAutoAprobacion) {
+            botonesAccion += `
+                <button onclick="aprobarSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-success ms-1" title="Aprobar">
+                    <i class="fas fa-check"></i>
+                </button>
+                <button onclick="rechazarSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-danger ms-1" title="Rechazar">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+        }
+
+        if (sol.estado === 'Pendiente' && esSolicitante) {
+            botonesAccion += `
+                <button onclick="cancelarSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-warning ms-1" title="Cancelar">
+                    <i class="fas fa-ban"></i>
+                </button>
+            `;
+        }
+
+        let conceptoHtml = sol.concepto;
+        if (sol.tipo === 'Transferencia' && sol.cuentaDestino) {
+            const nombreDestino = sol.cuentaDestino?.nombre || 'N/A';
+            conceptoHtml += `<br><small class="text-gray-600">→ ${nombreDestino}</small>`;
+        }
+
+        tbody.append(`
+            <tr class="border-b border-gray-200 hover:bg-gray-100">
+                <td class="px-6 py-4">${fecha}</td>
+                <td class="px-6 py-4">${sol.organizacion?.nombre || 'N/A'}</td>
+                <td class="px-6 py-4">${sol.cuenta?.nombre || 'N/A'}</td>
+                <td class="px-6 py-4 ${tipoColor}"><span style="font-size: 1.2em;">${tipoIcono}</span> ${sol.tipo}</td>
+                <td class="px-6 py-4 font-medium text-gray-900">${conceptoHtml}</td>
+                <td class="px-6 py-4">${sol.solicitadoPor?.firstName || 'N/A'} ${sol.solicitadoPor?.lastName || ''}</td>
+                <td class="px-6 py-4 text-right font-semibold ${tipoColor}">${monto}</td>
+                <td class="px-6 py-4">${estadoBadge}</td>
+                <td class="px-6 py-4 text-center">${botonesAccion}</td>
+            </tr>
+        `);
+    });
+}
+
+async function aprobarSolicitudOrganizacion(solicitudId) {
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/solicitudes-organizacion/${solicitudId}/procesar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accion: 'aprobar', comentario: '' })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Solicitud organizacional aprobada exitosamente');
+            await cargarSolicitudesOrganizacion();
+            await cargarMisCuentas();
+        } else {
+            mostrarError(data.message || 'Error al aprobar solicitud organizacional');
+        }
+    } catch (error) {
+        console.error('Error al aprobar solicitud organizacional:', error);
+        mostrarError('Error al aprobar solicitud organizacional');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function rechazarSolicitudOrganizacion(solicitudId) {
+    const result = await Swal.fire({
+        title: '¿Rechazar solicitud organizacional?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        input: 'textarea',
+        inputLabel: 'Motivo del rechazo *',
+        inputPlaceholder: 'Explica por qué se rechaza la solicitud...',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Debes especificar un motivo';
+            }
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Rechazar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ef4444',
+        background: '#ffffff',
+        color: '#1f2937'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/solicitudes-organizacion/${solicitudId}/procesar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accion: 'rechazar', motivoRechazo: result.value })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Solicitud organizacional rechazada');
+            await cargarSolicitudesOrganizacion();
+        } else {
+            mostrarError(data.message || 'Error al rechazar solicitud organizacional');
+        }
+    } catch (error) {
+        console.error('Error al rechazar solicitud organizacional:', error);
+        mostrarError('Error al rechazar solicitud organizacional');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function cancelarSolicitudOrganizacion(solicitudId) {
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/solicitudes-organizacion/${solicitudId}/cancelar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Solicitud organizacional cancelada');
+            await cargarSolicitudesOrganizacion();
+        } else {
+            mostrarError(data.message || 'Error al cancelar solicitud organizacional');
+        }
+    } catch (error) {
+        console.error('Error al cancelar solicitud organizacional:', error);
+        mostrarError('Error al cancelar solicitud organizacional');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+function verDetalleSolicitudOrganizacion(solicitudId) {
+    const solicitud = solicitudesOrganizacion.find(s => s._id === solicitudId);
+    if (!solicitud) {
+        mostrarError('Solicitud organizacional no encontrada');
+        return;
+    }
+
+    mostrarDetalleSolicitudGeneral(solicitud, 'organizacion');
+}
+
 // Cargar cuentas de organizaciones donde el usuario es participante
 async function cargarCuentasParaSolicitudes() {
     try {
@@ -1203,6 +1721,9 @@ async function cargarCuentasParaSolicitudes() {
             const select = $('#solicitud-cuenta');
             select.empty().append('<option value="">Seleccione una cuenta...</option>');
             
+            // Guardar cuentas en variable global para uso posterior
+            window.cuentasParaSolicitudes = data.data;
+            
             // Agrupar por organización
             const cuentasPorOrg = {};
             data.data.forEach(cuenta => {
@@ -1213,12 +1734,12 @@ async function cargarCuentasParaSolicitudes() {
                 cuentasPorOrg[orgNombre].push(cuenta);
             });
             
-            // Agregar opciones agrupadas
+            // Agregar opciones agrupadas con data-attributes
             Object.keys(cuentasPorOrg).sort().forEach(orgNombre => {
                 const optgroup = $(`<optgroup label="${orgNombre}"></optgroup>`);
                 cuentasPorOrg[orgNombre].forEach(cuenta => {
                     const propietario = `${cuenta.propietario.firstName} ${cuenta.propietario.lastName}`;
-                    optgroup.append(`<option value="${cuenta._id}">${cuenta.nombre} (${cuenta.moneda}) - ${propietario}</option>`);
+                    optgroup.append(`<option value="${cuenta._id}" data-moneda="${cuenta.moneda}" data-activa="${cuenta.activa}">${cuenta.nombre} (${cuenta.moneda}) - ${propietario}</option>`);
                 });
                 select.append(optgroup);
             });
@@ -1233,16 +1754,175 @@ async function cargarCuentasParaSolicitudes() {
     }
 }
 
+/**
+ * Cargar cuentas disponibles para hacer transferencias
+ * Excluye la cuenta origen y solo muestra cuentas con la misma moneda
+ */
+async function cargarCuentasParaTransferencia(cuentaOrigenId) {
+    try {
+        const select = $('#transaccion-cuenta-destino');
+        select.empty().append('<option value="">Seleccione cuenta destino...</option>');
+        
+        // Obtener la cuenta origen para conocer su moneda
+        const cuentaOrigen = cuentas.find(c => c._id === cuentaOrigenId);
+        if (!cuentaOrigen) {
+            mostrarError('Cuenta origen no encontrada');
+            return;
+        }
+        
+        // Filtrar cuentas: excluir cuenta origen y solo misma moneda
+        const cuentasDisponibles = cuentas.filter(cuenta => 
+            cuenta._id !== cuentaOrigenId && 
+            cuenta.moneda === cuentaOrigen.moneda &&
+            cuenta.activa
+        );
+        
+        if (cuentasDisponibles.length === 0) {
+            select.append('<option value="" disabled>No hay cuentas disponibles con la misma moneda</option>');
+            return;
+        }
+        
+        // Agrupar por organización
+        const cuentasPorOrg = {};
+        cuentasDisponibles.forEach(cuenta => {
+            const orgNombre = cuenta.organizacion?.nombre || 'Sin organización';
+            if (!cuentasPorOrg[orgNombre]) {
+                cuentasPorOrg[orgNombre] = [];
+            }
+            cuentasPorOrg[orgNombre].push(cuenta);
+        });
+        
+        // Agregar opciones agrupadas
+        Object.keys(cuentasPorOrg).sort().forEach(orgNombre => {
+            const optgroup = $(`<optgroup label="${orgNombre}"></optgroup>`);
+            cuentasPorOrg[orgNombre].forEach(cuenta => {
+                const saldo = formatearMoneda(cuenta.saldoActual, cuenta.moneda);
+                optgroup.append(`<option value="${cuenta._id}">${cuenta.nombre} - Saldo: ${saldo}</option>`);
+            });
+            select.append(optgroup);
+        });
+    } catch (error) {
+        console.error('Error al cargar cuentas para transferencia:', error);
+        mostrarError('Error al cargar cuentas disponibles');
+    }
+}
+
+async function cargarMisCuentasParaTransferenciaSolicitud(cuentaDestinoId) {
+    try {
+        const select = $('#solicitud-cuenta-origen');
+        select.empty().append('<option value="">Seleccione su cuenta...</option>');
+        
+        // Verificar que tengamos las cuentas del propietario (para solicitudes)
+        if (!window.cuentasParaSolicitudes || window.cuentasParaSolicitudes.length === 0) {
+            mostrarError('No hay cuentas disponibles. Por favor recarga la página.');
+            return;
+        }
+        
+        // Obtener la cuenta destino para conocer su moneda
+        const cuentaDestino = window.cuentasParaSolicitudes.find(c => c._id === cuentaDestinoId);
+        if (!cuentaDestino) {
+            mostrarError('Cuenta destino no encontrada');
+            return;
+        }
+        
+        // Obtener MIS cuentas propias (donde soy propietario)
+        if (!cuentas || cuentas.length === 0) {
+            mostrarError('No tienes cuentas propias disponibles');
+            return;
+        }
+        
+        // Filtrar: solo mis cuentas con la misma moneda que la cuenta destino
+        const misCuentasDisponibles = cuentas.filter(cuenta => 
+            cuenta.moneda === cuentaDestino.moneda &&
+            cuenta.activa &&
+            cuenta.miRol === 'Propietario' // Asegurar que soy propietario
+        );
+        
+        if (misCuentasDisponibles.length === 0) {
+            select.append('<option value="" disabled>No tienes cuentas propias con la misma moneda</option>');
+            return;
+        }
+        
+        // Agrupar por organización
+        const cuentasPorOrg = {};
+        misCuentasDisponibles.forEach(cuenta => {
+            const orgNombre = cuenta.organizacion?.nombre || 'Sin organización';
+            if (!cuentasPorOrg[orgNombre]) {
+                cuentasPorOrg[orgNombre] = [];
+            }
+            cuentasPorOrg[orgNombre].push(cuenta);
+        });
+        
+        // Agregar opciones agrupadas
+        Object.keys(cuentasPorOrg).sort().forEach(orgNombre => {
+            const optgroup = $(`<optgroup label="${orgNombre}"></optgroup>`);
+            cuentasPorOrg[orgNombre].forEach(cuenta => {
+                const saldo = formatearMoneda(cuenta.saldoActual, cuenta.moneda);
+                optgroup.append(`<option value="${cuenta._id}">${cuenta.nombre} - Saldo: ${saldo}</option>`);
+            });
+            select.append(optgroup);
+        });
+    } catch (error) {
+        console.error('Error al cargar mis cuentas para transferencia en solicitud:', error);
+        mostrarError('Error al cargar tus cuentas disponibles');
+    }
+}
+
 async function guardarSolicitud() {
-    const datos = {
-        cuentaId: $('#solicitud-cuenta').val(),
-        tipo: $('#solicitud-tipo').val(),
+    const modo = $('#solicitud-modo').val();
+    const tipo = $('#solicitud-tipo').val();
+    let datos = {
+        tipo: tipo,
         monto: parseFloat($('#solicitud-monto').val()),
         concepto: $('#solicitud-concepto').val().trim(),
         categoria: $('#solicitud-categoria').val(),
         descripcion: $('#solicitud-descripcion').val().trim(),
         fecha: $('#solicitud-fecha').val()
     };
+    
+    const cuentaPrincipal = $('#solicitud-cuenta').val();
+    const cuentaAuxiliar = $('#solicitud-cuenta-origen').val();
+
+    if (modo === 'organizacion') {
+        datos.organizacionId = $('#solicitud-organizacion').val();
+
+        if (!datos.organizacionId) {
+            mostrarError('Debe seleccionar la organización');
+            return;
+        }
+
+        if (tipo === 'Transferencia') {
+            if (!cuentaPrincipal || !cuentaAuxiliar) {
+                mostrarError('Debe seleccionar cuenta origen y cuenta destino');
+                return;
+            }
+
+            datos.cuentaId = cuentaPrincipal;
+            datos.cuentaDestinoId = cuentaAuxiliar;
+        } else {
+            datos.cuentaId = cuentaPrincipal;
+        }
+    } else {
+        // Flujo legacy por cuenta
+        if (tipo === 'Transferencia') {
+            const cuentaOrigenId = cuentaAuxiliar;
+            const cuentaDestinoId = cuentaPrincipal;
+
+            if (!cuentaOrigenId) {
+                mostrarError('Debe seleccionar su cuenta de origen para la transferencia');
+                return;
+            }
+            if (!cuentaDestinoId) {
+                mostrarError('Debe seleccionar la cuenta destino para la transferencia');
+                return;
+            }
+
+            datos.cuentaId = cuentaDestinoId;
+            datos.cuentaDestinoId = cuentaOrigenId;
+        } else {
+            datos.cuentaId = cuentaPrincipal;
+        }
+    }
 
     if (!datos.cuentaId || !datos.concepto || !datos.monto) {
         mostrarError('Complete todos los campos requeridos');
@@ -1252,8 +1932,10 @@ async function guardarSolicitud() {
     try {
         mostrarSpinner();
         
+        const endpoint = modo === 'organizacion' ? '/api/sw/solicitudes-organizacion' : '/api/sw/solicitudes';
+
         // Crear la solicitud primero
-        const response = await fetch('/api/sw/solicitudes', {
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datos)
@@ -1266,13 +1948,21 @@ async function guardarSolicitud() {
             
             // Si hay imágenes seleccionadas, subirlas
             const archivosInput = document.getElementById('solicitud-imagenes');
-            if (archivosInput && archivosInput.files.length > 0) {
+            if (modo === 'cuenta' && archivosInput && archivosInput.files.length > 0) {
                 try {
                     await subirImagenesSolicitud(solicitudId, archivosInput.files);
                     mostrarExito('Solicitud e imágenes guardadas exitosamente');
                 } catch (errorImg) {
                     console.error('Error al subir imágenes:', errorImg);
                     mostrarError('Solicitud creada, pero hubo un error al subir las imágenes');
+                }
+            } else if (modo === 'organizacion' && archivosInput && archivosInput.files.length > 0) {
+                try {
+                    await subirImagenesSolicitudOrganizacion(solicitudId, archivosInput.files);
+                    mostrarExito('Solicitud organizacional e imágenes guardadas exitosamente');
+                } catch (errorImg) {
+                    console.error('Error al subir imágenes organizacionales:', errorImg);
+                    mostrarError('Solicitud organizacional creada, pero hubo un error al subir las imágenes');
                 }
             } else {
                 mostrarExito('Solicitud creada exitosamente');
@@ -1281,7 +1971,14 @@ async function guardarSolicitud() {
             $('#modalSolicitud').modal('hide');
             $('#formSolicitud')[0].reset();
             $('#preview-solicitud-imagenes').empty();
-            cargarSolicitudes();
+            // Resetear UI de transferencia
+            $('#solicitud-campo-cuenta-origen').hide();
+            $('#solicitud-campo-categoria').show();
+            $('#solicitud-campo-imagenes').show();
+            $('#solicitud-campo-organizacion').hide();
+            $('#solicitud-modo').val('cuenta');
+            await cargarSolicitudes();
+            await cargarSolicitudesOrganizacion();
         } else {
             mostrarError(data.message);
         }
@@ -1327,6 +2024,7 @@ async function aprobarSolicitud(solicitudId) {
 
     if (result.isConfirmed) {
         try {
+            mostrarSpinner();
             const formData = new FormData();
             formData.append('accion', 'aprobar');
             formData.append('comentario', result.value.comentario || '');
@@ -1353,14 +2051,17 @@ async function aprobarSolicitud(solicitudId) {
 
             if (data.success) {
                 mostrarExito('Solicitud aprobada exitosamente');
-                cargarSolicitudes();
-                cargarMisCuentas(); // Actualizar saldos
+                // Esperar a que se carguen las solicitudes y cuentas SECUENCIALMENTE
+                await cargarSolicitudes();
+                await cargarMisCuentas(); // Actualizar saldos
             } else {
                 mostrarError(data.message || 'Error al aprobar solicitud');
             }
         } catch (error) {
             console.error('Error:', error);
             mostrarError(error.message || 'Error al aprobar solicitud');
+        } finally {
+            ocultarSpinner();
         }
     }
 }
@@ -1388,6 +2089,7 @@ async function rechazarSolicitud(solicitudId) {
 
     if (result.isConfirmed) {
         try {
+            mostrarSpinner();
             const response = await fetch(`/api/sw/solicitudes/${solicitudId}/procesar`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1410,13 +2112,15 @@ async function rechazarSolicitud(solicitudId) {
 
             if (data.success) {
                 mostrarExito('Solicitud rechazada');
-                cargarSolicitudes();
+                await cargarSolicitudes();
             } else {
                 mostrarError(data.message || 'Error al rechazar solicitud');
             }
         } catch (error) {
             console.error('Error:', error);
             mostrarError(error.message || 'Error al rechazar solicitud');
+        } finally {
+            ocultarSpinner();
         }
     }
 }
@@ -1436,6 +2140,7 @@ async function cancelarSolicitud(solicitudId) {
 
     if (result.isConfirmed) {
         try {
+            mostrarSpinner();
             const response = await fetch(`/api/sw/solicitudes/${solicitudId}/cancelar`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
@@ -1454,13 +2159,15 @@ async function cancelarSolicitud(solicitudId) {
 
             if (data.success) {
                 mostrarExito('Solicitud cancelada');
-                cargarSolicitudes();
+                await cargarSolicitudes();
             } else {
                 mostrarError(data.message || 'Error al cancelar solicitud');
             }
         } catch (error) {
             console.error('Error:', error);
             mostrarError(error.message || 'Error al cancelar solicitud');
+        } finally {
+            ocultarSpinner();
         }
     }
 }
@@ -1470,21 +2177,44 @@ function agregarTransaccion(cuentaId) {
     $('#formTransaccion')[0].reset();
     $('#transaccion-fecha').val(new Date().toISOString().split('T')[0]);
     $('#preview-imagenes').empty();
+    
+    // Resetear a estado de transacción normal (no transferencia)
+    $('#transaccion-tipo').val('Gasto');
+    $('#campo-cuenta-destino').hide();
+    $('#campo-categoria').show();
+    $('#campo-imagenes').show();
+    $('#transaccion-cuenta-destino').val('');
+    $('#saldo-cuenta-destino').text('-');
+    
     $('#modalTransaccion').modal('show');
 }
 
 async function guardarTransaccion() {
     const cuentaId = $('#transaccion-cuenta-id').val();
+    const tipo = $('#transaccion-tipo').val();
+    
     const datos = {
         cuentaId: cuentaId,
-        tipo: $('#transaccion-tipo').val(),
+        tipo: tipo,
         monto: parseFloat($('#transaccion-monto').val()),
         concepto: $('#transaccion-concepto').val().trim(),
-        categoria: $('#transaccion-categoria').val(),
         descripcion: $('#transaccion-descripcion').val().trim(),
         fecha: $('#transaccion-fecha').val(),
         notas: $('#transaccion-notas').val().trim()
     };
+    
+    // Si es transferencia, agregar cuenta destino
+    if (tipo === 'Transferencia') {
+        datos.cuentaDestinoId = $('#transaccion-cuenta-destino').val();
+        
+        if (!datos.cuentaDestinoId) {
+            mostrarError('Debe seleccionar una cuenta destino para la transferencia');
+            return;
+        }
+    } else {
+        // Solo para transacciones normales, agregar categoría
+        datos.categoria = $('#transaccion-categoria').val();
+    }
 
     if (!datos.cuentaId || !datos.concepto || !datos.monto) {
         mostrarError('Complete todos los campos requeridos');
@@ -1499,48 +2229,73 @@ async function guardarTransaccion() {
     try {
         mostrarSpinner();
         
-        // Crear la transacción primero
-        const response = await fetch('/api/sw/transacciones', {
+        // Determinar el endpoint según el tipo
+        const endpoint = tipo === 'Transferencia' ? '/api/sw/transferencias' : '/api/sw/transacciones';
+        
+        // Crear la transacción/transferencia
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datos)
         });
 
         if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+
             if (response.status === 403) {
-                mostrarError('No tienes permiso para crear transacciones en esta cuenta');
+                if (data.requiredAction === 'CREAR_SOLICITUD_ORGANIZACION') {
+                    mostrarError('No tienes permiso para realizar transacciones directamente. Debes crear una solicitud de transacción en la pestaña de Solicitudes > Nueva Solicitud > Solicitud de organización para este caso específico.');
+                    return;
+                }
+
+                if (data.message) {
+                    mostrarError(data.message);
+                    return;
+                }
+
+                mostrarError('No tienes permiso para realizar esta operación');
                 return;
             }
-            const data = await response.json();
+
             throw new Error(data.message || `Error HTTP: ${response.status}`);
         }
 
         const data = await response.json();
 
         if (data.success) {
-            const transaccionId = data.data._id;
-            
-            // Si hay imágenes seleccionadas, subirlas
-            const archivosInput = document.getElementById('transaccion-imagenes');
-            if (archivosInput && archivosInput.files.length > 0) {
-                try {
-                    await subirImagenesTransaccion(transaccionId, archivosInput.files);
-                    mostrarExito('Transacción e imágenes guardadas exitosamente');
-                } catch (errorImg) {
-                    console.error('Error al subir imágenes:', errorImg);
-                    mostrarError('Transacción creada, pero hubo un error al subir las imágenes');
-                }
+            // Para transferencias, manejo especial
+            if (tipo === 'Transferencia') {
+                mostrarExito('Transferencia creada exitosamente');
+                $('#modalTransaccion').modal('hide');
+                $('#formTransaccion')[0].reset();
+                await cargarMisCuentas(); // Actualizar saldos de ambas cuentas
+                await cargarTransacciones();
             } else {
-                mostrarExito('Transacción creada exitosamente');
+                // Para transacciones normales, manejar imágenes
+                const transaccionId = data.data._id;
+                
+                // Si hay imágenes seleccionadas, subirlas
+                const archivosInput = document.getElementById('transaccion-imagenes');
+                if (archivosInput && archivosInput.files.length > 0) {
+                    try {
+                        await subirImagenesTransaccion(transaccionId, archivosInput.files);
+                        mostrarExito('Transacción e imágenes guardadas exitosamente');
+                    } catch (errorImg) {
+                        console.error('Error al subir imágenes:', errorImg);
+                        mostrarError('Transacción creada, pero hubo un error al subir las imágenes');
+                    }
+                } else {
+                    mostrarExito('Transacción creada exitosamente');
+                }
+                
+                $('#modalTransaccion').modal('hide');
+                $('#formTransaccion')[0].reset();
+                $('#preview-imagenes').empty();
+                await cargarMisCuentas(); // Actualizar saldos
+                
+                // Recargar transacciones para mostrar la nueva con sus imágenes
+                await cargarTransacciones();
             }
-            
-            $('#modalTransaccion').modal('hide');
-            $('#formTransaccion')[0].reset();
-            $('#preview-imagenes').empty();
-            cargarMisCuentas(); // Actualizar saldos
-            
-            // Recargar transacciones para mostrar la nueva con sus imágenes
-            await cargarTransacciones();
         } else {
             mostrarError(data.message || 'Error al crear transacción');
         }
@@ -1560,13 +2315,28 @@ function verDetalleSolicitud(solicitudId) {
         return;
     }
     
+    mostrarDetalleSolicitudGeneral(solicitud, 'cuenta');
+}
+
+function mostrarDetalleSolicitudGeneral(solicitud, modo = 'cuenta') {
     const fecha = new Date(solicitud.fecha).toLocaleDateString('es-MX');
     const monto = formatearMoneda(solicitud.monto, solicitud.cuenta?.moneda || 'MXN');
-    const tipoColor = solicitud.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
-    
+    let tipoColor = solicitud.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+    if (solicitud.tipo === 'Transferencia') {
+        tipoColor = 'text-purple-600';
+    }
+
+    const fechaRespuesta = solicitud.respuesta?.fechaRespuesta || solicitud.respuesta?.fechaProcesada;
+
     let detalleHtml = `
         <div class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
+                ${modo === 'organizacion' ? `
+                    <div>
+                        <p class="text-gray-500 text-sm">Organización</p>
+                        <p class="text-gray-900 font-semibold">${solicitud.organizacion?.nombre || 'N/A'}</p>
+                    </div>
+                ` : ''}
                 <div>
                     <p class="text-gray-500 text-sm">Cuenta</p>
                     <p class="text-gray-900 font-semibold">${solicitud.cuenta?.nombre || 'N/A'}</p>
@@ -1589,7 +2359,7 @@ function verDetalleSolicitud(solicitudId) {
                 </div>
                 <div>
                     <p class="text-gray-500 text-sm">Categoría</p>
-                    <p class="text-gray-900">${solicitud.categoria}</p>
+                    <p class="text-gray-900">${solicitud.categoria || '-'}</p>
                 </div>
             </div>
             
@@ -1643,8 +2413,8 @@ function verDetalleSolicitud(solicitudId) {
                     <p class="text-gray-500 text-sm">Respuesta del propietario</p>
                     <p class="text-gray-900">${solicitud.respuesta.comentario}</p>
                     <p class="text-gray-500 text-xs mt-2">
-                        ${solicitud.respuesta.procesadaPor?.firstName || ''} - 
-                        ${new Date(solicitud.respuesta.fechaProcesada).toLocaleString('es-MX')}
+                        ${solicitud.respuesta.procesadaPor?.firstName || ''} 
+                        ${fechaRespuesta ? `- ${new Date(fechaRespuesta).toLocaleString('es-MX')}` : ''}
                     </p>
                 </div>
             ` : ''}
@@ -1661,7 +2431,7 @@ function verDetalleSolicitud(solicitudId) {
                                 <div class="relative group cursor-pointer" onclick="visualizarImagenCompleta('${imagenUrl}')">
                                     <img src="${imagenUrl}" alt="Imagen adjunta" class="w-full h-24 object-cover rounded-lg border border-gray-300 hover:border-teal-500 transition-colors">
                                     ${solicitud.estado === 'Pendiente' ? `
-                                        <button onclick="event.stopPropagation(); eliminarImagenSolicitud('${solicitud._id}', '${imagen}')" 
+                                        <button onclick="event.stopPropagation(); eliminarImagenSolicitud('${solicitud._id}', '${imagen}', '${modo}')" 
                                                 class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-gray-900 rounded-full p-1 w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                             <i class="fas fa-times text-xs"></i>
                                         </button>
@@ -1696,7 +2466,7 @@ function verDetalleSolicitud(solicitudId) {
     `;
     
     Swal.fire({
-        title: 'Detalle de Solicitud',
+        title: modo === 'organizacion' ? 'Detalle de Solicitud Organizacional' : 'Detalle de Solicitud',
         html: detalleHtml,
         width: 600,
         showCloseButton: true,
@@ -1777,7 +2547,18 @@ function renderizarTransacciones() {
     transacciones.forEach(trans => {
         const fecha = new Date(trans.fecha).toLocaleDateString('es-MX');
         const monto = formatearMoneda(trans.monto, 'MXN');
-        const tipoColor = trans.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+        
+        // Determinar color y tipo según si es transferencia
+        let tipoTexto = trans.tipo;
+        let tipoColor = 'text-gray-600';
+        
+        if (trans.tipo === 'Transferencia') {
+            tipoColor = 'text-purple-600';
+            tipoTexto = '<i class="fas fa-exchange-alt me-1"></i>Transferencia';
+        } else {
+            tipoColor = trans.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+        }
+        
         const estadoBadge = trans.aprobada ? 
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-900 text-green-300">Aprobada</span>' :
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-900 text-yellow-300">Pendiente</span>';
@@ -1787,11 +2568,21 @@ function renderizarTransacciones() {
         const iconoImagenes = cantidadImagenes > 0 ? 
             `<i class="fas fa-paperclip text-teal-600" title="${cantidadImagenes} imagen(es)"></i>` : '';
 
+        // Para transferencias, mostrar cuenta relacionada en el concepto
+        let conceptoMostrar = trans.concepto;
+        if (trans.tipo === 'Transferencia') {
+            if (trans.cuentaDestino) {
+                conceptoMostrar += ` <small class="text-gray-500">(→ ${trans.cuentaDestino.nombre})</small>`;
+            } else if (trans.transferenciaVinculada?.cuenta) {
+                conceptoMostrar += ` <small class="text-gray-500">(← Transferencia)</small>`;
+            }
+        }
+
         tbody.append(`
             <tr class="border-b border-gray-200 hover:bg-gray-100">
                 <td class="px-6 py-4">${fecha} ${iconoImagenes}</td>
-                <td class="px-6 py-4 ${tipoColor}">${trans.tipo}</td>
-                <td class="px-6 py-4 font-medium text-gray-900">${trans.concepto}</td>
+                <td class="px-6 py-4 ${tipoColor}">${tipoTexto}</td>
+                <td class="px-6 py-4 font-medium text-gray-900">${conceptoMostrar}</td>
                 <td class="px-6 py-4">${trans.categoria}</td>
                 <td class="px-6 py-4 text-right font-semibold ${tipoColor}">${monto}</td>
                 <td class="px-6 py-4">${estadoBadge}</td>
@@ -2070,6 +2861,7 @@ async function eliminarParticipante(cuentaId, usuarioId) {
     if (!confirm('¿Está seguro de eliminar este participante?')) return;
 
     try {
+        mostrarSpinner();
         const response = await fetch(`/api/sw/cuentas/${cuentaId}/participantes/${usuarioId}`, {
             method: 'DELETE'
         });
@@ -2094,6 +2886,8 @@ async function eliminarParticipante(cuentaId, usuarioId) {
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al eliminar participante');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -2377,10 +3171,18 @@ async function verDetalleTransaccion(transaccionId) {
             day: 'numeric'
         });
         const monto = formatearMoneda(trans.monto, trans.cuenta?.moneda || 'MXN');
-        const tipoColor = trans.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
-        const tipoBadge = trans.tipo === 'Ingreso' ? 
-            '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-900 text-green-300"><i class="fas fa-arrow-up me-1"></i>Ingreso</span>' :
-            '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-red-900 text-red-300"><i class="fas fa-arrow-down me-1"></i>Gasto</span>';
+        
+        let tipoColor, tipoBadge;
+        if (trans.tipo === 'Transferencia') {
+            tipoColor = 'text-purple-600';
+            tipoBadge = '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-purple-900 text-purple-300"><i class="fas fa-exchange-alt me-1"></i>Transferencia</span>';
+        } else {
+            tipoColor = trans.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+            tipoBadge = trans.tipo === 'Ingreso' ? 
+                '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-900 text-green-300"><i class="fas fa-arrow-up me-1"></i>Ingreso</span>' :
+                '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-red-900 text-red-300"><i class="fas fa-arrow-down me-1"></i>Gasto</span>';
+        }
+        
         const estadoBadge = trans.aprobada ? 
             '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-900 text-green-300"><i class="fas fa-check-circle me-1"></i>Aprobada</span>' :
             '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-yellow-900 text-yellow-300"><i class="fas fa-clock me-1"></i>Pendiente</span>';
@@ -2421,6 +3223,52 @@ async function verDetalleTransaccion(transaccionId) {
                 </div>
             </div>
         `;
+
+        // Información de Transferencia
+        if (trans.tipo === 'Transferencia') {
+            html += `
+                <div class="bg-purple-100 border-l-4 border-purple-500 rounded-lg p-4 mb-4">
+                    <h6 class="text-purple-800 mb-3"><i class="fas fa-exchange-alt me-2"></i>Detalles de Transferencia</h6>
+                    <div class="row g-3">
+            `;
+            
+            if (trans.cuentaDestino) {
+                // Esta es la transacción de origen (salida)
+                html += `
+                        <div class="col-md-6">
+                            <p class="text-purple-700 mb-1 text-sm">Transferencia desde</p>
+                            <p class="text-gray-900 mb-0 font-semibold"><i class="fas fa-wallet me-2"></i>${trans.cuenta?.nombre || 'N/A'}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-purple-700 mb-1 text-sm">Transferencia hacia</p>
+                            <p class="text-gray-900 mb-0 font-semibold"><i class="fas fa-wallet me-2"></i>${trans.cuentaDestino?.nombre || 'N/A'}</p>
+                        </div>
+                `;
+            } else if (trans.transferenciaVinculada) {
+                // Esta es la transacción de destino (entrada)
+                html += `
+                        <div class="col-md-12">
+                            <p class="text-purple-700 mb-1 text-sm">Transferencia recibida en</p>
+                            <p class="text-gray-900 mb-0 font-semibold"><i class="fas fa-wallet me-2"></i>${trans.cuenta?.nombre || 'N/A'}</p>
+                        </div>
+                `;
+            }
+            
+            if (trans.transferenciaVinculada) {
+                html += `
+                        <div class="col-md-12">
+                            <button onclick="verDetalleTransaccion('${trans.transferenciaVinculada._id}')" class="btn btn-sm btn-outline-purple">
+                                <i class="fas fa-link me-1"></i> Ver transacción vinculada
+                            </button>
+                        </div>
+                `;
+            }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+        }
 
         // Descripción
         if (trans.descripcion) {
@@ -2663,8 +3511,28 @@ async function subirImagenesSolicitud(solicitudId, files) {
     return await response.json();
 }
 
+async function subirImagenesSolicitudOrganizacion(solicitudId, files) {
+    const formData = new FormData();
+
+    Array.from(files).forEach(file => {
+        formData.append('imagenes', file);
+    });
+
+    const response = await fetch(`/api/sw/solicitudes-organizacion/${solicitudId}/imagenes`, {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Error al subir imágenes');
+    }
+
+    return await response.json();
+}
+
 // Eliminar una imagen de solicitud
-async function eliminarImagenSolicitud(solicitudId, imagenNombre) {
+async function eliminarImagenSolicitud(solicitudId, imagenNombre, modo = 'cuenta') {
     const result = await Swal.fire({
         title: '¿Eliminar imagen?',
         text: 'Esta acción no se puede deshacer',
@@ -2681,7 +3549,11 @@ async function eliminarImagenSolicitud(solicitudId, imagenNombre) {
 
     try {
         mostrarSpinner();
-        const response = await fetch(`/api/sw/solicitudes/${solicitudId}/imagenes/${imagenNombre}`, {
+        const endpoint = modo === 'organizacion'
+            ? `/api/sw/solicitudes-organizacion/${solicitudId}/imagenes/${imagenNombre}`
+            : `/api/sw/solicitudes/${solicitudId}/imagenes/${imagenNombre}`;
+
+        const response = await fetch(endpoint, {
             method: 'DELETE'
         });
 
@@ -2690,7 +3562,11 @@ async function eliminarImagenSolicitud(solicitudId, imagenNombre) {
         if (data.success) {
             mostrarExito('Imagen eliminada exitosamente');
             // Recargar solicitudes para actualizar la lista
-            await cargarSolicitudes();
+            if (modo === 'organizacion') {
+                await cargarSolicitudesOrganizacion();
+            } else {
+                await cargarSolicitudes();
+            }
         } else {
             mostrarError(data.message);
         }
@@ -3503,7 +4379,7 @@ async function guardarTransaccionRecurrente() {
             mostrarExito('Transacción recurrente creada exitosamente');
             $('#modalTransaccionRecurrente').modal('hide');
             $('#formTransaccionRecurrente')[0].reset();
-            cargarTransaccionesRecurrentes();
+            await cargarTransaccionesRecurrentes();
         } else {
             mostrarError(data.message || 'Error al crear transacción recurrente');
         }
@@ -3539,8 +4415,9 @@ async function ejecutarRecurrenteManual(recurrenteId) {
 
         if (data.success) {
             mostrarExito('Transacción ejecutada exitosamente');
-            cargarTransaccionesRecurrentes();
-            cargarTransacciones(); // Recargar transacciones también
+            await cargarTransaccionesRecurrentes();
+            await cargarTransacciones(); // Recargar transacciones también
+            await cargarMisCuentas(); // Actualizar saldos
         } else {
             mostrarError(data.message);
         }
@@ -3565,7 +4442,7 @@ async function toggleRecurrente(recurrenteId, estadoActual) {
 
         if (data.success) {
             mostrarExito(`Transacción recurrente ${!estadoActual ? 'activada' : 'pausada'}`);
-            cargarTransaccionesRecurrentes();
+            await cargarTransaccionesRecurrentes();
         } else {
             mostrarError(data.message);
         }
@@ -3602,7 +4479,7 @@ async function eliminarRecurrente(recurrenteId) {
 
         if (data.success) {
             mostrarExito('Transacción recurrente eliminada');
-            cargarTransaccionesRecurrentes();
+            await cargarTransaccionesRecurrentes();
         } else {
             mostrarError(data.message);
         }
@@ -3664,8 +4541,9 @@ async function ejecutarRecurrentesManualmente() {
 
         if (data.success) {
             mostrarExito(`Se ejecutaron ${data.data.ejecutadas} transacciones recurrentes`);
-            cargarTransaccionesRecurrentes();
-            cargarTransacciones();
+            await cargarTransaccionesRecurrentes();
+            await cargarTransacciones();
+            await cargarMisCuentas(); // Actualizar saldos
         } else {
             mostrarError(data.message);
         }
@@ -3965,8 +4843,9 @@ async function pagarCuota(pagoId, cuotaNumero) {
 
         if (data.success) {
             mostrarExito('Cuota pagada exitosamente');
-            cargarPagosDiferidos();
-            cargarTransacciones();
+            await cargarPagosDiferidos();
+            await cargarTransacciones();
+            await cargarMisCuentas(); // Actualizar saldos
             // Cerrar el modal actual y reabrir el detalle actualizado
             Swal.close();
             setTimeout(() => verDetallePagoDiferido(pagoId), 500);

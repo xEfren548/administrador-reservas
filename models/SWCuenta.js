@@ -117,13 +117,48 @@ swCuentaSchema.methods.calcularSaldo = async function() {
                     $sum: {
                         $cond: [{ $eq: ['$tipo', 'Gasto'] }, '$monto', 0]
                     }
+                },
+                // Transferencias salientes (tienen cuentaDestino definido)
+                totalTransferenciasSalida: {
+                    $sum: {
+                        $cond: [
+                            { 
+                                $and: [
+                                    { $eq: ['$tipo', 'Transferencia'] },
+                                    { $ne: [{ $type: '$cuentaDestino' }, 'missing'] }
+                                ]
+                            }, 
+                            '$monto', 
+                            0
+                        ]
+                    }
+                },
+                // Transferencias entrantes (NO tienen cuentaDestino - campo missing)
+                totalTransferenciasEntrada: {
+                    $sum: {
+                        $cond: [
+                            { 
+                                $and: [
+                                    { $eq: ['$tipo', 'Transferencia'] },
+                                    { $eq: [{ $type: '$cuentaDestino' }, 'missing'] }
+                                ]
+                            }, 
+                            '$monto', 
+                            0
+                        ]
+                    }
                 }
             }
         }
     ]);
 
     if (result.length > 0) {
-        this.saldoActual = this.saldoInicial + result[0].totalIngresos - result[0].totalGastos;
+        const { totalIngresos, totalGastos, totalTransferenciasSalida, totalTransferenciasEntrada } = result[0];
+        this.saldoActual = this.saldoInicial 
+            + totalIngresos 
+            - totalGastos 
+            + totalTransferenciasEntrada 
+            - totalTransferenciasSalida;
     } else {
         this.saldoActual = this.saldoInicial;
     }

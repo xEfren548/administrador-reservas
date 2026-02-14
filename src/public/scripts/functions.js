@@ -889,12 +889,29 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = {
                 firstName: document.getElementById("txtClientName").value,
                 lastName: document.getElementById("txtClientLastname").value,
-                phone: document.getElementById("txtClientPhone").value,
+                phone: (() => {
+                    const countryCodeElement = document.getElementById("slctClientCountryCode");
+                    const countryCode = countryCodeElement ? (countryCodeElement.value || '+52') : '+52';
+                    const rawPhone = document.getElementById("txtClientPhone").value || '';
+                    const localDigits = rawPhone.replace(/\D/g, '');
+                    return `${countryCode}${localDigits}`;
+                })(),
                 address: document.getElementById("txtClientAddress").value,
                 email: document.getElementById("txtClientEmail").value,
                 identificationType: document.getElementById("slctClientIdType").value,
                 identificationNumber: document.getElementById("txtClientIdNumber").value
             };
+
+            const localDigits = (document.getElementById("txtClientPhone").value || '').replace(/\D/g, '');
+            if (localDigits.length !== 10) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Teléfono inválido',
+                    text: 'El teléfono debe tener exactamente 10 dígitos para MX (+52) o USA (+1).',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
 
             try {
                 const response = await fetch('/api/clientes/crear-cliente', {

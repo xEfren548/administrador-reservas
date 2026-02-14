@@ -1,6 +1,7 @@
 const SWTransaccion = require('../models/SWTransaccion');
 const SWCuenta = require('../models/SWCuenta');
 const SWParticipante = require('../models/SWParticipante');
+const SWOrganizacion = require('../models/SWOrganizacion');
 const Evento = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const { check, validationResult } = require('express-validator');
@@ -15,7 +16,7 @@ const createTransaccionValidators = [
         .isMongoId().withMessage('ID de cuenta inválido'),
     check('tipo')
         .notEmpty().withMessage('El tipo es requerido')
-        .isIn(['Ingreso', 'Gasto']).withMessage('Tipo inválido'),
+        .isIn(['Ingreso', 'Gasto', 'Transferencia']).withMessage('Tipo inválido'),
     check('monto')
         .notEmpty().withMessage('El monto es requerido')
         .isFloat({ min: 0.01 }).withMessage('El monto debe ser mayor a 0'),
@@ -24,12 +25,16 @@ const createTransaccionValidators = [
         .isLength({ min: 3, max: 200 }).withMessage('El concepto debe tener entre 3 y 200 caracteres')
         .trim(),
     check('categoria')
-        .notEmpty().withMessage('La categoría es requerida')
+        .optional()
         .isIn([
             'Alimentación', 'Transporte', 'Servicios', 'Mantenimiento',
             'Compras', 'Salud', 'Entretenimiento', 'Educación', 'Hogar',
-            'Salario', 'Venta', 'Inversión', 'Préstamo', 'Reembolso', 'Otro'
+            'Salario', 'Venta', 'Inversión', 'Préstamo', 'Reembolso', 'Transferencia', 'Otro'
         ]).withMessage('Categoría inválida'),
+    check('cuentaDestinoId')
+        .if(check('tipo').equals('Transferencia'))
+        .notEmpty().withMessage('La cuenta destino es requerida para transferencias')
+        .isMongoId().withMessage('ID de cuenta destino inválido'),
     check('fecha')
         .optional()
         .isISO8601().withMessage('Fecha inválida'),
@@ -44,6 +49,46 @@ const createTransaccionValidators = [
         .optional()
         .isString().withMessage('Cada imagen debe ser una ruta de texto')
 ];
+
+const evaluarGobernanzaOrganizacion = async (cuenta, userId) => {
+    if (!cuenta?.organizacion) {
+        return { requiereSolicitudOrganizacion: false };
+    }
+
+    const organizacion = await SWOrganizacion.findById(cuenta.organizacion).select('participantes');
+
+    if (!organizacion || !Array.isArray(organizacion.participantes) || organizacion.participantes.length === 0) {
+        return { requiereSolicitudOrganizacion: false };
+    }
+
+    const participante = organizacion.participantes.find(
+        (item) => item.usuario.toString() === userId.toString()
+    );
+
+    if (!participante) {
+        return { requiereSolicitudOrganizacion: false };
+    }
+
+    const totalAdmins = organizacion.participantes.filter(
+        (item) => item.rol === 'Administrador'
+    ).length;
+
+    if (participante.rol === 'Miembro') {
+        return {
+            requiereSolicitudOrganizacion: true,
+            message: 'Como miembro de organización, debe crear una solicitud organizacional para este movimiento'
+        };
+    }
+
+    if (participante.rol === 'Administrador' && totalAdmins > 1) {
+        return {
+            requiereSolicitudOrganizacion: true,
+            message: 'La organización tiene múltiples administradores. Este movimiento debe enviarse como solicitud organizacional para aprobación'
+        };
+    }
+
+    return { requiereSolicitudOrganizacion: false };
+};
 
 /**
  * Crear transacción directa (solo propietario puede aprobar directamente)
@@ -88,6 +133,15 @@ const createTransaccion = async (req, res) => {
             return res.status(403).json({
                 success: false,
                 message: 'Solo el propietario puede crear transacciones directamente'
+            });
+        }
+
+        const politica = await evaluarGobernanzaOrganizacion(cuenta, userId);
+        if (politica.requiereSolicitudOrganizacion) {
+            return res.status(403).json({
+                success: false,
+                message: politica.message,
+                requiredAction: 'CREAR_SOLICITUD_ORGANIZACION'
             });
         }
 
@@ -190,6 +244,8 @@ const getTransacciones = async (req, res) => {
         const transacciones = await SWTransaccion.find(filter)
             .populate('creadoPor', 'firstName lastName email')
             .populate('aprobadaPor', 'firstName lastName')
+            .populate('transferenciaVinculada', '_id concepto monto fecha tipo')
+            .populate('cuentaDestino', 'nombre moneda')
             .populate({
                 path: 'reservaAsociada',
                 select: 'arrivalDate departureDate resourceId',
@@ -236,6 +292,8 @@ const getTransaccionById = async (req, res) => {
             .populate('creadoPor', 'firstName lastName email')
             .populate('aprobadaPor', 'firstName lastName email')
             .populate('solicitudOriginal')
+            .populate('transferenciaVinculada', '_id concepto monto fecha tipo cuenta')
+            .populate('cuentaDestino', 'nombre moneda')
             .populate({
                 path: 'reservaAsociada',
                 select: 'arrivalDate departureDate resourceId',
@@ -793,9 +851,78 @@ const deleteTransaccionImage = async (req, res) => {
     }
 };
 
+/**
+ * Crear transferencia entre cuentas
+ */
+const createTransferencia = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ 
+                success: false, 
+                errors: errors.array() 
+            });
+        }
+
+        const { 
+            cuentaId, 
+            cuentaDestinoId,
+            monto, 
+            concepto, 
+            descripcion
+        } = req.body;
+
+        const userId = req.session.userId;
+
+        const cuentaOrigen = await SWCuenta.findById(cuentaId);
+        if (!cuentaOrigen) {
+            return res.status(404).json({
+                success: false,
+                message: 'Cuenta de origen no encontrada'
+            });
+        }
+
+        const politica = await evaluarGobernanzaOrganizacion(cuentaOrigen, userId);
+        if (politica.requiereSolicitudOrganizacion) {
+            return res.status(403).json({
+                success: false,
+                message: politica.message,
+                requiredAction: 'CREAR_SOLICITUD_ORGANIZACION'
+            });
+        }
+
+        // Crear la transferencia usando el método estático del modelo
+        const resultado = await SWTransaccion.crearTransferencia(
+            cuentaId,
+            cuentaDestinoId,
+            monto,
+            concepto,
+            descripcion,
+            userId
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Transferencia creada exitosamente',
+            data: {
+                transaccionOrigen: resultado.origen,
+                transaccionDestino: resultado.destino
+            }
+        });
+    } catch (error) {
+        console.error('Error al crear transferencia:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error al crear la transferencia',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     createTransaccionValidators,
     createTransaccion,
+    createTransferencia,
     getTransacciones,
     getTransaccionById,
     updateTransaccionNotas,

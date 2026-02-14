@@ -9,7 +9,7 @@ const swTransaccionSchema = new Schema({
     },
     tipo: {
         type: String,
-        enum: ['Ingreso', 'Gasto'],
+        enum: ['Ingreso', 'Gasto', 'Transferencia'],
         required: true
     },
     monto: {
@@ -44,6 +44,7 @@ const swTransaccionSchema = new Schema({
             'Préstamo',
             'Reembolso',
             'Reserva',
+            'Transferencia',
             'Otro'
         ],
         required: true,
@@ -105,6 +106,16 @@ const swTransaccionSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Documento'
     },
+    // Para transferencias: referencia a la transacción vinculada
+    transferenciaVinculada: {
+        type: Schema.Types.ObjectId,
+        ref: 'SWTransaccion'
+    },
+    // Para transferencias: cuenta destino (solo se usa en la transacción de origen/gasto)
+    cuentaDestino: {
+        type: Schema.Types.ObjectId,
+        ref: 'SWCuenta'
+    },
     etiquetas: [{
         type: String,
         trim: true
@@ -133,6 +144,7 @@ swTransaccionSchema.index({ cuenta: 1, aprobada: 1 });
 swTransaccionSchema.index({ creadoPor: 1 });
 swTransaccionSchema.index({ tipo: 1, categoria: 1 });
 swTransaccionSchema.index({ fecha: -1 });
+swTransaccionSchema.index({ transferenciaVinculada: 1 });
 
 // Middleware para actualizar updatedAt
 swTransaccionSchema.pre('save', function(next) {
@@ -144,7 +156,7 @@ swTransaccionSchema.pre('save', function(next) {
 swTransaccionSchema.pre('save', function(next) {
     if (!this.isNew && this.aprobada && this.isModified()) {
         // Permitir solo actualizar ciertos campos en transacciones aprobadas
-        const allowedFields = ['notas', 'etiquetas', 'archivosAdjuntos'];
+        const allowedFields = ['notas', 'etiquetas', 'archivosAdjuntos', 'transferenciaVinculada', 'updatedAt', 'imagenes'];
         const modifiedFields = this.modifiedPaths();
         
         const hasDisallowedChanges = modifiedFields.some(field => 
@@ -153,6 +165,20 @@ swTransaccionSchema.pre('save', function(next) {
         
         if (hasDisallowedChanges) {
             return next(new Error('No se pueden modificar transacciones aprobadas'));
+        }
+    }
+    next();
+});
+
+// Middleware para validar transferencias
+swTransaccionSchema.pre('save', function(next) {
+    if (this.tipo === 'Transferencia') {
+        // Forzar categoría a Transferencia
+        this.categoria = 'Transferencia';
+        
+        // Validar que tenga transferenciaVinculada (excepto durante creación inicial)
+        if (!this.isNew && !this.transferenciaVinculada) {
+            return next(new Error('Las transferencias deben tener una transacción vinculada'));
         }
     }
     next();
@@ -199,6 +225,36 @@ swTransaccionSchema.statics.obtenerResumen = async function(cuentaId, fechaInici
                         $cond: [{ $eq: ['$tipo', 'Gasto'] }, '$monto', 0]
                     }
                 },
+                // Transferencias salientes (tienen cuentaDestino definido) - se restan
+                totalTransferenciasSalida: {
+                    $sum: {
+                        $cond: [
+                            { 
+                                $and: [
+                                    { $eq: ['$tipo', 'Transferencia'] },
+                                    { $ne: [{ $type: '$cuentaDestino' }, 'missing'] }
+                                ]
+                            }, 
+                            '$monto', 
+                            0
+                        ]
+                    }
+                },
+                // Transferencias entrantes (NO tienen cuentaDestino - campo missing) - se suman
+                totalTransferenciasEntrada: {
+                    $sum: {
+                        $cond: [
+                            { 
+                                $and: [
+                                    { $eq: ['$tipo', 'Transferencia'] },
+                                    { $eq: [{ $type: '$cuentaDestino' }, 'missing'] }
+                                ]
+                            }, 
+                            '$monto', 
+                            0
+                        ]
+                    }
+                },
                 cantidadTransacciones: { $sum: 1 }
             }
         },
@@ -207,7 +263,14 @@ swTransaccionSchema.statics.obtenerResumen = async function(cuentaId, fechaInici
                 _id: 0,
                 totalIngresos: 1,
                 totalGastos: 1,
-                balance: { $subtract: ['$totalIngresos', '$totalGastos'] },
+                totalTransferenciasSalida: 1,
+                totalTransferenciasEntrada: 1,
+                balance: { 
+                    $subtract: [
+                        { $add: ['$totalIngresos', '$totalTransferenciasEntrada'] },
+                        { $add: ['$totalGastos', '$totalTransferenciasSalida'] }
+                    ]
+                },
                 cantidadTransacciones: 1
             }
         }
@@ -250,6 +313,136 @@ swTransaccionSchema.statics.obtenerPorCategoria = async function(cuentaId, fecha
         },
         { $sort: { total: -1 } }
     ]);
+};
+
+// Método estático para crear transferencia entre cuentas
+swTransaccionSchema.statics.crearTransferencia = async function(cuentaOrigenId, cuentaDestinoId, monto, concepto, descripcion, userId, skipAccessValidation = false) {
+    const SWCuenta = mongoose.model('SWCuenta');
+    const SWParticipante = mongoose.model('SWParticipante');
+    const session = await mongoose.startSession();
+    
+    try {
+        session.startTransaction();
+        
+        // Validar que las cuentas existen
+        const cuentaOrigen = await SWCuenta.findById(cuentaOrigenId).session(session);
+        const cuentaDestino = await SWCuenta.findById(cuentaDestinoId).session(session);
+        
+        if (!cuentaOrigen) {
+            throw new Error('Cuenta de origen no encontrada');
+        }
+        if (!cuentaDestino) {
+            throw new Error('Cuenta de destino no encontrada');
+        }
+        
+        // Validar que las cuentas sean diferentes
+        if (cuentaOrigenId.toString() === cuentaDestinoId.toString()) {
+            throw new Error('No se puede transferir a la misma cuenta');
+        }
+        
+        // Validar que tengan la misma moneda
+        if (cuentaOrigen.moneda !== cuentaDestino.moneda) {
+            throw new Error(`No se puede transferir entre cuentas con diferentes monedas (${cuentaOrigen.moneda} → ${cuentaDestino.moneda})`);
+        }
+        
+        // Solo validar permisos si NO se omiten las validaciones de acceso
+        if (!skipAccessValidation) {
+            // Verificar acceso del usuario a cuenta origen
+            const participanteOrigen = await SWParticipante.findOne({
+                cuenta: cuentaOrigenId,
+                usuario: userId,
+                activo: true
+            }).session(session);
+            
+            if (!participanteOrigen) {
+                throw new Error('No tiene acceso a la cuenta de origen');
+            }
+            
+            // Solo el propietario puede hacer transferencias
+            if (participanteOrigen.rol !== 'Propietario' && cuentaOrigen.propietario.toString() !== userId.toString()) {
+                throw new Error('Solo el propietario puede realizar transferencias');
+            }
+            
+            // Verificar acceso del usuario a cuenta destino
+            const participanteDestino = await SWParticipante.findOne({
+                cuenta: cuentaDestinoId,
+                usuario: userId,
+                activo: true
+            }).session(session);
+            
+            if (!participanteDestino) {
+                throw new Error('No tiene acceso a la cuenta de destino');
+            }
+        }
+        
+        // Validar saldo suficiente
+        await cuentaOrigen.calcularSaldo();
+        if (cuentaOrigen.saldoActual < monto) {
+            throw new Error(`Saldo insuficiente en cuenta origen. Disponible: ${cuentaOrigen.saldoActual} ${cuentaOrigen.moneda}`);
+        }
+        
+        const fecha = new Date();
+        
+        // Crear transacción de salida (Gasto) en cuenta origen
+        const transaccionOrigen = new this({
+            cuenta: cuentaOrigenId,
+            tipo: 'Transferencia',
+            monto,
+            concepto: concepto || `Transferencia a ${cuentaDestino.nombre}`,
+            descripcion,
+            categoria: 'Transferencia',
+            fecha,
+            creadoPor: userId,
+            aprobada: true,
+            aprobadaPor: userId,
+            fechaAprobacion: fecha,
+            cuentaDestino: cuentaDestinoId
+        });
+        
+        // Crear transacción de entrada (Ingreso) en cuenta destino
+        const transaccionDestino = new this({
+            cuenta: cuentaDestinoId,
+            tipo: 'Transferencia',
+            monto,
+            concepto: concepto || `Transferencia desde ${cuentaOrigen.nombre}`,
+            descripcion,
+            categoria: 'Transferencia',
+            fecha,
+            creadoPor: userId,
+            aprobada: true,
+            aprobadaPor: userId,
+            fechaAprobacion: fecha
+        });
+        
+        // Guardar ambas transacciones para obtener sus IDs
+        await transaccionOrigen.save({ session });
+        await transaccionDestino.save({ session });
+        
+        // Vincular las transacciones
+        transaccionOrigen.transferenciaVinculada = transaccionDestino._id;
+        transaccionDestino.transferenciaVinculada = transaccionOrigen._id;
+        
+        await transaccionOrigen.save({ session });
+        await transaccionDestino.save({ session });
+        
+        // Actualizar saldos
+        await cuentaOrigen.calcularSaldo();
+        await cuentaDestino.calcularSaldo();
+        await cuentaOrigen.save({ session });
+        await cuentaDestino.save({ session });
+        
+        await session.commitTransaction();
+        
+        return {
+            origen: transaccionOrigen,
+            destino: transaccionDestino
+        };
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        session.endSession();
+    }
 };
 
 const SWTransaccion = mongoose.model('SWTransaccion', swTransaccionSchema);

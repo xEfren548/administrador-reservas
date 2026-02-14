@@ -342,9 +342,17 @@
                         <!-- Phone -->
                         <div>
                             <label for="txtClientPhone" class="block text-sm font-medium text-gray-500">Teléfono</label>
-                            <input type="tel" name="txtClientPhone" id="txtClientPhone"
-                                class="w-full p-2 mt-1 bg-gray-100 border border-gray-600 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500"
-                                placeholder="Teléfono">
+                            <div class="flex gap-2 mt-1">
+                                <select id="slctClientCountryCode"
+                                    class="w-28 p-2 bg-gray-100 border border-gray-600 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500">
+                                    <option value="+52" selected>+52 MX</option>
+                                    <option value="+1">+1 USA</option>
+                                </select>
+                                <input type="tel" name="txtClientPhone" id="txtClientPhone"
+                                    class="flex-1 p-2 bg-gray-100 border border-gray-600 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500"
+                                    placeholder="10 dígitos" maxlength="10" inputmode="numeric">
+                            </div>
+                            <small class="text-gray-500">Ingresa 10 dígitos locales; se enviará con el prefijo seleccionado.</small>
                         </div>
 
                         <!-- Address -->
@@ -1783,12 +1791,28 @@
                 const data = {
                     firstName: document.getElementById("txtClientName").value,
                     lastName: document.getElementById("txtClientLastname").value,
-                    phone: document.getElementById("txtClientPhone").value,
+                    phone: (() => {
+                        const countryCode = document.getElementById("slctClientCountryCode").value || '+52';
+                        const rawPhone = document.getElementById("txtClientPhone").value || '';
+                        const localDigits = rawPhone.replace(/\D/g, '');
+                        return `${countryCode}${localDigits}`;
+                    })(),
                     address: document.getElementById("txtClientAddress").value,
                     email: document.getElementById("txtClientEmail").value,
                     identificationType: document.getElementById("slctClientIdType").value,
                     identificationNumber: document.getElementById("txtClientIdNumber").value
                 };
+
+                const localDigits = (document.getElementById("txtClientPhone").value || '').replace(/\D/g, '');
+                if (localDigits.length !== 10) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Teléfono inválido',
+                        text: 'El teléfono debe tener exactamente 10 dígitos para MX (+52) o USA (+1).',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return;
+                }
 
                 try {
                     const response = await fetch('/api/clientes/crear-cliente', {
