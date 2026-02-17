@@ -436,20 +436,55 @@
             </div>
         </div>
 
-        {{#if evento.discount}}
+        {{#if evento.cuponInfo.usado}}
         <div class="bg-light border h-auto pt-1 pr-1 pl-1 pb-1 rounded-3 shadow-sm">
             <div class="article-row row rounded">
                 <div class="col-8">
-                    <p>Descuento</p>
-
+                    <p>Cupón usado</p>
                 </div>
                 <div class="col-4 text-right">
                     <p class="fs-5">
-                        <span class="badge bg-info">{{evento.discount}}%</span>
+                        <span class="badge bg-success">{{evento.cuponInfo.codigo}}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="article-row row rounded">
+                <div class="col-8">
+                    <p>Monto original</p>
+                </div>
+                <div class="col-4 text-right">
+                    <p class="fs-5">
+                        <span class="badge bg-info">$ {{evento.cuponInfo.montoOriginal}}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="article-row row rounded">
+                <div class="col-8">
+                    <p>Descuento aplicado</p>
+                </div>
+                <div class="col-4 text-right">
+                    <p class="fs-5">
+                        <span class="badge bg-info">$ {{evento.cuponInfo.descuentoTotal}}</span>
                     </p>
                 </div>
             </div>
         </div>
+        {{else}}
+            {{#if evento.discount}}
+            <div class="bg-light border h-auto pt-1 pr-1 pl-1 pb-1 rounded-3 shadow-sm">
+                <div class="article-row row rounded">
+                    <div class="col-8">
+                        <p>Descuento</p>
+
+                    </div>
+                    <div class="col-4 text-right">
+                        <p class="fs-5">
+                            <span class="badge bg-info">{{evento.discount}}%</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {{/if}}
         {{/if}}
 
 
