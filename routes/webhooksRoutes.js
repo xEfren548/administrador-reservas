@@ -237,7 +237,14 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
     try {
         const storedReservationData = JSON.parse(metadata.reservationData);
         const storedCustomerData = metadata.customerData ? JSON.parse(metadata.customerData) : {};
-        const storedCuponInfo = metadata.cuponInfo ? JSON.parse(metadata.cuponInfo) : null;
+        const storedCuponInfo = payment?.paymentMethodData?.cuponInfo || (() => {
+            try {
+                return metadata.cuponInfo ? JSON.parse(metadata.cuponInfo) : null;
+            } catch (error) {
+                console.warn('⚠️ Invalid legacy cuponInfo metadata JSON in webhook:', error.message);
+                return null;
+            }
+        })();
         
         const totalAmount = Number(storedReservationData.totalPrice || 0);
         const totalOriginalAmount = Number(storedReservationData.totalOriginalPrice || totalAmount);

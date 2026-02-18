@@ -460,7 +460,6 @@ router.post('/create-payment-intent', async (req, res) => {
                     phone: customerData.phone_number || customerData.phone
                 }),
                 clienteWebId: clienteWebId || '',
-                cuponInfo: cuponInfo ? JSON.stringify(cuponInfo) : '',
                 depositPercentage: '50',
                 stripeAccountRef: stripeAccountRef,
                 cuentaFinancieraId: cuentaFinancieraId ? cuentaFinancieraId.toString() : null
@@ -601,7 +600,14 @@ router.post('/confirm-payment', async (req, res) => {
         const totalOriginalAmount = Number(storedReservationData.totalOriginalPrice || fullPricing.totalOriginalPrice || totalAmount);
         const depositAmount = paymentIntent.amount / 100; // Convertir de centavos
         const remainingAmount = totalAmount - depositAmount;
-        const storedCuponInfo = metadata.cuponInfo ? JSON.parse(metadata.cuponInfo) : null;
+        const storedCuponInfo = payment?.paymentMethodData?.cuponInfo || (() => {
+            try {
+                return metadata.cuponInfo ? JSON.parse(metadata.cuponInfo) : null;
+            } catch (error) {
+                console.warn('⚠️ Invalid legacy cuponInfo metadata JSON:', error.message);
+                return null;
+            }
+        })();
         
         // Combinar datos: priorizar los del body sobre los del metadata
         const mergedReservationData = {
@@ -966,7 +972,6 @@ router.post('/create-oxxo-payment', async (req, res) => {
                 }),
                 customerData: JSON.stringify(customerData),
                 clienteWebId: clienteWebId || '',
-                cuponInfo: cuponInfo ? JSON.stringify(cuponInfo) : '',
                 paymentMethod: 'oxxo',
                 stripeAccountRef: stripeAccountRef,
                 cuentaFinancieraId: cuentaFinancieraId ? cuentaFinancieraId.toString() : null
