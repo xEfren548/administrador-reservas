@@ -1322,6 +1322,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     },
                     body: JSON.stringify({
                         codigo: codigoCupon,
+                        source: 'internal',
                         montoReserva: total,
                         habitacionId: habitacionId,
                         noches: noches,

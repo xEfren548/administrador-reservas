@@ -162,6 +162,18 @@ async function calcularComisiones(req, res) {
                 console.log(`     Pool sin owner original: ${VnoOwner} = ${utilidadOwner} (utilidad) + ${comisionesQueSuman} (comisiones)`);
                 console.log(`     Pool sin owner nuevo: ${VnoOwnerPrima}`);
                 console.log(`     Factor: ${VnoOwnerPrima} / ${VnoOwner} = ${factorAjusteComisiones.toFixed(4)}`);
+
+            } else if (cuponData.aplicableA === 'virtual_seller') {
+                // Cupón web: por ahora sigue la misma regla de absorción que except_owner
+                // (el descuento no impacta al owner y se absorbe del lado de usuarios/comisiones)
+                const VnoOwner = utilidadOwner + comisionesQueSuman;
+                const VnoOwnerPrima = Vprima - costoBase;
+
+                factorAjusteComisiones = VnoOwnerPrima / VnoOwner;
+                console.log(`  → VIRTUAL_SELLER: Absorción del lado usuarios/comisiones`);
+                console.log(`     Pool sin owner original: ${VnoOwner}`);
+                console.log(`     Pool sin owner nuevo: ${VnoOwnerPrima}`);
+                console.log(`     Factor: ${VnoOwnerPrima} / ${VnoOwner} = ${factorAjusteComisiones.toFixed(4)}`);
                 
             } else if (cuponData.aplicableA === 'all') {
                 // Regla 3: Todos absorben (incluido el dueño)
@@ -289,6 +301,12 @@ async function calcularComisiones(req, res) {
                 
             } else if (cuponData.aplicableA === 'except_owner') {
                 // Todos menos el dueño - costo base no cambia, utilidad se ajusta
+                costoBaseAjustado = costoBase;
+                utilidadAjustada = utilidadAjustada * factorAjusteComisiones;
+                precioBaseAjustado = costoBaseAjustado + utilidadAjustada;
+
+            } else if (cuponData.aplicableA === 'virtual_seller') {
+                // Cupón web: se comporta como except_owner para mantener owner intacto
                 costoBaseAjustado = costoBase;
                 utilidadAjustada = utilidadAjustada * factorAjusteComisiones;
                 precioBaseAjustado = costoBaseAjustado + utilidadAjustada;
@@ -458,6 +476,16 @@ async function calcularComisionesInternas(info) {
                 console.log(`     Pool sin owner original: ${VnoOwner} = ${utilidadOwner} (utilidad) + ${comisionesQueSuman} (comisiones)`);
                 console.log(`     Pool sin owner nuevo: ${VnoOwnerPrima}`);
                 console.log(`     Factor: ${VnoOwnerPrima} / ${VnoOwner} = ${factorAjusteComisiones.toFixed(4)}`);
+
+            } else if (cuponData.aplicableA === 'virtual_seller') {
+                const VnoOwner = utilidadOwner + comisionesQueSuman;
+                const VnoOwnerPrima = Vprima - costoBase;
+
+                factorAjusteComisiones = VnoOwnerPrima / VnoOwner;
+                console.log(`  → VIRTUAL_SELLER: Absorción del lado usuarios/comisiones`);
+                console.log(`     Pool sin owner original: ${VnoOwner}`);
+                console.log(`     Pool sin owner nuevo: ${VnoOwnerPrima}`);
+                console.log(`     Factor: ${VnoOwnerPrima} / ${VnoOwner} = ${factorAjusteComisiones.toFixed(4)}`);
                 
             } else if (cuponData.aplicableA === 'all') {
                 // Regla 3: Todos absorben (incluido el dueño)
@@ -589,6 +617,10 @@ async function calcularComisionesInternas(info) {
                     utilidadAjustada = utilidadOriginal;
                     precioBaseAjustado = costoBaseAjustado + utilidadAjustada;
                 } else if (cuponData.aplicableA === 'except_owner') {
+                    costoBaseAjustado = costoBase;
+                    utilidadAjustada = utilidadAjustada * factorAjusteComisiones;
+                    precioBaseAjustado = costoBaseAjustado + utilidadAjustada;
+                } else if (cuponData.aplicableA === 'virtual_seller') {
                     costoBaseAjustado = costoBase;
                     utilidadAjustada = utilidadAjustada * factorAjusteComisiones;
                     precioBaseAjustado = costoBaseAjustado + utilidadAjustada;
@@ -838,6 +870,16 @@ async function generarComisionReserva(req, res) {
                 console.log(`     Pool sin owner original: ${VnoOwner} = ${utilidadOwner} (utilidad) + ${comisionesQueSuman} (comisiones)`);
                 console.log(`     Pool sin owner nuevo: ${VnoOwnerPrima}`);
                 console.log(`     Factor: ${VnoOwnerPrima} / ${VnoOwner} = ${factorAjusteComisiones.toFixed(4)}`);
+
+            } else if (cuponData.aplicableA === 'virtual_seller') {
+                const VnoOwner = utilidadOwner + comisionesQueSuman;
+                const VnoOwnerPrima = Vprima - costoBase;
+
+                factorAjusteComisiones = VnoOwnerPrima / VnoOwner;
+                console.log(`  → VIRTUAL_SELLER: Absorción del lado usuarios/comisiones`);
+                console.log(`     Pool sin owner original: ${VnoOwner}`);
+                console.log(`     Pool sin owner nuevo: ${VnoOwnerPrima}`);
+                console.log(`     Factor: ${VnoOwnerPrima} / ${VnoOwner} = ${factorAjusteComisiones.toFixed(4)}`);
                 
             } else if (cuponData.aplicableA === 'all') {
                 // Regla 3: Todos absorben (incluido el dueño)
@@ -867,6 +909,10 @@ async function generarComisionReserva(req, res) {
                 
             } else if (cuponData.aplicableA === 'except_owner') {
                 // Todos menos el dueño - costo base no cambia
+                costoBaseAjustado = costoBase;
+
+            } else if (cuponData.aplicableA === 'virtual_seller') {
+                // Cupón web: mismo tratamiento financiero que except_owner
                 costoBaseAjustado = costoBase;
                 
             } else if (cuponData.aplicableA === 'all') {
@@ -902,6 +948,10 @@ async function generarComisionReserva(req, res) {
                 const utilidadOriginal = totalSinComisiones - costoBase;
                 utilidadChalet = utilidadOriginal * factorAjusteComisiones;
                 console.log(`→ Utilidad Chalet (EXCEPT_OWNER): ${utilidadOriginal} × ${factorAjusteComisiones.toFixed(4)} = ${utilidadChalet}`);
+            } else if (cuponData.aplicableA === 'virtual_seller') {
+                const utilidadOriginal = totalSinComisiones - costoBase;
+                utilidadChalet = utilidadOriginal * factorAjusteComisiones;
+                console.log(`→ Utilidad Chalet (VIRTUAL_SELLER): ${utilidadOriginal} × ${factorAjusteComisiones.toFixed(4)} = ${utilidadChalet}`);
             } else if (cuponData.aplicableA === 'all') {
                 // Ambos se ajustan con el factor
                 const utilidadOriginal = totalSinComisiones - costoBase;
@@ -1318,11 +1368,38 @@ async function generarComisionReserva(req, res) {
                 } else if (cupon.aplicableA === 'except_owner') {
                     descuentoOwnerFinal = 0;
                     descuentoUsuariosFinal = cupon.descuentoTotal;
+                } else if (cupon.aplicableA === 'virtual_seller') {
+                    descuentoOwnerFinal = 0;
+                    descuentoUsuariosFinal = cupon.descuentoTotal;
                 } else if (cupon.aplicableA === 'all') {
                     const totalOriginal = costoBase + totalSinComisiones;
                     const proporcionOwner = costoBase / totalOriginal;
                     descuentoOwnerFinal = cupon.descuentoTotal * proporcionOwner;
                     descuentoUsuariosFinal = cupon.descuentoTotal - descuentoOwnerFinal;
+                }
+
+                const cuponDoc = await Cupon.findById(cupon.cuponId)
+                    .populate('cuentaReferido', 'nombre comisionReferidor')
+                    .lean();
+
+                let esReferido = false;
+                let cuentaReferido = null;
+                let comisionReferidorTipo = null;
+                let comisionReferidorValor = 0;
+                let comisionReferidorMonto = 0;
+
+                if (cuponDoc?.esReferido && cuponDoc?.cuentaReferido?.comisionReferidor) {
+                    esReferido = true;
+                    cuentaReferido = cuponDoc.cuentaReferido._id;
+                    comisionReferidorTipo = cuponDoc.cuentaReferido.comisionReferidor.tipo;
+                    comisionReferidorValor = Number(cuponDoc.cuentaReferido.comisionReferidor.valor) || 0;
+
+                    const baseComision = (Number(totalSinComisiones) || 0) + (Number(cupon.descuentoTotal) || 0);
+                    if (comisionReferidorTipo === 'percentage') {
+                        comisionReferidorMonto = (baseComision * comisionReferidorValor) / 100;
+                    } else {
+                        comisionReferidorMonto = comisionReferidorValor;
+                    }
                 }
 
                 // Crear registro de uso
@@ -1338,7 +1415,12 @@ async function generarComisionReserva(req, res) {
                     noches: nNights,
                     aplicableA: cupon.aplicableA,
                     descuentoOwner: descuentoOwnerFinal,
-                    descuentoUsuarios: descuentoUsuariosFinal
+                    descuentoUsuarios: descuentoUsuariosFinal,
+                    esReferido,
+                    cuentaReferido,
+                    comisionReferidorTipo,
+                    comisionReferidorValor,
+                    comisionReferidorMonto
                 };
 
                 // Agregar cliente si existe

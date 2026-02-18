@@ -66,7 +66,7 @@ const cuponUsageSchema = new mongoose.Schema({
     // Distribución del descuento según aplicableA
     aplicableA: {
         type: String,
-        enum: ['all', 'owner_only', 'except_owner'],
+        enum: ['all', 'owner_only', 'except_owner', 'virtual_seller'],
         default: 'all'
     },
     descuentoOwner: {
@@ -78,6 +78,30 @@ const cuponUsageSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         min: [0, 'El descuento usuarios no puede ser negativo']
+    },
+    esReferido: {
+        type: Boolean,
+        default: false
+    },
+    cuentaReferido: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'CuentaReferido',
+        default: null
+    },
+    comisionReferidorTipo: {
+        type: String,
+        enum: ['percentage', 'fixed_amount', null],
+        default: null
+    },
+    comisionReferidorValor: {
+        type: Number,
+        default: 0,
+        min: [0, 'El valor de comisión del referidor no puede ser negativo']
+    },
+    comisionReferidorMonto: {
+        type: Number,
+        default: 0,
+        min: [0, 'El monto de comisión del referidor no puede ser negativo']
     }
 }, {
     timestamps: true

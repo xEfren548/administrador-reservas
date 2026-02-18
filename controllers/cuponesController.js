@@ -3,6 +3,7 @@ const { Parser } = require('json2csv');
 const moment = require('moment');
 const Cupon = require('../models/Cupon');
 const CuponUsage = require('../models/CuponUsage');
+const CuentaReferido = require('../models/CuentaReferido');
 const Habitacion = require('../models/Habitacion');
 const Roles = require('../models/Roles');
 
@@ -34,8 +35,8 @@ const crearCuponValidators = [
         .isFloat({ min: 0 }).withMessage('El valor no puede ser negativo'),
     check('aplicableA')
         .notEmpty().withMessage('Debe especificar a quién aplica')
-        .isIn(['all', 'owner_only', 'except_owner'])
-        .withMessage('aplicableA debe ser all, owner_only o except_owner'),
+        .isIn(['all', 'owner_only', 'except_owner', 'virtual_seller'])
+        .withMessage('aplicableA debe ser all, owner_only, except_owner o virtual_seller'),
     check('fechaInicio')
         .notEmpty().withMessage('La fecha de inicio es requerida')
         .isISO8601().withMessage('Fecha de inicio inválida'),
@@ -54,6 +55,9 @@ const crearCuponValidators = [
     check('todasCabanas')
         .optional()
         .isBoolean().withMessage('todasCabanas debe ser booleano'),
+    check('esCuponWeb')
+        .optional()
+        .isBoolean().withMessage('esCuponWeb debe ser booleano'),
     check('habitaciones')
         .optional()
         .isArray().withMessage('habitaciones debe ser un array'),
@@ -89,8 +93,8 @@ const editarCuponValidators = [
         .isFloat({ min: 0 }).withMessage('El valor no puede ser negativo'),
     check('aplicableA')
         .optional()
-        .isIn(['all', 'owner_only', 'except_owner'])
-        .withMessage('aplicableA debe ser all, owner_only o except_owner'),
+        .isIn(['all', 'owner_only', 'except_owner', 'virtual_seller'])
+        .withMessage('aplicableA debe ser all, owner_only, except_owner o virtual_seller'),
     check('fechaInicio')
         .optional()
         .isISO8601().withMessage('Fecha de inicio inválida'),
@@ -109,6 +113,9 @@ const editarCuponValidators = [
     check('todasCabanas')
         .optional()
         .isBoolean().withMessage('todasCabanas debe ser booleano'),
+    check('esCuponWeb')
+        .optional()
+        .isBoolean().withMessage('esCuponWeb debe ser booleano'),
     check('habitaciones')
         .optional()
         .isArray().withMessage('habitaciones debe ser un array'),
@@ -131,6 +138,9 @@ const validarCuponValidators = [
     check('codigo')
         .notEmpty().withMessage('El código del cupón es requerido')
         .trim(),
+    check('source')
+        .notEmpty().withMessage('El origen de validación es requerido (source)')
+        .isIn(['web', 'internal']).withMessage('source debe ser web o internal'),
     check('montoReserva')
         .optional()
         .isFloat({ min: 0 }).withMessage('El monto de reserva debe ser mayor a 0'),
@@ -184,8 +194,12 @@ const crearCupon = async (req, res) => {
             restricciones,
             descripcion,
             nochesRecibidas,
-            nochesPagadas
+            nochesPagadas,
+            esCuponWeb
         } = req.body;
+
+        const esCuponWebFinal = esCuponWeb === true || esCuponWeb === 'true';
+        const aplicableAFinal = esCuponWebFinal ? 'virtual_seller' : aplicableA;
 
         // Validar que si no son todas las cabañas, se especifiquen habitaciones
         if (!todasCabanas && (!habitaciones || habitaciones.length === 0)) {
@@ -217,7 +231,7 @@ const crearCupon = async (req, res) => {
             codigo: codigo.toUpperCase(),
             tipo,
             valor: tipo === 'nights_free' ? 0 : valor,
-            aplicableA,
+            aplicableA: aplicableAFinal,
             montoMinimoCompra,
             descuentoMaximo,
             usosLimitados,
@@ -229,6 +243,7 @@ const crearCupon = async (req, res) => {
             descripcion,
             nochesRecibidas: tipo === 'nights_free' ? nochesRecibidas : null,
             nochesPagadas: tipo === 'nights_free' ? nochesPagadas : null,
+            esCuponWeb: esCuponWebFinal,
             creadoPor: userId
         });
 
@@ -464,7 +479,8 @@ const editarCupon = async (req, res) => {
             'restricciones',
             'descripcion',
             'nochesRecibidas',
-            'nochesPagadas'
+            'nochesPagadas',
+            'esCuponWeb'
         ];
 
         // Actualizar solo los campos enviados
@@ -479,6 +495,12 @@ const editarCupon = async (req, res) => {
                 }
             }
         });
+
+        if (cupon.esCuponWeb) {
+            cupon.aplicableA = 'virtual_seller';
+        } else if (cupon.aplicableA === 'virtual_seller') {
+            cupon.aplicableA = 'all';
+        }
 
         // Validar campos específicos para nights_free
         if (cupon.tipo === 'nights_free') {
@@ -632,7 +654,7 @@ const eliminarCupon = async (req, res) => {
  */
 const validarCupon = async (req, res) => {
     try {
-        const { codigo, montoReserva, habitacionId, noches, clienteId, clienteWebId, totalSinComisiones, costoBase } = req.body;
+        const { codigo, source, montoReserva, habitacionId, noches, clienteId, clienteWebId, totalSinComisiones, costoBase } = req.body;
 
         const cupon = await Cupon.findOne({ codigo: codigo.toUpperCase() });
 
@@ -640,6 +662,21 @@ const validarCupon = async (req, res) => {
             return res.status(404).json({
                 success: false,
                 message: 'Cupón no encontrado'
+            });
+        }
+
+        // Validar canal de uso (web vs interno)
+        if (cupon.esCuponWeb && source !== 'web') {
+            return res.status(400).json({
+                success: false,
+                message: 'Este cupón solo es válido para reservas web'
+            });
+        }
+
+        if (!cupon.esCuponWeb && source !== 'internal') {
+            return res.status(400).json({
+                success: false,
+                message: 'Este cupón solo es válido para reservas internas'
             });
         }
 
@@ -793,6 +830,7 @@ const validarCupon = async (req, res) => {
         // Aquí solo marcamos cómo se debe aplicar
         let descuentoOwner = 0;
         let descuentoUsuarios = 0;
+        let referido = null;
 
         if (descuentoCalculado > 0) {
             if (cupon.aplicableA === 'owner_only') {
@@ -803,12 +841,42 @@ const validarCupon = async (req, res) => {
                 // Todo el descuento lo absorben los usuarios (comisiones)
                 descuentoOwner = 0;
                 descuentoUsuarios = descuentoCalculado;
+            } else if (cupon.aplicableA === 'virtual_seller') {
+                // Cupón web: el descuento lo absorbe el vendedor virtual
+                descuentoOwner = 0;
+                descuentoUsuarios = descuentoCalculado;
             } else if (cupon.aplicableA === 'all') {
                 // El descuento se distribuye proporcionalmente
                 // La proporción exacta se calculará en el backend con los datos reales
                 // Aquí marcamos que se distribuye entre ambos
                 descuentoOwner = descuentoCalculado * 0.5; // Placeholder
                 descuentoUsuarios = descuentoCalculado * 0.5; // Placeholder
+            }
+        }
+
+        if (cupon.esReferido && cupon.cuentaReferido) {
+            const cuentaReferido = await CuentaReferido.findById(cupon.cuentaReferido)
+                .select('nombre comisionReferidor')
+                .lean();
+
+            if (cuentaReferido?.comisionReferidor) {
+                const baseComision = Number(montoReserva) || 0;
+                let comisionEstimada = 0;
+
+                if (cuentaReferido.comisionReferidor.tipo === 'percentage') {
+                    comisionEstimada = (baseComision * (Number(cuentaReferido.comisionReferidor.valor) || 0)) / 100;
+                } else {
+                    comisionEstimada = Number(cuentaReferido.comisionReferidor.valor) || 0;
+                }
+
+                referido = {
+                    esReferido: true,
+                    cuentaReferidoId: cuentaReferido._id,
+                    cuentaReferidoNombre: cuentaReferido.nombre,
+                    tipoComision: cuentaReferido.comisionReferidor.tipo,
+                    valorComision: cuentaReferido.comisionReferidor.valor,
+                    comisionEstimada
+                };
             }
         }
 
@@ -825,12 +893,14 @@ const validarCupon = async (req, res) => {
                     nochesRecibidas: cupon.nochesRecibidas,
                     nochesPagadas: cupon.nochesPagadas,
                     aplicableA: cupon.aplicableA,
-                    descripcion: cupon.descripcion
+                    descripcion: cupon.descripcion,
+                    esCuponWeb: !!cupon.esCuponWeb
                 },
                 descuento: descuentoCalculado,
                 descuentoOwner: descuentoOwner,
                 descuentoUsuarios: descuentoUsuarios,
-                montoFinal: montoReserva ? montoReserva - descuentoCalculado : null
+                montoFinal: montoReserva ? montoReserva - descuentoCalculado : null,
+                referido
             }
         });
 
@@ -982,7 +1052,14 @@ const exportarCuponesCSV = async (req, res) => {
                     Nombre: cupon.nombre,
                     Tipo: cupon.tipo === 'percentage' ? 'Porcentaje' : cupon.tipo === 'fixed_amount' ? 'Monto Fijo' : 'Noches Gratis',
                     Valor: cupon.valor,
-                    'Aplica A': cupon.aplicableA === 'all' ? 'Todos' : cupon.aplicableA === 'owner_only' ? 'Solo Dueño' : 'Excepto Dueño',
+                    'Es Cupón Web': cupon.esCuponWeb ? 'Sí' : 'No',
+                    'Aplica A': cupon.aplicableA === 'all'
+                        ? 'Todos'
+                        : cupon.aplicableA === 'owner_only'
+                            ? 'Solo Dueño'
+                            : cupon.aplicableA === 'except_owner'
+                                ? 'Excepto Dueño'
+                                : 'Vendedor Virtual',
                     'Usos Actuales': cupon.usosActuales,
                     'Usos Limitados': cupon.usosLimitados || 'Ilimitado',
                     'Total Descuentos': totalDescuentos.toFixed(2),
@@ -996,7 +1073,7 @@ const exportarCuponesCSV = async (req, res) => {
         );
 
         const parser = new Parser({
-            fields: ['Código', 'Nombre', 'Tipo', 'Valor', 'Aplica A', 'Usos Actuales', 'Usos Limitados', 'Total Descuentos', 'Fecha Inicio', 'Fecha Fin', 'Activo', 'Creado Por', 'Fecha Creación']
+            fields: ['Código', 'Nombre', 'Tipo', 'Valor', 'Es Cupón Web', 'Aplica A', 'Usos Actuales', 'Usos Limitados', 'Total Descuentos', 'Fecha Inicio', 'Fecha Fin', 'Activo', 'Creado Por', 'Fecha Creación']
         });
 
         const csv = parser.parse(cuponesConStats);

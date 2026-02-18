@@ -98,13 +98,13 @@ function inicializarEventos() {
     document.getElementById('cupon-tipo')?.addEventListener('change', actualizarHelpTextoValor);
     document.getElementById('cupon-tipo')?.addEventListener('change', verificarAdvertenciaExceptOwner);
     document.getElementById('cupon-aplicable-a')?.addEventListener('change', verificarAdvertenciaExceptOwner);
+    document.getElementById('cupon-es-web')?.addEventListener('change', actualizarAplicableSegunCuponWeb);
     document.getElementById('cupon-todas-cabanas')?.addEventListener('change', toggleSelectorHabitaciones);
     document.getElementById('buscar-habitaciones-cupon')?.addEventListener('input', filtrarHabitacionesCupon);
 
     // Modal cupón referido
     document.getElementById('cupon-referido-tipo')?.addEventListener('change', actualizarHelpTextoValorReferido);
     document.getElementById('cupon-referido-tipo')?.addEventListener('change', verificarAdvertenciaExceptOwnerReferido);
-    document.getElementById('cupon-referido-aplicable')?.addEventListener('change', verificarAdvertenciaExceptOwnerReferido);
     document.getElementById('cupon-referido-todas-cabanas')?.addEventListener('change', toggleSelectorHabitacionesReferido);
     document.getElementById('buscar-habitaciones-referido')?.addEventListener('input', filtrarHabitacionesReferido);
 
@@ -136,6 +136,14 @@ function inicializarEventos() {
     });
 
     document.getElementById('modalEstadisticas')?.addEventListener('hidden.bs.modal', function () {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    });
+
+    document.getElementById('modalDetalleCuentaReferido')?.addEventListener('hidden.bs.modal', function () {
         const backdrops = document.querySelectorAll('.modal-backdrop');
         backdrops.forEach(backdrop => backdrop.remove());
         document.body.classList.remove('modal-open');
@@ -482,6 +490,7 @@ function abrirModalNuevoCupon() {
     document.getElementById('cupon-id').value = '';
     document.getElementById('modalCuponLabel').textContent = 'Nuevo Cupón';
     document.getElementById('cupon-todas-cabanas').checked = true;
+    document.getElementById('cupon-es-web').checked = false;
     document.getElementById('selector-habitaciones').style.display = 'none';
     
     // Limpiar checkboxes de habitaciones
@@ -490,6 +499,7 @@ function abrirModalNuevoCupon() {
     actualizarContadorHabitaciones();
     
     // Ocultar advertencia inicialmente
+    actualizarAplicableSegunCuponWeb();
     verificarAdvertenciaExceptOwner();
     
     const modal = new bootstrap.Modal(document.getElementById('modalCupon'));
@@ -511,6 +521,8 @@ async function editarCupon(id) {
             document.getElementById('cupon-tipo').value = cupon.tipo;
             document.getElementById('cupon-valor').value = cupon.valor;
             document.getElementById('cupon-aplicable-a').value = cupon.aplicableA;
+            document.getElementById('cupon-es-web').checked = !!cupon.esCuponWeb;
+            actualizarAplicableSegunCuponWeb();
             document.getElementById('cupon-fecha-inicio').value = cupon.fechaInicio.split('T')[0];
             document.getElementById('cupon-fecha-fin').value = cupon.fechaFin.split('T')[0];
             document.getElementById('cupon-usos-limitados').value = cupon.usosLimitados || '';
@@ -567,6 +579,7 @@ async function guardarCupon() {
             tipo: tipo,
             valor: tipo === 'nights_free' ? 0 : parseFloat(document.getElementById('cupon-valor').value),
             aplicableA: document.getElementById('cupon-aplicable-a').value,
+            esCuponWeb: document.getElementById('cupon-es-web').checked,
             fechaInicio: document.getElementById('cupon-fecha-inicio').value,
             fechaFin: document.getElementById('cupon-fecha-fin').value,
             todasCabanas: todasCabanas,
@@ -928,6 +941,8 @@ function abrirModalNuevaCuentaReferido() {
     
     // Resetear checkboxes
     document.getElementById('cupon-referido-todas-cabanas').checked = true;
+    document.getElementById('cupon-referido-aplicable').value = 'virtual_seller';
+    document.getElementById('cupon-referido-aplicable').disabled = true;
     document.getElementById('selector-habitaciones-referido').style.display = 'none';
     
     // Cargar habitaciones
@@ -976,7 +991,7 @@ async function guardarCuentaReferido() {
             codigoCupon: document.getElementById('cupon-referido-codigo').value,
             tipoCupon: document.getElementById('cupon-referido-tipo').value,
             valorCupon: parseFloat(document.getElementById('cupon-referido-valor').value) || 0,
-            aplicableA: document.getElementById('cupon-referido-aplicable').value,
+            aplicableA: 'virtual_seller',
             fechaInicio: document.getElementById('cupon-referido-fecha-inicio').value,
             fechaFin: document.getElementById('cupon-referido-fecha-fin').value,
             usosLimitados: parseInt(document.getElementById('cupon-referido-usos').value) || null,
@@ -1054,17 +1069,7 @@ async function verDetalleCuentaReferido(id) {
         const result = await response.json();
 
         if (result.success) {
-            const { cuenta, usos, estadisticas } = result.data;
-            
-            // Mostrar modal o alert con la información
-            alert(`
-Cuenta: ${cuenta.nombre}
-Tipo: ${cuenta.tipo}
-Código Cupón: ${cuenta.cupon?.codigo || 'N/A'}
-Total Usos: ${estadisticas.totalUsos}
-Total Descuentos: $${estadisticas.totalDescuentos.toFixed(2)}
-Comisión Total: $${estadisticas.comisionTotal.toFixed(2)}
-            `);
+            mostrarModalDetalleCuentaReferido(result.data);
         } else {
             mostrarToast(result.message || 'Error al obtener detalle', 'error');
         }
@@ -1074,6 +1079,94 @@ Comisión Total: $${estadisticas.comisionTotal.toFixed(2)}
     } finally {
         ocultarSpinner();
     }
+}
+
+function mostrarModalDetalleCuentaReferido(data) {
+    const contenido = document.getElementById('contenido-detalle-cuenta-referido');
+    if (!contenido) return;
+
+    const { cuenta, usos = [], estadisticas = {} } = data;
+    const tipoComision = cuenta?.comisionReferidor?.tipo === 'percentage' ? 'Porcentaje' : 'Monto Fijo';
+    const valorComision = cuenta?.comisionReferidor?.tipo === 'percentage'
+        ? `${parseFloat(cuenta?.comisionReferidor?.valor || 0).toFixed(2)}%`
+        : `$${parseFloat(cuenta?.comisionReferidor?.valor || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+
+    const html = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="bg-gray-50 rounded p-3">
+                <p class="text-xs text-gray-500 mb-1">Cuenta</p>
+                <p class="font-semibold text-gray-900">${cuenta?.nombre || 'N/A'}</p>
+                <p class="text-sm text-gray-600 mt-1">Tipo: ${cuenta?.tipo || 'N/A'}</p>
+                <p class="text-sm text-gray-600">Celular: ${cuenta?.celular || 'N/A'}</p>
+                <p class="text-sm text-gray-600">Estado: ${cuenta?.activo ? 'Activa' : 'Inactiva'}</p>
+            </div>
+            <div class="bg-gray-50 rounded p-3">
+                <p class="text-xs text-gray-500 mb-1">Cupón</p>
+                <p class="font-semibold text-gray-900">${cuenta?.cupon?.codigo || 'N/A'}</p>
+                <p class="text-sm text-gray-600 mt-1">${cuenta?.cupon?.nombre || 'Sin nombre'}</p>
+                <p class="text-sm text-gray-600">Comisión: ${tipoComision} (${valorComision})</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+            <div class="bg-white border rounded p-3">
+                <p class="text-xs text-gray-500">Total Usos</p>
+                <p class="text-2xl font-bold text-gray-900">${estadisticas?.totalUsos || 0}</p>
+            </div>
+            <div class="bg-white border rounded p-3">
+                <p class="text-xs text-gray-500">Total Descuentos</p>
+                <p class="text-2xl font-bold text-green-600">$${parseFloat(estadisticas?.totalDescuentos || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
+            </div>
+            <div class="bg-white border rounded p-3">
+                <p class="text-xs text-gray-500">Comisión Total</p>
+                <p class="text-2xl font-bold text-purple-600">$${parseFloat(estadisticas?.comisionTotal || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
+            </div>
+        </div>
+
+        <h6 class="font-semibold mb-3">Últimos usos</h6>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Fecha</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Cliente</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Habitación</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Original</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Descuento</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Final</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    ${usos.length > 0 ? usos.slice(0, 15).map(uso => {
+                        const cliente = uso.clienteWeb
+                            ? `${uso.clienteWeb.firstName} ${uso.clienteWeb.lastName}`
+                            : uso.cliente
+                                ? `${uso.cliente.firstName} ${uso.cliente.lastName}`
+                                : 'N/A';
+
+                        return `
+                            <tr>
+                                <td class="px-4 py-2 text-sm text-gray-600">${new Date(uso.fechaUso).toLocaleDateString('es-MX')}</td>
+                                <td class="px-4 py-2 text-sm text-gray-900">${cliente}</td>
+                                <td class="px-4 py-2 text-sm text-gray-600">${uso.habitacion?.propertyDetails?.name || 'N/A'}</td>
+                                <td class="px-4 py-2 text-sm text-gray-600">$${parseFloat(uso.montoOriginal || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                                <td class="px-4 py-2 text-sm text-green-600">-$${parseFloat(uso.montoDescuento || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                                <td class="px-4 py-2 text-sm font-semibold text-gray-900">$${parseFloat(uso.montoFinal || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                            </tr>
+                        `;
+                    }).join('') : `
+                        <tr>
+                            <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">Sin usos registrados para este cupón</td>
+                        </tr>
+                    `}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    contenido.innerHTML = html;
+    const modal = new bootstrap.Modal(document.getElementById('modalDetalleCuentaReferido'));
+    modal.show();
 }
 
 async function exportarCuentasReferidos() {
@@ -1267,6 +1360,28 @@ function verificarAdvertenciaExceptOwner() {
     } else {
         warningDiv.style.display = 'none';
     }
+}
+
+function actualizarAplicableSegunCuponWeb() {
+    const checkboxWeb = document.getElementById('cupon-es-web');
+    const selectAplicableA = document.getElementById('cupon-aplicable-a');
+
+    if (!checkboxWeb || !selectAplicableA) return;
+
+    if (checkboxWeb.checked) {
+        if (selectAplicableA.value !== 'virtual_seller') {
+            selectAplicableA.dataset.prevInternalValue = selectAplicableA.value;
+        }
+        selectAplicableA.value = 'virtual_seller';
+        selectAplicableA.disabled = true;
+    } else {
+        selectAplicableA.disabled = false;
+        if (selectAplicableA.value === 'virtual_seller') {
+            selectAplicableA.value = selectAplicableA.dataset.prevInternalValue || 'all';
+        }
+    }
+
+    verificarAdvertenciaExceptOwner();
 }
 
 function verificarAdvertenciaExceptOwnerReferido() {

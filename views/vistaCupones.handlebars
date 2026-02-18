@@ -419,7 +419,17 @@
                                 <option value="all">Todos</option>
                                 <option value="owner_only">Solo Dueño</option>
                                 <option value="except_owner">Excepto Dueño</option>
+                                <option value="virtual_seller">Vendedor Virtual (Web)</option>
                             </select>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" id="cupon-es-web" class="form-check-input">
+                                <label class="form-check-label" for="cupon-es-web">
+                                    Es cupón web (solo válido para reservas web)
+                                </label>
+                            </div>
                         </div>
 
                         <!-- Advertencia para Noches Gratis + Excepto Dueño -->
@@ -524,6 +534,23 @@
             </div>
             <div class="modal-body">
                 <div id="contenido-estadisticas">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Detalle de Cuenta de Referido -->
+<div class="modal fade" id="modalDetalleCuentaReferido" tabindex="-1" aria-labelledby="modalDetalleCuentaReferidoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDetalleCuentaReferidoLabel">Detalle de Cuenta de Referido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="contenido-detalle-cuenta-referido">
                     <!-- Se llena dinámicamente -->
                 </div>
             </div>
@@ -637,11 +664,10 @@
 
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Aplica a *</label>
-                            <select id="cupon-referido-aplicable" class="form-select" required>
-                                <option value="all">Todos</option>
-                                <option value="owner_only">Solo Dueño</option>
-                                <option value="except_owner">Excepto Dueño</option>
+                            <select id="cupon-referido-aplicable" class="form-select" required disabled>
+                                <option value="virtual_seller" selected>Vendedor Virtual (Web)</option>
                             </select>
+                            <small class="text-muted">Los cupones de referido se aplican automáticamente al vendedor virtual.</small>
                         </div>
 
                         <!-- Advertencia para Noches Gratis + Excepto Dueño -->

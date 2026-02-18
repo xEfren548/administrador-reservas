@@ -46,8 +46,8 @@ const cuponSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Debe especificar a quién aplica el cupón'],
         enum: {
-            values: ['all', 'owner_only', 'except_owner'],
-            message: 'aplicableA debe ser all, owner_only o except_owner'
+            values: ['all', 'owner_only', 'except_owner', 'virtual_seller'],
+            message: 'aplicableA debe ser all, owner_only, except_owner o virtual_seller'
         },
         default: 'all'
     },
@@ -128,6 +128,10 @@ const cuponSchema = new mongoose.Schema({
         ref: 'CuentaReferido',
         default: null
     },
+    esCuponWeb: {
+        type: Boolean,
+        default: false
+    },
     creadoPor: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Usuario',
@@ -143,6 +147,7 @@ cuponSchema.index({ activo: 1, fechaInicio: 1, fechaFin: 1 });
 cuponSchema.index({ creadoPor: 1 });
 cuponSchema.index({ esReferido: 1 });
 cuponSchema.index({ cuentaReferido: 1 });
+cuponSchema.index({ esCuponWeb: 1 });
 
 // Método para verificar si el cupón está vigente
 cuponSchema.methods.estaVigente = function() {

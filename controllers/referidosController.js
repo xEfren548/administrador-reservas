@@ -5,6 +5,18 @@ const Cupon = require('../models/Cupon');
 const CuponUsage = require('../models/CuponUsage');
 const Roles = require('../models/Roles');
 
+const obtenerComisionUsoReferido = (uso, cuenta) => {
+    if (typeof uso.comisionReferidorMonto === 'number' && uso.comisionReferidorMonto > 0) {
+        return uso.comisionReferidorMonto;
+    }
+
+    if (cuenta.comisionReferidor.tipo === 'percentage') {
+        return (uso.montoOriginal * cuenta.comisionReferidor.valor) / 100;
+    }
+
+    return cuenta.comisionReferidor.valor;
+};
+
 // ============= VALIDADORES =============
 
 const crearCuentaReferidoValidators = [
@@ -116,7 +128,7 @@ const crearCuentaReferido = async (req, res) => {
             codigo: codigoCupon.toUpperCase(),
             tipo: tipoCupon,
             valor: tipoCupon === 'nights_free' ? 0 : valorCupon,
-            aplicableA: aplicableA || 'all',
+            aplicableA: 'virtual_seller',
             fechaInicio,
             fechaFin,
             usosLimitados: usosLimitados || null,
@@ -131,6 +143,7 @@ const crearCuentaReferido = async (req, res) => {
             nochesPagadas: tipoCupon === 'nights_free' ? nochesPagadas : null,
             activo: true,
             esReferido: true,
+            esCuponWeb: true,
             cuentaReferido: nuevaCuenta._id,
             creadoPor: req.session.userId
         });
@@ -220,15 +233,10 @@ const listarCuentasReferidos = async (req, res) => {
             
             const totalUsos = usos.length;
             const totalDescuentos = usos.reduce((sum, uso) => sum + uso.montoDescuento, 0);
-            
-            let comisionTotal = 0;
-            usos.forEach(uso => {
-                if (cuenta.comisionReferidor.tipo === 'percentage') {
-                    comisionTotal += (uso.montoOriginal * cuenta.comisionReferidor.valor) / 100;
-                } else {
-                    comisionTotal += cuenta.comisionReferidor.valor;
-                }
-            });
+
+            const comisionTotal = usos.reduce((sum, uso) => {
+                return sum + obtenerComisionUsoReferido(uso, cuenta);
+            }, 0);
 
             return {
                 ...cuenta,
@@ -302,15 +310,10 @@ const obtenerCuentaReferido = async (req, res) => {
 
         // Calcular estadísticas
         const totalDescuentos = usos.reduce((sum, uso) => sum + uso.montoDescuento, 0);
-        
-        let comisionTotal = 0;
-        usos.forEach(uso => {
-            if (cuenta.comisionReferidor.tipo === 'percentage') {
-                comisionTotal += (uso.montoOriginal * cuenta.comisionReferidor.valor) / 100;
-            } else {
-                comisionTotal += cuenta.comisionReferidor.valor;
-            }
-        });
+
+        const comisionTotal = usos.reduce((sum, uso) => {
+            return sum + obtenerComisionUsoReferido(uso, cuenta);
+        }, 0);
 
         res.json({
             success: true,
@@ -475,14 +478,10 @@ const exportarCuentasReferidosCSV = async (req, res) => {
                 const usos = await CuponUsage.find({ cupon: cuenta.cupon._id }).lean();
                 totalUsos = usos.length;
                 totalDescuentos = usos.reduce((sum, uso) => sum + uso.montoDescuento, 0);
-                
-                usos.forEach(uso => {
-                    if (cuenta.comisionReferidor.tipo === 'percentage') {
-                        comisionTotal += (uso.montoOriginal * cuenta.comisionReferidor.valor) / 100;
-                    } else {
-                        comisionTotal += cuenta.comisionReferidor.valor;
-                    }
-                });
+
+                comisionTotal = usos.reduce((sum, uso) => {
+                    return sum + obtenerComisionUsoReferido(uso, cuenta);
+                }, 0);
             }
 
             return {
@@ -564,13 +563,9 @@ const obtenerEstadisticasReferidos = async (req, res) => {
         for (const cuenta of cuentas) {
             if (cuenta.cupon) {
                 const usos = await CuponUsage.find({ cupon: cuenta.cupon }).lean();
-                usos.forEach(uso => {
-                    if (cuenta.comisionReferidor.tipo === 'percentage') {
-                        comisionTotalGeneral += (uso.montoOriginal * cuenta.comisionReferidor.valor) / 100;
-                    } else {
-                        comisionTotalGeneral += cuenta.comisionReferidor.valor;
-                    }
-                });
+                comisionTotalGeneral += usos.reduce((sum, uso) => {
+                    return sum + obtenerComisionUsoReferido(uso, cuenta);
+                }, 0);
             }
         }
 

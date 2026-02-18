@@ -1534,6 +1534,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             codigo,
+                            source: 'internal',
                             montoReserva: precioOriginalCotizador.valor,
                             habitacionId: reservaCotizadorActual.habitacionId,
                             noches: reservaCotizadorActual.nNights,
