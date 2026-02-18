@@ -6,6 +6,9 @@ const stripe = require('../lib/stripe');
 const Payment = require('../models/Payment');
 const Pagos = require('../models/Pago');
 const Reserva = require('../models/Evento');
+const Cupon = require('../models/Cupon');
+const CuponUsage = require('../models/CuponUsage');
+const CuentaReferido = require('../models/CuentaReferido');
 const { createReservationForClient, cotizarReserva } = require('../controllers/webClientes/generalController');
 
 // Mapea estados Stripe -> nuestros estados
@@ -41,6 +44,169 @@ function mapPaymentMethodType(type) {
         default:
             return type;
     }
+}
+
+function getCouponCodeFromReservationData(reservationData = {}) {
+    const rawCode = reservationData.cuponCodigo || reservationData.couponCode || reservationData.cupon?.codigo;
+    if (!rawCode || typeof rawCode !== 'string') return null;
+    const trimmedCode = rawCode.trim().toUpperCase();
+    return trimmedCode || null;
+}
+
+async function validarCuponWebCheckout({ codigo, montoReserva, habitacionId, noches, clienteId = null, clienteWebId = null, totalSinComisiones, costoBase }) {
+    const cupon = await Cupon.findOne({ codigo: codigo.toUpperCase() });
+
+    if (!cupon) {
+        return { success: false, status: 404, message: 'Cupón no encontrado' };
+    }
+
+    if (!cupon.esCuponWeb) {
+        return { success: false, status: 400, message: 'Este cupón solo es válido para reservas web' };
+    }
+
+    if (!cupon.activo) {
+        return { success: false, status: 400, message: 'Este cupón está desactivado' };
+    }
+
+    const ahora = new Date();
+    if (ahora < cupon.fechaInicio || ahora > cupon.fechaFin) {
+        return { success: false, status: 400, message: 'Este cupón no está vigente' };
+    }
+
+    if (!cupon.tieneUsosDisponibles()) {
+        return { success: false, status: 400, message: 'Este cupón ya no tiene usos disponibles' };
+    }
+
+    if (montoReserva && cupon.montoMinimoCompra > 0 && montoReserva < cupon.montoMinimoCompra) {
+        return { success: false, status: 400, message: `El monto mínimo de compra es $${cupon.montoMinimoCompra}` };
+    }
+
+    if (!cupon.todasCabanas && habitacionId) {
+        const appliesToCabin = (cupon.habitaciones || []).some((id) => String(id) === String(habitacionId));
+        if (!appliesToCabin) {
+            return { success: false, status: 400, message: 'Este cupón no aplica para la habitación seleccionada' };
+        }
+    }
+
+    if (noches && cupon.restricciones?.nochesMinimas && noches < cupon.restricciones.nochesMinimas) {
+        return { success: false, status: 400, message: `Este cupón requiere al menos ${cupon.restricciones.nochesMinimas} noches` };
+    }
+
+    if (noches && cupon.restricciones?.nochesMaximas && noches > cupon.restricciones.nochesMaximas) {
+        return { success: false, status: 400, message: `Este cupón aplica máximo para ${cupon.restricciones.nochesMaximas} noches` };
+    }
+
+    if (cupon.restricciones?.soloNuevosClientes && (clienteId || clienteWebId)) {
+        const usageConditions = [];
+        if (clienteId) usageConditions.push({ cliente: clienteId });
+        if (clienteWebId) usageConditions.push({ clienteWeb: clienteWebId });
+
+        const previousUsage = usageConditions.length > 0
+            ? await CuponUsage.findOne({ $or: usageConditions }).lean()
+            : null;
+
+        if (previousUsage) {
+            return { success: false, status: 400, message: 'Este cupón solo aplica para clientes nuevos' };
+        }
+    }
+
+    let descuentoCalculado = 0;
+
+    if (montoReserva) {
+        if (cupon.tipo === 'percentage') {
+            descuentoCalculado = (montoReserva * cupon.valor) / 100;
+        } else if (cupon.tipo === 'fixed_amount') {
+            descuentoCalculado = cupon.valor;
+        } else if (cupon.tipo === 'nights_free') {
+            if (noches && cupon.nochesRecibidas && cupon.nochesPagadas) {
+                const nochesGratis = cupon.nochesRecibidas - cupon.nochesPagadas;
+                if (noches >= cupon.nochesRecibidas) {
+                    const baseParaCalculo = totalSinComisiones || montoReserva;
+                    const precioPorNoche = baseParaCalculo / noches;
+                    const descuentoBase = precioPorNoche * nochesGratis;
+
+                    if (totalSinComisiones && montoReserva) {
+                        const proporcionTotal = montoReserva / totalSinComisiones;
+                        descuentoCalculado = descuentoBase * proporcionTotal;
+                    } else {
+                        descuentoCalculado = descuentoBase;
+                    }
+                } else {
+                    return {
+                        success: false,
+                        status: 400,
+                        message: `Este cupón requiere al menos ${cupon.nochesRecibidas} noches (promoción ${cupon.nochesRecibidas}x${cupon.nochesPagadas})`
+                    };
+                }
+            }
+        }
+
+        if (cupon.descuentoMaximo && descuentoCalculado > cupon.descuentoMaximo) {
+            descuentoCalculado = cupon.descuentoMaximo;
+        }
+
+        if (descuentoCalculado > montoReserva) {
+            descuentoCalculado = montoReserva;
+        }
+    }
+
+    let descuentoOwner = 0;
+    let descuentoUsuarios = 0;
+
+    if (descuentoCalculado > 0) {
+        descuentoOwner = 0;
+        descuentoUsuarios = descuentoCalculado;
+    }
+
+    let referido = null;
+    if (cupon.esReferido && cupon.cuentaReferido) {
+        const cuentaReferido = await CuentaReferido.findById(cupon.cuentaReferido)
+            .select('nombre comisionReferidor')
+            .lean();
+
+        if (cuentaReferido?.comisionReferidor) {
+            const baseComision = Number(montoReserva) || 0;
+            let comisionEstimada = 0;
+            if (cuentaReferido.comisionReferidor.tipo === 'percentage') {
+                comisionEstimada = (baseComision * (Number(cuentaReferido.comisionReferidor.valor) || 0)) / 100;
+            } else {
+                comisionEstimada = Number(cuentaReferido.comisionReferidor.valor) || 0;
+            }
+
+            referido = {
+                esReferido: true,
+                cuentaReferidoId: cuentaReferido._id,
+                cuentaReferidoNombre: cuentaReferido.nombre,
+                tipoComision: cuentaReferido.comisionReferidor.tipo,
+                valorComision: cuentaReferido.comisionReferidor.valor,
+                comisionEstimada
+            };
+        }
+    }
+
+    const montoOriginal = Number(montoReserva) || 0;
+    const montoFinal = Math.max(montoOriginal - descuentoCalculado, 0);
+
+    return {
+        success: true,
+        cuponInfo: {
+            usado: true,
+            cuponId: cupon._id,
+            codigo: cupon.codigo,
+            tipo: cupon.tipo,
+            promocion: cupon.nombre,
+            aplicableA: cupon.aplicableA,
+            valor: cupon.valor,
+            descuentoTotal: descuentoCalculado,
+            descuentoOwner,
+            descuentoUsuarios,
+            montoOriginal,
+            montoFinal,
+            totalSinComisiones: Number(totalSinComisiones) || null,
+            costoBase: Number(costoBase) || null,
+            referido
+        }
+    };
 }
 
 /**
@@ -124,14 +290,7 @@ router.post('/create-payment-intent', async (req, res) => {
             return res.status(400).json({ error: 'El email del cliente es requerido' });
         }
 
-        const totalAmount = Number(reservationData.pricing?.totalPrice || 0);
-        if (!totalAmount || totalAmount <= 0) {
-            return res.status(400).json({ error: 'Monto inválido en reservationData.pricing.totalPrice' });
-        }
-
-        // Calcular el 50% para el depósito
-        const depositAmount = Math.ceil(totalAmount * 0.50);
-        const remainingAmount = totalAmount - depositAmount;
+        const requestedTotalAmount = Number(reservationData.pricing?.totalPrice || 0);
 
         // Obtener configuración de Stripe según la habitación
         const Habitacion = require('../models/Habitacion');
@@ -171,12 +330,50 @@ router.post('/create-payment-intent', async (req, res) => {
             });
         }
 
-        // Validar que los precios sean los mismos (evitar manipulación)
-        if (validarDisponibilidadYPrecio.pricing.totalPrice !== totalAmount) {
-            return res.status(400).json({ 
-                error: 'El precio ha cambiado, por favor recarga la página e intenta de nuevo' 
+        const totalOriginalPrice = Number(validarDisponibilidadYPrecio.pricing?.totalPrice || 0);
+        if (!totalOriginalPrice || totalOriginalPrice <= 0) {
+            return res.status(400).json({
+                error: 'No fue posible calcular el total de la reservación'
             });
         }
+
+        const couponCode = getCouponCodeFromReservationData(reservationData);
+        let cuponInfo = null;
+
+        if (couponCode) {
+            const couponValidation = await validarCuponWebCheckout({
+                codigo: couponCode,
+                montoReserva: totalOriginalPrice,
+                habitacionId: reservationData.cabinId,
+                noches: validarDisponibilidadYPrecio.booking?.nights,
+                clienteWebId: clienteWebId || null,
+                totalSinComisiones: validarDisponibilidadYPrecio.precioCalculado?.precioTotalSinComision,
+                costoBase: validarDisponibilidadYPrecio.precioCalculado?.costoBaseFinal
+            });
+
+            if (!couponValidation.success) {
+                return res.status(couponValidation.status || 400).json({ error: couponValidation.message });
+            }
+
+            cuponInfo = couponValidation.cuponInfo;
+        }
+
+        const totalAmount = cuponInfo ? Number(cuponInfo.montoFinal) : totalOriginalPrice;
+
+        if (requestedTotalAmount > 0) {
+            const sameOriginal = Math.abs(requestedTotalAmount - totalOriginalPrice) < 0.01;
+            const sameFinal = Math.abs(requestedTotalAmount - totalAmount) < 0.01;
+
+            if (!sameOriginal && !sameFinal) {
+                return res.status(400).json({
+                    error: 'El precio ha cambiado, por favor recarga la página e intenta de nuevo'
+                });
+            }
+        }
+
+        // Calcular el 50% para el depósito
+        const depositAmount = Math.ceil(totalAmount * 0.50);
+        const remainingAmount = totalAmount - depositAmount;
 
         // Generar orderId temporal
         const tempOrderId = `temp_${Math.floor(Date.now() / 1000)}_${Math.random().toString(36).substr(2, 5)}`;
@@ -246,7 +443,13 @@ router.post('/create-payment-intent', async (req, res) => {
                     checkIn: reservationData.checkIn,
                     checkOut: reservationData.checkOut,
                     guests: reservationData.guests,
+                    nights: validarDisponibilidadYPrecio.booking?.nights,
                     totalPrice: totalAmount,
+                    totalOriginalPrice,
+                    basePrice: Number(validarDisponibilidadYPrecio.pricing?.basePrice || 0),
+                    costoBase: Number(validarDisponibilidadYPrecio.precioCalculado?.costoBaseFinal || validarDisponibilidadYPrecio.pricing?.basePrice || 0),
+                    totalSinComisiones: Number(validarDisponibilidadYPrecio.precioCalculado?.precioTotalSinComision || 0),
+                    comisionServicio: Number(validarDisponibilidadYPrecio.precioCalculado?.comisionServicio || 35),
                     depositAmount: depositAmount,
                     remainingAmount: remainingAmount
                 }),
@@ -257,6 +460,7 @@ router.post('/create-payment-intent', async (req, res) => {
                     phone: customerData.phone_number || customerData.phone
                 }),
                 clienteWebId: clienteWebId || '',
+                cuponInfo: cuponInfo ? JSON.stringify(cuponInfo) : '',
                 depositPercentage: '50',
                 stripeAccountRef: stripeAccountRef,
                 cuentaFinancieraId: cuentaFinancieraId ? cuentaFinancieraId.toString() : null
@@ -290,6 +494,8 @@ router.post('/create-payment-intent', async (req, res) => {
             paymentMethodData: {
                 depositPercentage: 50,
                 totalAmount: totalAmount,
+                totalOriginalAmount: totalOriginalPrice,
+                cuponInfo,
                 remainingAmount: remainingAmount
             },
             description: paymentIntent.description,
@@ -308,6 +514,8 @@ router.post('/create-payment-intent', async (req, res) => {
             depositAmount,
             remainingAmount,
             totalAmount,
+            totalOriginalAmount: totalOriginalPrice,
+            cuponInfo,
             orderId: tempOrderId,
             stripeAccountRef: stripeAccountRef, // Incluir la cuenta usada
             publishableKey: getPublishableKey(stripeAccountRef) // Incluir la clave pública
@@ -389,22 +597,28 @@ router.post('/confirm-payment', async (req, res) => {
         // Usar reservationData del body si está disponible (tiene datos más completos)
         // El metadata de Stripe tiene límite de caracteres, así que solo guardamos lo esencial
         const fullPricing = reservationData?.pricing || storedReservationData.pricing || {};
-        const totalAmount = fullPricing.totalPrice || storedReservationData.totalPrice;
+        const totalAmount = Number(storedReservationData.totalPrice || fullPricing.totalPrice || 0);
+        const totalOriginalAmount = Number(storedReservationData.totalOriginalPrice || fullPricing.totalOriginalPrice || totalAmount);
         const depositAmount = paymentIntent.amount / 100; // Convertir de centavos
         const remainingAmount = totalAmount - depositAmount;
+        const storedCuponInfo = metadata.cuponInfo ? JSON.parse(metadata.cuponInfo) : null;
         
         // Combinar datos: priorizar los del body sobre los del metadata
         const mergedReservationData = {
             ...storedReservationData,
             ...reservationData,
             pricing: {
-                basePrice: fullPricing.basePrice || 0,
+                ...fullPricing,
+                basePrice: storedReservationData.basePrice || fullPricing.basePrice || 0,
                 totalPrice: totalAmount,
+                totalOriginalPrice: totalOriginalAmount,
                 cleaningFee: fullPricing.cleaningFee || 0,
                 serviceFee: fullPricing.serviceFee || 0,
-                comisionServicio: fullPricing.comisionServicio || 0,
+                comisionServicio: storedReservationData.comisionServicio || fullPricing.comisionServicio || 35,
                 taxes: fullPricing.taxes || 0,
-                ...fullPricing
+                totalSinComisiones: storedReservationData.totalSinComisiones || fullPricing.totalSinComisiones || 0,
+                costoBase: storedReservationData.costoBase || fullPricing.costoBase || fullPricing.basePrice || 0,
+                cuponInfo: storedCuponInfo || fullPricing.cuponInfo || null
             }
         };
         
@@ -504,7 +718,9 @@ router.post('/confirm-payment', async (req, res) => {
                 type: paymentMethodType,
                 depositPercentage: 50,
                 totalAmount: totalAmount,
+                totalOriginalAmount: totalOriginalAmount,
                 remainingAmount: remainingAmount,
+                cuponInfo: mergedReservationData.pricing?.cuponInfo || null,
                 holderName: mergedCustomerData?.name || 'N/A'
             };
             payment.raw = paymentIntent;
@@ -617,13 +833,7 @@ router.post('/create-oxxo-payment', async (req, res) => {
             return res.status(400).json({ error: 'reservationData y email son requeridos' });
         }
 
-        const totalAmount = Number(reservationData.pricing?.totalPrice || 0);
-        if (!totalAmount || totalAmount <= 0) {
-            return res.status(400).json({ error: 'Monto inválido' });
-        }
-
-        const depositAmount = Math.ceil(totalAmount * 0.50);
-        const remainingAmount = totalAmount - depositAmount;
+        const requestedTotalAmount = Number(reservationData.pricing?.totalPrice || 0);
 
         // Validar disponibilidad
         const validarDisponibilidadYPrecio = await cotizarReserva(
@@ -640,11 +850,48 @@ router.post('/create-oxxo-payment', async (req, res) => {
             });
         }
 
-        if (validarDisponibilidadYPrecio.pricing.totalPrice !== totalAmount) {
-            return res.status(400).json({ 
-                error: 'El precio ha cambiado, por favor recarga la página' 
+        const totalOriginalPrice = Number(validarDisponibilidadYPrecio.pricing?.totalPrice || 0);
+        if (!totalOriginalPrice || totalOriginalPrice <= 0) {
+            return res.status(400).json({
+                error: 'No fue posible calcular el total de la reservación'
             });
         }
+
+        const couponCode = getCouponCodeFromReservationData(reservationData);
+        let cuponInfo = null;
+
+        if (couponCode) {
+            const couponValidation = await validarCuponWebCheckout({
+                codigo: couponCode,
+                montoReserva: totalOriginalPrice,
+                habitacionId: reservationData.cabinId,
+                noches: validarDisponibilidadYPrecio.booking?.nights,
+                clienteWebId: clienteWebId || null,
+                totalSinComisiones: validarDisponibilidadYPrecio.precioCalculado?.precioTotalSinComision,
+                costoBase: validarDisponibilidadYPrecio.precioCalculado?.costoBaseFinal
+            });
+
+            if (!couponValidation.success) {
+                return res.status(couponValidation.status || 400).json({ error: couponValidation.message });
+            }
+
+            cuponInfo = couponValidation.cuponInfo;
+        }
+
+        const totalAmount = cuponInfo ? Number(cuponInfo.montoFinal) : totalOriginalPrice;
+
+        if (requestedTotalAmount > 0) {
+            const sameOriginal = Math.abs(requestedTotalAmount - totalOriginalPrice) < 0.01;
+            const sameFinal = Math.abs(requestedTotalAmount - totalAmount) < 0.01;
+            if (!sameOriginal && !sameFinal) {
+                return res.status(400).json({
+                    error: 'El precio ha cambiado, por favor recarga la página'
+                });
+            }
+        }
+
+        const depositAmount = Math.ceil(totalAmount * 0.50);
+        const remainingAmount = totalAmount - depositAmount;
 
         // Detectar la cuenta de Stripe a usar (igual lógica que create-payment-intent)
         const Habitacion = require('../models/Habitacion');
@@ -707,12 +954,19 @@ router.post('/create-oxxo-payment', async (req, res) => {
                     checkIn: reservationData.checkIn,
                     checkOut: reservationData.checkOut,
                     guests: reservationData.guests,
+                    nights: validarDisponibilidadYPrecio.booking?.nights,
                     totalPrice: totalAmount,
+                    totalOriginalPrice,
+                    basePrice: Number(validarDisponibilidadYPrecio.pricing?.basePrice || 0),
+                    costoBase: Number(validarDisponibilidadYPrecio.precioCalculado?.costoBaseFinal || validarDisponibilidadYPrecio.pricing?.basePrice || 0),
+                    totalSinComisiones: Number(validarDisponibilidadYPrecio.precioCalculado?.precioTotalSinComision || 0),
+                    comisionServicio: Number(validarDisponibilidadYPrecio.precioCalculado?.comisionServicio || 35),
                     depositAmount: depositAmount,
                     remainingAmount: remainingAmount
                 }),
                 customerData: JSON.stringify(customerData),
                 clienteWebId: clienteWebId || '',
+                cuponInfo: cuponInfo ? JSON.stringify(cuponInfo) : '',
                 paymentMethod: 'oxxo',
                 stripeAccountRef: stripeAccountRef,
                 cuentaFinancieraId: cuentaFinancieraId ? cuentaFinancieraId.toString() : null
@@ -732,6 +986,8 @@ router.post('/create-oxxo-payment', async (req, res) => {
                 type: 'oxxo',
                 depositPercentage: 50,
                 totalAmount: totalAmount,
+                totalOriginalAmount: totalOriginalPrice,
+                cuponInfo,
                 remainingAmount: remainingAmount
             },
             description: paymentIntent.description
@@ -746,6 +1002,8 @@ router.post('/create-oxxo-payment', async (req, res) => {
             depositAmount,
             remainingAmount,
             totalAmount,
+            totalOriginalAmount: totalOriginalPrice,
+            cuponInfo,
             expiresInDays: 3,
             stripeAccountRef: stripeAccountRef, // Incluir la cuenta usada
             publishableKey: getPublishableKey(stripeAccountRef) // Incluir la clave pública

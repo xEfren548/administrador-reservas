@@ -237,8 +237,10 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
     try {
         const storedReservationData = JSON.parse(metadata.reservationData);
         const storedCustomerData = metadata.customerData ? JSON.parse(metadata.customerData) : {};
+        const storedCuponInfo = metadata.cuponInfo ? JSON.parse(metadata.cuponInfo) : null;
         
-        const totalAmount = storedReservationData.totalPrice;
+        const totalAmount = Number(storedReservationData.totalPrice || 0);
+        const totalOriginalAmount = Number(storedReservationData.totalOriginalPrice || totalAmount);
         const depositAmount = paymentIntent.amount / 100;
         const remainingAmount = totalAmount - depositAmount;
 
@@ -260,8 +262,15 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
             nights: storedReservationData.nights || Math.ceil((new Date(storedReservationData.checkOut) - new Date(storedReservationData.checkIn)) / (1000 * 60 * 60 * 24)),
             guestInfo: guestInfo,
             pricing: {
-                totalPrice: totalAmount
-            }
+                totalPrice: totalAmount,
+                totalOriginalPrice: totalOriginalAmount,
+                basePrice: Number(storedReservationData.basePrice || 0),
+                costoBase: Number(storedReservationData.costoBase || storedReservationData.basePrice || 0),
+                totalSinComisiones: Number(storedReservationData.totalSinComisiones || 0),
+                comisionServicio: Number(storedReservationData.comisionServicio || 35),
+                cuponInfo: storedCuponInfo
+            },
+            cuponInfo: storedCuponInfo
         };
 
         const nuevaReserva = await createReservationForClient(
@@ -282,6 +291,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
             payment.paymentMethodData = {
                 ...payment.paymentMethodData,
                 totalAmount: totalAmount,
+                totalOriginalAmount: totalOriginalAmount,
                 remainingAmount: remainingAmount
             };
             payment.raw = paymentIntent;

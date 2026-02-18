@@ -388,6 +388,11 @@ function actualizarTablaCupones(cupones) {
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cupon.nombre}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tipoTexto}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${valorTexto}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="badge ${cupon.esCuponWeb ? 'badge-info' : 'badge-secondary'}">
+                        ${cupon.esCuponWeb ? 'Sí' : 'No'}
+                    </span>
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${usosTexto}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${vigenciaTexto}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
@@ -414,7 +419,7 @@ function actualizarTablaCupones(cupones) {
     }).join('');
 
     if (cupones.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">No se encontraron cupones</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-4 text-center text-sm text-gray-500">No se encontraron cupones</td></tr>';
     }
 }
 
@@ -896,11 +901,18 @@ function actualizarTablaHistorialReferidos(usos) {
             : uso.clienteWeb 
             ? `${uso.clienteWeb.firstName} ${uso.clienteWeb.lastName}`
             : 'N/A';
+        const reservaId = uso.reserva?._id || uso.reserva || null;
+        const reservaLink = reservaId
+            ? `<a href="/api/eventos/${reservaId}" class="text-blue-600 hover:text-blue-800 underline" title="Ver reserva">${reservaId}</a>`
+            : 'N/A';
 
         return `
             <tr>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     ${new Date(uso.fechaUso).toLocaleDateString('es-MX')}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">
+                    ${reservaLink}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     ${uso.cupon?.cuentaReferido?.nombre || 'N/A'}
@@ -926,7 +938,7 @@ function actualizarTablaHistorialReferidos(usos) {
     }).join('');
 
     if (usos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">No hay usos de cupones de referido</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-4 text-center text-sm text-gray-500">No hay usos de cupones de referido</td></tr>';
     }
 }
 

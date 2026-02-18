@@ -4,6 +4,8 @@ const PreciosEspeciales = require('../../models/PreciosEspeciales');
 const BloqueoFechas = require('../../models/BloqueoFechas');
 const Costos = require('../../models/Costos');
 const Reservas = require('../../models/Evento');
+const Cupon = require('../../models/Cupon');
+const CuponUsage = require('../../models/CuponUsage');
 const Usuario = require('../../models/Usuario');
 const Cliente = require('../../models/Cliente');
 const ClienteWeb = require('../../models/ClienteWeb');
@@ -1171,6 +1173,7 @@ async function getDisponibilidadDeRestricciones(chalets, fechaLlegada, fechaSali
 async function createReservationForClient(reservationData, status, paymentStatus, balanceDue, clienteWebId = null, req = null) {
     const guestInfo = reservationData.guestInfo;
     const pricing = reservationData.pricing;
+    const cuponInfo = reservationData.cuponInfo || pricing?.cuponInfo || null;
 
 
     try {
@@ -1261,7 +1264,21 @@ async function createReservationForClient(reservationData, status, paymentStatus
             paymentStatus: paymentStatus,
             payments: [],
             // Agregar flag para identificar si la reserva fue hecha por un cliente web
-            isWebClientReservation: isWebClient
+            isWebClientReservation: isWebClient,
+            cuponInfo: cuponInfo && cuponInfo.usado ? {
+                usado: true,
+                cuponId: cuponInfo.cuponId || null,
+                codigo: cuponInfo.codigo || null,
+                tipo: cuponInfo.tipo || null,
+                promocion: cuponInfo.promocion || null,
+                aplicableA: cuponInfo.aplicableA || null,
+                valor: Number(cuponInfo.valor || 0),
+                descuentoTotal: Number(cuponInfo.descuentoTotal || 0),
+                montoOriginal: Number(cuponInfo.montoOriginal || pricing.totalPrice || 0),
+                montoFinal: Number(cuponInfo.montoFinal || pricing.totalPrice || 0),
+                totalSinComisiones: Number(cuponInfo.totalSinComisiones || pricing.totalSinComisiones || 0),
+                costoBase: Number(cuponInfo.costoBase || pricing.costoBase || pricing.basePrice || 0)
+            } : { usado: false }
         });
         if (!newReservation) {
             throw new Error('Error creating reservation object');
@@ -1330,6 +1347,39 @@ async function createReservationForClient(reservationData, status, paymentStatus
             console.log("Utilidades de reserva generadas correctamente");
         } else {
             throw new Error("Error al generar utilidades de reserva");
+        }
+
+        // Registrar uso de cupón para métricas y comisión de referidos
+        if (cuponInfo && cuponInfo.usado && cuponInfo.cuponId && Number(cuponInfo.descuentoTotal || 0) > 0) {
+            try {
+                await Cupon.findByIdAndUpdate(cuponInfo.cuponId, {
+                    $inc: { usosActuales: 1 }
+                });
+
+                await CuponUsage.create({
+                    cupon: cuponInfo.cuponId,
+                    reserva: newReservation._id,
+                    cliente: client?._id || null,
+                    clienteWeb: clienteWebId || null,
+                    montoDescuento: Number(cuponInfo.descuentoTotal || 0),
+                    montoOriginal: Number(cuponInfo.montoOriginal || pricing.totalPrice || 0),
+                    montoFinal: Number(cuponInfo.montoFinal || pricing.totalPrice || 0),
+                    tipoCupon: cuponInfo.tipo,
+                    valorAplicado: Number(cuponInfo.valor || 0),
+                    habitacion: reservationData.cabinId,
+                    noches: reservationData.nights || newReservation.nNights,
+                    aplicableA: cuponInfo.aplicableA || 'all',
+                    descuentoOwner: Number(cuponInfo.descuentoOwner || 0),
+                    descuentoUsuarios: Number(cuponInfo.descuentoUsuarios || 0),
+                    esReferido: !!cuponInfo?.referido?.esReferido,
+                    cuentaReferido: cuponInfo?.referido?.cuentaReferidoId || null,
+                    comisionReferidorTipo: cuponInfo?.referido?.tipoComision || null,
+                    comisionReferidorValor: Number(cuponInfo?.referido?.valorComision || 0),
+                    comisionReferidorMonto: Number(cuponInfo?.referido?.comisionEstimada || 0)
+                });
+            } catch (couponUsageError) {
+                console.error('Error registrando uso de cupón en reserva web:', couponUsageError);
+            }
         }
 
 
@@ -1422,9 +1472,10 @@ async function generarComisionReservaRentravel(habitacionId, pricing, idReserva,
             throw new Error(`No se encontró el costo "${costName}" para comisiones`);
         }
 
-        const montoComision = costoComision.amount * nNights;
+        let montoComision = costoComision.amount * nNights;
         const comisionLimpieza = chalet.additionalInfo.extraCleaningCost;
-        const comisionServicio = pricing.comisionServicio;
+        const comisionServicio = Number(pricing.comisionServicio || 35);
+        const cuponInfo = pricing.cuponInfo || null;
 
         // Obtener ID del usuario responsable y nombre del dominio para logs
         let vendedorUserId = null;
@@ -1441,9 +1492,16 @@ async function generarComisionReservaRentravel(habitacionId, pricing, idReserva,
             vendedorUserId = '671be608256c4d53c3f5e12f'; // ID por defecto (Administración NyN)
         }
 
-        const totalCobrado = pricing.totalPrice;
+        const totalCobrado = Number(pricing.totalPrice || 0);
+
+        if (cuponInfo && cuponInfo.usado && Number(cuponInfo.descuentoTotal || 0) > 0) {
+            const descuentoTotal = Number(cuponInfo.descuentoTotal || 0);
+            const ajusteVendedor = Math.min(descuentoTotal, montoComision);
+            montoComision = montoComision - ajusteVendedor;
+        }
+
         const totalSinComisiones = totalCobrado - montoComision - comisionServicio;
-        const costoBase = pricing.basePrice;
+        const costoBase = Number(pricing.basePrice || pricing.costoBase || 0);
         let utilidadChalet = totalSinComisiones - costoBase;
 
         // Fin obtener comision de vendedor virtual
