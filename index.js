@@ -189,7 +189,6 @@ mongoose.connect(db_url).then(async () => {
       console.log(`HTTPS server is running on port ${port}`);
     });
 
-    
     // const job = schedule.scheduleJob('* * * * *', async () => {       
     
     // Se ejecuta todos los minutos, todos los dias
