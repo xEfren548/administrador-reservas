@@ -24,8 +24,10 @@ jobs:
             # Clone fresh copy
             git clone https://github.com/xEfren548/administrador-reservas
 
-            # Copy local cert to repository
-            cp -r cert3 administrador-reservas/
+            # Copy SSL certs from Let's Encrypt into repository path expected by index.js
+            mkdir -p administrador-reservas/cert3
+            sudo cp /etc/letsencrypt/live/www.nynhoteles.com.mx/privkey.pem administrador-reservas/cert3/privkey.pem
+            sudo cp /etc/letsencrypt/live/www.nynhoteles.com.mx/fullchain.pem administrador-reservas/cert3/fullchain.pem
 
             # Install dependencies and start
             cd administrador-reservas
