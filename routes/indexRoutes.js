@@ -101,8 +101,8 @@ router.use('/webhooks', webhooksRoutes);
 router.get('/app/version', (req, res) => {
     res.json({
         "force": true,
-        "minVersion": "1.4.12",
-        "minBuild": 15,
+        "minVersion": "1.4.11",
+        "minBuild": 16,
         "message": "¡Buenas Noticias! Tenemos una nueva versión de la app disponible. Para seguir disfrutando de la mejor experiencia, por favor actualiza a la última versión.",
         "androidUrl": "https://play.google.com/store/apps/details?id=com.hotelesnyn.rentravel&hl=es_MX",
         "iosUrl": "https://apps.apple.com/mx/app/rentravel/id6754517970?l=es-MX"
