@@ -97,6 +97,19 @@ router.use('/payments', paymentsRoutes);
 router.use('/api/payments', paymentsRoutes); // También disponible en /api/payments (público)
 router.use('/webhooks', webhooksRoutes);
 
+// Ruta para verificar version de app
+router.get('/app/version', (req, res) => {
+    res.json({
+        "force": true,
+        "minVersion": "1.4.10",
+        "minBuild": 15,
+        "message": "¡Buenas Noticias! Tenemos una nueva versión de la app disponible. Para seguir disfrutando de la mejor experiencia, por favor actualiza a la última versión.",
+        "androidUrl": "https://play.google.com/store/apps/details?id=com.hotelesnyn.rentravel&hl=es_MX",
+        "iosUrl": "https://apps.apple.com/mx/app/rentravel/id6754517970?l=es-MX"
+
+    })
+});
+
 // Rutas de autenticación para clientes web
 router.use('/client/auth', clientAuthRoutes);
 
