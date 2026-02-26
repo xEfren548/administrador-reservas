@@ -690,7 +690,23 @@ async function calcularComisionesOTA() {
 async function generarComisionReserva(req, res) {
     try {
         const loggedUserId = req.session.id;
-        const { habitacionId, costoBase: costoBaseRaw, totalSinComisiones: totalSinComisionesRaw, idReserva, chaletName, arrivalDate, departureDate, nNights, cupon } = req.body;
+        const { habitacionId, costoBase: costoBaseRaw, totalSinComisiones: totalSinComisionesRaw, idReserva, chaletName, arrivalDate, departureDate, nNights, cupon, isInvestorSellerMode, includeSellerCommission } = req.body;
+
+        const reserva = await Documento.findById(idReserva, {
+            isInvestorSellerMode: 1,
+            includeSellerCommission: 1,
+            createdBy: 1
+        }).lean();
+
+        const hasInvestorSellerModeFlag = typeof isInvestorSellerMode !== 'undefined';
+        const hasIncludeSellerCommissionFlag = typeof includeSellerCommission !== 'undefined';
+        const investorSellerModeEnabled = hasInvestorSellerModeFlag
+            ? (isInvestorSellerMode === true || isInvestorSellerMode === 'true')
+            : !!reserva?.isInvestorSellerMode;
+        const includeSellerCommissionEnabled = hasIncludeSellerCommissionFlag
+            ? (includeSellerCommission === true || includeSellerCommission === 'true')
+            : !!reserva?.includeSellerCommission;
+        const sellerCommissionRecipientId = reserva?.createdBy?.toString() || loggedUserId;
         
         // Convertir a números para evitar concatenación
         const costoBase = parseFloat(costoBaseRaw);
@@ -972,127 +988,102 @@ async function generarComisionReserva(req, res) {
         console.log("Utilidad Chalet:", utilidadChalet, `(ajustada según regla ${cuponData?.aplicableA || 'sin cupón'})`);
 
 
-        let counter = 0
+        if (!investorSellerModeEnabled) {
+            let counter = 0
 
-        let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
+            let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
 
-        let conceptoAdmin = ''
+            let conceptoAdmin = ''
 
-        while (true) {
-            // console.log(user)
+            while (true) {
+                // console.log(user)
 
-            if (user.privilege === 'Administrador') {
-                counter += 1;
+                if (user.privilege === 'Administrador') {
+                    counter += 1;
 
-                if (user.administrator.toString() === user._id.toString()) {
-                    if (costosGerente.commission === "Aumento por costo fijo") {
-                        if (counter > 1) {
-                            conceptoAdmin = `Comisión administrador ligado de vendedor por reservación ${nNights} noches`
+                    if (user.administrator.toString() === user._id.toString()) {
+                        if (costosGerente.commission === "Aumento por costo fijo") {
+                            if (counter > 1) {
+                                conceptoAdmin = `Comisión administrador ligado de vendedor por reservación ${nNights} noches`
 
-                        } else {
-                            conceptoAdmin = `Reservación A. vendedor: ${nNights} noches`
+                            } else {
+                                conceptoAdmin = `Reservación A. vendedor: ${nNights} noches`
+                            }
+                            const montoComisionAdmin = Math.round((costosAdministrador.amount * nNights) * factorAjusteComisiones * 100) / 100;
+                            console.log(`→ Comisión Admin Master: ${costosAdministrador.amount * nNights} x ${factorAjusteComisiones.toFixed(4)} = ${montoComisionAdmin}`);
+                            await altaComisionReturn({
+                                monto: montoComisionAdmin,
+                                concepto: conceptoAdmin,
+                                fecha: new Date(arrivalDate),
+                                idUsuario: user._id.toString(),
+                                idReserva: idReserva
+                            })
                         }
-                        // finalComission += costosGerente.amount;
-                        // minComission += costosGerente.amount;
-                        const montoComisionAdmin = Math.round((costosAdministrador.amount * nNights) * factorAjusteComisiones * 100) / 100;
-                        console.log(`→ Comisión Admin Master: ${costosAdministrador.amount * nNights} x ${factorAjusteComisiones.toFixed(4)} = ${montoComisionAdmin}`);
-                        await altaComisionReturn({
-                            monto: montoComisionAdmin,
-                            concepto: conceptoAdmin,
-                            fecha: new Date(arrivalDate),
-                            idUsuario: user._id.toString(),
-                            idReserva: idReserva
-                        })
+
+
+                        break;
+                    } else {
+                        if (costosVendedor.commission === "Aumento por costo fijo") {
+                            const montoComisionVendedor = Math.round((comisionVendedor * nNights) * factorAjusteComisiones * 100) / 100;
+                            console.log(`→ Comisión Vendedor (Admin): ${comisionVendedor * nNights} x ${factorAjusteComisiones.toFixed(4)} = ${montoComisionVendedor}`);
+                            await altaComisionReturn({
+                                monto: montoComisionVendedor,
+                                concepto: `Comisión por Reservación vendedor ${nNights} noches`,
+                                fecha: new Date(arrivalDate),
+                                idUsuario: user._id.toString(),
+                                idReserva: idReserva
+                            })
+                            user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                        }
                     }
-
-
-                    break;
                 } else {
-                    if (costosVendedor.commission === "Aumento por costo fijo") {
-                        const montoComisionVendedor = Math.round((comisionVendedor * nNights) * factorAjusteComisiones * 100) / 100;
-                        console.log(`→ Comisión Vendedor (Admin): ${comisionVendedor * nNights} x ${factorAjusteComisiones.toFixed(4)} = ${montoComisionVendedor}`);
-                        await altaComisionReturn({
-                            monto: montoComisionVendedor,
-                            concepto: `Comisión por Reservación vendedor ${nNights} noches`,
-                            fecha: new Date(arrivalDate),
-                            idUsuario: user._id.toString(),
-                            idReserva: idReserva
-                        })
-                        user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+
+                    counter += 1;
+                    if (counter >= 2 && user.privilege !== "Administrador") {
+                        user.privilege = "Gerente"
                     }
-                }
 
-                // let costos = await Costos.find({ category: "Gerente" });
-                // if (costosGerente.commission === "Aumento por costo fijo") {
-                //     if (counter > 1) {
-                //         conceptoAdmin = `Comisión administrador ligado por reservación ${chaletName}`
-
-                //     } else {
-                //         conceptoAdmin = `Reservación ${chaletName}`
-                //     }
-                //     // finalComission += costosGerente.amount;
-                //     // minComission += costosGerente.amount;
-                //     await altaComisionReturn({
-                //         monto: costosAdministrador.amount,
-                //         concepto: conceptoAdmin,
-                //         fecha: fechaActual,
-                //         idUsuario: user._id.toString()
-                //     })
-                // }
-
-                // break;
-            } else {
-
-                counter += 1;
-                if (counter >= 2 && user.privilege !== "Administrador") {
-                    user.privilege = "Gerente"
-                }
-                // let costos = await Costos.findOne({ category: user.privilege })
-
-
-                if (user.privilege === "Vendedor") {
-                    if (costosVendedor.commission === "Aumento por costo fijo") {
-                        const montoComisionVendedor = Math.round((comisionVendedor * nNights) * factorAjusteComisiones * 100) / 100;
-                        console.log(`→ Comisión Vendedor: ${comisionVendedor * nNights} x ${factorAjusteComisiones.toFixed(4)} = ${montoComisionVendedor}`);
+                    if (user.privilege === "Vendedor") {
+                        if (costosVendedor.commission === "Aumento por costo fijo") {
+                            const montoComisionVendedor = Math.round((comisionVendedor * nNights) * factorAjusteComisiones * 100) / 100;
+                            console.log(`→ Comisión Vendedor: ${comisionVendedor * nNights} x ${factorAjusteComisiones.toFixed(4)} = ${montoComisionVendedor}`);
+                            await altaComisionReturn({
+                                monto: montoComisionVendedor,
+                                concepto: `Reservación ${nNights} noches`,
+                                fecha: new Date(arrivalDate),
+                                idUsuario: user._id.toString(),
+                                idReserva: idReserva
+                            })
+                        }
+                    } else if (user.privilege === "Gerente") {
+                        const montoComisionGerente = Math.round((costosGerente.amount * nNights) * factorAjusteComisiones * 100) / 100;
+                        console.log(`→ Comisión Gerente: ${costosGerente.amount * nNights} x ${factorAjusteComisiones.toFixed(4)} = ${montoComisionGerente}`);
                         await altaComisionReturn({
-                            monto: montoComisionVendedor,
+                            monto: montoComisionGerente,
                             concepto: `Reservación ${nNights} noches`,
                             fecha: new Date(arrivalDate),
                             idUsuario: user._id.toString(),
                             idReserva: idReserva
                         })
 
-
-                        // finalComission += costosVendedor.maxAmount;
-                        // minComission += costosVendedor.minAmount;
-
-                        // minComission += costosDuenio.amount;
-                        // finalComission += costosDuenio.amount;
                     }
-                } else if (user.privilege === "Gerente") {
-                    const montoComisionGerente = Math.round((costosGerente.amount * nNights) * factorAjusteComisiones * 100) / 100;
-                    console.log(`→ Comisión Gerente: ${costosGerente.amount * nNights} x ${factorAjusteComisiones.toFixed(4)} = ${montoComisionGerente}`);
-                    await altaComisionReturn({
-                        monto: montoComisionGerente,
-                        concepto: `Reservación ${nNights} noches`,
-                        fecha: new Date(arrivalDate),
-                        idUsuario: user._id.toString(),
-                        idReserva: idReserva
-                    })
 
+                    user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                    if (!user) {
+                        res.status(400).send({ message: "user not found" })
+                    }
                 }
-
-                // if (costos.commission == "Aumento por costo fijo") {
-                //     finalComission += costos.maxAmount;
-                // }
-
-                user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
-                if (!user) {
-                    res.status(400).send({ message: "user not found" })
-                }
-
-
             }
+        } else if (includeSellerCommissionEnabled) {
+            const montoComisionVendedor = Math.round((comisionVendedor * nNights) * factorAjusteComisiones * 100) / 100;
+            console.log(`→ Comisión Inversionista-Vendedor: ${comisionVendedor * nNights} x ${factorAjusteComisiones.toFixed(4)} = ${montoComisionVendedor}`);
+            await altaComisionReturn({
+                monto: montoComisionVendedor,
+                concepto: `Comisión por Reservación inversionista vendedor ${nNights} noches`,
+                fecha: new Date(arrivalDate),
+                idUsuario: sellerCommissionRecipientId,
+                idReserva: idReserva
+            })
         }
 
         const chaletAdminId = chalet.others.admin.toString();
@@ -1451,9 +1442,25 @@ async function generarComisionReserva(req, res) {
 async function generarComisionReservaBackend(info) {
     try {
         const loggedUserId = info.userId;
-        const { costoBase, totalSinComisiones, idReserva, chaletName, arrivalDate, departureDate, nNights } = info;
+        const { costoBase, totalSinComisiones, idReserva, chaletName, arrivalDate, departureDate, nNights, isInvestorSellerMode, includeSellerCommission } = info;
         console.log("Desde generar comision reserva")
         console.log("Costo base: " + costoBase)
+
+        const reserva = await Documento.findById(idReserva, {
+            isInvestorSellerMode: 1,
+            includeSellerCommission: 1,
+            createdBy: 1
+        }).lean();
+
+        const hasInvestorSellerModeFlag = typeof isInvestorSellerMode !== 'undefined';
+        const hasIncludeSellerCommissionFlag = typeof includeSellerCommission !== 'undefined';
+        const investorSellerModeEnabled = hasInvestorSellerModeFlag
+            ? (isInvestorSellerMode === true || isInvestorSellerMode === 'true')
+            : !!reserva?.isInvestorSellerMode;
+        const includeSellerCommissionEnabled = hasIncludeSellerCommissionFlag
+            ? (includeSellerCommission === true || includeSellerCommission === 'true')
+            : !!reserva?.includeSellerCommission;
+        const sellerCommissionRecipientId = reserva?.createdBy?.toString() || loggedUserId;
 
         const reservacionId = idReserva
 
@@ -1502,121 +1509,93 @@ async function generarComisionReservaBackend(info) {
 
         const fechaActual = new Date();
 
-        let counter = 0
+        if (!investorSellerModeEnabled) {
+            let counter = 0
 
-        let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
+            let user = await usersController.obtenerUsuarioPorIdMongo(loggedUserId)
 
-        let conceptoAdmin = ''
+            let conceptoAdmin = ''
 
-        while (true) {
-            // console.log(user)
+            while (true) {
+                if (user.privilege === 'Administrador') {
+                    counter += 1;
 
-            if (user.privilege === 'Administrador') {
-                counter += 1;
+                    if (user.administrator.toString() === user._id.toString()) {
+                        if (costosGerente.commission === "Aumento por costo fijo") {
+                            if (counter > 1) {
+                                conceptoAdmin = `Comisión administrador ligado de vendedor por reservación ${nNights} noches`
 
-                if (user.administrator.toString() === user._id.toString()) {
-                    if (costosGerente.commission === "Aumento por costo fijo") {
-                        if (counter > 1) {
-                            conceptoAdmin = `Comisión administrador ligado de vendedor por reservación ${nNights} noches`
-
-                        } else {
-                            conceptoAdmin = `Reservación A. vendedor: ${nNights} noches`
+                            } else {
+                                conceptoAdmin = `Reservación A. vendedor: ${nNights} noches`
+                            }
+                            await altaComisionReturn({
+                                monto: costosAdministrador.amount * nNights,
+                                concepto: conceptoAdmin,
+                                fecha: new Date(arrivalDate),
+                                idUsuario: user._id.toString(),
+                                idReserva: reservacionId
+                            })
                         }
-                        // finalComission += costosGerente.amount;
-                        // minComission += costosGerente.amount;
-                        await altaComisionReturn({
-                            monto: costosAdministrador.amount * nNights,
-                            concepto: conceptoAdmin,
-                            fecha: new Date(arrivalDate),
-                            idUsuario: user._id.toString(),
-                            idReserva: reservacionId
-                        })
+
+
+                        break;
+                    } else {
+                        if (costosVendedor.commission === "Aumento por costo fijo") {
+                            console.log("Comision vendedor: ", comisionVendedor)
+                            await altaComisionReturn({
+                                monto: comisionVendedor * nNights,
+                                concepto: `Comisión por Reservación vendedor ${nNights} noches`,
+                                fecha: new Date(arrivalDate),
+                                idUsuario: user._id.toString(),
+                                idReserva: reservacionId
+                            })
+                            user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                        }
                     }
-
-
-                    break;
                 } else {
-                    if (costosVendedor.commission === "Aumento por costo fijo") {
-                        console.log("Comision vendedor: ", comisionVendedor)
-                        await altaComisionReturn({
-                            monto: comisionVendedor * nNights,
-                            concepto: `Comisión por Reservación vendedor ${nNights} noches`,
-                            fecha: new Date(arrivalDate),
-                            idUsuario: user._id.toString(),
-                            idReserva: reservacionId
-                        })
-                        user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+
+                    counter += 1;
+                    if (counter >= 2 && user.privilege !== "Administrador") {
+                        user.privilege = "Gerente"
                     }
-                }
-
-                // let costos = await Costos.find({ category: "Gerente" });
-                // if (costosGerente.commission === "Aumento por costo fijo") {
-                //     if (counter > 1) {
-                //         conceptoAdmin = `Comisión administrador ligado por reservación ${chaletName}`
-
-                //     } else {
-                //         conceptoAdmin = `Reservación ${chaletName}`
-                //     }
-                //     // finalComission += costosGerente.amount;
-                //     // minComission += costosGerente.amount;
-                //     await altaComisionReturn({
-                //         monto: costosAdministrador.amount,
-                //         concepto: conceptoAdmin,
-                //         fecha: fechaActual,
-                //         idUsuario: user._id.toString()
-                //     })
-                // }
-
-                // break;
-            } else {
-
-                counter += 1;
-                if (counter >= 2 && user.privilege !== "Administrador") {
-                    user.privilege = "Gerente"
-                }
-                // let costos = await Costos.findOne({ category: user.privilege })
 
 
-                if (user.privilege === "Vendedor") {
-                    if (costosVendedor.commission === "Aumento por costo fijo") {
+                    if (user.privilege === "Vendedor") {
+                        if (costosVendedor.commission === "Aumento por costo fijo") {
 
+                            await altaComisionReturn({
+                                monto: comisionVendedor * nNights,
+                                concepto: `Reservación ${nNights} noches`,
+                                fecha: new Date(arrivalDate),
+                                idUsuario: user._id.toString(),
+                                idReserva: reservacionId
+                            })
+                        }
+                    } else if (user.privilege === "Gerente") {
                         await altaComisionReturn({
-                            monto: comisionVendedor * nNights,
+                            monto: costosGerente.amount * nNights,
                             concepto: `Reservación ${nNights} noches`,
                             fecha: new Date(arrivalDate),
                             idUsuario: user._id.toString(),
                             idReserva: reservacionId
                         })
 
-
-                        // finalComission += costosVendedor.maxAmount;
-                        // minComission += costosVendedor.minAmount;
-
-                        // minComission += costosDuenio.amount;
-                        // finalComission += costosDuenio.amount;
                     }
-                } else if (user.privilege === "Gerente") {
-                    await altaComisionReturn({
-                        monto: costosGerente.amount * nNights,
-                        concepto: `Reservación ${nNights} noches`,
-                        fecha: new Date(arrivalDate),
-                        idUsuario: user._id.toString(),
-                        idReserva: reservacionId
-                    })
 
+                    user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
+                    if (!user) {
+                        return new Error("user not found")
+                    }
                 }
-
-                // if (costos.commission == "Aumento por costo fijo") {
-                //     finalComission += costos.maxAmount;
-                // }
-
-                user = await usersController.obtenerUsuarioPorIdMongo(user.administrator)
-                if (!user) {
-                    res.status(400).send({ message: "user not found" })
-                }
-
-
             }
+        } else if (includeSellerCommissionEnabled) {
+            await altaComisionReturn({
+                monto: comisionVendedor * nNights,
+                concepto: `Comisión por Reservación inversionista vendedor ${nNights} noches`,
+                fecha: new Date(arrivalDate),
+                idUsuario: sellerCommissionRecipientId,
+                idReserva: reservacionId
+            })
         }
 
         const chaletAdminId = chalet.others.admin.toString();

@@ -170,6 +170,14 @@ const reservaSchema = new Schema({
     cuponInfo: {
         type: cuponInfoSchema,
         default: () => ({ usado: false })
+    },
+    isInvestorSellerMode: {
+        type: Boolean,
+        default: false
+    },
+    includeSellerCommission: {
+        type: Boolean,
+        default: false
     }
 });
 

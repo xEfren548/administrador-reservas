@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
+    const reservationFlowContext = window.RESERVATION_FLOW_CONTEXT || {};
+    const isInvestorSellerFlow = reservationFlowContext.isInvestorSellerFlow === true;
     // Functions.
     function clearModal(modal) {
         const inputs = modal.querySelectorAll('input');
@@ -92,6 +94,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const totalCostoBaseInput = document.querySelector("#total-costo-base")
     let totalSinComisiones = document.querySelector("#total-sin-comisiones")
 
+    function formatDateToES(isoDate) {
+        const [year, month, day] = isoDate.split('-');
+        return `${day}/${month}/${year}`;
+    }
+
+    function getInvestorIncludeSellerCommission() {
+        const commissionToggle = document.getElementById('investor-seller-commission-toggle');
+        return !!commissionToggle?.checked;
+    }
+
     if (totalSinComisiones.value === undefined || totalSinComisiones.value === null || !totalSinComisiones.value) {
         totalSinComisiones.value = 0
     }
@@ -172,23 +184,59 @@ document.addEventListener("DOMContentLoaded", function () {
             const departureDay = departureValue.getDate().toString().padStart(2, '0');
             const departureDateStr = `${departureYear}-${departureMonth}-${departureDay}`;
 
-            // Construir query params
-            let queryParams = `fechaLlegada=${arrivalDateStr}&fechaSalida=${departureDateStr}`;
-            if (selectedTipologia && selectedTipologia !== 'all') {
-                queryParams += `&tipo=${encodeURIComponent(selectedTipologia)}`;
+            let availableRooms = [];
+
+            if (isInvestorSellerFlow) {
+                const categorias = (selectedTipologia && selectedTipologia !== 'all')
+                    ? [selectedTipologia]
+                    : ['all'];
+
+                const response = await fetch('/api/eventos/cotizaciones', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        categorias,
+                        fechaLlegada: formatDateToES(arrivalDateStr),
+                        fechaSalida: formatDateToES(departureDateStr),
+                        huespedes: 1,
+                        soloDisponibles: true,
+                        isInvestorSellerMode: true,
+                        includeSellerCommission: getInvestorIncludeSellerCommission()
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Error al consultar disponibilidad para inversionista');
+                }
+
+                const data = await response.json();
+                availableRooms = (data.chalets || []).map((room) => ({
+                    id: room.id,
+                    displayName: room.displayName || room.name,
+                    maxPax: room.maxPax,
+                    isGrouped: !!room.isGroup,
+                    availableCount: room.availableCount || 1
+                }));
+            } else {
+                let queryParams = `fechaLlegada=${arrivalDateStr}&fechaSalida=${departureDateStr}`;
+                if (selectedTipologia && selectedTipologia !== 'all') {
+                    queryParams += `&tipo=${encodeURIComponent(selectedTipologia)}`;
+                }
+
+                const response = await fetch(`/api/eventos/disponibilidad?${queryParams}`);
+                
+                if (!response.ok) {
+                    throw new Error('Error al consultar disponibilidad');
+                }
+
+                const data = await response.json();
+                availableRooms = data.availableRooms || [];
             }
 
-            // Llamar al endpoint simplificado
-            const response = await fetch(`/api/eventos/disponibilidad?${queryParams}`);
-            
-            if (!response.ok) {
-                throw new Error('Error al consultar disponibilidad');
-            }
-
-            const data = await response.json();
-            console.log('Habitaciones disponibles:', data);
-
-            const availableRooms = data.availableRooms || [];
+            console.log('Habitaciones disponibles:', availableRooms);
             
             // Limpiar select y agregar solo las disponibles
             // Mantener la primera opción vacía
@@ -388,6 +436,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 };
             }
 
+            if (isInvestorSellerFlow) {
+                formData.isInvestorSellerMode = true;
+                formData.includeSellerCommission = getInvestorIncludeSellerCommission();
+            }
+
             // Crear un objeto con los datos del formulario
 
 
@@ -474,6 +527,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 arrivalDate: formData.arrivalDate,
                 departureDate: formData.departureDate,
                 nNights: formData.nNights
+            }
+
+            if (isInvestorSellerFlow) {
+                comisionBody.isInvestorSellerMode = true;
+                comisionBody.includeSellerCommission = getInvestorIncludeSellerCommission();
             }
             
             console.log("Datos base para comisiones:");
@@ -719,6 +777,61 @@ document.addEventListener("DOMContentLoaded", function () {
             const resultados = []
 
             try {
+                if (isInvestorSellerFlow) {
+                    const selectedCategory = document.getElementById('tipologia_select')?.value;
+                    const categorias = (selectedCategory && selectedCategory !== 'all') ? [selectedCategory] : ['all'];
+                    const cotizacionResponse = await fetch('/api/eventos/cotizaciones', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            categorias,
+                            fechaLlegada: formatDateToES(arrivalDate.value),
+                            fechaSalida: formatDateToES(departureDate.value),
+                            huespedes: Number(selectedPax.value),
+                            soloDisponibles: true,
+                            isInvestorSellerMode: true,
+                            includeSellerCommission: getInvestorIncludeSellerCommission()
+                        })
+                    });
+
+                    if (!cotizacionResponse.ok) {
+                        const errorData = await cotizacionResponse.json();
+                        throw new Error(errorData.message || 'Error al cotizar la reserva');
+                    }
+
+                    const cotizacionData = await cotizacionResponse.json();
+                    const selectedChaletId = idHabitacionInput.value;
+                    const selectedChalet = (cotizacionData.chalets || []).find((chalet) => String(chalet.id) === String(selectedChaletId));
+
+                    if (!selectedChalet) {
+                        throw new Error('La habitación seleccionada no está disponible en esta cotización');
+                    }
+
+                    const totalSinComisionesValue = Number(selectedChalet.totalPriceNoComs || 0);
+                    const totalConComisiones = Number(selectedChalet.totalPrice || 0);
+                    const costoBaseTotal = Number(selectedChalet.totalCost || 0);
+
+                    totalSinComisiones.value = totalSinComisionesValue;
+                    totalCostoBaseInput.value = costoBaseTotal;
+                    precioMinimoPermitido = totalConComisiones;
+                    preciosTotalesGlobal = totalConComisiones;
+                    comisionesReserva = totalConComisiones - totalSinComisionesValue;
+
+                    const totalInput = document.getElementById('habitacion_total');
+                    totalInput.value = totalConComisiones.toFixed(2);
+
+                    mostrarSeccionCupon();
+                    const sectionTotal = document.getElementById('section-total');
+                    if (sectionTotal) {
+                        sectionTotal.style.display = 'block';
+                    }
+
+                    precioOriginalSinCupon.valor = totalConComisiones;
+                    return;
+                }
+
                 // Si es un grupo, obtener el ID de la habitación representativa
                 if (isGroup) {
                     const groupName = habitacionId.replace('group:', '');
@@ -1072,27 +1185,41 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     const tipoReservaSelect = document.querySelector('#tipo-reserva-select');
-    tipoReservaSelect.addEventListener('change', function() {
-        console.log("Ejecutando...")
-        
-        const containerAltaCliente = document.querySelectorAll('.container-alta-cliente');
-        const containerAltaClienteProvisional = document.querySelector('#container-alta-cliente-provisional')
+    if (tipoReservaSelect) {
+        tipoReservaSelect.addEventListener('change', function() {
+            console.log("Ejecutando...")
+            
+            const containerAltaCliente = document.querySelectorAll('.container-alta-cliente');
+            const containerAltaClienteProvisional = document.querySelector('#container-alta-cliente-provisional')
 
-        const selectedOption = tipoReservaSelect.options[tipoReservaSelect.selectedIndex];
-        console.log(selectedOption)
+            const selectedOption = tipoReservaSelect.options[tipoReservaSelect.selectedIndex];
+            console.log(selectedOption)
 
-        if (selectedOption.value === "reserva"){
-            containerAltaCliente.forEach(element => {
-                element.classList.remove('d-none')
-            });
-            containerAltaClienteProvisional.classList.add('d-none')
-        } else {
-            containerAltaCliente.forEach(element => {
-                element.classList.add('d-none')
-            });
-            containerAltaClienteProvisional.classList.remove('d-none')
-        }
-    });
+            if (selectedOption.value === "reserva"){
+                containerAltaCliente.forEach(element => {
+                    element.classList.remove('d-none')
+                });
+                containerAltaClienteProvisional.classList.add('d-none')
+            } else {
+                containerAltaCliente.forEach(element => {
+                    element.classList.add('d-none')
+                });
+                containerAltaClienteProvisional.classList.remove('d-none')
+            }
+        });
+    }
+
+    const investorCommissionToggle = document.getElementById('investor-seller-commission-toggle');
+    if (isInvestorSellerFlow && investorCommissionToggle) {
+        investorCommissionToggle.addEventListener('change', async function() {
+            try {
+                await showAvailableChalets();
+                await obtenerTotalReserva();
+            } catch (error) {
+                console.log('Error al recalcular cotización:', error.message);
+            }
+        });
+    }
 
     const searchInput = document.getElementById('lblClient');
     const optionsContainer = document.querySelector('.select-options');

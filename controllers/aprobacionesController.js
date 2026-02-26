@@ -253,7 +253,9 @@ async function updateRequestStatus(req, res, next) {
             totalSinComisiones: aprobacion.totalWithoutComs,
             costoBase: aprobacion.baseCost,
             chaletName: chalet.propertyDetails.name,
-            nNights: nNights
+            nNights: nNights,
+            isInvestorSellerMode: reservation.isInvestorSellerMode,
+            includeSellerCommission: reservation.includeSellerCommission
         };
         
 

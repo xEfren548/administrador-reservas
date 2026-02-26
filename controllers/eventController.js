@@ -1012,6 +1012,9 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
         const privilege = req.session.privilege;
         let eventosFiltradosOrdenadosConPagos = [];
         let habitacionesDueno = [];
+        let clientes = [];
+        let tipologias = [];
+        let chaletsReserva = [];
 
         console.log(req.session)
 
@@ -1136,10 +1139,36 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
 
         }
 
+        clientes = await Cliente.find({}, {
+            firstName: 1,
+            lastName: 1,
+            email: 1
+        }).lean();
+
+        const tipologiasSet = new Set(
+            habitacionesDueno
+                .map((habitacion) => habitacion?.propertyDetails?.accomodationType)
+                .filter(Boolean)
+        );
+
+        tipologias = Array.from(tipologiasSet).map((tipologia) => ({ tipologia }));
+
+        chaletsReserva = habitacionesDueno.map((habitacion) => ({
+            name: habitacion?.propertyDetails?.name,
+            pax: habitacion?.propertyDetails?.maxOccupancy,
+            id: habitacion?._id,
+            tipologia: habitacion?.propertyDetails?.accomodationType,
+            isGroup: !!habitacion?.isGrouped,
+            totalRooms: 1
+        }));
+
         res.render('vistaColaboradorDuenos', {
             eventos: eventosFiltradosOrdenadosConPagos,
             chalets: habitacionesDueno,
-            privilege: privilege
+            privilege: privilege,
+            clientes,
+            tipologias,
+            chaletsReserva
         });
 
     } catch (error) {
@@ -1167,7 +1196,9 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         cupon,
         totalOriginal,
         totalSinComisiones,
-        costoBase
+        costoBase,
+        isInvestorSellerMode,
+        includeSellerCommission
     } = req.body;
     let newCliente = null;
     let client = null;
@@ -1201,6 +1232,10 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
 
     try {
         const userRole = req.session.role;
+        const parsedInvestorSellerMode = isInvestorSellerMode === true || isInvestorSellerMode === 'true';
+        const parsedIncludeSellerCommission = includeSellerCommission === true || includeSellerCommission === 'true';
+        const userIsInvestor = req.session.privilege === 'Inversionistas';
+        const enabledInvestorSellerMode = parsedInvestorSellerMode && userIsInvestor;
 
         const userPermissions = await Roles.findById(userRole);
         if (!userPermissions) {
@@ -1208,7 +1243,8 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         }
 
         const permittedRole = "CREATE_RESERVATIONS";
-        if (!userPermissions.permissions.includes(permittedRole)) {
+        const hasCreateReservationPermission = userPermissions.permissions.includes(permittedRole);
+        if (!hasCreateReservationPermission && !enabledInvestorSellerMode) {
             throw new Error("El usuario no tiene permiso para crear reservas");
         }
 
@@ -1248,6 +1284,16 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
 
         if (!chalet) {
             throw new NotFoundError('La habitación no existe');
+        }
+
+        if (enabledInvestorSellerMode) {
+            const userId = req.session.id?.toString();
+            const isInvestorLinkedToRoom = Array.isArray(chalet?.others?.investors)
+                && chalet.others.investors.some((investor) => investor?.investor?.toString() === userId);
+
+            if (!isInvestorLinkedToRoom) {
+                throw new Error('No tienes permiso para reservar esta habitación como inversionista vendedor');
+            }
         }
 
         console.log("Habitación encontrada: ", chalet.propertyDetails.name);
@@ -1346,7 +1392,8 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         const costosVendedor = await Costos.findOne({ category: "Vendedor" }); // minAmount, maxAmount
         if (!costosVendedor) { throw new NotFoundError('Costos vendedor not found'); }
 
-        const comisionVendedor = costosVendedor.amount * nNights;
+        const applySellerCommission = enabledInvestorSellerMode ? parsedIncludeSellerCommission : true;
+        const comisionVendedor = applySellerCommission ? (costosVendedor.amount * nNights) : 0;
 
         console.log("Arrival date before: ")
         console.log(arrivalDate)
@@ -1388,7 +1435,9 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 createdBy: createdBy,
                 comisionVendedor: comisionVendedor,
                 status: 'active',
-                cuponInfo
+                cuponInfo,
+                isInvestorSellerMode: enabledInvestorSellerMode,
+                includeSellerCommission: applySellerCommission
             };
             message = isFromGroup
                 ? `Reservación agregada con éxito. Habitación asignada: ${actualChaletName}`
@@ -1430,7 +1479,9 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 paymentCancelation: paymentCancelation,
                 createdBy: createdBy,
                 comisionVendedor: comisionVendedor,
-                cuponInfo
+                cuponInfo,
+                isInvestorSellerMode: enabledInvestorSellerMode,
+                includeSellerCommission: applySellerCommission
             };
 
             const roomAssignedMessage = isFromGroup
@@ -3139,7 +3190,10 @@ function groupLocationsByMunicipality(locations) {
 // Cotizador WEB 
 async function cotizadorChaletsyPrecios(req, res) {
     try {
-        const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles, isForClient, noVendedor } = req.body;
+        const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles, isForClient, noVendedor, isInvestorSellerMode, includeSellerCommission } = req.body;
+
+        const parsedInvestorSellerMode = isInvestorSellerMode === true || isInvestorSellerMode === 'true';
+        const parsedIncludeSellerCommission = includeSellerCommission === true || includeSellerCommission === 'true';
 
         if (!req.session.token && !isForClient) {
             if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
@@ -3180,6 +3234,10 @@ async function cotizadorChaletsyPrecios(req, res) {
 
         let filtro = {};
 
+        if (parsedInvestorSellerMode && !isForClient && req.session.privilege !== 'Inversionistas') {
+            return res.status(403).json({ message: 'Solo inversionistas pueden usar este modo de cotización' });
+        }
+
         if (!categorias.includes("all")) { //Si se seleccionaron categorias
             if (isForClient) {
                 if (categorias.length > 1) {
@@ -3210,6 +3268,10 @@ async function cotizadorChaletsyPrecios(req, res) {
                 "propertyDetails.minOccupancy": { $lte: huespedes },
                 isActive: true
             };
+        }
+
+        if (parsedInvestorSellerMode && !isForClient && req.session.privilege === 'Inversionistas') {
+            filtro["others.investors.investor"] = req.session.id;
         }
 
 
@@ -3357,13 +3419,25 @@ async function cotizadorChaletsyPrecios(req, res) {
             huespedes: huespedes
         }
 
-        const infoComisiones = {
-            userId: req.session.id,
-            nNights: nNights,
-            noVendedor: noVendedor
+        let comisiones = 0;
 
+        if (parsedInvestorSellerMode && !isForClient && req.session.privilege === 'Inversionistas') {
+            const costosVendedor = await Costos.findOne({ category: "Vendedor" });
+            if (!costosVendedor) {
+                throw new Error("No se encontró costos para vendedor. Favor de agregar.");
+            }
+
+            const comisionVendedor = parsedIncludeSellerCommission ? (costosVendedor.amount * nNights) : 0;
+            comisiones = comisionVendedor + 35;
+        } else {
+            const infoComisiones = {
+                userId: req.session.id,
+                nNights: nNights,
+                noVendedor: noVendedor
+
+            }
+            comisiones = await utilidadesController.calcularComisionesInternas(infoComisiones);
         }
-        const comisiones = await utilidadesController.calcularComisionesInternas(infoComisiones);
 
         if (!comisiones) {
             throw new Error("No se encontró al usuario");
