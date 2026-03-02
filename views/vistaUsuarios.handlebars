@@ -604,6 +604,7 @@
 
             if (privilege === "Inversionistas") {
                 data.investorType = document.getElementById('select-investorType').value;
+                data.assignedChalets = assignedChalets();
             } else {
                 if (privilege === "Vendedor") {
                     data.assignedChalets = assignedChalets();
@@ -680,6 +681,7 @@
 
                 if (privilege === "Inversionistas") {
                     data.investorType = document.getElementById('select-investorTypeUpd').value
+                    data.assignedChalets = assignedEditedChalets();
                 } else if(privilege === "Vendedor") {
                     data.assignedChalets = assignedEditedChalets();
                 } else {
@@ -834,8 +836,7 @@
             containerSelectInvestorType.classList.remove('d-none');
             relatedLabel.classList.add('d-none');
             relatedSelectContainer.classList.add('d-none');
-            // Falta añadir d-none al relatedContainer
-            assignedChaletsContainer.classList.add('d-none');
+            assignedChaletsContainer.classList.remove('d-none');
 
         } else if (this.value === "Vendedor") {
             assignedChaletsContainer.classList.remove('d-none');
@@ -868,8 +869,7 @@
             containerSelectInvestorTypeUpd.classList.remove('d-none');
             relatedLabelUpd.classList.add('d-none');
             relatedSelectContainerUpd.classList.add('d-none');
-            // Falta añadir d-none al relatedContainer
-            assignedChaletsContainerUpd.classList.add('d-none');
+            assignedChaletsContainerUpd.classList.remove('d-none');
 
         } else if (this.value === "Vendedor") {
             assignedChaletsContainerUpd.classList.remove('d-none');
@@ -973,8 +973,7 @@
             containerSelectInvestorTypeUpd.classList.remove('d-none');
             relatedLabelUpd.classList.add('d-none');
             relatedSelectContainerUpd.classList.add('d-none');
-            // Falta añadir d-none al relatedContainer
-            assignedChaletsContainerUpd.classList.add('d-none');
+            assignedChaletsContainerUpd.classList.remove('d-none');
 
         } else if (privilege === "Vendedor") {
             assignedChaletsContainerUpd.classList.remove('d-none');

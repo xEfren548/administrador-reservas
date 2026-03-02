@@ -3322,66 +3322,77 @@ async function cotizadorChaletsyPrecios(req, res) {
         }
 
         // ========== AGRUPAR HABITACIONES POR roomGroup ==========
-        // Separar habitaciones agrupadas de las individuales
-        const groupedChalets = {}; // { roomGroup: [chalets...] }
-        const individualChalets = [];
-
-        for (const chalet of availableChalets) {
-            if (chalet.isGrouped && chalet.roomGroup) {
-                // Habitación pertenece a un grupo
-                if (!groupedChalets[chalet.roomGroup]) {
-                    groupedChalets[chalet.roomGroup] = [];
-                }
-                groupedChalets[chalet.roomGroup].push(chalet);
-            } else {
-                // Habitación individual (no agrupada)
-                individualChalets.push(chalet);
-            }
-        }
-
-        // Ordenar cada grupo por roomNumber para que la primera sea la "representante"
-        for (const groupName in groupedChalets) {
-            groupedChalets[groupName].sort((a, b) => (a.roomNumber || 0) - (b.roomNumber || 0));
-        }
-
-        // Crear array final combinando grupos (representados por primera habitación) e individuales
+        const shouldGroupRooms = !(parsedInvestorSellerMode && !isForClient && req.session.privilege === 'Inversionistas');
         const chaletsToProcess = [];
 
-        // Agregar grupos (usando primera habitación como representante)
-        for (const groupName in groupedChalets) {
-            const groupRooms = groupedChalets[groupName];
-            const representativeChalet = groupRooms[0]; // Primera habitación del grupo
+        if (shouldGroupRooms) {
+            // Separar habitaciones agrupadas de las individuales
+            const groupedChalets = {}; // { roomGroup: [chalets...] }
+            const individualChalets = [];
 
-            // Agregar metadata del grupo al chalet representante
-            representativeChalet._groupInfo = {
-                isGroup: true,
-                groupName: groupName,
-                availableCount: groupRooms.length,
-                availableRoomIds: groupRooms.map(r => r._id),
-                allRooms: groupRooms.map(r => ({
-                    id: r._id,
-                    name: r.propertyDetails.name,
-                    roomNumber: r.roomNumber
-                }))
-            };
+            for (const chalet of availableChalets) {
+                if (chalet.isGrouped && chalet.roomGroup) {
+                    if (!groupedChalets[chalet.roomGroup]) {
+                        groupedChalets[chalet.roomGroup] = [];
+                    }
+                    groupedChalets[chalet.roomGroup].push(chalet);
+                } else {
+                    individualChalets.push(chalet);
+                }
+            }
 
-            chaletsToProcess.push(representativeChalet);
-        }
+            for (const groupName in groupedChalets) {
+                groupedChalets[groupName].sort((a, b) => (a.roomNumber || 0) - (b.roomNumber || 0));
+            }
 
-        // Agregar habitaciones individuales
-        for (const chalet of individualChalets) {
-            chalet._groupInfo = {
-                isGroup: false,
-                groupName: null,
-                availableCount: 1,
-                availableRoomIds: [chalet._id],
-                allRooms: [{
-                    id: chalet._id,
-                    name: chalet.propertyDetails.name,
-                    roomNumber: null
-                }]
-            };
-            chaletsToProcess.push(chalet);
+            for (const groupName in groupedChalets) {
+                const groupRooms = groupedChalets[groupName];
+                const representativeChalet = groupRooms[0];
+
+                representativeChalet._groupInfo = {
+                    isGroup: true,
+                    groupName: groupName,
+                    availableCount: groupRooms.length,
+                    availableRoomIds: groupRooms.map(r => r._id),
+                    allRooms: groupRooms.map(r => ({
+                        id: r._id,
+                        name: r.propertyDetails.name,
+                        roomNumber: r.roomNumber
+                    }))
+                };
+
+                chaletsToProcess.push(representativeChalet);
+            }
+
+            for (const chalet of individualChalets) {
+                chalet._groupInfo = {
+                    isGroup: false,
+                    groupName: null,
+                    availableCount: 1,
+                    availableRoomIds: [chalet._id],
+                    allRooms: [{
+                        id: chalet._id,
+                        name: chalet.propertyDetails.name,
+                        roomNumber: null
+                    }]
+                };
+                chaletsToProcess.push(chalet);
+            }
+        } else {
+            for (const chalet of availableChalets) {
+                chalet._groupInfo = {
+                    isGroup: false,
+                    groupName: null,
+                    availableCount: 1,
+                    availableRoomIds: [chalet._id],
+                    allRooms: [{
+                        id: chalet._id,
+                        name: chalet.propertyDetails.name,
+                        roomNumber: chalet.roomNumber || null
+                    }]
+                };
+                chaletsToProcess.push(chalet);
+            }
         }
 
         // ========== FIN AGRUPACIÓN ==========
