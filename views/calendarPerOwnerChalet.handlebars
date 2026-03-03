@@ -10,6 +10,21 @@
                 <p class="text-muted">Gestiona las reservas de tus propiedades</p>
             </div>
 
+            {{#if (eq privilege 'Inversionistas')}}
+            <div class="card bg-white border shadow-sm mb-4">
+                <div class="card-body d-flex flex-wrap gap-2">
+                    <a id="crear-reserva-dueno-btn" class="btn btn-secondary" href="#" role="button"
+                        data-bs-toggle="modal" data-bs-target="#owner_entry_modal">
+                        <i class="fa fa-calendar-plus me-1"></i>Reserva Inversionista
+                    </a>
+                    <a id="crear-reserva-inversionista-btn" class="btn btn-success" href="#" role="button"
+                        data-bs-toggle="modal" data-bs-target="#investor_reservation_modal">
+                        <i class="fa fa-users me-1"></i>Reserva público general
+                    </a>
+                </div>
+            </div>
+            {{/if}}
+
             <!-- Selector de Tipología -->
             <div class="card bg-white border shadow-sm mb-4">
                 <div class="card-body">
@@ -190,7 +205,330 @@
     .fc-event-main {
         width: 100% !important;
     }
+
+    .inv-select-container { position: relative; }
+    .inv-select-options {
+        position: absolute;
+        width: 100%;
+        max-height: 220px;
+        overflow-y: auto;
+        background: #fff;
+        border: 1px solid #dcdcdc;
+        border-radius: 8px;
+        z-index: 1061;
+        display: none;
+    }
+    .inv-select-option {
+        padding: 0.55rem 0.75rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f3f3;
+    }
+    .inv-select-option:hover, .inv-select-option.selected { background: #f3fbfa; }
+    .inv-total-card {
+        border: 2px solid #BFE9E4;
+        border-radius: 12px;
+        padding: 1rem;
+        background: #f8fffe;
+    }
+    .inv-commission-switch-wrap .inv-commission-toggle {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        margin-bottom: 0;
+    }
+    .inv-commission-switch-wrap .inv-commission-toggle .inv-switch-input {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 2.2rem;
+        height: 1.2rem;
+        margin: 0;
+        border: 1px solid #c7c7c7;
+        border-radius: 999px;
+        background: #e3e3e3;
+        position: relative;
+        cursor: pointer;
+        transition: background-color .2s ease;
+        flex-shrink: 0;
+    }
+    .inv-commission-switch-wrap .inv-commission-toggle .inv-switch-input::before {
+        content: '';
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0,0,0,.2);
+        transition: transform .2s ease;
+    }
+    .inv-commission-switch-wrap .inv-commission-toggle .inv-switch-input:checked {
+        background: #7ECEC5;
+        border-color: #7ECEC5;
+    }
+    .inv-commission-switch-wrap .inv-commission-toggle .inv-switch-input:checked::before {
+        transform: translateX(1rem);
+    }
+    .inv-commission-label {
+        font-weight: 700;
+        margin-bottom: 0;
+    }
+    .inv-commission-badge {
+        font-size: .85rem;
+        min-width: 56px;
+        text-align: center;
+    }
 </style>
+
+{{#if (eq privilege 'Inversionistas')}}
+<div class="modal fade" id="owner_entry_modal" tabindex="-1" role="dialog" aria-labelledby="ownerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ownerModalLabel">Apartar fechas</h5>
+                <button type="button" class="close" onclick="$('#owner_entry_modal').modal('hide');" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="row mt-2">
+                    <div class="col-sm-6">
+                        <label for="owner_cliente_name">Nombre de cliente</label>
+                        <input type="text" id="owner_cliente_name" class="form-control" placeholder="Nombre">
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-sm-6">
+                        <label for="owner_date_range">Rango de fechas</label>
+                        <input type="text" id="owner_date_range" class="form-control" placeholder="Selecciona un rango de fechas">
+                        <input type="hidden" id="owner_event_start_date">
+                        <input type="hidden" id="owner_event_end_date">
+                    </div>
+                    <div class="col-sm-3">
+                        <label for="owner_event_nights">Noches</label>
+                        <input type="number" id="owner_event_nights" class="form-control" min="1" disabled>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-sm-6">
+                        <p id="owner_verificar_disponibilidad" style="display:none;">Verificando disponibilidad...</p>
+                        <label for="owner_tipologia_habitacion">Habitación</label>
+                        <select id="owner_tipologia_habitacion" class="form-select" required>
+                            <option value="" selected disabled>Selecciona una cabaña</option>
+                            {{#if chalets}}
+                                {{#each chalets}}
+                                <option value="{{this.name}}" data-bs-pax="{{this.pax}}" data-bs-id="{{this.id}}">
+                                    {{this.name}}
+                                </option>
+                                {{/each}}
+                            {{/if}}
+                        </select>
+                        <input type="hidden" id="owner_id_cabana">
+                    </div>
+                    <div class="col-sm-3">
+                        <label for="owner_ocupacion_habitacion">Ocupación Máx.</label>
+                        <input type="number" id="owner_ocupacion_habitacion" class="form-control" readonly>
+                    </div>
+                </div>
+                <p id="owner_txtReservationError" class="error mt-2"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="save-owner-event-btn">Crear Reserva</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="investor_reservation_modal" tabindex="-1" role="dialog" aria-labelledby="investorReservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #7ECEC5; color: #fff;">
+                <h5 class="modal-title" id="investorReservationModalLabel"><i class="fa fa-calendar-plus"></i> Nueva Reserva Inversionista</h5>
+                <button type="button" class="close text-white" onclick="$('#investor_reservation_modal').modal('hide');" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="inv_tipo_reserva"><i class="fa fa-tag"></i> Tipo de reserva</label>
+                        <select id="inv_tipo_reserva" class="form-select" required>
+                            <option value="por-depo" selected>Tentativa (por depósito)</option>
+                            <option value="reserva">Reserva confirmada</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="alert alert-warning w-100 mb-0 py-2 px-3 inv-commission-switch-wrap" role="alert">
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <div class="inv-commission-toggle">
+                                    <input class="inv-switch-input" type="checkbox" id="inv_include_seller_commission">
+                                    <label class="inv-commission-label" for="inv_include_seller_commission">
+                                        Comisión de vendedor
+                                    </label>
+                                </div>
+                                <span id="inv_commission_state_badge" class="badge bg-danger inv-commission-badge">OFF</span>
+                            </div>
+                            <div class="small mt-1 fw-semibold">Revisa este switch antes de crear la reserva.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="inv_confirmed_client_section" class="mb-3" style="display:none;">
+                    <label for="inv_client_email"><i class="fa fa-user"></i> Cliente confirmado</label>
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-9">
+                            <div class="inv-select-container">
+                                <input type="text" id="inv_lblClient" class="form-control" autocomplete="off" placeholder="Escribe para buscar...">
+                                <div class="inv-select-options" id="inv_client_options">
+                                    {{#if clientes}}
+                                        {{#each clientes}}
+                                        <div class="inv-select-option" data-value="{{this.email}}" data-label="{{this.firstName}} {{this.lastName}} ({{this.email}})">
+                                            <i class="fa fa-user-circle"></i> {{this.firstName}} {{this.lastName}} <small>({{this.email}})</small>
+                                        </div>
+                                        {{/each}}
+                                    {{else}}
+                                        <div class="inv-select-option" data-value="">No hay clientes registrados</div>
+                                    {{/if}}
+                                </div>
+                                <input type="hidden" id="inv_lblClientValue">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#invClientEntryModal">
+                                <i class="fa fa-user-plus"></i> Nuevo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="inv_provisional_client_section" class="mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="inv_client_first_name"><i class="fa fa-user"></i> Nombre</label>
+                            <input type="text" id="inv_client_first_name" class="form-control" placeholder="Nombre del cliente">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="inv_client_last_name"><i class="fa fa-user"></i> Apellido</label>
+                            <input type="text" id="inv_client_last_name" class="form-control" placeholder="Apellido del cliente">
+                        </div>
+                        <div class="col-md-12">
+                            <label for="inv_client_phone"><i class="fa fa-phone"></i> Teléfono (opcional)</label>
+                            <input type="tel" id="inv_client_phone" class="form-control" placeholder="3312345678">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="inv_date_range"><i class="fa fa-calendar-week"></i> Rango de fechas</label>
+                        <input type="text" id="inv_date_range" class="form-control" placeholder="Selecciona check-in y check-out">
+                        <input type="hidden" id="inv_start_date">
+                        <input type="hidden" id="inv_end_date">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="inv_nights"><i class="fa fa-moon"></i> Noches</label>
+                        <input type="number" id="inv_nights" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="inv_tipologia_filter"><i class="fa fa-filter"></i> Tipología</label>
+                        <select id="inv_tipologia_filter" class="form-select">
+                            <option value="all" selected>Todas</option>
+                            {{#if tipologias}}
+                                {{#each tipologias}}
+                                <option value="{{this.tipologia}}">{{this.tipologia}}</option>
+                                {{/each}}
+                            {{/if}}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <button type="button" class="btn btn-outline-secondary w-100" id="inv_btn_search_availability">
+                        <span class="inv-btn-text"><i class="fa fa-search"></i> Buscar habitaciones disponibles</span>
+                        <span class="inv-btn-spinner d-none"><i class="fa fa-spinner fa-spin"></i> Buscando...</span>
+                    </button>
+                </div>
+
+                <div id="inv_verificar_disponibilidad" style="display:none; margin-bottom: .75rem; color:#0f766e; font-weight:500;">
+                    <i class="fa fa-spinner fa-spin"></i> Verificando disponibilidad...
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-12">
+                        <label for="inv_room_select"><i class="fa fa-bed"></i> Habitación</label>
+                        <select id="inv_room_select" class="form-select" required>
+                            <option value="" selected disabled>Primero busca disponibilidad</option>
+                        </select>
+                        <input type="hidden" id="inv_room_id">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="inv_max_occupancy"><i class="fa fa-users"></i> Ocupación máx.</label>
+                        <input type="number" id="inv_max_occupancy" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="inv_pax"><i class="fa fa-user-friends"></i> Huéspedes</label>
+                        <select id="inv_pax" class="form-select" required>
+                            <option value="" selected disabled>Personas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label><i class="fa fa-book"></i> Resumen de la reserva</label>
+                        <div class="inv-total-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold"><i class="fa fa-money-bill-wave"></i> Total a cobrar</span>
+                                <div class="input-group" style="max-width: 200px;">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" id="inv_total" class="form-control text-end fw-bold" readonly>
+                                    <span class="input-group-text">MXN</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="inv_total_sin_comisiones" value="0">
+                            <input type="hidden" id="inv_costo_base" value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="inv_calculando_precios" style="display:none; margin-top: .75rem; color:#0f766e; font-weight:500;">
+                    <i class="fa fa-spinner fa-spin"></i> Calculando precio...
+                </div>
+
+                <p id="inv_error_text" class="error mt-2"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="inv_save_reservation_btn">
+                    <span class="inv-save-text"><i class="fa fa-check-circle"></i> Crear Reserva</span>
+                    <span class="inv-save-spinner d-none"><i class="fa fa-spinner fa-spin"></i> Creando...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="invClientEntryModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <form id="invFrmCreateClient" action="/api/clientes/crear-cliente" method="post" class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #7ECEC5; color:#fff;">
+                <h5 class="modal-title"><i class="fa fa-user-plus"></i> Nuevo Cliente</h5>
+                <button type="button" class="close text-white" onclick="$('#invClientEntryModal').modal('hide');" data-bs-target="#investor_reservation_modal" data-bs-toggle="modal" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6"><label>Nombre</label><input type="text" id="invTxtClientName" class="form-control" placeholder="Nombre"></div>
+                    <div class="col-md-6"><label>Apellido</label><input type="text" id="invTxtClientLastname" class="form-control" placeholder="Apellido"></div>
+                    <div class="col-md-6"><label>Teléfono</label><input type="tel" id="invTxtClientPhone" class="form-control" placeholder="10 dígitos"></div>
+                    <div class="col-md-6"><label>Email</label><input type="email" id="invTxtClientEmail" class="form-control" placeholder="correo@ejemplo.com"></div>
+                    <div class="col-12"><label>Dirección</label><input type="text" id="invTxtClientAddress" class="form-control" placeholder="Dirección completa"></div>
+                    <div class="col-md-6"><label>Tipo de ID</label><select id="invSlctClientIdType" class="form-select" required><option value="" selected disabled>Selecciona...</option><option value="INE">INE</option><option value="Pasaporte">Pasaporte</option><option value="Licencia de conducir">Licencia de conducir</option></select></div>
+                    <div class="col-md-6"><label>Número de ID</label><input type="text" id="invTxtClientIdNumber" class="form-control" placeholder="Número de identificación"></div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <button type="button" class="btn btn-outline-secondary" data-bs-target="#investor_reservation_modal" data-bs-toggle="modal" data-bs-dismiss="modal"><i class="fa fa-arrow-left"></i> Regresar</button>
+                <button type="button" class="btn btn-success" id="invBtnSaveClient"><i class="fa fa-save"></i> Guardar Cliente</button>
+            </div>
+        </div>
+    </form>
+</div>
+{{/if}}
 
 <script>
     // Mostrar leyenda cuando se selecciona una cabaña
@@ -199,6 +537,114 @@
             document.getElementById('legend-card').style.display = 'block';
         }
     });
+
+    {{#if (eq privilege 'Inversionistas')}}
+    document.addEventListener('DOMContentLoaded', function () {
+        const ownerDateRange = document.getElementById('owner_date_range');
+        const ownerStart = document.getElementById('owner_event_start_date');
+        const ownerEnd = document.getElementById('owner_event_end_date');
+        const ownerNights = document.getElementById('owner_event_nights');
+        const ownerRoomSelect = document.getElementById('owner_tipologia_habitacion');
+        const ownerOccInput = document.getElementById('owner_ocupacion_habitacion');
+        const ownerRoomIdInput = document.getElementById('owner_id_cabana');
+        const ownerAvailability = document.getElementById('owner_verificar_disponibilidad');
+
+        if (ownerDateRange) {
+            flatpickr('#owner_date_range', {
+                mode: 'range',
+                dateFormat: 'd-m-Y',
+                onChange: async function (selectedDates) {
+                    if (selectedDates.length !== 2) return;
+                    ownerStart.value = selectedDates[0].toISOString().split('T')[0];
+                    ownerEnd.value = selectedDates[1].toISOString().split('T')[0];
+
+                    const nights = Math.ceil((selectedDates[1].getTime() - selectedDates[0].getTime()) / (1000 * 3600 * 24));
+                    ownerNights.value = nights > 0 ? nights : 0;
+
+                    if (!ownerRoomSelect) return;
+                    ownerAvailability.style.display = 'block';
+                    ownerRoomSelect.disabled = true;
+
+                    try {
+                        const options = ownerRoomSelect.querySelectorAll('option[data-bs-id]');
+                        const arrivalDate = ownerStart.value;
+                        const departureDate = ownerEnd.value;
+
+                        for (const option of options) {
+                            const roomId = option.getAttribute('data-bs-id');
+                            const response = await fetch(`/api/check-availability/?resourceId=${roomId}&arrivalDate=${arrivalDate}&departureDate=${departureDate}&isForOwner=true`);
+                            const data = await response.json();
+                            option.disabled = !data.available;
+                            option.style.backgroundColor = data.available ? 'lightgreen' : 'lightcoral';
+                        }
+                    } catch (error) {
+                        Swal.fire({ icon: 'error', title: 'Error', text: error.message, confirmButtonText: 'Aceptar' });
+                    } finally {
+                        ownerAvailability.style.display = 'none';
+                        ownerRoomSelect.disabled = false;
+                    }
+                }
+            });
+        }
+
+        if (ownerRoomSelect) {
+            ownerRoomSelect.addEventListener('change', function () {
+                const selectedOption = ownerRoomSelect.options[ownerRoomSelect.selectedIndex];
+                ownerOccInput.value = selectedOption?.getAttribute('data-bs-pax') || '';
+                ownerRoomIdInput.value = selectedOption?.getAttribute('data-bs-id') || '';
+            });
+        }
+
+        const saveOwnerBtn = document.getElementById('save-owner-event-btn');
+        if (saveOwnerBtn) {
+            saveOwnerBtn.addEventListener('click', async function () {
+                try {
+                    const formData = {
+                        arrivalDate: ownerStart.value.trim(),
+                        departureDate: ownerEnd.value.trim(),
+                        nNights: ownerNights.value.trim(),
+                        chaletName: ownerRoomSelect.value.trim(),
+                        maxOccupation: ownerOccInput.value.trim(),
+                        clienteProvisional: document.getElementById('owner_cliente_name').value.trim(),
+                    };
+
+                    if (!formData.arrivalDate || !formData.departureDate || !formData.nNights || !formData.chaletName || !formData.clienteProvisional) {
+                        throw new Error('Completa todos los campos obligatorios');
+                    }
+
+                    const response = await fetch('/api/eventos/reservadueno', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || errorData?.error?.[0]?.message || 'Error al apartar fechas');
+                    }
+
+                    const data = await response.json();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Reserva creada',
+                        text: data.message,
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => window.location.reload());
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: `Ha ocurrido un error al crear la reserva: ${error.message}`,
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            });
+        }
+    });
+    {{/if}}
 </script>
 
 <script src="/scripts/ownerChaletCalendar.js"></script>
+{{#if (eq privilege 'Inversionistas')}}
+<script src="/scripts/investorAssignedReservation.js"></script>
+{{/if}}

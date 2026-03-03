@@ -1139,13 +1139,30 @@ async function renderCalendarPerChaletOwner(req, res, next) {
             name: chalet.propertyDetails.name,
             basePrice: chalet.others.basePrice,
             pax: chalet.propertyDetails.maxOccupancy,
-            id: chalet._id.toString()
+            id: chalet._id.toString(),
+            tipologia: chalet.propertyDetails.accomodationType
         }));
+
+        const clientes = await Cliente.find({}, {
+            firstName: 1,
+            lastName: 1,
+            email: 1
+        }).lean();
+
+        const tipologiasSet = new Set(
+            habitacionesDueno
+                .map((habitacion) => habitacion?.propertyDetails?.accomodationType)
+                .filter(Boolean)
+        );
+
+        const tipologias = Array.from(tipologiasSet).map((tipologia) => ({ tipologia }));
 
         console.log(chalets);
         res.render('calendarPerOwnerChalet', {
             chalets: chalets,
-            privilege: privilege
+            privilege: privilege,
+            clientes,
+            tipologias
             // events: eventosFiltrados
 
         })
