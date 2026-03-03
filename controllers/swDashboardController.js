@@ -188,10 +188,12 @@ const getEstadisticasOrganizacion = async (req, res) => {
             activo: true
         }).populate('cuenta');
 
-        const misCuentasIds = misCuentas.map(p => p.cuenta._id);
+        const misCuentasIds = misCuentas
+            .filter(p => p.cuenta && p.cuenta._id)
+            .map(p => p.cuenta._id.toString());
 
         const misTransacciones = transacciones.filter(t => 
-            misCuentasIds.some(id => id.toString() === t.cuenta._id.toString())
+            t.cuenta && t.cuenta._id && misCuentasIds.includes(t.cuenta._id.toString())
         );
 
         let misIngresos = 0;
