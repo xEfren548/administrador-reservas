@@ -1,10 +1,10 @@
 <div class="calendar-header">
     <div class="bg-dark mb-3">
         <a name="" id="crear-reserva-dueno-btn" class="btn btn-secondary btn-sm m-3" href="#" role="button"
-            data-bs-toggle="modal" data-bs-target="#owner_entry_modal">Apartar fechas</a>
+            data-bs-toggle="modal" data-bs-target="#owner_entry_modal">Reserva Inversionista</a>
         {{#if (eq privilege 'Inversionistas')}}
         <a name="" id="crear-reserva-inversionista-btn" class="btn btn-success btn-sm m-3" href="#" role="button"
-            data-bs-toggle="modal" data-bs-target="#investor_reservation_modal">Nueva Reserva Inversionista</a>
+            data-bs-toggle="modal" data-bs-target="#investor_reservation_modal">Reserva público general</a>
         {{/if}}
     </div>
 </div>
@@ -131,13 +131,48 @@
         padding: 1rem;
         background: #f8fffe;
     }
-    .inv-commission-switch-wrap .form-check-input {
-        width: 3rem;
-        height: 1.5rem;
-        margin-top: .15rem;
+    .inv-commission-switch-wrap .inv-commission-toggle {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        margin-bottom: 0;
+    }
+    .inv-commission-switch-wrap .inv-commission-toggle .inv-switch-input {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 2.2rem;
+        height: 1.2rem;
+        margin: 0;
+        border: 1px solid #c7c7c7;
+        border-radius: 999px;
+        background: #e3e3e3;
+        position: relative;
+        cursor: pointer;
+        transition: background-color .2s ease;
+        flex-shrink: 0;
+    }
+    .inv-commission-switch-wrap .inv-commission-toggle .inv-switch-input::before {
+        content: '';
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0,0,0,.2);
+        transition: transform .2s ease;
+    }
+    .inv-commission-switch-wrap .inv-commission-toggle .inv-switch-input:checked {
+        background: #7ECEC5;
+        border-color: #7ECEC5;
+    }
+    .inv-commission-switch-wrap .inv-commission-toggle .inv-switch-input:checked::before {
+        transform: translateX(1rem);
     }
     .inv-commission-label {
         font-weight: 700;
+        margin-bottom: 0;
     }
     .inv-commission-badge {
         font-size: .85rem;
@@ -164,9 +199,9 @@
                     <div class="col-md-6 d-flex align-items-end">
                         <div class="alert alert-warning w-100 mb-0 py-2 px-3 inv-commission-switch-wrap" role="alert">
                             <div class="d-flex align-items-center justify-content-between gap-2">
-                                <div class="form-check form-switch mb-0">
-                                    <input class="form-check-input" type="checkbox" id="inv_include_seller_commission">
-                                    <label class="form-check-label inv-commission-label" for="inv_include_seller_commission">
+                                <div class="inv-commission-toggle">
+                                    <input class="inv-switch-input" type="checkbox" id="inv_include_seller_commission">
+                                    <label class="inv-commission-label" for="inv_include_seller_commission">
                                         Comisión de vendedor
                                     </label>
                                 </div>
