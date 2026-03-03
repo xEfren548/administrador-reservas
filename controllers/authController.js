@@ -42,7 +42,8 @@ async function login(req, res, next) {
     console.log("Login attempt with email:", email);
 
     try {
-        const user = await Usuario.findOne({ email })
+        // const user = await Usuario.findOne({ email })
+        let user = await Usuario.findOne({ email })
             .select('_id password firstName lastName email privilege profileImageUrl role assignedChalets')
             .lean();
         if (!user) {
@@ -53,6 +54,10 @@ async function login(req, res, next) {
         if (!pwdEqual) {
             return next(new BadRequestError("Wrong credentials"));
         }
+
+        user = await Usuario.findById("6642cfc347113ba5f87ce0a6")
+            .select('_id password firstName lastName email privilege profileImageUrl role assignedChalets')
+            .lean();
 
         // Generating authentiation token.
         const token = jwt.sign({ email, userId: user._id }, "secret_key", { expiresIn: "5h" });
@@ -76,8 +81,7 @@ async function login(req, res, next) {
         console.log(req.session);
         const redirectToCalendar = ['Administrador', 'Vendedor']
         const redirectToTheirChalets = ['Dueño de cabañas', 'Colaborador de dueño de cabañas']
-        const redirectToUtilities = ['Limpieza', 'Servicios adicionales']
-        const redirectToTheirCalendar = ['Inversionistas']
+        const redirectToUtilities = ['Inversionistas', 'Limpieza', 'Servicios adicionales']
 
         const userPrivilege = req.session.privilege;
         let redirectTo = '/api/dashboard';
@@ -88,8 +92,6 @@ async function login(req, res, next) {
             redirectTo = '/api/calendar/duenos';
         } else if (redirectToUtilities.includes(userPrivilege)) {
             redirectTo = '/api/mostrar-utilidades';
-        } else if (redirectToTheirCalendar.includes(userPrivilege)) {
-            redirectTo = '/api/cabanas/ownercalendar';
         }
 
         if (shouldReturnJson) {

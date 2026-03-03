@@ -30,14 +30,29 @@ const getEstadisticasOrganizacion = async (req, res) => {
 
         const cuentasIds = cuentas.map(c => c._id);
 
-        // Verificar que el usuario es participante de al menos una cuenta de esta organización
-        const participacion = await SWParticipante.findOne({
-            cuenta: { $in: cuentasIds },
-            usuario: userId,
-            activo: true
-        });
+        // Verificar acceso por membresía/administración en la organización
+        const esCreadorOrganizacion = organizacion.createdBy &&
+            organizacion.createdBy.toString() === userId.toString();
 
-        if (!participacion) {
+        const esMiembroOrganizacion = Array.isArray(organizacion.participantes) &&
+            organizacion.participantes.some(participante =>
+                participante.usuario && participante.usuario.toString() === userId.toString()
+            );
+
+        let tieneAcceso = esCreadorOrganizacion || esMiembroOrganizacion;
+
+        // Fallback: permitir también si participa en al menos una cuenta de esta organización
+        if (!tieneAcceso) {
+            const participacion = await SWParticipante.findOne({
+                cuenta: { $in: cuentasIds },
+                usuario: userId,
+                activo: true
+            });
+
+            tieneAcceso = !!participacion;
+        }
+
+        if (!tieneAcceso) {
             return res.status(403).json({
                 success: false,
                 message: 'No tienes acceso a esta organización'
