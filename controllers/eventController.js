@@ -1025,10 +1025,6 @@ async function reservasDeDuenosParaColaborador(req, res, next) {
             }
 
             const investorId = investor._id;
-            // const habitacionesExistentes = await Habitacion.find().lean();
-            // if (!habitacionesExistentes) {
-            //     return res.status(404).send('No rooms found');
-            // }
 
             habitacionesDueno = await Habitacion.find({
                 "others.investors": {
@@ -1287,11 +1283,16 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         }
 
         if (enabledInvestorSellerMode) {
-            const userId = req.session.id?.toString();
-            const isInvestorLinkedToRoom = Array.isArray(chalet?.others?.investors)
-                && chalet.others.investors.some((investor) => investor?.investor?.toString() === userId);
+            const investorSessionId = req.session.userId || req.session.id;
+            const investorUser = investorSessionId
+                ? await Usuario.findById(investorSessionId, { assignedChalets: 1 }).lean()
+                : null;
 
-            if (!isInvestorLinkedToRoom) {
+            const assignedChaletIds = Array.isArray(investorUser?.assignedChalets)
+                ? investorUser.assignedChalets.map((id) => id?.toString()).filter(Boolean)
+                : [];
+
+            if (!assignedChaletIds.includes(chalet._id.toString())) {
                 throw new Error('No tienes permiso para reservar esta habitación como inversionista vendedor');
             }
         }
@@ -3191,6 +3192,8 @@ function groupLocationsByMunicipality(locations) {
 async function cotizadorChaletsyPrecios(req, res) {
     try {
         const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles, isForClient, noVendedor, isInvestorSellerMode, includeSellerCommission } = req.body;
+        const huespedesNum = Number(huespedes);
+        const shouldFilterByOccupancy = Number.isFinite(huespedesNum) && huespedesNum > 0;
 
         const parsedInvestorSellerMode = isInvestorSellerMode === true || isInvestorSellerMode === 'true';
         const parsedIncludeSellerCommission = includeSellerCommission === true || includeSellerCommission === 'true';
@@ -3250,28 +3253,57 @@ async function cotizadorChaletsyPrecios(req, res) {
                 console.log(categorias)
                 filtro = {
                     "location.population": { $in: categorias },
-                    "propertyDetails.maxOccupancy": { $gte: huespedes },
-                    "propertyDetails.minOccupancy": { $lte: huespedes },
                     isActive: true
+                }
+                if (shouldFilterByOccupancy) {
+                    filtro["propertyDetails.maxOccupancy"] = { $gte: huespedesNum };
+                    filtro["propertyDetails.minOccupancy"] = { $lte: huespedesNum };
                 }
             } else {
                 filtro = {
                     "propertyDetails.accomodationType": { $in: categorias },
-                    "propertyDetails.maxOccupancy": { $gte: huespedes },
-                    "propertyDetails.minOccupancy": { $lte: huespedes },
                     isActive: true
+                };
+                if (shouldFilterByOccupancy) {
+                    filtro["propertyDetails.maxOccupancy"] = { $gte: huespedesNum };
+                    filtro["propertyDetails.minOccupancy"] = { $lte: huespedesNum };
                 }
             };
         } else { // Si se mostrara todo
             filtro = {
-                "propertyDetails.maxOccupancy": { $gte: huespedes },
-                "propertyDetails.minOccupancy": { $lte: huespedes },
                 isActive: true
             };
+            if (shouldFilterByOccupancy) {
+                filtro["propertyDetails.maxOccupancy"] = { $gte: huespedesNum };
+                filtro["propertyDetails.minOccupancy"] = { $lte: huespedesNum };
+            }
         }
 
         if (parsedInvestorSellerMode && !isForClient && req.session.privilege === 'Inversionistas') {
-            filtro["others.investors.investor"] = req.session.id;
+            const investorSessionId = req.session.userId || req.session.id;
+            const investorUser = investorSessionId
+                ? await Usuario.findById(investorSessionId, { assignedChalets: 1 }).lean()
+                : null;
+
+            const assignedChaletIds = Array.isArray(investorUser?.assignedChalets)
+                ? investorUser.assignedChalets.map((id) => id?.toString()).filter(Boolean)
+                : [];
+
+            if (!assignedChaletIds.length) {
+                return res.status(400).json({ message: 'No tienes cabañas asignadas para cotizar como inversionista' });
+            }
+
+            const validAssignedObjectIds = assignedChaletIds
+                .filter((id) => mongoose.Types.ObjectId.isValid(id))
+                .map((id) => new mongoose.Types.ObjectId(id));
+
+            if (!validAssignedObjectIds.length) {
+                return res.status(400).json({ message: 'No tienes cabañas asignadas válidas para cotizar como inversionista' });
+            }
+
+            filtro._id = {
+                $in: validAssignedObjectIds
+            };
         }
 
 
