@@ -76,7 +76,8 @@ async function login(req, res, next) {
         console.log(req.session);
         const redirectToCalendar = ['Administrador', 'Vendedor']
         const redirectToTheirChalets = ['Dueño de cabañas', 'Colaborador de dueño de cabañas']
-        const redirectToUtilities = ['Inversionistas', 'Limpieza', 'Servicios adicionales']
+        const redirectToUtilities = ['Limpieza', 'Servicios adicionales']
+        const redirectToTheirCalendar = ['Inversionistas']
 
         const userPrivilege = req.session.privilege;
         let redirectTo = '/api/dashboard';
@@ -87,6 +88,8 @@ async function login(req, res, next) {
             redirectTo = '/api/calendar/duenos';
         } else if (redirectToUtilities.includes(userPrivilege)) {
             redirectTo = '/api/mostrar-utilidades';
+        } else if (redirectToTheirCalendar.includes(userPrivilege)) {
+            redirectTo = '/api/cabanas/ownercalendar';
         }
 
         if (shouldReturnJson) {
