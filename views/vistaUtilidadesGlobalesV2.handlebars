@@ -41,9 +41,12 @@
                             </div>
                             
                             <!-- Botones -->
-                            <div class="col-md-3 d-flex align-items-end gap-2">
+                            <div class="col-md-3 d-flex flex-wrap align-items-end gap-2">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fa fa-search"></i> Buscar
+                                </button>
+                                <button type="button" id="btnExportarExcel" class="btn btn-success text-nowrap">
+                                    <i class="fa fa-file-excel"></i> Exportar Excel
                                 </button>
                                 <button type="button" id="btnLimpiarFiltros" class="btn btn-secondary">
                                     <i class="fa fa-eraser"></i> Limpiar
@@ -362,7 +365,35 @@
                 cargarDatos();
             }
         });
+
+        document.getElementById('btnExportarExcel').addEventListener('click', function() {
+            exportarExcel();
+        });
     });
+
+    function construirQueryParams(filtros, incluirPaginacion = true) {
+        const params = new URLSearchParams();
+
+        if (incluirPaginacion) {
+            params.append('page', currentPage);
+            params.append('limit', currentPageSize);
+        }
+
+        Object.entries(filtros || {}).forEach(([key, value]) => {
+            if (key === 'usuarios') return;
+            if (value !== undefined && value !== null && value !== '') {
+                params.append(key, value);
+            }
+        });
+
+        if (filtros.usuarios && Array.isArray(filtros.usuarios)) {
+            filtros.usuarios.forEach(userId => {
+                params.append('usuarios', userId);
+            });
+        }
+
+        return params;
+    }
 
     function obtenerFiltros() {
         const filtros = {};
@@ -386,23 +417,8 @@
     async function cargarDatos() {
         try {
             currentFilters = obtenerFiltros();
-            
-            // Construir query params
-            const params = new URLSearchParams({
-                page: currentPage,
-                limit: currentPageSize,
-                ...currentFilters
-            });
 
-            // Si hay múltiples usuarios, agregarlos correctamente
-            if (currentFilters.usuarios && Array.isArray(currentFilters.usuarios)) {
-                // Remover el parámetro usuarios que se agregó arriba
-                params.delete('usuarios');
-                // Agregar cada usuario individualmente
-                currentFilters.usuarios.forEach(userId => {
-                    params.append('usuarios', userId);
-                });
-            }
+            const params = construirQueryParams(currentFilters, true);
 
             mostrarCargando();
 
@@ -425,6 +441,50 @@
         } catch (error) {
             console.error('Error:', error);
             mostrarError(error.message);
+        }
+    }
+
+    async function exportarExcel() {
+        const btnExportar = document.getElementById('btnExportarExcel');
+        const filtros = obtenerFiltros();
+        const params = construirQueryParams(filtros, false);
+
+        try {
+            btnExportar.disabled = true;
+            btnExportar.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Exportando...';
+
+            const response = await fetch(`/api/utilidades-globales-excel?${params.toString()}`);
+
+            if (!response.ok) {
+                let errorMessage = 'No se pudo exportar el archivo';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    // Mantener mensaje por defecto si no hay JSON
+                }
+                throw new Error(errorMessage);
+            }
+
+            const blob = await response.blob();
+            const contentDisposition = response.headers.get('Content-Disposition') || '';
+            const fileNameMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+            const fileName = fileNameMatch ? fileNameMatch[1] : 'utilidades_globales_v2.xlsx';
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Error al exportar Excel:', error);
+            alert(error.message || 'Error al exportar Excel');
+        } finally {
+            btnExportar.disabled = false;
+            btnExportar.innerHTML = '<i class="fa fa-file-excel"></i> Exportar Excel';
         }
     }
 

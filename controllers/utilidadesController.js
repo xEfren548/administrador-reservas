@@ -1,6 +1,7 @@
 const moment = require('moment');
 const momentTz = require('moment-timezone');
 const mongoose = require('mongoose');
+const XLSX = require('xlsx');
 const NotFoundError = require("../common/error/not-found-error");
 
 
@@ -19,6 +20,59 @@ const Roles = require('./../models/Roles');
 const Cupon = require('./../models/Cupon');
 const CuponUsage = require('./../models/CuponUsage');
 const { $where } = require('../models/Log');
+
+const DATE_FILTER_TZ = 'America/Mexico_City';
+const DATE_INPUT_FORMATS = ['YYYY-MM-DD', 'DD/MM/YYYY'];
+
+function parseDateFilter(rawDate, boundary) {
+    const parsedDate = momentTz.tz(rawDate, DATE_INPUT_FORMATS, true, DATE_FILTER_TZ);
+    if (!parsedDate.isValid()) {
+        return null;
+    }
+
+    return boundary === 'start'
+        ? parsedDate.startOf('day').toDate()
+        : parsedDate.endOf('day').toDate();
+}
+
+function buildUtilidadesGlobalesQuery({ fechaInicio, fechaFin, usuarios, idReserva }) {
+    const query = {};
+
+    if (fechaInicio || fechaFin) {
+        query.fecha = {};
+
+        if (fechaInicio) {
+            const startDate = parseDateFilter(fechaInicio, 'start');
+            if (!startDate) {
+                return {
+                    error: 'Formato inválido en fechaInicio. Use YYYY-MM-DD o DD/MM/YYYY'
+                };
+            }
+            query.fecha.$gte = startDate;
+        }
+
+        if (fechaFin) {
+            const endDate = parseDateFilter(fechaFin, 'end');
+            if (!endDate) {
+                return {
+                    error: 'Formato inválido en fechaFin. Use YYYY-MM-DD o DD/MM/YYYY'
+                };
+            }
+            query.fecha.$lte = endDate;
+        }
+    }
+
+    if (usuarios) {
+        const usuariosArray = Array.isArray(usuarios) ? usuarios : [usuarios];
+        query.idUsuario = { $in: usuariosArray };
+    }
+
+    if (idReserva) {
+        query.idReserva = idReserva;
+    }
+
+    return { query };
+}
 
 async function obtenerComisionesPorReserva(idReserva) {
     try {
@@ -2559,31 +2613,12 @@ async function obtenerUtilidadesGlobalesJson(req, res, next) {
             limit = 50
         } = req.query;
 
-        // Construir query de filtros
-        let query = {};
-
-        // Filtro por fecha
-        if (fechaInicio || fechaFin) {
-            query.fecha = {};
-            if (fechaInicio) {
-                const startDate = moment(fechaInicio, 'YYYY-MM-DD').startOf('day').toDate();
-                query.fecha.$gte = startDate;
-            }
-            if (fechaFin) {
-                const endDate = moment(fechaFin, 'YYYY-MM-DD').endOf('day').toDate();
-                query.fecha.$lte = endDate;
-            }
-        }
-
-        // Filtro por usuarios (puede ser array)
-        if (usuarios) {
-            const usuariosArray = Array.isArray(usuarios) ? usuarios : [usuarios];
-            query.idUsuario = { $in: usuariosArray };
-        }
-
-        // Filtro por ID de reserva
-        if (idReserva) {
-            query.idReserva = idReserva;
+        const { query, error } = buildUtilidadesGlobalesQuery({ fechaInicio, fechaFin, usuarios, idReserva });
+        if (error) {
+            return res.status(400).json({
+                success: false,
+                error
+            });
         }
 
         // Calcular paginación
@@ -2757,6 +2792,198 @@ async function obtenerUtilidadesGlobalesJson(req, res, next) {
         return res.status(500).json({ 
             success: false,
             error: 'Error al obtener utilidades: ' + (error?.message || 'Error desconocido')
+        });
+    }
+}
+
+async function exportarUtilidadesGlobalesExcel(req, res, next) {
+    try {
+        const userRole = req.session.role;
+
+        const userPermissions = await Roles.findById(userRole);
+        if (!userPermissions) {
+            return res.status(403).json({ error: "El usuario no tiene un rol definido" });
+        }
+
+        const permittedRole = "VIEW_GLOBAL_UTILITIES";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            return res.status(403).json({ error: "No tiene permiso para ver utilidades globales" });
+        }
+
+        const {
+            fechaInicio,
+            fechaFin,
+            usuarios,
+            idReserva
+        } = req.query;
+
+        const { query, error } = buildUtilidadesGlobalesQuery({ fechaInicio, fechaFin, usuarios, idReserva });
+        if (error) {
+            return res.status(400).json({
+                success: false,
+                error
+            });
+        }
+
+        const [utilidades, habitacionesExistentes, reservas, allUsers] = await Promise.all([
+            Utilidades.find(query).sort({ fecha: -1 }).lean(),
+            Habitacion.find().lean(),
+            Documento.find().lean(),
+            usersController.getAllUsersMongo()
+        ]);
+
+        const habitacionesMap = new Map(
+            habitacionesExistentes.map(h => [h._id.toString(), h])
+        );
+
+        const reservasMap = new Map(
+            reservas.map(r => [r._id.toString(), r])
+        );
+
+        const usersMap = new Map(
+            allUsers.map(u => [u._id.toString(), u])
+        );
+
+        const chaletAdminIds = [...new Set(
+            habitacionesExistentes
+                .map(h => h?.others?.admin)
+                .filter(Boolean)
+                .map(a => a.toString())
+        )];
+
+        const chaletAdminMap = {};
+        if (chaletAdminIds.length > 0) {
+            const admins = await Promise.all(
+                chaletAdminIds.map(async (id) => {
+                    const u = await usersController.obtenerUsuarioPorIdMongo(id);
+                    return [id, u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : '-'];
+                })
+            );
+
+            for (const [id, nombre] of admins) {
+                chaletAdminMap[id] = nombre || '-';
+            }
+        }
+
+        const reservaIds = [...new Set(utilidades.map(u => u.idReserva).filter(Boolean))];
+        const pagosResults = await Promise.all(
+            reservaIds.map(id => pagoController.obtenerPagos(id))
+        );
+
+        const pagosMap = new Map();
+        reservaIds.forEach((id, index) => {
+            const pagos = pagosResults[index] || [];
+            const pagadoReserva = pagos
+                .filter(p => p.status === 'Aplicado' || !p.status)
+                .reduce((total, pago) => total + pago.importe, 0);
+
+            pagosMap.set(id, pagadoReserva);
+        });
+
+        const rows = utilidades.map((u) => {
+            let nombreUsuario = 'N/A';
+            let fechaCheckIn = 'N/A';
+            let fechaCheckOut = 'N/A';
+            let nombreHabitacion = 'N/A';
+            let chaletAdmin = 'N/A';
+            let nochesReservadas = 0;
+            let statusReserva = 'N/A';
+            let totalReserva = 0;
+            let pagadoReserva = 0;
+            let restanteReserva = 0;
+
+            const user = usersMap.get(u.idUsuario?.toString());
+            if (user) {
+                nombreUsuario = `${user.firstName} ${user.lastName}`;
+            }
+
+            let tipoUsuario = 'Otro';
+            const concepto = u.concepto || '';
+            if (concepto.includes('Dueño de cabaña') || concepto.includes('inversionista')) {
+                tipoUsuario = concepto.includes('inversionista') ? 'Inversionista' : 'Dueño de cabaña';
+            } else if (concepto.includes('limpieza') || concepto.includes('Limpieza')) {
+                tipoUsuario = 'Limpieza';
+            } else if (concepto.includes('uso de sistema') || concepto.includes('NyN')) {
+                tipoUsuario = 'Sistema';
+            } else if (concepto.includes('administrador ligado de vendedor') || concepto.includes('Administrador ligado de vendedor')) {
+                tipoUsuario = 'Administrador ligado de vendedor';
+            } else if (concepto.includes('administrador ligado de Cabaña') || concepto.includes('Administrador ligado de Cabaña')) {
+                tipoUsuario = 'Administrador ligado de Cabaña';
+            } else if (concepto.includes('Reservación')) {
+                tipoUsuario = 'Vendedor';
+            } else if (concepto.includes('Utilidad')) {
+                tipoUsuario = 'Utilidad';
+            }
+
+            if (u.idReserva) {
+                const reserva = reservasMap.get(u.idReserva.toString());
+
+                if (reserva) {
+                    const habitacion = reserva.resourceId ? habitacionesMap.get(reserva.resourceId.toString()) : null;
+
+                    nombreHabitacion = habitacion?.propertyDetails?.name || 'N/A';
+                    const adminId = habitacion?.others?.admin?.toString();
+                    chaletAdmin = adminId ? (chaletAdminMap[adminId] || 'N/A') : 'N/A';
+                    nochesReservadas = reserva.nNights || 0;
+                    statusReserva = (reserva.status || 'N/A').toUpperCase();
+                    totalReserva = reserva.total || 0;
+                    pagadoReserva = pagosMap.get(u.idReserva) || 0;
+                    restanteReserva = totalReserva - pagadoReserva;
+
+                    const checkOut = reserva.departureDate ? moment.utc(reserva.departureDate) : moment.invalid();
+                    fechaCheckOut = checkOut.isValid() ? checkOut.format('DD/MM/YYYY') : 'N/A';
+                }
+            }
+
+            const fechaUtilidad = u.fecha ? moment.utc(u.fecha) : moment.invalid();
+            fechaCheckIn = fechaUtilidad.isValid() ? fechaUtilidad.format('DD/MM/YYYY') : 'N/A';
+
+            return [
+                nombreHabitacion,
+                chaletAdmin,
+                u.concepto || 'N/A',
+                u.idReserva || 'N/A',
+                Number((u.monto || 0).toFixed(2)),
+                nochesReservadas,
+                fechaCheckIn,
+                fechaCheckOut,
+                statusReserva,
+                nombreUsuario,
+                tipoUsuario,
+                Number((totalReserva || 0).toFixed(2)),
+                Number((pagadoReserva || 0).toFixed(2)),
+                Number((restanteReserva || 0).toFixed(2))
+            ];
+        });
+
+        const worksheetData = [
+            ['Habitación', 'Admin Ligado', 'Concepto', 'ID Reserva', 'Monto', 'Noches', 'Check In', 'Check Out', 'Estatus', 'Usuario', 'Tipo Usuario', 'Total Reserva', 'Pagado', 'Pendiente'],
+            ...rows
+        ];
+
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+        worksheet['!cols'] = [
+            { wch: 28 }, { wch: 28 }, { wch: 36 }, { wch: 28 },
+            { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 },
+            { wch: 14 }, { wch: 28 }, { wch: 28 }, { wch: 14 },
+            { wch: 14 }, { wch: 14 }
+        ];
+
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Utilidades Globales');
+
+        const timestamp = momentTz.tz(new Date(), 'America/Mexico_City').format('YYYYMMDD_HHmmss');
+        const fileName = `utilidades_globales_v2_${timestamp}.xlsx`;
+        const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        return res.send(excelBuffer);
+    } catch (error) {
+        console.log(error?.message || error);
+        return res.status(500).json({
+            success: false,
+            error: 'Error al exportar utilidades: ' + (error?.message || 'Error desconocido')
         });
     }
 }
@@ -3526,6 +3753,7 @@ module.exports = {
     mostrarUtilidadesGlobales,
     mostrarUtilidadesGlobalesV2,
     obtenerUtilidadesGlobalesJson,
+    exportarUtilidadesGlobalesExcel,
     vistaParaReporte,
     generarComisionReserva,
     generarComisionReservaBackend,

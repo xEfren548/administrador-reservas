@@ -9,6 +9,7 @@ router.get('/mostrar-utilidades-json', utilidadesController.mostrarUtilidadesPor
 router.get('/mostrar-utilidades-globales', utilidadesController.mostrarUtilidadesGlobales)
 router.get('/mostrar-utilidades-globales-v2', utilidadesController.mostrarUtilidadesGlobalesV2)
 router.get('/utilidades-globales-json', utilidadesController.obtenerUtilidadesGlobalesJson)
+router.get('/utilidades-globales-excel', utilidadesController.exportarUtilidadesGlobalesExcel)
 router.get('/reportes', utilidadesController.vistaParaReporte)
 
 router.post('/utilidades', utilidadesController.altaComision);
