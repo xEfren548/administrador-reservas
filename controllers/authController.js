@@ -42,8 +42,8 @@ async function login(req, res, next) {
     console.log("Login attempt with email:", email);
 
     try {
-        // const user = await Usuario.findOne({ email })
-        let user = await Usuario.findOne({ email })
+        // let user = await Usuario.findOne({ email })
+        const user = await Usuario.findOne({ email })
             .select('_id password firstName lastName email privilege profileImageUrl role assignedChalets')
             .lean();
         if (!user) {
@@ -55,9 +55,9 @@ async function login(req, res, next) {
             return next(new BadRequestError("Wrong credentials"));
         }
 
-        user = await Usuario.findById("6642cfc347113ba5f87ce0a6")
-            .select('_id password firstName lastName email privilege profileImageUrl role assignedChalets')
-            .lean();
+        // user = await Usuario.findById("6642cfc347113ba5f87ce0a6")
+        //     .select('_id password firstName lastName email privilege profileImageUrl role assignedChalets')
+        //     .lean();
 
         // Generating authentiation token.
         const token = jwt.sign({ email, userId: user._id }, "secret_key", { expiresIn: "5h" });
