@@ -55,6 +55,25 @@ const swSolicitudOrganizacionSchema = new Schema({
         required: true,
         default: 'Otro'
     },
+    esProveedorExterno: {
+        type: Boolean,
+        default: false
+    },
+    proveedorNombre: {
+        type: String,
+        trim: true,
+        maxlength: 150
+    },
+    proveedorBeneficiario: {
+        type: String,
+        trim: true,
+        maxlength: 150
+    },
+    proveedorCuentaClabe: {
+        type: String,
+        trim: true,
+        maxlength: 30
+    },
     cuentaDestino: {
         type: Schema.Types.ObjectId,
         ref: 'SWCuenta'
@@ -153,7 +172,17 @@ swSolicitudOrganizacionSchema.methods.aprobar = async function(usuarioId, coment
             this.concepto,
             this.descripcion,
             usuarioId,
-            true
+            true,
+            {
+                esProveedorExterno: this.esProveedorExterno,
+                proveedor: this.esProveedorExterno
+                    ? {
+                        nombre: this.proveedorNombre,
+                        beneficiario: this.proveedorBeneficiario,
+                        cuentaClabe: this.proveedorCuentaClabe
+                    }
+                    : undefined
+            }
         );
 
         transaccion = resultado.origen;
@@ -195,7 +224,15 @@ swSolicitudOrganizacionSchema.methods.aprobar = async function(usuarioId, coment
             fechaAprobacion: new Date(),
             imagenes: this.imagenes,
             etiquetas: this.etiquetas,
-            notas: this.notas
+            notas: this.notas,
+            esProveedorExterno: this.esProveedorExterno,
+            proveedor: this.esProveedorExterno
+                ? {
+                    nombre: this.proveedorNombre,
+                    beneficiario: this.proveedorBeneficiario,
+                    cuentaClabe: this.proveedorCuentaClabe
+                }
+                : undefined
         });
 
         await transaccion.save();

@@ -76,6 +76,10 @@ function inicializarEventos() {
         await cargarCuentasPorOrganizacionParaSolicitud(organizacionId);
     });
 
+    $('#solicitud-es-proveedor-externo').on('change', function() {
+        actualizarCamposProveedorSolicitud($(this).is(':checked'));
+    });
+
     // Listener para cuando se abre el modal de organización
     $('#modalOrganizacion').on('show.bs.modal', function(e) {
         if ($(e.relatedTarget).attr('id') === 'btn-nueva-organizacion') {
@@ -119,6 +123,8 @@ function inicializarEventos() {
             $('#solicitud-campo-cuenta-origen').hide();
             $('#solicitud-campo-categoria').show();
             $('#solicitud-campo-imagenes').show();
+            $('#solicitud-es-proveedor-externo').prop('checked', false);
+            actualizarCamposProveedorSolicitud(false);
             $('#solicitud-cuenta-origen').val('');
             $('#solicitud-saldo-origen').text('');
             $('#solicitud-cuenta-origen-label').text('Cuenta Origen (mi cuenta) *');
@@ -1327,6 +1333,17 @@ async function actualizarModoSolicitud(modo) {
     }
 }
 
+function actualizarCamposProveedorSolicitud(esProveedorExterno) {
+    if (esProveedorExterno) {
+        $('#solicitud-campo-proveedor-externo').show();
+    } else {
+        $('#solicitud-campo-proveedor-externo').hide();
+        $('#solicitud-proveedor-nombre').val('');
+        $('#solicitud-proveedor-beneficiario').val('');
+        $('#solicitud-proveedor-cuenta-clabe').val('');
+    }
+}
+
 async function cargarCuentasPorOrganizacionParaSolicitud(organizacionId) {
     const select = $('#solicitud-cuenta');
     select.empty().append('<option value="">Seleccione una cuenta...</option>');
@@ -1461,6 +1478,9 @@ function renderizarSolicitudes() {
             const nombreDestino = sol.cuentaDestino?.nombre || 'N/A';
             conceptoHtml += `<br><small class="text-gray-600">→ ${nombreDestino}</small>`;
         }
+        if (sol.esProveedorExterno) {
+            conceptoHtml += `<br><small class="text-indigo-600"><i class="fas fa-user-tie me-1"></i>Proveedor externo</small>`;
+        }
 
         tbody.append(`
             <tr class="border-b border-gray-200 hover:bg-gray-100">
@@ -1585,6 +1605,9 @@ function renderizarSolicitudesOrganizacion() {
         if (sol.tipo === 'Transferencia' && sol.cuentaDestino) {
             const nombreDestino = sol.cuentaDestino?.nombre || 'N/A';
             conceptoHtml += `<br><small class="text-gray-600">→ ${nombreDestino}</small>`;
+        }
+        if (sol.esProveedorExterno) {
+            conceptoHtml += `<br><small class="text-indigo-600"><i class="fas fa-user-tie me-1"></i>Proveedor externo</small>`;
         }
 
         tbody.append(`
@@ -1871,13 +1894,21 @@ async function cargarMisCuentasParaTransferenciaSolicitud(cuentaDestinoId) {
 async function guardarSolicitud() {
     const modo = $('#solicitud-modo').val();
     const tipo = $('#solicitud-tipo').val();
+    const esProveedorExterno = $('#solicitud-es-proveedor-externo').is(':checked');
+    const proveedorNombre = $('#solicitud-proveedor-nombre').val().trim();
+    const proveedorBeneficiario = $('#solicitud-proveedor-beneficiario').val().trim();
+    const proveedorCuentaClabe = $('#solicitud-proveedor-cuenta-clabe').val().trim();
     let datos = {
         tipo: tipo,
         monto: parseFloat($('#solicitud-monto').val()),
         concepto: $('#solicitud-concepto').val().trim(),
         categoria: $('#solicitud-categoria').val(),
         descripcion: $('#solicitud-descripcion').val().trim(),
-        fecha: $('#solicitud-fecha').val()
+        fecha: $('#solicitud-fecha').val(),
+        esProveedorExterno,
+        proveedorNombre: esProveedorExterno ? proveedorNombre : '',
+        proveedorBeneficiario: esProveedorExterno ? proveedorBeneficiario : '',
+        proveedorCuentaClabe: esProveedorExterno ? proveedorCuentaClabe : ''
     };
     
     const cuentaPrincipal = $('#solicitud-cuenta').val();
@@ -1929,6 +1960,11 @@ async function guardarSolicitud() {
         return;
     }
 
+    if (esProveedorExterno && (!proveedorNombre || !proveedorBeneficiario || !proveedorCuentaClabe)) {
+        mostrarError('Para proveedor externo debe capturar nombre, beneficiario y cuenta/CLABE');
+        return;
+    }
+
     try {
         mostrarSpinner();
         
@@ -1976,6 +2012,8 @@ async function guardarSolicitud() {
             $('#solicitud-campo-categoria').show();
             $('#solicitud-campo-imagenes').show();
             $('#solicitud-campo-organizacion').hide();
+            $('#solicitud-es-proveedor-externo').prop('checked', false);
+            actualizarCamposProveedorSolicitud(false);
             $('#solicitud-modo').val('cuenta');
             await cargarSolicitudes();
             await cargarSolicitudesOrganizacion();
@@ -2372,6 +2410,28 @@ function mostrarDetalleSolicitudGeneral(solicitud, modo = 'cuenta') {
                 <div>
                     <p class="text-gray-500 text-sm">Descripción</p>
                     <p class="text-gray-900">${solicitud.descripcion}</p>
+                </div>
+            ` : ''}
+
+            ${solicitud.esProveedorExterno ? `
+                <div class="bg-indigo-50 rounded-lg p-3 border border-indigo-200">
+                    <p class="text-indigo-700 text-sm font-semibold mb-2">
+                        <i class="fas fa-user-tie me-2"></i>Proveedor Externo
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <p class="text-gray-500 text-xs">Nombre proveedor</p>
+                            <p class="text-gray-900 text-sm">${solicitud.proveedorNombre || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-xs">Beneficiario</p>
+                            <p class="text-gray-900 text-sm">${solicitud.proveedorBeneficiario || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-xs">Cuenta / CLABE</p>
+                            <p class="text-gray-900 text-sm">${solicitud.proveedorCuentaClabe || 'N/A'}</p>
+                        </div>
+                    </div>
                 </div>
             ` : ''}
             

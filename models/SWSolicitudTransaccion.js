@@ -50,6 +50,25 @@ const swSolicitudTransaccionSchema = new Schema({
         required: true,
         default: 'Otro'
     },
+    esProveedorExterno: {
+        type: Boolean,
+        default: false
+    },
+    proveedorNombre: {
+        type: String,
+        trim: true,
+        maxlength: 150
+    },
+    proveedorBeneficiario: {
+        type: String,
+        trim: true,
+        maxlength: 150
+    },
+    proveedorCuentaClabe: {
+        type: String,
+        trim: true,
+        maxlength: 30
+    },
     // Para transferencias: cuenta destino (solo para solicitudes de tipo Transferencia)
     cuentaDestino: {
         type: Schema.Types.ObjectId,
@@ -204,7 +223,17 @@ swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comenta
             this.concepto,
             this.descripcion,
             this.solicitadoPor,  // Usuario solicitante (propietario de cuenta origen)
-            true                 // Omitir validaciones de acceso (solicitud ya fue validada)
+            true,                // Omitir validaciones de acceso (solicitud ya fue validada)
+            {
+                esProveedorExterno: this.esProveedorExterno,
+                proveedor: this.esProveedorExterno
+                    ? {
+                        nombre: this.proveedorNombre,
+                        beneficiario: this.proveedorBeneficiario,
+                        cuentaClabe: this.proveedorCuentaClabe
+                    }
+                    : undefined
+            }
         );
         
         // La transacción de origen es la que vinculamos con la solicitud
@@ -254,7 +283,15 @@ swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comenta
             imagenes: this.imagenes,
             reservaAsociada: this.reservaAsociada,
             etiquetas: this.etiquetas,
-            notas: this.notas
+            notas: this.notas,
+            esProveedorExterno: this.esProveedorExterno,
+            proveedor: this.esProveedorExterno
+                ? {
+                    nombre: this.proveedorNombre,
+                    beneficiario: this.proveedorBeneficiario,
+                    cuentaClabe: this.proveedorCuentaClabe
+                }
+                : undefined
         };
         
         // Solo agregar comprobante si existe

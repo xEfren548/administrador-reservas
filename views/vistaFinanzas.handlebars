@@ -883,6 +883,36 @@
                     </div>
 
                     <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="solicitud-es-proveedor-externo">
+                            <label class="form-check-label" for="solicitud-es-proveedor-externo">
+                                Pago a proveedor externo
+                            </label>
+                        </div>
+                        <small class="text-gray-500">Activa esta opción para capturar los datos bancarios del proveedor.</small>
+                    </div>
+
+                    <div id="solicitud-campo-proveedor-externo" class="border rounded p-3 mb-3" style="display: none;">
+                        <h6 class="text-gray-700 mb-3">
+                            <i class="fas fa-user-tie me-1"></i> Datos del proveedor
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="solicitud-proveedor-nombre" class="form-label">Nombre proveedor *</label>
+                                <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="solicitud-proveedor-nombre" maxlength="150">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="solicitud-proveedor-beneficiario" class="form-label">Beneficiario *</label>
+                                <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="solicitud-proveedor-beneficiario" maxlength="150">
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label for="solicitud-proveedor-cuenta-clabe" class="form-label">Cuenta bancaria / CLABE *</label>
+                            <input type="text" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="solicitud-proveedor-cuenta-clabe" maxlength="30" placeholder="Ej. 012345678901234567 o cuenta bancaria">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
                         <label for="solicitud-fecha" class="form-label">Fecha</label>
                         <input type="date" class="form-control bg-gray-100 border-gray-300 text-gray-800" id="solicitud-fecha">
                     </div>
