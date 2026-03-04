@@ -44,7 +44,25 @@ const createSolicitudValidators = [
         .isArray().withMessage('Las imágenes deben ser un array'),
     check('imagenes.*')
         .optional()
-        .isString().withMessage('Cada imagen debe ser una ruta de texto')
+        .isString().withMessage('Cada imagen debe ser una ruta de texto'),
+    check('esProveedorExterno')
+        .optional()
+        .isBoolean().withMessage('El indicador de proveedor externo debe ser booleano'),
+    check('proveedorNombre')
+        .if((value, { req }) => req.body.esProveedorExterno === true || req.body.esProveedorExterno === 'true')
+        .notEmpty().withMessage('El nombre del proveedor es requerido')
+        .isLength({ min: 2, max: 150 }).withMessage('El nombre del proveedor debe tener entre 2 y 150 caracteres')
+        .trim(),
+    check('proveedorBeneficiario')
+        .if((value, { req }) => req.body.esProveedorExterno === true || req.body.esProveedorExterno === 'true')
+        .notEmpty().withMessage('El beneficiario es requerido')
+        .isLength({ min: 2, max: 150 }).withMessage('El beneficiario debe tener entre 2 y 150 caracteres')
+        .trim(),
+    check('proveedorCuentaClabe')
+        .if((value, { req }) => req.body.esProveedorExterno === true || req.body.esProveedorExterno === 'true')
+        .notEmpty().withMessage('La cuenta bancaria o CLABE es requerida')
+        .isLength({ min: 6, max: 30 }).withMessage('La cuenta bancaria o CLABE debe tener entre 6 y 30 caracteres')
+        .trim()
 ];
 
 const procesarSolicitudValidators = [
@@ -97,6 +115,10 @@ const createSolicitud = async (req, res) => {
             imagenes,
             reservaAsociada,
             cuentaDestinoId, // Para transferencias
+            esProveedorExterno,
+            proveedorNombre,
+            proveedorBeneficiario,
+            proveedorCuentaClabe,
             bypassValidacion // Flag para permitir creación desde registro de pago
         } = req.body;
 
@@ -301,7 +323,11 @@ const createSolicitud = async (req, res) => {
             notas,
             imagenes: imagenesFinales,
             reservaAsociada,
-            cuentaDestino: cuentaDestinoId || undefined // Solo para transferencias
+            cuentaDestino: cuentaDestinoId || undefined, // Solo para transferencias
+            esProveedorExterno: esProveedorExterno === true || esProveedorExterno === 'true',
+            proveedorNombre: esProveedorExterno === true || esProveedorExterno === 'true' ? proveedorNombre : undefined,
+            proveedorBeneficiario: esProveedorExterno === true || esProveedorExterno === 'true' ? proveedorBeneficiario : undefined,
+            proveedorCuentaClabe: esProveedorExterno === true || esProveedorExterno === 'true' ? proveedorCuentaClabe : undefined
         });
 
         await solicitud.save();

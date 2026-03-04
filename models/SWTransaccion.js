@@ -50,6 +50,27 @@ const swTransaccionSchema = new Schema({
         required: true,
         default: 'Otro'
     },
+    esProveedorExterno: {
+        type: Boolean,
+        default: false
+    },
+    proveedor: {
+        nombre: {
+            type: String,
+            trim: true,
+            maxlength: 150
+        },
+        beneficiario: {
+            type: String,
+            trim: true,
+            maxlength: 150
+        },
+        cuentaClabe: {
+            type: String,
+            trim: true,
+            maxlength: 30
+        }
+    },
     fecha: {
         type: Date,
         required: true,
@@ -316,10 +337,18 @@ swTransaccionSchema.statics.obtenerPorCategoria = async function(cuentaId, fecha
 };
 
 // Método estático para crear transferencia entre cuentas
-swTransaccionSchema.statics.crearTransferencia = async function(cuentaOrigenId, cuentaDestinoId, monto, concepto, descripcion, userId, skipAccessValidation = false) {
+swTransaccionSchema.statics.crearTransferencia = async function(cuentaOrigenId, cuentaDestinoId, monto, concepto, descripcion, userId, skipAccessValidation = false, options = {}) {
     const SWCuenta = mongoose.model('SWCuenta');
     const SWParticipante = mongoose.model('SWParticipante');
     const session = await mongoose.startSession();
+
+    const proveedorData = options.esProveedorExterno && options.proveedor
+        ? {
+            nombre: options.proveedor.nombre,
+            beneficiario: options.proveedor.beneficiario,
+            cuentaClabe: options.proveedor.cuentaClabe
+        }
+        : undefined;
     
     try {
         session.startTransaction();
@@ -396,7 +425,9 @@ swTransaccionSchema.statics.crearTransferencia = async function(cuentaOrigenId, 
             aprobada: true,
             aprobadaPor: userId,
             fechaAprobacion: fecha,
-            cuentaDestino: cuentaDestinoId
+            cuentaDestino: cuentaDestinoId,
+            esProveedorExterno: Boolean(proveedorData),
+            proveedor: proveedorData
         });
         
         // Crear transacción de entrada (Ingreso) en cuenta destino
@@ -411,7 +442,9 @@ swTransaccionSchema.statics.crearTransferencia = async function(cuentaOrigenId, 
             creadoPor: userId,
             aprobada: true,
             aprobadaPor: userId,
-            fechaAprobacion: fecha
+            fechaAprobacion: fecha,
+            esProveedorExterno: Boolean(proveedorData),
+            proveedor: proveedorData
         });
         
         // Guardar ambas transacciones para obtener sus IDs
