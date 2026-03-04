@@ -182,6 +182,17 @@ router.get('/eventos/f/:idevento', async (req, res) => {
         const evento = await Evento.findById(id).lean();
 
         if (!evento) { throw new Error('No se encontró el evento'); }
+        console.log("Evento encontrado: ", evento);
+
+        // Si el usuario no es administrador ni vendedor, verificar que el evento sea de su propiedad
+        const privilege = req.session.privilege;
+        if (!privilege || (privilege !== 'Administrador' && privilege !== 'Vendedor')) {
+            const createdBy = evento.createdBy ? evento.createdBy.toString() : null;
+            const userId = req.session.userId ? req.session.userId.toString() : null;
+            if (createdBy !== userId) {
+                throw new Error('No tienes permiso para ver este evento');
+            }
+        }
 
         // const habitacion = habitaciones.resources.find(habitacion => habitacion._id.equals(newId));
         const habitacion = await Habitacion.findById(evento.resourceId).lean();
