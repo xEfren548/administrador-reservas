@@ -58,6 +58,11 @@ const createSolicitudValidators = [
         .notEmpty().withMessage('El beneficiario es requerido')
         .isLength({ min: 2, max: 150 }).withMessage('El beneficiario debe tener entre 2 y 150 caracteres')
         .trim(),
+    check('proveedorBanco')
+        .if((value, { req }) => req.body.esProveedorExterno === true || req.body.esProveedorExterno === 'true')
+        .notEmpty().withMessage('El banco es requerido')
+        .isLength({ min: 2, max: 120 }).withMessage('El banco debe tener entre 2 y 120 caracteres')
+        .trim(),
     check('proveedorCuentaClabe')
         .if((value, { req }) => req.body.esProveedorExterno === true || req.body.esProveedorExterno === 'true')
         .notEmpty().withMessage('La cuenta bancaria o CLABE es requerida')
@@ -118,6 +123,7 @@ const createSolicitud = async (req, res) => {
             esProveedorExterno,
             proveedorNombre,
             proveedorBeneficiario,
+            proveedorBanco,
             proveedorCuentaClabe,
             bypassValidacion // Flag para permitir creación desde registro de pago
         } = req.body;
@@ -327,6 +333,7 @@ const createSolicitud = async (req, res) => {
             esProveedorExterno: esProveedorExterno === true || esProveedorExterno === 'true',
             proveedorNombre: esProveedorExterno === true || esProveedorExterno === 'true' ? proveedorNombre : undefined,
             proveedorBeneficiario: esProveedorExterno === true || esProveedorExterno === 'true' ? proveedorBeneficiario : undefined,
+            proveedorBanco: esProveedorExterno === true || esProveedorExterno === 'true' ? proveedorBanco : undefined,
             proveedorCuentaClabe: esProveedorExterno === true || esProveedorExterno === 'true' ? proveedorCuentaClabe : undefined
         });
 

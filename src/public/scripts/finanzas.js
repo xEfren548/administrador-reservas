@@ -1340,6 +1340,7 @@ function actualizarCamposProveedorSolicitud(esProveedorExterno) {
         $('#solicitud-campo-proveedor-externo').hide();
         $('#solicitud-proveedor-nombre').val('');
         $('#solicitud-proveedor-beneficiario').val('');
+        $('#solicitud-proveedor-banco').val('');
         $('#solicitud-proveedor-cuenta-clabe').val('');
     }
 }
@@ -1897,6 +1898,7 @@ async function guardarSolicitud() {
     const esProveedorExterno = $('#solicitud-es-proveedor-externo').is(':checked');
     const proveedorNombre = $('#solicitud-proveedor-nombre').val().trim();
     const proveedorBeneficiario = $('#solicitud-proveedor-beneficiario').val().trim();
+    const proveedorBanco = $('#solicitud-proveedor-banco').val().trim();
     const proveedorCuentaClabe = $('#solicitud-proveedor-cuenta-clabe').val().trim();
     let datos = {
         tipo: tipo,
@@ -1908,6 +1910,7 @@ async function guardarSolicitud() {
         esProveedorExterno,
         proveedorNombre: esProveedorExterno ? proveedorNombre : '',
         proveedorBeneficiario: esProveedorExterno ? proveedorBeneficiario : '',
+        proveedorBanco: esProveedorExterno ? proveedorBanco : '',
         proveedorCuentaClabe: esProveedorExterno ? proveedorCuentaClabe : ''
     };
     
@@ -1960,8 +1963,8 @@ async function guardarSolicitud() {
         return;
     }
 
-    if (esProveedorExterno && (!proveedorNombre || !proveedorBeneficiario || !proveedorCuentaClabe)) {
-        mostrarError('Para proveedor externo debe capturar nombre, beneficiario y cuenta/CLABE');
+    if (esProveedorExterno && (!proveedorNombre || !proveedorBeneficiario || !proveedorBanco || !proveedorCuentaClabe)) {
+        mostrarError('Para proveedor externo debe capturar nombre, beneficiario, banco y cuenta/CLABE');
         return;
     }
 
@@ -2418,7 +2421,7 @@ function mostrarDetalleSolicitudGeneral(solicitud, modo = 'cuenta') {
                     <p class="text-indigo-700 text-sm font-semibold mb-2">
                         <i class="fas fa-user-tie me-2"></i>Proveedor Externo
                     </p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
                             <p class="text-gray-500 text-xs">Nombre proveedor</p>
                             <p class="text-gray-900 text-sm">${solicitud.proveedorNombre || 'N/A'}</p>
@@ -2426,6 +2429,10 @@ function mostrarDetalleSolicitudGeneral(solicitud, modo = 'cuenta') {
                         <div>
                             <p class="text-gray-500 text-xs">Beneficiario</p>
                             <p class="text-gray-900 text-sm">${solicitud.proveedorBeneficiario || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-xs">Banco</p>
+                            <p class="text-gray-900 text-sm">${solicitud.proveedorBanco || 'N/A'}</p>
                         </div>
                         <div>
                             <p class="text-gray-500 text-xs">Cuenta / CLABE</p>

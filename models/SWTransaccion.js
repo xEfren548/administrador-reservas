@@ -65,6 +65,11 @@ const swTransaccionSchema = new Schema({
             trim: true,
             maxlength: 150
         },
+        banco: {
+            type: String,
+            trim: true,
+            maxlength: 120
+        },
         cuentaClabe: {
             type: String,
             trim: true,
@@ -346,6 +351,7 @@ swTransaccionSchema.statics.crearTransferencia = async function(cuentaOrigenId, 
         ? {
             nombre: options.proveedor.nombre,
             beneficiario: options.proveedor.beneficiario,
+            banco: options.proveedor.banco,
             cuentaClabe: options.proveedor.cuentaClabe
         }
         : undefined;
