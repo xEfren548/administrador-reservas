@@ -2323,8 +2323,69 @@
 	}
 
 	const habitaciones = {{{ json habitaciones }}};
-	const preciosHabitaciones = {{{ json preciosHabitaciones }}}
-	const preciosEspeciales = {{{ json preciosEspeciales }}}
+	const preciosHabitacionCache = new Map();
+
+	function formatDateForQuery(date) {
+		const year = date.getFullYear();
+		const month = (date.getMonth() + 1).toString().padStart(2, '0');
+		const day = date.getDate().toString().padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	}
+
+	function getDefaultCalendarRange() {
+		const startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+		const endDate = new Date(today.getFullYear() + 2, today.getMonth(), today.getDate());
+		return { startDate, endDate };
+	}
+
+	async function obtenerPreciosPorHabitacion(habitacionId) {
+		if (preciosHabitacionCache.has(habitacionId)) {
+			return preciosHabitacionCache.get(habitacionId);
+		}
+
+		const { startDate, endDate } = getDefaultCalendarRange();
+		const query = new URLSearchParams({
+			startDate: formatDateForQuery(startDate),
+			endDate: formatDateForQuery(endDate)
+		});
+
+		const response = await fetch(`/api/calendario-precios/habitacion/${habitacionId}?${query.toString()}`);
+		if (!response.ok) {
+			throw new Error('No se pudieron obtener los precios de la habitación.');
+		}
+
+		const data = await response.json();
+		preciosHabitacionCache.set(habitacionId, data);
+		return data;
+	}
+
+	function limpiarTablaHabitacion(roomName) {
+		const headerRow = document.getElementById(`header-row-${roomName}`);
+		if (headerRow) {
+			headerRow.querySelectorAll('th:not(.sticky-column)').forEach(el => el.remove());
+		}
+
+		const tbody = document.getElementById(`tbody-${roomName}`);
+		if (!tbody) return;
+
+		const filasBase = new Set([
+			`costo-base-row-${roomName}`,
+			`precio-base-row-${roomName}`,
+			`costo-base2-row-${roomName}`,
+			`precio-base2nights-row-${roomName}`
+		]);
+
+		Array.from(tbody.querySelectorAll('tr')).forEach(row => {
+			if (filasBase.has(row.id)) {
+				row.querySelectorAll('td:not(.sticky-column)').forEach(td => td.remove());
+				return;
+			}
+
+			if (row.id && (row.id.startsWith(`row-especiales-${roomName}`) || row.id.includes(`-especialestd-${roomName}-`))) {
+				row.remove();
+			}
+		});
+	}
 
 
 	// NUEVA TABLA DE CALENDARIO DE PRECIOS
@@ -2435,21 +2496,43 @@
 		});
 	});
 
-	document.getElementById('habitacion-select').addEventListener('change', function () {
+	document.getElementById('habitacion-select').addEventListener('change', async function () {
 		const selectedRoomId = this.value;
-		if (selectedRoomId !== "Seleccione una habitación --") {
-			// Filtrar los datos de la habitación seleccionada
-			const selectedRoom = habitaciones.find(habitacion => habitacion._id === selectedRoomId);
+		if (!selectedRoomId || selectedRoomId === "Seleccione una habitación --") {
+			return;
+		}
 
-			if (selectedRoom) {
-				// Llamar a la función para cargar las fechas y precios solo de la habitación seleccionada
-				cargarDatosHabitacion(selectedRoom);
-			}
+		const selectedRoom = habitaciones.find(habitacion => habitacion._id === selectedRoomId);
+		if (!selectedRoom) {
+			return;
+		}
+
+		try {
+			Swal.fire({
+				title: 'Cargando precios...',
+				allowOutsideClick: false,
+				didOpen: () => {
+					Swal.showLoading();
+				}
+			});
+
+			const preciosHabitacion = await obtenerPreciosPorHabitacion(selectedRoomId);
+			limpiarTablaHabitacion(selectedRoom.propertyDetails.name);
+			cargarDatosHabitacion(selectedRoom, preciosHabitacion);
+			Swal.close();
+		} catch (error) {
+			Swal.close();
+			Swal.fire({
+				title: 'Error',
+				text: error.message || 'Ocurrió un error al cargar los precios de la habitación',
+				icon: 'error',
+				confirmButtonText: 'Aceptar'
+			});
 		}
 	});
 
 
-	function cargarDatosHabitacion(habitacion) {
+	function cargarDatosHabitacion(habitacion, dataHabitacion) {
 		try {
 			const roomName = habitacion.propertyDetails.name;
 			const roomId = habitacion._id;
@@ -2463,8 +2546,7 @@
 
 
 			// Generar las fechas desde 1 año antes hasta 2 años después
-			const startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-			const endDate = new Date(today.getFullYear() + 2, today.getMonth(), today.getDate());
+			const { startDate, endDate } = getDefaultCalendarRange();
 
 			let currentDate = startDate;
 
@@ -2474,17 +2556,13 @@
 			const precioBase2nightsRow = document.getElementById(`precio-base2nights-row-${roomName}`);
 
 			const tbodyTable = document.getElementById(`tbody-${roomName}`);
-			const costoBaseEspecialRow = document.getElementById(`costobase-especialesrow-${roomName}`);
-			const precioBaseEspecialRow = document.getElementById(`preciobase-especialesrow-${roomName}`);
-			const costoBase2EspecialRow = document.getElementById(`costobase2-especialesrow-${roomName}`);
-			const precioBase2EspecialRow = document.getElementById(`preciobase2-especialesrow-${roomName}`);
 
-			const preciosPorHabitacion = preciosHabitaciones.filter(precio => precio.habitacionId === roomId);
+			const preciosPorHabitacion = (dataHabitacion?.preciosHabitaciones || []).map(precio => ({ ...precio }));
 			preciosPorHabitacion.forEach(precio => {
 				precio.fecha = convertirFechaMexicoCity(precio.fecha);
 			});
 
-			const preciosEspecialesPorHabitacion = preciosEspeciales.filter(precio => precio.habitacionId === roomId)
+			const preciosEspecialesPorHabitacion = (dataHabitacion?.preciosEspeciales || []).map(precio => ({ ...precio }));
 			preciosEspecialesPorHabitacion.map(precio => {
 				precio.fecha = convertirFechaMexicoCity(precio.fecha)
 			})

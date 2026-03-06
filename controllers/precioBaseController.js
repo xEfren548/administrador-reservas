@@ -351,6 +351,68 @@ async function consultarPreciosPorFechas(req, res) {
     }
 }
 
+async function consultarPreciosCalendarioPorHabitacion(req, res) {
+    try {
+        const { habitacionId } = req.params;
+        const { startDate, endDate } = req.query;
+
+        if (!habitacionId) {
+            return res.status(400).json({ mensaje: 'El ID de habitación es requerido.' });
+        }
+
+        const habitacion = await Habitacion.findById(habitacionId).lean();
+        if (!habitacion) {
+            return res.status(404).json({ mensaje: 'Habitación no encontrada.' });
+        }
+
+        const hoy = new Date();
+        const rangoInicio = startDate
+            ? new Date(startDate)
+            : new Date(hoy.getFullYear() - 1, hoy.getMonth(), hoy.getDate());
+        const rangoFin = endDate
+            ? new Date(endDate)
+            : new Date(hoy.getFullYear() + 2, hoy.getMonth(), hoy.getDate());
+
+        if (Number.isNaN(rangoInicio.getTime()) || Number.isNaN(rangoFin.getTime())) {
+            return res.status(400).json({ mensaje: 'Rango de fechas inválido.' });
+        }
+
+        const fechaInicio = new Date(rangoInicio);
+        fechaInicio.setUTCHours(6, 0, 0, 0);
+
+        const fechaFin = new Date(rangoFin);
+        fechaFin.setUTCHours(6, 0, 0, 0);
+
+        const [preciosHabitaciones, preciosEspeciales] = await Promise.all([
+            PrecioBaseXDia.find({
+                habitacionId,
+                fecha: { $gte: fechaInicio, $lte: fechaFin }
+            }).lean(),
+            PreciosEspeciales.find({
+                habitacionId,
+                fecha: { $gte: fechaInicio, $lte: fechaFin }
+            }).lean()
+        ]);
+
+        res.json({
+            habitacionId,
+            startDate: fechaInicio,
+            endDate: fechaFin,
+            baseDefaults: {
+                costo_base: habitacion.others.baseCost,
+                costo_base_2noches: habitacion.others.baseCost2nights,
+                precio_modificado: habitacion.others.basePrice,
+                precio_base_2noches: habitacion.others.basePrice2nights
+            },
+            preciosHabitaciones,
+            preciosEspeciales
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: 'Hubo un error al consultar los precios de la habitación.' });
+    }
+}
+
 async function eliminarRegistroPrecio(req, res) {
     try {
 
@@ -565,6 +627,7 @@ module.exports = {
     consultarPreciosPorId,
     consultarPreciosPorFecha,
     consultarPreciosPorFechas,
+    consultarPreciosCalendarioPorHabitacion,
     eliminarRegistroPrecio,
     verificarExistenciaRegistro,
     cargarPreciosCSV

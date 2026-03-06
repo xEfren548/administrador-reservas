@@ -37,6 +37,26 @@ function getDateFromDayOfYear(dayOfYear) {
     return date.toLocaleDateString('es-ES', options); // Devolver la fecha en formato 'DD/MM'
 }
 
+async function requireViewPriceCalendarPermission(req, res, next) {
+    try {
+        const userRole = req.session.role;
+        const userPermissions = await Roles.findById(userRole);
+
+        if (!userPermissions) {
+            return next(new Error("El usuario no tiene un rol definido, contacte al administrador"));
+        }
+
+        const permittedRole = "VIEW_PRICE_CALENDAR";
+        if (!userPermissions.permissions.includes(permittedRole)) {
+            return next(new Error("El usuario no tiene permiso para ver este calendario."));
+        }
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+}
+
 // CURRENT CHANGE
 function pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, preciosEspecialesData) {
     var matrixhabitaciones = [];
@@ -113,23 +133,8 @@ function pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, p
 
 
 // INCOMING CHANGE
-router.get('/calendario-precios', async (req, res, next) => {
+router.get('/calendario-precios', requireViewPriceCalendarPermission, async (req, res, next) => {
     try {
-        const userRole = req.session.role;
-
-        const userPermissions = await Roles.findById(userRole);
-        if (!userPermissions) {
-            // throw new Error("El usuario no tiene un rol definido, contacte al administrador");
-            return next(new Error("El usuario no tiene un rol definido, contacte al administrador"));
-        }
-
-        const permittedRole = "VIEW_PRICE_CALENDAR";
-        if (!userPermissions.permissions.includes(permittedRole)) {
-            // throw new Error("El usuario no tiene permiso para ver utilidades globales.");
-            return next(new Error("El usuario no tiene permiso para ver este calendario."));
-        }
-
-
         // const url = `http://${process.env.URL}/api/habitaciones`
         // // Obtener las habitaciones
         // const response = await fetch(url);
@@ -141,25 +146,8 @@ router.get('/calendario-precios', async (req, res, next) => {
         const allHabitaciones = await Habitacion.find().lean().sort({ 'propertyDetails.name': 1 });
         const habitaciones = allHabitaciones;
 
-        // Crear un arreglo con las fechas correspondientes a cada día del año
-        const daysWithDates = Array.from({ length: getDaysInYear() }, (_, index) => getDateFromDayOfYear(index + 1));
-
-        //console.log(habitaciones);
-
-        const preciosHabitacionesData = await precioBaseController.consultarPrecios();
-        //console.log(preciosHabitacionesData);
-        const preciosEspecialesData = await preciosEspecialesController.consultarPrecios()
-        console.log(preciosEspecialesData)
-
-        //const pricexday = pricexdaymatrix(daysWithDates, habitaciones, preciosHabitacionesData, preciosEspecialesData);
-
-
-
         res.render('calendarioPrecios', {
-            habitaciones: habitaciones, // Pasa las habitaciones a la plantilla
-            daysWithDates: daysWithDates, // Pasa el arreglo de fechas a la plantilla
-            preciosHabitaciones: preciosHabitacionesData, // Pasa los precios de las habitaciones a la plantilla
-            preciosEspeciales: preciosEspecialesData
+            habitaciones: habitaciones
             //pricexday: pricexday
         });
     } catch (error) {
@@ -172,6 +160,7 @@ router.get('/calendario-precios', async (req, res, next) => {
 
 router.get('/api/calendario-precios', precioBaseController.verificarExistenciaRegistro);
 router.post('/api/calendario-precios', precioBaseController.agregarNuevoPrecio);
+router.get('/api/calendario-precios/habitacion/:habitacionId', requireViewPriceCalendarPermission, precioBaseController.consultarPreciosCalendarioPorHabitacion);
 router.get('/api/calendario-precios/:id', precioBaseController.consultarPreciosPorId);
 router.get('/api/consulta-fechas/', precioBaseController.consultarPreciosPorFecha);
 router.get('/api/consulta-precios/', precioBaseController.consultarPreciosPorFechas);
