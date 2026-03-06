@@ -64,6 +64,11 @@ const swSolicitudTransaccionSchema = new Schema({
         trim: true,
         maxlength: 150
     },
+    proveedorBanco: {
+        type: String,
+        trim: true,
+        maxlength: 120
+    },
     proveedorCuentaClabe: {
         type: String,
         trim: true,
@@ -230,6 +235,7 @@ swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comenta
                     ? {
                         nombre: this.proveedorNombre,
                         beneficiario: this.proveedorBeneficiario,
+                        banco: this.proveedorBanco,
                         cuentaClabe: this.proveedorCuentaClabe
                     }
                     : undefined
@@ -289,6 +295,7 @@ swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comenta
                 ? {
                     nombre: this.proveedorNombre,
                     beneficiario: this.proveedorBeneficiario,
+                    banco: this.proveedorBanco,
                     cuentaClabe: this.proveedorCuentaClabe
                 }
                 : undefined

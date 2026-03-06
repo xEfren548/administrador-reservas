@@ -61,6 +61,11 @@ const createSolicitudOrganizacionValidators = [
         .notEmpty().withMessage('El beneficiario es requerido')
         .isLength({ min: 2, max: 150 }).withMessage('El beneficiario debe tener entre 2 y 150 caracteres')
         .trim(),
+    check('proveedorBanco')
+        .if((value, { req }) => req.body.esProveedorExterno === true || req.body.esProveedorExterno === 'true')
+        .notEmpty().withMessage('El banco es requerido')
+        .isLength({ min: 2, max: 120 }).withMessage('El banco debe tener entre 2 y 120 caracteres')
+        .trim(),
     check('proveedorCuentaClabe')
         .if((value, { req }) => req.body.esProveedorExterno === true || req.body.esProveedorExterno === 'true')
         .notEmpty().withMessage('La cuenta bancaria o CLABE es requerida')
@@ -134,6 +139,7 @@ const createSolicitudOrganizacion = async (req, res) => {
             esProveedorExterno,
             proveedorNombre,
             proveedorBeneficiario,
+            proveedorBanco,
             proveedorCuentaClabe
         } = req.body;
 
@@ -217,6 +223,7 @@ const createSolicitudOrganizacion = async (req, res) => {
                             ? {
                                 nombre: proveedorNombre,
                                 beneficiario: proveedorBeneficiario,
+                                banco: proveedorBanco,
                                 cuentaClabe: proveedorCuentaClabe
                             }
                             : undefined
@@ -254,6 +261,7 @@ const createSolicitudOrganizacion = async (req, res) => {
                     ? {
                         nombre: proveedorNombre,
                         beneficiario: proveedorBeneficiario,
+                        banco: proveedorBanco,
                         cuentaClabe: proveedorCuentaClabe
                     }
                     : undefined
@@ -289,6 +297,7 @@ const createSolicitudOrganizacion = async (req, res) => {
             esProveedorExterno: esPagoProveedorExterno,
             proveedorNombre: esPagoProveedorExterno ? proveedorNombre : undefined,
             proveedorBeneficiario: esPagoProveedorExterno ? proveedorBeneficiario : undefined,
+            proveedorBanco: esPagoProveedorExterno ? proveedorBanco : undefined,
             proveedorCuentaClabe: esPagoProveedorExterno ? proveedorCuentaClabe : undefined
         });
 
