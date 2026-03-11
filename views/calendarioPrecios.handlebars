@@ -9,6 +9,8 @@
 			data-bs-toggle="modal" data-bs-target="#update_prices_modal">Actualizar precios</a>
 		<a name="" id="actualizar-precios--masive-btn" class="btn btn-secondary btn-sm mr-3" href="#" role="button"
 			data-bs-toggle="modal" data-bs-target="#update_masive_prices_modal">Actualización masiva de precios</a>
+		<a name="" id="bulk-rules-open-btn" class="btn btn-secondary btn-sm mr-3" href="#" role="button"
+			data-bs-toggle="modal" data-bs-target="#bulk-rules-modal">Carga masiva por reglas</a>
 		<a name="" id="agregar-precios-xpersona" class="btn btn-secondary btn-sm mr-3" href="#" role="button"
 			data-bs-toggle="modal" data-bs-target="#preciosxpersona_modal">Agregar precios por personas</a>
 		<a name="" id="eliminar-precios-openmodalbtn" class="btn btn-secondary btn-sm " href="#" role="button"
@@ -982,6 +984,123 @@
 						<span class="visually-hidden">Loading...</span>
 					</div>
 				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- End Modal -->
+
+<!-- Modal Carga Masiva por Reglas (Side Modal) -->
+<div class="modal fade" id="bulk-rules-modal" tabindex="-1" role="dialog" aria-labelledby="bulkRulesModalLabel"
+	aria-hidden="true">
+	<div class="modal-dialog modal-dialog-scrollable ml-auto ms-auto m-0" role="document"
+		style="max-width: 50vw; width: 50vw; height: 100vh;">
+		<div class="modal-content h-100 border-0 rounded-0">
+			<div class="modal-header">
+				<h5 class="modal-title" id="bulkRulesModalLabel">Carga masiva por reglas</h5>
+				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+					&times;
+				</button>
+			</div>
+			<div class="modal-body" style="overflow-y: auto; overflow-x: hidden;">
+				<div class="alert alert-info py-2 mb-3">
+					<div><b>Prototipo visual:</b> esta version solo arma reglas y simula envio.</div>
+					<div><b>noPersonas = 0</b> se enviara a General y <b>noPersonas = 1+</b> a Especial por personas.</div>
+					<div>Flujo sugerido: <b>1) Define calendario A/R/E/SE</b> -> <b>2) Carga precios por temporada</b>.</div>
+				</div>
+
+				<div class="d-flex mb-3">
+					<button type="button" class="btn btn-sm btn-primary mr-2" id="bulk-step-1-btn">Paso 1: Calendario</button>
+					<button type="button" class="btn btn-sm btn-outline-primary" id="bulk-step-2-btn">Paso 2: Precios</button>
+				</div>
+
+				<div id="bulk-step-1-section">
+					<div class="card mb-3">
+						<div class="card-body">
+							<div class="row">
+								<div class="col-12 col-md-4 mb-2">
+									<label class="form-label">Año de trabajo</label>
+									<input type="number" min="2000" max="2100" class="form-control" id="bulk-calendar-year-input">
+								</div>
+								<div class="col-12 col-md-8 mb-2 d-flex align-items-end">
+									<button type="button" class="btn btn-outline-secondary btn-sm mr-2" id="bulk-calendar-fill-regular">Rellenar todo R</button>
+								</div>
+							</div>
+
+							<div class="border rounded p-2 bg-light mb-2">
+								<div class="row">
+									<div class="col-12 col-md-3 mb-2">
+										<label class="form-label">Desde</label>
+										<input type="date" class="form-control" id="bulk-calendar-range-start">
+									</div>
+									<div class="col-12 col-md-3 mb-2">
+										<label class="form-label">Hasta</label>
+										<input type="date" class="form-control" id="bulk-calendar-range-end">
+									</div>
+									<div class="col-12 col-md-3 mb-2">
+										<label class="form-label">Temporada</label>
+										<select class="form-select" id="bulk-calendar-range-season">
+											<option value="R">R - Regular</option>
+											<option value="A">A - Alta</option>
+											<option value="E">E - Especial</option>
+											<option value="SE">SE - Super especial</option>
+										</select>
+									</div>
+									<div class="col-12 col-md-3 mb-2 d-flex align-items-end">
+										<button type="button" class="btn btn-primary w-100" id="bulk-calendar-apply-range">Aplicar rango</button>
+									</div>
+								</div>
+							</div>
+
+							<div class="small text-muted mb-2">Haz clic en un dia para alternar R -> A -> E -> SE.</div>
+							<div class="small text-muted mb-2">Nota: la temporada (R/A/E/SE) es independiente del tipo de dia. Los precios entre semana (D-J) y fin de semana (V-S) se toman en el Paso 2.</div>
+							<div id="bulk-calendar-editor"></div>
+						</div>
+					</div>
+				</div>
+
+				<div id="bulk-step-2-section" class="d-none">
+					<div class="d-flex flex-wrap mb-3">
+						<button type="button" class="btn btn-primary btn-sm mr-2 mb-2" id="bulk-rules-add-row">Agregar regla</button>
+						<button type="button" class="btn btn-outline-secondary btn-sm mr-2 mb-2" id="bulk-rules-preset-regular">Regular</button>
+						<button type="button" class="btn btn-outline-secondary btn-sm mr-2 mb-2" id="bulk-rules-preset-alta">Alta</button>
+						<button type="button" class="btn btn-outline-secondary btn-sm mr-2 mb-2" id="bulk-rules-preset-finde">Fin de semana</button>
+						<button type="button" class="btn btn-outline-secondary btn-sm mr-2 mb-2" id="bulk-rules-preset-especial">Especial</button>
+						<button type="button" class="btn btn-outline-danger btn-sm mb-2" id="bulk-rules-clear">Limpiar</button>
+					</div>
+
+					<div class="row mb-3">
+						<div class="col-4">
+							<div class="border rounded p-2 bg-light">
+								<div class="small text-muted">Reglas</div>
+								<div id="bulk-rules-summary-total">0</div>
+							</div>
+						</div>
+						<div class="col-4">
+							<div class="border rounded p-2 bg-light">
+								<div class="small text-muted">Validas</div>
+								<div id="bulk-rules-summary-valid">0</div>
+							</div>
+						</div>
+						<div class="col-4">
+							<div class="border rounded p-2 bg-light">
+								<div class="small text-muted">Fechas</div>
+								<div id="bulk-rules-summary-dates">0</div>
+							</div>
+						</div>
+					</div>
+
+					<div id="bulk-rules-rows" class="d-flex flex-column"></div>
+
+					<div class="mt-3">
+						<label for="bulk-rules-preview" class="form-label"><b>Preview payload (JSON)</b></label>
+						<textarea id="bulk-rules-preview" class="form-control" rows="10" readonly></textarea>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-outline-primary" id="bulk-rules-refresh-preview">Actualizar preview</button>
+				<button type="button" class="btn btn-primary" id="bulk-rules-simulate-submit">Simular envio</button>
 			</div>
 		</div>
 	</div>
@@ -2893,6 +3012,835 @@
         link.click();
         document.body.removeChild(link);
     });
+
+	(function initBulkRulesPrototype() {
+		const modal = document.getElementById('bulk-rules-modal');
+		if (!modal) return;
+
+		const rowsContainer = document.getElementById('bulk-rules-rows');
+		const previewArea = document.getElementById('bulk-rules-preview');
+		const totalEl = document.getElementById('bulk-rules-summary-total');
+		const validEl = document.getElementById('bulk-rules-summary-valid');
+		const datesEl = document.getElementById('bulk-rules-summary-dates');
+		const step1Section = document.getElementById('bulk-step-1-section');
+		const step2Section = document.getElementById('bulk-step-2-section');
+		const step1Btn = document.getElementById('bulk-step-1-btn');
+		const step2Btn = document.getElementById('bulk-step-2-btn');
+		const calendarEditor = document.getElementById('bulk-calendar-editor');
+		const calendarYearInput = document.getElementById('bulk-calendar-year-input');
+		const calendarRangeStart = document.getElementById('bulk-calendar-range-start');
+		const calendarRangeEnd = document.getElementById('bulk-calendar-range-end');
+		const calendarRangeSeason = document.getElementById('bulk-calendar-range-season');
+		const currentYear = new Date().getFullYear();
+
+		const seasonCodes = ['R', 'A', 'E', 'SE'];
+		const seasonLabels = {
+			R: 'Regular',
+			A: 'Alta',
+			E: 'Especial',
+			SE: 'Super especial'
+		};
+
+		const state = {
+			nextRowId: 1,
+			rows: [],
+			activeStep: 1,
+			calendarYear: currentYear,
+			calendarMap: {}
+		};
+
+		function toDateKey(dateObj) {
+			return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+		}
+
+		function createYearCalendarMap(year, defaultSeason = 'R') {
+			const map = {};
+			const start = new Date(year, 0, 1);
+			const end = new Date(year, 11, 31);
+			const current = new Date(start);
+
+			while (current <= end) {
+				map[toDateKey(current)] = defaultSeason;
+				current.setDate(current.getDate() + 1);
+			}
+
+			return map;
+		}
+
+		function getSeasonFromMap(dateObj) {
+			const key = toDateKey(dateObj);
+			return state.calendarMap[key] || 'R';
+		}
+
+		function setSeasonInRange(startDateStr, endDateStr, seasonCode) {
+			const start = new Date(`${startDateStr}T00:00:00`);
+			const end = new Date(`${endDateStr}T00:00:00`);
+			if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) return false;
+
+			const current = new Date(start);
+			while (current <= end) {
+				if (current.getFullYear() === state.calendarYear) {
+					state.calendarMap[toDateKey(current)] = seasonCode;
+				}
+				current.setDate(current.getDate() + 1);
+			}
+
+			return true;
+		}
+
+		function cycleSeason(current) {
+			if (current === 'R') return 'A';
+			if (current === 'A') return 'E';
+			if (current === 'E') return 'SE';
+			return 'R';
+		}
+
+		function seasonBg(code) {
+			if (code === 'A') return '#ffe9b3';
+			if (code === 'E') return '#ffd6d6';
+			if (code === 'SE') return '#e8d5ff';
+			return '#d5f5d5';
+		}
+
+		function renderCalendarEditor() {
+			const months = [
+				'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+				'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+			];
+
+			calendarEditor.innerHTML = months.map((monthName, monthIndex) => {
+				const daysInMonth = new Date(state.calendarYear, monthIndex + 1, 0).getDate();
+				const dayCells = Array.from({ length: daysInMonth }, (_, i) => {
+					const day = i + 1;
+					const dateObj = new Date(state.calendarYear, monthIndex, day);
+					const key = toDateKey(dateObj);
+					const season = state.calendarMap[key] || 'R';
+					const bg = seasonBg(season);
+					return `
+						<button type="button" class="btn btn-sm m-1"
+							style="min-width:44px;background:${bg};border:1px solid #ccc;"
+							data-action="bulk-calendar-day-toggle"
+							data-date-key="${key}">
+							${day}<br><small>${season}</small>
+						</button>`;
+				}).join('');
+
+				return `
+					<div class="border rounded p-2 mb-2">
+						<div class="fw-bold mb-2">${monthName}</div>
+						<div class="d-flex flex-wrap">${dayCells}</div>
+					</div>`;
+			}).join('');
+		}
+
+		function setStep(step) {
+			state.activeStep = step;
+			if (step === 1) {
+				step1Section.classList.remove('d-none');
+				step2Section.classList.add('d-none');
+				step1Btn.classList.remove('btn-outline-primary');
+				step1Btn.classList.add('btn-primary');
+				step2Btn.classList.remove('btn-primary');
+				step2Btn.classList.add('btn-outline-primary');
+				return;
+			}
+
+			step1Section.classList.add('d-none');
+			step2Section.classList.remove('d-none');
+			step2Btn.classList.remove('btn-outline-primary');
+			step2Btn.classList.add('btn-primary');
+			step1Btn.classList.remove('btn-primary');
+			step1Btn.classList.add('btn-outline-primary');
+		}
+
+		function getSeasonCodeForDate(date) {
+			return getSeasonFromMap(date) || 'R';
+		}
+
+		function createDefaultPrices() {
+			const mkDayType = () => ({
+				precio_modificado: '',
+				precio_base_2noches: '',
+				costo_base: '',
+				costo_base_2noches: ''
+			});
+
+			return {
+				R: { weekday: mkDayType(), weekend: mkDayType() },
+				A: { weekday: mkDayType(), weekend: mkDayType() },
+				E: { weekday: mkDayType(), weekend: mkDayType() },
+				SE: { weekday: mkDayType(), weekend: mkDayType() }
+			};
+		}
+
+		function createRowByPreset(preset = 'regular') {
+			const basePrices = createDefaultPrices();
+			const row = {
+				id: state.nextRowId++,
+				roomIds: [],
+				capacidadesText: preset === 'especial' ? '1-4' : '0',
+				year: currentYear,
+				capacityPricing: {
+					'0': basePrices
+				},
+				expanded: true
+			};
+
+			return row;
+		}
+
+		function deepClone(value) {
+			return JSON.parse(JSON.stringify(value));
+		}
+
+		function syncCapacityPricing(row, capacities) {
+			if (!row.capacityPricing) {
+				row.capacityPricing = {};
+			}
+
+			const existingKeys = Object.keys(row.capacityPricing);
+			const templateKey = existingKeys[0];
+			const template = templateKey ? row.capacityPricing[templateKey] : createDefaultPrices();
+
+			capacities.forEach(cap => {
+				const key = String(cap);
+				if (!row.capacityPricing[key]) {
+					row.capacityPricing[key] = deepClone(template);
+				}
+			});
+
+			existingKeys.forEach(key => {
+				if (!capacities.includes(Number(key))) {
+					delete row.capacityPricing[key];
+				}
+			});
+		}
+
+		function escapeHtml(text) {
+			return String(text || '')
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#039;');
+		}
+
+		function getRoomsOptionsCheckboxes(selectedIds, rowId) {
+			return (habitaciones || []).map(h => {
+				const checked = selectedIds.includes(h._id) ? 'checked' : '';
+				return `
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" ${checked}
+							data-action="bulk-rules-room-toggle"
+							data-row-id="${rowId}"
+							data-room-id="${h._id}"
+							id="bulk-room-${rowId}-${h._id}">
+						<label class="form-check-label" for="bulk-room-${rowId}-${h._id}">${escapeHtml(h.propertyDetails?.name || h._id)}</label>
+					</div>`;
+			}).join('');
+		}
+
+		function getRoomsByIds(roomIds) {
+			return (habitaciones || []).filter(h => roomIds.includes(h._id));
+		}
+
+		function parseCapacidadesInput(capacidadesText, maxOccupancy = null) {
+			const tokens = String(capacidadesText || '')
+				.split(',')
+				.map(item => item.trim())
+				.filter(Boolean);
+
+			if (tokens.length === 0) {
+				return { values: [], errors: ['Define capacidades. Ejemplo: 0,2-8,12'] };
+			}
+
+			const values = new Set();
+			const errors = [];
+
+			tokens.forEach(token => {
+				if (token.includes('-')) {
+					const [startRaw, endRaw] = token.split('-').map(v => Number(v.trim()));
+					if (!Number.isInteger(startRaw) || !Number.isInteger(endRaw) || startRaw < 0 || endRaw < 0) {
+						errors.push(`Rango invalido: ${token}`);
+						return;
+					}
+					if (startRaw > endRaw) {
+						errors.push(`Rango invertido: ${token}`);
+						return;
+					}
+
+					for (let i = startRaw; i <= endRaw; i++) {
+						values.add(i);
+					}
+					return;
+				}
+
+				const single = Number(token);
+				if (!Number.isInteger(single) || single < 0) {
+					errors.push(`Valor invalido: ${token}`);
+					return;
+				}
+				values.add(single);
+			});
+
+			if (maxOccupancy !== null) {
+				Array.from(values).forEach(p => {
+					if (p > maxOccupancy) {
+						errors.push(`Persona ${p} excede maximo (${maxOccupancy})`);
+					}
+				});
+			}
+
+			return {
+				values: Array.from(values).sort((a, b) => a - b),
+				errors
+			};
+		}
+
+		function getPriceBlock(pricingMatrix, seasonCode, isWeekend) {
+			const season = pricingMatrix[seasonCode] || pricingMatrix.R;
+			return isWeekend ? season.weekend : season.weekday;
+		}
+
+		function expandGeneratedRows(row) {
+			const rooms = getRoomsByIds(row.roomIds || []);
+			if (rooms.length === 0) return [];
+
+			const maxOcc = Math.min(...rooms.map(room => Number(room?.propertyDetails?.maxOccupancy || 0)).filter(Boolean));
+			const capacidades = parseCapacidadesInput(row.capacidadesText, maxOcc).values;
+			if (capacidades.length === 0) return [];
+			syncCapacityPricing(row, capacidades);
+
+			const year = Number(row.year);
+			if (!Number.isInteger(year) || year < 2000 || year > 2100) return [];
+
+			const start = new Date(year, 0, 1);
+			const end = new Date(year, 11, 31);
+			const current = new Date(start);
+			const generated = [];
+
+			while (current <= end) {
+				const seasonCode = getSeasonCodeForDate(current);
+				const isWeekend = current.getDay() === 5 || current.getDay() === 6;
+				const dayType = isWeekend ? 'weekend' : 'weekday';
+
+				rooms.forEach(room => {
+					capacidades.forEach(capacidad => {
+						const pricingMatrix = row.capacityPricing[String(capacidad)] || createDefaultPrices();
+						const priceBlock = getPriceBlock(pricingMatrix, seasonCode, isWeekend);
+
+						generated.push({
+							habitacionId: room._id,
+							fecha: formatDateForQuery(current),
+							noPersonas: capacidad,
+							destino: capacidad === 0 ? 'general' : 'especial_personas',
+							temporada: seasonCode,
+							tipoDia: dayType,
+							precio_modificado: Number(priceBlock.precio_modificado),
+							precio_base_2noches: Number(priceBlock.precio_base_2noches),
+							costo_base: Number(priceBlock.costo_base),
+							costo_base_2noches: Number(priceBlock.costo_base_2noches)
+						});
+					});
+				});
+
+				current.setDate(current.getDate() + 1);
+			}
+
+			return generated;
+		}
+
+		function countAffectedDates(row) {
+			return expandGeneratedRows(row).length;
+		}
+
+		function validateRow(row) {
+			const errors = [];
+
+			if (!row.roomIds || row.roomIds.length === 0) {
+				errors.push('Selecciona al menos una habitacion.');
+			}
+
+			const rooms = getRoomsByIds(row.roomIds || []);
+			const maxOccupancy = rooms.length > 0
+				? Math.min(...rooms.map(room => Number(room?.propertyDetails?.maxOccupancy || 0)).filter(Boolean))
+				: null;
+			const capacidades = parseCapacidadesInput(row.capacidadesText, maxOccupancy);
+			if (capacidades.values.length === 0) {
+				errors.push('Define capacidades.');
+			}
+			syncCapacityPricing(row, capacidades.values);
+			if (capacidades.errors.length > 0) {
+				errors.push(capacidades.errors[0]);
+			}
+
+			const parsedYear = Number(row.year);
+			if (!Number.isInteger(parsedYear) || parsedYear < 2000 || parsedYear > 2100) {
+				errors.push('El año debe estar entre 2000 y 2100.');
+			}
+
+			capacidades.values.forEach(cap => {
+				const pricing = row.capacityPricing[String(cap)] || createDefaultPrices();
+				seasonCodes.forEach(code => {
+					['weekday', 'weekend'].forEach(dayType => {
+						const block = pricing[code][dayType];
+						const p1 = Number(block.precio_modificado);
+						const p2 = Number(block.precio_base_2noches);
+						const c1 = Number(block.costo_base);
+						const c2 = Number(block.costo_base_2noches);
+
+						if (!(p1 > 0) || !(p2 > 0) || !(c1 > 0) || !(c2 > 0)) {
+							errors.push(`Completa precios/costos en capacidad ${cap}, ${seasonLabels[code]} (${dayType === 'weekday' ? 'entre semana' : 'fin de semana'}).`);
+							return;
+						}
+
+						if (c1 >= p1) {
+							errors.push(`El costo base debe ser menor al precio base en capacidad ${cap}, ${seasonLabels[code]} (${dayType}).`);
+						}
+
+						if (c2 >= p2) {
+							errors.push(`El costo base 2+ noches debe ser menor al precio base 2+ noches en capacidad ${cap}, ${seasonLabels[code]} (${dayType}).`);
+						}
+					});
+				});
+			});
+
+			return errors;
+		}
+
+		function buildPayload() {
+			const generatedRows = state.rows.flatMap(row => expandGeneratedRows(row));
+			const sample = generatedRows.slice(0, 300);
+
+			return {
+				mode: 'season-matrix',
+				calendarMapYear: state.calendarYear,
+				calendarMap: state.calendarMap,
+				configRows: state.rows.map(row => ({
+					habitacionIds: row.roomIds,
+					capacidades: parseCapacidadesInput(row.capacidadesText).values,
+					year: Number(row.year),
+					preciosPorCapacidad: row.capacityPricing
+				})),
+				generatedRowsCount: generatedRows.length,
+				sampleGeneratedRows: sample
+			};
+		}
+
+		function renderPriceMatrixForCapacity(row, capacidad) {
+			const pricing = row.capacityPricing[String(capacidad)] || createDefaultPrices();
+
+			return seasonCodes.map(code => {
+				const weekday = pricing[code].weekday;
+				const weekend = pricing[code].weekend;
+
+				const block = (label, key, values) => `
+					<div class="border rounded p-2 mb-2 bg-white">
+						<div class="small text-muted mb-2">${label}</div>
+						<div class="row">
+							<div class="col-6 mb-2">
+								<label class="form-label">Precio base</label>
+								<input type="number" min="0" step="0.01" class="form-control"
+									value="${values.precio_modificado}"
+									data-action="bulk-rules-price"
+									data-row-id="${row.id}"
+									data-capacity="${capacidad}"
+									data-season-code="${code}"
+									data-day-key="${key}"
+									data-price-field="precio_modificado">
+							</div>
+							<div class="col-6 mb-2">
+								<label class="form-label">Precio base 2+ noches</label>
+								<input type="number" min="0" step="0.01" class="form-control"
+									value="${values.precio_base_2noches}"
+									data-action="bulk-rules-price"
+									data-row-id="${row.id}"
+									data-capacity="${capacidad}"
+									data-season-code="${code}"
+									data-day-key="${key}"
+									data-price-field="precio_base_2noches">
+							</div>
+							<div class="col-6 mb-2">
+								<label class="form-label">Costo base</label>
+								<input type="number" min="0" step="0.01" class="form-control"
+									value="${values.costo_base}"
+									data-action="bulk-rules-price"
+									data-row-id="${row.id}"
+									data-capacity="${capacidad}"
+									data-season-code="${code}"
+									data-day-key="${key}"
+									data-price-field="costo_base">
+							</div>
+							<div class="col-6 mb-2">
+								<label class="form-label">Costo base 2+ noches</label>
+								<input type="number" min="0" step="0.01" class="form-control"
+									value="${values.costo_base_2noches}"
+									data-action="bulk-rules-price"
+									data-row-id="${row.id}"
+									data-capacity="${capacidad}"
+									data-season-code="${code}"
+									data-day-key="${key}"
+									data-price-field="costo_base_2noches">
+							</div>
+						</div>
+					</div>`;
+
+				return `<div class="border rounded p-2 mb-2 bg-light"><div class="mb-2"><b>${code} - ${seasonLabels[code]}</b></div>${block('Entre semana (D-J)', 'weekday', weekday)}${block('Fin de semana (V-S)', 'weekend', weekend)}</div>`;
+			}).join('');
+		}
+
+		function renderCapacityEditors(row, capacidades) {
+			if (!capacidades.length) {
+				return '<div class="small text-muted">Define capacidades para editar precios por persona/habitacion.</div>';
+			}
+
+			const firstCap = capacidades[0];
+			return `
+				<div class="mb-2">
+					<button type="button" class="btn btn-sm btn-outline-secondary mr-1" data-action="bulk-rules-copy-first" data-row-id="${row.id}">Copiar precios de capacidad ${firstCap} a todas</button>
+				</div>
+				${capacidades.map((cap, idx) => `
+					<details class="border rounded p-2 mb-2" ${idx === 0 ? 'open' : ''}>
+						<summary><b>Capacidad ${cap}</b> ${cap === 0 ? '(General)' : '(Especial)'}</summary>
+						<div class="mt-2">${renderPriceMatrixForCapacity(row, cap)}</div>
+					</details>
+				`).join('')}`;
+		}
+
+		function renderRows() {
+			rowsContainer.innerHTML = state.rows.map((row, index) => {
+				const errors = validateRow(row);
+				const statusClass = errors.length ? 'badge bg-danger' : 'badge bg-success';
+				const statusLabel = errors.length ? `${errors.length} error(es)` : 'Lista';
+				const selectedRooms = getRoomsByIds(row.roomIds || []);
+				const maxPax = selectedRooms.length > 0
+					? Math.min(...selectedRooms.map(room => Number(room?.propertyDetails?.maxOccupancy || 0)).filter(Boolean))
+					: null;
+				const parsedCapacidades = parseCapacidadesInput(row.capacidadesText, maxPax ?? null).values;
+				syncCapacityPricing(row, parsedCapacidades);
+				const generalCount = parsedCapacidades.filter(p => p === 0).length;
+				const specialCount = parsedCapacidades.filter(p => p > 0).length;
+
+				return `
+					<div class="card mb-3" data-row-id="${row.id}">
+						<div class="card-header d-flex justify-content-between align-items-center">
+							<div>
+								<b>Regla ${index + 1}</b>
+								<span class="${statusClass} ml-2 ms-2">${statusLabel}</span>
+							</div>
+							<div>
+								<button type="button" class="btn btn-sm btn-outline-primary mr-1" data-action="bulk-rules-toggle" data-row-id="${row.id}">${row.expanded ? 'Contraer' : 'Expandir'}</button>
+								<button type="button" class="btn btn-sm btn-outline-secondary mr-1" data-action="bulk-rules-duplicate" data-row-id="${row.id}">Duplicar</button>
+								<button type="button" class="btn btn-sm btn-outline-danger" data-action="bulk-rules-remove" data-row-id="${row.id}">Eliminar</button>
+							</div>
+						</div>
+						<div class="card-body ${row.expanded ? '' : 'd-none'}">
+							<div class="row">
+								<div class="col-12 col-md-4 mb-2">
+									<label class="form-label">Año</label>
+									<input type="number" min="2000" max="2100" class="form-control" value="${row.year}" data-action="bulk-rules-year" data-row-id="${row.id}">
+								</div>
+								<div class="col-12 mb-2">
+									<label class="form-label">Habitaciones</label>
+									<div class="border rounded p-2" style="max-height: 180px; overflow-y: auto;">
+										${getRoomsOptionsCheckboxes(row.roomIds || [], row.id)}
+									</div>
+									<small class="text-muted">${(row.roomIds || []).length} seleccionada(s)</small>
+								</div>
+								<div class="col-12 mb-2">
+									<label class="form-label">Capacidades (admite lista y rangos)</label>
+									<input type="text" class="form-control" value="${escapeHtml(row.capacidadesText)}" placeholder="Ejemplo: 0,2-10,15" data-action="bulk-rules-capacidades" data-row-id="${row.id}">
+									<div class="mt-1">
+										<button type="button" class="btn btn-sm btn-outline-secondary mr-1" data-action="bulk-rules-fill-general" data-row-id="${row.id}">Solo general (0)</button>
+										<button type="button" class="btn btn-sm btn-outline-secondary" data-action="bulk-rules-fill-room-max" data-row-id="${row.id}">Cargar 1..max de habitacion</button>
+									</div>
+									<small class="text-muted">General: ${generalCount} | Especial: ${specialCount}${maxPax ? ` | Max: ${maxPax}` : ''}</small>
+								</div>
+							</div>
+
+							<div class="mt-2 mb-2"><b>Precios por capacidad y temporada</b></div>
+							${renderCapacityEditors(row, parsedCapacidades)}
+
+							<div class="small text-muted mt-2">Temporadas tomadas del Paso 1 (calendario). Esta seccion solo define precios/capacidades.</div>
+							${errors.length ? `<div class="small text-danger mt-2">${escapeHtml(errors.join(' | '))}</div>` : ''}
+						</div>
+					</div>`;
+			}).join('');
+
+			renderSummaryAndPreview();
+		}
+
+		function renderSummaryAndPreview() {
+			const total = state.rows.length;
+			const validRows = state.rows.filter(row => validateRow(row).length === 0);
+			const affectedDates = state.rows.reduce((acc, row) => acc + countAffectedDates(row), 0);
+
+			totalEl.textContent = String(total);
+			validEl.textContent = String(validRows.length);
+			datesEl.textContent = String(affectedDates);
+
+			previewArea.value = JSON.stringify(buildPayload(), null, 2);
+		}
+
+		function findRow(rowId) {
+			return state.rows.find(r => r.id === Number(rowId));
+		}
+
+		function duplicateRow(rowId) {
+			const row = findRow(rowId);
+			if (!row) return;
+			const cloned = JSON.parse(JSON.stringify(row));
+			cloned.id = state.nextRowId++;
+			cloned.expanded = true;
+			state.rows.push(cloned);
+			renderRows();
+		}
+
+		document.getElementById('bulk-rules-add-row').addEventListener('click', () => {
+			state.rows.push(createRowByPreset('regular'));
+			renderRows();
+		});
+
+		document.getElementById('bulk-rules-preset-regular').addEventListener('click', () => {
+			state.rows.push(createRowByPreset('regular'));
+			renderRows();
+		});
+
+		document.getElementById('bulk-rules-preset-alta').addEventListener('click', () => {
+			state.rows.push(createRowByPreset('alta'));
+			renderRows();
+		});
+
+		document.getElementById('bulk-rules-preset-finde').addEventListener('click', () => {
+			state.rows.push(createRowByPreset('finde'));
+			renderRows();
+		});
+
+		document.getElementById('bulk-rules-preset-especial').addEventListener('click', () => {
+			state.rows.push(createRowByPreset('especial'));
+			renderRows();
+		});
+
+		document.getElementById('bulk-rules-clear').addEventListener('click', () => {
+			state.rows = [createRowByPreset('regular')];
+			renderRows();
+		});
+
+		document.getElementById('bulk-rules-refresh-preview').addEventListener('click', () => {
+			renderSummaryAndPreview();
+			Swal.fire({ icon: 'info', title: 'Preview actualizado', timer: 1200, showConfirmButton: false });
+		});
+
+		document.getElementById('bulk-rules-simulate-submit').addEventListener('click', () => {
+			const total = state.rows.length;
+			const valid = state.rows.filter(row => validateRow(row).length === 0).length;
+			const invalid = total - valid;
+			const payload = buildPayload();
+
+			Swal.fire({
+				icon: invalid > 0 ? 'warning' : 'success',
+				title: 'Simulación de envío',
+				html: `
+					<div style="text-align:left;">
+						<p><b>Total de filas:</b> ${total}</p>
+						<p><b>Filas válidas:</b> ${valid}</p>
+						<p><b>Filas con error:</b> ${invalid}</p>
+						<p><b>Filas JSON generadas:</b> ${payload.generatedRowsCount}</p>
+						<p><b>Destino API:</b> /api/precios/bulk-upsert (pendiente backend)</p>
+					</div>`,
+				confirmButtonText: 'Aceptar'
+			});
+
+			console.log('Payload simulado bulk-rules:', payload);
+		});
+
+		step1Btn.addEventListener('click', () => setStep(1));
+		step2Btn.addEventListener('click', () => setStep(2));
+
+		calendarYearInput.addEventListener('change', () => {
+			const y = Number(calendarYearInput.value);
+			if (!Number.isInteger(y) || y < 2000 || y > 2100) {
+				Swal.fire({ icon: 'error', title: 'Año invalido', text: 'Debe estar entre 2000 y 2100.' });
+				calendarYearInput.value = String(state.calendarYear);
+				return;
+			}
+
+			state.calendarYear = y;
+			state.calendarMap = createYearCalendarMap(y, 'R');
+			state.rows.forEach(row => {
+				row.year = y;
+			});
+			renderCalendarEditor();
+			renderRows();
+		});
+
+		document.getElementById('bulk-calendar-fill-regular').addEventListener('click', () => {
+			state.calendarMap = createYearCalendarMap(state.calendarYear, 'R');
+			renderCalendarEditor();
+			renderRows();
+		});
+
+		document.getElementById('bulk-calendar-apply-range').addEventListener('click', () => {
+			const start = calendarRangeStart.value;
+			const end = calendarRangeEnd.value;
+			const season = calendarRangeSeason.value;
+
+			if (!start || !end) {
+				Swal.fire({ icon: 'error', title: 'Fechas requeridas', text: 'Selecciona inicio y fin.' });
+				return;
+			}
+
+			const ok = setSeasonInRange(start, end, season);
+			if (!ok) {
+				Swal.fire({ icon: 'error', title: 'Rango invalido', text: 'Revisa las fechas seleccionadas.' });
+				return;
+			}
+
+			renderCalendarEditor();
+			renderRows();
+		});
+
+		calendarEditor.addEventListener('click', (event) => {
+			const action = event.target.getAttribute('data-action');
+			if (action !== 'bulk-calendar-day-toggle') return;
+
+			const key = event.target.getAttribute('data-date-key');
+			if (!key) return;
+
+			const current = state.calendarMap[key] || 'R';
+			state.calendarMap[key] = cycleSeason(current);
+			renderCalendarEditor();
+			renderRows();
+		});
+
+		rowsContainer.addEventListener('click', (event) => {
+			const action = event.target.getAttribute('data-action');
+			if (!action) return;
+
+			const rowId = event.target.getAttribute('data-row-id');
+			const row = findRow(rowId);
+			if (!row) return;
+
+			if (action === 'bulk-rules-toggle') {
+				row.expanded = !row.expanded;
+				renderRows();
+				return;
+			}
+
+			if (action === 'bulk-rules-duplicate') {
+				duplicateRow(rowId);
+				return;
+			}
+
+			if (action === 'bulk-rules-remove') {
+				state.rows = state.rows.filter(r => r.id !== Number(rowId));
+				if (state.rows.length === 0) state.rows.push(createRowByPreset('regular'));
+				renderRows();
+				return;
+			}
+
+			if (action === 'bulk-rules-fill-general') {
+				row.capacidadesText = '0';
+				renderRows();
+				return;
+			}
+
+			if (action === 'bulk-rules-fill-room-max') {
+				const rooms = getRoomsByIds(row.roomIds || []);
+				const maxPax = rooms.length > 0
+					? Math.min(...rooms.map(room => Number(room?.propertyDetails?.maxOccupancy || 0)).filter(Boolean))
+					: 0;
+				if (!maxPax || maxPax < 1) {
+					Swal.fire({
+						icon: 'warning',
+						title: 'Habitacion sin capacidad',
+						text: 'Selecciona habitaciones con capacidad valida primero.'
+					});
+					return;
+				}
+
+				row.capacidadesText = `1-${maxPax}`;
+				renderRows();
+				return;
+			}
+
+			if (action === 'bulk-rules-copy-first') {
+				const rooms = getRoomsByIds(row.roomIds || []);
+				const maxPax = rooms.length > 0
+					? Math.min(...rooms.map(room => Number(room?.propertyDetails?.maxOccupancy || 0)).filter(Boolean))
+					: null;
+				const capacidades = parseCapacidadesInput(row.capacidadesText, maxPax).values;
+				syncCapacityPricing(row, capacidades);
+
+				if (capacidades.length < 2) {
+					Swal.fire({ icon: 'info', title: 'Nada que copiar', text: 'Necesitas al menos 2 capacidades.' });
+					return;
+				}
+
+				const firstKey = String(capacidades[0]);
+				const template = row.capacityPricing[firstKey];
+				capacidades.forEach(cap => {
+					row.capacityPricing[String(cap)] = deepClone(template);
+				});
+
+				renderRows();
+				return;
+			}
+		});
+
+		rowsContainer.addEventListener('change', (event) => {
+			const action = event.target.getAttribute('data-action');
+			if (!action) return;
+
+			const rowId = event.target.getAttribute('data-row-id');
+			const row = findRow(rowId);
+			if (!row) return;
+
+			if (action === 'bulk-rules-room-toggle') {
+				const roomId = event.target.getAttribute('data-room-id');
+				const checked = event.target.checked;
+				const current = new Set(row.roomIds || []);
+				if (checked) current.add(roomId); else current.delete(roomId);
+				row.roomIds = Array.from(current);
+				renderRows();
+				return;
+			}
+
+			if (action === 'bulk-rules-capacidades') {
+				row.capacidadesText = event.target.value;
+				renderRows();
+				return;
+			}
+
+			if (action === 'bulk-rules-year') {
+				row.year = event.target.value;
+				renderRows();
+				return;
+			}
+
+			if (action === 'bulk-rules-price') {
+				const cap = event.target.getAttribute('data-capacity');
+				const seasonCode = event.target.getAttribute('data-season-code');
+				const dayKey = event.target.getAttribute('data-day-key');
+				const field = event.target.getAttribute('data-price-field');
+				syncCapacityPricing(row, parseCapacidadesInput(row.capacidadesText).values);
+				if (!row.capacityPricing[String(cap)] || !row.capacityPricing[String(cap)][seasonCode] || !row.capacityPricing[String(cap)][seasonCode][dayKey]) return;
+				row.capacityPricing[String(cap)][seasonCode][dayKey][field] = event.target.value;
+				renderRows();
+				return;
+			}
+
+			// No actions beyond this point for Step 2.
+		});
+
+		calendarYearInput.value = String(state.calendarYear);
+		state.calendarMap = createYearCalendarMap(state.calendarYear, 'R');
+		renderCalendarEditor();
+		setStep(1);
+
+		state.rows.push(createRowByPreset('regular'));
+		renderRows();
+	})();
 
 
 	window.addEventListener("load", () => {
