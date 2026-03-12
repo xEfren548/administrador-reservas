@@ -2777,10 +2777,22 @@ function renderizarTransacciones() {
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-900 text-green-300">Aprobada</span>' :
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-900 text-yellow-300">Pendiente</span>';
 
-        // Indicador de imágenes
+        // Indicador de comprobantes (imágenes y/o comprobante de confirmación)
         const cantidadImagenes = trans.imagenes?.length || 0;
-        const iconoImagenes = cantidadImagenes > 0 ? 
-            `<i class="fas fa-paperclip text-teal-600" title="${cantidadImagenes} imagen(es)"></i>` : '';
+        const tieneComprobanteConfirmacion = Boolean(trans.comprobanteConfirmacion?.url);
+        const partesTooltipComprobante = [];
+
+        if (cantidadImagenes > 0) {
+            partesTooltipComprobante.push(`${cantidadImagenes} imagen(es)`);
+        }
+
+        if (tieneComprobanteConfirmacion) {
+            partesTooltipComprobante.push('comprobante de confirmación');
+        }
+
+        const iconoComprobantes = partesTooltipComprobante.length > 0
+            ? `<i class="fas fa-paperclip text-teal-600" title="Comprobante: ${partesTooltipComprobante.join(', ')}"></i>`
+            : '';
 
         // Para transferencias, mostrar cuenta relacionada en el concepto
         let conceptoMostrar = trans.concepto;
@@ -2794,7 +2806,7 @@ function renderizarTransacciones() {
 
         tbody.append(`
             <tr class="border-b border-gray-200 hover:bg-gray-100">
-                <td class="px-6 py-4">${fecha} ${iconoImagenes}</td>
+                <td class="px-6 py-4">${fecha} ${iconoComprobantes}</td>
                 <td class="px-6 py-4 ${tipoColor}">${tipoTexto}</td>
                 <td class="px-6 py-4 font-medium text-gray-900">${conceptoMostrar}</td>
                 <td class="px-6 py-4">${trans.categoria}</td>
