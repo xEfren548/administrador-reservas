@@ -568,6 +568,256 @@ const exportarCSV = async (req, res) => {
     }
 };
 
+const normalizarFechaInicio = (fecha) => {
+    if (!fecha) return null;
+    const d = new Date(fecha);
+    if (Number.isNaN(d.getTime())) return null;
+    d.setHours(0, 0, 0, 0);
+    return d;
+};
+
+const normalizarFechaFin = (fecha) => {
+    if (!fecha) return null;
+    const d = new Date(fecha);
+    if (Number.isNaN(d.getTime())) return null;
+    d.setHours(23, 59, 59, 999);
+    return d;
+};
+
+const obtenerDeltaMovimiento = (transaccion) => {
+    if (transaccion.tipo === 'Ingreso') return transaccion.monto;
+    if (transaccion.tipo === 'Gasto') return -transaccion.monto;
+
+    // Transferencia con cuentaDestino = salida. Sin cuentaDestino = entrada.
+    if (transaccion.tipo === 'Transferencia') {
+        return transaccion.cuentaDestino ? -transaccion.monto : transaccion.monto;
+    }
+
+    return 0;
+};
+
+/**
+ * Obtener estado de cuenta (movimientos con saldo previo y saldo actual)
+ */
+const getEstadoCuentaMovimientos = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const { cuentaId, fechaInicio, fechaFin } = req.query;
+
+        const fechaInicioDate = normalizarFechaInicio(fechaInicio);
+        const fechaFinDate = normalizarFechaFin(fechaFin);
+
+        if (fechaInicio && !fechaInicioDate) {
+            return res.status(400).json({
+                success: false,
+                message: 'fechaInicio inválida'
+            });
+        }
+
+        if (fechaFin && !fechaFinDate) {
+            return res.status(400).json({
+                success: false,
+                message: 'fechaFin inválida'
+            });
+        }
+
+        if (fechaInicioDate && fechaFinDate && fechaInicioDate > fechaFinDate) {
+            return res.status(400).json({
+                success: false,
+                message: 'El rango de fechas es inválido'
+            });
+        }
+
+        let participantes = [];
+
+        if (cuentaId) {
+            const participante = await SWParticipante.findOne({
+                cuenta: cuentaId,
+                usuario: userId,
+                activo: true,
+                $or: [
+                    { rol: 'Propietario' },
+                    { 'permisos.puedeVerTransacciones': true }
+                ]
+            }).select('cuenta');
+
+            if (!participante) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'No tiene acceso a la cuenta seleccionada'
+                });
+            }
+
+            participantes = [participante];
+        } else {
+            participantes = await SWParticipante.find({
+                usuario: userId,
+                activo: true,
+                $or: [
+                    { rol: 'Propietario' },
+                    { 'permisos.puedeVerTransacciones': true }
+                ]
+            }).select('cuenta');
+        }
+
+        const cuentaIds = [...new Set(participantes.map((p) => p.cuenta.toString()))];
+
+        if (cuentaIds.length === 0) {
+            return res.status(200).json({
+                success: true,
+                data: {
+                    movimientos: [],
+                    resumen: { totalMovimientos: 0, totalCuentas: 0 },
+                    rango: { fechaInicio: fechaInicio || null, fechaFin: fechaFin || null }
+                }
+            });
+        }
+
+        const cuentasPermitidas = await SWCuenta.find({ _id: { $in: cuentaIds } })
+            .select('nombre moneda saldoInicial')
+            .lean();
+
+        const movimientos = [];
+
+        for (const cuenta of cuentasPermitidas) {
+            const filterPrevio = {
+                cuenta: cuenta._id,
+                aprobada: true
+            };
+
+            if (fechaInicioDate) {
+                filterPrevio.fecha = { $lt: fechaInicioDate };
+            }
+
+            const agregadosPrevios = await SWTransaccion.aggregate([
+                { $match: filterPrevio },
+                {
+                    $group: {
+                        _id: null,
+                        totalIngresos: {
+                            $sum: {
+                                $cond: [{ $eq: ['$tipo', 'Ingreso'] }, '$monto', 0]
+                            }
+                        },
+                        totalGastos: {
+                            $sum: {
+                                $cond: [{ $eq: ['$tipo', 'Gasto'] }, '$monto', 0]
+                            }
+                        },
+                        totalTransferenciasSalida: {
+                            $sum: {
+                                $cond: [
+                                    {
+                                        $and: [
+                                            { $eq: ['$tipo', 'Transferencia'] },
+                                            { $ne: [{ $type: '$cuentaDestino' }, 'missing'] }
+                                        ]
+                                    },
+                                    '$monto',
+                                    0
+                                ]
+                            }
+                        },
+                        totalTransferenciasEntrada: {
+                            $sum: {
+                                $cond: [
+                                    {
+                                        $and: [
+                                            { $eq: ['$tipo', 'Transferencia'] },
+                                            { $eq: [{ $type: '$cuentaDestino' }, 'missing'] }
+                                        ]
+                                    },
+                                    '$monto',
+                                    0
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            const previo = agregadosPrevios[0] || {
+                totalIngresos: 0,
+                totalGastos: 0,
+                totalTransferenciasSalida: 0,
+                totalTransferenciasEntrada: 0
+            };
+
+            let saldoCorriente = Number(cuenta.saldoInicial || 0)
+                + Number(previo.totalIngresos || 0)
+                - Number(previo.totalGastos || 0)
+                + Number(previo.totalTransferenciasEntrada || 0)
+                - Number(previo.totalTransferenciasSalida || 0);
+
+            const filterRango = {
+                cuenta: cuenta._id,
+                aprobada: true
+            };
+
+            if (fechaInicioDate || fechaFinDate) {
+                filterRango.fecha = {};
+                if (fechaInicioDate) filterRango.fecha.$gte = fechaInicioDate;
+                if (fechaFinDate) filterRango.fecha.$lte = fechaFinDate;
+            }
+
+            const transacciones = await SWTransaccion.find(filterRango)
+                .populate('creadoPor', 'firstName lastName')
+                .sort({ fecha: 1, _id: 1 })
+                .lean();
+
+            for (const transaccion of transacciones) {
+                const saldoPrevio = saldoCorriente;
+                const movimiento = Number(obtenerDeltaMovimiento(transaccion));
+                const saldoActual = saldoPrevio + movimiento;
+
+                movimientos.push({
+                    fecha: transaccion.fecha,
+                    cuentaId: cuenta._id,
+                    cuentaNombre: cuenta.nombre,
+                    moneda: cuenta.moneda,
+                    tipo: transaccion.tipo,
+                    categoria: transaccion.categoria,
+                    concepto: transaccion.concepto,
+                    estado: transaccion.aprobada ? 'Aprobada' : 'Pendiente',
+                    movimiento,
+                    saldoPrevio,
+                    saldoActual,
+                    creadoPor: transaccion.creadoPor
+                        ? `${transaccion.creadoPor.firstName || ''} ${transaccion.creadoPor.lastName || ''}`.trim()
+                        : '',
+                    transaccionId: transaccion._id
+                });
+
+                saldoCorriente = saldoActual;
+            }
+        }
+
+        movimientos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+        res.status(200).json({
+            success: true,
+            data: {
+                movimientos,
+                resumen: {
+                    totalMovimientos: movimientos.length,
+                    totalCuentas: cuentasPermitidas.length
+                },
+                rango: {
+                    fechaInicio: fechaInicio || null,
+                    fechaFin: fechaFin || null
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error al obtener estado de cuenta:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener estado de cuenta',
+            error: error.message
+        });
+    }
+};
+
 /**
  * Eliminar transacción (solo si no está aprobada y es el creador o propietario)
  */
@@ -928,6 +1178,7 @@ module.exports = {
     updateTransaccionNotas,
     getResumen,
     getPorCategoria,
+    getEstadoCuentaMovimientos,
     exportarCSV,
     deleteTransaccion,
     uploadTransaccionImages,

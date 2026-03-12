@@ -51,6 +51,16 @@ router.get(
 );
 
 /**
+ * @route   GET /api/sw/transacciones/estado-cuenta
+ * @desc    Obtener movimientos para estado de cuenta (saldo previo y saldo actual)
+ * @access  Participante activo con permiso de ver transacciones
+ */
+router.get(
+    '/transacciones/estado-cuenta',
+    swTransaccionController.getEstadoCuentaMovimientos
+);
+
+/**
  * @route   GET /api/sw/transacciones/:id
  * @desc    Obtener una transacción por ID
  * @access  Permiso VIEW_TRANSACTIONS o MASTER ADMIN + Participante de la cuenta

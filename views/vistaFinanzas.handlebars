@@ -370,11 +370,42 @@
         <div id="tab-transacciones" class="tab-content hidden">
             <div class="bg-white rounded-lg shadow-xl overflow-hidden">
                 <div class="p-4 sm:p-6 border-b border-gray-200">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <h2 class="text-xl font-semibold text-gray-900">Transacciones</h2>
-                        <select id="filtro-cuenta-transacciones" class="form-select form-select-sm bg-gray-100 border-gray-300 text-gray-700">
-                            <option value="">Todas las cuentas</option>
-                        </select>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <h2 class="text-xl font-semibold text-gray-900">Transacciones</h2>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <label for="filtro-cuenta-transacciones" class="text-sm text-gray-600">Cuenta:</label>
+                                <select id="filtro-cuenta-transacciones" class="form-select form-select-sm bg-gray-100 border-gray-300 text-gray-700">
+                                    <option value="">Todas las cuentas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex flex-col lg:flex-row lg:items-end gap-2">
+                            <div class="flex flex-wrap items-end gap-2">
+                                <div>
+                                    <label for="transacciones-fecha-inicio" class="text-xs text-gray-500">Desde</label>
+                                    <input type="date" id="transacciones-fecha-inicio" class="form-control form-control-sm bg-gray-100 border-gray-300 text-gray-700">
+                                </div>
+                                <div>
+                                    <label for="transacciones-fecha-fin" class="text-xs text-gray-500">Hasta</label>
+                                    <input type="date" id="transacciones-fecha-fin" class="form-control form-control-sm bg-gray-100 border-gray-300 text-gray-700">
+                                </div>
+                                <button id="btn-filtrar-transacciones" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-filter me-1"></i> Filtrar
+                                </button>
+                                <button id="btn-limpiar-filtro-transacciones" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-eraser me-1"></i> Limpiar
+                                </button>
+                            </div>
+                            <div class="flex flex-wrap gap-2 lg:ms-auto">
+                                <button id="btn-descargar-transacciones-xlsx" class="btn btn-success btn-sm">
+                                    <i class="fas fa-file-excel me-1"></i> Descargar XLSX
+                                </button>
+                                <button id="btn-descargar-transacciones-pdf" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-file-pdf me-1"></i> Descargar PDF
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -1587,6 +1618,9 @@
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 
 <script src="/scripts/finanzas.js"></script>
 

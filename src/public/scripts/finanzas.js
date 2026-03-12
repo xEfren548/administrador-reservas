@@ -239,6 +239,13 @@ function inicializarEventos() {
             $('#solicitud-saldo-origen').text('');
         }
     });
+
+    // Filtros y exportación de estado de cuenta en transacciones
+    $('#filtro-cuenta-transacciones').on('change', cargarTransacciones);
+    $('#btn-filtrar-transacciones').on('click', cargarTransacciones);
+    $('#btn-limpiar-filtro-transacciones').on('click', limpiarFiltrosTransacciones);
+    $('#btn-descargar-transacciones-xlsx').on('click', () => descargarEstadoCuenta('xlsx'));
+    $('#btn-descargar-transacciones-pdf').on('click', () => descargarEstadoCuenta('pdf'));
 }
 
 function cambiarTab(tabName) {
@@ -2546,13 +2553,19 @@ function mostrarDetalleSolicitudGeneral(solicitud, modo = 'cuenta') {
 // ===== TRANSACCIONES =====
 async function cargarTransacciones() {
     const cuentaId = $('#filtro-cuenta-transacciones').val();
+    const { fechaInicio, fechaFin } = obtenerFiltrosFechaTransacciones();
+
+    if (fechaInicio && fechaFin && new Date(fechaInicio) > new Date(fechaFin)) {
+        mostrarError('La fecha "Desde" no puede ser mayor que la fecha "Hasta"');
+        return;
+    }
     
     // Si no hay cuenta seleccionada, mostrar mensaje
     if (!cuentaId && cuentas.length > 0) {
         $('#tabla-transacciones-body').html(`
             <tr>
                 <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-                    Seleccione una cuenta para ver sus transacciones
+                    Seleccione una cuenta para ver sus transacciones. Para descargar movimientos de todas las cuentas use los botones de exportación.
                 </td>
             </tr>
         `);
@@ -2563,7 +2576,12 @@ async function cargarTransacciones() {
 
     try {
         mostrarSpinner();
-        const response = await fetch(`/api/sw/transacciones/cuenta/${cuentaId}`);
+        const params = new URLSearchParams();
+        if (fechaInicio) params.append('fechaInicio', fechaInicio);
+        if (fechaFin) params.append('fechaFin', fechaFin);
+
+        const query = params.toString();
+        const response = await fetch(`/api/sw/transacciones/cuenta/${cuentaId}${query ? `?${query}` : ''}`);
         
         if (!response.ok) {
             if (response.status === 403) {
@@ -2594,6 +2612,135 @@ async function cargarTransacciones() {
     } finally {
         ocultarSpinner();
     }
+}
+
+function obtenerFiltrosFechaTransacciones() {
+    return {
+        fechaInicio: ($('#transacciones-fecha-inicio').val() || '').trim(),
+        fechaFin: ($('#transacciones-fecha-fin').val() || '').trim()
+    };
+}
+
+function limpiarFiltrosTransacciones() {
+    $('#transacciones-fecha-inicio').val('');
+    $('#transacciones-fecha-fin').val('');
+    cargarTransacciones();
+}
+
+async function descargarEstadoCuenta(formato) {
+    const cuentaId = $('#filtro-cuenta-transacciones').val();
+    const { fechaInicio, fechaFin } = obtenerFiltrosFechaTransacciones();
+
+    if (!fechaInicio || !fechaFin) {
+        mostrarInfo('Seleccione un rango de fechas (Desde y Hasta) para descargar el estado de cuenta.');
+        return;
+    }
+
+    if (new Date(fechaInicio) > new Date(fechaFin)) {
+        mostrarError('La fecha "Desde" no puede ser mayor que la fecha "Hasta"');
+        return;
+    }
+
+    try {
+        mostrarSpinner();
+
+        const params = new URLSearchParams({ fechaInicio, fechaFin });
+        if (cuentaId) params.append('cuentaId', cuentaId);
+
+        const response = await fetch(`/api/sw/transacciones/estado-cuenta?${params.toString()}`);
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'No se pudo generar el estado de cuenta');
+        }
+
+        const movimientos = data.data?.movimientos || [];
+        if (movimientos.length === 0) {
+            mostrarInfo('No hay movimientos en el rango seleccionado.');
+            return;
+        }
+
+        if (formato === 'xlsx') {
+            generarEstadoCuentaXLSX(data.data);
+        } else {
+            generarEstadoCuentaPDF(data.data);
+        }
+    } catch (error) {
+        console.error('Error al descargar estado de cuenta:', error);
+        mostrarError(error.message || 'Error al descargar estado de cuenta');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+function construirFilasEstadoCuenta(movimientos) {
+    return movimientos.map((mov) => ({
+        Fecha: new Date(mov.fecha).toLocaleDateString('es-MX'),
+        Cuenta: mov.cuentaNombre || '-',
+        Tipo: mov.tipo,
+        Concepto: mov.concepto,
+        Categoria: mov.categoria || '-',
+        Movimiento: mov.movimiento,
+        'Saldo Previo': mov.saldoPrevio,
+        'Saldo Actual': mov.saldoActual,
+        Moneda: mov.moneda || 'MXN',
+        Estado: mov.estado || '-',
+        Usuario: mov.creadoPor || '-'
+    }));
+}
+
+function generarEstadoCuentaXLSX(payload) {
+    if (typeof XLSX === 'undefined') {
+        mostrarError('No se pudo cargar la librería para exportar XLSX.');
+        return;
+    }
+
+    const filas = construirFilasEstadoCuenta(payload.movimientos || []);
+    const worksheet = XLSX.utils.json_to_sheet(filas);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'EstadoCuenta');
+
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+    XLSX.writeFile(workbook, `estado_cuenta_${timestamp}.xlsx`);
+}
+
+function generarEstadoCuentaPDF(payload) {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        mostrarError('No se pudo cargar la librería para exportar PDF.');
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape' });
+
+    const rango = payload?.rango || {};
+    doc.setFontSize(14);
+    doc.text('Estado de Cuenta de Movimientos', 14, 14);
+    doc.setFontSize(10);
+    doc.text(`Rango: ${rango.fechaInicio || '-'} a ${rango.fechaFin || '-'}`, 14, 21);
+    doc.text(`Generado: ${new Date().toLocaleString('es-MX')}`, 14, 27);
+
+    const body = (payload.movimientos || []).map((mov) => ([
+        new Date(mov.fecha).toLocaleDateString('es-MX'),
+        mov.cuentaNombre || '-',
+        mov.tipo,
+        mov.concepto,
+        `${mov.movimiento >= 0 ? '+' : ''}${Number(mov.movimiento).toFixed(2)}`,
+        Number(mov.saldoPrevio).toFixed(2),
+        Number(mov.saldoActual).toFixed(2),
+        mov.moneda || 'MXN'
+    ]));
+
+    doc.autoTable({
+        head: [['Fecha', 'Cuenta', 'Tipo', 'Concepto', 'Movimiento', 'Saldo Previo', 'Saldo Actual', 'Moneda']],
+        body,
+        startY: 32,
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [20, 184, 166] }
+    });
+
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+    doc.save(`estado_cuenta_${timestamp}.pdf`);
 }
 
 function renderizarTransacciones() {
@@ -2665,9 +2812,6 @@ function renderizarTransacciones() {
         `);
     });
 }
-
-// Listener para filtro de cuenta
-$('#filtro-cuenta-transacciones').on('change', cargarTransacciones);
 
 // ===== UTILIDADES =====
 function formatearMoneda(monto, moneda = 'MXN') {
