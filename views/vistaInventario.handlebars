@@ -1,0 +1,422 @@
+<div id="inventoryGlobalSpinner" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 hidden">
+    <div class="bg-white rounded-lg shadow-2xl p-4 border border-gray-200">
+        <div class="flex items-center space-x-3">
+            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-500"></div>
+            <p class="text-gray-900 text-sm font-medium">Cargando inventario...</p>
+        </div>
+    </div>
+</div>
+
+<div class="min-h-screen bg-gray-50 text-gray-800">
+    <div class="bg-white border-b border-gray-200 px-4 py-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Inventario y BOM</h1>
+                <p class="mt-1 text-sm text-gray-500">Control por cabaña, grupos y consumo automático por checkout</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                {{#if isMasterAdmin}}
+                <button id="btn-open-warehouse" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalWarehouse">
+                    <i class="fas fa-warehouse me-1"></i> Nueva Bodega
+                </button>
+                <button id="btn-open-item" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalItem">
+                    <i class="fas fa-boxes-stacked me-1"></i> Nuevo Item
+                </button>
+                <button id="btn-open-bom" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#modalBOMTemplate">
+                    <i class="fas fa-list-check me-1"></i> Nueva Regla BOM
+                </button>
+                {{/if}}
+                <button id="btn-run-checkout-consumption" class="btn btn-warning btn-sm {{#unless isMasterAdmin}}hidden{{/unless}}">
+                    <i class="fas fa-play me-1"></i> Ejecutar Consumo Checkout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white border-b border-gray-200">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <nav class="flex space-x-4 overflow-x-auto scrollbar-hide" aria-label="Tabs">
+                <button class="inventory-tab-button active whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-teal-500 text-teal-600" data-tab="dashboard">
+                    <i class="fas fa-chart-pie me-1"></i> Dashboard
+                </button>
+                <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="items">
+                    <i class="fas fa-box me-1"></i> Items
+                </button>
+                <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="bodegas">
+                    <i class="fas fa-warehouse me-1"></i> Bodegas
+                </button>
+                <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="bom">
+                    <i class="fas fa-list-check me-1"></i> BOM
+                </button>
+                <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="alertas">
+                    <i class="fas fa-bell me-1"></i> Alertas
+                </button>
+                <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="consumo">
+                    <i class="fas fa-chart-column me-1"></i> Métricas de Consumo
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <div class="px-4 py-6 sm:px-6 lg:px-8">
+        <div id="inventory-tab-dashboard" class="inventory-tab-content active">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-teal-500">
+                    <p class="text-gray-500 text-sm font-medium">Total Items</p>
+                    <p id="dashboard-total-items" class="text-3xl font-bold text-gray-900 mt-2">0</p>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-red-500">
+                    <p class="text-gray-500 text-sm font-medium">Items Bajo Stock</p>
+                    <p id="dashboard-low-stock" class="text-3xl font-bold text-red-600 mt-2">0</p>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-indigo-500">
+                    <p class="text-gray-500 text-sm font-medium">Bancos (Bodegas)</p>
+                    <p id="dashboard-bank-count" class="text-3xl font-bold text-indigo-600 mt-2">0</p>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-green-500">
+                    <p class="text-gray-500 text-sm font-medium">Unidades Totales</p>
+                    <p id="dashboard-total-units" class="text-3xl font-bold text-green-600 mt-2">0</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg p-6 shadow-xl">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Stock por Banco</h3>
+                    <div id="stock-by-bank" class="space-y-2"></div>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-xl">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Items Críticos</h3>
+                    <div id="critical-items" class="space-y-2 max-h-80 overflow-y-auto"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="inventory-tab-items" class="inventory-tab-content hidden">
+            <div class="bg-white rounded-lg p-6 shadow-xl">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Listado de Items</h3>
+                    <button id="btn-refresh-items" class="btn btn-outline-secondary btn-sm"><i class="fas fa-rotate me-1"></i>Actualizar</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Tipo</th>
+                                <th>Unidad</th>
+                                <th>Stock</th>
+                                <th>Min</th>
+                                <th>Bodega</th>
+                                <th>Banco</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="inventory-tab-bodegas" class="inventory-tab-content hidden">
+            <div class="bg-white rounded-lg p-6 shadow-xl">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Bodegas por Cabaña / Grupo</h3>
+                    <button id="btn-refresh-warehouses" class="btn btn-outline-secondary btn-sm"><i class="fas fa-rotate me-1"></i>Actualizar</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Banco</th>
+                                <th>Scope</th>
+                                <th>Cabaña</th>
+                                <th>Grupo</th>
+                                <th>Estatus</th>
+                            </tr>
+                        </thead>
+                        <tbody id="warehouses-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="inventory-tab-bom" class="inventory-tab-content hidden">
+            <div class="bg-white rounded-lg p-6 shadow-xl">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Plantillas BOM</h3>
+                    <button id="btn-refresh-bom" class="btn btn-outline-secondary btn-sm"><i class="fas fa-rotate me-1"></i>Actualizar</button>
+                </div>
+                <div id="bom-list" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <div id="inventory-tab-alertas" class="inventory-tab-content hidden">
+            <div class="bg-white rounded-lg p-6 shadow-xl">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Alertas de Inventario</h3>
+                    <button id="btn-refresh-alerts" class="btn btn-outline-secondary btn-sm"><i class="fas fa-rotate me-1"></i>Actualizar</button>
+                </div>
+                <div id="alerts-list" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <div id="inventory-tab-consumo" class="inventory-tab-content hidden">
+            <div class="bg-white rounded-lg p-6 shadow-xl mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Consumo por Bodega/Grupo</h3>
+                    <button id="btn-refresh-consumption-metrics" class="btn btn-outline-secondary btn-sm"><i class="fas fa-rotate me-1"></i>Actualizar</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Banco</th>
+                                <th>Items</th>
+                                <th>Unidades</th>
+                            </tr>
+                        </thead>
+                        <tbody id="consumption-metrics-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalWarehouse" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Bodega</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-warehouse">
+                <div class="modal-body space-y-3">
+                    <input class="form-control" name="name" placeholder="Nombre de bodega" required>
+                    <input class="form-control" name="bankName" placeholder="Banco / Zona física" value="Principal" required>
+                    <select class="form-select" name="scopeType" id="warehouse-scope-type" required>
+                        <option value="cabana">Cabaña</option>
+                        <option value="grupo">Grupo</option>
+                    </select>
+                    <select class="form-select" name="cabin" id="warehouse-cabin-select"></select>
+                    <select class="form-select hidden" name="roomGroup" id="warehouse-group-select"></select>
+                    <p class="text-xs text-gray-500">Selecciona por nombre de habitación. No necesitas capturar IDs.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalItem" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-item">
+                <div class="modal-body space-y-3">
+                    <input class="form-control" name="name" placeholder="Nombre del item" required>
+                    <textarea class="form-control" name="description" placeholder="Descripción"></textarea>
+                    <select class="form-select" name="itemType" required>
+                        <option value="directo">Directo</option>
+                        <option value="indirecto">Indirecto</option>
+                        <option value="no_consumible">No consumible</option>
+                    </select>
+                    <select class="form-select" name="unit" id="item-unit-select" required>
+                        <option value="">Selecciona unidad</option>
+                        <option value="pz">Pieza (pz)</option>
+                        <option value="juego">Juego</option>
+                        <option value="par">Par</option>
+                        <option value="rollo">Rollo</option>
+                        <option value="paquete">Paquete</option>
+                        <option value="caja">Caja</option>
+                        <option value="bolsa">Bolsa</option>
+                        <option value="botella">Botella</option>
+                        <option value="lata">Lata</option>
+                        <option value="lt">Litro (lt)</option>
+                        <option value="ml">Mililitro (ml)</option>
+                        <option value="kg">Kilogramo (kg)</option>
+                        <option value="g">Gramo (g)</option>
+                        <option value="otra">Otra...</option>
+                    </select>
+                    <input class="form-control hidden" name="unitCustom" id="item-unit-custom" placeholder="Especifica unidad personalizada">
+                    <select class="form-select" name="warehouse" id="item-warehouse-select" required></select>
+
+                    <div>
+                        <label class="text-sm font-medium text-gray-700 mb-1">Stock inicial</label>
+                        <input type="number" min="0" step="0.01" class="form-control" name="stockCurrent" placeholder="Ej. 25" value="0">
+                        <p class="text-xs text-gray-500 mt-1 mb-0">Cantidad disponible al momento de crear el item.</p>
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium text-gray-700 mb-1">Stock mínimo (alerta)</label>
+                        <input type="number" min="0" step="0.01" class="form-control" name="stockMin" placeholder="Ej. 5" value="0">
+                        <p class="text-xs text-gray-500 mt-1 mb-0">Cuando el stock llegue a este valor, se generará alerta de reposición.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalBOMTemplate" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Regla de Consumo BOM</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-bom-template">
+                <div class="modal-body bom-modal-body">
+                    <div class="bom-modal-grid">
+                        <section class="bom-panel">
+                            <h6 class="bom-panel-title">Configuración</h6>
+                            <div class="space-y-3">
+                                <input class="form-control" name="name" placeholder="Nombre de la regla BOM" required>
+                                <select class="form-select" name="scopeType" id="bom-scope-type" required>
+                                    <option value="cabana">Habitación individual</option>
+                                    <option value="grupo">Grupo de habitaciones</option>
+                                </select>
+                            </div>
+
+                            <div class="mt-4">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="text-sm font-medium text-gray-700 mb-0">Habitaciones</label>
+                                    <span class="text-xs text-gray-500">Selecciona una o varias</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mb-2">No necesitas capturar IDs, todo es por nombre.</p>
+                                <div id="bom-room-checklist" class="bom-room-checklist"></div>
+                            </div>
+
+                            <div id="bom-group-hint" class="hidden text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 mt-3">
+                                En modo grupo, las habitaciones seleccionadas deben pertenecer al mismo Room Group.
+                            </div>
+                        </section>
+
+                        <section class="bom-panel">
+                            <div class="flex items-center justify-between mb-2">
+                                <h6 class="bom-panel-title mb-0">Consumo por Noche</h6>
+                                <button id="btn-add-bom-line" type="button" class="btn btn-outline-primary btn-sm">Agregar producto</button>
+                            </div>
+                            <div class="bg-blue-50 border border-blue-200 rounded p-2 mb-3 text-xs text-blue-800 space-y-1">
+                                <p class="mb-0"><strong>Cantidad por noche:</strong> consumo base del producto por cada noche de la reserva.</p>
+                                <p class="mb-0"><strong>Factor:</strong> multiplicador del consumo base (1 = normal, 2 = doble, 0.5 = mitad).</p>
+                                <p class="mb-0">Ejemplo: Si "Toalla" tiene cantidad 2 y factor 1.5, en una reserva de 3 noches se descuentan 2 x 1.5 x 3 = 9 toallas.</p>
+                            </div>
+                            <div id="bom-lines-container" class="space-y-2"></div>
+                        </section>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-info">Guardar BOM</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .inventory-tab-content.active {
+        display: block;
+    }
+    .inventory-tab-button.active {
+        border-bottom-color: #14B8A6;
+        color: #0F766E;
+    }
+    .room-option-card {
+        border: 1px solid #E5E7EB;
+        border-radius: 0.5rem;
+        padding: 0.625rem;
+        background: #F9FAFB;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.625rem;
+        min-height: 72px;
+    }
+    .room-option-card:hover {
+        border-color: #14B8A6;
+        background: #F0FDFA;
+    }
+    .room-option-card input[type="checkbox"] {
+        position: static !important;
+        margin: 0.2rem 0 0 0 !important;
+        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
+    }
+    .bom-modal-body {
+        min-height: 62vh;
+    }
+    .bom-modal-grid {
+        display: grid;
+        grid-template-columns: 0.95fr 1.25fr;
+        gap: 1rem;
+    }
+    .bom-panel {
+        border: 1px solid #E5E7EB;
+        border-radius: 0.75rem;
+        background: #fff;
+        padding: 0.9rem;
+    }
+    .bom-panel-title {
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 0.6rem;
+    }
+    .bom-room-checklist {
+        height: 360px;
+        overflow-y: auto;
+        border: 1px solid #E5E7EB;
+        border-radius: 0.75rem;
+        padding: 0.65rem;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.55rem;
+        background: #FAFAFA;
+    }
+    #bom-lines-container {
+        min-height: 360px;
+        max-height: 360px;
+        overflow-y: auto;
+        padding-right: 0.2rem;
+    }
+    .bom-line-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    @media (max-width: 768px) {
+        .bom-modal-grid {
+            grid-template-columns: 1fr;
+        }
+        .bom-room-checklist {
+            grid-template-columns: 1fr;
+            height: 250px;
+        }
+        #bom-lines-container {
+            min-height: 240px;
+            max-height: 240px;
+        }
+        .bom-line-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    window.isMasterAdmin = {{#if isMasterAdmin}}true{{else}}false{{/if}};
+    window.currentUserId = '{{userId}}';
+</script>
+<script src="/scripts/inventario.js"></script>

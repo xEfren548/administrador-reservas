@@ -178,6 +178,18 @@ const reservaSchema = new Schema({
     includeSellerCommission: {
         type: Boolean,
         default: false
+    },
+    inventoryConsumptionProcessed: {
+        type: Boolean,
+        default: false
+    },
+    inventoryConsumptionBlocked: {
+        type: Boolean,
+        default: false
+    },
+    inventoryConsumptionProcessedAt: {
+        type: Date,
+        default: null
     }
 });
 

@@ -1,0 +1,248 @@
+const moment = require('moment-timezone');
+const Evento = require('../models/Evento');
+const Habitacion = require('../models/Habitacion');
+const Log = require('../models/Log');
+const InventoryItem = require('../models/InventoryItem');
+const InventoryMovement = require('../models/InventoryMovement');
+const InventoryBOMTemplate = require('../models/InventoryBOMTemplate');
+const InventoryAlert = require('../models/InventoryAlert');
+
+const TZ = 'America/Mexico_City';
+
+const buildCheckoutCutoffUtc = () => {
+    return moment.tz(TZ).startOf('day').utc().toDate();
+};
+
+const resolveTemplate = async (resourceId, roomGroup) => {
+    const byCabin = await InventoryBOMTemplate.findOne({
+        active: true,
+        scopeType: 'cabana',
+        cabin: resourceId
+    }).lean();
+
+    if (byCabin) {
+        return byCabin;
+    }
+
+    if (!roomGroup) {
+        return null;
+    }
+
+    return InventoryBOMTemplate.findOne({
+        active: true,
+        scopeType: 'grupo',
+        roomGroup
+    }).lean();
+};
+
+const createInventoryLog = async (acciones, userId = null) => {
+    await Log.create({
+        fecha: new Date(),
+        idUsuario: userId,
+        type: 'inventory',
+        acciones
+    });
+};
+
+const ensureLowStockAlert = async (item, eventId, message) => {
+    await InventoryAlert.create({
+        warehouse: item.warehouse,
+        item: item._id,
+        event: eventId,
+        alertType: 'insufficient_stock_checkout',
+        status: 'open',
+        message,
+        generatedAt: new Date()
+    });
+};
+
+const processSingleEventCheckoutConsumption = async (event, systemUserId = null) => {
+    const room = await Habitacion.findById(event.resourceId).lean();
+    const roomGroup = room?.roomGroup || null;
+    const template = await resolveTemplate(event.resourceId, roomGroup);
+
+    if (!template || !Array.isArray(template.lines) || template.lines.length === 0) {
+        return {
+            consumed: false,
+            skipped: true,
+            reason: 'No active BOM template configured'
+        };
+    }
+
+    const nights = Math.max(Number(event.nNights || 0), 1);
+    const itemIds = template.lines.map((line) => line.item);
+    const items = await InventoryItem.find({ _id: { $in: itemIds }, active: true });
+    const itemMap = new Map(items.map((item) => [String(item._id), item]));
+
+    const insufficiencies = [];
+    const movementPayloads = [];
+
+    for (const line of template.lines) {
+        const item = itemMap.get(String(line.item));
+        if (!item) {
+            insufficiencies.push({
+                itemId: line.item,
+                reason: 'Item not found or inactive'
+            });
+            continue;
+        }
+
+        const requiredQty = Number(line.quantityPerNight || 0) * Number(line.useFactor || 1) * nights;
+        if (requiredQty <= 0) {
+            continue;
+        }
+
+        if (item.stockCurrent < requiredQty) {
+            insufficiencies.push({
+                itemId: item._id,
+                itemName: item.name,
+                available: item.stockCurrent,
+                required: requiredQty
+            });
+            continue;
+        }
+
+        movementPayloads.push({
+            item,
+            requiredQty
+        });
+    }
+
+    if (insufficiencies.length > 0) {
+        event.inventoryConsumptionBlocked = true;
+        event.inventoryConsumptionProcessed = false;
+        event.inventoryConsumptionProcessedAt = null;
+        await event.save();
+
+        for (const issue of insufficiencies) {
+            const message = issue.itemName
+                ? `Insufficient stock for ${issue.itemName} in reservation ${event._id}. Required ${issue.required}, available ${issue.available}.`
+                : `Inventory item unavailable for reservation ${event._id}.`;
+            const itemRef = issue.itemId ? { _id: issue.itemId, warehouse: null } : null;
+            if (itemRef) {
+                const maybeItem = await InventoryItem.findById(issue.itemId).lean();
+                if (maybeItem) {
+                    await ensureLowStockAlert(maybeItem, event._id, message);
+                }
+            }
+            await createInventoryLog(message, systemUserId);
+        }
+
+        return {
+            consumed: false,
+            blocked: true,
+            insufficiencies
+        };
+    }
+
+    for (const payload of movementPayloads) {
+        const { item, requiredQty } = payload;
+        const idempotencyKey = `checkout:${event._id}:${item._id}`;
+        const alreadyApplied = await InventoryMovement.findOne({ idempotencyKey }).lean();
+        if (alreadyApplied) {
+            continue;
+        }
+
+        const freshItem = await InventoryItem.findById(item._id);
+        if (!freshItem) {
+            continue;
+        }
+
+        if (freshItem.stockCurrent < requiredQty) {
+            const message = `Concurrent stock update detected for item ${freshItem.name} on reservation ${event._id}.`;
+            await ensureLowStockAlert(freshItem, event._id, message);
+            event.inventoryConsumptionBlocked = true;
+            event.inventoryConsumptionProcessed = false;
+            event.inventoryConsumptionProcessedAt = null;
+            await event.save();
+            return {
+                consumed: false,
+                blocked: true,
+                insufficiencies: [{ itemId: freshItem._id, itemName: freshItem.name }]
+            };
+        }
+
+        const stockBefore = freshItem.stockCurrent;
+        const stockAfter = Math.max(stockBefore - requiredQty, 0);
+        freshItem.stockCurrent = stockAfter;
+        await freshItem.save();
+
+        await InventoryMovement.create({
+            item: freshItem._id,
+            warehouse: freshItem.warehouse,
+            movementType: 'checkout_exit',
+            quantity: requiredQty,
+            unitCost: Number(freshItem.lastPurchaseUnitCost || 0),
+            totalCost: Number(freshItem.lastPurchaseUnitCost || 0) * requiredQty,
+            stockBefore,
+            stockAfter,
+            event: event._id,
+            idempotencyKey,
+            performedBy: systemUserId,
+            note: `Automatic checkout consumption for reservation ${event._id}`
+        });
+
+        if (stockAfter <= Number(freshItem.stockMin || 0)) {
+            await InventoryAlert.create({
+                warehouse: freshItem.warehouse,
+                item: freshItem._id,
+                event: event._id,
+                alertType: 'low_stock',
+                status: 'open',
+                message: `Low stock for ${freshItem.name}. Current ${stockAfter}, min ${freshItem.stockMin}.`
+            });
+        }
+    }
+
+    event.inventoryConsumptionBlocked = false;
+    event.inventoryConsumptionProcessed = true;
+    event.inventoryConsumptionProcessedAt = new Date();
+    await event.save();
+    await createInventoryLog(`Inventory checkout consumption applied to reservation ${event._id}.`, systemUserId);
+
+    return {
+        consumed: true,
+        blocked: false,
+        reservationId: event._id,
+        linesApplied: movementPayloads.length
+    };
+};
+
+const processFinishedReservationsCheckoutConsumption = async (systemUserId = null) => {
+    const cutoff = buildCheckoutCutoffUtc();
+
+    const events = await Evento.find({
+        status: { $in: ['active', 'reserva de dueño'] },
+        departureDate: { $lt: cutoff },
+        inventoryConsumptionProcessed: { $ne: true }
+    });
+
+    const summary = {
+        totalCandidates: events.length,
+        consumed: 0,
+        blocked: 0,
+        skipped: 0,
+        details: []
+    };
+
+    for (const event of events) {
+        const result = await processSingleEventCheckoutConsumption(event, systemUserId);
+        summary.details.push({ reservationId: event._id, ...result });
+
+        if (result.consumed) {
+            summary.consumed += 1;
+        } else if (result.blocked) {
+            summary.blocked += 1;
+        } else {
+            summary.skipped += 1;
+        }
+    }
+
+    return summary;
+};
+
+module.exports = {
+    TZ,
+    processSingleEventCheckoutConsumption,
+    processFinishedReservationsCheckoutConsumption
+};

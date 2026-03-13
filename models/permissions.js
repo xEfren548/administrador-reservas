@@ -55,4 +55,10 @@ module.exports = {
     VIEW_REFERIDOS: "Ver referidos",
     MANAGE_REFERIDOS_CONFIG: "Gestionar configuración de referidos",
 
+    // Permisos del módulo de Inventario/BOM
+    VIEW_INVENTORY: "Ver inventario",
+    MANAGE_INVENTORY: "Gestionar inventario",
+    ADJUST_INVENTORY: "Ajustar inventario manual",
+    VIEW_INVENTORY_DASHBOARD: "Ver dashboard de inventario",
+
 };

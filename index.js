@@ -21,6 +21,7 @@ const SendMessages = require('./common/tasks/send-messages');
 const backupController = require('./controllers/backupController');
 const { iniciarCronTransaccionesRecurrentes } = require('./common/tasks/ejecutarTransaccionesRecurrentes');
 const { iniciarCronPagosDiferidos } = require('./common/tasks/verificarPagosDiferidos');
+const { iniciarCronInventarioCheckout } = require('./common/tasks/inventoryCheckoutConsumption');
 
 const passport = require('passport');
 const cookieSession = require('cookie-session');
@@ -239,6 +240,7 @@ mongoose.connect(db_url).then(async () => {
     console.log('Inicializando tareas programadas del módulo de finanzas...');
     iniciarCronTransaccionesRecurrentes();
     iniciarCronPagosDiferidos();
+    iniciarCronInventarioCheckout();
     console.log('✓ Todas las tareas programadas del módulo de finanzas iniciadas');
 
     
