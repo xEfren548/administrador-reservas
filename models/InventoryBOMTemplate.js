@@ -38,11 +38,15 @@ const inventoryBOMTemplateSchema = new mongoose.Schema({
         ref: 'habitaciones',
         default: null
     },
-    roomGroup: {
+    groupName: {
         type: String,
         default: null,
         trim: true
     },
+    cabins: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'habitaciones'
+    }],
     lines: {
         type: [bomLineSchema],
         default: []
@@ -60,6 +64,6 @@ const inventoryBOMTemplateSchema = new mongoose.Schema({
     timestamps: true
 });
 
-inventoryBOMTemplateSchema.index({ scopeType: 1, cabin: 1, roomGroup: 1, active: 1 });
+inventoryBOMTemplateSchema.index({ scopeType: 1, cabin: 1, groupName: 1, active: 1 });
 
 module.exports = mongoose.model('InventoryBOMTemplate', inventoryBOMTemplateSchema);

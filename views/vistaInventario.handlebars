@@ -16,8 +16,8 @@
             </div>
             <div class="flex flex-wrap gap-2">
                 {{#if isMasterAdmin}}
-                <button id="btn-open-warehouse" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalWarehouse">
-                    <i class="fas fa-warehouse me-1"></i> Nueva Bodega
+                <button id="btn-open-metric-group" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalMetricGroup">
+                    <i class="fas fa-layer-group me-1"></i> Nuevo Grupo de Habitaciones
                 </button>
                 <button id="btn-open-item" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalItem">
                     <i class="fas fa-boxes-stacked me-1"></i> Nuevo Item
@@ -42,8 +42,8 @@
                 <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="items">
                     <i class="fas fa-box me-1"></i> Items
                 </button>
-                <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="bodegas">
-                    <i class="fas fa-warehouse me-1"></i> Bodegas
+                <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="grupos">
+                    <i class="fas fa-layer-group me-1"></i> Grupos
                 </button>
                 <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="bom">
                     <i class="fas fa-list-check me-1"></i> BOM
@@ -70,8 +70,8 @@
                     <p id="dashboard-low-stock" class="text-3xl font-bold text-red-600 mt-2">0</p>
                 </div>
                 <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-indigo-500">
-                    <p class="text-gray-500 text-sm font-medium">Bancos (Bodegas)</p>
-                    <p id="dashboard-bank-count" class="text-3xl font-bold text-indigo-600 mt-2">0</p>
+                    <p class="text-gray-500 text-sm font-medium">Habitaciones con Inventario</p>
+                    <p id="dashboard-room-count" class="text-3xl font-bold text-indigo-600 mt-2">0</p>
                 </div>
                 <div class="bg-white rounded-lg p-6 shadow-lg border-l-4 border-green-500">
                     <p class="text-gray-500 text-sm font-medium">Unidades Totales</p>
@@ -81,8 +81,8 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white rounded-lg p-6 shadow-xl">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Stock por Banco</h3>
-                    <div id="stock-by-bank" class="space-y-2"></div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Stock por Habitacion</h3>
+                    <div id="stock-by-cabin" class="space-y-2"></div>
                 </div>
                 <div class="bg-white rounded-lg p-6 shadow-xl">
                     <h3 class="text-lg font-semibold text-gray-900 mb-3">Items Críticos</h3>
@@ -106,8 +106,8 @@
                                 <th>Unidad</th>
                                 <th>Stock</th>
                                 <th>Min</th>
-                                <th>Bodega</th>
-                                <th>Banco</th>
+                                <th>Habitacion</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="items-table-body"></tbody>
@@ -116,27 +116,13 @@
             </div>
         </div>
 
-        <div id="inventory-tab-bodegas" class="inventory-tab-content hidden">
+        <div id="inventory-tab-grupos" class="inventory-tab-content hidden">
             <div class="bg-white rounded-lg p-6 shadow-xl">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Bodegas por Cabaña / Grupo</h3>
-                    <button id="btn-refresh-warehouses" class="btn btn-outline-secondary btn-sm"><i class="fas fa-rotate me-1"></i>Actualizar</button>
+                    <h3 class="text-lg font-semibold text-gray-900">Grupos de Habitaciones para Metricas</h3>
+                    <button id="btn-refresh-groups" class="btn btn-outline-secondary btn-sm"><i class="fas fa-rotate me-1"></i>Actualizar</button>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="table table-sm table-striped align-middle">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Banco</th>
-                                <th>Scope</th>
-                                <th>Cabaña</th>
-                                <th>Grupo</th>
-                                <th>Estatus</th>
-                            </tr>
-                        </thead>
-                        <tbody id="warehouses-table-body"></tbody>
-                    </table>
-                </div>
+                <div id="metric-groups-list" class="space-y-3"></div>
             </div>
         </div>
 
@@ -163,14 +149,15 @@
         <div id="inventory-tab-consumo" class="inventory-tab-content hidden">
             <div class="bg-white rounded-lg p-6 shadow-xl mb-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Consumo por Bodega/Grupo</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Metricas por Grupo de Habitaciones</h3>
                     <button id="btn-refresh-consumption-metrics" class="btn btn-outline-secondary btn-sm"><i class="fas fa-rotate me-1"></i>Actualizar</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="table table-sm table-striped align-middle">
                         <thead>
                             <tr>
-                                <th>Banco</th>
+                                <th>Grupo</th>
+                                <th>Habitaciones</th>
                                 <th>Items</th>
                                 <th>Unidades</th>
                             </tr>
@@ -183,24 +170,26 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalWarehouse" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalMetricGroup" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nueva Bodega</h5>
+                <h5 class="modal-title">Nuevo Grupo de Habitaciones</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="form-warehouse">
+            <form id="form-metric-group">
                 <div class="modal-body space-y-3">
-                    <input class="form-control" name="name" placeholder="Nombre de bodega" required>
-                    <input class="form-control" name="bankName" placeholder="Banco / Zona física" value="Principal" required>
-                    <select class="form-select" name="scopeType" id="warehouse-scope-type" required>
-                        <option value="cabana">Cabaña</option>
-                        <option value="grupo">Grupo</option>
-                    </select>
-                    <select class="form-select" name="cabin" id="warehouse-cabin-select"></select>
-                    <select class="form-select hidden" name="roomGroup" id="warehouse-group-select"></select>
-                    <p class="text-xs text-gray-500">Selecciona por nombre de habitación. No necesitas capturar IDs.</p>
+                    <input class="form-control" name="name" placeholder="Nombre del grupo" required>
+                    <textarea class="form-control" name="description" placeholder="Descripcion opcional"></textarea>
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="text-sm font-medium text-gray-700 mb-0">Habitaciones</label>
+                            <span class="text-xs text-gray-500">Selecciona una o varias</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">Este grupo solo servira para metricas y dashboards. No comparte inventario ni BOM.</p>
+                        <div id="metric-group-room-checklist" class="bom-room-checklist"></div>
+                    </div>
+                    <p class="text-xs text-gray-500">Estos grupos son independientes a tipologias y grupos ya existentes en el sistema.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -215,7 +204,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nuevo Item</h5>
+                <h5 class="modal-title" id="modal-item-title">Nuevo Item</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="form-item">
@@ -245,12 +234,12 @@
                         <option value="otra">Otra...</option>
                     </select>
                     <input class="form-control hidden" name="unitCustom" id="item-unit-custom" placeholder="Especifica unidad personalizada">
-                    <select class="form-select" name="warehouse" id="item-warehouse-select" required></select>
+                    <select class="form-select" name="cabin" id="item-cabin-select" required></select>
 
                     <div>
                         <label class="text-sm font-medium text-gray-700 mb-1">Stock inicial</label>
                         <input type="number" min="0" step="0.01" class="form-control" name="stockCurrent" placeholder="Ej. 25" value="0">
-                        <p class="text-xs text-gray-500 mt-1 mb-0">Cantidad disponible al momento de crear el item.</p>
+                        <p class="text-xs text-gray-500 mt-1 mb-0">Si capturas stock inicial, registra tambien el costo unitario de esa primera compra.</p>
                     </div>
 
                     <div>
@@ -258,10 +247,37 @@
                         <input type="number" min="0" step="0.01" class="form-control" name="stockMin" placeholder="Ej. 5" value="0">
                         <p class="text-xs text-gray-500 mt-1 mb-0">Cuando el stock llegue a este valor, se generará alerta de reposición.</p>
                     </div>
+
+                    <div id="item-initial-purchase-section" class="border border-emerald-200 bg-emerald-50 rounded p-3 space-y-3">
+                        <div>
+                            <p class="text-sm font-semibold text-emerald-800 mb-1">Compra inicial</p>
+                            <p class="text-xs text-emerald-700 mb-0">Estos datos se usan para dejar trazado el primer lote del item al momento de crearlo.</p>
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 mb-1">Costo unitario inicial</label>
+                            <input type="number" min="0" step="0.01" class="form-control" name="initialUnitCost" id="item-initial-unit-cost" placeholder="Ej. 18.50">
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+                            <input class="form-control" name="initialSupplier" placeholder="Opcional">
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 mb-1">Factura / referencia</label>
+                            <input class="form-control" name="initialInvoiceNumber" placeholder="Opcional">
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 mb-1">Fecha de compra inicial</label>
+                            <input type="date" class="form-control" name="initialPurchaseDate">
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="submit" class="btn btn-success" id="modal-item-submit">Guardar</button>
                 </div>
             </form>
         </div>
@@ -272,7 +288,7 @@
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nueva Regla de Consumo BOM</h5>
+                <h5 class="modal-title" id="modal-bom-title">Nueva Regla de Consumo BOM</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="form-bom-template">
@@ -282,10 +298,6 @@
                             <h6 class="bom-panel-title">Configuración</h6>
                             <div class="space-y-3">
                                 <input class="form-control" name="name" placeholder="Nombre de la regla BOM" required>
-                                <select class="form-select" name="scopeType" id="bom-scope-type" required>
-                                    <option value="cabana">Habitación individual</option>
-                                    <option value="grupo">Grupo de habitaciones</option>
-                                </select>
                             </div>
 
                             <div class="mt-4">
@@ -293,12 +305,8 @@
                                     <label class="text-sm font-medium text-gray-700 mb-0">Habitaciones</label>
                                     <span class="text-xs text-gray-500">Selecciona una o varias</span>
                                 </div>
-                                <p class="text-xs text-gray-500 mb-2">No necesitas capturar IDs, todo es por nombre.</p>
+                                <p class="text-xs text-gray-500 mb-2">Si eliges varias, se crea una regla individual por cada habitación. No se comparte una sola regla entre ellas.</p>
                                 <div id="bom-room-checklist" class="bom-room-checklist"></div>
-                            </div>
-
-                            <div id="bom-group-hint" class="hidden text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 mt-3">
-                                En modo grupo, las habitaciones seleccionadas deben pertenecer al mismo Room Group.
                             </div>
                         </section>
 
@@ -318,7 +326,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-info">Guardar BOM</button>
+                    <button type="submit" class="btn btn-info" id="modal-bom-submit">Guardar BOM</button>
                 </div>
             </form>
         </div>

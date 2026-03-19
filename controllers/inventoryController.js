@@ -1,6 +1,5 @@
 const { check, validationResult } = require('express-validator');
 const Habitacion = require('../models/Habitacion');
-const InventoryWarehouse = require('../models/InventoryWarehouse');
 const InventoryItem = require('../models/InventoryItem');
 const InventoryBOMTemplate = require('../models/InventoryBOMTemplate');
 const InventoryMovement = require('../models/InventoryMovement');
@@ -9,38 +8,56 @@ const InventoryAlert = require('../models/InventoryAlert');
 const InventoryMetricGroup = require('../models/InventoryMetricGroup');
 const { processFinishedReservationsCheckoutConsumption } = require('../services/inventoryCheckoutService');
 
-const createWarehouseValidators = [
-    check('name').notEmpty().withMessage('Warehouse name is required'),
-    check('bankName').optional().isString().withMessage('Bank name must be a string'),
-    check('scopeType').isIn(['cabana', 'grupo']).withMessage('Invalid scope type'),
-    check('cabin').optional().isMongoId().withMessage('Invalid cabin id'),
-    check('roomGroup').optional().isString().withMessage('roomGroup must be string')
-];
-
 const createItemValidators = [
     check('name').notEmpty().withMessage('Item name is required'),
     check('itemType').isIn(['directo', 'indirecto', 'no_consumible']).withMessage('Invalid item type'),
     check('unit').notEmpty().withMessage('Unit is required'),
-    check('warehouse').isMongoId().withMessage('Invalid warehouse id'),
+    check('cabin').isMongoId().withMessage('Invalid cabin id'),
     check('stockCurrent').optional().isFloat({ min: 0 }).withMessage('stockCurrent must be >= 0'),
-    check('stockMin').optional().isFloat({ min: 0 }).withMessage('stockMin must be >= 0')
+    check('stockMin').optional().isFloat({ min: 0 }).withMessage('stockMin must be >= 0'),
+    check('initialUnitCost').optional().isFloat({ min: 0 }).withMessage('initialUnitCost must be >= 0'),
+    check('initialSupplier').optional().isString().withMessage('initialSupplier must be a string'),
+    check('initialInvoiceNumber').optional().isString().withMessage('initialInvoiceNumber must be a string'),
+    check('initialPurchaseDate').optional().isISO8601().withMessage('Invalid initialPurchaseDate')
+];
+
+const updateItemValidators = [
+    check('name').optional().notEmpty().withMessage('Item name cannot be empty'),
+    check('description').optional().isString().withMessage('description must be a string'),
+    check('itemType').optional().isIn(['directo', 'indirecto', 'no_consumible']).withMessage('Invalid item type'),
+    check('unit').optional().notEmpty().withMessage('Unit cannot be empty'),
+    check('cabin').optional().isMongoId().withMessage('Invalid cabin id'),
+    check('stockCurrent').optional().isFloat({ min: 0 }).withMessage('stockCurrent must be >= 0'),
+    check('stockMin').optional().isFloat({ min: 0 }).withMessage('stockMin must be >= 0'),
+    check('lastPurchaseUnitCost').optional().isFloat({ min: 0 }).withMessage('lastPurchaseUnitCost must be >= 0'),
+    check('active').optional().isBoolean().withMessage('active must be boolean')
 ];
 
 const createBOMTemplateValidators = [
     check('name').notEmpty().withMessage('Template name is required'),
-    check('scopeType').isIn(['cabana', 'grupo']).withMessage('Invalid scope type'),
+    check('scopeType').optional().isIn(['cabana']).withMessage('Invalid scope type'),
     check('cabin').optional().isMongoId().withMessage('Invalid cabin id'),
     check('cabinIds').optional().isArray().withMessage('cabinIds must be an array'),
     check('cabinIds.*').optional().isMongoId().withMessage('Invalid cabin id in cabinIds'),
-    check('roomGroup').optional().isString().withMessage('roomGroup must be string'),
     check('lines').isArray({ min: 1 }).withMessage('At least one BOM line is required'),
     check('lines.*.item').isMongoId().withMessage('Invalid item id in lines'),
     check('lines.*.quantityPerNight').isFloat({ min: 0 }).withMessage('quantityPerNight must be >= 0'),
     check('lines.*.useFactor').optional().isFloat({ min: 0 }).withMessage('useFactor must be >= 0')
 ];
 
+const updateBOMTemplateValidators = [
+    check('name').optional().notEmpty().withMessage('Template name cannot be empty'),
+    check('scopeType').optional().isIn(['cabana']).withMessage('Invalid scope type'),
+    check('cabin').optional({ nullable: true }).isMongoId().withMessage('Invalid cabin id'),
+    check('lines').optional().isArray({ min: 1 }).withMessage('At least one BOM line is required'),
+    check('lines.*.item').optional().isMongoId().withMessage('Invalid item id in lines'),
+    check('lines.*.quantityPerNight').optional().isFloat({ min: 0 }).withMessage('quantityPerNight must be >= 0'),
+    check('lines.*.useFactor').optional().isFloat({ min: 0 }).withMessage('useFactor must be >= 0'),
+    check('active').optional().isBoolean().withMessage('active must be boolean')
+];
+
 const registerPurchaseValidators = [
-    check('warehouse').isMongoId().withMessage('Invalid warehouse id'),
+    check('cabin').isMongoId().withMessage('Invalid cabin id'),
     check('purchaseDate').optional().isISO8601().withMessage('Invalid purchaseDate'),
     check('lines').isArray({ min: 1 }).withMessage('At least one purchase line is required'),
     check('lines.*.item').isMongoId().withMessage('Invalid item id in lines'),
@@ -71,84 +88,176 @@ const handleValidation = (req, res) => {
     return true;
 };
 
-const createWarehouse = async (req, res) => {
-    try {
-        if (!handleValidation(req, res)) return;
-
-        const { name, bankName = 'Principal', scopeType, cabin = null, roomGroup = null, active = true } = req.body;
-
-        if (scopeType === 'cabana' && !cabin) {
-            return res.status(400).json({ success: false, message: 'cabin is required for cabana scope' });
-        }
-
-        if (scopeType === 'grupo' && !roomGroup) {
-            return res.status(400).json({ success: false, message: 'roomGroup is required for grupo scope' });
-        }
-
-        const warehouse = await InventoryWarehouse.create({
-            name,
-            bankName,
-            scopeType,
-            cabin,
-            roomGroup,
-            active,
-            createdBy: req.session.userId || null
-        });
-
-        return res.status(201).json({ success: true, data: warehouse });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: 'Error creating warehouse', error: error.message });
-    }
+const normalizeBoolean = (value) => {
+    if (value === undefined) return undefined;
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') return value === 'true';
+    return Boolean(value);
 };
 
-const listWarehouses = async (req, res) => {
-    try {
-        const { scopeType, cabin, roomGroup, active } = req.query;
-        const filter = {};
-
-        if (scopeType) filter.scopeType = scopeType;
-        if (cabin) filter.cabin = cabin;
-        if (roomGroup) filter.roomGroup = roomGroup;
-        if (active !== undefined) filter.active = active === 'true';
-
-        const warehouses = await InventoryWarehouse.find(filter)
-            .populate('cabin', 'propertyDetails roomGroup isGrouped')
-            .sort({ createdAt: -1 })
-            .lean();
-
-        return res.json({ success: true, data: warehouses });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: 'Error listing warehouses', error: error.message });
-    }
+const ensureCabinExists = async (cabinId) => {
+    if (!cabinId) return null;
+    return Habitacion.findById(cabinId);
 };
 
 const createItem = async (req, res) => {
     try {
         if (!handleValidation(req, res)) return;
 
+        const cabin = await ensureCabinExists(req.body.cabin);
+        if (!cabin) {
+            return res.status(404).json({ success: false, message: 'Cabin not found' });
+        }
+
+        const initialStock = Number(req.body.stockCurrent || 0);
+        const initialUnitCost = req.body.initialUnitCost !== undefined && req.body.initialUnitCost !== ''
+            ? Number(req.body.initialUnitCost)
+            : null;
+
+        if (initialStock > 0 && (initialUnitCost === null || initialUnitCost <= 0)) {
+            return res.status(400).json({ success: false, message: 'initialUnitCost is required when initial stock is greater than 0' });
+        }
+
         const payload = {
-            ...req.body,
+            name: req.body.name,
+            description: req.body.description || '',
+            itemType: req.body.itemType,
+            unit: req.body.unit,
+            cabin: req.body.cabin,
+            stockCurrent: initialStock,
+            stockMin: Number(req.body.stockMin || 0),
+            lastPurchaseUnitCost: initialUnitCost || 0,
+            active: req.body.active !== undefined ? normalizeBoolean(req.body.active) : true,
             createdBy: req.session.userId || null
         };
 
         const item = await InventoryItem.create(payload);
+
+        if (initialStock > 0) {
+            const totalCost = initialStock * initialUnitCost;
+
+            await InventoryMovement.create({
+                item: item._id,
+                cabin: item.cabin,
+                movementType: 'purchase_entry',
+                quantity: initialStock,
+                unitCost: initialUnitCost,
+                totalCost,
+                stockBefore: 0,
+                stockAfter: initialStock,
+                performedBy: req.session.userId || null,
+                note: 'Initial stock on item creation'
+            });
+
+            await InventoryPurchase.create({
+                cabin: item.cabin,
+                supplier: req.body.initialSupplier || '',
+                invoiceNumber: req.body.initialInvoiceNumber || '',
+                purchaseDate: req.body.initialPurchaseDate || new Date(),
+                lines: [{
+                    item: item._id,
+                    quantity: initialStock,
+                    unitCost: initialUnitCost,
+                    totalCost
+                }],
+                totalAmount: totalCost,
+                createdBy: req.session.userId || null
+            });
+        }
+
         return res.status(201).json({ success: true, data: item });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Error creating item', error: error.message });
     }
 };
 
+const updateItem = async (req, res) => {
+    try {
+        if (!handleValidation(req, res)) return;
+
+        const { id } = req.params;
+        const item = await InventoryItem.findById(id);
+
+        if (!item) {
+            return res.status(404).json({ success: false, message: 'Item not found' });
+        }
+
+        const nextCabinId = req.body.cabin || item.cabin;
+        const cabin = await ensureCabinExists(nextCabinId);
+        if (!cabin) {
+            return res.status(404).json({ success: false, message: 'Cabin not found' });
+        }
+
+        const nextName = req.body.name ? String(req.body.name).trim() : item.name;
+        const duplicateItem = await InventoryItem.findOne({
+            _id: { $ne: item._id },
+            cabin: nextCabinId,
+            name: nextName
+        }).lean();
+
+        if (duplicateItem) {
+            return res.status(409).json({ success: false, message: 'Another item with the same name already exists in this cabin' });
+        }
+
+        const fields = ['name', 'description', 'itemType', 'unit', 'cabin', 'stockCurrent', 'stockMin', 'lastPurchaseUnitCost', 'active'];
+        fields.forEach((field) => {
+            if (req.body[field] !== undefined) {
+                item[field] = field === 'active' ? normalizeBoolean(req.body[field]) : req.body[field];
+            }
+        });
+
+        await item.save();
+
+        const updatedItem = await InventoryItem.findById(item._id)
+            .populate('cabin', 'propertyDetails isGrouped')
+            .lean();
+
+        return res.json({ success: true, data: updatedItem });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error updating item', error: error.message });
+    }
+};
+
+const deleteItem = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const item = await InventoryItem.findById(id);
+
+        if (!item) {
+            return res.status(404).json({ success: false, message: 'Item not found' });
+        }
+
+        const [movementCount, bomUsageCount] = await Promise.all([
+            InventoryMovement.countDocuments({ item: item._id }),
+            InventoryBOMTemplate.countDocuments({ 'lines.item': item._id })
+        ]);
+
+        if (movementCount > 0 || bomUsageCount > 0) {
+            return res.status(409).json({
+                success: false,
+                message: 'Item cannot be deleted because it has related movements or BOM templates. Deactivate it instead.',
+                data: { movementCount, bomUsageCount }
+            });
+        }
+
+        await InventoryItem.deleteOne({ _id: item._id });
+        return res.json({ success: true, message: 'Item deleted successfully' });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error deleting item', error: error.message });
+    }
+};
+
 const listItems = async (req, res) => {
     try {
-        const { warehouse, active, itemType, lowStockOnly } = req.query;
+        const { cabin, active, itemType, lowStockOnly } = req.query;
         const filter = {};
 
-        if (warehouse) filter.warehouse = warehouse;
+        if (cabin) filter.cabin = cabin;
         if (active !== undefined) filter.active = active === 'true';
         if (itemType) filter.itemType = itemType;
 
         const items = await InventoryItem.find(filter)
-            .populate('warehouse', 'name bankName scopeType cabin roomGroup')
+            .populate('cabin', 'propertyDetails isGrouped')
             .sort({ createdAt: -1 })
             .lean();
 
@@ -166,18 +275,14 @@ const createBOMTemplate = async (req, res) => {
     try {
         if (!handleValidation(req, res)) return;
 
-        const { scopeType, cabin, roomGroup, cabinIds = [] } = req.body;
+        const { cabin, cabinIds = [] } = req.body;
         const selectedCabinIds = Array.isArray(cabinIds) ? cabinIds.filter(Boolean) : [];
 
-        if (scopeType === 'cabana' && !cabin && selectedCabinIds.length === 0) {
-            return res.status(400).json({ success: false, message: 'At least one cabin is required for cabana scope' });
+        if (!cabin && selectedCabinIds.length === 0) {
+            return res.status(400).json({ success: false, message: 'At least one cabin is required for BOM creation' });
         }
 
-        if (scopeType === 'grupo' && !roomGroup) {
-            return res.status(400).json({ success: false, message: 'roomGroup is required for grupo scope' });
-        }
-
-        if (scopeType === 'cabana' && selectedCabinIds.length > 0) {
+        if (selectedCabinIds.length > 0) {
             const cabins = await Habitacion.find({ _id: { $in: selectedCabinIds } })
                 .select('_id propertyDetails.name')
                 .lean();
@@ -185,7 +290,7 @@ const createBOMTemplate = async (req, res) => {
 
             const templatesToCreate = selectedCabinIds.map((cabinId) => ({
                 name: `${req.body.name} - ${cabinNameMap.get(String(cabinId)) || String(cabinId)}`,
-                scopeType,
+                scopeType: 'cabana',
                 cabin: cabinId,
                 lines: req.body.lines,
                 active: req.body.active !== false,
@@ -200,10 +305,15 @@ const createBOMTemplate = async (req, res) => {
             });
         }
 
-        const template = await InventoryBOMTemplate.create({
+        const payload = {
             ...req.body,
+            scopeType: 'cabana',
+            groupName: null,
+            cabins: [],
             createdBy: req.session.userId || null
-        });
+        };
+
+        const template = await InventoryBOMTemplate.create(payload);
 
         return res.status(201).json({ success: true, data: template });
     } catch (error) {
@@ -211,19 +321,93 @@ const createBOMTemplate = async (req, res) => {
     }
 };
 
+const updateBOMTemplate = async (req, res) => {
+    try {
+        if (!handleValidation(req, res)) return;
+
+        const { id } = req.params;
+        const template = await InventoryBOMTemplate.findById(id);
+
+        if (!template) {
+            return res.status(404).json({ success: false, message: 'BOM template not found' });
+        }
+
+        const nextCabin = req.body.cabin !== undefined ? req.body.cabin : template.cabin;
+
+        if (!nextCabin) {
+            return res.status(400).json({ success: false, message: 'cabin is required for BOM template' });
+        }
+
+        if (req.body.cabin) {
+            const existingCabin = await Habitacion.exists({ _id: req.body.cabin });
+            if (!existingCabin) {
+                return res.status(400).json({ success: false, message: 'Cabin is invalid' });
+            }
+        }
+
+        if (Array.isArray(req.body.lines)) {
+            const lineItemIds = [...new Set(req.body.lines.map((line) => String(line.item)).filter(Boolean))];
+            const itemCount = await InventoryItem.countDocuments({ _id: { $in: lineItemIds } });
+            if (itemCount !== lineItemIds.length) {
+                return res.status(400).json({ success: false, message: 'One or more BOM items are invalid' });
+            }
+        }
+
+        const fields = ['name', 'lines', 'active'];
+        fields.forEach((field) => {
+            if (req.body[field] !== undefined) {
+                template[field] = field === 'active' ? normalizeBoolean(req.body[field]) : req.body[field];
+            }
+        });
+
+        template.scopeType = 'cabana';
+        template.cabin = nextCabin;
+        template.groupName = null;
+        template.cabins = [];
+
+        await template.save();
+
+        const updatedTemplate = await InventoryBOMTemplate.findById(template._id)
+            .populate('cabin', 'propertyDetails isGrouped')
+            .populate('lines.item', 'name itemType unit stockCurrent stockMin cabin')
+            .lean();
+
+        return res.json({ success: true, data: updatedTemplate });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error updating BOM template', error: error.message });
+    }
+};
+
+const deleteBOMTemplate = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const template = await InventoryBOMTemplate.findByIdAndUpdate(
+            id,
+            { active: false },
+            { new: true }
+        ).lean();
+
+        if (!template) {
+            return res.status(404).json({ success: false, message: 'BOM template not found' });
+        }
+
+        return res.json({ success: true, message: 'BOM template deactivated successfully', data: template });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error deleting BOM template', error: error.message });
+    }
+};
+
 const listBOMTemplates = async (req, res) => {
     try {
-        const { scopeType, cabin, roomGroup, active } = req.query;
-        const filter = {};
-
-        if (scopeType) filter.scopeType = scopeType;
+        const { scopeType, cabin, groupName, active } = req.query;
+        const filter = { scopeType: scopeType || 'cabana' };
         if (cabin) filter.cabin = cabin;
-        if (roomGroup) filter.roomGroup = roomGroup;
+        if (groupName) filter.groupName = groupName;
         if (active !== undefined) filter.active = active === 'true';
 
         const templates = await InventoryBOMTemplate.find(filter)
-            .populate('cabin', 'propertyDetails roomGroup isGrouped')
-            .populate('lines.item', 'name itemType unit stockCurrent stockMin warehouse')
+            .populate('cabin', 'propertyDetails isGrouped')
+            .populate('lines.item', 'name itemType unit stockCurrent stockMin cabin')
             .sort({ updatedAt: -1 })
             .lean();
 
@@ -233,11 +417,71 @@ const listBOMTemplates = async (req, res) => {
     }
 };
 
+const listMovements = async (req, res) => {
+    try {
+        const {
+            item,
+            cabin,
+            movementType,
+            event,
+            startDate,
+            endDate,
+            page = 1,
+            limit = 50
+        } = req.query;
+
+        const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
+        const safePage = Math.max(Number(page) || 1, 1);
+        const filter = {};
+
+        if (item) filter.item = item;
+    if (cabin) filter.cabin = cabin;
+        if (movementType) filter.movementType = movementType;
+        if (event) filter.event = event;
+        if (startDate || endDate) {
+            filter.createdAt = {};
+            if (startDate) filter.createdAt.$gte = new Date(startDate);
+            if (endDate) filter.createdAt.$lte = new Date(endDate);
+        }
+
+        const [total, movements] = await Promise.all([
+            InventoryMovement.countDocuments(filter),
+            InventoryMovement.find(filter)
+                .populate('item', 'name itemType unit')
+                .populate('cabin', 'propertyDetails isGrouped')
+                .populate('performedBy', 'name email')
+                .populate('event', 'folio checkIn checkOut')
+                .sort({ createdAt: -1 })
+                .skip((safePage - 1) * safeLimit)
+                .limit(safeLimit)
+                .lean()
+        ]);
+
+        return res.json({
+            success: true,
+            data: movements,
+            pagination: {
+                total,
+                page: safePage,
+                limit: safeLimit,
+                totalPages: Math.ceil(total / safeLimit) || 1
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error listing movements', error: error.message });
+    }
+};
+
 const registerPurchase = async (req, res) => {
     try {
         if (!handleValidation(req, res)) return;
 
-        const { warehouse, supplier = '', invoiceNumber = '', purchaseDate, lines } = req.body;
+        const { cabin, supplier = '', invoiceNumber = '', purchaseDate, lines } = req.body;
+        const existingCabin = await ensureCabinExists(cabin);
+        if (!existingCabin) {
+            return res.status(404).json({ success: false, message: 'Cabin not found' });
+        }
+
         let totalAmount = 0;
         const normalizedLines = [];
 
@@ -247,8 +491,8 @@ const registerPurchase = async (req, res) => {
                 return res.status(404).json({ success: false, message: `Item not found: ${line.item}` });
             }
 
-            if (String(item.warehouse) !== String(warehouse)) {
-                return res.status(400).json({ success: false, message: `Item ${item.name} does not belong to selected warehouse` });
+            if (String(item.cabin) !== String(cabin)) {
+                return res.status(400).json({ success: false, message: `Item ${item.name} does not belong to selected cabin` });
             }
 
             const quantity = Number(line.quantity);
@@ -264,7 +508,7 @@ const registerPurchase = async (req, res) => {
 
             await InventoryMovement.create({
                 item: item._id,
-                warehouse: item.warehouse,
+                cabin: item.cabin,
                 movementType: 'purchase_entry',
                 quantity,
                 unitCost,
@@ -284,7 +528,7 @@ const registerPurchase = async (req, res) => {
         }
 
         const purchase = await InventoryPurchase.create({
-            warehouse,
+            cabin,
             supplier,
             invoiceNumber,
             purchaseDate: purchaseDate || new Date(),
@@ -331,7 +575,7 @@ const createManualAdjustment = async (req, res) => {
 
         const movement = await InventoryMovement.create({
             item: item._id,
-            warehouse: item.warehouse,
+            cabin: item.cabin,
             movementType,
             quantity: qty,
             unitCost: Number(item.lastPurchaseUnitCost || 0),
@@ -344,7 +588,7 @@ const createManualAdjustment = async (req, res) => {
 
         if (stockAfter <= Number(item.stockMin || 0)) {
             await InventoryAlert.create({
-                warehouse: item.warehouse,
+                cabin: item.cabin,
                 item: item._id,
                 alertType: 'low_stock',
                 status: 'open',
@@ -367,7 +611,7 @@ const getAlerts = async (req, res) => {
 
         const alerts = await InventoryAlert.find(filter)
             .populate('item', 'name itemType unit stockCurrent stockMin')
-            .populate('warehouse', 'name bankName scopeType cabin roomGroup')
+            .populate('cabin', 'propertyDetails isGrouped')
             .sort({ createdAt: -1 })
             .lean();
 
@@ -403,14 +647,14 @@ const resolveAlert = async (req, res) => {
 const getStockDashboard = async (req, res) => {
     try {
         const items = await InventoryItem.find({ active: true })
-            .populate('warehouse', 'name bankName scopeType cabin roomGroup')
+            .populate('cabin', 'propertyDetails isGrouped')
             .lean();
 
         const totalItems = items.length;
         const lowStockItems = items.filter((item) => Number(item.stockCurrent) <= Number(item.stockMin || 0));
 
-        const stockByBank = items.reduce((acc, item) => {
-            const key = item.warehouse?.bankName || 'Sin banco';
+        const stockByCabin = items.reduce((acc, item) => {
+            const key = item.cabin?.propertyDetails?.name || 'Sin habitación';
             acc[key] = acc[key] || { items: 0, stockUnits: 0 };
             acc[key].items += 1;
             acc[key].stockUnits += Number(item.stockCurrent || 0);
@@ -422,7 +666,7 @@ const getStockDashboard = async (req, res) => {
             data: {
                 totalItems,
                 lowStockCount: lowStockItems.length,
-                stockByBank,
+                stockByCabin,
                 lowStockItems
             }
         });
@@ -460,7 +704,7 @@ const createMetricGroup = async (req, res) => {
 const listMetricGroups = async (req, res) => {
     try {
         const groups = await InventoryMetricGroup.find({ active: true })
-            .populate('cabins', 'propertyDetails roomGroup isGrouped')
+            .populate('cabins', 'propertyDetails isGrouped')
             .sort({ name: 1 })
             .lean();
 
@@ -480,20 +724,13 @@ const getMetricConsumptionDashboard = async (req, res) => {
         }
 
         const items = await InventoryItem.find({ active: true })
-            .populate({
-                path: 'warehouse',
-                select: 'scopeType cabin roomGroup name bankName',
-                populate: {
-                    path: 'cabin',
-                    select: 'propertyDetails roomGroup isGrouped'
-                }
-            })
+            .populate('cabin', 'propertyDetails isGrouped')
             .lean();
 
         const cabinIds = new Set((metricGroup.cabins || []).map((id) => String(id)));
         const filteredItems = items.filter((item) => {
-            const warehouseCabinId = item.warehouse?.cabin?._id ? String(item.warehouse.cabin._id) : null;
-            return warehouseCabinId && cabinIds.has(warehouseCabinId);
+            const itemCabinId = item.cabin?._id ? String(item.cabin._id) : String(item.cabin || '');
+            return itemCabinId && cabinIds.has(itemCabinId);
         });
 
         const totalStock = filteredItems.reduce((sum, item) => sum + Number(item.stockCurrent || 0), 0);
@@ -540,18 +777,22 @@ const runCheckoutConsumptionNow = async (req, res) => {
 };
 
 module.exports = {
-    createWarehouseValidators,
     createItemValidators,
+    updateItemValidators,
     createBOMTemplateValidators,
+    updateBOMTemplateValidators,
     registerPurchaseValidators,
     manualAdjustmentValidators,
     createMetricGroupValidators,
-    createWarehouse,
-    listWarehouses,
     createItem,
+    updateItem,
+    deleteItem,
     listItems,
     createBOMTemplate,
+    updateBOMTemplate,
+    deleteBOMTemplate,
     listBOMTemplates,
+    listMovements,
     registerPurchase,
     createManualAdjustment,
     getAlerts,

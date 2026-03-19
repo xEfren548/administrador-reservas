@@ -6,9 +6,9 @@ const inventoryMovementSchema = new mongoose.Schema({
         ref: 'InventoryItem',
         required: true
     },
-    warehouse: {
+    cabin: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'InventoryWarehouse',
+        ref: 'habitaciones',
         required: true
     },
     movementType: {

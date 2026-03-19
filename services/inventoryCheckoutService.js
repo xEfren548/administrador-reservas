@@ -1,6 +1,5 @@
 const moment = require('moment-timezone');
 const Evento = require('../models/Evento');
-const Habitacion = require('../models/Habitacion');
 const Log = require('../models/Log');
 const InventoryItem = require('../models/InventoryItem');
 const InventoryMovement = require('../models/InventoryMovement');
@@ -13,25 +12,11 @@ const buildCheckoutCutoffUtc = () => {
     return moment.tz(TZ).startOf('day').utc().toDate();
 };
 
-const resolveTemplate = async (resourceId, roomGroup) => {
-    const byCabin = await InventoryBOMTemplate.findOne({
+const resolveTemplate = async (resourceId) => {
+    return InventoryBOMTemplate.findOne({
         active: true,
         scopeType: 'cabana',
         cabin: resourceId
-    }).lean();
-
-    if (byCabin) {
-        return byCabin;
-    }
-
-    if (!roomGroup) {
-        return null;
-    }
-
-    return InventoryBOMTemplate.findOne({
-        active: true,
-        scopeType: 'grupo',
-        roomGroup
     }).lean();
 };
 
@@ -46,7 +31,7 @@ const createInventoryLog = async (acciones, userId = null) => {
 
 const ensureLowStockAlert = async (item, eventId, message) => {
     await InventoryAlert.create({
-        warehouse: item.warehouse,
+        cabin: item.cabin,
         item: item._id,
         event: eventId,
         alertType: 'insufficient_stock_checkout',
@@ -57,9 +42,7 @@ const ensureLowStockAlert = async (item, eventId, message) => {
 };
 
 const processSingleEventCheckoutConsumption = async (event, systemUserId = null) => {
-    const room = await Habitacion.findById(event.resourceId).lean();
-    const roomGroup = room?.roomGroup || null;
-    const template = await resolveTemplate(event.resourceId, roomGroup);
+    const template = await resolveTemplate(event.resourceId);
 
     if (!template || !Array.isArray(template.lines) || template.lines.length === 0) {
         return {
@@ -118,7 +101,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
             const message = issue.itemName
                 ? `Insufficient stock for ${issue.itemName} in reservation ${event._id}. Required ${issue.required}, available ${issue.available}.`
                 : `Inventory item unavailable for reservation ${event._id}.`;
-            const itemRef = issue.itemId ? { _id: issue.itemId, warehouse: null } : null;
+            const itemRef = issue.itemId ? { _id: issue.itemId, cabin: null } : null;
             if (itemRef) {
                 const maybeItem = await InventoryItem.findById(issue.itemId).lean();
                 if (maybeItem) {
@@ -169,7 +152,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
 
         await InventoryMovement.create({
             item: freshItem._id,
-            warehouse: freshItem.warehouse,
+            cabin: freshItem.cabin,
             movementType: 'checkout_exit',
             quantity: requiredQty,
             unitCost: Number(freshItem.lastPurchaseUnitCost || 0),
@@ -184,7 +167,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
 
         if (stockAfter <= Number(freshItem.stockMin || 0)) {
             await InventoryAlert.create({
-                warehouse: freshItem.warehouse,
+                cabin: freshItem.cabin,
                 item: freshItem._id,
                 event: event._id,
                 alertType: 'low_stock',

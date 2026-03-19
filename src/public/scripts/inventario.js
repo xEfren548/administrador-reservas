@@ -2,8 +2,11 @@
     const apiBase = '/api/inventory';
     const state = {
         rooms: [],
-        warehouses: [],
-        items: []
+        items: [],
+        bomTemplates: [],
+        metricGroups: [],
+        editingItemId: null,
+        editingBOMId: null
     };
 
     const el = {
@@ -12,36 +15,42 @@
         tabContents: document.querySelectorAll('.inventory-tab-content'),
         totalItems: document.getElementById('dashboard-total-items'),
         lowStock: document.getElementById('dashboard-low-stock'),
-        bankCount: document.getElementById('dashboard-bank-count'),
+        roomCount: document.getElementById('dashboard-room-count'),
         totalUnits: document.getElementById('dashboard-total-units'),
-        stockByBank: document.getElementById('stock-by-bank'),
+        stockByCabin: document.getElementById('stock-by-cabin'),
         criticalItems: document.getElementById('critical-items'),
         itemsTableBody: document.getElementById('items-table-body'),
-        warehousesTableBody: document.getElementById('warehouses-table-body'),
+        metricGroupsList: document.getElementById('metric-groups-list'),
         bomList: document.getElementById('bom-list'),
         alertsList: document.getElementById('alerts-list'),
         consumptionMetricsTableBody: document.getElementById('consumption-metrics-table-body'),
-        formWarehouse: document.getElementById('form-warehouse'),
+        formMetricGroup: document.getElementById('form-metric-group'),
         formItem: document.getElementById('form-item'),
         formBOMTemplate: document.getElementById('form-bom-template'),
+        modalItem: document.getElementById('modalItem'),
+        modalBOMTemplate: document.getElementById('modalBOMTemplate'),
+        modalItemTitle: document.getElementById('modal-item-title'),
+        modalItemSubmit: document.getElementById('modal-item-submit'),
+        modalBOMTitle: document.getElementById('modal-bom-title'),
+        modalBOMSubmit: document.getElementById('modal-bom-submit'),
+        itemInitialPurchaseSection: document.getElementById('item-initial-purchase-section'),
+        itemInitialUnitCost: document.getElementById('item-initial-unit-cost'),
         btnRunConsumption: document.getElementById('btn-run-checkout-consumption'),
         btnRefreshItems: document.getElementById('btn-refresh-items'),
-        btnRefreshWarehouses: document.getElementById('btn-refresh-warehouses'),
+        btnRefreshGroups: document.getElementById('btn-refresh-groups'),
         btnRefreshBom: document.getElementById('btn-refresh-bom'),
         btnRefreshAlerts: document.getElementById('btn-refresh-alerts'),
         btnRefreshConsumptionMetrics: document.getElementById('btn-refresh-consumption-metrics'),
-        warehouseScopeType: document.getElementById('warehouse-scope-type'),
-        warehouseCabinSelect: document.getElementById('warehouse-cabin-select'),
-        warehouseGroupSelect: document.getElementById('warehouse-group-select'),
-        itemWarehouseSelect: document.getElementById('item-warehouse-select'),
+        itemCabinSelect: document.getElementById('item-cabin-select'),
         itemUnitSelect: document.getElementById('item-unit-select'),
         itemUnitCustom: document.getElementById('item-unit-custom'),
-        bomScopeType: document.getElementById('bom-scope-type'),
+        metricGroupRoomChecklist: document.getElementById('metric-group-room-checklist'),
         bomRoomChecklist: document.getElementById('bom-room-checklist'),
-        bomGroupHint: document.getElementById('bom-group-hint'),
         bomLinesContainer: document.getElementById('bom-lines-container'),
         btnAddBomLine: document.getElementById('btn-add-bom-line')
     };
+
+    const isMasterAdmin = Boolean(window.isMasterAdmin);
 
     const toggleSpinner = (show) => {
         if (!el.spinner) return;
@@ -59,7 +68,7 @@
 
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-            throw new Error(data.message || 'Error de comunicación con inventario');
+            throw new Error(data.message || 'Error de comunicacion con inventario');
         }
         return data;
     };
@@ -68,7 +77,7 @@
 
     const showError = (error) => {
         console.error(error);
-        alert(error.message || 'Ocurrió un error inesperado');
+        alert(error.message || 'Ocurrio un error inesperado');
     };
 
     const escapeHtml = (value) => String(value || '')
@@ -78,59 +87,51 @@
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
 
-    const roomDisplayName = (room) => room?.propertyDetails?.name || room?.name || 'Habitación';
+    const roomDisplayName = (room) => room?.propertyDetails?.name || room?.name || 'Habitacion';
 
-    const groupOptions = () => {
-        const groups = Array.from(new Set(
-            state.rooms
-                .map((room) => room.roomGroup)
-                .filter((group) => Boolean(group))
-        ));
-
-        return groups.sort();
+    const getBootstrapModal = (element) => {
+        if (!element || !window.bootstrap?.Modal) return null;
+        return window.bootstrap.Modal.getOrCreateInstance(element);
     };
 
-    const populateWarehouseInputs = () => {
-        if (el.warehouseCabinSelect) {
-            el.warehouseCabinSelect.innerHTML = [
-                '<option value="">Selecciona habitación</option>',
-                ...state.rooms.map((room) => `<option value="${room._id}">${escapeHtml(roomDisplayName(room))}</option>`)
-            ].join('');
-        }
-
-        if (el.warehouseGroupSelect) {
-            const groups = groupOptions();
-            el.warehouseGroupSelect.innerHTML = [
-                '<option value="">Selecciona grupo</option>',
-                ...groups.map((group) => `<option value="${escapeHtml(group)}">${escapeHtml(group)}</option>`)
-            ].join('');
-        }
+    const showModal = (element) => {
+        getBootstrapModal(element)?.show();
     };
 
-    const populateItemWarehouseSelect = () => {
-        if (!el.itemWarehouseSelect) return;
-        el.itemWarehouseSelect.innerHTML = [
-            '<option value="">Selecciona bodega</option>',
-            ...state.warehouses.map((warehouse) => {
-                const scopeLabel = warehouse.scopeType === 'grupo'
-                    ? `Grupo ${warehouse.roomGroup || '-'}`
-                    : (warehouse.cabin?.propertyDetails?.name || 'Cabaña');
-                return `<option value="${warehouse._id}">${escapeHtml(warehouse.name)} | ${escapeHtml(warehouse.bankName || '-') } | ${escapeHtml(scopeLabel)}</option>`;
-            })
+    const hideModal = (element) => {
+        getBootstrapModal(element)?.hide();
+    };
+
+    const populateItemCabinSelect = () => {
+        if (!el.itemCabinSelect) return;
+        el.itemCabinSelect.innerHTML = [
+            '<option value="">Selecciona habitacion</option>',
+            ...state.rooms.map((room) => `<option value="${room._id}">${escapeHtml(roomDisplayName(room))}</option>`)
         ].join('');
     };
 
-    const renderBomRoomChecklist = () => {
-        if (!el.bomRoomChecklist) return;
-        el.bomRoomChecklist.innerHTML = state.rooms.map((room) => `
+    const renderRoomChecklist = (container, checkboxClass, helperText) => {
+        if (!container) return;
+        container.innerHTML = state.rooms.map((room) => `
             <label class="room-option-card flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" class="bom-room-checkbox" value="${room._id}" data-room-group="${escapeHtml(room.roomGroup || '')}">
+                <input type="checkbox" class="${checkboxClass}" value="${room._id}">
                 <div>
                     <p class="mb-0 text-sm font-medium text-gray-800">${escapeHtml(roomDisplayName(room))}</p>
-                    <p class="mb-0 text-xs text-gray-500">Grupo: ${escapeHtml(room.roomGroup || 'Sin grupo')}</p>
+                    <p class="mb-0 text-xs text-gray-500">${helperText}</p>
                 </div>
             </label>
         `).join('') || '<p class="text-gray-500 text-sm">No hay habitaciones disponibles.</p>';
+    };
+
+    const setCheckedRooms = (selector, roomIds) => {
+        const selectedIds = new Set((roomIds || []).map(String));
+        document.querySelectorAll(selector).forEach((checkbox) => {
+            checkbox.checked = selectedIds.has(String(checkbox.value));
+        });
+    };
+
+    const getCheckedRooms = (selector) => {
+        return Array.from(document.querySelectorAll(`${selector}:checked`)).map((checkbox) => ({ id: checkbox.value }));
     };
 
     const createBomLineRow = () => {
@@ -162,17 +163,9 @@
         }
     };
 
-    const getSelectedBomRooms = () => {
-        return Array.from(document.querySelectorAll('.bom-room-checkbox:checked')).map((checkbox) => ({
-            id: checkbox.value,
-            roomGroup: checkbox.getAttribute('data-room-group') || null
-        }));
-    };
-
     const getBomLinesPayload = () => {
         if (!el.bomLinesContainer) return [];
-        const rows = Array.from(el.bomLinesContainer.children);
-        return rows.map((row) => {
+        return Array.from(el.bomLinesContainer.children).map((row) => {
             const item = row.querySelector('.bom-line-item')?.value;
             const quantityPerNight = Number(row.querySelector('.bom-line-qty')?.value || 0);
             const useFactor = Number(row.querySelector('.bom-line-factor')?.value || 1);
@@ -180,25 +173,17 @@
         }).filter((line) => line.item && line.quantityPerNight > 0);
     };
 
-    const toggleWarehouseScopeInputs = () => {
-        const isGroup = el.warehouseScopeType?.value === 'grupo';
-        if (el.warehouseCabinSelect) {
-            el.warehouseCabinSelect.classList.toggle('hidden', isGroup);
-            el.warehouseCabinSelect.required = !isGroup;
-            if (isGroup) el.warehouseCabinSelect.value = '';
-        }
-        if (el.warehouseGroupSelect) {
-            el.warehouseGroupSelect.classList.toggle('hidden', !isGroup);
-            el.warehouseGroupSelect.required = isGroup;
-            if (!isGroup) el.warehouseGroupSelect.value = '';
-        }
-    };
-
-    const toggleBomScopeHint = () => {
-        const isGroup = el.bomScopeType?.value === 'grupo';
-        if (el.bomGroupHint) {
-            el.bomGroupHint.classList.toggle('hidden', !isGroup);
-        }
+    const setBomLines = (lines) => {
+        if (!el.bomLinesContainer) return;
+        el.bomLinesContainer.innerHTML = '';
+        (lines || []).forEach((line) => {
+            const row = createBomLineRow();
+            row.querySelector('.bom-line-item').value = line.item?._id || line.item || '';
+            row.querySelector('.bom-line-qty').value = line.quantityPerNight ?? '';
+            row.querySelector('.bom-line-factor').value = line.useFactor ?? 1;
+            el.bomLinesContainer.appendChild(row);
+        });
+        ensureOneBomLine();
     };
 
     const toggleItemUnitCustom = () => {
@@ -211,19 +196,39 @@
         }
     };
 
+    const toggleInitialPurchaseSection = () => {
+        if (!el.itemInitialPurchaseSection) return;
+        el.itemInitialPurchaseSection.classList.toggle('hidden', Boolean(state.editingItemId));
+    };
+
+    const resetItemFormMode = () => {
+        state.editingItemId = null;
+        el.formItem?.reset();
+        if (el.modalItemTitle) el.modalItemTitle.textContent = 'Nuevo Item';
+        if (el.modalItemSubmit) el.modalItemSubmit.textContent = 'Guardar';
+        toggleItemUnitCustom();
+        toggleInitialPurchaseSection();
+    };
+
+    const resetBOMFormMode = () => {
+        state.editingBOMId = null;
+        el.formBOMTemplate?.reset();
+        if (el.modalBOMTitle) el.modalBOMTitle.textContent = 'Nueva Regla de Consumo BOM';
+        if (el.modalBOMSubmit) el.modalBOMSubmit.textContent = 'Guardar BOM';
+        setCheckedRooms('.bom-room-checkbox', []);
+        setBomLines([]);
+    };
+
     const setupTabs = () => {
         el.tabs.forEach((button) => {
             button.addEventListener('click', () => {
                 const tab = button.getAttribute('data-tab');
-
                 el.tabs.forEach((btn) => btn.classList.remove('active', 'border-teal-500', 'text-teal-600'));
                 button.classList.add('active', 'border-teal-500', 'text-teal-600');
-
                 el.tabContents.forEach((content) => {
                     content.classList.add('hidden');
                     content.classList.remove('active');
                 });
-
                 const target = document.getElementById(`inventory-tab-${tab}`);
                 if (target) {
                     target.classList.remove('hidden');
@@ -236,30 +241,31 @@
     const renderDashboard = async () => {
         const result = await request('/dashboard/stock');
         const data = result.data || {};
-        const stockByBank = data.stockByBank || {};
+        const stockByCabin = data.stockByCabin || {};
         const lowStockItems = data.lowStockItems || [];
 
         if (el.totalItems) el.totalItems.textContent = data.totalItems || 0;
         if (el.lowStock) el.lowStock.textContent = data.lowStockCount || 0;
-        if (el.bankCount) el.bankCount.textContent = Object.keys(stockByBank).length;
+        if (el.roomCount) el.roomCount.textContent = Object.keys(stockByCabin).length;
 
-        const totalUnits = Object.values(stockByBank).reduce((sum, bank) => sum + Number(bank.stockUnits || 0), 0);
+        const totalUnits = Object.values(stockByCabin).reduce((sum, cabin) => sum + Number(cabin.stockUnits || 0), 0);
         if (el.totalUnits) el.totalUnits.textContent = money(totalUnits);
 
-        if (el.stockByBank) {
-            el.stockByBank.innerHTML = Object.entries(stockByBank).map(([bank, values]) => `
+        if (el.stockByCabin) {
+            el.stockByCabin.innerHTML = Object.entries(stockByCabin).map(([cabinName, values]) => `
                 <div class="flex items-center justify-between bg-gray-100 rounded p-2">
-                    <span class="font-medium text-gray-700">${bank}</span>
+                    <span class="font-medium text-gray-700">${escapeHtml(cabinName)}</span>
                     <span class="text-sm text-gray-600">Items: ${values.items} | Unidades: ${money(values.stockUnits)}</span>
                 </div>
-            `).join('') || '<p class="text-gray-500">Sin información por banco.</p>';
+            `).join('') || '<p class="text-gray-500">Sin informacion por habitacion.</p>';
         }
 
         if (el.criticalItems) {
             el.criticalItems.innerHTML = lowStockItems.map((item) => `
                 <div class="border border-red-200 bg-red-50 rounded p-2">
-                    <p class="font-semibold text-red-700">${item.name}</p>
-                    <p class="text-xs text-red-600">Stock ${item.stockCurrent} / Min ${item.stockMin} | ${item.unit}</p>
+                    <p class="font-semibold text-red-700">${escapeHtml(item.name)}</p>
+                    <p class="text-xs text-red-600">Stock ${item.stockCurrent} / Min ${item.stockMin} | ${escapeHtml(item.unit)}</p>
+                    <p class="text-xs text-red-500 mt-1">Habitacion: ${escapeHtml(roomDisplayName(item.cabin))}</p>
                 </div>
             `).join('') || '<p class="text-gray-500">No hay items en bajo stock.</p>';
         }
@@ -268,21 +274,67 @@
     const renderItems = async () => {
         const result = await request('/items');
         state.items = result.data || [];
-        const rows = (result.data || []).map((item) => `
+        const rows = state.items.map((item) => `
             <tr>
-                <td>${item.name}</td>
-                <td>${item.itemType}</td>
-                <td>${item.unit}</td>
+                <td>${escapeHtml(item.name)}</td>
+                <td>${escapeHtml(item.itemType)}</td>
+                <td>${escapeHtml(item.unit)}</td>
                 <td>${item.stockCurrent}</td>
                 <td>${item.stockMin}</td>
-                <td>${item.warehouse?.name || '-'}</td>
-                <td>${item.warehouse?.bankName || '-'}</td>
+                <td>${escapeHtml(roomDisplayName(item.cabin))}</td>
+                <td>
+                    ${isMasterAdmin ? `
+                        <div class="flex gap-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-edit-item="${item._id}">Editar</button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" data-delete-item="${item._id}">Eliminar</button>
+                        </div>
+                    ` : '<span class="text-xs text-gray-400">Sin acciones</span>'}
+                </td>
             </tr>
         `).join('');
-        if (el.itemsTableBody) el.itemsTableBody.innerHTML = rows || '<tr><td colspan="7" class="text-center text-gray-500">Sin items</td></tr>';
+
+        if (el.itemsTableBody) {
+            el.itemsTableBody.innerHTML = rows || '<tr><td colspan="7" class="text-center text-gray-500">Sin items</td></tr>';
+            el.itemsTableBody.querySelectorAll('[data-edit-item]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const item = state.items.find((entry) => String(entry._id) === button.getAttribute('data-edit-item'));
+                    if (!item || !el.formItem) return;
+                    state.editingItemId = item._id;
+                    if (el.modalItemTitle) el.modalItemTitle.textContent = `Editar Item: ${item.name}`;
+                    if (el.modalItemSubmit) el.modalItemSubmit.textContent = 'Actualizar';
+                    el.formItem.elements.name.value = item.name || '';
+                    el.formItem.elements.description.value = item.description || '';
+                    el.formItem.elements.itemType.value = item.itemType || 'directo';
+                    const unitOptionExists = Array.from(el.itemUnitSelect?.options || []).some((option) => option.value === item.unit);
+                    if (el.itemUnitSelect) el.itemUnitSelect.value = unitOptionExists ? item.unit : 'otra';
+                    if (el.itemUnitCustom) el.itemUnitCustom.value = unitOptionExists ? '' : (item.unit || '');
+                    el.formItem.elements.cabin.value = item.cabin?._id || item.cabin || '';
+                    el.formItem.elements.stockCurrent.value = item.stockCurrent ?? 0;
+                    el.formItem.elements.stockMin.value = item.stockMin ?? 0;
+                    if (el.formItem.elements.initialUnitCost) el.formItem.elements.initialUnitCost.value = '';
+                    if (el.formItem.elements.initialSupplier) el.formItem.elements.initialSupplier.value = '';
+                    if (el.formItem.elements.initialInvoiceNumber) el.formItem.elements.initialInvoiceNumber.value = '';
+                    if (el.formItem.elements.initialPurchaseDate) el.formItem.elements.initialPurchaseDate.value = '';
+                    toggleItemUnitCustom();
+                    toggleInitialPurchaseSection();
+                    showModal(el.modalItem);
+                });
+            });
+            el.itemsTableBody.querySelectorAll('[data-delete-item]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    try {
+                        if (!confirm('Se eliminara el item seleccionado. Esta accion no se puede deshacer.')) return;
+                        await request(`/items/${button.getAttribute('data-delete-item')}`, { method: 'DELETE' });
+                        await Promise.all([renderItems(), renderDashboard(), renderConsumptionMetrics()]);
+                        alert('Item eliminado correctamente');
+                    } catch (error) {
+                        showError(error);
+                    }
+                });
+            });
+        }
 
         if (el.bomLinesContainer) {
-            // Refresh product options in BOM rows
             const existingRows = Array.from(el.bomLinesContainer.children);
             const oldValues = existingRows.map((row) => ({
                 item: row.querySelector('.bom-line-item')?.value,
@@ -301,63 +353,93 @@
         }
     };
 
-    const renderWarehouses = async () => {
-        const result = await request('/warehouses');
-        state.warehouses = result.data || [];
-        const rows = (result.data || []).map((warehouse) => `
-            <tr>
-                <td>${warehouse.name}</td>
-                <td>${warehouse.bankName || '-'}</td>
-                <td>${warehouse.scopeType}</td>
-                <td>${warehouse.cabin?.propertyDetails?.name || '-'}</td>
-                <td>${warehouse.roomGroup || '-'}</td>
-                <td>${warehouse.active ? 'Activa' : 'Inactiva'}</td>
-            </tr>
-        `).join('');
-        if (el.warehousesTableBody) el.warehousesTableBody.innerHTML = rows || '<tr><td colspan="6" class="text-center text-gray-500">Sin bodegas</td></tr>';
-        populateItemWarehouseSelect();
+    const renderMetricGroups = async () => {
+        const result = await request('/metric-groups');
+        state.metricGroups = result.data || [];
+        if (el.metricGroupsList) {
+            el.metricGroupsList.innerHTML = state.metricGroups.map((group) => `
+                <div class="border border-gray-200 rounded-lg p-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">${escapeHtml(group.name)}</h4>
+                            <p class="text-xs text-gray-500 mt-1">${escapeHtml(group.description || 'Sin descripcion')}</p>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded bg-sky-100 text-sky-700">${(group.cabins || []).length} habitaciones</span>
+                    </div>
+                    <p class="text-sm text-gray-700 mt-3">${(group.cabins || []).map((room) => escapeHtml(roomDisplayName(room))).join(', ') || 'Sin habitaciones asignadas'}</p>
+                </div>
+            `).join('') || '<p class="text-gray-500">No hay grupos metricos registrados.</p>';
+        }
     };
 
     const renderBOM = async () => {
         const result = await request('/bom-templates');
-        const cards = (result.data || []).map((template) => {
-            const lines = (template.lines || []).map((line) => `${line.item?.name || 'Item'}: ${line.quantityPerNight} x factor ${line.useFactor || 1}`).join('<br>');
-            return `
-                <div class="border border-gray-200 rounded-lg p-3">
-                    <div class="flex items-center justify-between">
-                        <h4 class="font-semibold text-gray-800">${template.name}</h4>
-                        <span class="text-xs px-2 py-1 rounded bg-teal-100 text-teal-700">${template.scopeType}</span>
+        state.bomTemplates = result.data || [];
+        if (el.bomList) {
+            el.bomList.innerHTML = state.bomTemplates.map((template) => {
+                const lines = (template.lines || []).map((line) => `${escapeHtml(line.item?.name || 'Item')}: ${line.quantityPerNight} x factor ${line.useFactor || 1}`).join('<br>');
+                return `
+                    <div class="border border-gray-200 rounded-lg p-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-semibold text-gray-800">${escapeHtml(template.name)}</h4>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs px-2 py-1 rounded bg-teal-100 text-teal-700">Habitacion</span>
+                                ${isMasterAdmin ? `<button type="button" class="btn btn-outline-primary btn-sm" data-edit-bom="${template._id}">Editar</button><button type="button" class="btn btn-outline-danger btn-sm" data-delete-bom="${template._id}">Desactivar</button>` : ''}
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Habitacion: ${escapeHtml(roomDisplayName(template.cabin))}</p>
+                        <p class="text-sm text-gray-700 mt-2">${lines || 'Sin lineas'}</p>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">Cabaña: ${template.cabin?.propertyDetails?.name || '-'} | Grupo: ${template.roomGroup || '-'}</p>
-                    <p class="text-sm text-gray-700 mt-2">${lines || 'Sin líneas'}</p>
-                </div>
-            `;
-        }).join('');
+                `;
+            }).join('') || '<p class="text-gray-500">No hay plantillas BOM.</p>';
 
-        if (el.bomList) el.bomList.innerHTML = cards || '<p class="text-gray-500">No hay plantillas BOM.</p>';
+            el.bomList.querySelectorAll('[data-edit-bom]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const template = state.bomTemplates.find((entry) => String(entry._id) === button.getAttribute('data-edit-bom'));
+                    if (!template || !el.formBOMTemplate) return;
+                    state.editingBOMId = template._id;
+                    if (el.modalBOMTitle) el.modalBOMTitle.textContent = `Editar BOM: ${template.name}`;
+                    if (el.modalBOMSubmit) el.modalBOMSubmit.textContent = 'Actualizar BOM';
+                    el.formBOMTemplate.elements.name.value = template.name || '';
+                    setCheckedRooms('.bom-room-checkbox', [template.cabin?._id || template.cabin].filter(Boolean));
+                    setBomLines(template.lines || []);
+                    showModal(el.modalBOMTemplate);
+                });
+            });
+            el.bomList.querySelectorAll('[data-delete-bom]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    try {
+                        if (!confirm('La regla BOM se desactivara y dejara de aplicarse en consumos futuros.')) return;
+                        await request(`/bom-templates/${button.getAttribute('data-delete-bom')}`, { method: 'DELETE' });
+                        await renderBOM();
+                        alert('Regla BOM desactivada correctamente');
+                    } catch (error) {
+                        showError(error);
+                    }
+                });
+            });
+        }
     };
 
     const renderAlerts = async () => {
         const result = await request('/alerts?status=open');
-        const cards = (result.data || []).map((alertItem) => `
-            <div class="border border-yellow-200 bg-yellow-50 rounded-lg p-3">
-                <div class="flex items-center justify-between gap-2">
-                    <p class="font-semibold text-yellow-800">${alertItem.alertType}</p>
-                    <button class="btn btn-sm btn-outline-success" data-resolve-alert="${alertItem._id}">Resolver</button>
-                </div>
-                <p class="text-sm text-yellow-700 mt-2">${alertItem.message}</p>
-                <p class="text-xs text-yellow-600 mt-1">Item: ${alertItem.item?.name || '-'} | Bodega: ${alertItem.warehouse?.name || '-'}</p>
-            </div>
-        `).join('');
-
         if (el.alertsList) {
-            el.alertsList.innerHTML = cards || '<p class="text-gray-500">Sin alertas abiertas.</p>';
+            el.alertsList.innerHTML = (result.data || []).map((alertItem) => `
+                <div class="border border-yellow-200 bg-yellow-50 rounded-lg p-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="font-semibold text-yellow-800">${escapeHtml(alertItem.alertType)}</p>
+                        <button class="btn btn-sm btn-outline-success" data-resolve-alert="${alertItem._id}">Resolver</button>
+                    </div>
+                    <p class="text-sm text-yellow-700 mt-2">${escapeHtml(alertItem.message)}</p>
+                    <p class="text-xs text-yellow-600 mt-1">Item: ${escapeHtml(alertItem.item?.name || '-')} | Habitacion: ${escapeHtml(roomDisplayName(alertItem.cabin))}</p>
+                </div>
+            `).join('') || '<p class="text-gray-500">Sin alertas abiertas.</p>';
+
             el.alertsList.querySelectorAll('[data-resolve-alert]').forEach((button) => {
                 button.addEventListener('click', async () => {
                     try {
                         await request(`/alerts/${button.getAttribute('data-resolve-alert')}/resolve`, { method: 'PUT' });
-                        await renderAlerts();
-                        await renderDashboard();
+                        await Promise.all([renderAlerts(), renderDashboard()]);
                     } catch (error) {
                         showError(error);
                     }
@@ -367,42 +449,58 @@
     };
 
     const renderConsumptionMetrics = async () => {
-        const result = await request('/dashboard/stock');
-        const stockByBank = result.data?.stockByBank || {};
+        await renderMetricGroups();
+        const dashboards = await Promise.all(state.metricGroups.map(async (group) => {
+            try {
+                const result = await request(`/metric-groups/${group._id}/dashboard`);
+                return result.data;
+            } catch (error) {
+                return null;
+            }
+        }));
 
-        const rows = Object.entries(stockByBank).map(([bankName, values]) => `
+        const rows = dashboards.filter(Boolean).map((dashboard) => `
             <tr>
-                <td>${bankName}</td>
-                <td>${values.items || 0}</td>
-                <td>${money(values.stockUnits || 0)}</td>
+                <td>${escapeHtml(dashboard.metricGroup?.name || '-')}</td>
+                <td>${dashboard.metricGroup?.cabins?.length || 0}</td>
+                <td>${dashboard.itemCount || 0}</td>
+                <td>${money(dashboard.totalStock || 0)}</td>
             </tr>
         `).join('');
 
         if (el.consumptionMetricsTableBody) {
-            el.consumptionMetricsTableBody.innerHTML = rows || '<tr><td colspan="3" class="text-center text-gray-500">Sin métricas</td></tr>';
+            el.consumptionMetricsTableBody.innerHTML = rows || '<tr><td colspan="4" class="text-center text-gray-500">Sin metricas</td></tr>';
         }
     };
 
+    const loadRooms = async () => {
+        const response = await fetch('/api/habitaciones');
+        if (!response.ok) {
+            throw new Error('No se pudieron cargar las habitaciones');
+        }
+        const rooms = await response.json();
+        state.rooms = Array.isArray(rooms) ? rooms : [];
+        populateItemCabinSelect();
+        renderRoomChecklist(el.metricGroupRoomChecklist, 'metric-group-room-checkbox', 'Se asociara al grupo para metricas');
+        renderRoomChecklist(el.bomRoomChecklist, 'bom-room-checkbox', 'Se creara una regla individual para esta habitacion');
+    };
+
     const setupForms = () => {
-        if (el.formWarehouse) {
-            el.formWarehouse.addEventListener('submit', async (event) => {
+        if (el.formMetricGroup) {
+            el.formMetricGroup.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 try {
-                    const fd = new FormData(el.formWarehouse);
+                    const fd = new FormData(el.formMetricGroup);
                     const payload = Object.fromEntries(fd.entries());
-                    if (payload.scopeType === 'cabana') {
-                        delete payload.roomGroup;
-                    } else {
-                        delete payload.cabin;
+                    payload.cabins = getCheckedRooms('.metric-group-room-checkbox').map((room) => room.id);
+                    if (payload.cabins.length === 0) {
+                        throw new Error('Selecciona al menos una habitacion');
                     }
-                    if (!payload.cabin) delete payload.cabin;
-                    if (!payload.roomGroup) delete payload.roomGroup;
-                    await request('/warehouses', { method: 'POST', body: JSON.stringify(payload) });
-                    el.formWarehouse.reset();
-                    toggleWarehouseScopeInputs();
-                    await renderWarehouses();
-                    await renderDashboard();
-                    alert('Bodega creada correctamente');
+                    await request('/metric-groups', { method: 'POST', body: JSON.stringify(payload) });
+                    el.formMetricGroup.reset();
+                    setCheckedRooms('.metric-group-room-checkbox', []);
+                    await Promise.all([renderMetricGroups(), renderConsumptionMetrics()]);
+                    alert('Grupo metrico creado correctamente');
                 } catch (error) {
                     showError(error);
                 }
@@ -415,7 +513,6 @@
                 try {
                     const fd = new FormData(el.formItem);
                     const payload = Object.fromEntries(fd.entries());
-
                     if (payload.unit === 'otra') {
                         const customUnit = String(payload.unitCustom || '').trim();
                         if (!customUnit) {
@@ -423,15 +520,25 @@
                         }
                         payload.unit = customUnit;
                     }
-
                     delete payload.unitCustom;
                     payload.stockCurrent = Number(payload.stockCurrent || 0);
                     payload.stockMin = Number(payload.stockMin || 0);
-                    await request('/items', { method: 'POST', body: JSON.stringify(payload) });
-                    el.formItem.reset();
-                    toggleItemUnitCustom();
-                    await Promise.all([renderItems(), renderDashboard()]);
-                    alert('Item creado correctamente');
+                    const isEditingItem = Boolean(state.editingItemId);
+                    if (isEditingItem) {
+                        delete payload.initialUnitCost;
+                        delete payload.initialSupplier;
+                        delete payload.initialInvoiceNumber;
+                        delete payload.initialPurchaseDate;
+                    } else if (payload.initialUnitCost !== undefined && payload.initialUnitCost !== '') {
+                        payload.initialUnitCost = Number(payload.initialUnitCost || 0);
+                    }
+                    const path = isEditingItem ? `/items/${state.editingItemId}` : '/items';
+                    const method = isEditingItem ? 'PUT' : 'POST';
+                    await request(path, { method, body: JSON.stringify(payload) });
+                    resetItemFormMode();
+                    hideModal(el.modalItem);
+                    await Promise.all([renderItems(), renderDashboard(), renderConsumptionMetrics()]);
+                    alert(isEditingItem ? 'Item actualizado correctamente' : 'Item creado correctamente');
                 } catch (error) {
                     showError(error);
                 }
@@ -444,52 +551,32 @@
                 try {
                     const fd = new FormData(el.formBOMTemplate);
                     const payload = Object.fromEntries(fd.entries());
-
-                    const selectedRooms = getSelectedBomRooms();
+                    const selectedRooms = getCheckedRooms('.bom-room-checkbox');
                     const lines = getBomLinesPayload();
-
                     if (selectedRooms.length === 0) {
-                        throw new Error('Selecciona al menos una habitación');
+                        throw new Error('Selecciona al menos una habitacion');
                     }
-
                     if (lines.length === 0) {
-                        throw new Error('Agrega al menos una línea de consumo válida');
+                        throw new Error('Agrega al menos una linea de consumo valida');
                     }
-
+                    if (state.editingBOMId && selectedRooms.length !== 1) {
+                        throw new Error('Para editar una regla individual debes seleccionar una sola habitacion');
+                    }
                     payload.lines = lines;
-
-                    if (payload.scopeType === 'cabana') {
-                        payload.cabinIds = selectedRooms.map((room) => room.id);
-                        delete payload.cabin;
-                        delete payload.roomGroup;
+                    payload.scopeType = 'cabana';
+                    if (state.editingBOMId) {
+                        payload.cabin = selectedRooms[0].id;
                     } else {
-                        const nonEmptyGroups = selectedRooms.map((room) => room.roomGroup).filter(Boolean);
-                        const uniqueGroups = Array.from(new Set(nonEmptyGroups));
-
-                        if (uniqueGroups.length !== 1) {
-                            throw new Error('Para scope grupo, selecciona habitaciones del mismo Room Group');
-                        }
-
-                        payload.roomGroup = uniqueGroups[0];
+                        payload.cabinIds = selectedRooms.map((room) => room.id);
                     }
-
-                    await request('/bom-templates', { method: 'POST', body: JSON.stringify(payload) });
-                    el.formBOMTemplate.reset();
-                    if (el.bomRoomChecklist) {
-                        el.bomRoomChecklist.querySelectorAll('.bom-room-checkbox').forEach((checkbox) => {
-                            checkbox.checked = false;
-                        });
-                    }
-                    if (el.bomLinesContainer) {
-                        el.bomLinesContainer.innerHTML = '';
-                        ensureOneBomLine();
-                        const firstFactorInput = el.bomLinesContainer.querySelector('.bom-line-factor');
-                        if (firstFactorInput && !firstFactorInput.value) {
-                            firstFactorInput.value = '1';
-                        }
-                    }
+                    const isEditingBOM = Boolean(state.editingBOMId);
+                    const path = isEditingBOM ? `/bom-templates/${state.editingBOMId}` : '/bom-templates';
+                    const method = isEditingBOM ? 'PUT' : 'POST';
+                    await request(path, { method, body: JSON.stringify(payload) });
+                    resetBOMFormMode();
+                    hideModal(el.modalBOMTemplate);
                     await renderBOM();
-                    alert('Regla BOM creada correctamente');
+                    alert(isEditingBOM ? 'Regla BOM actualizada correctamente' : 'Regla BOM creada correctamente');
                 } catch (error) {
                     showError(error);
                 }
@@ -498,20 +585,17 @@
     };
 
     const setupActions = () => {
-        el.warehouseScopeType?.addEventListener('change', toggleWarehouseScopeInputs);
         el.itemUnitSelect?.addEventListener('change', toggleItemUnitCustom);
-        el.bomScopeType?.addEventListener('change', toggleBomScopeHint);
         el.btnAddBomLine?.addEventListener('click', () => {
             el.bomLinesContainer?.appendChild(createBomLineRow());
         });
-
         if (el.btnRunConsumption) {
             el.btnRunConsumption.addEventListener('click', async () => {
                 try {
                     toggleSpinner(true);
                     const result = await request('/cron/run-checkout-consumption', { method: 'POST' });
                     alert(`Consumo ejecutado. Reservas evaluadas: ${result.data?.totalCandidates || 0}`);
-                    await Promise.all([renderAlerts(), renderDashboard()]);
+                    await Promise.all([renderAlerts(), renderDashboard(), renderConsumptionMetrics()]);
                 } catch (error) {
                     showError(error);
                 } finally {
@@ -521,21 +605,12 @@
         }
 
         el.btnRefreshItems?.addEventListener('click', renderItems);
-        el.btnRefreshWarehouses?.addEventListener('click', renderWarehouses);
+        el.btnRefreshGroups?.addEventListener('click', renderMetricGroups);
         el.btnRefreshBom?.addEventListener('click', renderBOM);
         el.btnRefreshAlerts?.addEventListener('click', renderAlerts);
         el.btnRefreshConsumptionMetrics?.addEventListener('click', renderConsumptionMetrics);
-    };
-
-    const loadRooms = async () => {
-        const response = await fetch('/api/habitaciones');
-        if (!response.ok) {
-            throw new Error('No se pudieron cargar las habitaciones');
-        }
-        const rooms = await response.json();
-        state.rooms = Array.isArray(rooms) ? rooms : [];
-        populateWarehouseInputs();
-        renderBomRoomChecklist();
+        el.modalItem?.addEventListener('hidden.bs.modal', resetItemFormMode);
+        el.modalBOMTemplate?.addEventListener('hidden.bs.modal', resetBOMFormMode);
     };
 
     const initialize = async () => {
@@ -544,21 +619,18 @@
             setupTabs();
             setupForms();
             setupActions();
-
             await loadRooms();
             await Promise.all([
                 renderDashboard(),
                 renderItems(),
-                renderWarehouses(),
+                renderMetricGroups(),
                 renderBOM(),
                 renderAlerts(),
                 renderConsumptionMetrics()
             ]);
-
             ensureOneBomLine();
-            toggleWarehouseScopeInputs();
-            toggleBomScopeHint();
             toggleItemUnitCustom();
+            toggleInitialPurchaseSection();
         } catch (error) {
             showError(error);
         } finally {

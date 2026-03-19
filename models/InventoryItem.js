@@ -35,9 +35,9 @@ const inventoryItemSchema = new mongoose.Schema({
         default: 0,
         min: 0
     },
-    warehouse: {
+    cabin: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'InventoryWarehouse',
+        ref: 'habitaciones',
         required: true
     },
     active: {
@@ -53,6 +53,6 @@ const inventoryItemSchema = new mongoose.Schema({
     timestamps: true
 });
 
-inventoryItemSchema.index({ warehouse: 1, name: 1 }, { unique: true });
+inventoryItemSchema.index({ cabin: 1, name: 1 }, { unique: true });
 
 module.exports = mongoose.model('InventoryItem', inventoryItemSchema);

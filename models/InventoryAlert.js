@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const inventoryAlertSchema = new mongoose.Schema({
-    warehouse: {
+    cabin: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'InventoryWarehouse',
+        ref: 'habitaciones',
         required: true
     },
     item: {

@@ -10,16 +10,6 @@ const {
 
 router.use(ensureAuthenticated);
 
-// Warehouses by cabin/group (no global warehouse)
-router.post(
-    '/warehouses',
-    requireMasterAdmin,
-    inventoryController.createWarehouseValidators,
-    validationRequest,
-    inventoryController.createWarehouse
-);
-router.get('/warehouses', inventoryController.listWarehouses);
-
 // Inventory items
 router.post(
     '/items',
@@ -29,6 +19,14 @@ router.post(
     inventoryController.createItem
 );
 router.get('/items', inventoryController.listItems);
+router.put(
+    '/items/:id',
+    requireMasterAdmin,
+    inventoryController.updateItemValidators,
+    validationRequest,
+    inventoryController.updateItem
+);
+router.delete('/items/:id', requireMasterAdmin, inventoryController.deleteItem);
 
 // BOM templates by cabin/group
 router.post(
@@ -39,6 +37,17 @@ router.post(
     inventoryController.createBOMTemplate
 );
 router.get('/bom-templates', inventoryController.listBOMTemplates);
+router.put(
+    '/bom-templates/:id',
+    requireMasterAdmin,
+    inventoryController.updateBOMTemplateValidators,
+    validationRequest,
+    inventoryController.updateBOMTemplate
+);
+router.delete('/bom-templates/:id', requireMasterAdmin, inventoryController.deleteBOMTemplate);
+
+// Movement history / kardex
+router.get('/movements', inventoryController.listMovements);
 
 // Purchases (kardex by lot)
 router.post(
