@@ -1087,6 +1087,44 @@ async function getDisponibilidad(chaletId, fechaLlegada, fechaSalida) {
     return true;
 }
 
+function getUtcDayBounds(dateValue) {
+    const date = new Date(dateValue);
+    const start = new Date(Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        0,
+        0,
+        0,
+        0
+    ));
+    const end = new Date(start);
+    end.setUTCHours(23, 59, 59, 999);
+
+    return { start, end };
+}
+
+async function hasAdjacentReservationForMinNights(resourceId, checkInDate, checkOutDate) {
+    const excludedStatuses = ['playground', 'no-show', 'cancelled'];
+    const { start: checkInStart, end: checkInEnd } = getUtcDayBounds(checkInDate);
+    const { start: checkOutStart, end: checkOutEnd } = getUtcDayBounds(checkOutDate);
+
+    const [adjacentBefore, adjacentAfter] = await Promise.all([
+        Reservas.exists({
+            resourceId,
+            status: { $nin: excludedStatuses },
+            departureDate: { $gte: checkInStart, $lte: checkInEnd },
+        }),
+        Reservas.exists({
+            resourceId,
+            status: { $nin: excludedStatuses },
+            arrivalDate: { $gte: checkOutStart, $lte: checkOutEnd },
+        }),
+    ]);
+
+    return Boolean(adjacentBefore || adjacentAfter);
+}
+
 async function getDisponibilidadDeRestricciones(chalets, fechaLlegada, fechaSalida, huespedes) {
     const fechaLlegadaDate = new Date(fechaLlegada);
     const fechaSalidaDate = new Date(fechaSalida);
@@ -1131,6 +1169,17 @@ async function getDisponibilidadDeRestricciones(chalets, fechaLlegada, fechaSali
             });
             
             if (disponibilidadNochesMinimas && nNights < disponibilidadNochesMinimas.min) {
+                const hasAdjacentReservation = await hasAdjacentReservationForMinNights(
+                    chalet._id,
+                    fechaLlegadaDate,
+                    fechaSalidaDate
+                );
+
+                if (hasAdjacentReservation) {
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    continue;
+                }
+
                 errorMessages.push({
                     type: 'noches_minimas',
                     message: `El alojamiento requiere una estancia mínima de ${disponibilidadNochesMinimas.min} noches para las fechas seleccionadas.`,

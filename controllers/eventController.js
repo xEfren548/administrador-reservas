@@ -34,6 +34,44 @@ const NotFoundError = require('../common/error/not-found-error');
 const SendMessages = require('../common/tasks/send-messages');
 const ensureAuthenticated = require('../common/middlewares/authMiddleware');
 
+function getUtcDayBounds(dateValue) {
+    const date = new Date(dateValue);
+    const start = new Date(Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        0,
+        0,
+        0,
+        0
+    ));
+    const end = new Date(start);
+    end.setUTCHours(23, 59, 59, 999);
+
+    return { start, end };
+}
+
+async function hasAdjacentReservationForMinNights(resourceId, checkInDate, checkOutDate) {
+    const excludedStatuses = ['playground', 'no-show', 'cancelled'];
+    const { start: checkInStart, end: checkInEnd } = getUtcDayBounds(checkInDate);
+    const { start: checkOutStart, end: checkOutEnd } = getUtcDayBounds(checkOutDate);
+
+    const [adjacentBefore, adjacentAfter] = await Promise.all([
+        Documento.exists({
+            resourceId,
+            status: { $nin: excludedStatuses },
+            departureDate: { $gte: checkInStart, $lte: checkInEnd },
+        }),
+        Documento.exists({
+            resourceId,
+            status: { $nin: excludedStatuses },
+            arrivalDate: { $gte: checkOutStart, $lte: checkOutEnd },
+        }),
+    ]);
+
+    return Boolean(adjacentBefore || adjacentAfter);
+}
+
 const createReservationValidators = [
     check('arrivalDate')
         .notEmpty().withMessage('Start date is required')
@@ -1324,7 +1362,15 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: 'restriccion' });
         if (fechasBloqueadasPorRestriccion) {
             if (nNights < fechasBloqueadasPorRestriccion.min) {
-                return res.status(400).send({ message: `La estancia minima es de ${fechasBloqueadas.min} noches` });
+                const hasAdjacentReservation = await hasAdjacentReservationForMinNights(
+                    mongooseChaletId,
+                    arrivalDateObj,
+                    departureDateObj
+                );
+
+                if (!hasAdjacentReservation) {
+                    return res.status(400).send({ message: `La estancia minima es de ${fechasBloqueadasPorRestriccion.min} noches` });
+                }
             }
         }
 
@@ -2600,7 +2646,15 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
     const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: resourceId, type: 'restriccion' });
     if (fechasBloqueadasPorRestriccion && !isForOwner) {
         if (nNights < fechasBloqueadasPorRestriccion.min) {
-            return false;
+            const hasAdjacentReservation = await hasAdjacentReservationForMinNights(
+                newResourceId,
+                arrivalDateObj,
+                departureDateObj
+            );
+
+            if (!hasAdjacentReservation) {
+                return false;
+            }
         }
     }
 
@@ -3342,7 +3396,15 @@ async function cotizadorChaletsyPrecios(req, res) {
                 const disponibilidadNochesMinimas = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: chalet._id, type: 'restriccion' });
                 if (disponibilidadNochesMinimas) {
                     if (nNights < disponibilidadNochesMinimas.min) {
-                        continue;
+                        const hasAdjacentReservation = await hasAdjacentReservationForMinNights(
+                            chalet._id,
+                            startDate,
+                            endDate
+                        );
+
+                        if (!hasAdjacentReservation) {
+                            continue;
+                        }
                     }
                 }
 
@@ -3651,7 +3713,15 @@ async function obtenerHabitacionesDisponibles(req, res) {
                 }).lean();
 
                 if (nochesMin && nNights < Number(nochesMin.min)) {
-                    continue; // No cumple noches mínimas
+                        const hasAdjacentReservation = await hasAdjacentReservationForMinNights(
+                            c._id,
+                            startDate,
+                            endDate
+                        );
+
+                        if (!hasAdjacentReservation) {
+                            continue; // No cumple noches mínimas
+                        }
                 }
             }
 
@@ -3688,7 +3758,15 @@ async function obtenerHabitacionesDisponibles(req, res) {
                     }).lean();
 
                     if (nochesMin && nNights < Number(nochesMin.min)) {
-                        continue; // Esta habitación no cumple
+                        const hasAdjacentReservation = await hasAdjacentReservationForMinNights(
+                            c._id,
+                            startDate,
+                            endDate
+                        );
+
+                        if (!hasAdjacentReservation) {
+                            continue; // Esta habitación no cumple
+                        }
                     }
                 }
 
