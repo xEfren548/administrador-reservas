@@ -10,6 +10,29 @@ let participantes = []; // Lista de participantes de la cuenta actual
 let participantesOrganizacion = []; // Lista temporal de participantes para nueva organización
 let organizacionSeleccionada = null; // Organización seleccionada para gestionar participantes
 let vistaSolicitudesActiva = 'cuenta';
+let categoriasFinancieras = [];
+let categoriasFijas = ['Otro', 'Transferencia'];
+let categoriasEnEdicion = [];
+
+const CATEGORIAS_FALLBACK = [
+    'Otro',
+    'Alimentación',
+    'Transporte',
+    'Servicios',
+    'Mantenimiento',
+    'Compras',
+    'Salud',
+    'Entretenimiento',
+    'Educación',
+    'Hogar',
+    'Salario',
+    'Venta',
+    'Inversión',
+    'Préstamo',
+    'Reembolso',
+    'Reserva',
+    'Transferencia'
+];
 
 // Funciones de spinner global
 function mostrarSpinner() {
@@ -28,8 +51,189 @@ function ocultarSpinner() {
     }
 }
 
+function normalizarCategorias(categorias = []) {
+    const lista = categorias
+        .filter((categoria) => typeof categoria === 'string')
+        .map((categoria) => categoria.trim())
+        .filter((categoria) => categoria.length > 0);
+
+    const resultado = [];
+    const llaves = new Set();
+
+    lista.forEach((categoria) => {
+        const key = categoria.toLowerCase();
+        if (!llaves.has(key)) {
+            llaves.add(key);
+            resultado.push(categoria);
+        }
+    });
+
+    return resultado;
+}
+
+function popularSelectCategorias(selector, selectedValue = 'Otro') {
+    const select = $(selector);
+    if (!select.length) return;
+
+    const categoriasDisponibles = categoriasFinancieras
+        .filter((categoria) => categoria !== 'Transferencia');
+
+    const categoriasFinales = [...categoriasDisponibles];
+
+    if (selectedValue && !categoriasFinales.includes(selectedValue)) {
+        categoriasFinales.push(selectedValue);
+    }
+
+    select.empty();
+
+    categoriasFinales.forEach((categoria) => {
+        select.append($('<option>', { value: categoria, text: categoria }));
+    });
+
+    const categoriaObjetivo = categoriasFinales.includes(selectedValue)
+        ? selectedValue
+        : (categoriasFinales.includes('Otro') ? 'Otro' : categoriasFinales[0]);
+
+    if (categoriaObjetivo) {
+        select.val(categoriaObjetivo);
+    }
+}
+
+function aplicarCategoriasEnFormularios() {
+    popularSelectCategorias('#transaccion-categoria', $('#transaccion-categoria').val() || 'Otro');
+    popularSelectCategorias('#solicitud-categoria', $('#solicitud-categoria').val() || 'Otro');
+    popularSelectCategorias('#rec-categoria', $('#rec-categoria').val() || 'Otro');
+    popularSelectCategorias('#dif-categoria', $('#dif-categoria').val() || 'Otro');
+}
+
+async function cargarCategoriasFinancieras() {
+    try {
+        const response = await fetch('/api/sw/categorias');
+        const data = await response.json();
+
+        if (data.success && data.data && Array.isArray(data.data.categorias)) {
+            categoriasFinancieras = normalizarCategorias(data.data.categorias);
+            categoriasFijas = Array.isArray(data.data.categoriasFijas)
+                ? data.data.categoriasFijas
+                : ['Otro', 'Transferencia'];
+        } else {
+            categoriasFinancieras = [...CATEGORIAS_FALLBACK];
+        }
+    } catch (error) {
+        console.error('Error al cargar categorías financieras:', error);
+        categoriasFinancieras = [...CATEGORIAS_FALLBACK];
+    }
+
+    if (categoriasFinancieras.length === 0) {
+        categoriasFinancieras = [...CATEGORIAS_FALLBACK];
+    }
+
+    aplicarCategoriasEnFormularios();
+}
+
+function renderizarCategoriasEnModal() {
+    const container = $('#lista-categorias-financieras');
+    container.empty();
+
+    if (categoriasEnEdicion.length === 0) {
+        container.html('<p class="text-gray-500 text-center py-3">No hay categorías configuradas</p>');
+        return;
+    }
+
+    categoriasEnEdicion.forEach((categoria, index) => {
+        const esFija = categoriasFijas.some((catFija) => catFija.toLowerCase() === categoria.toLowerCase());
+
+        container.append(`
+            <div class="d-flex justify-content-between align-items-center border rounded px-3 py-2 bg-gray-50">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-secondary">${index + 1}</span>
+                    <span class="text-gray-800">${categoria}</span>
+                    ${esFija ? '<span class="badge bg-info text-dark">Fija</span>' : ''}
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarCategoriaEdicionPorIndice(${index})" ${esFija ? 'disabled' : ''}>
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `);
+    });
+}
+
+function agregarCategoriaEdicion() {
+    const input = $('#input-nueva-categoria');
+    const categoriaNueva = input.val().trim();
+
+    if (!categoriaNueva) {
+        mostrarError('Ingresa un nombre de categoría');
+        return;
+    }
+
+    const existe = categoriasEnEdicion.some((categoria) => categoria.toLowerCase() === categoriaNueva.toLowerCase());
+    if (existe) {
+        mostrarError('Esa categoría ya existe');
+        return;
+    }
+
+    categoriasEnEdicion.push(categoriaNueva);
+    input.val('');
+    renderizarCategoriasEnModal();
+}
+
+function eliminarCategoriaEdicion(categoria) {
+    const esFija = categoriasFijas.some((catFija) => catFija.toLowerCase() === categoria.toLowerCase());
+    if (esFija) {
+        return;
+    }
+
+    categoriasEnEdicion = categoriasEnEdicion.filter((cat) => cat.toLowerCase() !== categoria.toLowerCase());
+    renderizarCategoriasEnModal();
+}
+
+function eliminarCategoriaEdicionPorIndice(index) {
+    if (index < 0 || index >= categoriasEnEdicion.length) {
+        return;
+    }
+
+    const categoria = categoriasEnEdicion[index];
+    eliminarCategoriaEdicion(categoria);
+}
+
+async function guardarCategoriasFinancieras() {
+    try {
+        mostrarSpinner();
+
+        const response = await fetch('/api/sw/categorias', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ categorias: categoriasEnEdicion })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            mostrarError(data.message || 'No se pudieron guardar las categorías');
+            return;
+        }
+
+        categoriasFinancieras = normalizarCategorias(data.data.categorias || []);
+        categoriasFijas = Array.isArray(data.data.categoriasFijas)
+            ? data.data.categoriasFijas
+            : categoriasFijas;
+
+        aplicarCategoriasEnFormularios();
+        mostrarExito('Categorías actualizadas exitosamente');
+
+        $('#modalCategoriasFinancieras').modal('hide');
+    } catch (error) {
+        console.error('Error al guardar categorías financieras:', error);
+        mostrarError('Error al guardar categorías');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
 // Inicialización
-$(document).ready(function() {
+$(document).ready(async function() {
+    await cargarCategoriasFinancieras();
     inicializarEventos();
     cambiarVistaSolicitudes('cuenta');
     cargarOrganizaciones();
@@ -50,6 +254,15 @@ function inicializarEventos() {
     $('#btnGuardarSolicitud').on('click', guardarSolicitud);
     $('#btnGuardarParticipante').on('click', guardarParticipante);
     $('#btnGuardarTransaccion').on('click', guardarTransaccion);
+    $('#btnAgregarCategoriaFinanciera').on('click', agregarCategoriaEdicion);
+    $('#btnGuardarCategoriasFinancieras').on('click', guardarCategoriasFinancieras);
+
+    $('#input-nueva-categoria').on('keypress', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            agregarCategoriaEdicion();
+        }
+    });
 
     // Eventos para participantes de organización
     $('#btnAgregarParticipanteOrg').on('click', agregarParticipanteOrganizacionTemporal);
@@ -112,6 +325,13 @@ function inicializarEventos() {
         }
     });
 
+    $('#modalCategoriasFinancieras').on('show.bs.modal', async function() {
+        await cargarCategoriasFinancieras();
+        categoriasEnEdicion = [...categoriasFinancieras];
+        $('#input-nueva-categoria').val('');
+        renderizarCategoriasEnModal();
+    });
+
     // Listener para cuando se abre el modal de solicitud
     $('#modalSolicitud').on('show.bs.modal', function(e) {
         if ($(e.relatedTarget).attr('id') === 'btn-nueva-solicitud') {
@@ -125,6 +345,7 @@ function inicializarEventos() {
             $('#solicitud-campo-imagenes').show();
             $('#solicitud-es-proveedor-externo').prop('checked', false);
             actualizarCamposProveedorSolicitud(false);
+            popularSelectCategorias('#solicitud-categoria', 'Otro');
             $('#solicitud-cuenta-origen').val('');
             $('#solicitud-saldo-origen').text('');
             $('#solicitud-cuenta-origen-label').text('Cuenta Origen (mi cuenta) *');
@@ -1141,11 +1362,15 @@ async function verDetalleCuenta(id) {
     try {
         mostrarSpinner();
         const response = await fetch(`/api/sw/cuentas/${id}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            mostrarDetalleCuenta(data.data);
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.success) {
+            const message = data.message || 'No se pudo cargar el detalle de la cuenta';
+            mostrarError(message);
+            return;
         }
+
+        mostrarDetalleCuenta(data.data);
     } catch (error) {
         console.error('Error:', error);
         mostrarError('Error al cargar detalle de cuenta');
@@ -2224,6 +2449,7 @@ function agregarTransaccion(cuentaId) {
     $('#transaccion-cuenta-id').val(cuentaId);
     $('#formTransaccion')[0].reset();
     $('#transaccion-fecha').val(new Date().toISOString().split('T')[0]);
+    popularSelectCategorias('#transaccion-categoria', 'Otro');
     $('#preview-imagenes').empty();
     
     // Resetear a estado de transacción normal (no transferencia)
@@ -4334,7 +4560,7 @@ function renderizarGraficaCategorias(transaccionesPorCategoria) {
                 legend: {
                     position: 'right',
                     labels: {
-                        color: '#ffffff',
+                        color: '#374151',
                         generateLabels: function(chart) {
                             const data = chart.data;
                             if (data.labels.length && data.datasets.length) {
@@ -4345,7 +4571,7 @@ function renderizarGraficaCategorias(transaccionesPorCategoria) {
                                         fillStyle: data.datasets[0].backgroundColor[i],
                                         hidden: false,
                                         index: i,
-                                        fontColor: '#ffffff'
+                                        fontColor: '#374151'
                                     };
                                 });
                             }
@@ -4481,10 +4707,12 @@ $(document).ready(function() {
     // Cargar cuentas en selects de recurrentes y diferidos
     $('#modalTransaccionRecurrente').on('show.bs.modal', async function() {
         await cargarCuentasEnSelect('#rec-cuenta');
+        popularSelectCategorias('#rec-categoria', 'Otro');
     });
 
     $('#modalPagoDiferido').on('show.bs.modal', async function() {
         await cargarCuentasEnSelect('#dif-cuenta');
+        popularSelectCategorias('#dif-categoria', 'Otro');
     });
 });
 

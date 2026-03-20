@@ -28,23 +28,7 @@ const swTransaccionRecurrenteSchema = new Schema({
     },
     categoria: {
         type: String,
-        enum: [
-            'Alimentación',
-            'Transporte',
-            'Servicios',
-            'Mantenimiento',
-            'Compras',
-            'Salud',
-            'Entretenimiento',
-            'Educación',
-            'Hogar',
-            'Salario',
-            'Venta',
-            'Inversión',
-            'Préstamo',
-            'Reembolso',
-            'Otro'
-        ],
+        trim: true,
         required: true,
         default: 'Otro'
     },

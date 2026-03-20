@@ -206,15 +206,31 @@ const getMisCuentas = async (req, res) => {
         const userId = req.session.userId;
         const { organizacion, activa } = req.query;
 
-        // Obtener cuentas donde es participante
+        // Participaciones directas de cuenta.
         const participaciones = await SWParticipante.find({
             usuario: userId,
             activo: true
         }).select('cuenta rol permisos');
 
-        const cuentaIds = participaciones.map(p => p.cuenta);
+        const cuentaIdsDirectas = participaciones.map((p) => p.cuenta.toString());
 
-        const filter = { _id: { $in: cuentaIds } };
+        // Organizaciones donde el usuario participa (o creador legado).
+        const organizaciones = await SWOrganizacion.find({
+            $or: [
+                { 'participantes.usuario': userId },
+                { createdBy: userId }
+            ]
+        }).select('_id');
+
+        const orgIds = organizaciones.map((org) => org._id);
+
+        const filter = {
+            $or: [
+                { _id: { $in: cuentaIdsDirectas } },
+                ...(orgIds.length > 0 ? [{ organizacion: { $in: orgIds } }] : [])
+            ]
+        };
+
         if (organizacion) filter.organizacion = organizacion;
         if (activa !== undefined) filter.activa = activa === 'true';
 
@@ -227,6 +243,8 @@ const getMisCuentas = async (req, res) => {
         await Promise.all(cuentas.map(cuenta => cuenta.calcularSaldo()));
 
         // Agregar rol del usuario en cada cuenta y ocultar saldo si no tiene permiso
+        const orgIdsSet = new Set(orgIds.map((id) => id.toString()));
+
         const cuentasConRol = cuentas.map(cuenta => {
             const participacion = participaciones.find(
                 p => p.cuenta.toString() === cuenta._id.toString()
@@ -236,7 +254,11 @@ const getMisCuentas = async (req, res) => {
             
             // Si es participante (no propietario) y no tiene permiso de ver saldo
             const esPropietario = cuenta.propietario._id.toString() === userId.toString();
-            const puedeVerSaldo = participacion?.permisos?.puedeVerSaldo !== false; // Por defecto true
+            const esParticipanteOrganizacion = !participacion
+                && orgIdsSet.has((cuentaObj.organizacion?._id || cuentaObj.organizacion || '').toString());
+
+            // Participantes por organización no ven saldo por defecto; solo propietarios o participantes directos con permiso.
+            const puedeVerSaldo = esPropietario || (participacion?.permisos?.puedeVerSaldo !== false);
             
             if (!esPropietario && !puedeVerSaldo) {
                 // Ocultar saldos
@@ -246,7 +268,7 @@ const getMisCuentas = async (req, res) => {
             
             return {
                 ...cuentaObj,
-                miRol: participacion?.rol || 'Desconocido',
+                miRol: participacion?.rol || (esParticipanteOrganizacion ? 'ParticipanteOrganizacion' : 'Desconocido'),
                 puedeVerSaldo: esPropietario || puedeVerSaldo
             };
         });

@@ -6,6 +6,7 @@ const SWTransaccion = require('../models/SWTransaccion');
 const { check, validationResult } = require('express-validator');
 const ftp = require('basic-ftp');
 const fs = require('fs');
+const { isCategoriaValida } = require('../services/swCategoriasService');
 
 const createSolicitudOrganizacionValidators = [
     check('organizacionId')
@@ -26,11 +27,12 @@ const createSolicitudOrganizacionValidators = [
         .trim(),
     check('categoria')
         .optional()
-        .isIn([
-            'Alimentación', 'Transporte', 'Servicios', 'Mantenimiento',
-            'Compras', 'Salud', 'Entretenimiento', 'Educación', 'Hogar',
-            'Salario', 'Venta', 'Inversión', 'Préstamo', 'Reembolso', 'Reserva', 'Transferencia', 'Otro'
-        ]).withMessage('Categoría inválida'),
+        .custom((value) => {
+            if (!isCategoriaValida(value)) {
+                throw new Error('Categoría inválida');
+            }
+            return true;
+        }),
     check('cuentaDestinoId')
         .if(check('tipo').equals('Transferencia'))
         .notEmpty().withMessage('La cuenta destino es requerida para transferencias')

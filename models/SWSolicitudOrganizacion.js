@@ -33,25 +33,7 @@ const swSolicitudOrganizacionSchema = new Schema({
     },
     categoria: {
         type: String,
-        enum: [
-            'Alimentación',
-            'Transporte',
-            'Servicios',
-            'Mantenimiento',
-            'Compras',
-            'Salud',
-            'Entretenimiento',
-            'Educación',
-            'Hogar',
-            'Salario',
-            'Venta',
-            'Inversión',
-            'Préstamo',
-            'Reembolso',
-            'Reserva',
-            'Transferencia',
-            'Otro'
-        ],
+        trim: true,
         required: true,
         default: 'Otro'
     },

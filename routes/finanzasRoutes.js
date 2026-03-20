@@ -23,12 +23,15 @@ router.get('/finanzas', ensureAuthenticated, async (req, res) => {
             isMasterAdmin = usuario.role.name === 'MASTER ADMIN';
         }
         
+        const canEditCategorias = !!(usuario && usuario.privilege === 'Administrador');
+
         res.render('vistaFinanzas', {
             layout: 'tailwindMain',
             title: 'Finanzas - Splitwise',
             user: req.session.user,
             userId: req.session.userId,
-            isMasterAdmin: isMasterAdmin
+            isMasterAdmin: isMasterAdmin,
+            canEditCategorias: canEditCategorias
         });
     } catch (error) {
         console.error('Error al cargar vista de finanzas:', error);

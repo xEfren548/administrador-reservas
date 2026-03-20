@@ -3,6 +3,7 @@ const SWTransaccionRecurrente = require('../models/SWTransaccionRecurrente');
 const SWCuenta = require('../models/SWCuenta');
 const SWTransaccion = require('../models/SWTransaccion');
 const SWParticipante = require('../models/SWParticipante');
+const { isCategoriaValida } = require('../services/swCategoriasService');
 
 // Validadores para crear transacción recurrente
 const createRecurrenteValidators = [
@@ -10,7 +11,14 @@ const createRecurrenteValidators = [
     check('tipo').isIn(['Ingreso', 'Gasto']).withMessage('Tipo debe ser Ingreso o Gasto'),
     check('monto').isFloat({ min: 0.01 }).withMessage('Monto debe ser mayor a 0'),
     check('concepto').trim().notEmpty().withMessage('El concepto es requerido'),
-    check('categoria').notEmpty().withMessage('La categoría es requerida'),
+    check('categoria')
+        .notEmpty().withMessage('La categoría es requerida')
+        .custom((value) => {
+            if (!isCategoriaValida(value)) {
+                throw new Error('Categoría inválida');
+            }
+            return true;
+        }),
     check('frecuencia').isIn(['Diaria', 'Semanal', 'Quincenal', 'Mensual', 'Bimestral', 'Trimestral', 'Anual']).withMessage('Frecuencia inválida'),
     check('fechaInicio').isISO8601().withMessage('Fecha de inicio inválida')
 ];

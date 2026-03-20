@@ -3,6 +3,7 @@ const SWPagoDiferido = require('../models/SWPagoDiferido');
 const SWCuenta = require('../models/SWCuenta');
 const SWTransaccion = require('../models/SWTransaccion');
 const SWParticipante = require('../models/SWParticipante');
+const { isCategoriaValida } = require('../services/swCategoriasService');
 
 // Validadores
 const createPagoDiferidoValidators = [
@@ -11,7 +12,15 @@ const createPagoDiferidoValidators = [
     check('numeroPagos').isInt({ min: 2 }).withMessage('Debe tener al menos 2 pagos'),
     check('concepto').trim().notEmpty().withMessage('El concepto es requerido'),
     check('fechaInicio').isISO8601().withMessage('Fecha de inicio inválida'),
-    check('interes').optional().isFloat({ min: 0 }).withMessage('Interés debe ser mayor o igual a 0')
+    check('interes').optional().isFloat({ min: 0 }).withMessage('Interés debe ser mayor o igual a 0'),
+    check('categoria')
+        .optional()
+        .custom((value) => {
+            if (!isCategoriaValida(value)) {
+                throw new Error('Categoría inválida');
+            }
+            return true;
+        })
 ];
 
 /**

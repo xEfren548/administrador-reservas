@@ -57,6 +57,7 @@ const swSolicitudOrganizacionRoutes = require('./swSolicitudOrganizacionRoutes')
 const swDashboardRoutes = require('./swDashboardRoutes');
 const swTransaccionRecurrenteRoutes = require('./swTransaccionRecurrenteRoutes');
 const swPagoDiferidoRoutes = require('./swPagoDiferidoRoutes');
+const swCategoriaRoutes = require('./swCategoriaRoutes');
 const cronTasksRoutes = require('./cronTasksRoutes');
 const finanzasRoutes = require('./finanzasRoutes');
 
@@ -169,6 +170,7 @@ router.use('/api/sw', swSolicitudOrganizacionRoutes);
 router.use('/api/sw/dashboard', swDashboardRoutes);
 router.use('/api/sw', swTransaccionRecurrenteRoutes);
 router.use('/api/sw', swPagoDiferidoRoutes);
+router.use('/api/sw', swCategoriaRoutes);
 router.use('/api/cron', cronTasksRoutes);
 
 // Rutas del módulo de Cupones y Referidos

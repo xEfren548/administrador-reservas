@@ -8,6 +8,78 @@ const { check, validationResult } = require('express-validator');
 const { Parser } = require('json2csv');
 const ftp = require('basic-ftp');
 const fs = require('fs');
+const { isCategoriaValida } = require('../services/swCategoriasService');
+
+const usuarioEsParticipanteOrganizacion = async (organizacionId, userId) => {
+    if (!organizacionId) return false;
+
+    const organizacion = await SWOrganizacion.findById(organizacionId)
+        .select('createdBy participantes')
+        .lean();
+
+    if (!organizacion) return false;
+
+    if (Array.isArray(organizacion.participantes) && organizacion.participantes.length > 0) {
+        return organizacion.participantes.some(
+            (participante) => participante?.usuario?.toString() === userId.toString()
+        );
+    }
+
+    // Compatibilidad con organizaciones antiguas sin participantes.
+    return organizacion.createdBy?.toString() === userId.toString();
+};
+
+const usuarioTieneAccesoTransaccionesCuenta = async (cuentaId, userId) => {
+    const participante = await SWParticipante.findOne({
+        cuenta: cuentaId,
+        usuario: userId,
+        activo: true,
+        $or: [
+            { rol: 'Propietario' },
+            { 'permisos.puedeVerTransacciones': true }
+        ]
+    }).select('cuenta');
+
+    if (participante) {
+        return { tieneAcceso: true };
+    }
+
+    const cuenta = await SWCuenta.findById(cuentaId).select('organizacion');
+    if (!cuenta) {
+        return { tieneAcceso: false, cuentaNoExiste: true };
+    }
+
+    const esParticipanteOrganizacion = await usuarioEsParticipanteOrganizacion(cuenta.organizacion, userId);
+    return { tieneAcceso: esParticipanteOrganizacion };
+};
+
+const obtenerCuentaIdsConAccesoTransacciones = async (userId) => {
+    const participacionesDirectas = await SWParticipante.find({
+        usuario: userId,
+        activo: true,
+        $or: [
+            { rol: 'Propietario' },
+            { 'permisos.puedeVerTransacciones': true }
+        ]
+    }).select('cuenta');
+
+    const cuentaIds = new Set(participacionesDirectas.map((p) => p.cuenta.toString()));
+
+    const organizaciones = await SWOrganizacion.find({
+        $or: [
+            { 'participantes.usuario': userId },
+            { createdBy: userId }
+        ]
+    }).select('_id');
+
+    if (organizaciones.length > 0) {
+        const orgIds = organizaciones.map((org) => org._id);
+        const cuentasOrganizacion = await SWCuenta.find({ organizacion: { $in: orgIds } }).select('_id');
+        cuentasOrganizacion.forEach((cuenta) => cuentaIds.add(cuenta._id.toString()));
+    }
+
+    return Array.from(cuentaIds);
+};
 
 // Validadores
 const createTransaccionValidators = [
@@ -26,11 +98,12 @@ const createTransaccionValidators = [
         .trim(),
     check('categoria')
         .optional()
-        .isIn([
-            'Alimentación', 'Transporte', 'Servicios', 'Mantenimiento',
-            'Compras', 'Salud', 'Entretenimiento', 'Educación', 'Hogar',
-            'Salario', 'Venta', 'Inversión', 'Préstamo', 'Reembolso', 'Transferencia', 'Otro'
-        ]).withMessage('Categoría inválida'),
+        .custom((value) => {
+            if (!isCategoriaValida(value)) {
+                throw new Error('Categoría inválida');
+            }
+            return true;
+        }),
     check('cuentaDestinoId')
         .if(check('tipo').equals('Transferencia'))
         .notEmpty().withMessage('La cuenta destino es requerida para transferencias')
@@ -202,25 +275,11 @@ const getTransacciones = async (req, res) => {
 
         const userId = req.session.userId;
 
-        // Verificar acceso a la cuenta
-        const participante = await SWParticipante.findOne({
-            cuenta: cuentaId,
-            usuario: userId,
-            activo: true
-        });
-
-        if (!participante) {
+        const acceso = await usuarioTieneAccesoTransaccionesCuenta(cuentaId, userId);
+        if (!acceso.tieneAcceso) {
             return res.status(403).json({
                 success: false,
                 message: 'No tiene acceso a esta cuenta'
-            });
-        }
-
-        // Verificar permisos
-        if (!participante.permisos.puedeVerTransacciones && participante.rol !== 'Propietario') {
-            return res.status(403).json({
-                success: false,
-                message: 'No tiene permisos para ver las transacciones'
             });
         }
 
@@ -312,13 +371,9 @@ const getTransaccionById = async (req, res) => {
 
         // Verificar acceso
         const userId = req.session.userId;
-        const participante = await SWParticipante.findOne({
-            cuenta: transaccion.cuenta,
-            usuario: userId,
-            activo: true
-        });
+        const acceso = await usuarioTieneAccesoTransaccionesCuenta(transaccion.cuenta, userId);
 
-        if (!participante) {
+        if (!acceso.tieneAcceso) {
             return res.status(403).json({
                 success: false,
                 message: 'No tiene acceso a esta transacción'
@@ -397,14 +452,8 @@ const getResumen = async (req, res) => {
 
         const userId = req.session.userId;
 
-        // Verificar acceso
-        const participante = await SWParticipante.findOne({
-            cuenta: cuentaId,
-            usuario: userId,
-            activo: true
-        });
-
-        if (!participante) {
+        const acceso = await usuarioTieneAccesoTransaccionesCuenta(cuentaId, userId);
+        if (!acceso.tieneAcceso) {
             return res.status(403).json({
                 success: false,
                 message: 'No tiene acceso a esta cuenta'
@@ -628,39 +677,22 @@ const getEstadoCuentaMovimientos = async (req, res) => {
             });
         }
 
-        let participantes = [];
+        let cuentaIds = [];
 
         if (cuentaId) {
-            const participante = await SWParticipante.findOne({
-                cuenta: cuentaId,
-                usuario: userId,
-                activo: true,
-                $or: [
-                    { rol: 'Propietario' },
-                    { 'permisos.puedeVerTransacciones': true }
-                ]
-            }).select('cuenta');
+            const acceso = await usuarioTieneAccesoTransaccionesCuenta(cuentaId, userId);
 
-            if (!participante) {
+            if (!acceso.tieneAcceso) {
                 return res.status(403).json({
                     success: false,
                     message: 'No tiene acceso a la cuenta seleccionada'
                 });
             }
 
-            participantes = [participante];
+            cuentaIds = [cuentaId.toString()];
         } else {
-            participantes = await SWParticipante.find({
-                usuario: userId,
-                activo: true,
-                $or: [
-                    { rol: 'Propietario' },
-                    { 'permisos.puedeVerTransacciones': true }
-                ]
-            }).select('cuenta');
+            cuentaIds = await obtenerCuentaIdsConAccesoTransacciones(userId);
         }
-
-        const cuentaIds = [...new Set(participantes.map((p) => p.cuenta.toString()))];
 
         if (cuentaIds.length === 0) {
             return res.status(200).json({
