@@ -190,13 +190,14 @@ router.get('/eventos/f/:idevento', async (req, res) => {
             const createdBy = evento.createdBy ? evento.createdBy.toString() : null;
             const userId = req.session.userId ? req.session.userId.toString() : null;
             if (createdBy !== userId) {
-                throw new Error('No tienes permiso para ver este evento');
+                // throw new Error('No tienes permiso para ver este evento');
+                return res.status(403).json({ message: 'No tienes permiso para ver este evento' });
             }
         }
 
         // const habitacion = habitaciones.resources.find(habitacion => habitacion._id.equals(newId));
         const habitacion = await Habitacion.findById(evento.resourceId).lean();
-        if (!habitacion) { throw new Error('No se encontró la habitación'); }
+        if (!habitacion) { return res.status(404).json({ message: 'No se encontró la habitación' }); }
 
         // Fetch colorUsuario for each evento's createdBy
         const createdBy = evento.createdBy;
