@@ -3,8 +3,11 @@
     const state = {
         rooms: [],
         items: [],
+        purchases: [],
+        movements: [],
         bomTemplates: [],
         metricGroups: [],
+        editingMetricGroupId: null,
         editingItemId: null,
         editingBOMId: null
     };
@@ -20,15 +23,24 @@
         stockByCabin: document.getElementById('stock-by-cabin'),
         criticalItems: document.getElementById('critical-items'),
         itemsTableBody: document.getElementById('items-table-body'),
+        purchasesTableBody: document.getElementById('purchases-table-body'),
+        movementsTableBody: document.getElementById('movements-table-body'),
         metricGroupsList: document.getElementById('metric-groups-list'),
         bomList: document.getElementById('bom-list'),
         alertsList: document.getElementById('alerts-list'),
         consumptionMetricsTableBody: document.getElementById('consumption-metrics-table-body'),
         formMetricGroup: document.getElementById('form-metric-group'),
         formItem: document.getElementById('form-item'),
+        formPurchase: document.getElementById('form-purchase'),
+        formAdjustment: document.getElementById('form-adjustment'),
         formBOMTemplate: document.getElementById('form-bom-template'),
+        modalMetricGroup: document.getElementById('modalMetricGroup'),
         modalItem: document.getElementById('modalItem'),
+        modalPurchase: document.getElementById('modalPurchase'),
+        modalAdjustment: document.getElementById('modalAdjustment'),
         modalBOMTemplate: document.getElementById('modalBOMTemplate'),
+        modalMetricGroupTitle: document.getElementById('modal-metric-group-title'),
+        modalMetricGroupSubmit: document.getElementById('modal-metric-group-submit'),
         modalItemTitle: document.getElementById('modal-item-title'),
         modalItemSubmit: document.getElementById('modal-item-submit'),
         modalBOMTitle: document.getElementById('modal-bom-title'),
@@ -40,17 +52,29 @@
         btnRefreshGroups: document.getElementById('btn-refresh-groups'),
         btnRefreshBom: document.getElementById('btn-refresh-bom'),
         btnRefreshAlerts: document.getElementById('btn-refresh-alerts'),
+        btnRefreshPurchases: document.getElementById('btn-refresh-purchases'),
+        btnRefreshMovements: document.getElementById('btn-refresh-movements'),
         btnRefreshConsumptionMetrics: document.getElementById('btn-refresh-consumption-metrics'),
-        itemCabinSelect: document.getElementById('item-cabin-select'),
+        itemRoomChecklist: document.getElementById('item-room-checklist'),
+        itemRoomFilter: document.getElementById('item-room-filter'),
         itemUnitSelect: document.getElementById('item-unit-select'),
         itemUnitCustom: document.getElementById('item-unit-custom'),
+        metricGroupRoomFilter: document.getElementById('metric-group-room-filter'),
         metricGroupRoomChecklist: document.getElementById('metric-group-room-checklist'),
+        bomRoomFilter: document.getElementById('bom-room-filter'),
         bomRoomChecklist: document.getElementById('bom-room-checklist'),
+        purchaseCabinSelect: document.getElementById('purchase-cabin-select'),
+        purchaseLinesContainer: document.getElementById('purchase-lines-container'),
+        btnAddPurchaseLine: document.getElementById('btn-add-purchase-line'),
+        adjustmentItemSelect: document.getElementById('adjustment-item-select'),
         bomLinesContainer: document.getElementById('bom-lines-container'),
         btnAddBomLine: document.getElementById('btn-add-bom-line')
     };
 
     const isMasterAdmin = Boolean(window.isMasterAdmin);
+    const canManageInventory = Boolean(window.canManageInventory || window.isMasterAdmin);
+    const canAdjustInventory = Boolean(window.canAdjustInventory || window.isMasterAdmin);
+    const canViewInventoryDashboard = Boolean(window.canViewInventoryDashboard);
 
     const toggleSpinner = (show) => {
         if (!el.spinner) return;
@@ -75,6 +99,27 @@
 
     const money = (value) => Number(value || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+    const formatDateTime = (value) => {
+        if (!value) return '-';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '-';
+        return date.toLocaleString('es-MX', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const movementTypeLabel = (value) => ({
+        purchase_entry: 'Compra',
+        manual_adjustment_in: 'Ajuste +',
+        manual_adjustment_out: 'Ajuste -',
+        checkout_exit: 'Checkout',
+        initial_balance: 'Saldo inicial'
+    }[value] || value || '-');
+
     const showError = (error) => {
         console.error(error);
         alert(error.message || 'Ocurrio un error inesperado');
@@ -89,6 +134,12 @@
 
     const roomDisplayName = (room) => room?.propertyDetails?.name || room?.name || 'Habitacion';
 
+    const normalizeSearchText = (value) => String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
     const getBootstrapModal = (element) => {
         if (!element || !window.bootstrap?.Modal) return null;
         return window.bootstrap.Modal.getOrCreateInstance(element);
@@ -102,25 +153,55 @@
         getBootstrapModal(element)?.hide();
     };
 
-    const populateItemCabinSelect = () => {
-        if (!el.itemCabinSelect) return;
-        el.itemCabinSelect.innerHTML = [
+    const populatePurchaseCabinSelect = () => {
+        if (!el.purchaseCabinSelect) return;
+        el.purchaseCabinSelect.innerHTML = [
             '<option value="">Selecciona habitacion</option>',
             ...state.rooms.map((room) => `<option value="${room._id}">${escapeHtml(roomDisplayName(room))}</option>`)
+        ].join('');
+    };
+
+    const populateAdjustmentItemSelect = () => {
+        if (!el.adjustmentItemSelect) return;
+        el.adjustmentItemSelect.innerHTML = [
+            '<option value="">Selecciona item</option>',
+            ...state.items.map((item) => `<option value="${item._id}">${escapeHtml(item.name)} | ${escapeHtml(roomDisplayName(item.cabin))} | Stock ${item.stockCurrent} ${escapeHtml(item.unit)}</option>`)
         ].join('');
     };
 
     const renderRoomChecklist = (container, checkboxClass, helperText) => {
         if (!container) return;
         container.innerHTML = state.rooms.map((room) => `
-            <label class="room-option-card flex items-center gap-2 cursor-pointer">
+            <label class="room-option-card flex items-center gap-2 cursor-pointer" data-filter-label="${escapeHtml(normalizeSearchText(roomDisplayName(room)))}">
                 <input type="checkbox" class="${checkboxClass}" value="${room._id}">
                 <div>
                     <p class="mb-0 text-sm font-medium text-gray-800">${escapeHtml(roomDisplayName(room))}</p>
-                    <p class="mb-0 text-xs text-gray-500">${helperText}</p>
+                    ${helperText ? `<p class="mb-0 text-xs text-gray-500">${escapeHtml(helperText)}</p>` : ''}
                 </div>
             </label>
         `).join('') || '<p class="text-gray-500 text-sm">No hay habitaciones disponibles.</p>';
+    };
+
+    const applyChecklistFilter = (input, container) => {
+        if (!container) return;
+        const query = normalizeSearchText(input?.value || '');
+        container.querySelectorAll('.room-option-card').forEach((optionCard) => {
+            const label = optionCard.getAttribute('data-filter-label') || '';
+            optionCard.classList.toggle('hidden', Boolean(query) && !label.includes(query));
+        });
+    };
+
+    const resetChecklistFilter = (input, container) => {
+        if (!input) return;
+        input.value = '';
+        applyChecklistFilter(input, container);
+    };
+
+    const setupChecklistFilter = (input, container) => {
+        if (!input || !container) return;
+        input.addEventListener('input', () => {
+            applyChecklistFilter(input, container);
+        });
     };
 
     const setCheckedRooms = (selector, roomIds) => {
@@ -154,6 +235,62 @@
         });
 
         return wrapper;
+    };
+
+    const getItemsByCabin = (cabinId) => state.items.filter((item) => String(item.cabin?._id || item.cabin) === String(cabinId));
+
+    const buildPurchaseItemOptions = (cabinId, selectedItemId = '') => {
+        const items = cabinId ? getItemsByCabin(cabinId) : [];
+        return [
+            '<option value="">Item</option>',
+            ...items.map((item) => `<option value="${item._id}" ${String(selectedItemId) === String(item._id) ? 'selected' : ''}>${escapeHtml(item.name)} (${escapeHtml(item.unit)})</option>`)
+        ].join('');
+    };
+
+    const createPurchaseLineRow = (cabinId = '', line = {}) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'purchase-line-row';
+        wrapper.innerHTML = `
+            <select class="form-select purchase-line-item">${buildPurchaseItemOptions(cabinId, line.item?._id || line.item || '')}</select>
+            <input type="number" min="0.01" step="0.01" class="form-control purchase-line-qty" placeholder="Cantidad" value="${line.quantity ?? ''}">
+            <input type="number" min="0" step="0.01" class="form-control purchase-line-cost" placeholder="Costo unitario" value="${line.unitCost ?? ''}">
+            <button type="button" class="btn btn-outline-danger btn-sm purchase-line-remove">Quitar</button>
+        `;
+        wrapper.querySelector('.purchase-line-remove')?.addEventListener('click', () => {
+            wrapper.remove();
+            ensureOnePurchaseLine();
+        });
+        return wrapper;
+    };
+
+    const ensureOnePurchaseLine = () => {
+        if (!el.purchaseLinesContainer) return;
+        if (el.purchaseLinesContainer.children.length === 0) {
+            el.purchaseLinesContainer.appendChild(createPurchaseLineRow(el.purchaseCabinSelect?.value || ''));
+        }
+    };
+
+    const syncPurchaseLineOptions = () => {
+        if (!el.purchaseLinesContainer) return;
+        const cabinId = el.purchaseCabinSelect?.value || '';
+        Array.from(el.purchaseLinesContainer.children).forEach((row) => {
+            const select = row.querySelector('.purchase-line-item');
+            if (!select) return;
+            const previousValue = select.value;
+            select.innerHTML = buildPurchaseItemOptions(cabinId, previousValue);
+            if (!Array.from(select.options).some((option) => option.value === previousValue)) {
+                select.value = '';
+            }
+        });
+    };
+
+    const getPurchaseLinesPayload = () => {
+        if (!el.purchaseLinesContainer) return [];
+        return Array.from(el.purchaseLinesContainer.children).map((row) => ({
+            item: row.querySelector('.purchase-line-item')?.value,
+            quantity: Number(row.querySelector('.purchase-line-qty')?.value || 0),
+            unitCost: Number(row.querySelector('.purchase-line-cost')?.value || 0)
+        })).filter((line) => line.item && line.quantity > 0);
     };
 
     const ensureOneBomLine = () => {
@@ -204,10 +341,25 @@
     const resetItemFormMode = () => {
         state.editingItemId = null;
         el.formItem?.reset();
+        setCheckedRooms('.item-room-checkbox', []);
+        resetChecklistFilter(el.itemRoomFilter, el.itemRoomChecklist);
         if (el.modalItemTitle) el.modalItemTitle.textContent = 'Nuevo Item';
         if (el.modalItemSubmit) el.modalItemSubmit.textContent = 'Guardar';
         toggleItemUnitCustom();
         toggleInitialPurchaseSection();
+    };
+
+    const resetPurchaseFormMode = () => {
+        el.formPurchase?.reset();
+        if (el.purchaseLinesContainer) {
+            el.purchaseLinesContainer.innerHTML = '';
+        }
+        ensureOnePurchaseLine();
+        syncPurchaseLineOptions();
+    };
+
+    const resetAdjustmentFormMode = () => {
+        el.formAdjustment?.reset();
     };
 
     const resetBOMFormMode = () => {
@@ -216,7 +368,17 @@
         if (el.modalBOMTitle) el.modalBOMTitle.textContent = 'Nueva Regla de Consumo BOM';
         if (el.modalBOMSubmit) el.modalBOMSubmit.textContent = 'Guardar BOM';
         setCheckedRooms('.bom-room-checkbox', []);
+        resetChecklistFilter(el.bomRoomFilter, el.bomRoomChecklist);
         setBomLines([]);
+    };
+
+    const resetMetricGroupFormMode = () => {
+        state.editingMetricGroupId = null;
+        el.formMetricGroup?.reset();
+        setCheckedRooms('.metric-group-room-checkbox', []);
+        resetChecklistFilter(el.metricGroupRoomFilter, el.metricGroupRoomChecklist);
+        if (el.modalMetricGroupTitle) el.modalMetricGroupTitle.textContent = 'Nuevo Grupo de Habitaciones';
+        if (el.modalMetricGroupSubmit) el.modalMetricGroupSubmit.textContent = 'Guardar';
     };
 
     const setupTabs = () => {
@@ -239,6 +401,7 @@
     };
 
     const renderDashboard = async () => {
+        if (!canViewInventoryDashboard) return;
         const result = await request('/dashboard/stock');
         const data = result.data || {};
         const stockByCabin = data.stockByCabin || {};
@@ -274,6 +437,8 @@
     const renderItems = async () => {
         const result = await request('/items');
         state.items = result.data || [];
+        populateAdjustmentItemSelect();
+        syncPurchaseLineOptions();
         const rows = state.items.map((item) => `
             <tr>
                 <td>${escapeHtml(item.name)}</td>
@@ -283,7 +448,7 @@
                 <td>${item.stockMin}</td>
                 <td>${escapeHtml(roomDisplayName(item.cabin))}</td>
                 <td>
-                    ${isMasterAdmin ? `
+                    ${canManageInventory ? `
                         <div class="flex gap-2">
                             <button type="button" class="btn btn-outline-primary btn-sm" data-edit-item="${item._id}">Editar</button>
                             <button type="button" class="btn btn-outline-danger btn-sm" data-delete-item="${item._id}">Eliminar</button>
@@ -308,7 +473,7 @@
                     const unitOptionExists = Array.from(el.itemUnitSelect?.options || []).some((option) => option.value === item.unit);
                     if (el.itemUnitSelect) el.itemUnitSelect.value = unitOptionExists ? item.unit : 'otra';
                     if (el.itemUnitCustom) el.itemUnitCustom.value = unitOptionExists ? '' : (item.unit || '');
-                    el.formItem.elements.cabin.value = item.cabin?._id || item.cabin || '';
+                    setCheckedRooms('.item-room-checkbox', [item.cabin?._id || item.cabin].filter(Boolean));
                     el.formItem.elements.stockCurrent.value = item.stockCurrent ?? 0;
                     el.formItem.elements.stockMin.value = item.stockMin ?? 0;
                     if (el.formItem.elements.initialUnitCost) el.formItem.elements.initialUnitCost.value = '';
@@ -364,11 +529,81 @@
                             <h4 class="font-semibold text-gray-800">${escapeHtml(group.name)}</h4>
                             <p class="text-xs text-gray-500 mt-1">${escapeHtml(group.description || 'Sin descripcion')}</p>
                         </div>
-                        <span class="text-xs px-2 py-1 rounded bg-sky-100 text-sky-700">${(group.cabins || []).length} habitaciones</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs px-2 py-1 rounded bg-sky-100 text-sky-700">${(group.cabins || []).length} habitaciones</span>
+                            ${canManageInventory ? `<button type="button" class="btn btn-outline-primary btn-sm" data-edit-metric-group="${group._id}">Editar</button><button type="button" class="btn btn-outline-danger btn-sm" data-delete-metric-group="${group._id}">Desactivar</button>` : ''}
+                        </div>
                     </div>
                     <p class="text-sm text-gray-700 mt-3">${(group.cabins || []).map((room) => escapeHtml(roomDisplayName(room))).join(', ') || 'Sin habitaciones asignadas'}</p>
                 </div>
             `).join('') || '<p class="text-gray-500">No hay grupos metricos registrados.</p>';
+
+            el.metricGroupsList.querySelectorAll('[data-edit-metric-group]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const group = state.metricGroups.find((entry) => String(entry._id) === button.getAttribute('data-edit-metric-group'));
+                    if (!group || !el.formMetricGroup) return;
+                    state.editingMetricGroupId = group._id;
+                    if (el.modalMetricGroupTitle) el.modalMetricGroupTitle.textContent = `Editar Grupo: ${group.name}`;
+                    if (el.modalMetricGroupSubmit) el.modalMetricGroupSubmit.textContent = 'Actualizar';
+                    el.formMetricGroup.elements.name.value = group.name || '';
+                    el.formMetricGroup.elements.description.value = group.description || '';
+                    setCheckedRooms('.metric-group-room-checkbox', (group.cabins || []).map((room) => room._id || room));
+                    showModal(el.modalMetricGroup);
+                });
+            });
+
+            el.metricGroupsList.querySelectorAll('[data-delete-metric-group]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    try {
+                        if (!confirm('El grupo metrico se desactivara y dejara de aparecer en dashboards.')) return;
+                        await request(`/metric-groups/${button.getAttribute('data-delete-metric-group')}`, { method: 'DELETE' });
+                        await Promise.all([renderMetricGroups(), renderConsumptionMetrics()]);
+                        alert('Grupo metrico desactivado correctamente');
+                    } catch (error) {
+                        showError(error);
+                    }
+                });
+            });
+        }
+    };
+
+    const renderPurchases = async () => {
+        const result = await request('/purchases?limit=100');
+        state.purchases = result.data || [];
+        if (el.purchasesTableBody) {
+            el.purchasesTableBody.innerHTML = state.purchases.map((purchase) => {
+                const lineSummary = (purchase.lines || []).map((line) => `${escapeHtml(line.item?.name || 'Item')}: ${line.quantity} x ${money(line.unitCost)}`).join('<br>');
+                return `
+                    <tr>
+                        <td>${escapeHtml(formatDateTime(purchase.purchaseDate))}</td>
+                        <td>${escapeHtml(roomDisplayName(purchase.cabin))}</td>
+                        <td>${escapeHtml(purchase.supplier || '-')}</td>
+                        <td>${escapeHtml(purchase.invoiceNumber || '-')}</td>
+                        <td>${lineSummary || '-'}</td>
+                        <td>${money(purchase.totalAmount)}</td>
+                    </tr>
+                `;
+            }).join('') || '<tr><td colspan="6" class="text-center text-gray-500">Sin compras registradas</td></tr>';
+        }
+    };
+
+    const renderMovements = async () => {
+        const result = await request('/movements?limit=100');
+        state.movements = result.data || [];
+        if (el.movementsTableBody) {
+            el.movementsTableBody.innerHTML = state.movements.map((movement) => `
+                <tr>
+                    <td>${escapeHtml(formatDateTime(movement.createdAt))}</td>
+                    <td>${escapeHtml(movementTypeLabel(movement.movementType))}</td>
+                    <td>${escapeHtml(movement.item?.name || '-')}</td>
+                    <td>${escapeHtml(roomDisplayName(movement.cabin))}</td>
+                    <td>${movement.quantity}</td>
+                    <td>${money(movement.totalCost || 0)}</td>
+                    <td>${movement.stockBefore ?? '-'}</td>
+                    <td>${movement.stockAfter ?? '-'}</td>
+                    <td>${escapeHtml(movement.note || '-')}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="9" class="text-center text-gray-500">Sin movimientos registrados</td></tr>';
         }
     };
 
@@ -384,7 +619,7 @@
                             <h4 class="font-semibold text-gray-800">${escapeHtml(template.name)}</h4>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs px-2 py-1 rounded bg-teal-100 text-teal-700">Habitacion</span>
-                                ${isMasterAdmin ? `<button type="button" class="btn btn-outline-primary btn-sm" data-edit-bom="${template._id}">Editar</button><button type="button" class="btn btn-outline-danger btn-sm" data-delete-bom="${template._id}">Desactivar</button>` : ''}
+                                ${canManageInventory ? `<button type="button" class="btn btn-outline-primary btn-sm" data-edit-bom="${template._id}">Editar</button><button type="button" class="btn btn-outline-danger btn-sm" data-delete-bom="${template._id}">Desactivar</button>` : ''}
                             </div>
                         </div>
                         <p class="text-xs text-gray-500 mt-1">Habitacion: ${escapeHtml(roomDisplayName(template.cabin))}</p>
@@ -428,7 +663,7 @@
                 <div class="border border-yellow-200 bg-yellow-50 rounded-lg p-3">
                     <div class="flex items-center justify-between gap-2">
                         <p class="font-semibold text-yellow-800">${escapeHtml(alertItem.alertType)}</p>
-                        <button class="btn btn-sm btn-outline-success" data-resolve-alert="${alertItem._id}">Resolver</button>
+                        ${canManageInventory ? `<button class="btn btn-sm btn-outline-success" data-resolve-alert="${alertItem._id}">Resolver</button>` : ''}
                     </div>
                     <p class="text-sm text-yellow-700 mt-2">${escapeHtml(alertItem.message)}</p>
                     <p class="text-xs text-yellow-600 mt-1">Item: ${escapeHtml(alertItem.item?.name || '-')} | Habitacion: ${escapeHtml(roomDisplayName(alertItem.cabin))}</p>
@@ -449,6 +684,7 @@
     };
 
     const renderConsumptionMetrics = async () => {
+        if (!canViewInventoryDashboard) return;
         await renderMetricGroups();
         const dashboards = await Promise.all(state.metricGroups.map(async (group) => {
             try {
@@ -480,9 +716,13 @@
         }
         const rooms = await response.json();
         state.rooms = Array.isArray(rooms) ? rooms : [];
-        populateItemCabinSelect();
+        populatePurchaseCabinSelect();
+        renderRoomChecklist(el.itemRoomChecklist, 'item-room-checkbox');
         renderRoomChecklist(el.metricGroupRoomChecklist, 'metric-group-room-checkbox', 'Se asociara al grupo para metricas');
         renderRoomChecklist(el.bomRoomChecklist, 'bom-room-checkbox', 'Se creara una regla individual para esta habitacion');
+        applyChecklistFilter(el.itemRoomFilter, el.itemRoomChecklist);
+        applyChecklistFilter(el.metricGroupRoomFilter, el.metricGroupRoomChecklist);
+        applyChecklistFilter(el.bomRoomFilter, el.bomRoomChecklist);
     };
 
     const setupForms = () => {
@@ -496,11 +736,14 @@
                     if (payload.cabins.length === 0) {
                         throw new Error('Selecciona al menos una habitacion');
                     }
-                    await request('/metric-groups', { method: 'POST', body: JSON.stringify(payload) });
-                    el.formMetricGroup.reset();
-                    setCheckedRooms('.metric-group-room-checkbox', []);
+                    const isEditingMetricGroup = Boolean(state.editingMetricGroupId);
+                    const path = isEditingMetricGroup ? `/metric-groups/${state.editingMetricGroupId}` : '/metric-groups';
+                    const method = isEditingMetricGroup ? 'PUT' : 'POST';
+                    await request(path, { method, body: JSON.stringify(payload) });
+                    resetMetricGroupFormMode();
+                    hideModal(el.modalMetricGroup);
                     await Promise.all([renderMetricGroups(), renderConsumptionMetrics()]);
-                    alert('Grupo metrico creado correctamente');
+                    alert(isEditingMetricGroup ? 'Grupo metrico actualizado correctamente' : 'Grupo metrico creado correctamente');
                 } catch (error) {
                     showError(error);
                 }
@@ -523,7 +766,20 @@
                     delete payload.unitCustom;
                     payload.stockCurrent = Number(payload.stockCurrent || 0);
                     payload.stockMin = Number(payload.stockMin || 0);
+                    const selectedRooms = getCheckedRooms('.item-room-checkbox').map((room) => room.id);
                     const isEditingItem = Boolean(state.editingItemId);
+                    if (selectedRooms.length === 0) {
+                        throw new Error('Selecciona al menos una habitacion');
+                    }
+                    if (isEditingItem) {
+                        if (selectedRooms.length !== 1) {
+                            throw new Error('Para editar un item debes seleccionar una sola habitacion');
+                        }
+                        payload.cabin = selectedRooms[0];
+                    } else {
+                        payload.cabinIds = selectedRooms;
+                        delete payload.cabin;
+                    }
                     if (isEditingItem) {
                         delete payload.initialUnitCost;
                         delete payload.initialSupplier;
@@ -538,7 +794,7 @@
                     resetItemFormMode();
                     hideModal(el.modalItem);
                     await Promise.all([renderItems(), renderDashboard(), renderConsumptionMetrics()]);
-                    alert(isEditingItem ? 'Item actualizado correctamente' : 'Item creado correctamente');
+                    alert(isEditingItem ? 'Item actualizado correctamente' : selectedRooms.length > 1 ? 'Items creados correctamente' : 'Item creado correctamente');
                 } catch (error) {
                     showError(error);
                 }
@@ -582,12 +838,61 @@
                 }
             });
         }
+
+        if (el.formPurchase) {
+            el.formPurchase.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                try {
+                    const fd = new FormData(el.formPurchase);
+                    const payload = Object.fromEntries(fd.entries());
+                    payload.lines = getPurchaseLinesPayload();
+                    if (!payload.cabin) {
+                        throw new Error('Selecciona una habitacion');
+                    }
+                    if (payload.lines.length === 0) {
+                        throw new Error('Agrega al menos una linea de compra valida');
+                    }
+                    await request('/purchases', { method: 'POST', body: JSON.stringify(payload) });
+                    resetPurchaseFormMode();
+                    hideModal(el.modalPurchase);
+                    await Promise.all([renderItems(), renderDashboard(), renderPurchases(), renderMovements(), renderAlerts(), renderConsumptionMetrics()]);
+                    alert('Compra registrada correctamente');
+                } catch (error) {
+                    showError(error);
+                }
+            });
+        }
+
+        if (el.formAdjustment) {
+            el.formAdjustment.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                try {
+                    const fd = new FormData(el.formAdjustment);
+                    const payload = Object.fromEntries(fd.entries());
+                    payload.quantity = Number(payload.quantity || 0);
+                    await request('/adjustments', { method: 'POST', body: JSON.stringify(payload) });
+                    resetAdjustmentFormMode();
+                    hideModal(el.modalAdjustment);
+                    await Promise.all([renderItems(), renderDashboard(), renderMovements(), renderAlerts(), renderConsumptionMetrics()]);
+                    alert('Ajuste aplicado correctamente');
+                } catch (error) {
+                    showError(error);
+                }
+            });
+        }
     };
 
     const setupActions = () => {
+        setupChecklistFilter(el.itemRoomFilter, el.itemRoomChecklist);
+        setupChecklistFilter(el.metricGroupRoomFilter, el.metricGroupRoomChecklist);
+        setupChecklistFilter(el.bomRoomFilter, el.bomRoomChecklist);
         el.itemUnitSelect?.addEventListener('change', toggleItemUnitCustom);
+        el.purchaseCabinSelect?.addEventListener('change', syncPurchaseLineOptions);
         el.btnAddBomLine?.addEventListener('click', () => {
             el.bomLinesContainer?.appendChild(createBomLineRow());
+        });
+        el.btnAddPurchaseLine?.addEventListener('click', () => {
+            el.purchaseLinesContainer?.appendChild(createPurchaseLineRow(el.purchaseCabinSelect?.value || ''));
         });
         if (el.btnRunConsumption) {
             el.btnRunConsumption.addEventListener('click', async () => {
@@ -608,8 +913,13 @@
         el.btnRefreshGroups?.addEventListener('click', renderMetricGroups);
         el.btnRefreshBom?.addEventListener('click', renderBOM);
         el.btnRefreshAlerts?.addEventListener('click', renderAlerts);
+        el.btnRefreshPurchases?.addEventListener('click', renderPurchases);
+        el.btnRefreshMovements?.addEventListener('click', renderMovements);
         el.btnRefreshConsumptionMetrics?.addEventListener('click', renderConsumptionMetrics);
+        el.modalMetricGroup?.addEventListener('hidden.bs.modal', resetMetricGroupFormMode);
         el.modalItem?.addEventListener('hidden.bs.modal', resetItemFormMode);
+        el.modalPurchase?.addEventListener('hidden.bs.modal', resetPurchaseFormMode);
+        el.modalAdjustment?.addEventListener('hidden.bs.modal', resetAdjustmentFormMode);
         el.modalBOMTemplate?.addEventListener('hidden.bs.modal', resetBOMFormMode);
     };
 
@@ -620,15 +930,20 @@
             setupForms();
             setupActions();
             await loadRooms();
-            await Promise.all([
-                renderDashboard(),
+            const tasks = [
                 renderItems(),
                 renderMetricGroups(),
                 renderBOM(),
-                renderAlerts(),
-                renderConsumptionMetrics()
-            ]);
+                renderPurchases(),
+                renderMovements(),
+                renderAlerts()
+            ];
+            if (canViewInventoryDashboard) {
+                tasks.push(renderDashboard(), renderConsumptionMetrics());
+            }
+            await Promise.all(tasks);
             ensureOneBomLine();
+            ensureOnePurchaseLine();
             toggleItemUnitCustom();
             toggleInitialPurchaseSection();
         } catch (error) {

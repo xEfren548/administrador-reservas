@@ -12,7 +12,9 @@ const createItemValidators = [
     check('name').notEmpty().withMessage('Item name is required'),
     check('itemType').isIn(['directo', 'indirecto', 'no_consumible']).withMessage('Invalid item type'),
     check('unit').notEmpty().withMessage('Unit is required'),
-    check('cabin').isMongoId().withMessage('Invalid cabin id'),
+    check('cabin').optional().isMongoId().withMessage('Invalid cabin id'),
+    check('cabinIds').optional().isArray().withMessage('cabinIds must be an array'),
+    check('cabinIds.*').optional().isMongoId().withMessage('Invalid cabin id in cabinIds'),
     check('stockCurrent').optional().isFloat({ min: 0 }).withMessage('stockCurrent must be >= 0'),
     check('stockMin').optional().isFloat({ min: 0 }).withMessage('stockMin must be >= 0'),
     check('initialUnitCost').optional().isFloat({ min: 0 }).withMessage('initialUnitCost must be >= 0'),
@@ -79,6 +81,14 @@ const createMetricGroupValidators = [
     check('cabins.*').optional().isMongoId().withMessage('Invalid cabin id in cabins')
 ];
 
+const updateMetricGroupValidators = [
+    check('name').optional().notEmpty().withMessage('Metric group name cannot be empty'),
+    check('description').optional().isString(),
+    check('cabins').optional().isArray(),
+    check('cabins.*').optional().isMongoId().withMessage('Invalid cabin id in cabins'),
+    check('active').optional().isBoolean().withMessage('active must be boolean')
+];
+
 const handleValidation = (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -104,9 +114,21 @@ const createItem = async (req, res) => {
     try {
         if (!handleValidation(req, res)) return;
 
-        const cabin = await ensureCabinExists(req.body.cabin);
-        if (!cabin) {
-            return res.status(404).json({ success: false, message: 'Cabin not found' });
+        const selectedCabinIds = [...new Set([
+            req.body.cabin,
+            ...(Array.isArray(req.body.cabinIds) ? req.body.cabinIds : [])
+        ].filter(Boolean).map(String))];
+
+        if (selectedCabinIds.length === 0) {
+            return res.status(400).json({ success: false, message: 'At least one cabin is required' });
+        }
+
+        const cabins = await Habitacion.find({ _id: { $in: selectedCabinIds } })
+            .select('_id propertyDetails.name')
+            .lean();
+
+        if (cabins.length !== selectedCabinIds.length) {
+            return res.status(404).json({ success: false, message: 'One or more cabins were not found' });
         }
 
         const initialStock = Number(req.body.stockCurrent || 0);
@@ -118,54 +140,82 @@ const createItem = async (req, res) => {
             return res.status(400).json({ success: false, message: 'initialUnitCost is required when initial stock is greater than 0' });
         }
 
-        const payload = {
-            name: req.body.name,
-            description: req.body.description || '',
-            itemType: req.body.itemType,
-            unit: req.body.unit,
-            cabin: req.body.cabin,
-            stockCurrent: initialStock,
-            stockMin: Number(req.body.stockMin || 0),
-            lastPurchaseUnitCost: initialUnitCost || 0,
-            active: req.body.active !== undefined ? normalizeBoolean(req.body.active) : true,
-            createdBy: req.session.userId || null
-        };
+        const duplicateItems = await InventoryItem.find({
+            cabin: { $in: selectedCabinIds },
+            name: req.body.name
+        })
+            .populate('cabin', 'propertyDetails.name')
+            .lean();
 
-        const item = await InventoryItem.create(payload);
-
-        if (initialStock > 0) {
-            const totalCost = initialStock * initialUnitCost;
-
-            await InventoryMovement.create({
-                item: item._id,
-                cabin: item.cabin,
-                movementType: 'purchase_entry',
-                quantity: initialStock,
-                unitCost: initialUnitCost,
-                totalCost,
-                stockBefore: 0,
-                stockAfter: initialStock,
-                performedBy: req.session.userId || null,
-                note: 'Initial stock on item creation'
-            });
-
-            await InventoryPurchase.create({
-                cabin: item.cabin,
-                supplier: req.body.initialSupplier || '',
-                invoiceNumber: req.body.initialInvoiceNumber || '',
-                purchaseDate: req.body.initialPurchaseDate || new Date(),
-                lines: [{
-                    item: item._id,
-                    quantity: initialStock,
-                    unitCost: initialUnitCost,
-                    totalCost
-                }],
-                totalAmount: totalCost,
-                createdBy: req.session.userId || null
+        if (duplicateItems.length > 0) {
+            const duplicatedCabins = duplicateItems
+                .map((item) => item.cabin?.propertyDetails?.name)
+                .filter(Boolean)
+                .join(', ');
+            return res.status(409).json({
+                success: false,
+                message: duplicatedCabins
+                    ? `An item with the same name already exists in: ${duplicatedCabins}`
+                    : 'An item with the same name already exists in one or more selected cabins'
             });
         }
 
-        return res.status(201).json({ success: true, data: item });
+        const items = [];
+        for (const cabinId of selectedCabinIds) {
+            const payload = {
+                name: req.body.name,
+                description: req.body.description || '',
+                itemType: req.body.itemType,
+                unit: req.body.unit,
+                cabin: cabinId,
+                stockCurrent: initialStock,
+                stockMin: Number(req.body.stockMin || 0),
+                lastPurchaseUnitCost: initialUnitCost || 0,
+                active: req.body.active !== undefined ? normalizeBoolean(req.body.active) : true,
+                createdBy: req.session.userId || null
+            };
+
+            const item = await InventoryItem.create(payload);
+            items.push(item);
+
+            if (initialStock > 0) {
+                const totalCost = initialStock * initialUnitCost;
+
+                await InventoryMovement.create({
+                    item: item._id,
+                    cabin: item.cabin,
+                    movementType: 'purchase_entry',
+                    quantity: initialStock,
+                    unitCost: initialUnitCost,
+                    totalCost,
+                    stockBefore: 0,
+                    stockAfter: initialStock,
+                    performedBy: req.session.userId || null,
+                    note: 'Initial stock on item creation'
+                });
+
+                await InventoryPurchase.create({
+                    cabin: item.cabin,
+                    supplier: req.body.initialSupplier || '',
+                    invoiceNumber: req.body.initialInvoiceNumber || '',
+                    purchaseDate: req.body.initialPurchaseDate || new Date(),
+                    lines: [{
+                        item: item._id,
+                        quantity: initialStock,
+                        unitCost: initialUnitCost,
+                        totalCost
+                    }],
+                    totalAmount: totalCost,
+                    createdBy: req.session.userId || null
+                });
+            }
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: items.length > 1 ? `${items.length} items created` : 'Item created',
+            data: items.length === 1 ? items[0] : items
+        });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Error creating item', error: error.message });
     }
@@ -472,6 +522,58 @@ const listMovements = async (req, res) => {
     }
 };
 
+const listPurchases = async (req, res) => {
+    try {
+        const {
+            cabin,
+            supplier,
+            invoiceNumber,
+            startDate,
+            endDate,
+            page = 1,
+            limit = 50
+        } = req.query;
+
+        const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
+        const safePage = Math.max(Number(page) || 1, 1);
+        const filter = {};
+
+        if (cabin) filter.cabin = cabin;
+        if (supplier) filter.supplier = new RegExp(supplier, 'i');
+        if (invoiceNumber) filter.invoiceNumber = new RegExp(invoiceNumber, 'i');
+        if (startDate || endDate) {
+            filter.purchaseDate = {};
+            if (startDate) filter.purchaseDate.$gte = new Date(startDate);
+            if (endDate) filter.purchaseDate.$lte = new Date(endDate);
+        }
+
+        const [total, purchases] = await Promise.all([
+            InventoryPurchase.countDocuments(filter),
+            InventoryPurchase.find(filter)
+                .populate('cabin', 'propertyDetails isGrouped')
+                .populate('lines.item', 'name unit itemType')
+                .populate('createdBy', 'name email')
+                .sort({ purchaseDate: -1, createdAt: -1 })
+                .skip((safePage - 1) * safeLimit)
+                .limit(safeLimit)
+                .lean()
+        ]);
+
+        return res.json({
+            success: true,
+            data: purchases,
+            pagination: {
+                total,
+                page: safePage,
+                limit: safeLimit,
+                totalPages: Math.ceil(total / safeLimit) || 1
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error listing purchases', error: error.message });
+    }
+};
+
 const registerPurchase = async (req, res) => {
     try {
         if (!handleValidation(req, res)) return;
@@ -714,6 +816,65 @@ const listMetricGroups = async (req, res) => {
     }
 };
 
+const updateMetricGroup = async (req, res) => {
+    try {
+        if (!handleValidation(req, res)) return;
+
+        const { id } = req.params;
+        const metricGroup = await InventoryMetricGroup.findById(id);
+
+        if (!metricGroup) {
+            return res.status(404).json({ success: false, message: 'Metric group not found' });
+        }
+
+        if (Array.isArray(req.body.cabins)) {
+            const existingCabins = await Habitacion.find({ _id: { $in: req.body.cabins } }).select('_id').lean();
+            if (existingCabins.length !== req.body.cabins.length) {
+                return res.status(400).json({ success: false, message: 'One or more cabins are invalid' });
+            }
+        }
+
+        const fields = ['name', 'description', 'cabins', 'active'];
+        fields.forEach((field) => {
+            if (req.body[field] !== undefined) {
+                metricGroup[field] = field === 'active' ? normalizeBoolean(req.body[field]) : req.body[field];
+            }
+        });
+
+        await metricGroup.save();
+
+        const updatedGroup = await InventoryMetricGroup.findById(metricGroup._id)
+            .populate('cabins', 'propertyDetails isGrouped')
+            .lean();
+
+        return res.json({ success: true, data: updatedGroup });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error updating metric group', error: error.message });
+    }
+};
+
+const deleteMetricGroup = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const metricGroup = await InventoryMetricGroup.findByIdAndUpdate(
+            id,
+            {
+                active: false,
+                updatedAt: new Date()
+            },
+            { new: true }
+        ).lean();
+
+        if (!metricGroup) {
+            return res.status(404).json({ success: false, message: 'Metric group not found' });
+        }
+
+        return res.json({ success: true, data: metricGroup });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error deleting metric group', error: error.message });
+    }
+};
+
 const getMetricConsumptionDashboard = async (req, res) => {
     try {
         const { metricGroupId } = req.params;
@@ -784,6 +945,7 @@ module.exports = {
     registerPurchaseValidators,
     manualAdjustmentValidators,
     createMetricGroupValidators,
+    updateMetricGroupValidators,
     createItem,
     updateItem,
     deleteItem,
@@ -793,6 +955,7 @@ module.exports = {
     deleteBOMTemplate,
     listBOMTemplates,
     listMovements,
+    listPurchases,
     registerPurchase,
     createManualAdjustment,
     getAlerts,
@@ -800,6 +963,8 @@ module.exports = {
     getStockDashboard,
     createMetricGroup,
     listMetricGroups,
+    updateMetricGroup,
+    deleteMetricGroup,
     getMetricConsumptionDashboard,
     runCheckoutConsumptionNow
 };

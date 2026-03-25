@@ -13,46 +13,49 @@ router.use(ensureAuthenticated);
 // Inventory items
 router.post(
     '/items',
-    requireMasterAdmin,
+    requirePermissionOrMasterAdmin('MANAGE_INVENTORY'),
     inventoryController.createItemValidators,
     validationRequest,
     inventoryController.createItem
 );
-router.get('/items', inventoryController.listItems);
+router.get('/items', requirePermissionOrMasterAdmin('VIEW_INVENTORY'), inventoryController.listItems);
 router.put(
     '/items/:id',
-    requireMasterAdmin,
+    requirePermissionOrMasterAdmin('MANAGE_INVENTORY'),
     inventoryController.updateItemValidators,
     validationRequest,
     inventoryController.updateItem
 );
-router.delete('/items/:id', requireMasterAdmin, inventoryController.deleteItem);
+router.delete('/items/:id', requirePermissionOrMasterAdmin('MANAGE_INVENTORY'), inventoryController.deleteItem);
 
 // BOM templates by cabin/group
 router.post(
     '/bom-templates',
-    requireMasterAdmin,
+    requirePermissionOrMasterAdmin('MANAGE_INVENTORY'),
     inventoryController.createBOMTemplateValidators,
     validationRequest,
     inventoryController.createBOMTemplate
 );
-router.get('/bom-templates', inventoryController.listBOMTemplates);
+router.get('/bom-templates', requirePermissionOrMasterAdmin('VIEW_INVENTORY'), inventoryController.listBOMTemplates);
 router.put(
     '/bom-templates/:id',
-    requireMasterAdmin,
+    requirePermissionOrMasterAdmin('MANAGE_INVENTORY'),
     inventoryController.updateBOMTemplateValidators,
     validationRequest,
     inventoryController.updateBOMTemplate
 );
-router.delete('/bom-templates/:id', requireMasterAdmin, inventoryController.deleteBOMTemplate);
+router.delete('/bom-templates/:id', requirePermissionOrMasterAdmin('MANAGE_INVENTORY'), inventoryController.deleteBOMTemplate);
 
 // Movement history / kardex
-router.get('/movements', inventoryController.listMovements);
+router.get('/movements', requirePermissionOrMasterAdmin('VIEW_INVENTORY'), inventoryController.listMovements);
+
+// Purchase history and restocks
+router.get('/purchases', requirePermissionOrMasterAdmin('VIEW_INVENTORY'), inventoryController.listPurchases);
 
 // Purchases (kardex by lot)
 router.post(
     '/purchases',
-    requireMasterAdmin,
+    requirePermissionOrMasterAdmin('MANAGE_INVENTORY'),
     inventoryController.registerPurchaseValidators,
     validationRequest,
     inventoryController.registerPurchase
@@ -68,22 +71,30 @@ router.post(
 );
 
 // Alerts and dashboard
-router.get('/alerts', inventoryController.getAlerts);
-router.put('/alerts/:id/resolve', requireMasterAdmin, inventoryController.resolveAlert);
-router.get('/dashboard/stock', inventoryController.getStockDashboard);
+router.get('/alerts', requirePermissionOrMasterAdmin('VIEW_INVENTORY'), inventoryController.getAlerts);
+router.put('/alerts/:id/resolve', requirePermissionOrMasterAdmin('MANAGE_INVENTORY'), inventoryController.resolveAlert);
+router.get('/dashboard/stock', requirePermissionOrMasterAdmin('VIEW_INVENTORY_DASHBOARD'), inventoryController.getStockDashboard);
 
 // Metric groups (independent from existing Tipologia model)
 router.post(
     '/metric-groups',
-    requireMasterAdmin,
+    requirePermissionOrMasterAdmin('MANAGE_INVENTORY'),
     inventoryController.createMetricGroupValidators,
     validationRequest,
     inventoryController.createMetricGroup
 );
-router.get('/metric-groups', inventoryController.listMetricGroups);
-router.get('/metric-groups/:metricGroupId/dashboard', inventoryController.getMetricConsumptionDashboard);
+router.get('/metric-groups', requirePermissionOrMasterAdmin('VIEW_INVENTORY'), inventoryController.listMetricGroups);
+router.put(
+    '/metric-groups/:id',
+    requirePermissionOrMasterAdmin('MANAGE_INVENTORY'),
+    inventoryController.updateMetricGroupValidators,
+    validationRequest,
+    inventoryController.updateMetricGroup
+);
+router.delete('/metric-groups/:id', requirePermissionOrMasterAdmin('MANAGE_INVENTORY'), inventoryController.deleteMetricGroup);
+router.get('/metric-groups/:metricGroupId/dashboard', requirePermissionOrMasterAdmin('VIEW_INVENTORY_DASHBOARD'), inventoryController.getMetricConsumptionDashboard);
 
 // Manual trigger for scheduled checkout consumption
-router.post('/cron/run-checkout-consumption', requireMasterAdmin, inventoryController.runCheckoutConsumptionNow);
+router.post('/cron/run-checkout-consumption', requirePermissionOrMasterAdmin('MANAGE_INVENTORY'), inventoryController.runCheckoutConsumptionNow);
 
 module.exports = router;
