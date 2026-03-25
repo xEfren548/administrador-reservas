@@ -21,22 +21,22 @@ async function obtenerHabitaciones(req, res) {
                 isActive: true 
             }).lean().sort({ 'propertyDetails.name': 1 });
         } else if (privilege === "Dueño de cabañas") {
-            const ownerChalets = await Habitacion.find({ 'others.owner': req.session.id, isActive: true }).lean();
+            const ownerChalets = await Habitacion.find({ 'others.owner': req.session.id, isActive: true }).lean().sort({ 'propertyDetails.name': 1 });
             const ownerChaletsIds = ownerChalets.map(chalet => chalet._id);
-            habitaciones = await Habitacion.find({ _id: ownerChaletsIds, isActive: true }).lean();
+            habitaciones = await Habitacion.find({ _id: ownerChaletsIds, isActive: true }).lean().sort({ 'propertyDetails.name': 1 });
         } else if (privilege === "Inversionistas" ) {
-            const investorChalets = await Habitacion.find({ 'others.investors.investor': req.session.id, isActive: true }).lean();
+            const investorChalets = await Habitacion.find({ 'others.investors.investor': req.session.id, isActive: true }).lean().sort({ 'propertyDetails.name': 1 });
             const investorChaletsIds = investorChalets.map(chalet => chalet._id);
-            habitaciones = await Habitacion.find({ _id: investorChaletsIds, isActive: true }).lean();
+            habitaciones = await Habitacion.find({ _id: investorChaletsIds, isActive: true }).lean().sort({ 'propertyDetails.name': 1 });
         } else if (privilege === "Colaborador dueño" ) {
             const user = await Usuario.findById(req.session.id).lean();
             const ownerId = user.administrator;
-            const ownerChalets = await Habitacion.find({ 'others.owner': ownerId, isActive: true }).lean();
+            const ownerChalets = await Habitacion.find({ 'others.owner': ownerId, isActive: true }).lean().sort({ 'propertyDetails.name': 1 });
             const ownerChaletsIds = ownerChalets.map(chalet => chalet._id);
-            habitaciones = await Habitacion.find({ _id: ownerChaletsIds, isActive: true }).lean();
+            habitaciones = await Habitacion.find({ _id: ownerChaletsIds, isActive: true }).lean().sort({ 'propertyDetails.name': 1 });
 
         } else {
-            habitaciones = await Habitacion.find( { isActive: true }).lean();
+            habitaciones = await Habitacion.find( { isActive: true }).lean().sort({ 'propertyDetails.name': 1 });
         }
         
         res.send(habitaciones);

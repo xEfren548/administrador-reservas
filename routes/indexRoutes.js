@@ -60,6 +60,8 @@ const swPagoDiferidoRoutes = require('./swPagoDiferidoRoutes');
 const swCategoriaRoutes = require('./swCategoriaRoutes');
 const cronTasksRoutes = require('./cronTasksRoutes');
 const finanzasRoutes = require('./finanzasRoutes');
+const inventarioRoutes = require('./inventarioRoutes');
+const inventoryRoutes = require('./inventoryRoutes');
 
 // Rutas del módulo de Cupones y Referidos
 const cuponesRoutes = require('./cuponesRoutes');
@@ -143,6 +145,7 @@ router.use('/', bloqueoInversionistasRoutes);
 router.use('/', plataformasRoutes);
 router.use('/', aprobacionesRoutes);
 router.use('/', finanzasRoutes);
+router.use('/', inventarioRoutes);
 
 // API routes
 router.use('/api', eventRoutes);
@@ -172,6 +175,7 @@ router.use('/api/sw', swTransaccionRecurrenteRoutes);
 router.use('/api/sw', swPagoDiferidoRoutes);
 router.use('/api/sw', swCategoriaRoutes);
 router.use('/api/cron', cronTasksRoutes);
+router.use('/api/inventory', inventoryRoutes);
 
 // Rutas del módulo de Cupones y Referidos
 router.use('/', cuponesRoutes);
