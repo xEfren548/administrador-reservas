@@ -52,10 +52,8 @@ const inventoryMovementSchema = new mongoose.Schema({
     },
     idempotencyKey: {
         type: String,
-        default: null,
-        index: true,
-        unique: true,
-        sparse: true
+        default: undefined,
+        trim: true
     },
     performedBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -68,5 +66,15 @@ const inventoryMovementSchema = new mongoose.Schema({
 
 inventoryMovementSchema.index({ item: 1, createdAt: -1 });
 inventoryMovementSchema.index({ event: 1, movementType: 1 });
+inventoryMovementSchema.index(
+    { idempotencyKey: 1 },
+    {
+        name: 'idempotencyKey_1',
+        unique: true,
+        partialFilterExpression: {
+            idempotencyKey: { $type: 'string' }
+        }
+    }
+);
 
 module.exports = mongoose.model('InventoryMovement', inventoryMovementSchema);

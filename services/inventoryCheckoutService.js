@@ -48,7 +48,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
         return {
             consumed: false,
             skipped: true,
-            reason: 'No active BOM template configured'
+            reason: 'No hay una plantilla BOM activa configurada'
         };
     }
 
@@ -65,7 +65,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
         if (!item) {
             insufficiencies.push({
                 itemId: line.item,
-                reason: 'Item not found or inactive'
+                reason: 'Item no encontrado o inactivo'
             });
             continue;
         }
@@ -99,8 +99,8 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
 
         for (const issue of insufficiencies) {
             const message = issue.itemName
-                ? `Insufficient stock for ${issue.itemName} in reservation ${event._id}. Required ${issue.required}, available ${issue.available}.`
-                : `Inventory item unavailable for reservation ${event._id}.`;
+                ? `Stock insuficiente de ${issue.itemName} en la reserva ${event._id}. Requerido ${issue.required}, disponible ${issue.available}.`
+                : `Item de inventario no disponible para la reserva ${event._id}.`;
             const itemRef = issue.itemId ? { _id: issue.itemId, cabin: null } : null;
             if (itemRef) {
                 const maybeItem = await InventoryItem.findById(issue.itemId).lean();
@@ -132,7 +132,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
         }
 
         if (freshItem.stockCurrent < requiredQty) {
-            const message = `Concurrent stock update detected for item ${freshItem.name} on reservation ${event._id}.`;
+            const message = `Se detecto una actualizacion concurrente de stock para ${freshItem.name} en la reserva ${event._id}.`;
             await ensureLowStockAlert(freshItem, event._id, message);
             event.inventoryConsumptionBlocked = true;
             event.inventoryConsumptionProcessed = false;
@@ -162,7 +162,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
             event: event._id,
             idempotencyKey,
             performedBy: systemUserId,
-            note: `Automatic checkout consumption for reservation ${event._id}`
+            note: `Consumo automatico por checkout de la reserva ${event._id}`
         });
 
         if (stockAfter <= Number(freshItem.stockMin || 0)) {
@@ -172,7 +172,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
                 event: event._id,
                 alertType: 'low_stock',
                 status: 'open',
-                message: `Low stock for ${freshItem.name}. Current ${stockAfter}, min ${freshItem.stockMin}.`
+                message: `Stock bajo de ${freshItem.name}. Actual ${stockAfter}, minimo ${freshItem.stockMin}.`
             });
         }
     }
@@ -181,7 +181,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
     event.inventoryConsumptionProcessed = true;
     event.inventoryConsumptionProcessedAt = new Date();
     await event.save();
-    await createInventoryLog(`Inventory checkout consumption applied to reservation ${event._id}.`, systemUserId);
+    await createInventoryLog(`Consumo de inventario por checkout aplicado a la reserva ${event._id}.`, systemUserId);
 
     return {
         consumed: true,

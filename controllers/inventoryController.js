@@ -105,12 +105,18 @@ const normalizeBoolean = (value) => {
     return Boolean(value);
 };
 
+const normalizeItemName = (value) => String(value || '').trim().replace(/\s+/g, ' ');
+
 const ensureCabinExists = async (cabinId) => {
     if (!cabinId) return null;
     return Habitacion.findById(cabinId);
 };
 
 const createItem = async (req, res) => {
+    const createdItemIds = [];
+    const createdMovementIds = [];
+    const createdPurchaseIds = [];
+
     try {
         if (!handleValidation(req, res)) return;
 
@@ -135,6 +141,11 @@ const createItem = async (req, res) => {
         const initialUnitCost = req.body.initialUnitCost !== undefined && req.body.initialUnitCost !== ''
             ? Number(req.body.initialUnitCost)
             : null;
+        const normalizedItemName = normalizeItemName(req.body.name);
+
+        if (!normalizedItemName) {
+            return res.status(400).json({ success: false, message: 'Item name is required' });
+        }
 
         if (initialStock > 0 && (initialUnitCost === null || initialUnitCost <= 0)) {
             return res.status(400).json({ success: false, message: 'initialUnitCost is required when initial stock is greater than 0' });
@@ -142,8 +153,9 @@ const createItem = async (req, res) => {
 
         const duplicateItems = await InventoryItem.find({
             cabin: { $in: selectedCabinIds },
-            name: req.body.name
+            name: normalizedItemName
         })
+            .collation({ locale: 'es', strength: 2 })
             .populate('cabin', 'propertyDetails.name')
             .lean();
 
@@ -163,7 +175,7 @@ const createItem = async (req, res) => {
         const items = [];
         for (const cabinId of selectedCabinIds) {
             const payload = {
-                name: req.body.name,
+                name: normalizedItemName,
                 description: req.body.description || '',
                 itemType: req.body.itemType,
                 unit: req.body.unit,
@@ -176,12 +188,13 @@ const createItem = async (req, res) => {
             };
 
             const item = await InventoryItem.create(payload);
+            createdItemIds.push(item._id);
             items.push(item);
 
             if (initialStock > 0) {
                 const totalCost = initialStock * initialUnitCost;
 
-                await InventoryMovement.create({
+                const movement = await InventoryMovement.create({
                     item: item._id,
                     cabin: item.cabin,
                     movementType: 'purchase_entry',
@@ -191,10 +204,11 @@ const createItem = async (req, res) => {
                     stockBefore: 0,
                     stockAfter: initialStock,
                     performedBy: req.session.userId || null,
-                    note: 'Initial stock on item creation'
+                    note: 'Stock inicial al crear el item'
                 });
+                createdMovementIds.push(movement._id);
 
-                await InventoryPurchase.create({
+                const purchase = await InventoryPurchase.create({
                     cabin: item.cabin,
                     supplier: req.body.initialSupplier || '',
                     invoiceNumber: req.body.initialInvoiceNumber || '',
@@ -208,6 +222,7 @@ const createItem = async (req, res) => {
                     totalAmount: totalCost,
                     createdBy: req.session.userId || null
                 });
+                createdPurchaseIds.push(purchase._id);
             }
         }
 
@@ -217,6 +232,20 @@ const createItem = async (req, res) => {
             data: items.length === 1 ? items[0] : items
         });
     } catch (error) {
+        try {
+            if (createdPurchaseIds.length > 0) {
+                await InventoryPurchase.deleteMany({ _id: { $in: createdPurchaseIds } });
+            }
+            if (createdMovementIds.length > 0) {
+                await InventoryMovement.deleteMany({ _id: { $in: createdMovementIds } });
+            }
+            if (createdItemIds.length > 0) {
+                await InventoryItem.deleteMany({ _id: { $in: createdItemIds } });
+            }
+        } catch (rollbackError) {
+            console.error('Error rolling back failed item creation:', rollbackError);
+        }
+
         return res.status(500).json({ success: false, message: 'Error creating item', error: error.message });
     }
 };
@@ -238,12 +267,14 @@ const updateItem = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Cabin not found' });
         }
 
-        const nextName = req.body.name ? String(req.body.name).trim() : item.name;
+        const nextName = req.body.name !== undefined ? normalizeItemName(req.body.name) : item.name;
         const duplicateItem = await InventoryItem.findOne({
             _id: { $ne: item._id },
             cabin: nextCabinId,
             name: nextName
-        }).lean();
+        })
+            .collation({ locale: 'es', strength: 2 })
+            .lean();
 
         if (duplicateItem) {
             return res.status(409).json({ success: false, message: 'Another item with the same name already exists in this cabin' });
@@ -252,7 +283,11 @@ const updateItem = async (req, res) => {
         const fields = ['name', 'description', 'itemType', 'unit', 'cabin', 'stockCurrent', 'stockMin', 'lastPurchaseUnitCost', 'active'];
         fields.forEach((field) => {
             if (req.body[field] !== undefined) {
-                item[field] = field === 'active' ? normalizeBoolean(req.body[field]) : req.body[field];
+                if (field === 'active') {
+                    item[field] = normalizeBoolean(req.body[field]);
+                    return;
+                }
+                item[field] = field === 'name' ? nextName : req.body[field];
             }
         });
 
@@ -618,7 +653,7 @@ const registerPurchase = async (req, res) => {
                 stockBefore,
                 stockAfter,
                 performedBy: req.session.userId || null,
-                note: `Purchase entry ${invoiceNumber || ''}`.trim()
+                note: `Entrada por compra ${invoiceNumber || ''}`.trim()
             });
 
             normalizedLines.push({
@@ -666,7 +701,7 @@ const createManualAdjustment = async (req, res) => {
             movementType = 'manual_adjustment_in';
         } else {
             if (stockBefore < qty) {
-                return res.status(400).json({ success: false, message: 'Insufficient stock for adjustment out' });
+                return res.status(400).json({ success: false, message: 'Stock insuficiente para aplicar la salida' });
             }
             stockAfter = stockBefore - qty;
             movementType = 'manual_adjustment_out';
@@ -694,7 +729,7 @@ const createManualAdjustment = async (req, res) => {
                 item: item._id,
                 alertType: 'low_stock',
                 status: 'open',
-                message: `Low stock for ${item.name}. Current ${stockAfter}, min ${item.stockMin}.`
+                message: `Stock bajo de ${item.name}. Actual ${stockAfter}, minimo ${item.stockMin}.`
             });
         }
 

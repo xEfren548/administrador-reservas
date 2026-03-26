@@ -22,6 +22,8 @@ const backupController = require('./controllers/backupController');
 const { iniciarCronTransaccionesRecurrentes } = require('./common/tasks/ejecutarTransaccionesRecurrentes');
 const { iniciarCronPagosDiferidos } = require('./common/tasks/verificarPagosDiferidos');
 const { iniciarCronInventarioCheckout } = require('./common/tasks/inventoryCheckoutConsumption');
+require('./models/InventoryItem');
+require('./models/InventoryMovement');
 
 const passport = require('passport');
 const cookieSession = require('cookie-session');
@@ -167,9 +169,81 @@ async function cleanupInactiveUsers() {
   }
 }
 
+async function ensureInventoryMovementIndexes() {
+  try {
+    const collection = mongoose.connection.collection('inventorymovements');
+    const indexes = await collection.indexes();
+    const idempotencyIndex = indexes.find((index) => index.name === 'idempotencyKey_1');
+
+    const hasCorrectPartialUniqueIndex = Boolean(
+      idempotencyIndex &&
+      idempotencyIndex.unique === true &&
+      idempotencyIndex.partialFilterExpression?.idempotencyKey?.$type === 'string'
+    );
+
+    if (!hasCorrectPartialUniqueIndex && idempotencyIndex) {
+      await collection.dropIndex('idempotencyKey_1');
+    }
+
+    if (!hasCorrectPartialUniqueIndex) {
+      await collection.createIndex(
+        { idempotencyKey: 1 },
+        {
+          name: 'idempotencyKey_1',
+          unique: true,
+          partialFilterExpression: {
+            idempotencyKey: { $type: 'string' }
+          }
+        }
+      );
+    }
+  } catch (error) {
+    console.error('Error ensuring inventory movement indexes:', error);
+  }
+}
+
+async function ensureInventoryItemIndexes() {
+  try {
+    const collection = mongoose.connection.collection('inventoryitems');
+    const indexes = await collection.indexes();
+
+    const legacyWarehouseIndex = indexes.find((index) => index.name === 'warehouse_1_name_1');
+    if (legacyWarehouseIndex) {
+      await collection.dropIndex('warehouse_1_name_1');
+    }
+
+    const cabinNameIndex = indexes.find((index) => index.name === 'cabin_1_name_1');
+    const hasCorrectCabinUniqueIndex = Boolean(
+      cabinNameIndex &&
+      cabinNameIndex.unique === true &&
+      cabinNameIndex.key?.cabin === 1 &&
+      cabinNameIndex.key?.name === 1
+    );
+
+    if (!hasCorrectCabinUniqueIndex) {
+      if (cabinNameIndex) {
+        await collection.dropIndex('cabin_1_name_1');
+      }
+
+      await collection.createIndex(
+        { cabin: 1, name: 1 },
+        {
+          name: 'cabin_1_name_1',
+          unique: true
+        }
+      );
+    }
+  } catch (error) {
+    console.error('Error ensuring inventory item indexes:', error);
+  }
+}
+
 // Connecting app to Mongoose
 mongoose.connect(db_url).then(async () => {
   let server;
+
+  await ensureInventoryItemIndexes();
+  await ensureInventoryMovementIndexes();
   
   if (process.env.NODE_ENV === 'development') {
     // For development, run on HTTP at port 3005

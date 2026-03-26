@@ -75,10 +75,50 @@
     const canManageInventory = Boolean(window.canManageInventory || window.isMasterAdmin);
     const canAdjustInventory = Boolean(window.canAdjustInventory || window.isMasterAdmin);
     const canViewInventoryDashboard = Boolean(window.canViewInventoryDashboard);
+    let loadingModalCount = 0;
 
     const toggleSpinner = (show) => {
         if (!el.spinner) return;
         el.spinner.classList.toggle('hidden', !show);
+    };
+
+    const collectErrorMessages = (payload) => {
+        if (!payload) return [];
+
+        if (typeof payload === 'string') {
+            return [payload];
+        }
+
+        if (Array.isArray(payload)) {
+            return payload.flatMap((entry) => collectErrorMessages(entry));
+        }
+
+        const messages = [];
+        if (typeof payload.message === 'string' && payload.message.trim()) {
+            messages.push(payload.message.trim());
+        }
+        if (typeof payload.error === 'string' && payload.error.trim()) {
+            messages.push(payload.error.trim());
+        }
+        if (Array.isArray(payload.error)) {
+            messages.push(...collectErrorMessages(payload.error));
+        }
+        if (Array.isArray(payload.errors)) {
+            messages.push(...collectErrorMessages(payload.errors));
+        }
+        if (typeof payload.msg === 'string' && payload.msg.trim()) {
+            messages.push(payload.msg.trim());
+        }
+
+        return messages.filter(Boolean);
+    };
+
+    const extractErrorMessage = (payload) => {
+        const messages = [...new Set(collectErrorMessages(payload))];
+        if (messages.length === 0) {
+            return 'Error de comunicacion con inventario';
+        }
+        return messages.join('\n');
     };
 
     const request = async (path, options = {}) => {
@@ -92,7 +132,10 @@
 
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-            throw new Error(data.message || 'Error de comunicacion con inventario');
+            const error = new Error(extractErrorMessage(data));
+            error.payload = data;
+            error.status = response.status;
+            throw error;
         }
         return data;
     };
@@ -120,9 +163,172 @@
         initial_balance: 'Saldo inicial'
     }[value] || value || '-');
 
-    const showError = (error) => {
+    const formatMovementNote = (value) => {
+        const note = String(value || '').trim();
+        if (!note) return '-';
+
+        if (note === 'Initial stock on item creation') {
+            return 'Stock inicial al crear el item';
+        }
+
+        if (note.startsWith('Purchase entry ')) {
+            return note.replace(/^Purchase entry\s*/i, 'Entrada por compra ');
+        }
+
+        if (note === 'Purchase entry') {
+            return 'Entrada por compra';
+        }
+
+        if (note.startsWith('Automatic checkout consumption for reservation ')) {
+            return note.replace(/^Automatic checkout consumption for reservation\s*/i, 'Consumo automatico por checkout de la reserva ');
+        }
+
+        return note;
+    };
+
+    const getSwal = () => window.Swal || window.swal || null;
+
+    const showSuccess = async (message, title = 'Operacion completada') => {
+        const swal = getSwal();
+        if (!swal?.fire) {
+            return;
+        }
+
+        await swal.fire({
+            icon: 'success',
+            title,
+            text: message,
+            timer: 1800,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        });
+    };
+
+    const showError = async (error) => {
         console.error(error);
-        alert(error.message || 'Ocurrio un error inesperado');
+        const swal = getSwal();
+        const message = error?.message || 'Ocurrio un error inesperado';
+        if (!swal?.fire) {
+            return;
+        }
+
+        await swal.fire({
+            icon: 'error',
+            title: 'No se pudo completar la accion',
+            text: message,
+            confirmButtonText: 'Cerrar',
+            allowOutsideClick: true,
+            allowEscapeKey: true
+        });
+    };
+
+    const confirmAction = async ({ title = 'Confirmar accion', text, confirmButtonText = 'Continuar', cancelButtonText = 'Cancelar' }) => {
+        const swal = getSwal();
+        if (!swal?.fire) {
+            return true;
+        }
+
+        const result = await swal.fire({
+            icon: 'warning',
+            title,
+            text,
+            showCancelButton: true,
+            confirmButtonText,
+            cancelButtonText,
+            reverseButtons: true,
+            focusCancel: true,
+            allowOutsideClick: true,
+            allowEscapeKey: true
+        });
+
+        return Boolean(result.isConfirmed);
+    };
+
+    const openLoadingDialog = (title = 'Procesando...', text = 'Espera un momento.') => {
+        const swal = getSwal();
+        loadingModalCount += 1;
+
+        if (!swal?.fire || loadingModalCount > 1) {
+            return;
+        }
+
+        swal.fire({
+            title,
+            text,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                swal.showLoading();
+                swal.getPopup()?.setAttribute('aria-busy', 'true');
+            }
+        });
+    };
+
+    const closeLoadingDialog = () => {
+        const swal = getSwal();
+        loadingModalCount = Math.max(loadingModalCount - 1, 0);
+        if (loadingModalCount === 0 && swal?.isVisible?.()) {
+            swal.close();
+        }
+    };
+
+    const setPendingState = (target, busy, busyText = 'Procesando...') => {
+        if (!target) return () => {};
+
+        const elements = target.tagName === 'FORM'
+            ? Array.from(target.querySelectorAll('button, input, select, textarea'))
+            : [target];
+
+        const snapshot = elements.map((element) => ({
+            element,
+            disabled: element.disabled,
+            text: element.tagName === 'BUTTON' ? element.textContent : null
+        }));
+
+        snapshot.forEach(({ element }) => {
+            element.disabled = busy;
+            if (busy && element.tagName === 'BUTTON' && element === target && busyText) {
+                element.textContent = busyText;
+            }
+        });
+
+        if (target.setAttribute) {
+            target.setAttribute('aria-busy', busy ? 'true' : 'false');
+        }
+
+        return () => {
+            snapshot.forEach(({ element, disabled, text }) => {
+                element.disabled = disabled;
+                if (text !== null) {
+                    element.textContent = text;
+                }
+            });
+            if (target.removeAttribute) {
+                target.removeAttribute('aria-busy');
+            }
+        };
+    };
+
+    const runBusyAction = async ({ target, busyText, loadingTitle, loadingText, successMessage, successTitle, action }) => {
+        const releasePendingState = setPendingState(target, true, busyText);
+        openLoadingDialog(loadingTitle, loadingText);
+
+        try {
+            const result = await action();
+            closeLoadingDialog();
+            if (successMessage) {
+                await showSuccess(successMessage, successTitle);
+            }
+            return result;
+        } catch (error) {
+            closeLoadingDialog();
+            throw error;
+        } finally {
+            releasePendingState();
+        }
     };
 
     const escapeHtml = (value) => String(value || '')
@@ -488,12 +694,27 @@
             el.itemsTableBody.querySelectorAll('[data-delete-item]').forEach((button) => {
                 button.addEventListener('click', async () => {
                     try {
-                        if (!confirm('Se eliminara el item seleccionado. Esta accion no se puede deshacer.')) return;
-                        await request(`/items/${button.getAttribute('data-delete-item')}`, { method: 'DELETE' });
-                        await Promise.all([renderItems(), renderDashboard(), renderConsumptionMetrics()]);
-                        alert('Item eliminado correctamente');
+                        const confirmed = await confirmAction({
+                            title: 'Eliminar item',
+                            text: 'Se eliminara el item seleccionado. Esta accion no se puede deshacer.',
+                            confirmButtonText: 'Si, eliminar'
+                        });
+                        if (!confirmed) return;
+
+                        await runBusyAction({
+                            target: button,
+                            busyText: 'Eliminando...',
+                            loadingTitle: 'Eliminando item',
+                            loadingText: 'Estamos actualizando el inventario.',
+                            successTitle: 'Item eliminado',
+                            successMessage: 'Item eliminado correctamente',
+                            action: async () => {
+                                await request(`/items/${button.getAttribute('data-delete-item')}`, { method: 'DELETE' });
+                                await Promise.all([renderItems(), renderDashboard(), renderConsumptionMetrics()]);
+                            }
+                        });
                     } catch (error) {
-                        showError(error);
+                        await showError(error);
                     }
                 });
             });
@@ -555,12 +776,27 @@
             el.metricGroupsList.querySelectorAll('[data-delete-metric-group]').forEach((button) => {
                 button.addEventListener('click', async () => {
                     try {
-                        if (!confirm('El grupo metrico se desactivara y dejara de aparecer en dashboards.')) return;
-                        await request(`/metric-groups/${button.getAttribute('data-delete-metric-group')}`, { method: 'DELETE' });
-                        await Promise.all([renderMetricGroups(), renderConsumptionMetrics()]);
-                        alert('Grupo metrico desactivado correctamente');
+                        const confirmed = await confirmAction({
+                            title: 'Desactivar grupo metrico',
+                            text: 'El grupo metrico se desactivara y dejara de aparecer en dashboards.',
+                            confirmButtonText: 'Si, desactivar'
+                        });
+                        if (!confirmed) return;
+
+                        await runBusyAction({
+                            target: button,
+                            busyText: 'Desactivando...',
+                            loadingTitle: 'Desactivando grupo',
+                            loadingText: 'Actualizando configuracion de metricas.',
+                            successTitle: 'Grupo desactivado',
+                            successMessage: 'Grupo metrico desactivado correctamente',
+                            action: async () => {
+                                await request(`/metric-groups/${button.getAttribute('data-delete-metric-group')}`, { method: 'DELETE' });
+                                await Promise.all([renderMetricGroups(), renderConsumptionMetrics()]);
+                            }
+                        });
                     } catch (error) {
-                        showError(error);
+                        await showError(error);
                     }
                 });
             });
@@ -601,7 +837,7 @@
                     <td>${money(movement.totalCost || 0)}</td>
                     <td>${movement.stockBefore ?? '-'}</td>
                     <td>${movement.stockAfter ?? '-'}</td>
-                    <td>${escapeHtml(movement.note || '-')}</td>
+                    <td>${escapeHtml(formatMovementNote(movement.note))}</td>
                 </tr>
             `).join('') || '<tr><td colspan="9" class="text-center text-gray-500">Sin movimientos registrados</td></tr>';
         }
@@ -644,12 +880,27 @@
             el.bomList.querySelectorAll('[data-delete-bom]').forEach((button) => {
                 button.addEventListener('click', async () => {
                     try {
-                        if (!confirm('La regla BOM se desactivara y dejara de aplicarse en consumos futuros.')) return;
-                        await request(`/bom-templates/${button.getAttribute('data-delete-bom')}`, { method: 'DELETE' });
-                        await renderBOM();
-                        alert('Regla BOM desactivada correctamente');
+                        const confirmed = await confirmAction({
+                            title: 'Desactivar regla BOM',
+                            text: 'La regla BOM se desactivara y dejara de aplicarse en consumos futuros.',
+                            confirmButtonText: 'Si, desactivar'
+                        });
+                        if (!confirmed) return;
+
+                        await runBusyAction({
+                            target: button,
+                            busyText: 'Desactivando...',
+                            loadingTitle: 'Desactivando BOM',
+                            loadingText: 'Guardando cambios de consumo.',
+                            successTitle: 'Regla desactivada',
+                            successMessage: 'Regla BOM desactivada correctamente',
+                            action: async () => {
+                                await request(`/bom-templates/${button.getAttribute('data-delete-bom')}`, { method: 'DELETE' });
+                                await renderBOM();
+                            }
+                        });
                     } catch (error) {
-                        showError(error);
+                        await showError(error);
                     }
                 });
             });
@@ -673,10 +924,20 @@
             el.alertsList.querySelectorAll('[data-resolve-alert]').forEach((button) => {
                 button.addEventListener('click', async () => {
                     try {
-                        await request(`/alerts/${button.getAttribute('data-resolve-alert')}/resolve`, { method: 'PUT' });
-                        await Promise.all([renderAlerts(), renderDashboard()]);
+                        await runBusyAction({
+                            target: button,
+                            busyText: 'Resolviendo...',
+                            loadingTitle: 'Resolviendo alerta',
+                            loadingText: 'Actualizando estado del inventario.',
+                            successTitle: 'Alerta resuelta',
+                            successMessage: 'La alerta fue resuelta correctamente',
+                            action: async () => {
+                                await request(`/alerts/${button.getAttribute('data-resolve-alert')}/resolve`, { method: 'PUT' });
+                                await Promise.all([renderAlerts(), renderDashboard()]);
+                            }
+                        });
                     } catch (error) {
-                        showError(error);
+                        await showError(error);
                     }
                 });
             });
@@ -739,13 +1000,21 @@
                     const isEditingMetricGroup = Boolean(state.editingMetricGroupId);
                     const path = isEditingMetricGroup ? `/metric-groups/${state.editingMetricGroupId}` : '/metric-groups';
                     const method = isEditingMetricGroup ? 'PUT' : 'POST';
-                    await request(path, { method, body: JSON.stringify(payload) });
-                    resetMetricGroupFormMode();
-                    hideModal(el.modalMetricGroup);
-                    await Promise.all([renderMetricGroups(), renderConsumptionMetrics()]);
-                    alert(isEditingMetricGroup ? 'Grupo metrico actualizado correctamente' : 'Grupo metrico creado correctamente');
+                    await runBusyAction({
+                        target: el.formMetricGroup,
+                        loadingTitle: isEditingMetricGroup ? 'Actualizando grupo metrico' : 'Creando grupo metrico',
+                        loadingText: 'Guardando configuracion de habitaciones.',
+                        successTitle: isEditingMetricGroup ? 'Grupo actualizado' : 'Grupo creado',
+                        successMessage: isEditingMetricGroup ? 'Grupo metrico actualizado correctamente' : 'Grupo metrico creado correctamente',
+                        action: async () => {
+                            await request(path, { method, body: JSON.stringify(payload) });
+                            resetMetricGroupFormMode();
+                            hideModal(el.modalMetricGroup);
+                            await Promise.all([renderMetricGroups(), renderConsumptionMetrics()]);
+                        }
+                    });
                 } catch (error) {
-                    showError(error);
+                    await showError(error);
                 }
             });
         }
@@ -790,13 +1059,21 @@
                     }
                     const path = isEditingItem ? `/items/${state.editingItemId}` : '/items';
                     const method = isEditingItem ? 'PUT' : 'POST';
-                    await request(path, { method, body: JSON.stringify(payload) });
-                    resetItemFormMode();
-                    hideModal(el.modalItem);
-                    await Promise.all([renderItems(), renderDashboard(), renderConsumptionMetrics()]);
-                    alert(isEditingItem ? 'Item actualizado correctamente' : selectedRooms.length > 1 ? 'Items creados correctamente' : 'Item creado correctamente');
+                    await runBusyAction({
+                        target: el.formItem,
+                        loadingTitle: isEditingItem ? 'Actualizando item' : 'Creando item',
+                        loadingText: 'Guardando informacion del inventario.',
+                        successTitle: isEditingItem ? 'Item actualizado' : 'Item creado',
+                        successMessage: isEditingItem ? 'Item actualizado correctamente' : selectedRooms.length > 1 ? 'Items creados correctamente' : 'Item creado correctamente',
+                        action: async () => {
+                            await request(path, { method, body: JSON.stringify(payload) });
+                            resetItemFormMode();
+                            hideModal(el.modalItem);
+                            await Promise.all([renderItems(), renderDashboard(), renderConsumptionMetrics()]);
+                        }
+                    });
                 } catch (error) {
-                    showError(error);
+                    await showError(error);
                 }
             });
         }
@@ -828,13 +1105,21 @@
                     const isEditingBOM = Boolean(state.editingBOMId);
                     const path = isEditingBOM ? `/bom-templates/${state.editingBOMId}` : '/bom-templates';
                     const method = isEditingBOM ? 'PUT' : 'POST';
-                    await request(path, { method, body: JSON.stringify(payload) });
-                    resetBOMFormMode();
-                    hideModal(el.modalBOMTemplate);
-                    await renderBOM();
-                    alert(isEditingBOM ? 'Regla BOM actualizada correctamente' : 'Regla BOM creada correctamente');
+                    await runBusyAction({
+                        target: el.formBOMTemplate,
+                        loadingTitle: isEditingBOM ? 'Actualizando regla BOM' : 'Creando regla BOM',
+                        loadingText: 'Guardando configuracion de consumo.',
+                        successTitle: isEditingBOM ? 'Regla actualizada' : 'Regla creada',
+                        successMessage: isEditingBOM ? 'Regla BOM actualizada correctamente' : 'Regla BOM creada correctamente',
+                        action: async () => {
+                            await request(path, { method, body: JSON.stringify(payload) });
+                            resetBOMFormMode();
+                            hideModal(el.modalBOMTemplate);
+                            await renderBOM();
+                        }
+                    });
                 } catch (error) {
-                    showError(error);
+                    await showError(error);
                 }
             });
         }
@@ -852,13 +1137,21 @@
                     if (payload.lines.length === 0) {
                         throw new Error('Agrega al menos una linea de compra valida');
                     }
-                    await request('/purchases', { method: 'POST', body: JSON.stringify(payload) });
-                    resetPurchaseFormMode();
-                    hideModal(el.modalPurchase);
-                    await Promise.all([renderItems(), renderDashboard(), renderPurchases(), renderMovements(), renderAlerts(), renderConsumptionMetrics()]);
-                    alert('Compra registrada correctamente');
+                    await runBusyAction({
+                        target: el.formPurchase,
+                        loadingTitle: 'Registrando compra',
+                        loadingText: 'Actualizando stock y movimientos.',
+                        successTitle: 'Compra registrada',
+                        successMessage: 'Compra registrada correctamente',
+                        action: async () => {
+                            await request('/purchases', { method: 'POST', body: JSON.stringify(payload) });
+                            resetPurchaseFormMode();
+                            hideModal(el.modalPurchase);
+                            await Promise.all([renderItems(), renderDashboard(), renderPurchases(), renderMovements(), renderAlerts(), renderConsumptionMetrics()]);
+                        }
+                    });
                 } catch (error) {
-                    showError(error);
+                    await showError(error);
                 }
             });
         }
@@ -870,13 +1163,21 @@
                     const fd = new FormData(el.formAdjustment);
                     const payload = Object.fromEntries(fd.entries());
                     payload.quantity = Number(payload.quantity || 0);
-                    await request('/adjustments', { method: 'POST', body: JSON.stringify(payload) });
-                    resetAdjustmentFormMode();
-                    hideModal(el.modalAdjustment);
-                    await Promise.all([renderItems(), renderDashboard(), renderMovements(), renderAlerts(), renderConsumptionMetrics()]);
-                    alert('Ajuste aplicado correctamente');
+                    await runBusyAction({
+                        target: el.formAdjustment,
+                        loadingTitle: 'Aplicando ajuste',
+                        loadingText: 'Actualizando stock del item.',
+                        successTitle: 'Ajuste aplicado',
+                        successMessage: 'Ajuste aplicado correctamente',
+                        action: async () => {
+                            await request('/adjustments', { method: 'POST', body: JSON.stringify(payload) });
+                            resetAdjustmentFormMode();
+                            hideModal(el.modalAdjustment);
+                            await Promise.all([renderItems(), renderDashboard(), renderMovements(), renderAlerts(), renderConsumptionMetrics()]);
+                        }
+                    });
                 } catch (error) {
-                    showError(error);
+                    await showError(error);
                 }
             });
         }
@@ -897,12 +1198,21 @@
         if (el.btnRunConsumption) {
             el.btnRunConsumption.addEventListener('click', async () => {
                 try {
-                    toggleSpinner(true);
-                    const result = await request('/cron/run-checkout-consumption', { method: 'POST' });
-                    alert(`Consumo ejecutado. Reservas evaluadas: ${result.data?.totalCandidates || 0}`);
-                    await Promise.all([renderAlerts(), renderDashboard(), renderConsumptionMetrics()]);
+                    const result = await runBusyAction({
+                        target: el.btnRunConsumption,
+                        busyText: 'Ejecutando...',
+                        loadingTitle: 'Ejecutando consumo',
+                        loadingText: 'Revisando reservas y movimientos generados.',
+                        action: async () => {
+                            toggleSpinner(true);
+                            const response = await request('/cron/run-checkout-consumption', { method: 'POST' });
+                            await Promise.all([renderAlerts(), renderDashboard(), renderConsumptionMetrics()]);
+                            return response;
+                        }
+                    });
+                    await showSuccess(`Reservas evaluadas: ${result.data?.totalCandidates || 0}`, 'Consumo ejecutado');
                 } catch (error) {
-                    showError(error);
+                    await showError(error);
                 } finally {
                     toggleSpinner(false);
                 }
@@ -947,7 +1257,7 @@
             toggleItemUnitCustom();
             toggleInitialPurchaseSection();
         } catch (error) {
-            showError(error);
+            await showError(error);
         } finally {
             toggleSpinner(false);
         }

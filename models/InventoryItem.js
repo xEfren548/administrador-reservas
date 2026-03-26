@@ -4,7 +4,8 @@ const inventoryItemSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        set: (value) => typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value
     },
     description: {
         type: String,
