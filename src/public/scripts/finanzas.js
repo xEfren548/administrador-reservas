@@ -34,6 +34,13 @@ const CATEGORIAS_FALLBACK = [
     'Transferencia'
 ];
 
+function compararTextoAlfabeticamente(a, b) {
+    return String(a || '').localeCompare(String(b || ''), 'es', {
+        sensitivity: 'base',
+        numeric: true
+    });
+}
+
 // Funciones de spinner global
 function mostrarSpinner() {
     const spinner = document.getElementById('globalSpinner');
@@ -68,7 +75,7 @@ function normalizarCategorias(categorias = []) {
         }
     });
 
-    return resultado;
+    return resultado.sort(compararTextoAlfabeticamente);
 }
 
 function popularSelectCategorias(selector, selectedValue = 'Otro') {
@@ -83,6 +90,8 @@ function popularSelectCategorias(selector, selectedValue = 'Otro') {
     if (selectedValue && !categoriasFinales.includes(selectedValue)) {
         categoriasFinales.push(selectedValue);
     }
+
+    categoriasFinales.sort(compararTextoAlfabeticamente);
 
     select.empty();
 
@@ -173,7 +182,7 @@ function agregarCategoriaEdicion() {
         return;
     }
 
-    categoriasEnEdicion.push(categoriaNueva);
+    categoriasEnEdicion = normalizarCategorias([...categoriasEnEdicion, categoriaNueva]);
     input.val('');
     renderizarCategoriasEnModal();
 }

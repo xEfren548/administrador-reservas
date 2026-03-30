@@ -340,6 +340,16 @@
 
     const roomDisplayName = (room) => room?.propertyDetails?.name || room?.name || 'Habitacion';
 
+    const sortAlphabetically = (items, getLabel) => {
+        if (!Array.isArray(items)) return [];
+
+        return [...items].sort((left, right) => String(getLabel(left) || '').localeCompare(
+            String(getLabel(right) || ''),
+            'es',
+            { sensitivity: 'base', numeric: true }
+        ));
+    };
+
     const normalizeSearchText = (value) => String(value || '')
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
@@ -642,7 +652,7 @@
 
     const renderItems = async () => {
         const result = await request('/items');
-        state.items = result.data || [];
+        state.items = sortAlphabetically(result.data || [], (item) => item?.name);
         populateAdjustmentItemSelect();
         syncPurchaseLineOptions();
         const rows = state.items.map((item) => `
@@ -741,7 +751,7 @@
 
     const renderMetricGroups = async () => {
         const result = await request('/metric-groups');
-        state.metricGroups = result.data || [];
+        state.metricGroups = sortAlphabetically(result.data || [], (group) => group?.name);
         if (el.metricGroupsList) {
             el.metricGroupsList.innerHTML = state.metricGroups.map((group) => `
                 <div class="border border-gray-200 rounded-lg p-3">
@@ -976,7 +986,7 @@
             throw new Error('No se pudieron cargar las habitaciones');
         }
         const rooms = await response.json();
-        state.rooms = Array.isArray(rooms) ? rooms : [];
+        state.rooms = sortAlphabetically(rooms, (room) => roomDisplayName(room));
         populatePurchaseCabinSelect();
         renderRoomChecklist(el.itemRoomChecklist, 'item-room-checkbox');
         renderRoomChecklist(el.metricGroupRoomChecklist, 'metric-group-room-checkbox', 'Se asociara al grupo para metricas');
