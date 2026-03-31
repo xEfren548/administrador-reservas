@@ -101,10 +101,20 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white rounded-lg p-6 shadow-xl">
                     <h3 class="text-lg font-semibold text-gray-900 mb-3">Stock por Habitacion</h3>
+                    <div class="inventory-chart-shell mb-4">
+                        <div class="inventory-chart-canvas-wrapper">
+                            <canvas id="dashboard-stock-by-cabin-chart"></canvas>
+                        </div>
+                    </div>
                     <div id="stock-by-cabin" class="space-y-2"></div>
                 </div>
                 <div class="bg-white rounded-lg p-6 shadow-xl">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Items Críticos</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Salud del Inventario</h3>
+                    <div class="inventory-chart-shell mb-4">
+                        <div class="inventory-chart-canvas-wrapper inventory-chart-canvas-wrapper--compact">
+                            <canvas id="dashboard-stock-health-chart"></canvas>
+                        </div>
+                    </div>
                     <div id="critical-items" class="space-y-2 max-h-80 overflow-y-auto"></div>
                 </div>
             </div>
@@ -381,6 +391,11 @@
                             <h6 class="bom-panel-title">Configuración</h6>
                             <div class="space-y-3">
                                 <input class="form-control" name="name" placeholder="Nombre de la regla BOM" required>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 mb-1">Vigente desde</label>
+                                    <input type="datetime-local" class="form-control" name="effectiveFrom" id="bom-effective-from" required>
+                                    <p class="text-xs text-gray-500 mt-1 mb-0">Solo se aplicará a reservas creadas a partir de esta fecha y hora.</p>
+                                </div>
                             </div>
 
                             <div class="mt-4">
@@ -559,6 +574,21 @@
         gap: 0.5rem;
         align-items: center;
     }
+    .inventory-chart-shell {
+        width: 100%;
+        overflow: hidden;
+    }
+    .inventory-chart-canvas-wrapper {
+        position: relative;
+        width: 100%;
+        height: 320px;
+        max-height: 320px;
+        overflow: hidden;
+    }
+    .inventory-chart-canvas-wrapper--compact {
+        height: 280px;
+        max-height: 280px;
+    }
     @media (max-width: 768px) {
         .bom-modal-grid {
             grid-template-columns: 1fr;
@@ -576,6 +606,14 @@
         }
         .purchase-line-row {
             grid-template-columns: 1fr;
+        }
+        .inventory-chart-canvas-wrapper {
+            height: 240px;
+            max-height: 240px;
+        }
+        .inventory-chart-canvas-wrapper--compact {
+            height: 220px;
+            max-height: 220px;
         }
     }
 </style>

@@ -12,6 +12,11 @@
         editingBOMId: null
     };
 
+    const dashboardCharts = {
+        stockByCabin: null,
+        stockHealth: null
+    };
+
     const el = {
         spinner: document.getElementById('inventoryGlobalSpinner'),
         tabs: document.querySelectorAll('.inventory-tab-button'),
@@ -21,6 +26,8 @@
         roomCount: document.getElementById('dashboard-room-count'),
         totalUnits: document.getElementById('dashboard-total-units'),
         stockByCabin: document.getElementById('stock-by-cabin'),
+        stockByCabinChart: document.getElementById('dashboard-stock-by-cabin-chart'),
+        stockHealthChart: document.getElementById('dashboard-stock-health-chart'),
         criticalItems: document.getElementById('critical-items'),
         itemsTableBody: document.getElementById('items-table-body'),
         purchasesTableBody: document.getElementById('purchases-table-body'),
@@ -45,6 +52,7 @@
         modalItemSubmit: document.getElementById('modal-item-submit'),
         modalBOMTitle: document.getElementById('modal-bom-title'),
         modalBOMSubmit: document.getElementById('modal-bom-submit'),
+        bomEffectiveFrom: document.getElementById('bom-effective-from'),
         itemInitialPurchaseSection: document.getElementById('item-initial-purchase-section'),
         itemInitialUnitCost: document.getElementById('item-initial-unit-cost'),
         btnRunConsumption: document.getElementById('btn-run-checkout-consumption'),
@@ -155,6 +163,36 @@
         });
     };
 
+    const formatDateTimeLocalInput = (value) => {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+
+        const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+        return localDate.toISOString().slice(0, 16);
+    };
+
+    const getMexicoCityNowForInput = () => {
+        const formatter = new Intl.DateTimeFormat('sv-SE', {
+            timeZone: 'America/Mexico_City',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hourCycle: 'h23'
+        });
+
+        return formatter.format(new Date()).replace(' ', 'T');
+    };
+
+    const parseDateTimeLocalInput = (value) => {
+        if (!value) return null;
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return null;
+        return date.toISOString();
+    };
+
     const movementTypeLabel = (value) => ({
         purchase_entry: 'Compra',
         manual_adjustment_in: 'Ajuste +',
@@ -162,6 +200,8 @@
         checkout_exit: 'Checkout',
         initial_balance: 'Saldo inicial'
     }[value] || value || '-');
+
+    const chartPalette = ['#0F766E', '#0EA5E9', '#14B8A6', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
     const formatMovementNote = (value) => {
         const note = String(value || '').trim();
@@ -367,6 +407,139 @@
 
     const hideModal = (element) => {
         getBootstrapModal(element)?.hide();
+    };
+
+    const destroyDashboardChart = (chartKey) => {
+        if (dashboardCharts[chartKey]) {
+            dashboardCharts[chartKey].destroy();
+            dashboardCharts[chartKey] = null;
+        }
+    };
+
+    const buildChartFallback = (canvas, message) => {
+        const container = canvas?.parentElement;
+        if (!container) return;
+        container.innerHTML = `<div class="h-full w-full flex items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-sm text-gray-500 text-center p-4">${escapeHtml(message)}</div>`;
+    };
+
+    const renderStockByCabinChart = (stockByCabin) => {
+        destroyDashboardChart('stockByCabin');
+
+        if (!el.stockByCabinChart) return;
+        if (typeof window.Chart !== 'function') {
+            buildChartFallback(el.stockByCabinChart, 'No se pudo cargar la grafica de stock por habitacion.');
+            return;
+        }
+
+        const entries = Object.entries(stockByCabin)
+            .map(([cabinName, values]) => ({
+                cabinName,
+                stockUnits: Number(values.stockUnits || 0),
+                items: Number(values.items || 0)
+            }))
+            .sort((left, right) => right.stockUnits - left.stockUnits)
+            .slice(0, 8);
+
+        if (entries.length === 0) {
+            buildChartFallback(el.stockByCabinChart, 'Sin informacion suficiente para la grafica.');
+            return;
+        }
+
+        dashboardCharts.stockByCabin = new window.Chart(el.stockByCabinChart, {
+            type: 'bar',
+            data: {
+                labels: entries.map((entry) => entry.cabinName.length > 26 ? `${entry.cabinName.slice(0, 26)}...` : entry.cabinName),
+                datasets: [{
+                    label: 'Unidades',
+                    data: entries.map((entry) => entry.stockUnits),
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    backgroundColor: entries.map((_, index) => chartPalette[index % chartPalette.length])
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                animation: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => ` ${money(context.parsed.x)} unidades`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: (value) => money(value)
+                        },
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.18)'
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#475569',
+                            font: { size: 11 }
+                        },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    };
+
+    const renderStockHealthChart = (totalItems, lowStockCount) => {
+        destroyDashboardChart('stockHealth');
+
+        if (!el.stockHealthChart) return;
+        if (typeof window.Chart !== 'function') {
+            buildChartFallback(el.stockHealthChart, 'No se pudo cargar la grafica de salud del inventario.');
+            return;
+        }
+
+        const healthyItems = Math.max(Number(totalItems || 0) - Number(lowStockCount || 0), 0);
+        const chartValues = totalItems > 0 ? [healthyItems, Number(lowStockCount || 0)] : [1];
+        const chartLabels = totalItems > 0 ? ['Stock saludable', 'Bajo stock'] : ['Sin datos'];
+        const chartColors = totalItems > 0 ? ['#0F766E', '#DC2626'] : ['#CBD5E1'];
+
+        dashboardCharts.stockHealth = new window.Chart(el.stockHealthChart, {
+            type: 'doughnut',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    data: chartValues,
+                    backgroundColor: chartColors,
+                    borderColor: '#FFFFFF',
+                    borderWidth: 4,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                cutout: '62%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 16,
+                            color: '#475569'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => ` ${context.label}: ${context.parsed}`
+                        }
+                    }
+                }
+            }
+        });
     };
 
     const populatePurchaseCabinSelect = () => {
@@ -583,6 +756,7 @@
         el.formBOMTemplate?.reset();
         if (el.modalBOMTitle) el.modalBOMTitle.textContent = 'Nueva Regla de Consumo BOM';
         if (el.modalBOMSubmit) el.modalBOMSubmit.textContent = 'Guardar BOM';
+        if (el.bomEffectiveFrom) el.bomEffectiveFrom.value = getMexicoCityNowForInput();
         setCheckedRooms('.bom-room-checkbox', []);
         resetChecklistFilter(el.bomRoomFilter, el.bomRoomChecklist);
         setBomLines([]);
@@ -629,6 +803,9 @@
 
         const totalUnits = Object.values(stockByCabin).reduce((sum, cabin) => sum + Number(cabin.stockUnits || 0), 0);
         if (el.totalUnits) el.totalUnits.textContent = money(totalUnits);
+
+        renderStockByCabinChart(stockByCabin);
+        renderStockHealthChart(data.totalItems || 0, data.lowStockCount || 0);
 
         if (el.stockByCabin) {
             el.stockByCabin.innerHTML = Object.entries(stockByCabin).map(([cabinName, values]) => `
@@ -854,7 +1031,7 @@
     };
 
     const renderBOM = async () => {
-        const result = await request('/bom-templates');
+        const result = await request('/bom-templates?active=true');
         state.bomTemplates = result.data || [];
         if (el.bomList) {
             el.bomList.innerHTML = state.bomTemplates.map((template) => {
@@ -869,6 +1046,7 @@
                             </div>
                         </div>
                         <p class="text-xs text-gray-500 mt-1">Habitacion: ${escapeHtml(roomDisplayName(template.cabin))}</p>
+                        <p class="text-xs text-gray-500 mt-1">Vigente desde: ${escapeHtml(formatDateTime(template.effectiveFrom))}</p>
                         <p class="text-sm text-gray-700 mt-2">${lines || 'Sin lineas'}</p>
                     </div>
                 `;
@@ -882,6 +1060,7 @@
                     if (el.modalBOMTitle) el.modalBOMTitle.textContent = `Editar BOM: ${template.name}`;
                     if (el.modalBOMSubmit) el.modalBOMSubmit.textContent = 'Actualizar BOM';
                     el.formBOMTemplate.elements.name.value = template.name || '';
+                    if (el.bomEffectiveFrom) el.bomEffectiveFrom.value = formatDateTimeLocalInput(template.effectiveFrom);
                     setCheckedRooms('.bom-room-checkbox', [template.cabin?._id || template.cabin].filter(Boolean));
                     setBomLines(template.lines || []);
                     showModal(el.modalBOMTemplate);
@@ -1105,6 +1284,10 @@
                     if (state.editingBOMId && selectedRooms.length !== 1) {
                         throw new Error('Para editar una regla individual debes seleccionar una sola habitacion');
                     }
+                    payload.effectiveFrom = parseDateTimeLocalInput(payload.effectiveFrom);
+                    if (!payload.effectiveFrom) {
+                        throw new Error('Selecciona una fecha y hora valida para la vigencia de la BOM');
+                    }
                     payload.lines = lines;
                     payload.scopeType = 'cabana';
                     if (state.editingBOMId) {
@@ -1241,6 +1424,11 @@
         el.modalPurchase?.addEventListener('hidden.bs.modal', resetPurchaseFormMode);
         el.modalAdjustment?.addEventListener('hidden.bs.modal', resetAdjustmentFormMode);
         el.modalBOMTemplate?.addEventListener('hidden.bs.modal', resetBOMFormMode);
+        el.modalBOMTemplate?.addEventListener('show.bs.modal', () => {
+            if (!state.editingBOMId) {
+                resetBOMFormMode();
+            }
+        });
     };
 
     const initialize = async () => {
@@ -1264,6 +1452,7 @@
             await Promise.all(tasks);
             ensureOneBomLine();
             ensureOnePurchaseLine();
+            resetBOMFormMode();
             toggleItemUnitCustom();
             toggleInitialPurchaseSection();
         } catch (error) {

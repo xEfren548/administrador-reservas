@@ -51,6 +51,11 @@ const inventoryBOMTemplateSchema = new mongoose.Schema({
         type: [bomLineSchema],
         default: []
     },
+    effectiveFrom: {
+        type: Date,
+        required: true,
+        default: Date.now
+    },
     active: {
         type: Boolean,
         default: true
@@ -65,5 +70,6 @@ const inventoryBOMTemplateSchema = new mongoose.Schema({
 });
 
 inventoryBOMTemplateSchema.index({ scopeType: 1, cabin: 1, groupName: 1, active: 1 });
+inventoryBOMTemplateSchema.index({ cabin: 1, active: 1, effectiveFrom: -1 });
 
 module.exports = mongoose.model('InventoryBOMTemplate', inventoryBOMTemplateSchema);

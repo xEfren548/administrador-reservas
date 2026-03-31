@@ -187,6 +187,15 @@ const reservaSchema = new Schema({
         type: Boolean,
         default: false
     },
+    inventoryConsumptionSkipReason: {
+        type: String,
+        enum: ['missing_bom'],
+        default: null
+    },
+    inventoryConsumptionSkippedAt: {
+        type: Date,
+        default: null
+    },
     inventoryConsumptionProcessedAt: {
         type: Date,
         default: null

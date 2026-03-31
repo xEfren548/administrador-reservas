@@ -9,15 +9,26 @@ const InventoryAlert = require('../models/InventoryAlert');
 const TZ = 'America/Mexico_City';
 
 const buildCheckoutCutoffUtc = () => {
-    return moment.tz(TZ).startOf('day').utc().toDate();
+    return moment.tz(TZ).toDate();
 };
 
-const resolveTemplate = async (resourceId) => {
+const getInventoryEffectiveDateForEvent = (event) => {
+    return event?.departureDate || null;
+};
+
+const resolveTemplate = async (resourceId, effectiveDate) => {
+    if (!resourceId || !effectiveDate) {
+        return null;
+    }
+
     return InventoryBOMTemplate.findOne({
         active: true,
         scopeType: 'cabana',
-        cabin: resourceId
-    }).lean();
+        cabin: resourceId,
+        effectiveFrom: { $lte: effectiveDate }
+    })
+        .sort({ effectiveFrom: -1, createdAt: -1 })
+        .lean();
 };
 
 const createInventoryLog = async (acciones, userId = null) => {
@@ -41,14 +52,37 @@ const ensureLowStockAlert = async (item, eventId, message) => {
     });
 };
 
+const clearMissingBomSkipState = (event) => {
+    event.inventoryConsumptionSkipReason = null;
+    event.inventoryConsumptionSkippedAt = null;
+};
+
+const hasApplicableTemplateForEvent = (event, effectiveDatesByCabin) => {
+    const effectiveDate = getInventoryEffectiveDateForEvent(event);
+    if (!effectiveDate) {
+        return false;
+    }
+
+    const templateDates = effectiveDatesByCabin.get(String(event.resourceId || '')) || [];
+    return templateDates.some((templateDate) => new Date(templateDate).getTime() <= new Date(effectiveDate).getTime());
+};
+
 const processSingleEventCheckoutConsumption = async (event, systemUserId = null) => {
-    const template = await resolveTemplate(event.resourceId);
+    const eventEffectiveDate = getInventoryEffectiveDateForEvent(event);
+    const template = await resolveTemplate(event.resourceId, eventEffectiveDate);
 
     if (!template || !Array.isArray(template.lines) || template.lines.length === 0) {
+        event.inventoryConsumptionBlocked = false;
+        event.inventoryConsumptionProcessed = false;
+        event.inventoryConsumptionProcessedAt = null;
+        event.inventoryConsumptionSkipReason = 'missing_bom';
+        event.inventoryConsumptionSkippedAt = new Date();
+        await event.save();
+
         return {
             consumed: false,
             skipped: true,
-            reason: 'No hay una plantilla BOM activa configurada'
+            reason: 'No hay una plantilla BOM activa vigente para la fecha de salida de la reserva'
         };
     }
 
@@ -95,6 +129,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
         event.inventoryConsumptionBlocked = true;
         event.inventoryConsumptionProcessed = false;
         event.inventoryConsumptionProcessedAt = null;
+        clearMissingBomSkipState(event);
         await event.save();
 
         for (const issue of insufficiencies) {
@@ -137,6 +172,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
             event.inventoryConsumptionBlocked = true;
             event.inventoryConsumptionProcessed = false;
             event.inventoryConsumptionProcessedAt = null;
+            clearMissingBomSkipState(event);
             await event.save();
             return {
                 consumed: false,
@@ -180,6 +216,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
     event.inventoryConsumptionBlocked = false;
     event.inventoryConsumptionProcessed = true;
     event.inventoryConsumptionProcessedAt = new Date();
+    clearMissingBomSkipState(event);
     await event.save();
     await createInventoryLog(`Consumo de inventario por checkout aplicado a la reserva ${event._id}.`, systemUserId);
 
@@ -200,15 +237,40 @@ const processFinishedReservationsCheckoutConsumption = async (systemUserId = nul
         inventoryConsumptionProcessed: { $ne: true }
     });
 
+    const resourceIds = [...new Set(events.map((event) => String(event.resourceId || '')).filter(Boolean))];
+    const activeTemplates = resourceIds.length > 0
+        ? await InventoryBOMTemplate.find({
+            active: true,
+            scopeType: 'cabana',
+            cabin: { $in: resourceIds }
+        })
+            .select('cabin effectiveFrom')
+            .sort({ effectiveFrom: -1 })
+            .lean()
+        : [];
+    const effectiveDatesByCabin = activeTemplates.reduce((acc, template) => {
+        const cabinId = String(template.cabin || '');
+        if (!cabinId || !template.effectiveFrom) {
+            return acc;
+        }
+
+        const currentDates = acc.get(cabinId) || [];
+        currentDates.push(template.effectiveFrom);
+        acc.set(cabinId, currentDates);
+        return acc;
+    }, new Map());
+
+    const eligibleEvents = events.filter((event) => hasApplicableTemplateForEvent(event, effectiveDatesByCabin));
+
     const summary = {
-        totalCandidates: events.length,
+        totalCandidates: eligibleEvents.length,
         consumed: 0,
         blocked: 0,
         skipped: 0,
         details: []
     };
 
-    for (const event of events) {
+    for (const event of eligibleEvents) {
         const result = await processSingleEventCheckoutConsumption(event, systemUserId);
         summary.details.push({ reservationId: event._id, ...result });
 

@@ -41,6 +41,7 @@ const createBOMTemplateValidators = [
     check('cabin').optional().isMongoId().withMessage('Invalid cabin id'),
     check('cabinIds').optional().isArray().withMessage('cabinIds must be an array'),
     check('cabinIds.*').optional().isMongoId().withMessage('Invalid cabin id in cabinIds'),
+    check('effectiveFrom').optional().isISO8601().withMessage('effectiveFrom invalido'),
     check('lines').isArray({ min: 1 }).withMessage('At least one BOM line is required'),
     check('lines.*.item').isMongoId().withMessage('Invalid item id in lines'),
     check('lines.*.quantityPerNight').isFloat({ min: 0 }).withMessage('quantityPerNight must be >= 0'),
@@ -51,6 +52,7 @@ const updateBOMTemplateValidators = [
     check('name').optional().notEmpty().withMessage('Template name cannot be empty'),
     check('scopeType').optional().isIn(['cabana']).withMessage('Invalid scope type'),
     check('cabin').optional({ nullable: true }).isMongoId().withMessage('Invalid cabin id'),
+    check('effectiveFrom').optional().isISO8601().withMessage('effectiveFrom invalido'),
     check('lines').optional().isArray({ min: 1 }).withMessage('At least one BOM line is required'),
     check('lines.*.item').optional().isMongoId().withMessage('Invalid item id in lines'),
     check('lines.*.quantityPerNight').optional().isFloat({ min: 0 }).withMessage('quantityPerNight must be >= 0'),
@@ -110,6 +112,19 @@ const normalizeItemName = (value) => String(value || '').trim().replace(/\s+/g, 
 const ensureCabinExists = async (cabinId) => {
     if (!cabinId) return null;
     return Habitacion.findById(cabinId);
+};
+
+const normalizeEffectiveFrom = (value) => {
+    if (!value) {
+        return new Date();
+    }
+
+    const normalizedDate = new Date(value);
+    if (Number.isNaN(normalizedDate.getTime())) {
+        return null;
+    }
+
+    return normalizedDate;
 };
 
 const createItem = async (req, res) => {
@@ -362,9 +377,14 @@ const createBOMTemplate = async (req, res) => {
 
         const { cabin, cabinIds = [] } = req.body;
         const selectedCabinIds = Array.isArray(cabinIds) ? cabinIds.filter(Boolean) : [];
+        const effectiveFrom = normalizeEffectiveFrom(req.body.effectiveFrom);
 
         if (!cabin && selectedCabinIds.length === 0) {
             return res.status(400).json({ success: false, message: 'At least one cabin is required for BOM creation' });
+        }
+
+        if (!effectiveFrom) {
+            return res.status(400).json({ success: false, message: 'La fecha de vigencia de la BOM es invalida' });
         }
 
         if (selectedCabinIds.length > 0) {
@@ -378,6 +398,7 @@ const createBOMTemplate = async (req, res) => {
                 scopeType: 'cabana',
                 cabin: cabinId,
                 lines: req.body.lines,
+                effectiveFrom,
                 active: req.body.active !== false,
                 createdBy: req.session.userId || null
             }));
@@ -395,6 +416,7 @@ const createBOMTemplate = async (req, res) => {
             scopeType: 'cabana',
             groupName: null,
             cabins: [],
+            effectiveFrom,
             createdBy: req.session.userId || null
         };
 
@@ -438,10 +460,22 @@ const updateBOMTemplate = async (req, res) => {
             }
         }
 
-        const fields = ['name', 'lines', 'active'];
+        const fields = ['name', 'lines', 'active', 'effectiveFrom'];
         fields.forEach((field) => {
             if (req.body[field] !== undefined) {
-                template[field] = field === 'active' ? normalizeBoolean(req.body[field]) : req.body[field];
+                if (field === 'active') {
+                    template[field] = normalizeBoolean(req.body[field]);
+                    return;
+                }
+                if (field === 'effectiveFrom') {
+                    const effectiveFrom = normalizeEffectiveFrom(req.body[field]);
+                    if (!effectiveFrom) {
+                        throw new Error('La fecha de vigencia de la BOM es invalida');
+                    }
+                    template[field] = effectiveFrom;
+                    return;
+                }
+                template[field] = req.body[field];
             }
         });
 
@@ -485,15 +519,17 @@ const deleteBOMTemplate = async (req, res) => {
 const listBOMTemplates = async (req, res) => {
     try {
         const { scopeType, cabin, groupName, active } = req.query;
-        const filter = { scopeType: scopeType || 'cabana' };
+        const filter = {
+            scopeType: scopeType || 'cabana',
+            active: active !== undefined ? active === 'true' : true
+        };
         if (cabin) filter.cabin = cabin;
         if (groupName) filter.groupName = groupName;
-        if (active !== undefined) filter.active = active === 'true';
 
         const templates = await InventoryBOMTemplate.find(filter)
             .populate('cabin', 'propertyDetails isGrouped')
             .populate('lines.item', 'name itemType unit stockCurrent stockMin cabin')
-            .sort({ updatedAt: -1 })
+            .sort({ effectiveFrom: -1, updatedAt: -1 })
             .lean();
 
         return res.json({ success: true, data: templates });
