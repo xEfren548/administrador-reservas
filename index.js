@@ -86,7 +86,7 @@ app.engine('handlebars', engine({
     }
   }));
 app.set('view engine', 'handlebars');
-app.set('views', './views');
+app.set('views', path.join(__dirname, 'views'));
 
 console.log(`Env variable: ${process.env.NODE_ENV}`)
 
