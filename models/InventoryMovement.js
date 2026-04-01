@@ -9,7 +9,7 @@ const inventoryMovementSchema = new mongoose.Schema({
     cabin: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'habitaciones',
-        required: true
+        default: null
     },
     movementType: {
         type: String,
