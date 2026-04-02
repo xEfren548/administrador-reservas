@@ -4,7 +4,7 @@ const inventoryAlertSchema = new mongoose.Schema({
     cabin: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'habitaciones',
-        required: true
+        default: null
     },
     item: {
         type: mongoose.Schema.Types.ObjectId,

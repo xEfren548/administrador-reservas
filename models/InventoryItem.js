@@ -39,7 +39,7 @@ const inventoryItemSchema = new mongoose.Schema({
     cabin: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'habitaciones',
-        required: true
+        default: null
     },
     active: {
         type: Boolean,

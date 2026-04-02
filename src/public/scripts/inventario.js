@@ -9,7 +9,8 @@
         metricGroups: [],
         editingMetricGroupId: null,
         editingItemId: null,
-        editingBOMId: null
+        editingBOMId: null,
+        bomRoomSelectionLocked: false
     };
 
     const dashboardCharts = {
@@ -63,15 +64,12 @@
         btnRefreshPurchases: document.getElementById('btn-refresh-purchases'),
         btnRefreshMovements: document.getElementById('btn-refresh-movements'),
         btnRefreshConsumptionMetrics: document.getElementById('btn-refresh-consumption-metrics'),
-        itemRoomChecklist: document.getElementById('item-room-checklist'),
-        itemRoomFilter: document.getElementById('item-room-filter'),
         itemUnitSelect: document.getElementById('item-unit-select'),
         itemUnitCustom: document.getElementById('item-unit-custom'),
         metricGroupRoomFilter: document.getElementById('metric-group-room-filter'),
         metricGroupRoomChecklist: document.getElementById('metric-group-room-checklist'),
         bomRoomFilter: document.getElementById('bom-room-filter'),
         bomRoomChecklist: document.getElementById('bom-room-checklist'),
-        purchaseCabinSelect: document.getElementById('purchase-cabin-select'),
         purchaseLinesContainer: document.getElementById('purchase-lines-container'),
         btnAddPurchaseLine: document.getElementById('btn-add-purchase-line'),
         adjustmentItemSelect: document.getElementById('adjustment-item-select'),
@@ -378,7 +376,10 @@
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
 
-    const roomDisplayName = (room) => room?.propertyDetails?.name || room?.name || 'Habitacion';
+    const roomDisplayName = (room) => {
+        if (!room) return 'Bodega Global';
+        return room?.propertyDetails?.name || room?.name || 'Habitacion';
+    };
 
     const sortAlphabetically = (items, getLabel) => {
         if (!Array.isArray(items)) return [];
@@ -427,7 +428,7 @@
 
         if (!el.stockByCabinChart) return;
         if (typeof window.Chart !== 'function') {
-            buildChartFallback(el.stockByCabinChart, 'No se pudo cargar la grafica de stock por habitacion.');
+            buildChartFallback(el.stockByCabinChart, 'No se pudo cargar la grafica de stock por ubicacion.');
             return;
         }
 
@@ -542,14 +543,6 @@
         });
     };
 
-    const populatePurchaseCabinSelect = () => {
-        if (!el.purchaseCabinSelect) return;
-        el.purchaseCabinSelect.innerHTML = [
-            '<option value="">Selecciona habitacion</option>',
-            ...state.rooms.map((room) => `<option value="${room._id}">${escapeHtml(roomDisplayName(room))}</option>`)
-        ].join('');
-    };
-
     const populateAdjustmentItemSelect = () => {
         if (!el.adjustmentItemSelect) return;
         el.adjustmentItemSelect.innerHTML = [
@@ -558,9 +551,18 @@
         ].join('');
     };
 
-    const renderRoomChecklist = (container, checkboxClass, helperText) => {
+    const renderRoomChecklist = (container, checkboxClass, helperText, includeGlobal = false) => {
         if (!container) return;
-        container.innerHTML = state.rooms.map((room) => `
+        const globalOption = includeGlobal ? `
+            <label class="room-option-card flex items-center gap-2 cursor-pointer" data-filter-label="bodega global">
+                <input type="checkbox" class="${checkboxClass}" value="GLOBAL">
+                <div>
+                    <p class="mb-0 text-sm font-medium text-gray-800">🏭 Bodega Global</p>
+                    <p class="mb-0 text-xs text-gray-500">Stock centralizado, sin habitacion especifica</p>
+                </div>
+            </label>
+        ` : '';
+        container.innerHTML = globalOption + (state.rooms.map((room) => `
             <label class="room-option-card flex items-center gap-2 cursor-pointer" data-filter-label="${escapeHtml(normalizeSearchText(roomDisplayName(room)))}">
                 <input type="checkbox" class="${checkboxClass}" value="${room._id}">
                 <div>
@@ -568,7 +570,7 @@
                     ${helperText ? `<p class="mb-0 text-xs text-gray-500">${escapeHtml(helperText)}</p>` : ''}
                 </div>
             </label>
-        `).join('') || '<p class="text-gray-500 text-sm">No hay habitaciones disponibles.</p>';
+        `).join('') || '<p class="text-gray-500 text-sm">No hay habitaciones disponibles.</p>');
     };
 
     const applyChecklistFilter = (input, container) => {
@@ -600,6 +602,16 @@
         });
     };
 
+    const setBOMRoomSelectionLocked = (locked) => {
+        state.bomRoomSelectionLocked = Boolean(locked);
+        document.querySelectorAll('.bom-room-checkbox').forEach((checkbox) => {
+            checkbox.disabled = state.bomRoomSelectionLocked;
+        });
+        if (el.bomRoomFilter) {
+            el.bomRoomFilter.disabled = state.bomRoomSelectionLocked;
+        }
+    };
+
     const getCheckedRooms = (selector) => {
         return Array.from(document.querySelectorAll(`${selector}:checked`)).map((checkbox) => ({ id: checkbox.value }));
     };
@@ -626,21 +638,19 @@
         return wrapper;
     };
 
-    const getItemsByCabin = (cabinId) => state.items.filter((item) => String(item.cabin?._id || item.cabin) === String(cabinId));
-
-    const buildPurchaseItemOptions = (cabinId, selectedItemId = '') => {
-        const items = cabinId ? getItemsByCabin(cabinId) : [];
+    const buildPurchaseItemOptions = (selectedItemId = '') => {
+        const items = state.items.filter((item) => !item.cabin);
         return [
             '<option value="">Item</option>',
             ...items.map((item) => `<option value="${item._id}" ${String(selectedItemId) === String(item._id) ? 'selected' : ''}>${escapeHtml(item.name)} (${escapeHtml(item.unit)})</option>`)
         ].join('');
     };
 
-    const createPurchaseLineRow = (cabinId = '', line = {}) => {
+    const createPurchaseLineRow = (line = {}) => {
         const wrapper = document.createElement('div');
         wrapper.className = 'purchase-line-row';
         wrapper.innerHTML = `
-            <select class="form-select purchase-line-item">${buildPurchaseItemOptions(cabinId, line.item?._id || line.item || '')}</select>
+            <select class="form-select purchase-line-item">${buildPurchaseItemOptions(line.item?._id || line.item || '')}</select>
             <input type="number" min="0.01" step="0.01" class="form-control purchase-line-qty" placeholder="Cantidad" value="${line.quantity ?? ''}">
             <input type="number" min="0" step="0.01" class="form-control purchase-line-cost" placeholder="Costo unitario" value="${line.unitCost ?? ''}">
             <button type="button" class="btn btn-outline-danger btn-sm purchase-line-remove">Quitar</button>
@@ -655,18 +665,17 @@
     const ensureOnePurchaseLine = () => {
         if (!el.purchaseLinesContainer) return;
         if (el.purchaseLinesContainer.children.length === 0) {
-            el.purchaseLinesContainer.appendChild(createPurchaseLineRow(el.purchaseCabinSelect?.value || ''));
+            el.purchaseLinesContainer.appendChild(createPurchaseLineRow());
         }
     };
 
     const syncPurchaseLineOptions = () => {
         if (!el.purchaseLinesContainer) return;
-        const cabinId = el.purchaseCabinSelect?.value || '';
         Array.from(el.purchaseLinesContainer.children).forEach((row) => {
             const select = row.querySelector('.purchase-line-item');
             if (!select) return;
             const previousValue = select.value;
-            select.innerHTML = buildPurchaseItemOptions(cabinId, previousValue);
+            select.innerHTML = buildPurchaseItemOptions(previousValue);
             if (!Array.from(select.options).some((option) => option.value === previousValue)) {
                 select.value = '';
             }
@@ -730,8 +739,6 @@
     const resetItemFormMode = () => {
         state.editingItemId = null;
         el.formItem?.reset();
-        setCheckedRooms('.item-room-checkbox', []);
-        resetChecklistFilter(el.itemRoomFilter, el.itemRoomChecklist);
         if (el.modalItemTitle) el.modalItemTitle.textContent = 'Nuevo Item';
         if (el.modalItemSubmit) el.modalItemSubmit.textContent = 'Guardar';
         toggleItemUnitCustom();
@@ -757,6 +764,7 @@
         if (el.modalBOMTitle) el.modalBOMTitle.textContent = 'Nueva Regla de Consumo BOM';
         if (el.modalBOMSubmit) el.modalBOMSubmit.textContent = 'Guardar BOM';
         if (el.bomEffectiveFrom) el.bomEffectiveFrom.value = getMexicoCityNowForInput();
+        setBOMRoomSelectionLocked(false);
         setCheckedRooms('.bom-room-checkbox', []);
         resetChecklistFilter(el.bomRoomFilter, el.bomRoomChecklist);
         setBomLines([]);
@@ -813,7 +821,7 @@
                     <span class="font-medium text-gray-700">${escapeHtml(cabinName)}</span>
                     <span class="text-sm text-gray-600">Items: ${values.items} | Unidades: ${money(values.stockUnits)}</span>
                 </div>
-            `).join('') || '<p class="text-gray-500">Sin informacion por habitacion.</p>';
+            `).join('') || '<p class="text-gray-500">Sin informacion de stock.</p>';
         }
 
         if (el.criticalItems) {
@@ -821,7 +829,7 @@
                 <div class="border border-red-200 bg-red-50 rounded p-2">
                     <p class="font-semibold text-red-700">${escapeHtml(item.name)}</p>
                     <p class="text-xs text-red-600">Stock ${item.stockCurrent} / Min ${item.stockMin} | ${escapeHtml(item.unit)}</p>
-                    <p class="text-xs text-red-500 mt-1">Habitacion: ${escapeHtml(roomDisplayName(item.cabin))}</p>
+                    <p class="text-xs text-red-500 mt-1">Ubicacion: ${escapeHtml(roomDisplayName(item.cabin))}</p>
                 </div>
             `).join('') || '<p class="text-gray-500">No hay items en bajo stock.</p>';
         }
@@ -866,7 +874,6 @@
                     const unitOptionExists = Array.from(el.itemUnitSelect?.options || []).some((option) => option.value === item.unit);
                     if (el.itemUnitSelect) el.itemUnitSelect.value = unitOptionExists ? item.unit : 'otra';
                     if (el.itemUnitCustom) el.itemUnitCustom.value = unitOptionExists ? '' : (item.unit || '');
-                    setCheckedRooms('.item-room-checkbox', [item.cabin?._id || item.cabin].filter(Boolean));
                     el.formItem.elements.stockCurrent.value = item.stockCurrent ?? 0;
                     el.formItem.elements.stockMin.value = item.stockMin ?? 0;
                     if (el.formItem.elements.initialUnitCost) el.formItem.elements.initialUnitCost.value = '';
@@ -1042,7 +1049,7 @@
                             <h4 class="font-semibold text-gray-800">${escapeHtml(template.name)}</h4>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs px-2 py-1 rounded bg-teal-100 text-teal-700">Habitacion</span>
-                                ${canManageInventory ? `<button type="button" class="btn btn-outline-primary btn-sm" data-edit-bom="${template._id}">Editar</button><button type="button" class="btn btn-outline-danger btn-sm" data-delete-bom="${template._id}">Desactivar</button>` : ''}
+                                ${canManageInventory ? `<button type="button" class="btn btn-outline-primary btn-sm" data-edit-bom="${template._id}">Editar</button>` : ''}
                             </div>
                         </div>
                         <p class="text-xs text-gray-500 mt-1">Habitacion: ${escapeHtml(roomDisplayName(template.cabin))}</p>
@@ -1061,36 +1068,10 @@
                     if (el.modalBOMSubmit) el.modalBOMSubmit.textContent = 'Actualizar BOM';
                     el.formBOMTemplate.elements.name.value = template.name || '';
                     if (el.bomEffectiveFrom) el.bomEffectiveFrom.value = formatDateTimeLocalInput(template.effectiveFrom);
+                    setBOMRoomSelectionLocked(true);
                     setCheckedRooms('.bom-room-checkbox', [template.cabin?._id || template.cabin].filter(Boolean));
                     setBomLines(template.lines || []);
                     showModal(el.modalBOMTemplate);
-                });
-            });
-            el.bomList.querySelectorAll('[data-delete-bom]').forEach((button) => {
-                button.addEventListener('click', async () => {
-                    try {
-                        const confirmed = await confirmAction({
-                            title: 'Desactivar regla BOM',
-                            text: 'La regla BOM se desactivara y dejara de aplicarse en consumos futuros.',
-                            confirmButtonText: 'Si, desactivar'
-                        });
-                        if (!confirmed) return;
-
-                        await runBusyAction({
-                            target: button,
-                            busyText: 'Desactivando...',
-                            loadingTitle: 'Desactivando BOM',
-                            loadingText: 'Guardando cambios de consumo.',
-                            successTitle: 'Regla desactivada',
-                            successMessage: 'Regla BOM desactivada correctamente',
-                            action: async () => {
-                                await request(`/bom-templates/${button.getAttribute('data-delete-bom')}`, { method: 'DELETE' });
-                                await renderBOM();
-                            }
-                        });
-                    } catch (error) {
-                        await showError(error);
-                    }
                 });
             });
         }
@@ -1106,7 +1087,7 @@
                         ${canManageInventory ? `<button class="btn btn-sm btn-outline-success" data-resolve-alert="${alertItem._id}">Resolver</button>` : ''}
                     </div>
                     <p class="text-sm text-yellow-700 mt-2">${escapeHtml(alertItem.message)}</p>
-                    <p class="text-xs text-yellow-600 mt-1">Item: ${escapeHtml(alertItem.item?.name || '-')} | Habitacion: ${escapeHtml(roomDisplayName(alertItem.cabin))}</p>
+                    <p class="text-xs text-yellow-600 mt-1">Item: ${escapeHtml(alertItem.item?.name || '-')} | Ubicacion: ${escapeHtml(roomDisplayName(alertItem.cabin))}</p>
                 </div>
             `).join('') || '<p class="text-gray-500">Sin alertas abiertas.</p>';
 
@@ -1166,11 +1147,8 @@
         }
         const rooms = await response.json();
         state.rooms = sortAlphabetically(rooms, (room) => roomDisplayName(room));
-        populatePurchaseCabinSelect();
-        renderRoomChecklist(el.itemRoomChecklist, 'item-room-checkbox');
         renderRoomChecklist(el.metricGroupRoomChecklist, 'metric-group-room-checkbox', 'Se asociara al grupo para metricas');
         renderRoomChecklist(el.bomRoomChecklist, 'bom-room-checkbox', 'Se creara una regla individual para esta habitacion');
-        applyChecklistFilter(el.itemRoomFilter, el.itemRoomChecklist);
         applyChecklistFilter(el.metricGroupRoomFilter, el.metricGroupRoomChecklist);
         applyChecklistFilter(el.bomRoomFilter, el.bomRoomChecklist);
     };
@@ -1224,20 +1202,10 @@
                     delete payload.unitCustom;
                     payload.stockCurrent = Number(payload.stockCurrent || 0);
                     payload.stockMin = Number(payload.stockMin || 0);
-                    const selectedRooms = getCheckedRooms('.item-room-checkbox').map((room) => room.id);
                     const isEditingItem = Boolean(state.editingItemId);
-                    if (selectedRooms.length === 0) {
-                        throw new Error('Selecciona al menos una habitacion');
-                    }
-                    if (isEditingItem) {
-                        if (selectedRooms.length !== 1) {
-                            throw new Error('Para editar un item debes seleccionar una sola habitacion');
-                        }
-                        payload.cabin = selectedRooms[0];
-                    } else {
-                        payload.cabinIds = selectedRooms;
-                        delete payload.cabin;
-                    }
+                    delete payload.cabin;
+                    delete payload.cabinIds;
+                    delete payload.isGlobal;
                     if (isEditingItem) {
                         delete payload.initialUnitCost;
                         delete payload.initialSupplier;
@@ -1253,7 +1221,7 @@
                         loadingTitle: isEditingItem ? 'Actualizando item' : 'Creando item',
                         loadingText: 'Guardando informacion del inventario.',
                         successTitle: isEditingItem ? 'Item actualizado' : 'Item creado',
-                        successMessage: isEditingItem ? 'Item actualizado correctamente' : selectedRooms.length > 1 ? 'Items creados correctamente' : 'Item creado correctamente',
+                        successMessage: isEditingItem ? 'Item actualizado correctamente' : 'Item creado correctamente',
                         action: async () => {
                             await request(path, { method, body: JSON.stringify(payload) });
                             resetItemFormMode();
@@ -1283,6 +1251,16 @@
                     }
                     if (state.editingBOMId && selectedRooms.length !== 1) {
                         throw new Error('Para editar una regla individual debes seleccionar una sola habitacion');
+                    }
+                    if (!state.editingBOMId) {
+                        const selectedRoomIds = selectedRooms.map((room) => String(room.id));
+                        const existingRoomNames = state.bomTemplates
+                            .filter((template) => selectedRoomIds.includes(String(template.cabin?._id || template.cabin || '')))
+                            .map((template) => roomDisplayName(template.cabin));
+
+                        if (existingRoomNames.length > 0) {
+                            throw new Error(`Ya existe una BOM para: ${existingRoomNames.join(', ')}. Debes editar la existente.`);
+                        }
                     }
                     payload.effectiveFrom = parseDateTimeLocalInput(payload.effectiveFrom);
                     if (!payload.effectiveFrom) {
@@ -1324,9 +1302,8 @@
                     const fd = new FormData(el.formPurchase);
                     const payload = Object.fromEntries(fd.entries());
                     payload.lines = getPurchaseLinesPayload();
-                    if (!payload.cabin) {
-                        throw new Error('Selecciona una habitacion');
-                    }
+                    delete payload.cabin;
+                    delete payload.isGlobal;
                     if (payload.lines.length === 0) {
                         throw new Error('Agrega al menos una linea de compra valida');
                     }
@@ -1377,16 +1354,14 @@
     };
 
     const setupActions = () => {
-        setupChecklistFilter(el.itemRoomFilter, el.itemRoomChecklist);
         setupChecklistFilter(el.metricGroupRoomFilter, el.metricGroupRoomChecklist);
         setupChecklistFilter(el.bomRoomFilter, el.bomRoomChecklist);
         el.itemUnitSelect?.addEventListener('change', toggleItemUnitCustom);
-        el.purchaseCabinSelect?.addEventListener('change', syncPurchaseLineOptions);
         el.btnAddBomLine?.addEventListener('click', () => {
             el.bomLinesContainer?.appendChild(createBomLineRow());
         });
         el.btnAddPurchaseLine?.addEventListener('click', () => {
-            el.purchaseLinesContainer?.appendChild(createPurchaseLineRow(el.purchaseCabinSelect?.value || ''));
+            el.purchaseLinesContainer?.appendChild(createPurchaseLineRow());
         });
         if (el.btnRunConsumption) {
             el.btnRunConsumption.addEventListener('click', async () => {

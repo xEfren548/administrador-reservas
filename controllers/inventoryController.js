@@ -12,9 +12,6 @@ const createItemValidators = [
     check('name').notEmpty().withMessage('Item name is required'),
     check('itemType').isIn(['directo', 'indirecto', 'no_consumible']).withMessage('Invalid item type'),
     check('unit').notEmpty().withMessage('Unit is required'),
-    check('cabin').optional().isMongoId().withMessage('Invalid cabin id'),
-    check('cabinIds').optional().isArray().withMessage('cabinIds must be an array'),
-    check('cabinIds.*').optional().isMongoId().withMessage('Invalid cabin id in cabinIds'),
     check('stockCurrent').optional().isFloat({ min: 0 }).withMessage('stockCurrent must be >= 0'),
     check('stockMin').optional().isFloat({ min: 0 }).withMessage('stockMin must be >= 0'),
     check('initialUnitCost').optional().isFloat({ min: 0 }).withMessage('initialUnitCost must be >= 0'),
@@ -28,7 +25,6 @@ const updateItemValidators = [
     check('description').optional().isString().withMessage('description must be a string'),
     check('itemType').optional().isIn(['directo', 'indirecto', 'no_consumible']).withMessage('Invalid item type'),
     check('unit').optional().notEmpty().withMessage('Unit cannot be empty'),
-    check('cabin').optional().isMongoId().withMessage('Invalid cabin id'),
     check('stockCurrent').optional().isFloat({ min: 0 }).withMessage('stockCurrent must be >= 0'),
     check('stockMin').optional().isFloat({ min: 0 }).withMessage('stockMin must be >= 0'),
     check('lastPurchaseUnitCost').optional().isFloat({ min: 0 }).withMessage('lastPurchaseUnitCost must be >= 0'),
@@ -61,7 +57,6 @@ const updateBOMTemplateValidators = [
 ];
 
 const registerPurchaseValidators = [
-    check('cabin').isMongoId().withMessage('Invalid cabin id'),
     check('purchaseDate').optional().isISO8601().withMessage('Invalid purchaseDate'),
     check('lines').isArray({ min: 1 }).withMessage('At least one purchase line is required'),
     check('lines.*.item').isMongoId().withMessage('Invalid item id in lines'),
@@ -109,11 +104,6 @@ const normalizeBoolean = (value) => {
 
 const normalizeItemName = (value) => String(value || '').trim().replace(/\s+/g, ' ');
 
-const ensureCabinExists = async (cabinId) => {
-    if (!cabinId) return null;
-    return Habitacion.findById(cabinId);
-};
-
 const normalizeEffectiveFrom = (value) => {
     if (!value) {
         return new Date();
@@ -135,23 +125,6 @@ const createItem = async (req, res) => {
     try {
         if (!handleValidation(req, res)) return;
 
-        const selectedCabinIds = [...new Set([
-            req.body.cabin,
-            ...(Array.isArray(req.body.cabinIds) ? req.body.cabinIds : [])
-        ].filter(Boolean).map(String))];
-
-        if (selectedCabinIds.length === 0) {
-            return res.status(400).json({ success: false, message: 'At least one cabin is required' });
-        }
-
-        const cabins = await Habitacion.find({ _id: { $in: selectedCabinIds } })
-            .select('_id propertyDetails.name')
-            .lean();
-
-        if (cabins.length !== selectedCabinIds.length) {
-            return res.status(404).json({ success: false, message: 'One or more cabins were not found' });
-        }
-
         const initialStock = Number(req.body.stockCurrent || 0);
         const initialUnitCost = req.body.initialUnitCost !== undefined && req.body.initialUnitCost !== ''
             ? Number(req.body.initialUnitCost)
@@ -166,85 +139,62 @@ const createItem = async (req, res) => {
             return res.status(400).json({ success: false, message: 'initialUnitCost is required when initial stock is greater than 0' });
         }
 
-        const duplicateItems = await InventoryItem.find({
-            cabin: { $in: selectedCabinIds },
-            name: normalizedItemName
-        })
+        const existingItem = await InventoryItem.findOne({ cabin: null, name: normalizedItemName })
             .collation({ locale: 'es', strength: 2 })
-            .populate('cabin', 'propertyDetails.name')
             .lean();
 
-        if (duplicateItems.length > 0) {
-            const duplicatedCabins = duplicateItems
-                .map((item) => item.cabin?.propertyDetails?.name)
-                .filter(Boolean)
-                .join(', ');
-            return res.status(409).json({
-                success: false,
-                message: duplicatedCabins
-                    ? `An item with the same name already exists in: ${duplicatedCabins}`
-                    : 'An item with the same name already exists in one or more selected cabins'
-            });
+        if (existingItem) {
+            return res.status(409).json({ success: false, message: 'Ya existe un item con el mismo nombre en la Bodega Global' });
         }
 
-        const items = [];
-        for (const cabinId of selectedCabinIds) {
-            const payload = {
-                name: normalizedItemName,
-                description: req.body.description || '',
-                itemType: req.body.itemType,
-                unit: req.body.unit,
-                cabin: cabinId,
-                stockCurrent: initialStock,
-                stockMin: Number(req.body.stockMin || 0),
-                lastPurchaseUnitCost: initialUnitCost || 0,
-                active: req.body.active !== undefined ? normalizeBoolean(req.body.active) : true,
+        const itemCommonPayload = {
+            name: normalizedItemName,
+            description: req.body.description || '',
+            itemType: req.body.itemType,
+            unit: req.body.unit,
+            stockCurrent: initialStock,
+            stockMin: Number(req.body.stockMin || 0),
+            lastPurchaseUnitCost: initialUnitCost || 0,
+            active: req.body.active !== undefined ? normalizeBoolean(req.body.active) : true,
+            createdBy: req.session.userId || null
+        };
+
+        const item = await InventoryItem.create({ ...itemCommonPayload, cabin: null });
+        createdItemIds.push(item._id);
+
+        if (initialStock > 0) {
+            const totalCost = initialStock * initialUnitCost;
+
+            const movement = await InventoryMovement.create({
+                item: item._id,
+                cabin: null,
+                movementType: 'purchase_entry',
+                quantity: initialStock,
+                unitCost: initialUnitCost,
+                totalCost,
+                stockBefore: 0,
+                stockAfter: initialStock,
+                performedBy: req.session.userId || null,
+                note: 'Stock inicial al crear el item'
+            });
+            createdMovementIds.push(movement._id);
+
+            const purchase = await InventoryPurchase.create({
+                cabin: null,
+                supplier: req.body.initialSupplier || '',
+                invoiceNumber: req.body.initialInvoiceNumber || '',
+                purchaseDate: req.body.initialPurchaseDate || new Date(),
+                lines: [{ item: item._id, quantity: initialStock, unitCost: initialUnitCost, totalCost }],
+                totalAmount: totalCost,
                 createdBy: req.session.userId || null
-            };
-
-            const item = await InventoryItem.create(payload);
-            createdItemIds.push(item._id);
-            items.push(item);
-
-            if (initialStock > 0) {
-                const totalCost = initialStock * initialUnitCost;
-
-                const movement = await InventoryMovement.create({
-                    item: item._id,
-                    cabin: item.cabin,
-                    movementType: 'purchase_entry',
-                    quantity: initialStock,
-                    unitCost: initialUnitCost,
-                    totalCost,
-                    stockBefore: 0,
-                    stockAfter: initialStock,
-                    performedBy: req.session.userId || null,
-                    note: 'Stock inicial al crear el item'
-                });
-                createdMovementIds.push(movement._id);
-
-                const purchase = await InventoryPurchase.create({
-                    cabin: item.cabin,
-                    supplier: req.body.initialSupplier || '',
-                    invoiceNumber: req.body.initialInvoiceNumber || '',
-                    purchaseDate: req.body.initialPurchaseDate || new Date(),
-                    lines: [{
-                        item: item._id,
-                        quantity: initialStock,
-                        unitCost: initialUnitCost,
-                        totalCost
-                    }],
-                    totalAmount: totalCost,
-                    createdBy: req.session.userId || null
-                });
-                createdPurchaseIds.push(purchase._id);
-            }
+            });
+            createdPurchaseIds.push(purchase._id);
         }
 
         return res.status(201).json({
             success: true,
-            message: items.length > 1 ? `${items.length} items created` : 'Item created',
-            data: items.length === 1 ? items[0] : items
+            message: 'Item created',
+            data: item
         });
     } catch (error) {
         try {
@@ -276,26 +226,20 @@ const updateItem = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Item not found' });
         }
 
-        const nextCabinId = req.body.cabin || item.cabin;
-        const cabin = await ensureCabinExists(nextCabinId);
-        if (!cabin) {
-            return res.status(404).json({ success: false, message: 'Cabin not found' });
-        }
-
         const nextName = req.body.name !== undefined ? normalizeItemName(req.body.name) : item.name;
         const duplicateItem = await InventoryItem.findOne({
             _id: { $ne: item._id },
-            cabin: nextCabinId,
+            cabin: null,
             name: nextName
         })
             .collation({ locale: 'es', strength: 2 })
             .lean();
 
         if (duplicateItem) {
-            return res.status(409).json({ success: false, message: 'Another item with the same name already exists in this cabin' });
+            return res.status(409).json({ success: false, message: 'Ya existe otro item con el mismo nombre en la Bodega Global' });
         }
 
-        const fields = ['name', 'description', 'itemType', 'unit', 'cabin', 'stockCurrent', 'stockMin', 'lastPurchaseUnitCost', 'active'];
+        const fields = ['name', 'description', 'itemType', 'unit', 'stockCurrent', 'stockMin', 'lastPurchaseUnitCost', 'active'];
         fields.forEach((field) => {
             if (req.body[field] !== undefined) {
                 if (field === 'active') {
@@ -305,6 +249,8 @@ const updateItem = async (req, res) => {
                 item[field] = field === 'name' ? nextName : req.body[field];
             }
         });
+
+        item.cabin = null;
 
         await item.save();
 
@@ -349,10 +295,9 @@ const deleteItem = async (req, res) => {
 
 const listItems = async (req, res) => {
     try {
-        const { cabin, active, itemType, lowStockOnly } = req.query;
-        const filter = {};
+        const { active, itemType, lowStockOnly } = req.query;
+        const filter = { cabin: null };
 
-        if (cabin) filter.cabin = cabin;
         if (active !== undefined) filter.active = active === 'true';
         if (itemType) filter.itemType = itemType;
 
@@ -371,15 +316,86 @@ const listItems = async (req, res) => {
     }
 };
 
+const validateGlobalBomItems = async (lines = []) => {
+    const lineItemIds = [...new Set(lines.map((line) => String(line.item)).filter(Boolean))];
+
+    const items = await InventoryItem.find({ _id: { $in: lineItemIds } })
+        .select('_id name cabin')
+        .lean();
+
+    if (items.length !== lineItemIds.length) {
+        return { valid: false, message: 'One or more BOM items are invalid' };
+    }
+
+    const nonGlobalItems = items.filter((item) => item.cabin !== null && item.cabin !== undefined);
+    if (nonGlobalItems.length > 0) {
+        return {
+            valid: false,
+            message: `Todos los items de la BOM deben pertenecer a la Bodega Global. Revisa: ${nonGlobalItems.map((item) => item.name).join(', ')}`
+        };
+    }
+
+    return { valid: true };
+};
+
+const getCabinDisplayNameMap = async (cabinIds = []) => {
+    const cabins = await Habitacion.find({ _id: { $in: cabinIds } })
+        .select('_id propertyDetails.name')
+        .lean();
+
+    return new Map(cabins.map((room) => [String(room._id), room.propertyDetails?.name || String(room._id)]));
+};
+
+const validateBomCabinAvailability = async (cabinIds = [], excludeTemplateId = null) => {
+    const normalizedCabinIds = [...new Set((cabinIds || []).filter(Boolean).map(String))];
+
+    if (normalizedCabinIds.length === 0) {
+        return { valid: true, cabinNameMap: new Map() };
+    }
+
+    const cabinNameMap = await getCabinDisplayNameMap(normalizedCabinIds);
+    if (cabinNameMap.size !== normalizedCabinIds.length) {
+        return { valid: false, message: 'One or more cabins were not found' };
+    }
+
+    const filter = {
+        active: true,
+        scopeType: 'cabana',
+        cabin: { $in: normalizedCabinIds }
+    };
+
+    if (excludeTemplateId) {
+        filter._id = { $ne: excludeTemplateId };
+    }
+
+    const existingTemplates = await InventoryBOMTemplate.find(filter)
+        .select('_id cabin')
+        .lean();
+
+    if (existingTemplates.length > 0) {
+        const duplicatedCabins = existingTemplates
+            .map((template) => cabinNameMap.get(String(template.cabin)) || String(template.cabin))
+            .filter(Boolean);
+
+        return {
+            valid: false,
+            message: `Ya existe una BOM activa para: ${duplicatedCabins.join(', ')}. Debes editar la existente.`
+        };
+    }
+
+    return { valid: true, cabinNameMap };
+};
+
 const createBOMTemplate = async (req, res) => {
     try {
         if (!handleValidation(req, res)) return;
 
         const { cabin, cabinIds = [] } = req.body;
         const selectedCabinIds = Array.isArray(cabinIds) ? cabinIds.filter(Boolean) : [];
+        const targetCabinIds = [...new Set([cabin, ...selectedCabinIds].filter(Boolean).map(String))];
         const effectiveFrom = normalizeEffectiveFrom(req.body.effectiveFrom);
 
-        if (!cabin && selectedCabinIds.length === 0) {
+        if (targetCabinIds.length === 0) {
             return res.status(400).json({ success: false, message: 'At least one cabin is required for BOM creation' });
         }
 
@@ -387,19 +403,26 @@ const createBOMTemplate = async (req, res) => {
             return res.status(400).json({ success: false, message: 'La fecha de vigencia de la BOM es invalida' });
         }
 
-        if (selectedCabinIds.length > 0) {
-            const cabins = await Habitacion.find({ _id: { $in: selectedCabinIds } })
-                .select('_id propertyDetails.name')
-                .lean();
-            const cabinNameMap = new Map(cabins.map((room) => [String(room._id), room.propertyDetails?.name || String(room._id)]));
+        const bomItemValidation = await validateGlobalBomItems(req.body.lines || []);
+        if (!bomItemValidation.valid) {
+            return res.status(400).json({ success: false, message: bomItemValidation.message });
+        }
 
-            const templatesToCreate = selectedCabinIds.map((cabinId) => ({
+        const bomAvailabilityValidation = await validateBomCabinAvailability(targetCabinIds);
+        if (!bomAvailabilityValidation.valid) {
+            return res.status(409).json({ success: false, message: bomAvailabilityValidation.message });
+        }
+
+        const cabinNameMap = bomAvailabilityValidation.cabinNameMap || new Map();
+
+        if (targetCabinIds.length > 1) {
+            const templatesToCreate = targetCabinIds.map((cabinId) => ({
                 name: `${req.body.name} - ${cabinNameMap.get(String(cabinId)) || String(cabinId)}`,
                 scopeType: 'cabana',
                 cabin: cabinId,
                 lines: req.body.lines,
                 effectiveFrom,
-                active: req.body.active !== false,
+                active: true,
                 createdBy: req.session.userId || null
             }));
 
@@ -414,9 +437,11 @@ const createBOMTemplate = async (req, res) => {
         const payload = {
             ...req.body,
             scopeType: 'cabana',
+            cabin: targetCabinIds[0],
             groupName: null,
             cabins: [],
             effectiveFrom,
+            active: true,
             createdBy: req.session.userId || null
         };
 
@@ -452,21 +477,25 @@ const updateBOMTemplate = async (req, res) => {
             }
         }
 
+        if (String(nextCabin) !== String(template.cabin)) {
+            return res.status(409).json({ success: false, message: 'La habitacion de una BOM existente no se puede cambiar. Debes editar la BOM de esa habitacion.' });
+        }
+
+        const bomAvailabilityValidation = await validateBomCabinAvailability([nextCabin], template._id);
+        if (!bomAvailabilityValidation.valid) {
+            return res.status(409).json({ success: false, message: bomAvailabilityValidation.message });
+        }
+
         if (Array.isArray(req.body.lines)) {
-            const lineItemIds = [...new Set(req.body.lines.map((line) => String(line.item)).filter(Boolean))];
-            const itemCount = await InventoryItem.countDocuments({ _id: { $in: lineItemIds } });
-            if (itemCount !== lineItemIds.length) {
-                return res.status(400).json({ success: false, message: 'One or more BOM items are invalid' });
+            const bomItemValidation = await validateGlobalBomItems(req.body.lines);
+            if (!bomItemValidation.valid) {
+                return res.status(400).json({ success: false, message: bomItemValidation.message });
             }
         }
 
-        const fields = ['name', 'lines', 'active', 'effectiveFrom'];
+        const fields = ['name', 'lines', 'effectiveFrom'];
         fields.forEach((field) => {
             if (req.body[field] !== undefined) {
-                if (field === 'active') {
-                    template[field] = normalizeBoolean(req.body[field]);
-                    return;
-                }
                 if (field === 'effectiveFrom') {
                     const effectiveFrom = normalizeEffectiveFrom(req.body[field]);
                     if (!effectiveFrom) {
@@ -500,17 +529,16 @@ const updateBOMTemplate = async (req, res) => {
 const deleteBOMTemplate = async (req, res) => {
     try {
         const { id } = req.params;
-        const template = await InventoryBOMTemplate.findByIdAndUpdate(
-            id,
-            { active: false },
-            { new: true }
-        ).lean();
+        const template = await InventoryBOMTemplate.findById(id).lean();
 
         if (!template) {
             return res.status(404).json({ success: false, message: 'BOM template not found' });
         }
 
-        return res.json({ success: true, message: 'BOM template deactivated successfully', data: template });
+        return res.status(409).json({
+            success: false,
+            message: 'Ya no se permite desactivar una BOM por habitacion. Debes editar la existente para agregar o quitar productos.'
+        });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Error deleting BOM template', error: error.message });
     }
@@ -649,11 +677,7 @@ const registerPurchase = async (req, res) => {
     try {
         if (!handleValidation(req, res)) return;
 
-        const { cabin, supplier = '', invoiceNumber = '', purchaseDate, lines } = req.body;
-        const existingCabin = await ensureCabinExists(cabin);
-        if (!existingCabin) {
-            return res.status(404).json({ success: false, message: 'Cabin not found' });
-        }
+        const { supplier = '', invoiceNumber = '', purchaseDate, lines } = req.body;
 
         let totalAmount = 0;
         const normalizedLines = [];
@@ -664,8 +688,9 @@ const registerPurchase = async (req, res) => {
                 return res.status(404).json({ success: false, message: `Item not found: ${line.item}` });
             }
 
-            if (String(item.cabin) !== String(cabin)) {
-                return res.status(400).json({ success: false, message: `Item ${item.name} does not belong to selected cabin` });
+            const itemIsGlobal = item.cabin === null || item.cabin === undefined;
+            if (!itemIsGlobal) {
+                return res.status(400).json({ success: false, message: `El item ${item.name} no pertenece a la Bodega Global` });
             }
 
             const quantity = Number(line.quantity);
@@ -681,7 +706,7 @@ const registerPurchase = async (req, res) => {
 
             await InventoryMovement.create({
                 item: item._id,
-                cabin: item.cabin,
+                cabin: null,
                 movementType: 'purchase_entry',
                 quantity,
                 unitCost,
@@ -701,7 +726,7 @@ const registerPurchase = async (req, res) => {
         }
 
         const purchase = await InventoryPurchase.create({
-            cabin,
+            cabin: null,
             supplier,
             invoiceNumber,
             purchaseDate: purchaseDate || new Date(),
@@ -725,6 +750,10 @@ const createManualAdjustment = async (req, res) => {
 
         if (!item) {
             return res.status(404).json({ success: false, message: 'Item not found' });
+        }
+
+        if (item.cabin !== null && item.cabin !== undefined) {
+            return res.status(400).json({ success: false, message: 'Solo se permiten ajustes manuales sobre items de la Bodega Global' });
         }
 
         const qty = Number(quantity);
@@ -827,7 +856,9 @@ const getStockDashboard = async (req, res) => {
         const lowStockItems = items.filter((item) => Number(item.stockCurrent) <= Number(item.stockMin || 0));
 
         const stockByCabin = items.reduce((acc, item) => {
-            const key = item.cabin?.propertyDetails?.name || 'Sin habitación';
+            const key = item.cabin
+                ? (item.cabin?.propertyDetails?.name || 'Habitacion sin nombre')
+                : 'Bodega Global';
             acc[key] = acc[key] || { items: 0, stockUnits: 0 };
             acc[key].items += 1;
             acc[key].stockUnits += Number(item.stockCurrent || 0);

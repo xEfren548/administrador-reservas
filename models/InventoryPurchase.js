@@ -27,7 +27,7 @@ const inventoryPurchaseSchema = new mongoose.Schema({
     cabin: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'habitaciones',
-        required: true
+        default: null
     },
     supplier: {
         type: String,
