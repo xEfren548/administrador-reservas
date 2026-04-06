@@ -3,9 +3,43 @@ const SWCuenta = require('../models/SWCuenta');
 const SWParticipante = require('../models/SWParticipante');
 const SWOrganizacion = require('../models/SWOrganizacion');
 const { check, validationResult } = require('express-validator');
+const moment = require('moment-timezone');
 const ftp = require('basic-ftp');
 const fs = require('fs');
 const { isCategoriaValida } = require('../services/swCategoriasService');
+
+const MEXICO_CENTRO_TIMEZONE = 'America/Mexico_City';
+const FECHA_SOLO_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+function crearErrorFechaInvalida() {
+    const error = new Error('Fecha inválida');
+    error.statusCode = 400;
+    return error;
+}
+
+function normalizarFechaSolicitud(fecha) {
+    if (!fecha) {
+        return new Date();
+    }
+
+    if (typeof fecha === 'string' && FECHA_SOLO_REGEX.test(fecha)) {
+        const fechaMexico = moment.tz(fecha, 'YYYY-MM-DD', true, MEXICO_CENTRO_TIMEZONE);
+
+        if (!fechaMexico.isValid()) {
+            throw crearErrorFechaInvalida();
+        }
+
+        return fechaMexico.startOf('day').toDate();
+    }
+
+    const fechaNormalizada = moment(fecha);
+
+    if (!fechaNormalizada.isValid()) {
+        throw crearErrorFechaInvalida();
+    }
+
+    return fechaNormalizada.toDate();
+}
 
 // Validadores
 const createSolicitudValidators = [
@@ -131,6 +165,7 @@ const createSolicitud = async (req, res) => {
         } = req.body;
 
         const userId = req.session.userId;
+        const fechaSolicitud = normalizarFechaSolicitud(fecha);
 
         // Verificar que la cuenta existe y está activa
         const cuenta = await SWCuenta.findById(cuentaId);
@@ -324,7 +359,7 @@ const createSolicitud = async (req, res) => {
             concepto,
             descripcion,
             categoria,
-            fecha: fecha || new Date(),
+            fecha: fechaSolicitud,
             solicitadoPor: userId,
             propietarioCuenta: cuenta.propietario,
             etiquetas,

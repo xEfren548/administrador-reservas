@@ -4,9 +4,43 @@ const SWCuenta = require('../models/SWCuenta');
 const SWOrganizacion = require('../models/SWOrganizacion');
 const SWTransaccion = require('../models/SWTransaccion');
 const { check, validationResult } = require('express-validator');
+const moment = require('moment-timezone');
 const ftp = require('basic-ftp');
 const fs = require('fs');
 const { isCategoriaValida } = require('../services/swCategoriasService');
+
+const MEXICO_CENTRO_TIMEZONE = 'America/Mexico_City';
+const FECHA_SOLO_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+function crearErrorFechaInvalida() {
+    const error = new Error('Fecha inválida');
+    error.statusCode = 400;
+    return error;
+}
+
+function normalizarFechaSolicitud(fecha) {
+    if (!fecha) {
+        return new Date();
+    }
+
+    if (typeof fecha === 'string' && FECHA_SOLO_REGEX.test(fecha)) {
+        const fechaMexico = moment.tz(fecha, 'YYYY-MM-DD', true, MEXICO_CENTRO_TIMEZONE);
+
+        if (!fechaMexico.isValid()) {
+            throw crearErrorFechaInvalida();
+        }
+
+        return fechaMexico.startOf('day').toDate();
+    }
+
+    const fechaNormalizada = moment(fecha);
+
+    if (!fechaNormalizada.isValid()) {
+        throw crearErrorFechaInvalida();
+    }
+
+    return fechaNormalizada.toDate();
+}
 
 const createSolicitudOrganizacionValidators = [
     check('organizacionId')
@@ -148,6 +182,7 @@ const createSolicitudOrganizacion = async (req, res) => {
         const esPagoProveedorExterno = esProveedorExterno === true || esProveedorExterno === 'true';
 
         const userId = req.session.userId;
+        const fechaSolicitud = normalizarFechaSolicitud(fecha);
 
         const { participanteActual, adminCount } = await getOrganizacionContext(organizacionId, userId);
 
@@ -250,7 +285,7 @@ const createSolicitudOrganizacion = async (req, res) => {
                 concepto,
                 descripcion,
                 categoria,
-                fecha: fecha || new Date(),
+                fecha: fechaSolicitud,
                 creadoPor: userId,
                 aprobada: true,
                 aprobadaPor: userId,
@@ -289,7 +324,7 @@ const createSolicitudOrganizacion = async (req, res) => {
             concepto,
             descripcion,
             categoria,
-            fecha: fecha || new Date(),
+            fecha: fechaSolicitud,
             solicitadoPor: userId,
             rolSolicitante: participanteActual.rol,
             cuentaDestino: cuentaDestinoId || undefined,

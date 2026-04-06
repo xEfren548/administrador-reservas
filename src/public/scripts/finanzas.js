@@ -14,6 +14,8 @@ let categoriasFinancieras = [];
 let categoriasFijas = ['Otro', 'Transferencia'];
 let categoriasEnEdicion = [];
 
+const MEXICO_CENTRO_TIMEZONE = 'America/Mexico_City';
+
 const CATEGORIAS_FALLBACK = [
     'Otro',
     'Alimentación',
@@ -38,6 +40,59 @@ function compararTextoAlfabeticamente(a, b) {
     return String(a || '').localeCompare(String(b || ''), 'es', {
         sensitivity: 'base',
         numeric: true
+    });
+}
+
+function obtenerFechaActualMexicoISO() {
+    const partes = new Intl.DateTimeFormat('en-US', {
+        timeZone: MEXICO_CENTRO_TIMEZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).formatToParts(new Date()).reduce((resultado, parte) => {
+        if (parte.type !== 'literal') {
+            resultado[parte.type] = parte.value;
+        }
+
+        return resultado;
+    }, {});
+
+    return `${partes.year}-${partes.month}-${partes.day}`;
+}
+
+function convertirAFechaValida(value) {
+    if (!value) {
+        return null;
+    }
+
+    const fecha = value instanceof Date ? value : new Date(value);
+
+    return Number.isNaN(fecha.getTime()) ? null : fecha;
+}
+
+function formatearFechaMexico(value, options = {}) {
+    const fecha = convertirAFechaValida(value);
+
+    if (!fecha) {
+        return 'N/A';
+    }
+
+    return fecha.toLocaleDateString('es-MX', {
+        timeZone: MEXICO_CENTRO_TIMEZONE,
+        ...options
+    });
+}
+
+function formatearFechaHoraMexico(value, options = {}) {
+    const fecha = convertirAFechaValida(value);
+
+    if (!fecha) {
+        return 'N/A';
+    }
+
+    return fecha.toLocaleString('es-MX', {
+        timeZone: MEXICO_CENTRO_TIMEZONE,
+        ...options
     });
 }
 
@@ -345,7 +400,7 @@ function inicializarEventos() {
     $('#modalSolicitud').on('show.bs.modal', function(e) {
         if ($(e.relatedTarget).attr('id') === 'btn-nueva-solicitud') {
             $('#formSolicitud')[0].reset();
-            $('#solicitud-fecha').val(new Date().toISOString().split('T')[0]);
+            $('#solicitud-fecha').val(obtenerFechaActualMexicoISO());
             $('#solicitud-modo').val('cuenta');
             $('#solicitud-organizacion').val('');
             // Resetear UI de transferencia
@@ -364,7 +419,7 @@ function inicializarEventos() {
     });
 
     // Establecer fecha actual en el input de solicitud
-    $('#solicitud-fecha').val(new Date().toISOString().split('T')[0]);
+    $('#solicitud-fecha').val(obtenerFechaActualMexicoISO());
     
     // Listener para cambio de tipo en transacción (para manejar transferencias)
     $('#transaccion-tipo').on('change', function() {
@@ -550,7 +605,7 @@ function renderizarOrganizaciones() {
     }
 
     organizaciones.forEach(org => {
-        const fecha = new Date(org.createdAt).toLocaleDateString('es-MX');
+        const fecha = formatearFechaMexico(org.createdAt);
         const estado = org.activa ? 
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-900 text-green-300">Activa</span>' :
             '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-900 text-red-300">Inactiva</span>';
@@ -1092,7 +1147,7 @@ async function verCuentasOrganizacion(organizacionId) {
                         <div>
                             <small class="text-muted">
                                 <i class="fas fa-calendar me-1"></i>
-                                Creada el ${new Date(org.createdAt).toLocaleDateString('es-MX', { 
+                                Creada el ${formatearFechaMexico(org.createdAt, { 
                                     year: 'numeric', 
                                     month: 'long', 
                                     day: 'numeric' 
@@ -1665,7 +1720,7 @@ function renderizarSolicitudes() {
     }
 
     solicitudes.forEach(sol => {
-        const fecha = new Date(sol.fecha).toLocaleDateString('es-MX');
+        const fecha = formatearFechaMexico(sol.fecha);
         const monto = formatearMoneda(sol.monto, 'MXN');
         let tipoColor = sol.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
         let tipoIcono = sol.tipo === 'Ingreso' ? '↑' : '↓';
@@ -1802,7 +1857,7 @@ function renderizarSolicitudesOrganizacion() {
     const totalAdmins = (organizacion?.participantes || []).filter(p => p.rol === 'Administrador').length;
 
     solicitudesOrganizacion.forEach(sol => {
-        const fecha = new Date(sol.fecha).toLocaleDateString('es-MX');
+        const fecha = formatearFechaMexico(sol.fecha);
         const monto = formatearMoneda(sol.monto, sol.cuenta?.moneda || 'MXN');
         let tipoColor = sol.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
         let tipoIcono = sol.tipo === 'Ingreso' ? '↑' : '↓';
@@ -2457,7 +2512,7 @@ async function cancelarSolicitud(solicitudId) {
 function agregarTransaccion(cuentaId) {
     $('#transaccion-cuenta-id').val(cuentaId);
     $('#formTransaccion')[0].reset();
-    $('#transaccion-fecha').val(new Date().toISOString().split('T')[0]);
+    $('#transaccion-fecha').val(obtenerFechaActualMexicoISO());
     popularSelectCategorias('#transaccion-categoria', 'Otro');
     $('#preview-imagenes').empty();
     
@@ -2602,7 +2657,7 @@ function verDetalleSolicitud(solicitudId) {
 }
 
 function mostrarDetalleSolicitudGeneral(solicitud, modo = 'cuenta') {
-    const fecha = new Date(solicitud.fecha).toLocaleDateString('es-MX');
+    const fecha = formatearFechaMexico(solicitud.fecha);
     const monto = formatearMoneda(solicitud.monto, solicitud.cuenta?.moneda || 'MXN');
     let tipoColor = solicitud.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
     if (solicitud.tipo === 'Transferencia') {
@@ -2699,13 +2754,13 @@ function mostrarDetalleSolicitudGeneral(solicitud, modo = 'cuenta') {
                         <div>
                             <p class="text-gray-500 text-xs">Fecha de llegada</p>
                             <p class="text-gray-900 text-sm">
-                                <i class="fas fa-sign-in-alt me-1"></i>${solicitud.reservaAsociada.arrivalDate ? new Date(solicitud.reservaAsociada.arrivalDate).toLocaleDateString('es-MX') : 'N/A'}
+                                <i class="fas fa-sign-in-alt me-1"></i>${solicitud.reservaAsociada.arrivalDate ? formatearFechaMexico(solicitud.reservaAsociada.arrivalDate) : 'N/A'}
                             </p>
                         </div>
                         <div>
                             <p class="text-gray-500 text-xs">Fecha de salida</p>
                             <p class="text-gray-900 text-sm">
-                                <i class="fas fa-sign-out-alt me-1"></i>${solicitud.reservaAsociada.departureDate ? new Date(solicitud.reservaAsociada.departureDate).toLocaleDateString('es-MX') : 'N/A'}
+                                <i class="fas fa-sign-out-alt me-1"></i>${solicitud.reservaAsociada.departureDate ? formatearFechaMexico(solicitud.reservaAsociada.departureDate) : 'N/A'}
                             </p>
                         </div>
                     </div>
@@ -2723,7 +2778,7 @@ function mostrarDetalleSolicitudGeneral(solicitud, modo = 'cuenta') {
                     <p class="text-gray-900">${solicitud.respuesta.comentario}</p>
                     <p class="text-gray-500 text-xs mt-2">
                         ${solicitud.respuesta.procesadaPor?.firstName || ''} 
-                        ${fechaRespuesta ? `- ${new Date(fechaRespuesta).toLocaleString('es-MX')}` : ''}
+                        ${fechaRespuesta ? `- ${formatearFechaHoraMexico(fechaRespuesta)}` : ''}
                     </p>
                 </div>
             ` : ''}
@@ -2910,7 +2965,7 @@ async function descargarEstadoCuenta(formato) {
 
 function construirFilasEstadoCuenta(movimientos) {
     return movimientos.map((mov) => ({
-        Fecha: new Date(mov.fecha).toLocaleDateString('es-MX'),
+        Fecha: formatearFechaMexico(mov.fecha),
         Cuenta: mov.cuentaNombre || '-',
         Tipo: mov.tipo,
         Concepto: mov.concepto,
@@ -2953,10 +3008,10 @@ function generarEstadoCuentaPDF(payload) {
     doc.text('Estado de Cuenta de Movimientos', 14, 14);
     doc.setFontSize(10);
     doc.text(`Rango: ${rango.fechaInicio || '-'} a ${rango.fechaFin || '-'}`, 14, 21);
-    doc.text(`Generado: ${new Date().toLocaleString('es-MX')}`, 14, 27);
+    doc.text(`Generado: ${formatearFechaHoraMexico(new Date())}`, 14, 27);
 
     const body = (payload.movimientos || []).map((mov) => ([
-        new Date(mov.fecha).toLocaleDateString('es-MX'),
+        formatearFechaMexico(mov.fecha),
         mov.cuentaNombre || '-',
         mov.tipo,
         mov.concepto,
@@ -2994,7 +3049,7 @@ function renderizarTransacciones() {
     }
 
     transacciones.forEach(trans => {
-        const fecha = new Date(trans.fecha).toLocaleDateString('es-MX');
+        const fecha = formatearFechaMexico(trans.fecha);
         const monto = formatearMoneda(trans.monto, 'MXN');
         
         // Determinar color y tipo según si es transferencia
@@ -3622,7 +3677,7 @@ async function verDetalleTransaccion(transaccionId) {
         const trans = data.data;
         
         // Formatear valores
-        const fecha = new Date(trans.fecha).toLocaleDateString('es-MX', {
+        const fecha = formatearFechaMexico(trans.fecha, {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -3750,7 +3805,7 @@ async function verDetalleTransaccion(transaccionId) {
 
         // Información de aprobación
         if (trans.aprobada && trans.aprobadaPor) {
-            const fechaAprobacion = new Date(trans.fechaAprobacion).toLocaleDateString('es-MX');
+            const fechaAprobacion = formatearFechaMexico(trans.fechaAprobacion);
             html += `
                 <div class="bg-gray-100 rounded-lg p-4 mb-4">
                     <h6 class="text-gray-600 mb-2"><i class="fas fa-check-circle me-2"></i>Información de Aprobación</h6>
@@ -3771,13 +3826,13 @@ async function verDetalleTransaccion(transaccionId) {
         // Reserva Asociada
         if (trans.reservaAsociada) {
             const llegada = trans.reservaAsociada.arrivalDate ? 
-                new Date(trans.reservaAsociada.arrivalDate).toLocaleDateString('es-MX', { 
+                formatearFechaMexico(trans.reservaAsociada.arrivalDate, { 
                     year: 'numeric', 
                     month: 'long', 
                     day: 'numeric' 
                 }) : 'N/A';
             const salida = trans.reservaAsociada.departureDate ? 
-                new Date(trans.reservaAsociada.departureDate).toLocaleDateString('es-MX', { 
+                formatearFechaMexico(trans.reservaAsociada.departureDate, { 
                     year: 'numeric', 
                     month: 'long', 
                     day: 'numeric' 
@@ -3885,7 +3940,7 @@ async function verDetalleTransaccion(transaccionId) {
                         </div>
                     </div>
                     <p class="text-gray-500 text-sm mt-3 mb-0">
-                        <i class="far fa-clock me-2"></i>Subido el ${new Date(trans.comprobanteConfirmacion.fechaSubida).toLocaleDateString('es-MX')}
+                        <i class="far fa-clock me-2"></i>Subido el ${formatearFechaMexico(trans.comprobanteConfirmacion.fechaSubida)}
                     </p>
                 </div>
             `;
@@ -4253,7 +4308,7 @@ function renderizarTransaccionesRecientes(transacciones) {
     transacciones.forEach(trans => {
         const tipoColor = trans.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
         const tipoIcon = trans.tipo === 'Ingreso' ? 'fa-arrow-up' : 'fa-arrow-down';
-        const fecha = new Date(trans.fecha).toLocaleDateString('es-MX');
+        const fecha = formatearFechaMexico(trans.fecha);
         const monto = formatearMoneda(trans.monto);
         
         container.append(`
@@ -4765,7 +4820,7 @@ function renderizarTransaccionesRecurrentes(recurrentes) {
         const estadoClass = rec.activa ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
         const estadoText = rec.activa ? 'Activa' : 'Pausada';
         const tipoClass = rec.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
-        const proximaEjecucion = new Date(rec.proximaEjecucion).toLocaleDateString('es-MX');
+        const proximaEjecucion = formatearFechaMexico(rec.proximaEjecucion);
 
         tbody.append(`
             <tr class="border-b border-gray-200 hover:bg-gray-50">
@@ -4959,8 +5014,8 @@ async function verDetalleRecurrente(recurrenteId) {
 
         if (data.success) {
             const rec = data.data;
-            const ultimaEjecucion = rec.ultimaEjecucion ? new Date(rec.ultimaEjecucion).toLocaleString('es-MX') : 'Nunca';
-            const proximaEjecucion = new Date(rec.proximaEjecucion).toLocaleString('es-MX');
+            const ultimaEjecucion = rec.ultimaEjecucion ? formatearFechaHoraMexico(rec.ultimaEjecucion) : 'Nunca';
+            const proximaEjecucion = formatearFechaHoraMexico(rec.proximaEjecucion);
 
             Swal.fire({
                 title: 'Detalle de Transacción Recurrente',
@@ -5138,7 +5193,7 @@ function calcularPreviewCuotas() {
         html += `
             <tr>
                 <td>${i + 1}</td>
-                <td>${fechaCuota.toLocaleDateString('es-MX')}</td>
+                <td>${formatearFechaMexico(fechaCuota)}</td>
                 <td class="text-right">$${montoPorPago.toFixed(2)}</td>
             </tr>
         `;
@@ -5236,7 +5291,7 @@ async function verDetallePagoDiferido(pagoId) {
                 cuotasHtml += `
                     <tr>
                         <td>${cuota.numero}</td>
-                        <td>${new Date(cuota.fechaProgramada).toLocaleDateString('es-MX')}</td>
+                        <td>${formatearFechaMexico(cuota.fechaProgramada)}</td>
                         <td class="text-right">$${cuota.monto.toFixed(2)}</td>
                         <td class="${estadoClass}">${cuota.estado}</td>
                         <td>${botonPagar}</td>
