@@ -266,11 +266,11 @@ async function crearArchivoExcel(data, fechaInicio, fechaFin) {
         { nombre: 'Identificación', columnas: ['ID Reserva', 'Estatus'], color: 'E7E6E6', colorDatos: 'F2F2F2' },
         { nombre: 'Administración', columnas: ['Admin Cabaña', 'Agente Reserva'], color: 'E7E6E6', colorDatos: 'F2F2F2' },
         { nombre: 'Información de Reserva', columnas: ['Cabaña', 'Agencia', 'Fecha Entrada', 'Fecha Salida', 'Noches', 'Huéspedes'], color: 'FFD966', colorDatos: 'FFF2CC' },
-        { nombre: 'Ingresos Base', columnas: ['Precio Base/Noche', 'Precio Base Total', 'Utilidad', 'Limpieza', 'Participación 20%'], color: '87CEEB', colorDatos: 'D9EDF7' },
-        { nombre: 'Comisiones', columnas: ['Admin NyN', 'Comisión Gerente', 'Comisión Admin', 'Comisión Vendedor'], color: 'FFA500', colorDatos: 'FFE5CC' },
-        { nombre: 'Pagos Cliente', columnas: ['Precio Reserva', 'Total Pagado', 'Excedente', 'Inversionistas'], color: 'C0C0C0', colorDatos: 'E8E8E8' },
+        { nombre: 'Ingresos Base', columnas: ['Precio Base/Noche', 'Ganancia inversionista/Dueño', 'Pago a Dueño', 'Utilidad', 'Limpieza', 'Administrador ligado'], color: '87CEEB', colorDatos: 'D9EDF7' },
+        { nombre: 'Comisiones', columnas: ['Admin NyN', 'Comisión Agencia', 'Comisión Gerente', 'Comisión Admin', 'Comisión Vendedor'], color: 'FFA500', colorDatos: 'FFE5CC' },
+        { nombre: 'Pagos Cliente', columnas: ['Precio Reserva', 'Total Pagado', 'Pagos Transferencia', 'Pagos Recibió Dueño', 'Pagos Restante', 'Excedente', 'Inversionistas'], color: 'C0C0C0', colorDatos: 'E8E8E8' },
         { nombre: 'Cliente', columnas: ['Cliente', 'Correo', 'Teléfono'], color: 'FFD966', colorDatos: 'FFF2CC' },
-        { nombre: 'Observaciones', columnas: ['Notas'], color: 'E7E6E6', colorDatos: 'F2F2F2' }
+        { nombre: 'Observaciones', columnas: ['Notas', 'Notas Privadas'], color: 'E7E6E6', colorDatos: 'F2F2F2' }
     ];
 
     // Crear array para los datos de la hoja
@@ -364,14 +364,24 @@ async function crearArchivoExcel(data, fechaInicio, fechaFin) {
             totalesRow.push(data.totales.totalPrecioReservas || 0);
         } else if (header.key === 'administracionNyN') {
             totalesRow.push(data.totales.totalComisionSistema || 0);
+        } else if (header.key === 'comisionAgencia') {
+            totalesRow.push(data.totales.totalComisionAgencia || 0);
         } else if (header.key === 'comisionAdminCabana') {
             totalesRow.push(data.totales.totalComisionAdmin || 0);
         } else if (header.key === 'comisionVendedor') {
             totalesRow.push(data.totales.totalComisionVendedor || 0);
+        } else if (header.key === 'pagoADueno') {
+            totalesRow.push(data.totales.totalPagoADueno || 0);
         } else if (header.key === 'utilidadTotal') {
             totalesRow.push(data.totales.totalUtilidades || 0);
         } else if (header.key === 'totalPagado') {
             totalesRow.push(data.totales.totalIngresos || 0);
+        } else if (header.key === 'pagosTransferencia') {
+            totalesRow.push(data.totales.totalPagosTransferencia || 0);
+        } else if (header.key === 'pagosRecibioDueno') {
+            totalesRow.push(data.totales.totalPagosRecibioDueno || 0);
+        } else if (header.key === 'pagosRestante') {
+            totalesRow.push(data.totales.totalPagosRestante || 0);
         } else if (header.key === 'excedente') {
             totalesRow.push(data.totales.totalExcedente || 0);
         } else {
@@ -391,10 +401,11 @@ async function crearArchivoExcel(data, fechaInicio, fechaFin) {
     
     // Columnas monetarias (necesitan formato de moneda)
     const columnasMonetarias = [
-        'precioBasePorNoche', 'precioBase', 'precioReserva', 'limpieza', 
-        'participacionBosques', 'administracionNyN', 'comisionAdminCabana', 
+        'precioBasePorNoche', 'precioBase', 'pagoADueno', 'precioReserva', 'limpieza', 
+        'participacionBosques', 'administracionNyN', 'comisionAgencia', 'comisionAdminCabana', 
         'comisionGerente', 'comisionVendedor', 'utilidadTotal', 
-        'comisionInversionistas', 'comisionDueno', 'totalPagado', 
+        'comisionInversionistas', 'comisionDueno', 'totalPagado',
+        'pagosTransferencia', 'pagosRecibioDueno', 'pagosRestante',
         'pagosNoEfectivo', 'liquidaEfectivo', 'excedente', 'balanceDue', 'agencia'
     ];
 
@@ -410,7 +421,7 @@ async function crearArchivoExcel(data, fechaInicio, fechaFin) {
             
             // Asegurar que la celda existe
             if (!worksheet[cellAddress]) {
-                worksheet[cellAddress] = { t: 's', v: '' };
+                worksheet[cellAddress] = { t: 's', v: '' }; 
             }
 
             // Estilo para fila de categorías (fila 0)

@@ -3342,6 +3342,16 @@ async function reporteTodoEnUno(req, res) {
             const reservaId = reserva._id.toString();
             const utilidadesReserva = utilidadesPorReserva.get(reservaId) || [];
             const pagosReserva = pagosPorReserva.get(reservaId) || [];
+            const pagosAplicados = pagosReserva.filter(p => p.status === 'Aplicado' || !p.status);
+            const pagosTransferencia = pagosAplicados
+                .filter(p => p.metodoPago === 'Transferencia')
+                .reduce((sum, p) => sum + (Number(p.importe) || 0), 0);
+            const pagosRecibioDueno = pagosAplicados
+                .filter(p => p.metodoPago === 'Recibio dueño')
+                .reduce((sum, p) => sum + (Number(p.importe) || 0), 0);
+            const pagosRestante = pagosAplicados
+                .filter(p => p.metodoPago !== 'Recibio dueño' && p.metodoPago !== 'Transferencia')
+                .reduce((sum, p) => sum + (Number(p.importe) || 0), 0);
 
             // Obtener habitación
             const habitacion = habitacionesMap.get(reserva.resourceId?.toString());
@@ -3410,14 +3420,13 @@ async function reporteTodoEnUno(req, res) {
             });
 
             // Calcular totales de pagos
-            const pagosAplicados = pagosReserva.filter(p => p.status === 'Aplicado' || !p.status);
-            const totalPagado = pagosAplicados.reduce((sum, pago) => sum + (pago.importe || 0), 0);
+            const totalPagado = pagosAplicados.reduce((sum, pago) => sum + (Number(pago.importe) || 0), 0);
             const pagosNoEfectivo = pagosAplicados
                 .filter(p => p.metodoPago !== 'Recibio dueño')
-                .reduce((sum, pago) => sum + (pago.importe || 0), 0);
+                .reduce((sum, pago) => sum + (Number(pago.importe) || 0), 0);
             const liquidaEfectivo = pagosAplicados
                 .filter(p => p.metodoPago === 'Recibio dueño')
-                .reduce((sum, pago) => sum + (pago.importe || 0), 0);
+                .reduce((sum, pago) => sum + (Number(pago.importe) || 0), 0);
 
             const isNoShow = reserva.status === 'no-show';
 
@@ -3426,6 +3435,8 @@ async function reporteTodoEnUno(req, res) {
             const precioBasePorNoche = reserva.nNights > 0 ? precioBase / reserva.nNights : 0;
             const participacionBosques = (precioBase + utilidadTotal + comisionLimpieza) * 0.20;
             const excedente = totalPagado - (isNoShow ? reserva.total / 2 : reserva.total || 0);
+            const comisionAgencia = comisionAdminCabana + excedente;
+            const pagoADueno = precioBase - pagosRecibioDueno;
             const totalAgencia = comisionAdminCabana + comisionGerente + comisionVendedor + excedente;
 
             // Procesar notas
@@ -3462,11 +3473,13 @@ async function reporteTodoEnUno(req, res) {
                 // Precios y comisiones
                 precioBasePorNoche: Math.round(precioBasePorNoche * 100) / 100,
                 precioBase: Math.round(precioBase * 100) / 100,
+                pagoADueno: Math.round(pagoADueno * 100) / 100,
                 // precioReserva: reserva.total || 0,
                 precioReserva: reserva.status === 'no-show' ? reserva.total / 2 : reserva.total,
                 limpieza: comisionLimpieza,
                 participacionBosques: Math.round(participacionBosques * 100) / 100,
                 administracionNyN: comisionSistema,
+                comisionAgencia: Math.round(comisionAgencia * 100) / 100,
                 comisionAdminCabana,
                 comisionGerente,
                 comisionVendedor,
@@ -3477,6 +3490,10 @@ async function reporteTodoEnUno(req, res) {
                 // Pagos
                 totalPagado,
                 pagosNoEfectivo,
+                pagosTransferencia,
+                pagosRecibioDueno,
+                pagosRestante,
+
                 liquidaEfectivo,
                 excedente: Math.round(excedente * 100) / 100,
                 balanceDue: reserva.balanceDue || 0,
@@ -3503,13 +3520,18 @@ async function reporteTodoEnUno(req, res) {
             totalReservas: reporteData.length,
             totalNoches: reporteData.reduce((sum, r) => sum + (r.noches > 0 ? r.noches : 0), 0),
             totalIngresos: reporteData.reduce((sum, r) => sum + (r.totalPagado > 0 ? r.totalPagado : 0), 0),
+            totalPagosTransferencia: reporteData.reduce((sum, r) => sum + (r.pagosTransferencia > 0 ? r.pagosTransferencia : 0), 0),
+            totalPagosRecibioDueno: reporteData.reduce((sum, r) => sum + (r.pagosRecibioDueno > 0 ? r.pagosRecibioDueno : 0), 0),
+            totalPagosRestante: reporteData.reduce((sum, r) => sum + (r.pagosRestante > 0 ? r.pagosRestante : 0), 0),
             totalPrecioReservas: reporteData.reduce((sum, r) => sum + (r.precioReserva > 0 ? r.precioReserva : 0), 0),
             totalComisionSistema: reporteData.reduce((sum, r) => sum + (r.administracionNyN > 0 ? r.administracionNyN : 0), 0),
+            totalComisionAgencia: reporteData.reduce((sum, r) => sum + (r.comisionAgencia > 0 ? r.comisionAgencia : 0), 0),
             totalComisionAdmin: reporteData.reduce((sum, r) => sum + (r.comisionAdminCabana > 0 ? r.comisionAdminCabana : 0), 0),
             totalComisionVendedor: reporteData.reduce((sum, r) => sum + (r.comisionVendedor > 0 ? r.comisionVendedor : 0), 0),
             totalUtilidades: reporteData.reduce((sum, r) => sum + (r.utilidadTotal > 0 ? r.utilidadTotal : 0), 0),
             totalExcedente: reporteData.reduce((sum, r) => sum + (r.excedente > 0 ? r.excedente : 0), 0),
             totalAgencia: reporteData.reduce((sum, r) => sum + (r.agencia > 0 ? r.agencia : 0), 0),
+            totalPagoADueno: reporteData.reduce((sum, r) => sum + (r.pagoADueno > 0 ? r.pagoADueno : 0), 0),
         };
 
         // Definir headers para el Excel
@@ -3525,22 +3547,28 @@ async function reporteTodoEnUno(req, res) {
             { key: 'noches', label: 'Noches', width: 10 },
             { key: 'huespedes', label: 'Huéspedes', width: 10 },
             { key: 'precioBasePorNoche', label: 'Precio Base/Noche', width: 15 },
-            { key: 'precioBase', label: 'Precio Base Total', width: 15 },
+            { key: 'precioBase', label: 'Ganancia inversionista/Dueño', width: 15 },
+            { key: 'pagoADueno', label: 'Pago a Dueño', width: 15 },
             { key: 'utilidadTotal', label: 'Utilidad', width: 12 },
             { key: 'limpieza', label: 'Limpieza', width: 12 },
-            { key: 'participacionBosques', label: 'Participación 20%', width: 15 },
+            { key: 'participacionBosques', label: 'Admin Ligado', width: 15 },
             { key: 'administracionNyN', label: 'Admin NyN', width: 12 },
+            { key: 'comisionAgencia', label: 'Comisión Agencia', width: 16 },
             { key: 'comisionGerente', label: 'Comisión Gerente', width: 15 },
             { key: 'comisionAdminCabana', label: 'Comisión Admin', width: 15 },
             { key: 'comisionVendedor', label: 'Comisión Vendedor', width: 15 },
             { key: 'precioReserva', label: 'Precio Reserva', width: 15 },
             { key: 'totalPagado', label: 'Total Pagado', width: 15 },
+            { key: 'pagosTransferencia', label: 'Pagos Transferencia', width: 18 },
+            { key: 'pagosRecibioDueno', label: 'Pagos Recibió Dueño', width: 20 },
+            { key: 'pagosRestante', label: 'Pagos Restante', width: 18 },
             { key: 'excedente', label: 'Excedente', width: 12 },
             { key: 'comisionInversionistas', label: 'Inversionistas', width: 15 },
             { key: 'nombreCliente', label: 'Cliente', width: 30 },
             { key: 'correoCliente', label: 'Correo', width: 30 },
             { key: 'telefonoCliente', label: 'Teléfono', width: 15 },
-            { key: 'notas', label: 'Notas', width: 40 }
+            { key: 'notas', label: 'Notas', width: 40 },
+            { key: 'notasPrivadas', label: 'Notas Privadas', width: 40 }
         ];
 
         // Respuesta exitosa
