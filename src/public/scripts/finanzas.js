@@ -2916,8 +2916,8 @@ function construirFilasEstadoCuenta(movimientos) {
         Concepto: mov.concepto,
         Categoria: mov.categoria || '-',
         Movimiento: mov.movimiento,
-        'Saldo Previo': mov.saldoPrevio,
         'Saldo Actual': mov.saldoActual,
+        'Saldo Previo': mov.saldoPrevio,
         Moneda: mov.moneda || 'MXN',
         Estado: mov.estado || '-',
         Usuario: mov.creadoPor || '-'
