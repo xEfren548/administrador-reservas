@@ -1390,11 +1390,10 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         currentDate = new Date(fechaAjustada);
         currentDate.setUTCHours(6);
 
-        while (currentDate <= departureDateAjustada) {
+
+        while (currentDate < departureDateAjustada) {
             const fechasBloqueadasPorCapacidad = await BloqueoFechas.findOne({ date: currentDate, habitacionId: mongooseChaletId, type: 'capacidad_minima' });
             if (fechasBloqueadasPorCapacidad) {
-                console.log("current date: ", currentDate);
-                console.log("fechasBloqueadasPorCapacidad: ", fechasBloqueadasPorCapacidad);
                 if (pax < fechasBloqueadasPorCapacidad.min) {
                     return res.status(400).send({ message: `La capacidad minima es de ${fechasBloqueadasPorCapacidad.min} personas` });
                 }
