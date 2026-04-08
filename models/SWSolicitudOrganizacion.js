@@ -1,6 +1,132 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const WORKFLOW_VERSION_OWNER_CONFIRMATION = 2;
+const ESTADO_PENDIENTE_CONFIRMACION_DUENO = 'PendienteConfirmacionDueno';
+const ESTADO_RECHAZADA_DUENO = 'RechazadaPorDueno';
+
+function isWorkflowOwnerConfirmation(solicitud) {
+    return Number(solicitud.workflowVersion || 1) >= WORKFLOW_VERSION_OWNER_CONFIRMATION;
+}
+
+function obtenerObjetoPlano(valor) {
+    if (!valor) {
+        return {};
+    }
+
+    if (typeof valor.toObject === 'function') {
+        return valor.toObject();
+    }
+
+    return { ...valor };
+}
+
+function construirConfirmacionDueno(actual, cambios) {
+    const confirmacionDueno = {
+        ...obtenerObjetoPlano(actual),
+        ...cambios
+    };
+
+    if (!confirmacionDueno.comprobanteConfirmacion) {
+        delete confirmacionDueno.comprobanteConfirmacion;
+    }
+
+    return confirmacionDueno;
+}
+
+async function crearTransaccionDesdeSolicitud(solicitud, usuarioId, comprobanteConfirmacion = null) {
+    const SWTransaccion = mongoose.model('SWTransaccion');
+    const SWCuenta = mongoose.model('SWCuenta');
+    let transaccion;
+
+    if (solicitud.tipo === 'Transferencia') {
+        if (!solicitud.cuentaDestino) {
+            throw new Error('La cuenta destino es requerida para transferencias');
+        }
+
+        const resultado = await SWTransaccion.crearTransferencia(
+            solicitud.cuenta,
+            solicitud.cuentaDestino,
+            solicitud.monto,
+            solicitud.concepto,
+            solicitud.descripcion,
+            usuarioId,
+            true,
+            {
+                esProveedorExterno: solicitud.esProveedorExterno,
+                proveedor: solicitud.esProveedorExterno
+                    ? {
+                        nombre: solicitud.proveedorNombre,
+                        beneficiario: solicitud.proveedorBeneficiario,
+                        banco: solicitud.proveedorBanco,
+                        cuentaClabe: solicitud.proveedorCuentaClabe
+                    }
+                    : undefined
+            }
+        );
+
+        transaccion = resultado.origen;
+
+        const update = { aprobadaPor: usuarioId };
+        if (comprobanteConfirmacion) {
+            update.comprobanteConfirmacion = comprobanteConfirmacion;
+        }
+
+        await SWTransaccion.updateOne({ _id: resultado.origen._id }, update);
+        await SWTransaccion.updateOne({ _id: resultado.destino._id }, update);
+
+        const cuentaOrigen = await SWCuenta.findById(solicitud.cuenta);
+        const cuentaDestino = await SWCuenta.findById(solicitud.cuentaDestino);
+
+        if (cuentaOrigen) {
+            await cuentaOrigen.calcularSaldo();
+            await cuentaOrigen.save();
+        }
+
+        if (cuentaDestino) {
+            await cuentaDestino.calcularSaldo();
+            await cuentaDestino.save();
+        }
+    } else {
+        transaccion = new SWTransaccion({
+            cuenta: solicitud.cuenta,
+            tipo: solicitud.tipo,
+            monto: solicitud.monto,
+            concepto: solicitud.concepto,
+            descripcion: solicitud.descripcion,
+            categoria: solicitud.categoria,
+            fecha: solicitud.fecha,
+            creadoPor: solicitud.solicitadoPor,
+            aprobada: true,
+            aprobadaPor: usuarioId,
+            fechaAprobacion: new Date(),
+            imagenes: solicitud.imagenes,
+            etiquetas: solicitud.etiquetas,
+            notas: solicitud.notas,
+            esProveedorExterno: solicitud.esProveedorExterno,
+            proveedor: solicitud.esProveedorExterno
+                ? {
+                    nombre: solicitud.proveedorNombre,
+                    beneficiario: solicitud.proveedorBeneficiario,
+                    banco: solicitud.proveedorBanco,
+                    cuentaClabe: solicitud.proveedorCuentaClabe
+                }
+                : undefined,
+            ...(comprobanteConfirmacion ? { comprobanteConfirmacion } : {})
+        });
+
+        await transaccion.save();
+
+        const cuenta = await SWCuenta.findById(solicitud.cuenta);
+        if (cuenta) {
+            await cuenta.calcularSaldo();
+            await cuenta.save();
+        }
+    }
+
+    return transaccion;
+}
+
 const swSolicitudOrganizacionSchema = new Schema({
     organizacion: {
         type: Schema.Types.ObjectId,
@@ -75,16 +201,70 @@ const swSolicitudOrganizacionSchema = new Schema({
         ref: 'Usuario',
         required: true
     },
+    propietarioCuenta: {
+        type: Schema.Types.ObjectId,
+        ref: 'Usuario'
+    },
     rolSolicitante: {
         type: String,
         enum: ['Administrador', 'Miembro'],
         required: true
     },
+    workflowVersion: {
+        type: Number
+    },
     estado: {
         type: String,
-        enum: ['Pendiente', 'Aprobada', 'Rechazada', 'Cancelada'],
+        enum: ['Pendiente', 'PendienteConfirmacionDueno', 'Aprobada', 'Rechazada', 'RechazadaPorDueno', 'Cancelada'],
         default: 'Pendiente',
         required: true
+    },
+    aprobacionAdministrativa: {
+        procesadaPor: {
+            type: Schema.Types.ObjectId,
+            ref: 'Usuario'
+        },
+        fechaRespuesta: {
+            type: Date
+        },
+        comentario: {
+            type: String,
+            trim: true
+        }
+    },
+    confirmacionDueno: {
+        requerida: {
+            type: Boolean,
+            default: false
+        },
+        estado: {
+            type: String,
+            enum: ['Pendiente', 'Confirmada', 'Rechazada']
+        },
+        confirmadoPor: {
+            type: Schema.Types.ObjectId,
+            ref: 'Usuario'
+        },
+        fechaConfirmacion: {
+            type: Date
+        },
+        comentario: {
+            type: String,
+            trim: true
+        },
+        validacionCompra: {
+            type: Boolean,
+            default: false
+        },
+        comprobanteConfirmacion: {
+            nombre: String,
+            url: String,
+            tipo: String,
+            fechaSubida: {
+                type: Date,
+                default: Date.now
+            }
+        }
     },
     respuesta: {
         procesadaPor: {
@@ -138,103 +318,83 @@ swSolicitudOrganizacionSchema.pre('save', function(next) {
     next();
 });
 
+swSolicitudOrganizacionSchema.methods.requiereConfirmacionDueno = function() {
+    return isWorkflowOwnerConfirmation(this) && this.confirmacionDueno?.requerida === true;
+};
+
 swSolicitudOrganizacionSchema.methods.aprobar = async function(usuarioId, comentario = '') {
     if (this.estado !== 'Pendiente') {
         throw new Error('Solo se pueden aprobar solicitudes pendientes');
     }
 
-    const SWTransaccion = mongoose.model('SWTransaccion');
-    const SWCuenta = mongoose.model('SWCuenta');
-    let transaccion;
-
-    if (this.tipo === 'Transferencia') {
-        if (!this.cuentaDestino) {
-            throw new Error('La cuenta destino es requerida para transferencias');
-        }
-
-        const resultado = await SWTransaccion.crearTransferencia(
-            this.cuenta,
-            this.cuentaDestino,
-            this.monto,
-            this.concepto,
-            this.descripcion,
-            usuarioId,
-            true,
-            {
-                esProveedorExterno: this.esProveedorExterno,
-                proveedor: this.esProveedorExterno
-                    ? {
-                        nombre: this.proveedorNombre,
-                        beneficiario: this.proveedorBeneficiario,
-                        banco: this.proveedorBanco,
-                        cuentaClabe: this.proveedorCuentaClabe
-                    }
-                    : undefined
-            }
-        );
-
-        transaccion = resultado.origen;
-
-        await SWTransaccion.updateOne(
-            { _id: resultado.origen._id },
-            { aprobadaPor: usuarioId }
-        );
-
-        await SWTransaccion.updateOne(
-            { _id: resultado.destino._id },
-            { aprobadaPor: usuarioId }
-        );
-
-        const cuentaOrigen = await SWCuenta.findById(this.cuenta);
-        const cuentaDestino = await SWCuenta.findById(this.cuentaDestino);
-
-        if (cuentaOrigen) {
-            await cuentaOrigen.calcularSaldo();
-            await cuentaOrigen.save();
-        }
-
-        if (cuentaDestino) {
-            await cuentaDestino.calcularSaldo();
-            await cuentaDestino.save();
-        }
-    } else {
-        transaccion = new SWTransaccion({
-            cuenta: this.cuenta,
-            tipo: this.tipo,
-            monto: this.monto,
-            concepto: this.concepto,
-            descripcion: this.descripcion,
-            categoria: this.categoria,
-            fecha: this.fecha,
-            creadoPor: this.solicitadoPor,
-            aprobada: true,
-            aprobadaPor: usuarioId,
-            fechaAprobacion: new Date(),
-            imagenes: this.imagenes,
-            etiquetas: this.etiquetas,
-            notas: this.notas,
-            esProveedorExterno: this.esProveedorExterno,
-            proveedor: this.esProveedorExterno
-                ? {
-                    nombre: this.proveedorNombre,
-                    beneficiario: this.proveedorBeneficiario,
-                    banco: this.proveedorBanco,
-                    cuentaClabe: this.proveedorCuentaClabe
-                }
-                : undefined
-        });
-
-        await transaccion.save();
-
-        const cuenta = await SWCuenta.findById(this.cuenta);
-        if (cuenta) {
-            await cuenta.calcularSaldo();
-            await cuenta.save();
-        }
-    }
+    const transaccion = await crearTransaccionDesdeSolicitud(this, usuarioId);
 
     this.estado = 'Aprobada';
     this.transaccionCreada = transaccion._id;
+    this.respuesta = {
+        procesadaPor: usuarioId,
+        fechaRespuesta: new Date(),
+        comentario
+    };
+
+    await this.save();
+
+    return transaccion;
+};
+
+swSolicitudOrganizacionSchema.methods.aprobarAdministrativamente = async function(usuarioId, comentario = '') {
+    if (this.estado !== 'Pendiente') {
+        throw new Error('Solo se pueden aprobar solicitudes pendientes');
+    }
+
+    this.aprobacionAdministrativa = {
+        procesadaPor: usuarioId,
+        fechaRespuesta: new Date(),
+        comentario
+    };
+    this.estado = ESTADO_PENDIENTE_CONFIRMACION_DUENO;
+    this.confirmacionDueno = construirConfirmacionDueno(this.confirmacionDueno, {
+        requerida: true,
+        estado: 'Pendiente'
+    });
+
+    await this.save();
+
+    return this;
+};
+
+swSolicitudOrganizacionSchema.methods.confirmarPorDueno = async function(usuarioId, payload = {}) {
+    if (this.estado !== ESTADO_PENDIENTE_CONFIRMACION_DUENO) {
+        throw new Error('La solicitud no está pendiente de confirmación del dueño');
+    }
+
+    const comentario = payload.comentario || '';
+    const validacionCompra = Boolean(payload.validacionCompra);
+    const comprobanteConfirmacion = payload.comprobanteConfirmacion || null;
+
+    if (this.esProveedorExterno) {
+        if (!validacionCompra) {
+            throw new Error('Debes validar la compra antes de confirmar el pago a proveedor');
+        }
+
+        if (!comprobanteConfirmacion) {
+            throw new Error('Debes subir un comprobante antes de confirmar el pago a proveedor');
+        }
+    }
+
+    const transaccion = await crearTransaccionDesdeSolicitud(this, usuarioId, comprobanteConfirmacion);
+
+    this.estado = 'Aprobada';
+    this.transaccionCreada = transaccion._id;
+    this.confirmacionDueno = construirConfirmacionDueno(this.confirmacionDueno, {
+        requerida: true,
+        estado: 'Confirmada',
+        confirmadoPor: usuarioId,
+        fechaConfirmacion: new Date(),
+        comentario,
+        validacionCompra,
+        ...(comprobanteConfirmacion ? { comprobanteConfirmacion } : {})
+    });
     this.respuesta = {
         procesadaPor: usuarioId,
         fechaRespuesta: new Date(),
@@ -252,6 +412,28 @@ swSolicitudOrganizacionSchema.methods.rechazar = async function(usuarioId, motiv
     }
 
     this.estado = 'Rechazada';
+    this.respuesta = {
+        procesadaPor: usuarioId,
+        fechaRespuesta: new Date(),
+        motivoRechazo
+    };
+
+    return this.save();
+};
+
+swSolicitudOrganizacionSchema.methods.rechazarPorDueno = async function(usuarioId, motivoRechazo = '') {
+    if (this.estado !== ESTADO_PENDIENTE_CONFIRMACION_DUENO) {
+        throw new Error('La solicitud no está pendiente de confirmación del dueño');
+    }
+
+    this.estado = ESTADO_RECHAZADA_DUENO;
+    this.confirmacionDueno = construirConfirmacionDueno(this.confirmacionDueno, {
+        requerida: true,
+        estado: 'Rechazada',
+        confirmadoPor: usuarioId,
+        fechaConfirmacion: new Date(),
+        comentario: motivoRechazo
+    });
     this.respuesta = {
         procesadaPor: usuarioId,
         fechaRespuesta: new Date(),

@@ -448,6 +448,7 @@
                         <div class="flex gap-2">
                             <button id="btn-vista-solicitudes-cuenta" class="btn btn-primary btn-sm">Solicitudes por Cuenta</button>
                             <button id="btn-vista-solicitudes-organizacion" class="btn btn-secondary btn-sm">Solicitudes por Organización</button>
+                            <button id="btn-vista-solicitudes-confirmacion-dueno" class="btn btn-secondary btn-sm">Confirmación Dueño</button>
                         </div>
                     </div>
                 </div>
@@ -501,6 +502,27 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <div id="solicitudes-vista-confirmacion-dueno" class="hidden overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-gray-500 uppercase bg-gray-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Fecha</th>
+                                <th scope="col" class="px-6 py-3">Organización</th>
+                                <th scope="col" class="px-6 py-3">Cuenta</th>
+                                <th scope="col" class="px-6 py-3">Tipo</th>
+                                <th scope="col" class="px-6 py-3">Concepto</th>
+                                <th scope="col" class="px-6 py-3">Solicitante</th>
+                                <th scope="col" class="px-6 py-3 text-right">Monto</th>
+                                <th scope="col" class="px-6 py-3">Estado</th>
+                                <th scope="col" class="px-6 py-3 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-solicitudes-confirmacion-dueno-body">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

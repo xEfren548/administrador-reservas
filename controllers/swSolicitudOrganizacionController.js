@@ -11,11 +11,43 @@ const { isCategoriaValida } = require('../services/swCategoriasService');
 
 const MEXICO_CENTRO_TIMEZONE = 'America/Mexico_City';
 const FECHA_SOLO_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const WORKFLOW_VERSION_OWNER_CONFIRMATION = 2;
+const ESTADO_PENDIENTE_CONFIRMACION_DUENO = 'PendienteConfirmacionDueno';
 
 function crearErrorFechaInvalida() {
     const error = new Error('Fecha inválida');
     error.statusCode = 400;
     return error;
+}
+
+function obtenerStatusCodeErrorSolicitudOrganizacional(error) {
+    if (error.statusCode) {
+        return error.statusCode;
+    }
+
+    if (error.name === 'ValidationError' || error.name === 'CastError') {
+        return 400;
+    }
+
+    const message = error.message || '';
+    const businessErrorPatterns = [
+        'Saldo insuficiente',
+        'No tiene acceso',
+        'Solo el propietario',
+        'La cuenta destino es requerida',
+        'No se puede transferir',
+        'Debes validar la compra',
+        'Debes subir un comprobante',
+        'La solicitud no está pendiente',
+        'Solo se pueden aprobar solicitudes pendientes',
+        'Solo se pueden rechazar solicitudes pendientes'
+    ];
+
+    if (businessErrorPatterns.some((pattern) => message.includes(pattern))) {
+        return 400;
+    }
+
+    return 500;
 }
 
 function normalizarFechaSolicitud(fecha) {
@@ -40,6 +72,68 @@ function normalizarFechaSolicitud(fecha) {
     }
 
     return fechaNormalizada.toDate();
+}
+
+function esMismoId(valueA, valueB) {
+    if (!valueA || !valueB) {
+        return false;
+    }
+
+    return valueA.toString() === valueB.toString();
+}
+
+function esWorkflowOwnerConfirmation(solicitud) {
+    return Number(solicitud.workflowVersion || 1) >= WORKFLOW_VERSION_OWNER_CONFIRMATION;
+}
+
+function puedeAccederComoPropietarioCuenta(solicitud, userId) {
+    return esWorkflowOwnerConfirmation(solicitud) && esMismoId(solicitud.propietarioCuenta, userId);
+}
+
+function poblarSolicitudOrganizacion(query) {
+    return query
+        .populate('organizacion', 'nombre')
+        .populate('cuenta', 'nombre moneda saldoActual propietario')
+        .populate('cuentaDestino', 'nombre moneda saldoActual propietario')
+        .populate('solicitadoPor', 'firstName lastName email')
+        .populate('propietarioCuenta', 'firstName lastName email')
+        .populate('aprobacionAdministrativa.procesadaPor', 'firstName lastName email')
+        .populate('confirmacionDueno.confirmadoPor', 'firstName lastName email')
+        .populate('respuesta.procesadaPor', 'firstName lastName email')
+        .populate('transaccionCreada');
+}
+
+async function subirArchivoConfirmacion(file, solicitudId) {
+    if (!file) {
+        return null;
+    }
+
+    const client = new ftp.Client();
+
+    try {
+        await client.access({
+            host: 'integradev.site',
+            user: process.env.FTP_USER,
+            password: process.env.FTP_PASSWORD,
+            secure: false
+        });
+
+        await client.ensureDir('splitwise');
+
+        const extension = file.originalname.split('.').pop();
+        const remoteFileName = `solicitud_org_confirmacion_${solicitudId}_${Date.now()}.${extension}`;
+        await client.uploadFrom(file.path, remoteFileName);
+
+        return {
+            nombre: file.originalname,
+            url: remoteFileName,
+            tipo: file.mimetype,
+            fechaSubida: new Date()
+        };
+    } finally {
+        client.close();
+        fs.unlink(file.path, () => {});
+    }
 }
 
 const createSolicitudOrganizacionValidators = [
@@ -123,6 +217,23 @@ const procesarSolicitudOrganizacionValidators = [
         .trim()
 ];
 
+const confirmarSolicitudOrganizacionDuenoValidators = [
+    check('comentario')
+        .optional()
+        .isLength({ max: 500 }).withMessage('El comentario no puede exceder 500 caracteres')
+        .trim(),
+    check('validacionCompra')
+        .optional()
+        .customSanitizer((value) => value === true || value === 'true')
+];
+
+const rechazarSolicitudOrganizacionDuenoValidators = [
+    check('motivoRechazo')
+        .notEmpty().withMessage('El motivo de rechazo es requerido')
+        .isLength({ max: 500 }).withMessage('El motivo no puede exceder 500 caracteres')
+        .trim()
+];
+
 const getOrganizacionContext = async (organizacionId, userId) => {
     const organizacion = await SWOrganizacion.findById(organizacionId);
     if (!organizacion) {
@@ -202,6 +313,7 @@ const createSolicitudOrganizacion = async (req, res) => {
         }
 
         let cuentaDestino = null;
+        let propietarioCuentaId = cuenta.propietario;
 
         if (tipo === 'Transferencia') {
             cuentaDestino = await SWCuenta.findById(cuentaDestinoId);
@@ -240,9 +352,13 @@ const createSolicitudOrganizacion = async (req, res) => {
                     });
                 }
             }
+
+            propietarioCuentaId = cuentaDestino.propietario;
         }
 
-        if (participanteActual.rol === 'Administrador' && adminCount <= 1) {
+        const esPropietarioConfirmador = esMismoId(propietarioCuentaId, userId);
+
+        if (participanteActual.rol === 'Administrador' && adminCount <= 1 && esPropietarioConfirmador) {
             let resultadoDirecto;
 
             if (tipo === 'Transferencia') {
@@ -326,7 +442,9 @@ const createSolicitudOrganizacion = async (req, res) => {
             categoria,
             fecha: fechaSolicitud,
             solicitadoPor: userId,
+            propietarioCuenta: propietarioCuentaId,
             rolSolicitante: participanteActual.rol,
+            workflowVersion: WORKFLOW_VERSION_OWNER_CONFIRMATION,
             cuentaDestino: cuentaDestinoId || undefined,
             etiquetas,
             notas,
@@ -335,16 +453,39 @@ const createSolicitudOrganizacion = async (req, res) => {
             proveedorNombre: esPagoProveedorExterno ? proveedorNombre : undefined,
             proveedorBeneficiario: esPagoProveedorExterno ? proveedorBeneficiario : undefined,
             proveedorBanco: esPagoProveedorExterno ? proveedorBanco : undefined,
-            proveedorCuentaClabe: esPagoProveedorExterno ? proveedorCuentaClabe : undefined
+            proveedorCuentaClabe: esPagoProveedorExterno ? proveedorCuentaClabe : undefined,
+            confirmacionDueno: {
+                requerida: !esPropietarioConfirmador
+            }
         });
 
         await solicitud.save();
 
-        const solicitudPopulada = await SWSolicitudOrganizacion.findById(solicitud._id)
-            .populate('organizacion', 'nombre')
-            .populate('cuenta', 'nombre moneda')
-            .populate('cuentaDestino', 'nombre moneda')
-            .populate('solicitadoPor', 'firstName lastName email');
+        if (participanteActual.rol === 'Administrador' && adminCount <= 1 && !esPropietarioConfirmador) {
+            await solicitud.aprobarAdministrativamente(
+                userId,
+                'Aprobación administrativa automática por administrador único'
+            );
+
+            const solicitudAutoAprobada = await poblarSolicitudOrganizacion(
+                SWSolicitudOrganizacion.findById(solicitud._id)
+            );
+
+            return res.status(201).json({
+                success: true,
+                mode: 'solicitud',
+                message: 'Solicitud organizacional creada y aprobada administrativamente de forma automática; pendiente de confirmación del dueño de la cuenta',
+                data: {
+                    solicitud: solicitudAutoAprobada,
+                    requiereConfirmacionDueno: true,
+                    aprobacionAdministrativaAutomatica: true
+                }
+            });
+        }
+
+        const solicitudPopulada = await poblarSolicitudOrganizacion(
+            SWSolicitudOrganizacion.findById(solicitud._id)
+        );
 
         return res.status(201).json({
             success: true,
@@ -376,16 +517,12 @@ const getSolicitudesOrganizacion = async (req, res) => {
 
         const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
-        const solicitudes = await SWSolicitudOrganizacion.find(filter)
-            .populate('organizacion', 'nombre')
-            .populate('cuenta', 'nombre moneda')
-            .populate('cuentaDestino', 'nombre moneda')
-            .populate('solicitadoPor', 'firstName lastName email')
-            .populate('respuesta.procesadaPor', 'firstName lastName email')
-            .populate('transaccionCreada')
+        const solicitudes = await poblarSolicitudOrganizacion(
+            SWSolicitudOrganizacion.find(filter)
             .sort({ createdAt: -1 })
             .skip(skip)
-            .limit(parseInt(limit, 10));
+            .limit(parseInt(limit, 10))
+        );
 
         const total = await SWSolicitudOrganizacion.countDocuments(filter);
 
@@ -423,15 +560,11 @@ const getSolicitudesPendientesOrganizacion = async (req, res) => {
             });
         }
 
-        const solicitudes = await SWSolicitudOrganizacion.find({
+        const solicitudes = await poblarSolicitudOrganizacion(SWSolicitudOrganizacion.find({
             organizacion: organizacionId,
             estado: 'Pendiente'
         })
-            .populate('organizacion', 'nombre')
-            .populate('cuenta', 'nombre moneda')
-            .populate('cuentaDestino', 'nombre moneda')
-            .populate('solicitadoPor', 'firstName lastName email')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 }));
 
         return res.status(200).json({
             success: true,
@@ -460,12 +593,10 @@ const getMisSolicitudesOrganizacion = async (req, res) => {
             filter.organizacion = organizacionId;
         }
 
-        const solicitudes = await SWSolicitudOrganizacion.find(filter)
-            .populate('organizacion', 'nombre')
-            .populate('cuenta', 'nombre moneda')
-            .populate('cuentaDestino', 'nombre moneda')
-            .populate('respuesta.procesadaPor', 'firstName lastName email')
-            .sort({ createdAt: -1 });
+        const solicitudes = await poblarSolicitudOrganizacion(
+            SWSolicitudOrganizacion.find(filter)
+                .sort({ createdAt: -1 })
+        );
 
         return res.status(200).json({
             success: true,
@@ -486,13 +617,9 @@ const getSolicitudOrganizacionById = async (req, res) => {
         const { id } = req.params;
         const userId = req.session.userId;
 
-        const solicitud = await SWSolicitudOrganizacion.findById(id)
-            .populate('organizacion', 'nombre')
-            .populate('cuenta', 'nombre moneda')
-            .populate('cuentaDestino', 'nombre moneda')
-            .populate('solicitadoPor', 'firstName lastName email')
-            .populate('respuesta.procesadaPor', 'firstName lastName email')
-            .populate('transaccionCreada');
+        const solicitud = await poblarSolicitudOrganizacion(
+            SWSolicitudOrganizacion.findById(id)
+        );
 
         if (!solicitud) {
             return res.status(404).json({
@@ -501,7 +628,9 @@ const getSolicitudOrganizacionById = async (req, res) => {
             });
         }
 
-        await getOrganizacionContext(solicitud.organizacion._id, userId);
+        if (!puedeAccederComoPropietarioCuenta(solicitud, userId)) {
+            await getOrganizacionContext(solicitud.organizacion._id, userId);
+        }
 
         return res.status(200).json({
             success: true,
@@ -568,15 +697,49 @@ const procesarSolicitudOrganizacion = async (req, res) => {
         }
 
         if (accion === 'aprobar') {
+            if (esWorkflowOwnerConfirmation(solicitud)) {
+                solicitud.aprobacionAdministrativa = {
+                    procesadaPor: userId,
+                    fechaRespuesta: new Date(),
+                    comentario: comentario || ''
+                };
+
+                if (esMismoId(solicitud.propietarioCuenta, userId)) {
+                    const transaccion = await solicitud.aprobar(userId, comentario);
+                    const solicitudActualizada = await poblarSolicitudOrganizacion(
+                        SWSolicitudOrganizacion.findById(id)
+                    );
+
+                    return res.status(200).json({
+                        success: true,
+                        message: 'Solicitud organizacional aprobada y confirmada por el dueño de la cuenta',
+                        data: {
+                            solicitud: solicitudActualizada,
+                            transaccion
+                        }
+                    });
+                }
+
+                await solicitud.aprobarAdministrativamente(userId, comentario);
+                const solicitudActualizada = await poblarSolicitudOrganizacion(
+                    SWSolicitudOrganizacion.findById(id)
+                );
+
+                return res.status(200).json({
+                    success: true,
+                    message: 'Solicitud organizacional aprobada administrativamente y pendiente de confirmación del dueño de la cuenta',
+                    data: {
+                        solicitud: solicitudActualizada,
+                        requiereConfirmacionDueno: true
+                    }
+                });
+            }
+
             const transaccion = await solicitud.aprobar(userId, comentario);
 
-            const solicitudActualizada = await SWSolicitudOrganizacion.findById(id)
-                .populate('organizacion', 'nombre')
-                .populate('cuenta', 'nombre saldoActual moneda')
-                .populate('cuentaDestino', 'nombre saldoActual moneda')
-                .populate('solicitadoPor', 'firstName lastName email')
-                .populate('respuesta.procesadaPor', 'firstName lastName email')
-                .populate('transaccionCreada');
+            const solicitudActualizada = await poblarSolicitudOrganizacion(
+                SWSolicitudOrganizacion.findById(id)
+            );
 
             return res.status(200).json({
                 success: true,
@@ -596,10 +759,134 @@ const procesarSolicitudOrganizacion = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al procesar solicitud organizacional:', error);
-        const statusCode = error.statusCode || 500;
+        const statusCode = obtenerStatusCodeErrorSolicitudOrganizacional(error);
         return res.status(statusCode).json({
             success: false,
             message: statusCode === 500 ? 'Error al procesar solicitud organizacional' : error.message,
+            error: error.message
+        });
+    }
+};
+
+const getSolicitudesPendientesConfirmacionDueno = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+
+        const solicitudes = await poblarSolicitudOrganizacion(
+            SWSolicitudOrganizacion.find({
+                workflowVersion: { $gte: WORKFLOW_VERSION_OWNER_CONFIRMATION },
+                propietarioCuenta: userId,
+                estado: ESTADO_PENDIENTE_CONFIRMACION_DUENO
+            }).sort({ createdAt: -1 })
+        );
+
+        return res.status(200).json({
+            success: true,
+            data: solicitudes
+        });
+    } catch (error) {
+        console.error('Error al obtener solicitudes pendientes de confirmación del dueño:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error al obtener solicitudes pendientes de confirmación del dueño',
+            error: error.message
+        });
+    }
+};
+
+const confirmarSolicitudOrganizacionDueno = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.session.userId;
+        const comentario = req.body.comentario || '';
+        const validacionCompra = req.body.validacionCompra === true || req.body.validacionCompra === 'true';
+
+        const solicitud = await SWSolicitudOrganizacion.findById(id);
+
+        if (!solicitud) {
+            return res.status(404).json({
+                success: false,
+                message: 'Solicitud organizacional no encontrada'
+            });
+        }
+
+        if (!puedeAccederComoPropietarioCuenta(solicitud, userId)) {
+            return res.status(403).json({
+                success: false,
+                message: 'Solo el dueño de la cuenta puede confirmar esta solicitud'
+            });
+        }
+
+        const comprobanteConfirmacion = await subirArchivoConfirmacion(req.file, id);
+        const transaccion = await solicitud.confirmarPorDueno(userId, {
+            comentario,
+            validacionCompra,
+            comprobanteConfirmacion
+        });
+
+        const solicitudActualizada = await poblarSolicitudOrganizacion(
+            SWSolicitudOrganizacion.findById(id)
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: 'Solicitud confirmada por el dueño de la cuenta',
+            data: {
+                solicitud: solicitudActualizada,
+                transaccion
+            }
+        });
+    } catch (error) {
+        console.error('Error al confirmar solicitud organizacional por dueño:', error);
+
+        if (req.file) {
+            fs.unlink(req.file.path, () => {});
+        }
+
+        const statusCode = error.statusCode || 500;
+        return res.status(statusCode).json({
+            success: false,
+            message: statusCode === 500 ? 'Error al confirmar la solicitud organizacional' : error.message,
+            error: error.message
+        });
+    }
+};
+
+const rechazarSolicitudOrganizacionDueno = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { motivoRechazo } = req.body;
+        const userId = req.session.userId;
+
+        const solicitud = await SWSolicitudOrganizacion.findById(id);
+
+        if (!solicitud) {
+            return res.status(404).json({
+                success: false,
+                message: 'Solicitud organizacional no encontrada'
+            });
+        }
+
+        if (!puedeAccederComoPropietarioCuenta(solicitud, userId)) {
+            return res.status(403).json({
+                success: false,
+                message: 'Solo el dueño de la cuenta puede rechazar esta solicitud'
+            });
+        }
+
+        await solicitud.rechazarPorDueno(userId, motivoRechazo);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Solicitud rechazada por el dueño de la cuenta',
+            data: solicitud
+        });
+    } catch (error) {
+        console.error('Error al rechazar solicitud organizacional por dueño:', error);
+        const statusCode = error.statusCode || 500;
+        return res.status(statusCode).json({
+            success: false,
+            message: statusCode === 500 ? 'Error al rechazar la solicitud organizacional' : error.message,
             error: error.message
         });
     }
@@ -881,12 +1168,17 @@ const deleteSolicitudOrganizacionImage = async (req, res) => {
 module.exports = {
     createSolicitudOrganizacionValidators,
     procesarSolicitudOrganizacionValidators,
+    confirmarSolicitudOrganizacionDuenoValidators,
+    rechazarSolicitudOrganizacionDuenoValidators,
     createSolicitudOrganizacion,
     getSolicitudesOrganizacion,
     getSolicitudesPendientesOrganizacion,
+    getSolicitudesPendientesConfirmacionDueno,
     getMisSolicitudesOrganizacion,
     getSolicitudOrganizacionById,
     procesarSolicitudOrganizacion,
+    confirmarSolicitudOrganizacionDueno,
+    rechazarSolicitudOrganizacionDueno,
     cancelarSolicitudOrganizacion,
     getEstadisticasSolicitudesOrganizacion,
     uploadSolicitudOrganizacionImages,

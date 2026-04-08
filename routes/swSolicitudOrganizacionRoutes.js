@@ -20,6 +20,11 @@ router.get(
 );
 
 router.get(
+    '/solicitudes-organizacion/pendientes-confirmacion-dueno',
+    swSolicitudOrganizacionController.getSolicitudesPendientesConfirmacionDueno
+);
+
+router.get(
     '/solicitudes-organizacion/organizacion/:organizacionId/pendientes',
     swSolicitudOrganizacionController.getSolicitudesPendientesOrganizacion
 );
@@ -44,6 +49,21 @@ router.post(
     swSolicitudOrganizacionController.procesarSolicitudOrganizacionValidators,
     validationRequest,
     swSolicitudOrganizacionController.procesarSolicitudOrganizacion
+);
+
+router.post(
+    '/solicitudes-organizacion/:id/confirmar-dueno',
+    upload.single('comprobanteConfirmacion'),
+    swSolicitudOrganizacionController.confirmarSolicitudOrganizacionDuenoValidators,
+    validationRequest,
+    swSolicitudOrganizacionController.confirmarSolicitudOrganizacionDueno
+);
+
+router.post(
+    '/solicitudes-organizacion/:id/rechazar-dueno',
+    swSolicitudOrganizacionController.rechazarSolicitudOrganizacionDuenoValidators,
+    validationRequest,
+    swSolicitudOrganizacionController.rechazarSolicitudOrganizacionDueno
 );
 
 router.post(

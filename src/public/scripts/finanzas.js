@@ -4,6 +4,7 @@ let cuentas = [];
 let transacciones = [];
 let solicitudes = [];
 let solicitudesOrganizacion = [];
+let solicitudesPendientesConfirmacionDueno = [];
 let cuentaSeleccionada = null;
 let usuarios = []; // Lista de usuarios disponibles
 let participantes = []; // Lista de participantes de la cuenta actual
@@ -337,6 +338,10 @@ function inicializarEventos() {
     $('#btn-vista-solicitudes-organizacion').on('click', async () => {
         cambiarVistaSolicitudes('organizacion');
         await cargarSolicitudesOrganizacion();
+    });
+    $('#btn-vista-solicitudes-confirmacion-dueno').on('click', async () => {
+        cambiarVistaSolicitudes('confirmacion-dueno');
+        await cargarSolicitudesPendientesConfirmacionDueno();
     });
     $('#filtro-solicitudes-organizacion').on('change', async function() {
         const organizacionId = $(this).val();
@@ -1550,15 +1555,22 @@ function mostrarDetalleCuenta(cuenta) {
 function cambiarVistaSolicitudes(vista) {
     vistaSolicitudesActiva = vista;
 
+    $('#solicitudes-vista-cuenta').addClass('hidden');
+    $('#solicitudes-vista-organizacion').addClass('hidden');
+    $('#solicitudes-vista-confirmacion-dueno').addClass('hidden');
+
+    $('#btn-vista-solicitudes-cuenta').removeClass('btn-primary').addClass('btn-secondary');
+    $('#btn-vista-solicitudes-organizacion').removeClass('btn-primary').addClass('btn-secondary');
+    $('#btn-vista-solicitudes-confirmacion-dueno').removeClass('btn-primary').addClass('btn-secondary');
+
     if (vista === 'organizacion') {
-        $('#solicitudes-vista-cuenta').addClass('hidden');
         $('#solicitudes-vista-organizacion').removeClass('hidden');
-        $('#btn-vista-solicitudes-cuenta').removeClass('btn-primary').addClass('btn-secondary');
         $('#btn-vista-solicitudes-organizacion').removeClass('btn-secondary').addClass('btn-primary');
+    } else if (vista === 'confirmacion-dueno') {
+        $('#solicitudes-vista-confirmacion-dueno').removeClass('hidden');
+        $('#btn-vista-solicitudes-confirmacion-dueno').removeClass('btn-secondary').addClass('btn-primary');
     } else {
-        $('#solicitudes-vista-organizacion').addClass('hidden');
         $('#solicitudes-vista-cuenta').removeClass('hidden');
-        $('#btn-vista-solicitudes-organizacion').removeClass('btn-primary').addClass('btn-secondary');
         $('#btn-vista-solicitudes-cuenta').removeClass('btn-secondary').addClass('btn-primary');
     }
 }
@@ -1857,69 +1869,144 @@ function renderizarSolicitudesOrganizacion() {
     const totalAdmins = (organizacion?.participantes || []).filter(p => p.rol === 'Administrador').length;
 
     solicitudesOrganizacion.forEach(sol => {
-        const fecha = formatearFechaMexico(sol.fecha);
-        const monto = formatearMoneda(sol.monto, sol.cuenta?.moneda || 'MXN');
-        let tipoColor = sol.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
-        let tipoIcono = sol.tipo === 'Ingreso' ? '↑' : '↓';
+        tbody.append(renderizarFilaSolicitudOrganizacion(sol, {
+            incluirOrganizacion: true,
+            soyAdmin,
+            totalAdmins
+        }));
+    });
+}
 
-        if (sol.tipo === 'Transferencia') {
-            tipoColor = 'text-purple-600';
-            tipoIcono = '⇄';
-        }
+function renderizarFilaSolicitudOrganizacion(sol, opciones = {}) {
+    const incluirOrganizacion = opciones.incluirOrganizacion !== false;
+    const soyAdmin = Boolean(opciones.soyAdmin);
+    const totalAdmins = opciones.totalAdmins || 0;
+    const fecha = formatearFechaMexico(sol.fecha);
+    const monto = formatearMoneda(sol.monto, sol.cuenta?.moneda || 'MXN');
+    let tipoColor = sol.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600';
+    let tipoIcono = sol.tipo === 'Ingreso' ? '↑' : '↓';
 
-        const estadoBadge = obtenerBadgeEstado(sol.estado);
-        const solicitanteId = sol.solicitadoPor?._id || sol.solicitadoPor;
-        const esSolicitante = solicitanteId === window.currentUserId;
+    if (sol.tipo === 'Transferencia') {
+        tipoColor = 'text-purple-600';
+        tipoIcono = '⇄';
+    }
 
-        let botonesAccion = `
-            <button onclick="verDetalleSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-info" title="Ver detalle">
-                <i class="fas fa-eye"></i>
+    const estadoBadge = obtenerBadgeEstado(sol.estado);
+    const solicitanteId = sol.solicitadoPor?._id || sol.solicitadoPor;
+    const propietarioCuentaId = sol.propietarioCuenta?._id || sol.propietarioCuenta;
+    const esSolicitante = solicitanteId === window.currentUserId;
+    const esPropietarioCuenta = propietarioCuentaId === window.currentUserId;
+    const bloqueoAutoAprobacion = esSolicitante && sol.rolSolicitante === 'Administrador' && totalAdmins >= 2;
+
+    let botonesAccion = `
+        <button onclick="verDetalleSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-info" title="Ver detalle">
+            <i class="fas fa-eye"></i>
+        </button>
+    `;
+
+    if (sol.estado === 'Pendiente' && soyAdmin && !bloqueoAutoAprobacion) {
+        botonesAccion += `
+            <button onclick="aprobarSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-success ms-1" title="Aprobar administrativamente">
+                <i class="fas fa-check"></i>
+            </button>
+            <button onclick="rechazarSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-danger ms-1" title="Rechazar administrativamente">
+                <i class="fas fa-times"></i>
             </button>
         `;
+    }
 
-        const bloqueoAutoAprobacion = esSolicitante && sol.rolSolicitante === 'Administrador' && totalAdmins >= 2;
+    if (sol.estado === 'PendienteConfirmacionDueno' && esPropietarioCuenta) {
+        botonesAccion += `
+            <button onclick="confirmarSolicitudOrganizacionDueno('${sol._id}')" class="btn btn-sm btn-success ms-1" title="Confirmar como dueño de la cuenta">
+                <i class="fas fa-wallet"></i>
+            </button>
+            <button onclick="rechazarSolicitudOrganizacionDueno('${sol._id}')" class="btn btn-sm btn-danger ms-1" title="Rechazar como dueño de la cuenta">
+                <i class="fas fa-user-times"></i>
+            </button>
+        `;
+    }
 
-        if (sol.estado === 'Pendiente' && soyAdmin && !bloqueoAutoAprobacion) {
-            botonesAccion += `
-                <button onclick="aprobarSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-success ms-1" title="Aprobar">
-                    <i class="fas fa-check"></i>
-                </button>
-                <button onclick="rechazarSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-danger ms-1" title="Rechazar">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
+    if (sol.estado === 'Pendiente' && esSolicitante) {
+        botonesAccion += `
+            <button onclick="cancelarSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-warning ms-1" title="Cancelar">
+                <i class="fas fa-ban"></i>
+            </button>
+        `;
+    }
+
+    let conceptoHtml = sol.concepto;
+    if (sol.tipo === 'Transferencia' && sol.cuentaDestino) {
+        const nombreDestino = sol.cuentaDestino?.nombre || 'N/A';
+        conceptoHtml += `<br><small class="text-gray-600">→ ${nombreDestino}</small>`;
+    }
+    if (sol.esProveedorExterno) {
+        conceptoHtml += `<br><small class="text-indigo-600"><i class="fas fa-user-tie me-1"></i>Proveedor externo</small>`;
+    }
+    if (sol.estado === 'PendienteConfirmacionDueno') {
+        const propietarioTexto = sol.propietarioCuenta?.firstName
+            ? `${sol.propietarioCuenta.firstName} ${sol.propietarioCuenta.lastName || ''}`.trim()
+            : 'dueño de la cuenta';
+        conceptoHtml += `<br><small class="text-amber-600"><i class="fas fa-user-shield me-1"></i>Pendiente de confirmar por ${propietarioTexto}</small>`;
+    }
+
+    return `
+        <tr class="border-b border-gray-200 hover:bg-gray-100">
+            <td class="px-6 py-4">${fecha}</td>
+            ${incluirOrganizacion ? `<td class="px-6 py-4">${sol.organizacion?.nombre || 'N/A'}</td>` : ''}
+            <td class="px-6 py-4">${sol.cuenta?.nombre || 'N/A'}</td>
+            <td class="px-6 py-4 ${tipoColor}"><span style="font-size: 1.2em;">${tipoIcono}</span> ${sol.tipo}</td>
+            <td class="px-6 py-4 font-medium text-gray-900">${conceptoHtml}</td>
+            <td class="px-6 py-4">${sol.solicitadoPor?.firstName || 'N/A'} ${sol.solicitadoPor?.lastName || ''}</td>
+            <td class="px-6 py-4 text-right font-semibold ${tipoColor}">${monto}</td>
+            <td class="px-6 py-4">${estadoBadge}</td>
+            <td class="px-6 py-4 text-center">${botonesAccion}</td>
+        </tr>
+    `;
+}
+
+async function cargarSolicitudesPendientesConfirmacionDueno() {
+    try {
+        mostrarSpinner();
+        const response = await fetch('/api/sw/solicitudes-organizacion/pendientes-confirmacion-dueno');
+        const data = await response.json();
+
+        if (data.success) {
+            solicitudesPendientesConfirmacionDueno = data.data || [];
+            renderizarSolicitudesPendientesConfirmacionDueno();
+        } else {
+            mostrarError(data.message || 'Error al cargar solicitudes pendientes de confirmación');
         }
+    } catch (error) {
+        console.error('Error al cargar solicitudes pendientes de confirmación del dueño:', error);
+        mostrarError('Error al cargar solicitudes pendientes de confirmación');
+    } finally {
+        ocultarSpinner();
+    }
+}
 
-        if (sol.estado === 'Pendiente' && esSolicitante) {
-            botonesAccion += `
-                <button onclick="cancelarSolicitudOrganizacion('${sol._id}')" class="btn btn-sm btn-warning ms-1" title="Cancelar">
-                    <i class="fas fa-ban"></i>
-                </button>
-            `;
-        }
+function renderizarSolicitudesPendientesConfirmacionDueno() {
+    const tbody = $('#tabla-solicitudes-confirmacion-dueno-body');
+    if (!tbody.length) return;
 
-        let conceptoHtml = sol.concepto;
-        if (sol.tipo === 'Transferencia' && sol.cuentaDestino) {
-            const nombreDestino = sol.cuentaDestino?.nombre || 'N/A';
-            conceptoHtml += `<br><small class="text-gray-600">→ ${nombreDestino}</small>`;
-        }
-        if (sol.esProveedorExterno) {
-            conceptoHtml += `<br><small class="text-indigo-600"><i class="fas fa-user-tie me-1"></i>Proveedor externo</small>`;
-        }
+    tbody.empty();
 
-        tbody.append(`
-            <tr class="border-b border-gray-200 hover:bg-gray-100">
-                <td class="px-6 py-4">${fecha}</td>
-                <td class="px-6 py-4">${sol.organizacion?.nombre || 'N/A'}</td>
-                <td class="px-6 py-4">${sol.cuenta?.nombre || 'N/A'}</td>
-                <td class="px-6 py-4 ${tipoColor}"><span style="font-size: 1.2em;">${tipoIcono}</span> ${sol.tipo}</td>
-                <td class="px-6 py-4 font-medium text-gray-900">${conceptoHtml}</td>
-                <td class="px-6 py-4">${sol.solicitadoPor?.firstName || 'N/A'} ${sol.solicitadoPor?.lastName || ''}</td>
-                <td class="px-6 py-4 text-right font-semibold ${tipoColor}">${monto}</td>
-                <td class="px-6 py-4">${estadoBadge}</td>
-                <td class="px-6 py-4 text-center">${botonesAccion}</td>
+    if (solicitudesPendientesConfirmacionDueno.length === 0) {
+        tbody.html(`
+            <tr>
+                <td colspan="9" class="px-6 py-4 text-center text-gray-500">
+                    No hay solicitudes pendientes de confirmación del dueño
+                </td>
             </tr>
         `);
+        return;
+    }
+
+    solicitudesPendientesConfirmacionDueno.forEach(sol => {
+        tbody.append(renderizarFilaSolicitudOrganizacion(sol, {
+            incluirOrganizacion: true,
+            soyAdmin: false,
+            totalAdmins: 0
+        }));
     });
 }
 
@@ -1932,18 +2019,18 @@ async function aprobarSolicitudOrganizacion(solicitudId) {
             body: JSON.stringify({ accion: 'aprobar', comentario: '' })
         });
 
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
 
-        if (data.success) {
+        if (response.ok && data.success) {
             mostrarExito('Solicitud organizacional aprobada exitosamente');
             await cargarSolicitudesOrganizacion();
             await cargarMisCuentas();
         } else {
-            mostrarError(data.message || 'Error al aprobar solicitud organizacional');
+            mostrarError(data.message || data.error || 'Error al aprobar solicitud organizacional');
         }
     } catch (error) {
         console.error('Error al aprobar solicitud organizacional:', error);
-        mostrarError('Error al aprobar solicitud organizacional');
+        mostrarError(error.message || 'Error al aprobar solicitud organizacional');
     } finally {
         ocultarSpinner();
     }
@@ -1996,6 +2083,156 @@ async function rechazarSolicitudOrganizacion(solicitudId) {
     }
 }
 
+function buscarSolicitudOrganizacionPorId(solicitudId) {
+    return [...solicitudesOrganizacion, ...solicitudesPendientesConfirmacionDueno].find(s => s._id === solicitudId);
+}
+
+async function confirmarSolicitudOrganizacionDueno(solicitudId) {
+    const solicitud = buscarSolicitudOrganizacionPorId(solicitudId);
+    if (!solicitud) {
+        mostrarError('Solicitud organizacional no encontrada');
+        return;
+    }
+
+    const requiereComprobante = Boolean(solicitud.esProveedorExterno);
+    const result = await Swal.fire({
+        title: 'Confirmar movimiento de cuenta',
+        html: `
+            <p class="mb-3 text-start">Esta acción aplicará el movimiento en tu cuenta.</p>
+            <div class="mb-3 text-start">
+                <label for="comentario-confirmacion-dueno" class="form-label text-gray-900">Comentario (opcional)</label>
+                <textarea id="comentario-confirmacion-dueno" class="form-control" rows="2" placeholder="Agregar comentario..."></textarea>
+            </div>
+            ${solicitud.esProveedorExterno ? `
+                <div class="form-check text-start mb-3">
+                    <input class="form-check-input" type="checkbox" id="validacion-compra-dueno">
+                    <label class="form-check-label" for="validacion-compra-dueno">
+                        Confirmo que la compra o pago a proveedor fue validado
+                    </label>
+                </div>
+            ` : ''}
+            <div class="mb-3 text-start">
+                <label for="comprobante-confirmacion-dueno" class="form-label text-gray-900">
+                    Comprobante ${requiereComprobante ? '*' : '(opcional)'}
+                </label>
+                <input type="file" id="comprobante-confirmacion-dueno" class="form-control" accept="image/*,.pdf">
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar movimiento',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#10b981',
+        background: '#ffffff',
+        color: '#1f2937',
+        preConfirm: () => {
+            const comentario = document.getElementById('comentario-confirmacion-dueno').value.trim();
+            const validacionCompra = solicitud.esProveedorExterno
+                ? document.getElementById('validacion-compra-dueno').checked
+                : false;
+            const fileInput = document.getElementById('comprobante-confirmacion-dueno');
+            const comprobante = fileInput?.files?.[0] || null;
+
+            if (solicitud.esProveedorExterno && !validacionCompra) {
+                Swal.showValidationMessage('Debes validar la compra antes de confirmar');
+                return false;
+            }
+
+            if (requiereComprobante && !comprobante) {
+                Swal.showValidationMessage('Debes subir un comprobante antes de confirmar');
+                return false;
+            }
+
+            return { comentario, validacionCompra, comprobante };
+        }
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        mostrarSpinner();
+        const formData = new FormData();
+        formData.append('comentario', result.value.comentario || '');
+        formData.append('validacionCompra', String(Boolean(result.value.validacionCompra)));
+        if (result.value.comprobante) {
+            formData.append('comprobanteConfirmacion', result.value.comprobante);
+        }
+
+        const response = await fetch(`/api/sw/solicitudes-organizacion/${solicitudId}/confirmar-dueno`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Solicitud confirmada por el dueño de la cuenta');
+            await cargarSolicitudesPendientesConfirmacionDueno();
+            if ($('#filtro-solicitudes-organizacion').val()) {
+                await cargarSolicitudesOrganizacion();
+            }
+            await cargarMisCuentas();
+        } else {
+            mostrarError(data.message || 'Error al confirmar la solicitud');
+        }
+    } catch (error) {
+        console.error('Error al confirmar solicitud como dueño:', error);
+        mostrarError('Error al confirmar la solicitud');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function rechazarSolicitudOrganizacionDueno(solicitudId) {
+    const result = await Swal.fire({
+        title: '¿Rechazar movimiento de cuenta?',
+        text: 'El movimiento no se aplicará a tu cuenta',
+        icon: 'warning',
+        input: 'textarea',
+        inputLabel: 'Motivo del rechazo *',
+        inputPlaceholder: 'Explica por qué rechazas el movimiento...',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Debes especificar un motivo';
+            }
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Rechazar movimiento',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ef4444',
+        background: '#ffffff',
+        color: '#1f2937'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/solicitudes-organizacion/${solicitudId}/rechazar-dueno`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ motivoRechazo: result.value })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito('Solicitud rechazada por el dueño de la cuenta');
+            await cargarSolicitudesPendientesConfirmacionDueno();
+            if ($('#filtro-solicitudes-organizacion').val()) {
+                await cargarSolicitudesOrganizacion();
+            }
+        } else {
+            mostrarError(data.message || 'Error al rechazar la solicitud');
+        }
+    } catch (error) {
+        console.error('Error al rechazar solicitud como dueño:', error);
+        mostrarError('Error al rechazar la solicitud');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
 async function cancelarSolicitudOrganizacion(solicitudId) {
     try {
         mostrarSpinner();
@@ -2021,7 +2258,7 @@ async function cancelarSolicitudOrganizacion(solicitudId) {
 }
 
 function verDetalleSolicitudOrganizacion(solicitudId) {
-    const solicitud = solicitudesOrganizacion.find(s => s._id === solicitudId);
+    const solicitud = [...solicitudesOrganizacion, ...solicitudesPendientesConfirmacionDueno].find(s => s._id === solicitudId);
     if (!solicitud) {
         mostrarError('Solicitud organizacional no encontrada');
         return;
@@ -2771,6 +3008,37 @@ function mostrarDetalleSolicitudGeneral(solicitud, modo = 'cuenta') {
                 <p class="text-gray-500 text-sm">Solicitado por</p>
                 <p class="text-gray-900">${solicitud.solicitadoPor?.firstName || 'N/A'} ${solicitud.solicitadoPor?.lastName || ''}</p>
             </div>
+
+            ${modo === 'organizacion' && solicitud.propietarioCuenta ? `
+                <div>
+                    <p class="text-gray-500 text-sm">Dueño de la cuenta</p>
+                    <p class="text-gray-900">${solicitud.propietarioCuenta?.firstName || 'N/A'} ${solicitud.propietarioCuenta?.lastName || ''}</p>
+                </div>
+            ` : ''}
+
+            ${solicitud.aprobacionAdministrativa?.procesadaPor ? `
+                <div class="border-t border-gray-200 pt-4">
+                    <p class="text-gray-500 text-sm">Aprobación administrativa</p>
+                    <p class="text-gray-900">${solicitud.aprobacionAdministrativa.comentario || 'Aprobada sin comentario'}</p>
+                    <p class="text-gray-500 text-xs mt-2">
+                        ${solicitud.aprobacionAdministrativa.procesadaPor?.firstName || ''}
+                        ${solicitud.aprobacionAdministrativa.fechaRespuesta ? `- ${formatearFechaHoraMexico(solicitud.aprobacionAdministrativa.fechaRespuesta)}` : ''}
+                    </p>
+                </div>
+            ` : ''}
+
+            ${solicitud.confirmacionDueno?.estado ? `
+                <div class="border-t border-gray-200 pt-4">
+                    <p class="text-gray-500 text-sm">Confirmación del dueño</p>
+                    <p class="text-gray-900">${obtenerBadgeEstado(solicitud.estado)}</p>
+                    ${solicitud.confirmacionDueno.comentario ? `<p class="text-gray-900 mt-2">${solicitud.confirmacionDueno.comentario}</p>` : ''}
+                    ${solicitud.confirmacionDueno.validacionCompra ? '<p class="text-green-700 text-sm mt-2"><i class="fas fa-check-circle me-1"></i>Compra validada por el dueño</p>' : ''}
+                    <p class="text-gray-500 text-xs mt-2">
+                        ${solicitud.confirmacionDueno.confirmadoPor?.firstName || ''}
+                        ${solicitud.confirmacionDueno.fechaConfirmacion ? `- ${formatearFechaHoraMexico(solicitud.confirmacionDueno.fechaConfirmacion)}` : ''}
+                    </p>
+                </div>
+            ` : ''}
             
             ${solicitud.respuesta?.comentario ? `
                 <div class="border-t border-gray-200 pt-4">
@@ -2807,20 +3075,20 @@ function mostrarDetalleSolicitudGeneral(solicitud, modo = 'cuenta') {
                 </div>
             ` : ''}
             
-            ${solicitud.respuesta?.comprobanteConfirmacion?.url ? `
+            ${(solicitud.confirmacionDueno?.comprobanteConfirmacion?.url || solicitud.respuesta?.comprobanteConfirmacion?.url) ? `
                 <div class="border-t border-gray-200 pt-4">
                     <p class="text-gray-500 text-sm mb-3">
-                        <i class="fas fa-check-circle me-2"></i>Comprobante de Confirmación del Propietario
+                        <i class="fas fa-check-circle me-2"></i>Comprobante de Confirmación del Dueño
                     </p>
                     <div class="grid grid-cols-3 gap-3">
-                        <div class="relative cursor-pointer" onclick="visualizarImagenCompleta('https://navarro.integradev.site/navarro/splitwise/${solicitud.respuesta.comprobanteConfirmacion.url}')">
-                            ${solicitud.respuesta.comprobanteConfirmacion.tipo && solicitud.respuesta.comprobanteConfirmacion.tipo.includes('pdf') ? `
+                        <div class="relative cursor-pointer" onclick="visualizarImagenCompleta('https://navarro.integradev.site/navarro/splitwise/${(solicitud.confirmacionDueno?.comprobanteConfirmacion?.url || solicitud.respuesta?.comprobanteConfirmacion?.url)}')">
+                            ${(solicitud.confirmacionDueno?.comprobanteConfirmacion?.tipo || solicitud.respuesta?.comprobanteConfirmacion?.tipo) && (solicitud.confirmacionDueno?.comprobanteConfirmacion?.tipo || solicitud.respuesta?.comprobanteConfirmacion?.tipo).includes('pdf') ? `
                                 <div class="w-full h-24 bg-red-900 rounded-lg border border-gray-300 hover:border-teal-500 transition-colors flex items-center justify-center">
                                     <i class="fas fa-file-pdf text-4xl text-red-300"></i>
                                 </div>
-                                <p class="text-xs text-gray-500 text-center mt-1">${solicitud.respuesta.comprobanteConfirmacion.nombre}</p>
+                                <p class="text-xs text-gray-500 text-center mt-1">${solicitud.confirmacionDueno?.comprobanteConfirmacion?.nombre || solicitud.respuesta?.comprobanteConfirmacion?.nombre}</p>
                             ` : `
-                                <img src="https://navarro.integradev.site/navarro/splitwise/${solicitud.respuesta.comprobanteConfirmacion.url}" alt="Comprobante confirmación" class="w-full h-24 object-cover rounded-lg border border-gray-300 hover:border-teal-500 transition-colors">
+                                <img src="https://navarro.integradev.site/navarro/splitwise/${solicitud.confirmacionDueno?.comprobanteConfirmacion?.url || solicitud.respuesta?.comprobanteConfirmacion?.url}" alt="Comprobante confirmación" class="w-full h-24 object-cover rounded-lg border border-gray-300 hover:border-teal-500 transition-colors">
                             `}
                         </div>
                     </div>
@@ -3125,8 +3393,10 @@ function formatearMoneda(monto, moneda = 'MXN') {
 function obtenerBadgeEstado(estado) {
     const badges = {
         'Pendiente': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-900 text-yellow-300">Pendiente</span>',
+        'PendienteConfirmacionDueno': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">Pendiente Dueño</span>',
         'Aprobada': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-900 text-green-300">Aprobada</span>',
         'Rechazada': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-900 text-red-300">Rechazada</span>',
+        'RechazadaPorDueno': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Rechazada Dueño</span>',
         'Cancelada': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-600 text-gray-600">Cancelada</span>'
     };
     return badges[estado] || estado;
