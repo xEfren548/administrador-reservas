@@ -6,6 +6,12 @@ const inventoryMovementSchema = new mongoose.Schema({
         ref: 'InventoryItem',
         required: true
     },
+    warehouse: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'InventoryWarehouse',
+        default: null,
+        required: true
+    },
     cabin: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'habitaciones',
@@ -65,6 +71,7 @@ const inventoryMovementSchema = new mongoose.Schema({
 });
 
 inventoryMovementSchema.index({ item: 1, createdAt: -1 });
+inventoryMovementSchema.index({ warehouse: 1, createdAt: -1 });
 inventoryMovementSchema.index({ event: 1, movementType: 1 });
 inventoryMovementSchema.index(
     { idempotencyKey: 1 },

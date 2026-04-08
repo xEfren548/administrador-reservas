@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 
 const inventoryAlertSchema = new mongoose.Schema({
+    warehouse: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'InventoryWarehouse',
+        default: null,
+        required: true
+    },
     cabin: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'habitaciones',
@@ -43,5 +49,6 @@ const inventoryAlertSchema = new mongoose.Schema({
 });
 
 inventoryAlertSchema.index({ status: 1, alertType: 1, generatedAt: -1 });
+inventoryAlertSchema.index({ warehouse: 1, status: 1, generatedAt: -1 });
 
 module.exports = mongoose.model('InventoryAlert', inventoryAlertSchema);

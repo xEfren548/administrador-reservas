@@ -24,6 +24,12 @@ const purchaseLineSchema = new mongoose.Schema({
 }, { _id: false });
 
 const inventoryPurchaseSchema = new mongoose.Schema({
+    warehouse: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'InventoryWarehouse',
+        default: null,
+        required: true
+    },
     cabin: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'habitaciones',
@@ -63,6 +69,6 @@ const inventoryPurchaseSchema = new mongoose.Schema({
     timestamps: true
 });
 
-inventoryPurchaseSchema.index({ cabin: 1, purchaseDate: -1 });
+inventoryPurchaseSchema.index({ warehouse: 1, purchaseDate: -1 });
 
 module.exports = mongoose.model('InventoryPurchase', inventoryPurchaseSchema);

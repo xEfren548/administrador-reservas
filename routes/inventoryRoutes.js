@@ -75,24 +75,24 @@ router.get('/alerts', requirePermissionOrMasterAdmin('VIEW_INVENTORY'), inventor
 router.put('/alerts/:id/resolve', requirePermissionOrMasterAdmin('MANAGE_INVENTORY'), inventoryController.resolveAlert);
 router.get('/dashboard/stock', requirePermissionOrMasterAdmin('VIEW_INVENTORY_DASHBOARD'), inventoryController.getStockDashboard);
 
-// Metric groups (independent from existing Tipologia model)
+// Warehouses / bodegas
 router.post(
-    '/metric-groups',
+    '/warehouses',
     requirePermissionOrMasterAdmin('MANAGE_INVENTORY'),
-    inventoryController.createMetricGroupValidators,
+    inventoryController.createWarehouseValidators,
     validationRequest,
-    inventoryController.createMetricGroup
+    inventoryController.createWarehouse
 );
-router.get('/metric-groups', requirePermissionOrMasterAdmin('VIEW_INVENTORY'), inventoryController.listMetricGroups);
+router.get('/warehouses', requirePermissionOrMasterAdmin('VIEW_INVENTORY'), inventoryController.listWarehouses);
 router.put(
-    '/metric-groups/:id',
+    '/warehouses/:id',
     requirePermissionOrMasterAdmin('MANAGE_INVENTORY'),
-    inventoryController.updateMetricGroupValidators,
+    inventoryController.updateWarehouseValidators,
     validationRequest,
-    inventoryController.updateMetricGroup
+    inventoryController.updateWarehouse
 );
-router.delete('/metric-groups/:id', requirePermissionOrMasterAdmin('MANAGE_INVENTORY'), inventoryController.deleteMetricGroup);
-router.get('/metric-groups/:metricGroupId/dashboard', requirePermissionOrMasterAdmin('VIEW_INVENTORY_DASHBOARD'), inventoryController.getMetricConsumptionDashboard);
+router.delete('/warehouses/:id', requirePermissionOrMasterAdmin('MANAGE_INVENTORY'), inventoryController.deleteWarehouse);
+router.get('/warehouses/:warehouseId/summary', requirePermissionOrMasterAdmin('VIEW_INVENTORY_DASHBOARD'), inventoryController.getWarehouseSummary);
 
 // Manual trigger for scheduled checkout consumption
 router.post('/cron/run-checkout-consumption', requirePermissionOrMasterAdmin('MANAGE_INVENTORY'), inventoryController.runCheckoutConsumptionNow);

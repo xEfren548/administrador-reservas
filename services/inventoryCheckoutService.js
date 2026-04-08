@@ -5,6 +5,7 @@ const InventoryItem = require('../models/InventoryItem');
 const InventoryMovement = require('../models/InventoryMovement');
 const InventoryBOMTemplate = require('../models/InventoryBOMTemplate');
 const InventoryAlert = require('../models/InventoryAlert');
+const InventoryWarehouse = require('../models/InventoryWarehouse');
 
 const TZ = 'America/Mexico_City';
 
@@ -42,6 +43,7 @@ const createInventoryLog = async (acciones, userId = null) => {
 
 const ensureLowStockAlert = async (item, eventId, message) => {
     await InventoryAlert.create({
+        warehouse: item.warehouse,
         cabin: item.cabin,
         item: item._id,
         event: eventId,
@@ -52,9 +54,47 @@ const ensureLowStockAlert = async (item, eventId, message) => {
     });
 };
 
-const clearMissingBomSkipState = (event) => {
+const clearInventorySkipState = (event) => {
     event.inventoryConsumptionSkipReason = null;
     event.inventoryConsumptionSkippedAt = null;
+};
+
+const hasActiveWarehouseForEvent = async (event, warehouseCabinIds = null) => {
+    const resourceId = String(event?.resourceId || '');
+    if (!resourceId) {
+        return false;
+    }
+
+    if (warehouseCabinIds instanceof Set) {
+        return warehouseCabinIds.has(resourceId);
+    }
+
+    const warehouse = await InventoryWarehouse.findOne({
+        active: true,
+        cabins: resourceId
+    })
+        .select('_id')
+        .lean();
+
+    return Boolean(warehouse);
+};
+
+const resolveWarehouseForEvent = async (event, warehouseByCabinId = null) => {
+    const resourceId = String(event?.resourceId || '');
+    if (!resourceId) {
+        return null;
+    }
+
+    if (warehouseByCabinId instanceof Map) {
+        return warehouseByCabinId.get(resourceId) || null;
+    }
+
+    return InventoryWarehouse.findOne({
+        active: true,
+        cabins: resourceId
+    })
+        .select('_id name cabins')
+        .lean();
 };
 
 const hasApplicableTemplateForEvent = (event, effectiveDatesByCabin) => {
@@ -67,7 +107,39 @@ const hasApplicableTemplateForEvent = (event, effectiveDatesByCabin) => {
     return templateDates.some((templateDate) => new Date(templateDate).getTime() <= new Date(effectiveDate).getTime());
 };
 
-const processSingleEventCheckoutConsumption = async (event, systemUserId = null) => {
+const processSingleEventCheckoutConsumption = async (event, systemUserId = null, warehouseCabinIds = null, warehouseByCabinId = null) => {
+    const hasWarehouse = await hasActiveWarehouseForEvent(event, warehouseCabinIds);
+    if (!hasWarehouse) {
+        event.inventoryConsumptionBlocked = false;
+        event.inventoryConsumptionProcessed = false;
+        event.inventoryConsumptionProcessedAt = null;
+        event.inventoryConsumptionSkipReason = 'missing_warehouse';
+        event.inventoryConsumptionSkippedAt = new Date();
+        await event.save();
+
+        return {
+            consumed: false,
+            skipped: true,
+            reason: 'La habitacion de la reserva no pertenece a una bodega activa'
+        };
+    }
+
+    const warehouse = await resolveWarehouseForEvent(event, warehouseByCabinId);
+    if (!warehouse) {
+        event.inventoryConsumptionBlocked = false;
+        event.inventoryConsumptionProcessed = false;
+        event.inventoryConsumptionProcessedAt = null;
+        event.inventoryConsumptionSkipReason = 'missing_warehouse';
+        event.inventoryConsumptionSkippedAt = new Date();
+        await event.save();
+
+        return {
+            consumed: false,
+            skipped: true,
+            reason: 'La habitacion de la reserva no pertenece a una bodega activa'
+        };
+    }
+
     const eventEffectiveDate = getInventoryEffectiveDateForEvent(event);
     const template = await resolveTemplate(event.resourceId, eventEffectiveDate);
 
@@ -88,7 +160,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
 
     const nights = Math.max(Number(event.nNights || 0), 1);
     const itemIds = template.lines.map((line) => line.item);
-    const items = await InventoryItem.find({ _id: { $in: itemIds }, active: true });
+    const items = await InventoryItem.find({ _id: { $in: itemIds }, active: true, warehouse: warehouse._id });
     const itemMap = new Map(items.map((item) => [String(item._id), item]));
 
     const insufficiencies = [];
@@ -129,14 +201,14 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
         event.inventoryConsumptionBlocked = true;
         event.inventoryConsumptionProcessed = false;
         event.inventoryConsumptionProcessedAt = null;
-        clearMissingBomSkipState(event);
+        clearInventorySkipState(event);
         await event.save();
 
         for (const issue of insufficiencies) {
             const message = issue.itemName
                 ? `Stock insuficiente de ${issue.itemName} en la reserva ${event._id}. Requerido ${issue.required}, disponible ${issue.available}.`
                 : `Item de inventario no disponible para la reserva ${event._id}.`;
-            const itemRef = issue.itemId ? { _id: issue.itemId, cabin: null } : null;
+            const itemRef = issue.itemId ? { _id: issue.itemId, warehouse: warehouse._id } : null;
             if (itemRef) {
                 const maybeItem = await InventoryItem.findById(issue.itemId).lean();
                 if (maybeItem) {
@@ -172,7 +244,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
             event.inventoryConsumptionBlocked = true;
             event.inventoryConsumptionProcessed = false;
             event.inventoryConsumptionProcessedAt = null;
-            clearMissingBomSkipState(event);
+            clearInventorySkipState(event);
             await event.save();
             return {
                 consumed: false,
@@ -188,6 +260,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
 
         await InventoryMovement.create({
             item: freshItem._id,
+            warehouse: freshItem.warehouse,
             cabin: freshItem.cabin,
             movementType: 'checkout_exit',
             quantity: requiredQty,
@@ -203,6 +276,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
 
         if (stockAfter <= Number(freshItem.stockMin || 0)) {
             await InventoryAlert.create({
+                warehouse: freshItem.warehouse,
                 cabin: freshItem.cabin,
                 item: freshItem._id,
                 event: event._id,
@@ -216,7 +290,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null)
     event.inventoryConsumptionBlocked = false;
     event.inventoryConsumptionProcessed = true;
     event.inventoryConsumptionProcessedAt = new Date();
-    clearMissingBomSkipState(event);
+    clearInventorySkipState(event);
     await event.save();
     await createInventoryLog(`Consumo de inventario por checkout aplicado a la reserva ${event._id}.`, systemUserId);
 
@@ -248,6 +322,14 @@ const processFinishedReservationsCheckoutConsumption = async (systemUserId = nul
             .sort({ effectiveFrom: -1 })
             .lean()
         : [];
+    const activeWarehouses = resourceIds.length > 0
+        ? await InventoryWarehouse.find({
+            active: true,
+            cabins: { $in: resourceIds }
+        })
+            .select('cabins')
+            .lean()
+        : [];
     const effectiveDatesByCabin = activeTemplates.reduce((acc, template) => {
         const cabinId = String(template.cabin || '');
         if (!cabinId || !template.effectiveFrom) {
@@ -259,19 +341,42 @@ const processFinishedReservationsCheckoutConsumption = async (systemUserId = nul
         acc.set(cabinId, currentDates);
         return acc;
     }, new Map());
-
-    const eligibleEvents = events.filter((event) => hasApplicableTemplateForEvent(event, effectiveDatesByCabin));
+    const warehouseCabinIds = activeWarehouses.reduce((acc, warehouse) => {
+        (warehouse.cabins || []).forEach((cabinId) => {
+            acc.add(String(cabinId));
+        });
+        return acc;
+    }, new Set());
+    const warehouseByCabinId = activeWarehouses.reduce((acc, warehouse) => {
+        (warehouse.cabins || []).forEach((cabinId) => {
+            const normalizedCabinId = String(cabinId);
+            if (!acc.has(normalizedCabinId)) {
+                acc.set(normalizedCabinId, warehouse);
+            }
+        });
+        return acc;
+    }, new Map());
 
     const summary = {
-        totalCandidates: eligibleEvents.length,
+        totalCandidates: events.length,
         consumed: 0,
         blocked: 0,
         skipped: 0,
         details: []
     };
 
-    for (const event of eligibleEvents) {
-        const result = await processSingleEventCheckoutConsumption(event, systemUserId);
+    for (const event of events) {
+        const hasWarehouse = warehouseCabinIds.has(String(event.resourceId || ''));
+        const hasTemplate = hasApplicableTemplateForEvent(event, effectiveDatesByCabin);
+
+        if (!hasWarehouse || !hasTemplate) {
+            const result = await processSingleEventCheckoutConsumption(event, systemUserId, warehouseCabinIds, warehouseByCabinId);
+            summary.details.push({ reservationId: event._id, ...result });
+            summary.skipped += 1;
+            continue;
+        }
+
+        const result = await processSingleEventCheckoutConsumption(event, systemUserId, warehouseCabinIds, warehouseByCabinId);
         summary.details.push({ reservationId: event._id, ...result });
 
         if (result.consumed) {

@@ -189,7 +189,7 @@ const reservaSchema = new Schema({
     },
     inventoryConsumptionSkipReason: {
         type: String,
-        enum: ['missing_bom'],
+        enum: ['missing_bom', 'missing_warehouse'],
         default: null
     },
     inventoryConsumptionSkippedAt: {

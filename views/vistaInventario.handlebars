@@ -12,12 +12,12 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Inventario y BOM</h1>
-                <p class="mt-1 text-sm text-gray-500">Control por cabaña, Bodega Global y consumo automático por checkout</p>
+                <p class="mt-1 text-sm text-gray-500">Control por habitacion, stock por bodega y consumo automatico por checkout</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 {{#if canManageInventory}}
-                <button id="btn-open-metric-group" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalMetricGroup">
-                    <i class="fas fa-layer-group me-1"></i> Nuevo Grupo de Habitaciones
+                <button id="btn-open-warehouse" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalWarehouse">
+                    <i class="fas fa-warehouse me-1"></i> Nueva Bodega
                 </button>
                 <button id="btn-open-item" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalItem">
                     <i class="fas fa-boxes-stacked me-1"></i> Nuevo Item
@@ -52,8 +52,8 @@
                 <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium {{#unless canViewInventoryDashboard}}active border-b-2 border-teal-500 text-teal-600{{else}}border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300{{/unless}}" data-tab="items">
                     <i class="fas fa-box me-1"></i> Items
                 </button>
-                <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="grupos">
-                    <i class="fas fa-layer-group me-1"></i> Grupos
+                <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="warehouses">
+                    <i class="fas fa-warehouse me-1"></i> Bodegas
                 </button>
                 <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="bom">
                     <i class="fas fa-list-check me-1"></i> BOM
@@ -68,8 +68,8 @@
                     <i class="fas fa-bell me-1"></i> Alertas
                 </button>
                 {{#if canViewInventoryDashboard}}
-                <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="consumo">
-                    <i class="fas fa-chart-column me-1"></i> Métricas de Consumo
+                <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="warehouse-summary">
+                    <i class="fas fa-chart-column me-1"></i> Resumen de Bodegas
                 </button>
                 {{/if}}
             </nav>
@@ -132,6 +132,7 @@
                         <thead>
                             <tr>
                                 <th>Item</th>
+                                <th>No. parte</th>
                                 <th>Tipo</th>
                                 <th>Unidad</th>
                                 <th>Stock</th>
@@ -146,13 +147,17 @@
             </div>
         </div>
 
-        <div id="inventory-tab-grupos" class="inventory-tab-content hidden">
+        <div id="inventory-tab-warehouses" class="inventory-tab-content hidden">
             <div class="bg-white rounded-lg p-6 shadow-xl">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Grupos de Habitaciones para Metricas</h3>
-                    <button id="btn-refresh-groups" class="btn btn-outline-secondary btn-sm"><i class="fas fa-rotate me-1"></i>Actualizar</button>
+                    <h3 class="text-lg font-semibold text-gray-900">Bodegas por Habitacion</h3>
+                    <button id="btn-refresh-warehouses" class="btn btn-outline-secondary btn-sm"><i class="fas fa-rotate me-1"></i>Actualizar</button>
                 </div>
-                <div id="metric-groups-list" class="space-y-3"></div>
+                <div class="rounded border border-sky-200 bg-sky-50 p-3 mb-4">
+                    <p class="text-sm font-semibold text-sky-800 mb-1">Asignacion exclusiva</p>
+                    <p class="text-xs text-sky-700 mb-0">Cada habitacion solo puede pertenecer a una bodega activa. La bodega habilita el consumo automatico en checkout cuando tambien existe una BOM vigente.</p>
+                </div>
+                <div id="warehouses-list" class="space-y-3"></div>
             </div>
         </div>
 
@@ -228,23 +233,53 @@
         </div>
 
         {{#if canViewInventoryDashboard}}
-        <div id="inventory-tab-consumo" class="inventory-tab-content hidden">
+        <div id="inventory-tab-warehouse-summary" class="inventory-tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-lg p-5 shadow-lg border-l-4 border-sky-500">
+                    <p class="text-gray-500 text-sm font-medium">Bodegas Activas</p>
+                    <p id="warehouse-summary-total-warehouses" class="text-3xl font-bold text-gray-900 mt-2">0</p>
+                </div>
+                <div class="bg-white rounded-lg p-5 shadow-lg border-l-4 border-emerald-500">
+                    <p class="text-gray-500 text-sm font-medium">Items Registrados</p>
+                    <p id="warehouse-summary-total-items" class="text-3xl font-bold text-gray-900 mt-2">0</p>
+                </div>
+                <div class="bg-white rounded-lg p-5 shadow-lg border-l-4 border-amber-500">
+                    <p class="text-gray-500 text-sm font-medium">Stock Total</p>
+                    <p id="warehouse-summary-total-stock" class="text-3xl font-bold text-gray-900 mt-2">0</p>
+                </div>
+                <div class="bg-white rounded-lg p-5 shadow-lg border-l-4 border-rose-500">
+                    <p class="text-gray-500 text-sm font-medium">Items Bajo Stock</p>
+                    <p id="warehouse-summary-low-stock" class="text-3xl font-bold text-gray-900 mt-2">0</p>
+                </div>
+            </div>
+
             <div class="bg-white rounded-lg p-6 shadow-xl mb-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Metricas por Grupo de Habitaciones</h3>
-                    <button id="btn-refresh-consumption-metrics" class="btn btn-outline-secondary btn-sm"><i class="fas fa-rotate me-1"></i>Actualizar</button>
+                    <h3 class="text-lg font-semibold text-gray-900">Resumen Operativo de Bodegas</h3>
+                    <button id="btn-refresh-warehouse-summary" class="btn btn-outline-secondary btn-sm"><i class="fas fa-rotate me-1"></i>Actualizar</button>
+                </div>
+                <p class="text-xs text-gray-500 mb-4">Cada tarjeta muestra habitaciones, estado BOM e items registrados en la bodega.</p>
+                <div id="warehouse-visual-summary" class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-2"></div>
+            </div>
+
+            <div class="bg-white rounded-lg p-6 shadow-xl mb-6">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                    <h4 class="text-base font-semibold text-gray-900 mb-0">Vista Tabular</h4>
+                    <span class="text-xs text-gray-500">Referencia rapida</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="table table-sm table-striped align-middle">
                         <thead>
                             <tr>
-                                <th>Grupo</th>
+                                <th>Bodega</th>
                                 <th>Habitaciones</th>
                                 <th>Items</th>
-                                <th>Unidades</th>
+                                <th>Stock</th>
+                                <th>Con BOM</th>
+                                <th>Sin BOM</th>
                             </tr>
                         </thead>
-                        <tbody id="consumption-metrics-table-body"></tbody>
+                        <tbody id="warehouse-summary-table-body"></tbody>
                     </table>
                 </div>
             </div>
@@ -253,31 +288,31 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalMetricGroup" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalWarehouse" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modal-metric-group-title">Nuevo Grupo de Habitaciones</h5>
+                <h5 class="modal-title" id="modal-warehouse-title">Nueva Bodega</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="form-metric-group">
+            <form id="form-warehouse">
                 <div class="modal-body space-y-3">
-                    <input class="form-control" name="name" placeholder="Nombre del grupo" required>
+                    <input class="form-control" name="name" placeholder="Nombre de la bodega" required>
                     <textarea class="form-control" name="description" placeholder="Descripcion opcional"></textarea>
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <label class="text-sm font-medium text-gray-700 mb-0">Habitaciones</label>
                             <span class="text-xs text-gray-500">Selecciona una o varias</span>
                         </div>
-                        <p class="text-xs text-gray-500 mb-2">Este grupo solo servira para metricas y dashboards. No comparte inventario ni BOM.</p>
-                        <input id="metric-group-room-filter" type="text" class="form-control form-control-sm mb-2" placeholder="Filtrar habitaciones...">
-                        <div id="metric-group-room-checklist" class="bom-room-checklist"></div>
+                        <p class="text-xs text-gray-500 mb-2">Cada habitacion solo puede estar en una bodega activa. Si una habitacion no pertenece a una bodega, su checkout no descontara stock de la BOM.</p>
+                        <input id="warehouse-room-filter" type="text" class="form-control form-control-sm mb-2" placeholder="Filtrar habitaciones...">
+                        <div id="warehouse-room-checklist" class="bom-room-checklist"></div>
                     </div>
-                    <p class="text-xs text-gray-500">Estos grupos son independientes a tipologias y grupos ya existentes en el sistema.</p>
+                    <p class="text-xs text-gray-500">Las bodegas agrupan habitaciones y concentran los items que se consumen desde esas habitaciones.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="modal-metric-group-submit">Guardar</button>
+                    <button type="submit" class="btn btn-primary" id="modal-warehouse-submit">Guardar</button>
                 </div>
             </form>
         </div>
@@ -294,6 +329,7 @@
             <form id="form-item">
                 <div class="modal-body space-y-3">
                     <input class="form-control" name="name" placeholder="Nombre del item" required>
+                    <input class="form-control" name="partNumber" placeholder="Numero de parte (opcional)">
                     <textarea class="form-control" name="description" placeholder="Descripción"></textarea>
                     <select class="form-select" name="itemType" required>
                         <option value="directo">Directo</option>
@@ -320,8 +356,15 @@
                     <input class="form-control hidden" name="unitCustom" id="item-unit-custom" placeholder="Especifica unidad personalizada">
 
                     <div class="rounded border border-sky-200 bg-sky-50 p-3">
-                        <p class="text-sm font-semibold text-sky-800 mb-1">Bodega Global</p>
-                        <p class="text-xs text-sky-700 mb-0">Todos los items se crean exclusivamente en la Bodega Global. Ya no se asignan items por habitación.</p>
+                        <p class="text-sm font-semibold text-sky-800 mb-1">Bodega del item</p>
+                        <p class="text-xs text-sky-700 mb-0">Cada item pertenece a una sola bodega. El stock, compras, ajustes y checkout se controlan dentro de esa bodega.</p>
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium text-gray-700 mb-1">Bodega</label>
+                        <select class="form-select" name="warehouse" id="item-warehouse-select" required>
+                            <option value="">Selecciona bodega</option>
+                        </select>
                     </div>
 
                     <div>
@@ -437,12 +480,9 @@
             <form id="form-purchase">
                 <div class="modal-body space-y-3">
                     <div class="grid md:grid-cols-2 gap-3">
-                        <div class="rounded border border-emerald-200 bg-emerald-50 p-3 flex items-center">
-                            <div>
-                                <p class="text-sm font-semibold text-emerald-800 mb-1">Destino de compra</p>
-                                <p class="text-xs text-emerald-700 mb-0">Todas las compras se registran en la Bodega Global.</p>
-                            </div>
-                        </div>
+                        <select class="form-select" name="warehouse" id="purchase-warehouse-select" required>
+                            <option value="">Selecciona bodega</option>
+                        </select>
                         <input type="date" class="form-control" name="purchaseDate">
                     </div>
                     <div class="grid md:grid-cols-2 gap-3">
@@ -586,6 +626,99 @@
     .inventory-chart-canvas-wrapper--compact {
         height: 280px;
         max-height: 280px;
+    }
+    .warehouse-summary-card {
+        border: 1px solid #E5E7EB;
+        border-radius: 1rem;
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(248,250,252,0.96) 0%, rgba(255,255,255,1) 38%);
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    }
+    .warehouse-summary-card__header {
+        padding: 1rem 1rem 0.85rem;
+        border-bottom: 1px solid #E5E7EB;
+        background: radial-gradient(circle at top right, rgba(14,165,233,0.15), transparent 40%), linear-gradient(135deg, rgba(20,184,166,0.08), rgba(255,255,255,0.92));
+    }
+    .warehouse-summary-card__body {
+        padding: 1rem;
+    }
+    .warehouse-summary-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    .warehouse-summary-stat {
+        border: 1px solid #E5E7EB;
+        border-radius: 0.85rem;
+        background: rgba(255,255,255,0.92);
+        padding: 0.75rem;
+    }
+    .warehouse-summary-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+    .warehouse-summary-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        padding: 0.32rem 0.65rem;
+        font-size: 0.74rem;
+        line-height: 1;
+        background: #EFF6FF;
+        color: #1D4ED8;
+    }
+    .warehouse-item-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        max-height: 320px;
+        overflow-y: auto;
+        padding-right: 0.15rem;
+    }
+    .warehouse-item-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        align-items: flex-start;
+        border: 1px solid #E5E7EB;
+        border-radius: 0.8rem;
+        background: rgba(255,255,255,0.94);
+        padding: 0.75rem;
+    }
+    .warehouse-item-row--low {
+        border-color: #FCA5A5;
+        background: #FEF2F2;
+    }
+    .warehouse-item-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 0.35rem;
+    }
+    .warehouse-item-badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 0.25rem 0.55rem;
+        font-size: 0.72rem;
+        line-height: 1;
+        background: #F1F5F9;
+        color: #334155;
+    }
+    .warehouse-item-badge--low {
+        background: #FEE2E2;
+        color: #B91C1C;
+    }
+    .warehouse-summary-empty {
+        border: 1px dashed #CBD5E1;
+        border-radius: 1rem;
+        padding: 2rem 1rem;
+        text-align: center;
+        color: #64748B;
+        background: linear-gradient(180deg, rgba(248,250,252,0.9), rgba(255,255,255,1));
     }
     @media (max-width: 768px) {
         .bom-modal-grid {

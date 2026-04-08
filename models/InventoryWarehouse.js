@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const inventoryMetricGroupSchema = new mongoose.Schema({
+const inventoryWarehouseSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -25,7 +25,8 @@ const inventoryMetricGroupSchema = new mongoose.Schema({
         default: null
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    collection: 'inventorymetricgroups'
 });
 
-module.exports = mongoose.model('InventoryMetricGroup', inventoryMetricGroupSchema);
+module.exports = mongoose.model('InventoryWarehouse', inventoryWarehouseSchema);

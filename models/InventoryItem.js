@@ -11,6 +11,11 @@ const inventoryItemSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    partNumber: {
+        type: String,
+        default: '',
+        trim: true
+    },
     itemType: {
         type: String,
         enum: ['directo', 'indirecto', 'no_consumible'],
@@ -36,6 +41,12 @@ const inventoryItemSchema = new mongoose.Schema({
         default: 0,
         min: 0
     },
+    warehouse: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'InventoryWarehouse',
+        default: null,
+        required: true
+    },
     cabin: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'habitaciones',
@@ -54,6 +65,6 @@ const inventoryItemSchema = new mongoose.Schema({
     timestamps: true
 });
 
-inventoryItemSchema.index({ cabin: 1, name: 1 }, { unique: true });
+inventoryItemSchema.index({ warehouse: 1, name: 1 }, { unique: true });
 
 module.exports = mongoose.model('InventoryItem', inventoryItemSchema);

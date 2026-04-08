@@ -6,8 +6,8 @@
         purchases: [],
         movements: [],
         bomTemplates: [],
-        metricGroups: [],
-        editingMetricGroupId: null,
+        warehouses: [],
+        editingWarehouseId: null,
         editingItemId: null,
         editingBOMId: null,
         bomRoomSelectionLocked: false
@@ -33,22 +33,27 @@
         itemsTableBody: document.getElementById('items-table-body'),
         purchasesTableBody: document.getElementById('purchases-table-body'),
         movementsTableBody: document.getElementById('movements-table-body'),
-        metricGroupsList: document.getElementById('metric-groups-list'),
+        warehousesList: document.getElementById('warehouses-list'),
         bomList: document.getElementById('bom-list'),
         alertsList: document.getElementById('alerts-list'),
-        consumptionMetricsTableBody: document.getElementById('consumption-metrics-table-body'),
-        formMetricGroup: document.getElementById('form-metric-group'),
+        warehouseSummaryTableBody: document.getElementById('warehouse-summary-table-body'),
+        warehouseVisualSummary: document.getElementById('warehouse-visual-summary'),
+        warehouseSummaryTotalWarehouses: document.getElementById('warehouse-summary-total-warehouses'),
+        warehouseSummaryTotalItems: document.getElementById('warehouse-summary-total-items'),
+        warehouseSummaryTotalStock: document.getElementById('warehouse-summary-total-stock'),
+        warehouseSummaryLowStock: document.getElementById('warehouse-summary-low-stock'),
+        formWarehouse: document.getElementById('form-warehouse'),
         formItem: document.getElementById('form-item'),
         formPurchase: document.getElementById('form-purchase'),
         formAdjustment: document.getElementById('form-adjustment'),
         formBOMTemplate: document.getElementById('form-bom-template'),
-        modalMetricGroup: document.getElementById('modalMetricGroup'),
+        modalWarehouse: document.getElementById('modalWarehouse'),
         modalItem: document.getElementById('modalItem'),
         modalPurchase: document.getElementById('modalPurchase'),
         modalAdjustment: document.getElementById('modalAdjustment'),
         modalBOMTemplate: document.getElementById('modalBOMTemplate'),
-        modalMetricGroupTitle: document.getElementById('modal-metric-group-title'),
-        modalMetricGroupSubmit: document.getElementById('modal-metric-group-submit'),
+        modalWarehouseTitle: document.getElementById('modal-warehouse-title'),
+        modalWarehouseSubmit: document.getElementById('modal-warehouse-submit'),
         modalItemTitle: document.getElementById('modal-item-title'),
         modalItemSubmit: document.getElementById('modal-item-submit'),
         modalBOMTitle: document.getElementById('modal-bom-title'),
@@ -58,16 +63,18 @@
         itemInitialUnitCost: document.getElementById('item-initial-unit-cost'),
         btnRunConsumption: document.getElementById('btn-run-checkout-consumption'),
         btnRefreshItems: document.getElementById('btn-refresh-items'),
-        btnRefreshGroups: document.getElementById('btn-refresh-groups'),
+        btnRefreshWarehouses: document.getElementById('btn-refresh-warehouses'),
         btnRefreshBom: document.getElementById('btn-refresh-bom'),
         btnRefreshAlerts: document.getElementById('btn-refresh-alerts'),
         btnRefreshPurchases: document.getElementById('btn-refresh-purchases'),
         btnRefreshMovements: document.getElementById('btn-refresh-movements'),
-        btnRefreshConsumptionMetrics: document.getElementById('btn-refresh-consumption-metrics'),
+        btnRefreshWarehouseSummary: document.getElementById('btn-refresh-warehouse-summary'),
         itemUnitSelect: document.getElementById('item-unit-select'),
         itemUnitCustom: document.getElementById('item-unit-custom'),
-        metricGroupRoomFilter: document.getElementById('metric-group-room-filter'),
-        metricGroupRoomChecklist: document.getElementById('metric-group-room-checklist'),
+        itemWarehouseSelect: document.getElementById('item-warehouse-select'),
+        purchaseWarehouseSelect: document.getElementById('purchase-warehouse-select'),
+        warehouseRoomFilter: document.getElementById('warehouse-room-filter'),
+        warehouseRoomChecklist: document.getElementById('warehouse-room-checklist'),
         bomRoomFilter: document.getElementById('bom-room-filter'),
         bomRoomChecklist: document.getElementById('bom-room-checklist'),
         purchaseLinesContainer: document.getElementById('purchase-lines-container'),
@@ -381,6 +388,102 @@
         return room?.propertyDetails?.name || room?.name || 'Habitacion';
     };
 
+    const warehouseDisplayName = (warehouse) => {
+        if (!warehouse) return 'Sin bodega';
+        return warehouse?.name || 'Bodega';
+    };
+
+    const getWarehouseItems = (warehouseId, items = state.items) => {
+        return (items || []).filter((item) => String(item.warehouse?._id || item.warehouse || '') === String(warehouseId || ''));
+    };
+
+    const buildWarehouseVisualCards = (summaries = [], items = []) => {
+        if (!el.warehouseVisualSummary) return;
+
+        if (!Array.isArray(summaries) || summaries.length === 0) {
+            el.warehouseVisualSummary.innerHTML = '<div class="warehouse-summary-empty xl:col-span-2">No hay bodegas para mostrar en el resumen.</div>';
+            return;
+        }
+
+        el.warehouseVisualSummary.innerHTML = summaries.map((summary) => {
+            const warehouse = summary.warehouse || {};
+            const warehouseItems = getWarehouseItems(warehouse._id, items);
+            const lowStockItems = warehouseItems.filter((item) => Number(item.stockCurrent || 0) <= Number(item.stockMin || 0));
+            const roomChips = (warehouse.cabins || []).map((room) => `<span class="warehouse-summary-chip">${escapeHtml(roomDisplayName(room))}</span>`).join('');
+            const itemRows = warehouseItems.map((item) => {
+                const isLow = Number(item.stockCurrent || 0) <= Number(item.stockMin || 0);
+                return `
+                    <div class="warehouse-item-row ${isLow ? 'warehouse-item-row--low' : ''}">
+                        <div>
+                            <p class="mb-0 text-sm font-semibold text-gray-900">${escapeHtml(item.name)}</p>
+                            <div class="warehouse-item-meta">
+                                ${item.partNumber ? `<span class="warehouse-item-badge">Parte ${escapeHtml(item.partNumber)}</span>` : ''}
+                                <span class="warehouse-item-badge">${escapeHtml(item.itemType || '-')}</span>
+                                <span class="warehouse-item-badge">Min ${escapeHtml(String(item.stockMin ?? 0))}</span>
+                                ${isLow ? '<span class="warehouse-item-badge warehouse-item-badge--low">Bajo stock</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="text-end shrink-0">
+                            <p class="mb-0 text-sm font-semibold text-gray-900">${escapeHtml(String(item.stockCurrent ?? 0))} ${escapeHtml(item.unit || '')}</p>
+                            <p class="mb-0 text-xs text-gray-500">Existencia actual</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <article class="warehouse-summary-card">
+                    <div class="warehouse-summary-card__header">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-900 mb-1">${escapeHtml(warehouse.name || 'Bodega')}</h4>
+                                <p class="mb-0 text-xs text-gray-600">${escapeHtml(warehouse.description || 'Sin descripcion registrada')}</p>
+                            </div>
+                            <span class="warehouse-summary-chip">${summary.roomCount || 0} habitaciones</span>
+                        </div>
+                    </div>
+                    <div class="warehouse-summary-card__body">
+                        <div class="warehouse-summary-stat-grid">
+                            <div class="warehouse-summary-stat">
+                                <p class="mb-1 text-xs text-gray-500 uppercase">Items</p>
+                                <p class="mb-0 text-2xl font-bold text-gray-900">${summary.itemCount || 0}</p>
+                            </div>
+                            <div class="warehouse-summary-stat">
+                                <p class="mb-1 text-xs text-gray-500 uppercase">Stock</p>
+                                <p class="mb-0 text-2xl font-bold text-gray-900">${money(summary.totalStock || 0)}</p>
+                            </div>
+                            <div class="warehouse-summary-stat">
+                                <p class="mb-1 text-xs text-gray-500 uppercase">Con BOM</p>
+                                <p class="mb-0 text-2xl font-bold text-emerald-700">${summary.roomsWithBomCount || 0}</p>
+                            </div>
+                            <div class="warehouse-summary-stat">
+                                <p class="mb-1 text-xs text-gray-500 uppercase">Bajo stock</p>
+                                <p class="mb-0 text-2xl font-bold text-rose-700">${lowStockItems.length}</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <p class="text-xs font-semibold text-gray-500 uppercase mb-2">Habitaciones</p>
+                            <div class="warehouse-summary-chip-list">
+                                ${roomChips || '<span class="text-sm text-gray-500">Sin habitaciones asignadas</span>'}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <p class="text-xs font-semibold text-gray-500 uppercase mb-0">Items de la bodega</p>
+                                <span class="text-xs text-gray-500">${warehouseItems.length} registrados</span>
+                            </div>
+                            <div class="warehouse-item-list">
+                                ${itemRows || '<div class="warehouse-summary-empty">Esta bodega aun no tiene items registrados.</div>'}
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            `;
+        }).join('');
+    };
+
     const sortAlphabetically = (items, getLabel) => {
         if (!Array.isArray(items)) return [];
 
@@ -389,6 +492,36 @@
             'es',
             { sensitivity: 'base', numeric: true }
         ));
+    };
+
+    const populateWarehouseSelect = (select, selectedWarehouseId = '') => {
+        if (!select) return;
+
+        select.innerHTML = [
+            '<option value="">Selecciona bodega</option>',
+            ...state.warehouses.map((warehouse) => `<option value="${warehouse._id}" ${String(selectedWarehouseId) === String(warehouse._id) ? 'selected' : ''}>${escapeHtml(warehouse.name)}</option>`)
+        ].join('');
+    };
+
+    const populateWarehouseSelects = () => {
+        populateWarehouseSelect(el.itemWarehouseSelect, el.itemWarehouseSelect?.value || '');
+        populateWarehouseSelect(el.purchaseWarehouseSelect, el.purchaseWarehouseSelect?.value || '');
+    };
+
+    const getSelectedPurchaseWarehouseId = () => String(el.purchaseWarehouseSelect?.value || '');
+
+    const getSelectedBomWarehouseId = () => {
+        const selectedRoomIds = getCheckedRooms('.bom-room-checkbox').map((room) => String(room.id));
+        if (selectedRoomIds.length === 0) {
+            return '';
+        }
+
+        const selectedWarehouseIds = [...new Set(state.warehouses.filter((warehouse) => {
+            const cabinIds = (warehouse.cabins || []).map((room) => String(room._id || room));
+            return selectedRoomIds.some((roomId) => cabinIds.includes(roomId));
+        }).map((warehouse) => String(warehouse._id)))];
+
+        return selectedWarehouseIds.length === 1 ? selectedWarehouseIds[0] : '';
     };
 
     const normalizeSearchText = (value) => String(value || '')
@@ -547,37 +680,73 @@
         if (!el.adjustmentItemSelect) return;
         el.adjustmentItemSelect.innerHTML = [
             '<option value="">Selecciona item</option>',
-            ...state.items.map((item) => `<option value="${item._id}">${escapeHtml(item.name)} | ${escapeHtml(roomDisplayName(item.cabin))} | Stock ${item.stockCurrent} ${escapeHtml(item.unit)}</option>`)
+            ...state.items.map((item) => `<option value="${item._id}">${escapeHtml(item.name)} | ${escapeHtml(warehouseDisplayName(item.warehouse))} | Stock ${item.stockCurrent} ${escapeHtml(item.unit)}</option>`)
         ].join('');
+    };
+
+    const createChecklistOption = ({ checkboxClass, value, title, helper }) => {
+        const optionCard = document.createElement('label');
+        optionCard.className = 'room-option-card flex items-center gap-2 cursor-pointer';
+        optionCard.dataset.filterLabel = normalizeSearchText(`${title} ${helper || ''}`);
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = checkboxClass;
+        checkbox.value = value;
+
+        const copyWrapper = document.createElement('div');
+
+        const titleNode = document.createElement('p');
+        titleNode.className = 'mb-0 text-sm font-medium text-gray-800';
+        titleNode.textContent = title;
+        copyWrapper.appendChild(titleNode);
+
+        if (helper) {
+            const helperNode = document.createElement('p');
+            helperNode.className = 'mb-0 text-xs text-gray-500';
+            helperNode.textContent = helper;
+            copyWrapper.appendChild(helperNode);
+        }
+
+        optionCard.appendChild(checkbox);
+        optionCard.appendChild(copyWrapper);
+        return optionCard;
     };
 
     const renderRoomChecklist = (container, checkboxClass, helperText, includeGlobal = false) => {
         if (!container) return;
-        const globalOption = includeGlobal ? `
-            <label class="room-option-card flex items-center gap-2 cursor-pointer" data-filter-label="bodega global">
-                <input type="checkbox" class="${checkboxClass}" value="GLOBAL">
-                <div>
-                    <p class="mb-0 text-sm font-medium text-gray-800">🏭 Bodega Global</p>
-                    <p class="mb-0 text-xs text-gray-500">Stock centralizado, sin habitacion especifica</p>
-                </div>
-            </label>
-        ` : '';
-        container.innerHTML = globalOption + (state.rooms.map((room) => `
-            <label class="room-option-card flex items-center gap-2 cursor-pointer" data-filter-label="${escapeHtml(normalizeSearchText(roomDisplayName(room)))}">
-                <input type="checkbox" class="${checkboxClass}" value="${room._id}">
-                <div>
-                    <p class="mb-0 text-sm font-medium text-gray-800">${escapeHtml(roomDisplayName(room))}</p>
-                    ${helperText ? `<p class="mb-0 text-xs text-gray-500">${escapeHtml(helperText)}</p>` : ''}
-                </div>
-            </label>
-        `).join('') || '<p class="text-gray-500 text-sm">No hay habitaciones disponibles.</p>');
+
+        container.innerHTML = '';
+
+        if (includeGlobal) {
+            container.appendChild(createChecklistOption({
+                checkboxClass,
+                value: 'GLOBAL',
+                title: '🏭 Bodega Global',
+                helper: 'Stock centralizado, sin habitacion especifica'
+            }));
+        }
+
+        if (!Array.isArray(state.rooms) || state.rooms.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-sm">No hay habitaciones disponibles.</p>';
+            return;
+        }
+
+        state.rooms.forEach((room) => {
+            container.appendChild(createChecklistOption({
+                checkboxClass,
+                value: room._id,
+                title: roomDisplayName(room),
+                helper: helperText
+            }));
+        });
     };
 
     const applyChecklistFilter = (input, container) => {
         if (!container) return;
         const query = normalizeSearchText(input?.value || '');
         container.querySelectorAll('.room-option-card').forEach((optionCard) => {
-            const label = optionCard.getAttribute('data-filter-label') || '';
+            const label = optionCard.dataset.filterLabel || normalizeSearchText(optionCard.textContent || '');
             optionCard.classList.toggle('hidden', Boolean(query) && !label.includes(query));
         });
     };
@@ -590,9 +759,10 @@
 
     const setupChecklistFilter = (input, container) => {
         if (!input || !container) return;
-        input.addEventListener('input', () => {
-            applyChecklistFilter(input, container);
-        });
+        const handleFilter = () => applyChecklistFilter(input, container);
+        input.addEventListener('input', handleFilter);
+        input.addEventListener('change', handleFilter);
+        input.addEventListener('search', handleFilter);
     };
 
     const setCheckedRooms = (selector, roomIds) => {
@@ -619,9 +789,12 @@
     const createBomLineRow = () => {
         const wrapper = document.createElement('div');
         wrapper.className = 'bom-line-row';
+        const selectedWarehouseId = getSelectedBomWarehouseId();
         const itemOptions = [
             '<option value="">Producto</option>',
-            ...state.items.map((item) => `<option value="${item._id}">${escapeHtml(item.name)} (${escapeHtml(item.unit)})</option>`)
+            ...state.items
+                .filter((item) => String(item.warehouse?._id || item.warehouse || '') === selectedWarehouseId)
+                .map((item) => `<option value="${item._id}">${escapeHtml(item.name)} (${escapeHtml(item.unit)})</option>`)
         ].join('');
 
         wrapper.innerHTML = `
@@ -639,7 +812,8 @@
     };
 
     const buildPurchaseItemOptions = (selectedItemId = '') => {
-        const items = state.items.filter((item) => !item.cabin);
+        const selectedWarehouseId = getSelectedPurchaseWarehouseId();
+        const items = state.items.filter((item) => String(item.warehouse?._id || item.warehouse || '') === selectedWarehouseId);
         return [
             '<option value="">Item</option>',
             ...items.map((item) => `<option value="${item._id}" ${String(selectedItemId) === String(item._id) ? 'selected' : ''}>${escapeHtml(item.name)} (${escapeHtml(item.unit)})</option>`)
@@ -678,6 +852,25 @@
             select.innerHTML = buildPurchaseItemOptions(previousValue);
             if (!Array.from(select.options).some((option) => option.value === previousValue)) {
                 select.value = '';
+            }
+        });
+    };
+
+    const syncBomLineOptions = () => {
+        if (!el.bomLinesContainer) return;
+        Array.from(el.bomLinesContainer.children).forEach((row) => {
+            const select = row.querySelector('.bom-line-item');
+            if (!select) return;
+            const previousValue = select.value;
+            const selectedWarehouseId = getSelectedBomWarehouseId();
+            select.innerHTML = [
+                '<option value="">Producto</option>',
+                ...state.items
+                    .filter((item) => String(item.warehouse?._id || item.warehouse || '') === selectedWarehouseId)
+                    .map((item) => `<option value="${item._id}">${escapeHtml(item.name)} (${escapeHtml(item.unit)})</option>`)
+            ].join('');
+            if (Array.from(select.options).some((option) => option.value === previousValue)) {
+                select.value = previousValue;
             }
         });
     };
@@ -741,12 +934,14 @@
         el.formItem?.reset();
         if (el.modalItemTitle) el.modalItemTitle.textContent = 'Nuevo Item';
         if (el.modalItemSubmit) el.modalItemSubmit.textContent = 'Guardar';
+        populateWarehouseSelect(el.itemWarehouseSelect);
         toggleItemUnitCustom();
         toggleInitialPurchaseSection();
     };
 
     const resetPurchaseFormMode = () => {
         el.formPurchase?.reset();
+        populateWarehouseSelect(el.purchaseWarehouseSelect);
         if (el.purchaseLinesContainer) {
             el.purchaseLinesContainer.innerHTML = '';
         }
@@ -770,13 +965,13 @@
         setBomLines([]);
     };
 
-    const resetMetricGroupFormMode = () => {
-        state.editingMetricGroupId = null;
-        el.formMetricGroup?.reset();
-        setCheckedRooms('.metric-group-room-checkbox', []);
-        resetChecklistFilter(el.metricGroupRoomFilter, el.metricGroupRoomChecklist);
-        if (el.modalMetricGroupTitle) el.modalMetricGroupTitle.textContent = 'Nuevo Grupo de Habitaciones';
-        if (el.modalMetricGroupSubmit) el.modalMetricGroupSubmit.textContent = 'Guardar';
+    const resetWarehouseFormMode = () => {
+        state.editingWarehouseId = null;
+        el.formWarehouse?.reset();
+        setCheckedRooms('.warehouse-room-checkbox', []);
+        resetChecklistFilter(el.warehouseRoomFilter, el.warehouseRoomChecklist);
+        if (el.modalWarehouseTitle) el.modalWarehouseTitle.textContent = 'Nueva Bodega';
+        if (el.modalWarehouseSubmit) el.modalWarehouseSubmit.textContent = 'Guardar';
     };
 
     const setupTabs = () => {
@@ -829,7 +1024,7 @@
                 <div class="border border-red-200 bg-red-50 rounded p-2">
                     <p class="font-semibold text-red-700">${escapeHtml(item.name)}</p>
                     <p class="text-xs text-red-600">Stock ${item.stockCurrent} / Min ${item.stockMin} | ${escapeHtml(item.unit)}</p>
-                    <p class="text-xs text-red-500 mt-1">Ubicacion: ${escapeHtml(roomDisplayName(item.cabin))}</p>
+                    <p class="text-xs text-red-500 mt-1">Bodega: ${escapeHtml(warehouseDisplayName(item.warehouse))}</p>
                 </div>
             `).join('') || '<p class="text-gray-500">No hay items en bajo stock.</p>';
         }
@@ -843,11 +1038,12 @@
         const rows = state.items.map((item) => `
             <tr>
                 <td>${escapeHtml(item.name)}</td>
+                <td>${escapeHtml(item.partNumber || '-')}</td>
                 <td>${escapeHtml(item.itemType)}</td>
                 <td>${escapeHtml(item.unit)}</td>
                 <td>${item.stockCurrent}</td>
                 <td>${item.stockMin}</td>
-                <td>${escapeHtml(roomDisplayName(item.cabin))}</td>
+                <td>${escapeHtml(warehouseDisplayName(item.warehouse))}</td>
                 <td>
                     ${canManageInventory ? `
                         <div class="flex gap-2">
@@ -860,7 +1056,7 @@
         `).join('');
 
         if (el.itemsTableBody) {
-            el.itemsTableBody.innerHTML = rows || '<tr><td colspan="7" class="text-center text-gray-500">Sin items</td></tr>';
+            el.itemsTableBody.innerHTML = rows || '<tr><td colspan="8" class="text-center text-gray-500">Sin items</td></tr>';
             el.itemsTableBody.querySelectorAll('[data-edit-item]').forEach((button) => {
                 button.addEventListener('click', () => {
                     const item = state.items.find((entry) => String(entry._id) === button.getAttribute('data-edit-item'));
@@ -869,11 +1065,15 @@
                     if (el.modalItemTitle) el.modalItemTitle.textContent = `Editar Item: ${item.name}`;
                     if (el.modalItemSubmit) el.modalItemSubmit.textContent = 'Actualizar';
                     el.formItem.elements.name.value = item.name || '';
+                    el.formItem.elements.partNumber.value = item.partNumber || '';
                     el.formItem.elements.description.value = item.description || '';
                     el.formItem.elements.itemType.value = item.itemType || 'directo';
                     const unitOptionExists = Array.from(el.itemUnitSelect?.options || []).some((option) => option.value === item.unit);
                     if (el.itemUnitSelect) el.itemUnitSelect.value = unitOptionExists ? item.unit : 'otra';
                     if (el.itemUnitCustom) el.itemUnitCustom.value = unitOptionExists ? '' : (item.unit || '');
+                    if (el.itemWarehouseSelect) {
+                        populateWarehouseSelect(el.itemWarehouseSelect, item.warehouse?._id || item.warehouse || '');
+                    }
                     el.formItem.elements.stockCurrent.value = item.stockCurrent ?? 0;
                     el.formItem.elements.stockMin.value = item.stockMin ?? 0;
                     if (el.formItem.elements.initialUnitCost) el.formItem.elements.initialUnitCost.value = '';
@@ -904,7 +1104,7 @@
                             successMessage: 'Item eliminado correctamente',
                             action: async () => {
                                 await request(`/items/${button.getAttribute('data-delete-item')}`, { method: 'DELETE' });
-                                await Promise.all([renderItems(), renderDashboard(), renderConsumptionMetrics()]);
+                                await Promise.all([renderItems(), renderDashboard(), renderWarehouseSummary()]);
                             }
                         });
                     } catch (error) {
@@ -930,49 +1130,53 @@
                 el.bomLinesContainer.appendChild(row);
             });
             ensureOneBomLine();
+            syncBomLineOptions();
         }
     };
 
-    const renderMetricGroups = async () => {
-        const result = await request('/metric-groups');
-        state.metricGroups = sortAlphabetically(result.data || [], (group) => group?.name);
-        if (el.metricGroupsList) {
-            el.metricGroupsList.innerHTML = state.metricGroups.map((group) => `
+    const renderWarehouses = async () => {
+        const result = await request('/warehouses');
+        state.warehouses = sortAlphabetically(result.data || [], (warehouse) => warehouse?.name);
+        populateWarehouseSelects();
+        syncPurchaseLineOptions();
+        syncBomLineOptions();
+        if (el.warehousesList) {
+            el.warehousesList.innerHTML = state.warehouses.map((warehouse) => `
                 <div class="border border-gray-200 rounded-lg p-3">
                     <div class="flex items-center justify-between gap-3">
                         <div>
-                            <h4 class="font-semibold text-gray-800">${escapeHtml(group.name)}</h4>
-                            <p class="text-xs text-gray-500 mt-1">${escapeHtml(group.description || 'Sin descripcion')}</p>
+                            <h4 class="font-semibold text-gray-800">${escapeHtml(warehouse.name)}</h4>
+                            <p class="text-xs text-gray-500 mt-1">${escapeHtml(warehouse.description || 'Sin descripcion')}</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-xs px-2 py-1 rounded bg-sky-100 text-sky-700">${(group.cabins || []).length} habitaciones</span>
-                            ${canManageInventory ? `<button type="button" class="btn btn-outline-primary btn-sm" data-edit-metric-group="${group._id}">Editar</button><button type="button" class="btn btn-outline-danger btn-sm" data-delete-metric-group="${group._id}">Desactivar</button>` : ''}
+                            <span class="text-xs px-2 py-1 rounded bg-sky-100 text-sky-700">${(warehouse.cabins || []).length} habitaciones</span>
+                            ${canManageInventory ? `<button type="button" class="btn btn-outline-primary btn-sm" data-edit-warehouse="${warehouse._id}">Editar</button><button type="button" class="btn btn-outline-danger btn-sm" data-delete-warehouse="${warehouse._id}">Desactivar</button>` : ''}
                         </div>
                     </div>
-                    <p class="text-sm text-gray-700 mt-3">${(group.cabins || []).map((room) => escapeHtml(roomDisplayName(room))).join(', ') || 'Sin habitaciones asignadas'}</p>
+                    <p class="text-sm text-gray-700 mt-3">${(warehouse.cabins || []).map((room) => escapeHtml(roomDisplayName(room))).join(', ') || 'Sin habitaciones asignadas'}</p>
                 </div>
-            `).join('') || '<p class="text-gray-500">No hay grupos metricos registrados.</p>';
+            `).join('') || '<p class="text-gray-500">No hay bodegas registradas.</p>';
 
-            el.metricGroupsList.querySelectorAll('[data-edit-metric-group]').forEach((button) => {
+            el.warehousesList.querySelectorAll('[data-edit-warehouse]').forEach((button) => {
                 button.addEventListener('click', () => {
-                    const group = state.metricGroups.find((entry) => String(entry._id) === button.getAttribute('data-edit-metric-group'));
-                    if (!group || !el.formMetricGroup) return;
-                    state.editingMetricGroupId = group._id;
-                    if (el.modalMetricGroupTitle) el.modalMetricGroupTitle.textContent = `Editar Grupo: ${group.name}`;
-                    if (el.modalMetricGroupSubmit) el.modalMetricGroupSubmit.textContent = 'Actualizar';
-                    el.formMetricGroup.elements.name.value = group.name || '';
-                    el.formMetricGroup.elements.description.value = group.description || '';
-                    setCheckedRooms('.metric-group-room-checkbox', (group.cabins || []).map((room) => room._id || room));
-                    showModal(el.modalMetricGroup);
+                    const warehouse = state.warehouses.find((entry) => String(entry._id) === button.getAttribute('data-edit-warehouse'));
+                    if (!warehouse || !el.formWarehouse) return;
+                    state.editingWarehouseId = warehouse._id;
+                    if (el.modalWarehouseTitle) el.modalWarehouseTitle.textContent = `Editar Bodega: ${warehouse.name}`;
+                    if (el.modalWarehouseSubmit) el.modalWarehouseSubmit.textContent = 'Actualizar';
+                    el.formWarehouse.elements.name.value = warehouse.name || '';
+                    el.formWarehouse.elements.description.value = warehouse.description || '';
+                    setCheckedRooms('.warehouse-room-checkbox', (warehouse.cabins || []).map((room) => room._id || room));
+                    showModal(el.modalWarehouse);
                 });
             });
 
-            el.metricGroupsList.querySelectorAll('[data-delete-metric-group]').forEach((button) => {
+            el.warehousesList.querySelectorAll('[data-delete-warehouse]').forEach((button) => {
                 button.addEventListener('click', async () => {
                     try {
                         const confirmed = await confirmAction({
-                            title: 'Desactivar grupo metrico',
-                            text: 'El grupo metrico se desactivara y dejara de aparecer en dashboards.',
+                            title: 'Desactivar bodega',
+                            text: 'La bodega se desactivara y sus habitaciones podran reasignarse a otra bodega activa.',
                             confirmButtonText: 'Si, desactivar'
                         });
                         if (!confirmed) return;
@@ -980,13 +1184,13 @@
                         await runBusyAction({
                             target: button,
                             busyText: 'Desactivando...',
-                            loadingTitle: 'Desactivando grupo',
-                            loadingText: 'Actualizando configuracion de metricas.',
-                            successTitle: 'Grupo desactivado',
-                            successMessage: 'Grupo metrico desactivado correctamente',
+                            loadingTitle: 'Desactivando bodega',
+                            loadingText: 'Actualizando asignacion operativa.',
+                            successTitle: 'Bodega desactivada',
+                            successMessage: 'Bodega desactivada correctamente',
                             action: async () => {
-                                await request(`/metric-groups/${button.getAttribute('data-delete-metric-group')}`, { method: 'DELETE' });
-                                await Promise.all([renderMetricGroups(), renderConsumptionMetrics()]);
+                                await request(`/warehouses/${button.getAttribute('data-delete-warehouse')}`, { method: 'DELETE' });
+                                await Promise.all([renderWarehouses(), renderWarehouseSummary()]);
                             }
                         });
                     } catch (error) {
@@ -1006,7 +1210,7 @@
                 return `
                     <tr>
                         <td>${escapeHtml(formatDateTime(purchase.purchaseDate))}</td>
-                        <td>${escapeHtml(roomDisplayName(purchase.cabin))}</td>
+                        <td>${escapeHtml(warehouseDisplayName(purchase.warehouse))}</td>
                         <td>${escapeHtml(purchase.supplier || '-')}</td>
                         <td>${escapeHtml(purchase.invoiceNumber || '-')}</td>
                         <td>${lineSummary || '-'}</td>
@@ -1026,7 +1230,7 @@
                     <td>${escapeHtml(formatDateTime(movement.createdAt))}</td>
                     <td>${escapeHtml(movementTypeLabel(movement.movementType))}</td>
                     <td>${escapeHtml(movement.item?.name || '-')}</td>
-                    <td>${escapeHtml(roomDisplayName(movement.cabin))}</td>
+                    <td>${escapeHtml(warehouseDisplayName(movement.warehouse))}</td>
                     <td>${movement.quantity}</td>
                     <td>${money(movement.totalCost || 0)}</td>
                     <td>${movement.stockBefore ?? '-'}</td>
@@ -1087,7 +1291,7 @@
                         ${canManageInventory ? `<button class="btn btn-sm btn-outline-success" data-resolve-alert="${alertItem._id}">Resolver</button>` : ''}
                     </div>
                     <p class="text-sm text-yellow-700 mt-2">${escapeHtml(alertItem.message)}</p>
-                    <p class="text-xs text-yellow-600 mt-1">Item: ${escapeHtml(alertItem.item?.name || '-')} | Ubicacion: ${escapeHtml(roomDisplayName(alertItem.cabin))}</p>
+                    <p class="text-xs text-yellow-600 mt-1">Item: ${escapeHtml(alertItem.item?.name || '-')} | Bodega: ${escapeHtml(warehouseDisplayName(alertItem.warehouse))}</p>
                 </div>
             `).join('') || '<p class="text-gray-500">Sin alertas abiertas.</p>';
 
@@ -1114,29 +1318,52 @@
         }
     };
 
-    const renderConsumptionMetrics = async () => {
+    const renderWarehouseSummary = async () => {
         if (!canViewInventoryDashboard) return;
-        await renderMetricGroups();
-        const dashboards = await Promise.all(state.metricGroups.map(async (group) => {
+        const [warehousesResult, itemsResult] = await Promise.all([
+            request('/warehouses'),
+            request('/items')
+        ]);
+
+        state.warehouses = sortAlphabetically(warehousesResult.data || [], (warehouse) => warehouse?.name);
+        state.items = sortAlphabetically(itemsResult.data || [], (item) => item?.name);
+        populateWarehouseSelects();
+
+        const summaries = await Promise.all(state.warehouses.map(async (warehouse) => {
             try {
-                const result = await request(`/metric-groups/${group._id}/dashboard`);
+                const result = await request(`/warehouses/${warehouse._id}/summary`);
                 return result.data;
             } catch (error) {
                 return null;
             }
         }));
 
-        const rows = dashboards.filter(Boolean).map((dashboard) => `
+        const validSummaries = summaries.filter(Boolean);
+        const totalWarehouses = validSummaries.length;
+        const totalItems = validSummaries.reduce((sum, summary) => sum + Number(summary.itemCount || 0), 0);
+        const totalStock = validSummaries.reduce((sum, summary) => sum + Number(summary.totalStock || 0), 0);
+        const lowStockCount = validSummaries.reduce((sum, summary) => sum + Number(summary.lowStockCount || 0), 0);
+
+        if (el.warehouseSummaryTotalWarehouses) el.warehouseSummaryTotalWarehouses.textContent = totalWarehouses;
+        if (el.warehouseSummaryTotalItems) el.warehouseSummaryTotalItems.textContent = totalItems;
+        if (el.warehouseSummaryTotalStock) el.warehouseSummaryTotalStock.textContent = money(totalStock);
+        if (el.warehouseSummaryLowStock) el.warehouseSummaryLowStock.textContent = lowStockCount;
+
+        buildWarehouseVisualCards(validSummaries, state.items);
+
+        const rows = validSummaries.map((summary) => `
             <tr>
-                <td>${escapeHtml(dashboard.metricGroup?.name || '-')}</td>
-                <td>${dashboard.metricGroup?.cabins?.length || 0}</td>
-                <td>${dashboard.itemCount || 0}</td>
-                <td>${money(dashboard.totalStock || 0)}</td>
+                <td>${escapeHtml(summary.warehouse?.name || '-')}</td>
+                <td>${summary.roomCount || 0}</td>
+                <td>${summary.itemCount || 0}</td>
+                <td>${money(summary.totalStock || 0)}</td>
+                <td>${summary.roomsWithBomCount || 0}</td>
+                <td>${summary.roomsWithoutBomCount || 0}</td>
             </tr>
         `).join('');
 
-        if (el.consumptionMetricsTableBody) {
-            el.consumptionMetricsTableBody.innerHTML = rows || '<tr><td colspan="4" class="text-center text-gray-500">Sin metricas</td></tr>';
+        if (el.warehouseSummaryTableBody) {
+            el.warehouseSummaryTableBody.innerHTML = rows || '<tr><td colspan="6" class="text-center text-gray-500">Sin bodegas</td></tr>';
         }
     };
 
@@ -1147,37 +1374,38 @@
         }
         const rooms = await response.json();
         state.rooms = sortAlphabetically(rooms, (room) => roomDisplayName(room));
-        renderRoomChecklist(el.metricGroupRoomChecklist, 'metric-group-room-checkbox', 'Se asociara al grupo para metricas');
+        renderRoomChecklist(el.warehouseRoomChecklist, 'warehouse-room-checkbox', 'Se asignara a la bodega. Una habitacion solo puede pertenecer a una bodega activa');
         renderRoomChecklist(el.bomRoomChecklist, 'bom-room-checkbox', 'Se creara una regla individual para esta habitacion');
-        applyChecklistFilter(el.metricGroupRoomFilter, el.metricGroupRoomChecklist);
+        applyChecklistFilter(el.warehouseRoomFilter, el.warehouseRoomChecklist);
         applyChecklistFilter(el.bomRoomFilter, el.bomRoomChecklist);
+        syncBomLineOptions();
     };
 
     const setupForms = () => {
-        if (el.formMetricGroup) {
-            el.formMetricGroup.addEventListener('submit', async (event) => {
+        if (el.formWarehouse) {
+            el.formWarehouse.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 try {
-                    const fd = new FormData(el.formMetricGroup);
+                    const fd = new FormData(el.formWarehouse);
                     const payload = Object.fromEntries(fd.entries());
-                    payload.cabins = getCheckedRooms('.metric-group-room-checkbox').map((room) => room.id);
+                    payload.cabins = getCheckedRooms('.warehouse-room-checkbox').map((room) => room.id);
                     if (payload.cabins.length === 0) {
                         throw new Error('Selecciona al menos una habitacion');
                     }
-                    const isEditingMetricGroup = Boolean(state.editingMetricGroupId);
-                    const path = isEditingMetricGroup ? `/metric-groups/${state.editingMetricGroupId}` : '/metric-groups';
-                    const method = isEditingMetricGroup ? 'PUT' : 'POST';
+                    const isEditingWarehouse = Boolean(state.editingWarehouseId);
+                    const path = isEditingWarehouse ? `/warehouses/${state.editingWarehouseId}` : '/warehouses';
+                    const method = isEditingWarehouse ? 'PUT' : 'POST';
                     await runBusyAction({
-                        target: el.formMetricGroup,
-                        loadingTitle: isEditingMetricGroup ? 'Actualizando grupo metrico' : 'Creando grupo metrico',
-                        loadingText: 'Guardando configuracion de habitaciones.',
-                        successTitle: isEditingMetricGroup ? 'Grupo actualizado' : 'Grupo creado',
-                        successMessage: isEditingMetricGroup ? 'Grupo metrico actualizado correctamente' : 'Grupo metrico creado correctamente',
+                        target: el.formWarehouse,
+                        loadingTitle: isEditingWarehouse ? 'Actualizando bodega' : 'Creando bodega',
+                        loadingText: 'Guardando asignacion operativa de habitaciones.',
+                        successTitle: isEditingWarehouse ? 'Bodega actualizada' : 'Bodega creada',
+                        successMessage: isEditingWarehouse ? 'Bodega actualizada correctamente' : 'Bodega creada correctamente',
                         action: async () => {
                             await request(path, { method, body: JSON.stringify(payload) });
-                            resetMetricGroupFormMode();
-                            hideModal(el.modalMetricGroup);
-                            await Promise.all([renderMetricGroups(), renderConsumptionMetrics()]);
+                            resetWarehouseFormMode();
+                            hideModal(el.modalWarehouse);
+                            await Promise.all([renderWarehouses(), renderWarehouseSummary()]);
                         }
                     });
                 } catch (error) {
@@ -1206,6 +1434,9 @@
                     delete payload.cabin;
                     delete payload.cabinIds;
                     delete payload.isGlobal;
+                    if (!payload.warehouse) {
+                        throw new Error('Selecciona la bodega del item');
+                    }
                     if (isEditingItem) {
                         delete payload.initialUnitCost;
                         delete payload.initialSupplier;
@@ -1226,7 +1457,7 @@
                             await request(path, { method, body: JSON.stringify(payload) });
                             resetItemFormMode();
                             hideModal(el.modalItem);
-                            await Promise.all([renderItems(), renderDashboard(), renderConsumptionMetrics()]);
+                                await Promise.all([renderItems(), renderDashboard(), renderWarehouseSummary()]);
                         }
                     });
                 } catch (error) {
@@ -1301,6 +1532,9 @@
                 try {
                     const fd = new FormData(el.formPurchase);
                     const payload = Object.fromEntries(fd.entries());
+                    if (!payload.warehouse) {
+                        throw new Error('Selecciona la bodega de la compra');
+                    }
                     payload.lines = getPurchaseLinesPayload();
                     delete payload.cabin;
                     delete payload.isGlobal;
@@ -1317,7 +1551,7 @@
                             await request('/purchases', { method: 'POST', body: JSON.stringify(payload) });
                             resetPurchaseFormMode();
                             hideModal(el.modalPurchase);
-                            await Promise.all([renderItems(), renderDashboard(), renderPurchases(), renderMovements(), renderAlerts(), renderConsumptionMetrics()]);
+                            await Promise.all([renderItems(), renderDashboard(), renderPurchases(), renderMovements(), renderAlerts(), renderWarehouseSummary()]);
                         }
                     });
                 } catch (error) {
@@ -1343,7 +1577,7 @@
                             await request('/adjustments', { method: 'POST', body: JSON.stringify(payload) });
                             resetAdjustmentFormMode();
                             hideModal(el.modalAdjustment);
-                            await Promise.all([renderItems(), renderDashboard(), renderMovements(), renderAlerts(), renderConsumptionMetrics()]);
+                            await Promise.all([renderItems(), renderDashboard(), renderMovements(), renderAlerts(), renderWarehouseSummary()]);
                         }
                     });
                 } catch (error) {
@@ -1354,9 +1588,16 @@
     };
 
     const setupActions = () => {
-        setupChecklistFilter(el.metricGroupRoomFilter, el.metricGroupRoomChecklist);
+        setupChecklistFilter(el.warehouseRoomFilter, el.warehouseRoomChecklist);
         setupChecklistFilter(el.bomRoomFilter, el.bomRoomChecklist);
         el.itemUnitSelect?.addEventListener('change', toggleItemUnitCustom);
+        el.purchaseWarehouseSelect?.addEventListener('change', () => {
+            syncPurchaseLineOptions();
+            ensureOnePurchaseLine();
+        });
+        el.bomRoomChecklist?.addEventListener('change', () => {
+            syncBomLineOptions();
+        });
         el.btnAddBomLine?.addEventListener('click', () => {
             el.bomLinesContainer?.appendChild(createBomLineRow());
         });
@@ -1374,7 +1615,7 @@
                         action: async () => {
                             toggleSpinner(true);
                             const response = await request('/cron/run-checkout-consumption', { method: 'POST' });
-                            await Promise.all([renderAlerts(), renderDashboard(), renderConsumptionMetrics()]);
+                            await Promise.all([renderAlerts(), renderDashboard(), renderWarehouseSummary()]);
                             return response;
                         }
                     });
@@ -1388,13 +1629,13 @@
         }
 
         el.btnRefreshItems?.addEventListener('click', renderItems);
-        el.btnRefreshGroups?.addEventListener('click', renderMetricGroups);
+        el.btnRefreshWarehouses?.addEventListener('click', renderWarehouses);
         el.btnRefreshBom?.addEventListener('click', renderBOM);
         el.btnRefreshAlerts?.addEventListener('click', renderAlerts);
         el.btnRefreshPurchases?.addEventListener('click', renderPurchases);
         el.btnRefreshMovements?.addEventListener('click', renderMovements);
-        el.btnRefreshConsumptionMetrics?.addEventListener('click', renderConsumptionMetrics);
-        el.modalMetricGroup?.addEventListener('hidden.bs.modal', resetMetricGroupFormMode);
+        el.btnRefreshWarehouseSummary?.addEventListener('click', renderWarehouseSummary);
+        el.modalWarehouse?.addEventListener('hidden.bs.modal', resetWarehouseFormMode);
         el.modalItem?.addEventListener('hidden.bs.modal', resetItemFormMode);
         el.modalPurchase?.addEventListener('hidden.bs.modal', resetPurchaseFormMode);
         el.modalAdjustment?.addEventListener('hidden.bs.modal', resetAdjustmentFormMode);
@@ -1415,14 +1656,14 @@
             await loadRooms();
             const tasks = [
                 renderItems(),
-                renderMetricGroups(),
+                renderWarehouses(),
                 renderBOM(),
                 renderPurchases(),
                 renderMovements(),
                 renderAlerts()
             ];
             if (canViewInventoryDashboard) {
-                tasks.push(renderDashboard(), renderConsumptionMetrics());
+                tasks.push(renderDashboard(), renderWarehouseSummary());
             }
             await Promise.all(tasks);
             ensureOneBomLine();
