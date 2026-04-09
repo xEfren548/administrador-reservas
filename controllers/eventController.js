@@ -2604,8 +2604,11 @@ async function checkAvailability(resourceId, arrivalDate, departureDate, eventId
     const arrivalDateBloqueo = arrivalDateObj.toISOString();
     const departureDateBloqueo = departureDateObj.toISOString();
 
-    const arrivalDateISO = new Date(`${arrivalDate}T11:30:00`).toISOString();
-    const departureDateISO = new Date(`${departureDate}T08:30:00`).toISOString();
+    const [arrivalYear, arrivalMonth, arrivalDay] = arrivalDate.split('-').map(Number);
+    const [departureYear, departureMonth, departureDay] = departureDate.split('-').map(Number);
+
+    const arrivalDateISO = new Date(Date.UTC(arrivalYear, arrivalMonth - 1, arrivalDay, 10, 30, 0, 0)).toISOString();
+    const departureDateISO = new Date(Date.UTC(departureYear, departureMonth - 1, departureDay, 13, 30, 0, 0)).toISOString();
 
     console.log("ARRIVAL DATE: ", arrivalDateISO, "DEPARTURE DATE: ", departureDateISO);
 
