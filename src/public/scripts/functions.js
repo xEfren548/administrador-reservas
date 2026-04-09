@@ -99,6 +99,29 @@ document.addEventListener("DOMContentLoaded", function () {
         return `${day}/${month}/${year}`;
     }
 
+    function normalizeSelectedCountryPhone(countryCodeValue, phoneValue) {
+        const countryCode = String(countryCodeValue || '52').replace(/\D/g, '');
+        let digits = String(phoneValue || '').replace(/\D/g, '');
+
+        if (!digits) {
+            return '';
+        }
+
+        if (digits.startsWith('00') && digits.length > 2) {
+            digits = digits.slice(2);
+        }
+
+        if (digits.startsWith(countryCode) && digits.length === countryCode.length + 10) {
+            return digits;
+        }
+
+        if (digits.length === 10) {
+            return `${countryCode}${digits}`;
+        }
+
+        return null;
+    }
+
     function getInvestorIncludeSellerCommission() {
         const commissionToggle = document.getElementById('investor-seller-commission-toggle');
         return !!commissionToggle?.checked;
@@ -399,9 +422,14 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             if (isDeposit){
-                const codigoPais = document.getElementById('codigo-pais-select').value;
-                const numeroTelefono = document.getElementById('telefono-cliente-provisional').value.trim();
-                const telefonoCompleto = numeroTelefono ? codigoPais + numeroTelefono : '';
+                const telefonoCompleto = normalizeSelectedCountryPhone(
+                    document.getElementById('codigo-pais-select').value,
+                    document.getElementById('telefono-cliente-provisional').value
+                );
+
+                if (telefonoCompleto === null) {
+                    throw new Error('El teléfono debe tener 10 dígitos locales o incluir el prefijo +52/+1 seleccionado');
+                }
                 
                 formData = {
                     clientFirstName: document.getElementById('nombre-cliente-provisional').value.trim(),

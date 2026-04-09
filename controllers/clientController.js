@@ -492,6 +492,8 @@ module.exports = {
     createClientValidators,
     editClientValidators,
     deleteClientValidators,
+    normalizeClientPhone,
+    isValidMxUsPhone,
     showClientsView,
     showClients,
     showAllClients,

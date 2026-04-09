@@ -221,6 +221,22 @@
                                     placeholder="Apellido de cliente">
                             </div>
                         </div>
+
+                        <div class="mt-4">
+                            <label for="telefono-cliente-provisional"
+                                class="block text-sm font-medium text-gray-500">Teléfono</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-[120px_minmax(0,1fr)] gap-4 mt-1">
+                                <select id="codigo-pais-reserva"
+                                    class="w-full p-2 bg-white border border-gray-200 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500">
+                                    <option value="52" selected>+52 MX</option>
+                                    <option value="1">+1 USA</option>
+                                </select>
+                                <input type="tel" id="telefono-cliente-provisional"
+                                    class="w-full p-2 bg-white border border-gray-200 rounded-md text-gray-900 focus:ring-2 focus:ring-blue-500"
+                                    placeholder="10 dígitos" maxlength="14" inputmode="numeric">
+                            </div>
+                            <small class="text-gray-500">Opcional. Se enviará como dígitos con el prefijo seleccionado.</small>
+                        </div>
                     </div>
 
 
@@ -1483,6 +1499,17 @@
                 console.log(fechaLlegada, fechaSalida)
                 const arrivalDate = moment.utc(fechaLlegada, "DD-MM-YYYY").format("YYYY-MM-DD");
                 const departureDate = moment.utc(fechaSalida, "DD-MM-YYYY").format("YYYY-MM-DD");
+                const normalizedClientPhone = normalizeReservationClientPhone('codigo-pais-reserva', 'telefono-cliente-provisional');
+
+                if (normalizedClientPhone === null) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Teléfono inválido',
+                        text: 'Captura 10 dígitos locales o el número completo con el prefijo seleccionado (+52 o +1).',
+                        confirmButtonText: 'Aceptar'
+                    })
+                    return;
+                }
 
                 const dataReserva = {
                     isDeposit: isDeposit,
@@ -1502,6 +1529,7 @@
                     isDeposit: isDeposit,
                     clientFirstName: document.getElementById('nombre-cliente-provisional').value.trim(),
                     clientLastName: document.getElementById('apellido-cliente-provisional').value.trim(),
+                    clientPhone: normalizedClientPhone || undefined,
                     arrivalDate: arrivalDate,
                     departureDate: departureDate,
                     pax: document.getElementById('huespedes-input').textContent,
@@ -1667,6 +1695,29 @@
 
         const clienteReservaContainer = document.getElementById("modalClientContainer");
         const clienteProvisionalContainer = document.getElementById("container-alta-cliente-provisional");
+
+        function normalizeReservationClientPhone(countrySelectId, phoneInputId) {
+            const countryCode = (document.getElementById(countrySelectId)?.value || '52').replace(/\D/g, '');
+            let digits = (document.getElementById(phoneInputId)?.value || '').replace(/\D/g, '');
+
+            if (!digits) {
+                return '';
+            }
+
+            if (digits.startsWith('00') && digits.length > 2) {
+                digits = digits.slice(2);
+            }
+
+            if (digits.startsWith(countryCode) && digits.length === countryCode.length + 10) {
+                return digits;
+            }
+
+            if (digits.length === 10) {
+                return `${countryCode}${digits}`;
+            }
+
+            return null;
+        }
 
         function toggleReserva() {
             if (toggleInput.checked) {

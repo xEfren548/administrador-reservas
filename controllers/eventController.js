@@ -151,7 +151,16 @@ const createReservationValidators = [
         }),
     check('pax')
         .notEmpty().withMessage('Por favor, selecciona el número de personas')
-        .isNumeric().withMessage('Por favor, selecciona el número de personas')
+        .isNumeric().withMessage('Por favor, selecciona el número de personas'),
+    check('clientPhone')
+        .optional({ checkFalsy: true })
+        .customSanitizer(clienteController.normalizeClientPhone)
+        .custom((value) => {
+            if (!clienteController.isValidMxUsPhone(value)) {
+                throw new BadRequestError('Client phone must use 52 or 1 with 10 digits');
+            }
+            return true;
+        })
 ];
 
 const createOwnersReservationValidators = [
@@ -1236,6 +1245,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
     } = req.body;
     let newCliente = null;
     let client = null;
+    const normalizedClientPhone = clienteController.normalizeClientPhone(clientPhone);
 
     const toNumberOrNull = (value) => {
         const parsed = Number(value);
@@ -1288,6 +1298,10 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
 
         if (!habitacionId) {
             throw new Error("El ID de la habitación es requerido");
+        }
+
+        if (normalizedClientPhone && !clienteController.isValidMxUsPhone(normalizedClientPhone)) {
+            throw new BadRequestError('El número de teléfono proporcionado no es válido. Asegúrate de que sea un número de México o Estados Unidos con el formato correcto.');
         }
 
         console.log("is depo: ", isDeposit);
@@ -1413,16 +1427,16 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         if (clientEmail) {
             client = await Cliente.findOne({ email: clientEmail });
             console.log("Client initial")
-            if (!client && clientPhone) {
-                client = await Cliente.findOne({ phone: clientPhone });
+            if (!client && normalizedClientPhone) {
+                client = await Cliente.findOne({ phone: normalizedClientPhone });
             }
 
         }
         if (!client) {
             console.log("Cliente firstname: ", clientFirstName);
             console.log("Cliente lastname: ", clientLastName);
-            console.log("Cliente phone: ", clientPhone);
-            newCliente = await clienteController.createClientLocal(clientFirstName, clientLastName, clientPhone, req.session)
+            console.log("Cliente phone: ", normalizedClientPhone);
+            newCliente = await clienteController.createClientLocal(clientFirstName, clientLastName, normalizedClientPhone, req.session)
             console.log("No cliente")
             console.log(newCliente)
             if (!newCliente) {
