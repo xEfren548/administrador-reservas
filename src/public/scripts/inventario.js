@@ -3,6 +3,10 @@
     const state = {
         rooms: [],
         items: [],
+        roomInventoryEntries: [],
+        roomInventoryTransferCandidates: [],
+        selectedRoomInventoryId: '',
+        selectedRoomInventoryType: 'all',
         purchases: [],
         movements: [],
         bomTemplates: [],
@@ -34,6 +38,11 @@
         purchasesTableBody: document.getElementById('purchases-table-body'),
         movementsTableBody: document.getElementById('movements-table-body'),
         warehousesList: document.getElementById('warehouses-list'),
+        roomInventoryRoomSelect: document.getElementById('room-inventory-room-select'),
+        roomInventoryTypeFilter: document.getElementById('room-inventory-type-filter'),
+        roomInventoryLoading: document.getElementById('room-inventory-loading'),
+        roomInventorySummary: document.getElementById('room-inventory-summary'),
+        roomInventoryTableBody: document.getElementById('room-inventory-table-body'),
         bomList: document.getElementById('bom-list'),
         alertsList: document.getElementById('alerts-list'),
         warehouseSummaryTableBody: document.getElementById('warehouse-summary-table-body'),
@@ -46,11 +55,15 @@
         formItem: document.getElementById('form-item'),
         formPurchase: document.getElementById('form-purchase'),
         formAdjustment: document.getElementById('form-adjustment'),
+        formRoomTransfer: document.getElementById('form-room-transfer'),
+        formRoomAdjustment: document.getElementById('form-room-adjustment'),
         formBOMTemplate: document.getElementById('form-bom-template'),
         modalWarehouse: document.getElementById('modalWarehouse'),
         modalItem: document.getElementById('modalItem'),
         modalPurchase: document.getElementById('modalPurchase'),
         modalAdjustment: document.getElementById('modalAdjustment'),
+        modalRoomTransfer: document.getElementById('modalRoomTransfer'),
+        modalRoomAdjustment: document.getElementById('modalRoomAdjustment'),
         modalBOMTemplate: document.getElementById('modalBOMTemplate'),
         modalWarehouseTitle: document.getElementById('modal-warehouse-title'),
         modalWarehouseSubmit: document.getElementById('modal-warehouse-submit'),
@@ -64,6 +77,9 @@
         btnRunConsumption: document.getElementById('btn-run-checkout-consumption'),
         btnRefreshItems: document.getElementById('btn-refresh-items'),
         btnRefreshWarehouses: document.getElementById('btn-refresh-warehouses'),
+        btnOpenRoomTransfer: document.getElementById('btn-open-room-transfer'),
+        btnOpenRoomAdjustment: document.getElementById('btn-open-room-adjustment'),
+        btnRefreshRoomInventory: document.getElementById('btn-refresh-room-inventory'),
         btnRefreshBom: document.getElementById('btn-refresh-bom'),
         btnRefreshAlerts: document.getElementById('btn-refresh-alerts'),
         btnRefreshPurchases: document.getElementById('btn-refresh-purchases'),
@@ -73,6 +89,12 @@
         itemUnitCustom: document.getElementById('item-unit-custom'),
         itemWarehouseSelect: document.getElementById('item-warehouse-select'),
         purchaseWarehouseSelect: document.getElementById('purchase-warehouse-select'),
+        roomTransferRoomSelect: document.getElementById('room-transfer-room-select'),
+        roomTransferItemSelect: document.getElementById('room-transfer-item-select'),
+        roomTransferStockHint: document.getElementById('room-transfer-stock-hint'),
+        roomAdjustmentRoomSelect: document.getElementById('room-adjustment-room-select'),
+        roomAdjustmentItemSelect: document.getElementById('room-adjustment-item-select'),
+        roomAdjustmentStockHint: document.getElementById('room-adjustment-stock-hint'),
         warehouseRoomFilter: document.getElementById('warehouse-room-filter'),
         warehouseRoomChecklist: document.getElementById('warehouse-room-checklist'),
         bomRoomFilter: document.getElementById('bom-room-filter'),
@@ -203,6 +225,8 @@
         manual_adjustment_in: 'Ajuste +',
         manual_adjustment_out: 'Ajuste -',
         checkout_exit: 'Checkout',
+        transfer_in: 'Transferencia +',
+        transfer_out: 'Transferencia -',
         initial_balance: 'Saldo inicial'
     }[value] || value || '-');
 
@@ -229,6 +253,20 @@
         }
 
         return note;
+    };
+
+    const movementLocationLabel = (movement) => {
+        if (!movement) return '-';
+
+        if (movement.balanceScope === 'room') {
+            return movement.cabin ? `Habitacion: ${roomDisplayName(movement.cabin)}` : 'Habitacion';
+        }
+
+        if (movement.cabin && movement.movementType === 'checkout_exit') {
+            return `${warehouseDisplayName(movement.warehouse)} / ${roomDisplayName(movement.cabin)}`;
+        }
+
+        return warehouseDisplayName(movement.warehouse);
     };
 
     const getSwal = () => window.Swal || window.swal || null;
@@ -393,6 +431,29 @@
         return warehouse?.name || 'Bodega';
     };
 
+    const getSelectedRoomInventoryRoomId = () => String(el.roomInventoryRoomSelect?.value || state.selectedRoomInventoryId || '');
+
+    const populateRoomSelect = (select, selectedValue = '') => {
+        if (!select) return;
+        select.innerHTML = [
+            '<option value="">Selecciona habitacion</option>',
+            ...state.rooms.map((room) => `<option value="${room._id}" ${String(selectedValue) === String(room._id) ? 'selected' : ''}>${escapeHtml(roomDisplayName(room))}</option>`)
+        ].join('');
+    };
+
+    const setRoomInventoryLoading = (loading) => {
+        el.roomInventoryLoading?.classList.toggle('hidden', !loading);
+        if (el.roomInventoryRoomSelect) {
+            el.roomInventoryRoomSelect.disabled = loading;
+        }
+        if (el.roomInventoryTypeFilter) {
+            el.roomInventoryTypeFilter.disabled = loading;
+        }
+        if (el.btnRefreshRoomInventory) {
+            el.btnRefreshRoomInventory.disabled = loading;
+        }
+    };
+
     const getWarehouseItems = (warehouseId, items = state.items) => {
         return (items || []).filter((item) => String(item.warehouse?._id || item.warehouse || '') === String(warehouseId || ''));
     };
@@ -506,6 +567,123 @@
     const populateWarehouseSelects = () => {
         populateWarehouseSelect(el.itemWarehouseSelect, el.itemWarehouseSelect?.value || '');
         populateWarehouseSelect(el.purchaseWarehouseSelect, el.purchaseWarehouseSelect?.value || '');
+    };
+
+    const populateRoomInventorySelectors = () => {
+        const selectedRoomId = getSelectedRoomInventoryRoomId();
+        populateRoomSelect(el.roomInventoryRoomSelect, selectedRoomId);
+        populateRoomSelect(el.roomTransferRoomSelect, el.roomTransferRoomSelect?.value || selectedRoomId);
+        populateRoomSelect(el.roomAdjustmentRoomSelect, el.roomAdjustmentRoomSelect?.value || selectedRoomId);
+        state.selectedRoomInventoryId = String(el.roomInventoryRoomSelect?.value || selectedRoomId || '');
+    };
+
+    const populateRoomTransferItemSelect = (selectedItemId = '') => {
+        if (!el.roomTransferItemSelect) return;
+
+        el.roomTransferItemSelect.innerHTML = [
+            '<option value="">Selecciona item</option>',
+            ...state.roomInventoryTransferCandidates.map((item) => `<option value="${item._id}" ${String(selectedItemId) === String(item._id) ? 'selected' : ''}>${escapeHtml(item.name)} | ${escapeHtml(item.itemType)} | Bodega ${item.stockCurrent} ${escapeHtml(item.unit || '')}</option>`)
+        ].join('');
+    };
+
+    const populateRoomAdjustmentItemSelect = (selectedItemId = '') => {
+        if (!el.roomAdjustmentItemSelect) return;
+
+        el.roomAdjustmentItemSelect.innerHTML = [
+            '<option value="">Selecciona item</option>',
+            ...state.roomInventoryEntries.map((entry) => `<option value="${entry.item?._id || ''}" ${String(selectedItemId) === String(entry.item?._id || '') ? 'selected' : ''}>${escapeHtml(entry.item?.name || 'Item')} | Habitacion ${entry.stockCurrent} ${escapeHtml(entry.item?.unit || '')}</option>`)
+        ].join('');
+    };
+
+    const renderRoomInventorySummary = (warehouse) => {
+        if (!el.roomInventorySummary) return;
+
+        const totalItems = state.roomInventoryEntries.length;
+        const totalUnits = state.roomInventoryEntries.reduce((sum, entry) => sum + Number(entry.stockCurrent || 0), 0);
+        const lowStockCount = state.roomInventoryEntries.filter((entry) => Number(entry.stockCurrent || 0) <= Number(entry.item?.stockMin || 0)).length;
+
+        el.roomInventorySummary.innerHTML = `
+            <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                <p class="text-xs uppercase text-gray-500 mb-1">Bodega fuente</p>
+                <p class="text-base font-semibold text-gray-900 mb-0">${escapeHtml(warehouseDisplayName(warehouse))}</p>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                <p class="text-xs uppercase text-gray-500 mb-1">Items en habitacion</p>
+                <p class="text-2xl font-bold text-gray-900 mb-0">${totalItems}</p>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                <p class="text-xs uppercase text-gray-500 mb-1">Unidades / bajo stock</p>
+                <p class="text-2xl font-bold text-gray-900 mb-0">${money(totalUnits)} <span class="text-sm font-medium text-rose-600">| ${lowStockCount}</span></p>
+            </div>
+        `;
+    };
+
+    const renderRoomInventory = async () => {
+        const roomId = getSelectedRoomInventoryRoomId();
+        if (!roomId) {
+            state.roomInventoryEntries = [];
+            state.roomInventoryTransferCandidates = [];
+            setRoomInventoryLoading(false);
+            if (el.roomInventorySummary) el.roomInventorySummary.innerHTML = '';
+            if (el.roomInventoryTableBody) {
+                el.roomInventoryTableBody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500">Selecciona una habitacion para consultar su inventario.</td></tr>';
+            }
+            populateRoomTransferItemSelect();
+            populateRoomAdjustmentItemSelect();
+            return;
+        }
+
+        setRoomInventoryLoading(true);
+        try {
+            const result = await request(`/room-inventory/${roomId}?itemType=${encodeURIComponent(state.selectedRoomInventoryType || 'all')}`);
+            const payload = result.data || {};
+
+            state.roomInventoryEntries = sortAlphabetically(payload.entries || [], (entry) => entry?.item?.name);
+            state.roomInventoryTransferCandidates = sortAlphabetically(payload.transferCandidates || [], (entry) => entry?.name);
+
+            renderRoomInventorySummary(payload.warehouse);
+            populateRoomTransferItemSelect();
+            populateRoomAdjustmentItemSelect();
+
+            if (!el.roomInventoryTableBody) return;
+
+            const rows = state.roomInventoryEntries.map((entry) => `
+                <tr>
+                    <td>${escapeHtml(entry.item?.name || '-')}</td>
+                    <td>${escapeHtml(entry.item?.partNumber || '-')}</td>
+                    <td>${escapeHtml(entry.item?.itemType || '-')}</td>
+                    <td>${escapeHtml(entry.item?.unit || '-')}</td>
+                    <td>${escapeHtml(String(entry.item?.stockCurrent ?? 0))}</td>
+                    <td>${escapeHtml(String(entry.stockCurrent ?? 0))}</td>
+                    <td>${escapeHtml(formatDateTime(entry.updatedAt))}</td>
+                    <td>
+                        ${canAdjustInventory ? `<button type="button" class="btn btn-outline-dark btn-sm" data-room-adjust-item="${entry.item?._id || ''}">Ajustar</button>` : '<span class="text-xs text-gray-400">Sin acciones</span>'}
+                    </td>
+                </tr>
+            `).join('');
+
+            el.roomInventoryTableBody.innerHTML = rows || '<tr><td colspan="8" class="text-center text-gray-500">La habitacion no tiene inventario cargado para este filtro.</td></tr>';
+            el.roomInventoryTableBody.querySelectorAll('[data-room-adjust-item]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    if (!el.roomAdjustmentRoomSelect) return;
+                    el.roomAdjustmentRoomSelect.value = roomId;
+                    populateRoomAdjustmentItemSelect(button.getAttribute('data-room-adjust-item'));
+                    updateRoomAdjustmentHint();
+                    showModal(el.modalRoomAdjustment);
+                });
+            });
+        } catch (error) {
+            state.roomInventoryEntries = [];
+            state.roomInventoryTransferCandidates = [];
+            if (el.roomInventorySummary) el.roomInventorySummary.innerHTML = '';
+            populateRoomTransferItemSelect();
+            populateRoomAdjustmentItemSelect();
+            if (el.roomInventoryTableBody) {
+                el.roomInventoryTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-gray-500">${escapeHtml(error.message || 'No se pudo cargar el inventario de la habitacion.')}</td></tr>`;
+            }
+        } finally {
+            setRoomInventoryLoading(false);
+        }
     };
 
     const getSelectedPurchaseWarehouseId = () => String(el.purchaseWarehouseSelect?.value || '');
@@ -953,6 +1131,36 @@
         el.formAdjustment?.reset();
     };
 
+    const updateRoomTransferHint = () => {
+        if (!el.roomTransferStockHint) return;
+        const selectedItem = state.roomInventoryTransferCandidates.find((item) => String(item._id) === String(el.roomTransferItemSelect?.value || ''));
+        el.roomTransferStockHint.textContent = selectedItem
+            ? `Disponible en bodega: ${selectedItem.stockCurrent} ${selectedItem.unit || ''}`
+            : 'Selecciona un item para ver el stock disponible en bodega.';
+    };
+
+    const updateRoomAdjustmentHint = () => {
+        if (!el.roomAdjustmentStockHint) return;
+        const selectedEntry = state.roomInventoryEntries.find((entry) => String(entry.item?._id || '') === String(el.roomAdjustmentItemSelect?.value || ''));
+        el.roomAdjustmentStockHint.textContent = selectedEntry
+            ? `Disponible en habitacion: ${selectedEntry.stockCurrent} ${selectedEntry.item?.unit || ''}`
+            : 'Selecciona un item para ver el stock actual en habitacion.';
+    };
+
+    const resetRoomTransferFormMode = () => {
+        el.formRoomTransfer?.reset();
+        populateRoomSelect(el.roomTransferRoomSelect, getSelectedRoomInventoryRoomId());
+        populateRoomTransferItemSelect();
+        updateRoomTransferHint();
+    };
+
+    const resetRoomAdjustmentFormMode = () => {
+        el.formRoomAdjustment?.reset();
+        populateRoomSelect(el.roomAdjustmentRoomSelect, getSelectedRoomInventoryRoomId());
+        populateRoomAdjustmentItemSelect();
+        updateRoomAdjustmentHint();
+    };
+
     const resetBOMFormMode = () => {
         state.editingBOMId = null;
         el.formBOMTemplate?.reset();
@@ -1138,6 +1346,7 @@
         const result = await request('/warehouses');
         state.warehouses = sortAlphabetically(result.data || [], (warehouse) => warehouse?.name);
         populateWarehouseSelects();
+        populateRoomInventorySelectors();
         syncPurchaseLineOptions();
         syncBomLineOptions();
         if (el.warehousesList) {
@@ -1230,7 +1439,7 @@
                     <td>${escapeHtml(formatDateTime(movement.createdAt))}</td>
                     <td>${escapeHtml(movementTypeLabel(movement.movementType))}</td>
                     <td>${escapeHtml(movement.item?.name || '-')}</td>
-                    <td>${escapeHtml(warehouseDisplayName(movement.warehouse))}</td>
+                    <td>${escapeHtml(movementLocationLabel(movement))}</td>
                     <td>${movement.quantity}</td>
                     <td>${money(movement.totalCost || 0)}</td>
                     <td>${movement.stockBefore ?? '-'}</td>
@@ -1374,8 +1583,12 @@
         }
         const rooms = await response.json();
         state.rooms = sortAlphabetically(rooms, (room) => roomDisplayName(room));
+        if (!state.selectedRoomInventoryId && state.rooms[0]?._id) {
+            state.selectedRoomInventoryId = state.rooms[0]._id;
+        }
         renderRoomChecklist(el.warehouseRoomChecklist, 'warehouse-room-checkbox', 'Se asignara a la bodega. Una habitacion solo puede pertenecer a una bodega activa');
         renderRoomChecklist(el.bomRoomChecklist, 'bom-room-checkbox', 'Se creara una regla individual para esta habitacion');
+        populateRoomInventorySelectors();
         applyChecklistFilter(el.warehouseRoomFilter, el.warehouseRoomChecklist);
         applyChecklistFilter(el.bomRoomFilter, el.bomRoomChecklist);
         syncBomLineOptions();
@@ -1585,12 +1798,94 @@
                 }
             });
         }
+
+        if (el.formRoomTransfer) {
+            el.formRoomTransfer.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                try {
+                    const fd = new FormData(el.formRoomTransfer);
+                    const payload = Object.fromEntries(fd.entries());
+                    payload.quantity = Number(payload.quantity || 0);
+                    await runBusyAction({
+                        target: el.formRoomTransfer,
+                        loadingTitle: 'Transfiriendo a habitacion',
+                        loadingText: 'Actualizando bodega y balance de habitacion.',
+                        successTitle: 'Transferencia aplicada',
+                        successMessage: 'El stock fue transferido correctamente a la habitacion',
+                        action: async () => {
+                            await request('/room-inventory/transfer', { method: 'POST', body: JSON.stringify(payload) });
+                            state.selectedRoomInventoryId = payload.cabinId;
+                            resetRoomTransferFormMode();
+                            hideModal(el.modalRoomTransfer);
+                            await Promise.all([renderItems(), renderDashboard(), renderMovements(), renderAlerts(), renderWarehouseSummary(), renderRoomInventory()]);
+                        }
+                    });
+                } catch (error) {
+                    await showError(error);
+                }
+            });
+        }
+
+        if (el.formRoomAdjustment) {
+            el.formRoomAdjustment.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                try {
+                    const fd = new FormData(el.formRoomAdjustment);
+                    const payload = Object.fromEntries(fd.entries());
+                    payload.quantity = Number(payload.quantity || 0);
+                    await runBusyAction({
+                        target: el.formRoomAdjustment,
+                        loadingTitle: 'Ajustando inventario de habitacion',
+                        loadingText: 'Guardando movimiento manual.',
+                        successTitle: 'Ajuste aplicado',
+                        successMessage: 'Inventario de habitacion ajustado correctamente',
+                        action: async () => {
+                            await request('/room-inventory/adjustments', { method: 'POST', body: JSON.stringify(payload) });
+                            state.selectedRoomInventoryId = payload.cabinId;
+                            resetRoomAdjustmentFormMode();
+                            hideModal(el.modalRoomAdjustment);
+                            await Promise.all([renderMovements(), renderRoomInventory()]);
+                        }
+                    });
+                } catch (error) {
+                    await showError(error);
+                }
+            });
+        }
     };
 
     const setupActions = () => {
         setupChecklistFilter(el.warehouseRoomFilter, el.warehouseRoomChecklist);
         setupChecklistFilter(el.bomRoomFilter, el.bomRoomChecklist);
         el.itemUnitSelect?.addEventListener('change', toggleItemUnitCustom);
+        el.roomInventoryRoomSelect?.addEventListener('change', async () => {
+            state.selectedRoomInventoryId = el.roomInventoryRoomSelect.value || '';
+            await renderRoomInventory();
+        });
+        el.roomInventoryTypeFilter?.addEventListener('change', async () => {
+            state.selectedRoomInventoryType = el.roomInventoryTypeFilter.value || 'all';
+            await renderRoomInventory();
+        });
+        el.roomTransferRoomSelect?.addEventListener('change', async () => {
+            const roomId = el.roomTransferRoomSelect.value || '';
+            if (roomId) {
+                state.selectedRoomInventoryId = roomId;
+                await renderRoomInventory();
+            }
+            populateRoomTransferItemSelect();
+            updateRoomTransferHint();
+        });
+        el.roomTransferItemSelect?.addEventListener('change', updateRoomTransferHint);
+        el.roomAdjustmentRoomSelect?.addEventListener('change', async () => {
+            const roomId = el.roomAdjustmentRoomSelect.value || '';
+            if (roomId) {
+                state.selectedRoomInventoryId = roomId;
+                await renderRoomInventory();
+            }
+            populateRoomAdjustmentItemSelect();
+            updateRoomAdjustmentHint();
+        });
+        el.roomAdjustmentItemSelect?.addEventListener('change', updateRoomAdjustmentHint);
         el.purchaseWarehouseSelect?.addEventListener('change', () => {
             syncPurchaseLineOptions();
             ensureOnePurchaseLine();
@@ -1630,6 +1925,15 @@
 
         el.btnRefreshItems?.addEventListener('click', renderItems);
         el.btnRefreshWarehouses?.addEventListener('click', renderWarehouses);
+        el.btnOpenRoomTransfer?.addEventListener('click', () => {
+            resetRoomTransferFormMode();
+            showModal(el.modalRoomTransfer);
+        });
+        el.btnOpenRoomAdjustment?.addEventListener('click', () => {
+            resetRoomAdjustmentFormMode();
+            showModal(el.modalRoomAdjustment);
+        });
+        el.btnRefreshRoomInventory?.addEventListener('click', renderRoomInventory);
         el.btnRefreshBom?.addEventListener('click', renderBOM);
         el.btnRefreshAlerts?.addEventListener('click', renderAlerts);
         el.btnRefreshPurchases?.addEventListener('click', renderPurchases);
@@ -1639,6 +1943,8 @@
         el.modalItem?.addEventListener('hidden.bs.modal', resetItemFormMode);
         el.modalPurchase?.addEventListener('hidden.bs.modal', resetPurchaseFormMode);
         el.modalAdjustment?.addEventListener('hidden.bs.modal', resetAdjustmentFormMode);
+        el.modalRoomTransfer?.addEventListener('hidden.bs.modal', resetRoomTransferFormMode);
+        el.modalRoomAdjustment?.addEventListener('hidden.bs.modal', resetRoomAdjustmentFormMode);
         el.modalBOMTemplate?.addEventListener('hidden.bs.modal', resetBOMFormMode);
         el.modalBOMTemplate?.addEventListener('show.bs.modal', () => {
             if (!state.editingBOMId) {
@@ -1657,6 +1963,7 @@
             const tasks = [
                 renderItems(),
                 renderWarehouses(),
+                renderRoomInventory(),
                 renderBOM(),
                 renderPurchases(),
                 renderMovements(),
@@ -1669,6 +1976,8 @@
             ensureOneBomLine();
             ensureOnePurchaseLine();
             resetBOMFormMode();
+            resetRoomTransferFormMode();
+            resetRoomAdjustmentFormMode();
             toggleItemUnitCustom();
             toggleInitialPurchaseSection();
         } catch (error) {

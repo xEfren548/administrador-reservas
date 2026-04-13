@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const { check, validationResult } = require('express-validator');
 const Habitacion = require('../models/Habitacion');
 const InventoryItem = require('../models/InventoryItem');
@@ -6,6 +7,7 @@ const InventoryMovement = require('../models/InventoryMovement');
 const InventoryPurchase = require('../models/InventoryPurchase');
 const InventoryAlert = require('../models/InventoryAlert');
 const InventoryWarehouse = require('../models/InventoryWarehouse');
+const InventoryRoomStock = require('../models/InventoryRoomStock');
 const { processFinishedReservationsCheckoutConsumption } = require('../services/inventoryCheckoutService');
 
 const createItemValidators = [
@@ -76,6 +78,21 @@ const manualAdjustmentValidators = [
     check('reason').notEmpty().withMessage('reason is required')
 ];
 
+const roomInventoryTransferValidators = [
+    check('cabinId').isMongoId().withMessage('Invalid cabin id'),
+    check('itemId').isMongoId().withMessage('Invalid item id'),
+    check('quantity').isFloat({ min: 0.0001 }).withMessage('quantity must be > 0'),
+    check('note').optional().isString().withMessage('note must be a string')
+];
+
+const roomInventoryAdjustmentValidators = [
+    check('cabinId').isMongoId().withMessage('Invalid cabin id'),
+    check('itemId').isMongoId().withMessage('Invalid item id'),
+    check('direction').isIn(['in', 'out']).withMessage('direction must be in or out'),
+    check('quantity').isFloat({ min: 0.0001 }).withMessage('quantity must be > 0'),
+    check('reason').notEmpty().withMessage('reason is required')
+];
+
 const createWarehouseValidators = [
     check('name').notEmpty().withMessage('Warehouse name is required'),
     check('description').optional().isString(),
@@ -120,6 +137,20 @@ const normalizeEffectiveFrom = (value) => {
     }
 
     return normalizedDate;
+};
+
+const ROOM_INVENTORY_ITEM_TYPES = ['indirecto', 'no_consumible'];
+
+const isRoomInventoryItemType = (itemType) => ROOM_INVENTORY_ITEM_TYPES.includes(String(itemType || ''));
+
+const findActiveCabinById = async (cabinId) => {
+    if (!cabinId) {
+        return null;
+    }
+
+    return Habitacion.findById(cabinId)
+        .select('_id propertyDetails.name')
+        .lean();
 };
 
 const createItem = async (req, res) => {
@@ -391,6 +422,16 @@ const getWarehouseByCabinMap = async (cabinIds = []) => {
     }, new Map());
 };
 
+const resolveWarehouseForCabin = async (cabinId) => {
+    const normalizedCabinId = String(cabinId || '');
+    if (!normalizedCabinId) {
+        return null;
+    }
+
+    const warehouseByCabin = await getWarehouseByCabinMap([normalizedCabinId]);
+    return warehouseByCabin.get(normalizedCabinId) || null;
+};
+
 const resolveWarehouseForCabins = async (cabinIds = []) => {
     const normalizedCabinIds = normalizeCabinIds(cabinIds);
     if (normalizedCabinIds.length === 0) {
@@ -434,7 +475,7 @@ const validateBomItemsForWarehouse = async (warehouseId, lines = []) => {
     const lineItemIds = [...new Set(lines.map((line) => String(line.item)).filter(Boolean))];
 
     const items = await InventoryItem.find({ _id: { $in: lineItemIds }, active: true })
-        .select('_id name warehouse')
+        .select('_id name warehouse itemType')
         .lean();
 
     if (items.length !== lineItemIds.length) {
@@ -449,7 +490,58 @@ const validateBomItemsForWarehouse = async (warehouseId, lines = []) => {
         };
     }
 
+    const nonDirectItems = items.filter((item) => item.itemType !== 'directo');
+    if (nonDirectItems.length > 0) {
+        return {
+            valid: false,
+            message: `La BOM solo puede incluir items directos. Revisa: ${nonDirectItems.map((item) => item.name).join(', ')}`
+        };
+    }
+
     return { valid: true };
+};
+
+const validateRoomInventoryOperation = async ({ cabinId, itemId, allowMissingRoomStock = false }) => {
+    const [cabin, item, warehouse] = await Promise.all([
+        findActiveCabinById(cabinId),
+        InventoryItem.findOne({ _id: itemId, active: true })
+            .populate('warehouse', 'name active')
+            .lean(),
+        resolveWarehouseForCabin(cabinId)
+    ]);
+
+    if (!cabin) {
+        return { valid: false, status: 404, message: 'Habitacion no encontrada' };
+    }
+
+    if (!warehouse) {
+        return { valid: false, status: 400, message: 'La habitacion no pertenece a una bodega activa' };
+    }
+
+    if (!item) {
+        return { valid: false, status: 404, message: 'Item no encontrado' };
+    }
+
+    if (!isRoomInventoryItemType(item.itemType)) {
+        return { valid: false, status: 400, message: 'Solo los items indirectos o no consumibles pueden manejar inventario por habitacion' };
+    }
+
+    if (String(item.warehouse?._id || item.warehouse || '') !== String(warehouse._id || '')) {
+        return { valid: false, status: 400, message: `El item ${item.name} no pertenece a la bodega de la habitacion seleccionada` };
+    }
+
+    const roomStock = await InventoryRoomStock.findOne({ item: item._id, cabin: cabin._id }).lean();
+    if (!allowMissingRoomStock && !roomStock) {
+        return { valid: false, status: 404, message: 'La habitacion todavia no tiene inventario para este item' };
+    }
+
+    return {
+        valid: true,
+        cabin,
+        item,
+        warehouse,
+        roomStock: roomStock || null
+    };
 };
 
 const validateWarehouseCabinAvailability = async (cabinIds = [], excludeWarehouseId = null) => {
@@ -883,6 +975,7 @@ const registerPurchase = async (req, res) => {
                 warehouse: warehouse._id,
                 cabin: null,
                 movementType: 'purchase_entry',
+                balanceScope: 'warehouse',
                 quantity,
                 unitCost,
                 totalCost: lineTotal,
@@ -956,6 +1049,7 @@ const createManualAdjustment = async (req, res) => {
             warehouse: item.warehouse,
             cabin: item.cabin,
             movementType,
+            balanceScope: 'warehouse',
             quantity: qty,
             unitCost: Number(item.lastPurchaseUnitCost || 0),
             totalCost: Number(item.lastPurchaseUnitCost || 0) * qty,
@@ -979,6 +1073,245 @@ const createManualAdjustment = async (req, res) => {
         return res.status(201).json({ success: true, data: movement });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Error creating adjustment', error: error.message });
+    }
+};
+
+const getRoomInventory = async (req, res) => {
+    try {
+        const { cabinId } = req.params;
+        const { itemType } = req.query;
+        const cabin = await findActiveCabinById(cabinId);
+
+        if (!cabin) {
+            return res.status(404).json({ success: false, message: 'Habitacion no encontrada' });
+        }
+
+        const warehouse = await resolveWarehouseForCabin(cabinId);
+        if (!warehouse) {
+            return res.status(400).json({ success: false, message: 'La habitacion no pertenece a una bodega activa' });
+        }
+
+        const itemMatch = {
+            active: true,
+            itemType: itemType && itemType !== 'all'
+                ? itemType
+                : { $in: ROOM_INVENTORY_ITEM_TYPES }
+        };
+
+        const [roomStocks, transferCandidates] = await Promise.all([
+            InventoryRoomStock.find({
+                cabin: cabin._id,
+                warehouse: warehouse._id
+            })
+                .populate({
+                    path: 'item',
+                    match: itemMatch,
+                    select: 'name partNumber itemType unit stockCurrent stockMin lastPurchaseUnitCost warehouse active'
+                })
+                .populate('warehouse', 'name active')
+                .sort({ updatedAt: -1, createdAt: -1 })
+                .lean(),
+            InventoryItem.find({
+                warehouse: warehouse._id,
+                active: true,
+                itemType: itemMatch.itemType
+            })
+                .select('name partNumber itemType unit stockCurrent stockMin lastPurchaseUnitCost warehouse')
+                .sort({ name: 1 })
+                .lean()
+        ]);
+
+        return res.json({
+            success: true,
+            data: {
+                cabin,
+                warehouse,
+                entries: roomStocks
+                    .filter((entry) => entry.item)
+                    .map((entry) => ({
+                        _id: entry._id,
+                        stockCurrent: Number(entry.stockCurrent || 0),
+                        updatedAt: entry.updatedAt,
+                        item: entry.item,
+                        warehouse: entry.warehouse || warehouse,
+                        cabin
+                    })),
+                transferCandidates
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error listing room inventory', error: error.message });
+    }
+};
+
+const transferItemToRoom = async (req, res) => {
+    try {
+        if (!handleValidation(req, res)) return;
+
+        const { cabinId, itemId, quantity, note = '' } = req.body;
+        const validation = await validateRoomInventoryOperation({ cabinId, itemId, allowMissingRoomStock: true });
+
+        if (!validation.valid) {
+            return res.status(validation.status).json({ success: false, message: validation.message });
+        }
+
+        const qty = Number(quantity || 0);
+        const warehouseItem = await InventoryItem.findById(validation.item._id);
+        if (!warehouseItem) {
+            return res.status(404).json({ success: false, message: 'Item no encontrado' });
+        }
+
+        const warehouseStockBefore = Number(warehouseItem.stockCurrent || 0);
+        if (warehouseStockBefore < qty) {
+            return res.status(400).json({ success: false, message: 'Stock insuficiente en bodega para transferir a la habitacion' });
+        }
+
+        const roomStockDoc = await InventoryRoomStock.findOne({ item: warehouseItem._id, cabin: validation.cabin._id })
+            || new InventoryRoomStock({
+                item: warehouseItem._id,
+                warehouse: validation.warehouse._id,
+                cabin: validation.cabin._id,
+                stockCurrent: 0,
+                createdBy: req.session.userId || null,
+                updatedBy: req.session.userId || null
+            });
+
+        const roomStockBefore = Number(roomStockDoc.stockCurrent || 0);
+        const unitCost = Number(warehouseItem.lastPurchaseUnitCost || 0);
+        const operationKey = `room-transfer:${validation.cabin._id}:${warehouseItem._id}:${Date.now()}`;
+
+        warehouseItem.stockCurrent = warehouseStockBefore - qty;
+        await warehouseItem.save();
+
+        roomStockDoc.stockCurrent = roomStockBefore + qty;
+        roomStockDoc.warehouse = validation.warehouse._id;
+        roomStockDoc.updatedBy = req.session.userId || null;
+        await roomStockDoc.save();
+
+        const movementNote = `Transferencia a habitacion ${validation.cabin.propertyDetails?.name || validation.cabin._id}${note ? ` | ${note}` : ''}`;
+
+        await InventoryMovement.insertMany([
+            {
+                item: warehouseItem._id,
+                warehouse: validation.warehouse._id,
+                cabin: validation.cabin._id,
+                movementType: 'transfer_out',
+                balanceScope: 'warehouse',
+                quantity: qty,
+                unitCost,
+                totalCost: unitCost * qty,
+                stockBefore: warehouseStockBefore,
+                stockAfter: Number(warehouseItem.stockCurrent || 0),
+                note: movementNote,
+                operationKey,
+                performedBy: req.session.userId || null
+            },
+            {
+                item: warehouseItem._id,
+                warehouse: validation.warehouse._id,
+                cabin: validation.cabin._id,
+                movementType: 'transfer_in',
+                balanceScope: 'room',
+                quantity: qty,
+                unitCost,
+                totalCost: unitCost * qty,
+                stockBefore: roomStockBefore,
+                stockAfter: Number(roomStockDoc.stockCurrent || 0),
+                note: movementNote,
+                operationKey,
+                performedBy: req.session.userId || null
+            }
+        ]);
+
+        if (Number(warehouseItem.stockCurrent || 0) <= Number(warehouseItem.stockMin || 0)) {
+            await InventoryAlert.create({
+                warehouse: validation.warehouse._id,
+                cabin: null,
+                item: warehouseItem._id,
+                alertType: 'low_stock',
+                status: 'open',
+                message: `Stock bajo de ${warehouseItem.name} en ${validation.warehouse.name}. Actual ${warehouseItem.stockCurrent}, minimo ${warehouseItem.stockMin}.`
+            });
+        }
+
+        return res.status(201).json({
+            success: true,
+            data: {
+                itemId: warehouseItem._id,
+                cabinId: validation.cabin._id,
+                warehouseStock: Number(warehouseItem.stockCurrent || 0),
+                roomStock: Number(roomStockDoc.stockCurrent || 0),
+                operationKey
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error transferring item to room', error: error.message });
+    }
+};
+
+const adjustRoomInventory = async (req, res) => {
+    try {
+        if (!handleValidation(req, res)) return;
+
+        const { cabinId, itemId, direction, quantity, reason } = req.body;
+        const validation = await validateRoomInventoryOperation({
+            cabinId,
+            itemId,
+            allowMissingRoomStock: direction === 'in'
+        });
+
+        if (!validation.valid) {
+            return res.status(validation.status).json({ success: false, message: validation.message });
+        }
+
+        const qty = Number(quantity || 0);
+        const roomStockDoc = await InventoryRoomStock.findOne({ item: validation.item._id, cabin: validation.cabin._id })
+            || new InventoryRoomStock({
+                item: validation.item._id,
+                warehouse: validation.warehouse._id,
+                cabin: validation.cabin._id,
+                stockCurrent: 0,
+                createdBy: req.session.userId || null,
+                updatedBy: req.session.userId || null
+            });
+
+        const stockBefore = Number(roomStockDoc.stockCurrent || 0);
+        let stockAfter = stockBefore;
+        let movementType = 'manual_adjustment_in';
+
+        if (direction === 'in') {
+            stockAfter = stockBefore + qty;
+        } else {
+            movementType = 'manual_adjustment_out';
+            if (stockBefore < qty) {
+                return res.status(400).json({ success: false, message: 'Stock insuficiente en la habitacion para aplicar la salida' });
+            }
+            stockAfter = stockBefore - qty;
+        }
+
+        roomStockDoc.stockCurrent = stockAfter;
+        roomStockDoc.warehouse = validation.warehouse._id;
+        roomStockDoc.updatedBy = req.session.userId || null;
+        await roomStockDoc.save();
+
+        const movement = await InventoryMovement.create({
+            item: validation.item._id,
+            warehouse: validation.warehouse._id,
+            cabin: validation.cabin._id,
+            movementType,
+            balanceScope: 'room',
+            quantity: qty,
+            unitCost: Number(validation.item.lastPurchaseUnitCost || 0),
+            totalCost: Number(validation.item.lastPurchaseUnitCost || 0) * qty,
+            stockBefore,
+            stockAfter,
+            performedBy: req.session.userId || null,
+            note: reason
+        });
+
+        return res.status(201).json({ success: true, data: movement });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error adjusting room inventory', error: error.message });
     }
 };
 
@@ -1227,6 +1560,8 @@ module.exports = {
     updateBOMTemplateValidators,
     registerPurchaseValidators,
     manualAdjustmentValidators,
+    roomInventoryTransferValidators,
+    roomInventoryAdjustmentValidators,
     createWarehouseValidators,
     updateWarehouseValidators,
     createItem,
@@ -1241,6 +1576,9 @@ module.exports = {
     listPurchases,
     registerPurchase,
     createManualAdjustment,
+    getRoomInventory,
+    transferItemToRoom,
+    adjustRoomInventory,
     getAlerts,
     resolveAlert,
     getStockDashboard,

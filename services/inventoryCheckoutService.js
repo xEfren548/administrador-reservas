@@ -175,6 +175,10 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null,
             });
             continue;
         }
+        
+            if (item.itemType !== 'directo') {
+                continue;
+            }
 
         const requiredQty = Number(line.quantityPerNight || 0) * Number(line.useFactor || 1) * nights;
         if (requiredQty <= 0) {
@@ -263,6 +267,7 @@ const processSingleEventCheckoutConsumption = async (event, systemUserId = null,
             warehouse: freshItem.warehouse,
             cabin: freshItem.cabin,
             movementType: 'checkout_exit',
+                balanceScope: 'warehouse',
             quantity: requiredQty,
             unitCost: Number(freshItem.lastPurchaseUnitCost || 0),
             totalCost: Number(freshItem.lastPurchaseUnitCost || 0) * requiredQty,

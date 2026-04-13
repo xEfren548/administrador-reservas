@@ -19,8 +19,13 @@ const inventoryMovementSchema = new mongoose.Schema({
     },
     movementType: {
         type: String,
-        enum: ['purchase_entry', 'checkout_exit', 'manual_adjustment_in', 'manual_adjustment_out', 'merma'],
+        enum: ['purchase_entry', 'checkout_exit', 'manual_adjustment_in', 'manual_adjustment_out', 'merma', 'transfer_in', 'transfer_out'],
         required: true
+    },
+    balanceScope: {
+        type: String,
+        enum: ['warehouse', 'room'],
+        default: 'warehouse'
     },
     quantity: {
         type: Number,
@@ -61,6 +66,11 @@ const inventoryMovementSchema = new mongoose.Schema({
         default: undefined,
         trim: true
     },
+    operationKey: {
+        type: String,
+        default: '',
+        trim: true
+    },
     performedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Usuario',
@@ -72,7 +82,9 @@ const inventoryMovementSchema = new mongoose.Schema({
 
 inventoryMovementSchema.index({ item: 1, createdAt: -1 });
 inventoryMovementSchema.index({ warehouse: 1, createdAt: -1 });
+inventoryMovementSchema.index({ cabin: 1, balanceScope: 1, createdAt: -1 });
 inventoryMovementSchema.index({ event: 1, movementType: 1 });
+inventoryMovementSchema.index({ operationKey: 1, createdAt: -1 });
 inventoryMovementSchema.index(
     { idempotencyKey: 1 },
     {

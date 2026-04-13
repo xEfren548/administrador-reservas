@@ -55,6 +55,9 @@
                 <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="warehouses">
                     <i class="fas fa-warehouse me-1"></i> Bodegas
                 </button>
+                <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="room-inventory">
+                    <i class="fas fa-bed me-1"></i> Inventario por Habitacion
+                </button>
                 <button class="inventory-tab-button whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300" data-tab="bom">
                     <i class="fas fa-list-check me-1"></i> BOM
                 </button>
@@ -158,6 +161,85 @@
                     <p class="text-xs text-sky-700 mb-0">Cada habitacion solo puede pertenecer a una bodega activa. La bodega habilita el consumo automatico en checkout cuando tambien existe una BOM vigente.</p>
                 </div>
                 <div id="warehouses-list" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <div id="inventory-tab-room-inventory" class="inventory-tab-content hidden">
+            <div class="bg-white rounded-lg p-6 shadow-xl">
+                <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-5">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-1">Inventario Manual por Habitacion</h3>
+                        <p class="text-sm text-gray-500 mb-0">Este flujo aplica solo a items indirectos y no consumibles. El checkout automatico sigue descontando solo items directos desde la bodega.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        {{#if canAdjustInventory}}
+                        <button id="btn-open-room-transfer" class="btn btn-primary btn-sm">
+                            <i class="fas fa-right-left me-1"></i> Transferir a Habitacion
+                        </button>
+                        <button id="btn-open-room-adjustment" class="btn btn-outline-dark btn-sm">
+                            <i class="fas fa-screwdriver-wrench me-1"></i> Ajustar Habitacion
+                        </button>
+                        {{/if}}
+                        <button id="btn-refresh-room-inventory" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-rotate me-1"></i>Actualizar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-[280px,1fr] gap-5">
+                    <div class="space-y-4">
+                        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                            <label class="text-sm font-medium text-gray-700 mb-1">Habitacion</label>
+                            <select id="room-inventory-room-select" class="form-select mb-3">
+                                <option value="">Selecciona habitacion</option>
+                            </select>
+                            <label class="text-sm font-medium text-gray-700 mb-1">Tipo de item</label>
+                            <select id="room-inventory-type-filter" class="form-select">
+                                <option value="all">Todos</option>
+                                <option value="indirecto">Indirecto</option>
+                                <option value="no_consumible">No consumible</option>
+                            </select>
+                        </div>
+
+                        <div class="border border-sky-200 bg-sky-50 rounded-xl p-4">
+                            <p class="text-sm font-semibold text-sky-800 mb-1">Como funciona</p>
+                            <p class="text-xs text-sky-700 mb-1">1. El item nace y se compra en la bodega.</p>
+                            <p class="text-xs text-sky-700 mb-1">2. Se transfiere manualmente a una habitacion de esa misma bodega.</p>
+                            <p class="text-xs text-sky-700 mb-0">3. La habitacion puede ajustarse manualmente sin tocar la BOM.</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div id="room-inventory-loading" class="hidden room-inventory-loading mb-4">
+                            <div class="room-inventory-loading__box">
+                                <div class="animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-teal-500"></div>
+                                <p class="text-sm font-medium text-gray-700 mb-0">Cargando inventario de la habitacion...</p>
+                            </div>
+                        </div>
+                        <div id="room-inventory-summary" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4"></div>
+                        <div class="overflow-x-auto">
+                            <table class="table table-sm table-striped align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>No. parte</th>
+                                        <th>Tipo</th>
+                                        <th>Unidad</th>
+                                        <th>Stock Bodega</th>
+                                        <th>Stock Habitacion</th>
+                                        <th>Ult. actualizacion</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="room-inventory-table-body">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-gray-500">Selecciona una habitacion para consultar su inventario.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -534,6 +616,78 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalRoomTransfer" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transferir Stock a Habitacion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-room-transfer">
+                <div class="modal-body space-y-3">
+                    <div>
+                        <label class="text-sm font-medium text-gray-700 mb-1">Habitacion</label>
+                        <select class="form-select" name="cabinId" id="room-transfer-room-select" required>
+                            <option value="">Selecciona habitacion</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-700 mb-1">Item de bodega</label>
+                        <select class="form-select" name="itemId" id="room-transfer-item-select" required>
+                            <option value="">Selecciona item</option>
+                        </select>
+                        <p id="room-transfer-stock-hint" class="text-xs text-gray-500 mt-1 mb-0">Selecciona un item para ver el stock disponible en bodega.</p>
+                    </div>
+                    <input type="number" min="0.01" step="0.01" class="form-control" name="quantity" placeholder="Cantidad a transferir" required>
+                    <textarea class="form-control" name="note" placeholder="Nota opcional"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Transferir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalRoomAdjustment" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajustar Inventario de Habitacion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-room-adjustment">
+                <div class="modal-body space-y-3">
+                    <div>
+                        <label class="text-sm font-medium text-gray-700 mb-1">Habitacion</label>
+                        <select class="form-select" name="cabinId" id="room-adjustment-room-select" required>
+                            <option value="">Selecciona habitacion</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-700 mb-1">Item en habitacion</label>
+                        <select class="form-select" name="itemId" id="room-adjustment-item-select" required>
+                            <option value="">Selecciona item</option>
+                        </select>
+                        <p id="room-adjustment-stock-hint" class="text-xs text-gray-500 mt-1 mb-0">Selecciona un item para ver el stock actual en habitacion.</p>
+                    </div>
+                    <select class="form-select" name="direction" required>
+                        <option value="in">Entrada manual</option>
+                        <option value="out">Salida manual</option>
+                    </select>
+                    <input type="number" min="0.01" step="0.01" class="form-control" name="quantity" placeholder="Cantidad" required>
+                    <textarea class="form-control" name="reason" placeholder="Motivo del ajuste" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-dark">Aplicar ajuste</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <style>
     .inventory-tab-content.active {
         display: block;
@@ -719,6 +873,24 @@
         text-align: center;
         color: #64748B;
         background: linear-gradient(180deg, rgba(248,250,252,0.9), rgba(255,255,255,1));
+    }
+    .room-inventory-loading {
+        display: flex;
+        justify-content: center;
+    }
+    .room-inventory-loading.hidden {
+        display: none !important;
+    }
+    .room-inventory-loading__box {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        border: 1px solid #CCFBF1;
+        border-radius: 0.9rem;
+        background: linear-gradient(135deg, rgba(240,253,250,0.96), rgba(255,255,255,0.98));
+        padding: 0.9rem 1rem;
     }
     @media (max-width: 768px) {
         .bom-modal-grid {

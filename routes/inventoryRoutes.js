@@ -70,6 +70,22 @@ router.post(
     inventoryController.createManualAdjustment
 );
 
+router.get('/room-inventory/:cabinId', requirePermissionOrMasterAdmin('VIEW_INVENTORY'), inventoryController.getRoomInventory);
+router.post(
+    '/room-inventory/transfer',
+    requirePermissionOrMasterAdmin('ADJUST_INVENTORY'),
+    inventoryController.roomInventoryTransferValidators,
+    validationRequest,
+    inventoryController.transferItemToRoom
+);
+router.post(
+    '/room-inventory/adjustments',
+    requirePermissionOrMasterAdmin('ADJUST_INVENTORY'),
+    inventoryController.roomInventoryAdjustmentValidators,
+    validationRequest,
+    inventoryController.adjustRoomInventory
+);
+
 // Alerts and dashboard
 router.get('/alerts', requirePermissionOrMasterAdmin('VIEW_INVENTORY'), inventoryController.getAlerts);
 router.put('/alerts/:id/resolve', requirePermissionOrMasterAdmin('MANAGE_INVENTORY'), inventoryController.resolveAlert);
