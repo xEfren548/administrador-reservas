@@ -190,9 +190,14 @@
                     <div class="space-y-4">
                         <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
                             <label class="text-sm font-medium text-gray-700 mb-1">Habitacion</label>
-                            <select id="room-inventory-room-select" class="form-select mb-3">
-                                <option value="">Selecciona habitacion</option>
-                            </select>
+                            <div class="room-search-picker mb-3">
+                                <input type="hidden" id="room-inventory-room-select">
+                                <div class="room-search-picker__input-wrap">
+                                    <input id="room-inventory-room-search" type="text" class="form-control room-search-picker__input" placeholder="Escribe para buscar habitacion..." autocomplete="off">
+                                    <button type="button" id="room-inventory-room-clear" class="room-search-picker__clear hidden" aria-label="Limpiar busqueda de habitacion">&times;</button>
+                                </div>
+                                <div id="room-inventory-room-results" class="room-search-picker__results hidden"></div>
+                            </div>
                             <label class="text-sm font-medium text-gray-700 mb-1">Tipo de item</label>
                             <select id="room-inventory-type-filter" class="form-select">
                                 <option value="all">Todos</option>
@@ -627,9 +632,14 @@
                 <div class="modal-body space-y-3">
                     <div>
                         <label class="text-sm font-medium text-gray-700 mb-1">Habitacion</label>
-                        <select class="form-select" name="cabinId" id="room-transfer-room-select" required>
-                            <option value="">Selecciona habitacion</option>
-                        </select>
+                        <div class="room-search-picker">
+                            <input type="hidden" name="cabinId" id="room-transfer-room-select" required>
+                            <div class="room-search-picker__input-wrap">
+                                <input id="room-transfer-room-search" type="text" class="form-control room-search-picker__input" placeholder="Escribe para buscar habitacion..." autocomplete="off">
+                                <button type="button" id="room-transfer-room-clear" class="room-search-picker__clear hidden" aria-label="Limpiar busqueda de habitacion">&times;</button>
+                            </div>
+                            <div id="room-transfer-room-results" class="room-search-picker__results hidden"></div>
+                        </div>
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-700 mb-1">Item de bodega</label>
@@ -661,9 +671,14 @@
                 <div class="modal-body space-y-3">
                     <div>
                         <label class="text-sm font-medium text-gray-700 mb-1">Habitacion</label>
-                        <select class="form-select" name="cabinId" id="room-adjustment-room-select" required>
-                            <option value="">Selecciona habitacion</option>
-                        </select>
+                        <div class="room-search-picker">
+                            <input type="hidden" name="cabinId" id="room-adjustment-room-select" required>
+                            <div class="room-search-picker__input-wrap">
+                                <input id="room-adjustment-room-search" type="text" class="form-control room-search-picker__input" placeholder="Escribe para buscar habitacion..." autocomplete="off">
+                                <button type="button" id="room-adjustment-room-clear" class="room-search-picker__clear hidden" aria-label="Limpiar busqueda de habitacion">&times;</button>
+                            </div>
+                            <div id="room-adjustment-room-results" class="room-search-picker__results hidden"></div>
+                        </div>
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-700 mb-1">Item en habitacion</label>
@@ -891,6 +906,78 @@
         border-radius: 0.9rem;
         background: linear-gradient(135deg, rgba(240,253,250,0.96), rgba(255,255,255,0.98));
         padding: 0.9rem 1rem;
+    }
+    .room-search-picker {
+        position: relative;
+    }
+    .room-search-picker__input-wrap {
+        position: relative;
+    }
+    .room-search-picker__input {
+        padding-right: 2.25rem;
+    }
+    .room-search-picker__clear {
+        position: absolute;
+        top: 50%;
+        right: 0.55rem;
+        transform: translateY(-50%);
+        width: 1.6rem;
+        height: 1.6rem;
+        border: 0;
+        border-radius: 999px;
+        background: #E5E7EB;
+        color: #374151;
+        font-size: 1.05rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    .room-search-picker__clear:hover {
+        background: #D1D5DB;
+    }
+    .room-search-picker__clear.hidden {
+        display: none !important;
+    }
+    .room-search-picker__results {
+        position: absolute;
+        top: calc(100% + 0.35rem);
+        left: 0;
+        right: 0;
+        z-index: 30;
+        max-height: 240px;
+        overflow-y: auto;
+        border: 1px solid #E5E7EB;
+        border-radius: 0.75rem;
+        background: #FFFFFF;
+        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
+        padding: 0.35rem;
+    }
+    .room-search-picker__results.hidden {
+        display: none !important;
+    }
+    .room-search-picker__option {
+        width: 100%;
+        text-align: left;
+        border: 0;
+        background: transparent;
+        border-radius: 0.6rem;
+        padding: 0.65rem 0.75rem;
+        color: #111827;
+        font-size: 0.92rem;
+    }
+    .room-search-picker__option:hover,
+    .room-search-picker__option:focus {
+        background: #F0FDFA;
+        color: #0F766E;
+        outline: none;
+    }
+    .room-search-picker__empty {
+        padding: 0.75rem;
+        font-size: 0.85rem;
+        color: #6B7280;
+        text-align: center;
     }
     @media (max-width: 768px) {
         .bom-modal-grid {

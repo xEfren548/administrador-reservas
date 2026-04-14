@@ -39,6 +39,9 @@
         movementsTableBody: document.getElementById('movements-table-body'),
         warehousesList: document.getElementById('warehouses-list'),
         roomInventoryRoomSelect: document.getElementById('room-inventory-room-select'),
+        roomInventoryRoomSearch: document.getElementById('room-inventory-room-search'),
+        roomInventoryRoomClear: document.getElementById('room-inventory-room-clear'),
+        roomInventoryRoomResults: document.getElementById('room-inventory-room-results'),
         roomInventoryTypeFilter: document.getElementById('room-inventory-type-filter'),
         roomInventoryLoading: document.getElementById('room-inventory-loading'),
         roomInventorySummary: document.getElementById('room-inventory-summary'),
@@ -90,9 +93,15 @@
         itemWarehouseSelect: document.getElementById('item-warehouse-select'),
         purchaseWarehouseSelect: document.getElementById('purchase-warehouse-select'),
         roomTransferRoomSelect: document.getElementById('room-transfer-room-select'),
+        roomTransferRoomSearch: document.getElementById('room-transfer-room-search'),
+        roomTransferRoomClear: document.getElementById('room-transfer-room-clear'),
+        roomTransferRoomResults: document.getElementById('room-transfer-room-results'),
         roomTransferItemSelect: document.getElementById('room-transfer-item-select'),
         roomTransferStockHint: document.getElementById('room-transfer-stock-hint'),
         roomAdjustmentRoomSelect: document.getElementById('room-adjustment-room-select'),
+        roomAdjustmentRoomSearch: document.getElementById('room-adjustment-room-search'),
+        roomAdjustmentRoomClear: document.getElementById('room-adjustment-room-clear'),
+        roomAdjustmentRoomResults: document.getElementById('room-adjustment-room-results'),
         roomAdjustmentItemSelect: document.getElementById('room-adjustment-item-select'),
         roomAdjustmentStockHint: document.getElementById('room-adjustment-stock-hint'),
         warehouseRoomFilter: document.getElementById('warehouse-room-filter'),
@@ -431,20 +440,148 @@
         return warehouse?.name || 'Bodega';
     };
 
+    const roomPickerMap = {
+        inventory: {
+            hiddenInput: () => el.roomInventoryRoomSelect,
+            searchInput: () => el.roomInventoryRoomSearch,
+            clearButton: () => el.roomInventoryRoomClear,
+            results: () => el.roomInventoryRoomResults
+        },
+        transfer: {
+            hiddenInput: () => el.roomTransferRoomSelect,
+            searchInput: () => el.roomTransferRoomSearch,
+            clearButton: () => el.roomTransferRoomClear,
+            results: () => el.roomTransferRoomResults
+        },
+        adjustment: {
+            hiddenInput: () => el.roomAdjustmentRoomSelect,
+            searchInput: () => el.roomAdjustmentRoomSearch,
+            clearButton: () => el.roomAdjustmentRoomClear,
+            results: () => el.roomAdjustmentRoomResults
+        }
+    };
+
     const getSelectedRoomInventoryRoomId = () => String(el.roomInventoryRoomSelect?.value || state.selectedRoomInventoryId || '');
 
-    const populateRoomSelect = (select, selectedValue = '') => {
-        if (!select) return;
-        select.innerHTML = [
-            '<option value="">Selecciona habitacion</option>',
-            ...state.rooms.map((room) => `<option value="${room._id}" ${String(selectedValue) === String(room._id) ? 'selected' : ''}>${escapeHtml(roomDisplayName(room))}</option>`)
-        ].join('');
+    const getRoomPickerConfig = (pickerKey) => roomPickerMap[pickerKey] ? {
+        hiddenInput: roomPickerMap[pickerKey].hiddenInput(),
+        searchInput: roomPickerMap[pickerKey].searchInput(),
+        clearButton: roomPickerMap[pickerKey].clearButton(),
+        results: roomPickerMap[pickerKey].results()
+    } : null;
+
+    const syncRoomPickerClearButton = (pickerKey) => {
+        const config = getRoomPickerConfig(pickerKey);
+        if (!config?.clearButton) return;
+        const hasValue = Boolean(String(config.searchInput?.value || '').trim()) || Boolean(String(config.hiddenInput?.value || '').trim());
+        config.clearButton.classList.toggle('hidden', !hasValue);
+    };
+
+    const findRoomById = (roomId) => state.rooms.find((room) => String(room._id) === String(roomId || '')) || null;
+
+    const hideRoomPickerResults = (pickerKey) => {
+        const config = getRoomPickerConfig(pickerKey);
+        config?.results?.classList.add('hidden');
+    };
+
+    const renderRoomPickerResults = (pickerKey, query = '') => {
+        const config = getRoomPickerConfig(pickerKey);
+        if (!config?.results) return;
+
+        const normalizedQuery = normalizeSearchText(query);
+        const matches = state.rooms.filter((room) => {
+            if (!normalizedQuery) return true;
+            return normalizeSearchText(roomDisplayName(room)).includes(normalizedQuery);
+        }).slice(0, 40);
+
+        if (matches.length === 0) {
+            config.results.innerHTML = '<div class="room-search-picker__empty">No hay habitaciones que coincidan.</div>';
+            config.results.classList.remove('hidden');
+            return;
+        }
+
+        config.results.innerHTML = matches.map((room) => `
+            <button type="button" class="room-search-picker__option" data-room-picker-option="${pickerKey}" data-room-id="${room._id}">${escapeHtml(roomDisplayName(room))}</button>
+        `).join('');
+
+        config.results.querySelectorAll(`[data-room-picker-option="${pickerKey}"]`).forEach((button) => {
+            button.addEventListener('mousedown', (event) => {
+                event.preventDefault();
+                setRoomPickerSelection(pickerKey, button.getAttribute('data-room-id'), { triggerChange: true });
+            });
+        });
+
+        config.results.classList.remove('hidden');
+    };
+
+    const setRoomPickerSelection = (pickerKey, roomId = '', { triggerChange = false } = {}) => {
+        const config = getRoomPickerConfig(pickerKey);
+        if (!config?.hiddenInput || !config?.searchInput) return;
+
+        const room = findRoomById(roomId);
+        config.hiddenInput.value = room?._id || '';
+        config.searchInput.value = room ? roomDisplayName(room) : '';
+        hideRoomPickerResults(pickerKey);
+        syncRoomPickerClearButton(pickerKey);
+
+        if (pickerKey === 'inventory') {
+            state.selectedRoomInventoryId = config.hiddenInput.value || '';
+        }
+
+        if (triggerChange) {
+            config.hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    };
+
+    const bindRoomPicker = (pickerKey) => {
+        const config = getRoomPickerConfig(pickerKey);
+        if (!config?.searchInput || !config?.hiddenInput || !config?.results) return;
+
+        config.searchInput.addEventListener('focus', () => {
+            renderRoomPickerResults(pickerKey, config.searchInput.value || '');
+        });
+
+        config.searchInput.addEventListener('input', () => {
+            const currentRoom = findRoomById(config.hiddenInput.value);
+            if (!currentRoom || roomDisplayName(currentRoom) !== config.searchInput.value) {
+                config.hiddenInput.value = '';
+            }
+            syncRoomPickerClearButton(pickerKey);
+            renderRoomPickerResults(pickerKey, config.searchInput.value || '');
+        });
+
+        config.searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                hideRoomPickerResults(pickerKey);
+            }
+        });
+
+        config.searchInput.addEventListener('blur', () => {
+            window.setTimeout(() => {
+                const exactMatch = state.rooms.find((room) => normalizeSearchText(roomDisplayName(room)) === normalizeSearchText(config.searchInput.value || ''));
+                if (exactMatch && !config.hiddenInput.value) {
+                    setRoomPickerSelection(pickerKey, exactMatch._id, { triggerChange: true });
+                    return;
+                }
+
+                if (!config.hiddenInput.value) {
+                    config.searchInput.value = '';
+                }
+
+                syncRoomPickerClearButton(pickerKey);
+                hideRoomPickerResults(pickerKey);
+            }, 150);
+        });
+
+        config.clearButton?.addEventListener('click', () => {
+            setRoomPickerSelection(pickerKey, '', { triggerChange: true });
+        });
     };
 
     const setRoomInventoryLoading = (loading) => {
         el.roomInventoryLoading?.classList.toggle('hidden', !loading);
-        if (el.roomInventoryRoomSelect) {
-            el.roomInventoryRoomSelect.disabled = loading;
+        if (el.roomInventoryRoomSearch) {
+            el.roomInventoryRoomSearch.disabled = loading;
         }
         if (el.roomInventoryTypeFilter) {
             el.roomInventoryTypeFilter.disabled = loading;
@@ -571,9 +708,9 @@
 
     const populateRoomInventorySelectors = () => {
         const selectedRoomId = getSelectedRoomInventoryRoomId();
-        populateRoomSelect(el.roomInventoryRoomSelect, selectedRoomId);
-        populateRoomSelect(el.roomTransferRoomSelect, el.roomTransferRoomSelect?.value || selectedRoomId);
-        populateRoomSelect(el.roomAdjustmentRoomSelect, el.roomAdjustmentRoomSelect?.value || selectedRoomId);
+        setRoomPickerSelection('inventory', selectedRoomId);
+        setRoomPickerSelection('transfer', el.roomTransferRoomSelect?.value || selectedRoomId);
+        setRoomPickerSelection('adjustment', el.roomAdjustmentRoomSelect?.value || selectedRoomId);
         state.selectedRoomInventoryId = String(el.roomInventoryRoomSelect?.value || selectedRoomId || '');
     };
 
@@ -666,7 +803,7 @@
             el.roomInventoryTableBody.querySelectorAll('[data-room-adjust-item]').forEach((button) => {
                 button.addEventListener('click', () => {
                     if (!el.roomAdjustmentRoomSelect) return;
-                    el.roomAdjustmentRoomSelect.value = roomId;
+                    setRoomPickerSelection('adjustment', roomId);
                     populateRoomAdjustmentItemSelect(button.getAttribute('data-room-adjust-item'));
                     updateRoomAdjustmentHint();
                     showModal(el.modalRoomAdjustment);
@@ -1149,14 +1286,14 @@
 
     const resetRoomTransferFormMode = () => {
         el.formRoomTransfer?.reset();
-        populateRoomSelect(el.roomTransferRoomSelect, getSelectedRoomInventoryRoomId());
+        setRoomPickerSelection('transfer', getSelectedRoomInventoryRoomId());
         populateRoomTransferItemSelect();
         updateRoomTransferHint();
     };
 
     const resetRoomAdjustmentFormMode = () => {
         el.formRoomAdjustment?.reset();
-        populateRoomSelect(el.roomAdjustmentRoomSelect, getSelectedRoomInventoryRoomId());
+        setRoomPickerSelection('adjustment', getSelectedRoomInventoryRoomId());
         populateRoomAdjustmentItemSelect();
         updateRoomAdjustmentHint();
     };
@@ -1583,9 +1720,6 @@
         }
         const rooms = await response.json();
         state.rooms = sortAlphabetically(rooms, (room) => roomDisplayName(room));
-        if (!state.selectedRoomInventoryId && state.rooms[0]?._id) {
-            state.selectedRoomInventoryId = state.rooms[0]._id;
-        }
         renderRoomChecklist(el.warehouseRoomChecklist, 'warehouse-room-checkbox', 'Se asignara a la bodega. Una habitacion solo puede pertenecer a una bodega activa');
         renderRoomChecklist(el.bomRoomChecklist, 'bom-room-checkbox', 'Se creara una regla individual para esta habitacion');
         populateRoomInventorySelectors();
@@ -1857,6 +1991,9 @@
     const setupActions = () => {
         setupChecklistFilter(el.warehouseRoomFilter, el.warehouseRoomChecklist);
         setupChecklistFilter(el.bomRoomFilter, el.bomRoomChecklist);
+        bindRoomPicker('inventory');
+        bindRoomPicker('transfer');
+        bindRoomPicker('adjustment');
         el.itemUnitSelect?.addEventListener('change', toggleItemUnitCustom);
         el.roomInventoryRoomSelect?.addEventListener('change', async () => {
             state.selectedRoomInventoryId = el.roomInventoryRoomSelect.value || '';
@@ -1870,6 +2007,7 @@
             const roomId = el.roomTransferRoomSelect.value || '';
             if (roomId) {
                 state.selectedRoomInventoryId = roomId;
+                setRoomPickerSelection('inventory', roomId);
                 await renderRoomInventory();
             }
             populateRoomTransferItemSelect();
@@ -1880,6 +2018,7 @@
             const roomId = el.roomAdjustmentRoomSelect.value || '';
             if (roomId) {
                 state.selectedRoomInventoryId = roomId;
+                setRoomPickerSelection('inventory', roomId);
                 await renderRoomInventory();
             }
             populateRoomAdjustmentItemSelect();
