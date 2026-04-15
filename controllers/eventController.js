@@ -34,6 +34,59 @@ const NotFoundError = require('../common/error/not-found-error');
 const SendMessages = require('../common/tasks/send-messages');
 const ensureAuthenticated = require('../common/middlewares/authMiddleware');
 
+let cotizadorIndexesPromise = null;
+
+async function ensureCotizadorIndexes() {
+    if (cotizadorIndexesPromise) {
+        return cotizadorIndexesPromise;
+    }
+
+    cotizadorIndexesPromise = (async () => {
+        try {
+            await Promise.all([
+                Habitacion.collection.createIndexes([
+                    {
+                        key: { isActive: 1, 'propertyDetails.accomodationType': 1 },
+                        name: 'cotizador_habitacion_tipo_activa_idx'
+                    },
+                    {
+                        key: { isActive: 1, 'location.population': 1 },
+                        name: 'cotizador_habitacion_poblacion_activa_idx'
+                    }
+                ]),
+                BloqueoFechas.collection.createIndexes([
+                    {
+                        key: { habitacionId: 1, type: 1, date: 1 },
+                        name: 'cotizador_bloqueo_habitacion_tipo_fecha_idx'
+                    }
+                ]),
+                Documento.collection.createIndexes([
+                    {
+                        key: { resourceId: 1, arrivalDate: 1, departureDate: 1 },
+                        name: 'cotizador_reserva_recurso_llegada_salida_idx'
+                    }
+                ]),
+                PreciosEspeciales.collection.createIndexes([
+                    {
+                        key: { habitacionId: 1, fecha: 1, noPersonas: 1 },
+                        name: 'cotizador_precios_especiales_habitacion_fecha_personas_idx'
+                    }
+                ]),
+                PrecioBaseXDia.collection.createIndexes([
+                    {
+                        key: { habitacionId: 1, fecha: 1 },
+                        name: 'cotizador_precio_base_habitacion_fecha_idx'
+                    }
+                ])
+            ]);
+        } catch (error) {
+            console.error('No se pudieron asegurar los indices del cotizador:', error.message);
+        }
+    })();
+
+    return cotizadorIndexesPromise;
+}
+
 function getUtcDayBounds(dateValue) {
     const date = new Date(dateValue);
     const start = new Date(Date.UTC(
@@ -3258,9 +3311,22 @@ function groupLocationsByMunicipality(locations) {
     return groupedByMunicipality;
 }
 
+function buildCotizadorPriceKey(habitacionId, fecha, noPersonas = null) {
+    const fechaKey = fecha instanceof Date ? fecha.toISOString() : new Date(fecha).toISOString();
+    const habitacionKey = habitacionId?.toString?.() || String(habitacionId);
+
+    if (noPersonas === null || noPersonas === undefined) {
+        return `${habitacionKey}|${fechaKey}`;
+    }
+
+    return `${habitacionKey}|${fechaKey}|${noPersonas}`;
+}
+
 // Cotizador WEB 
 async function cotizadorChaletsyPrecios(req, res) {
     try {
+        await ensureCotizadorIndexes();
+
         const { categorias, fechaLlegada, fechaSalida, huespedes, soloDisponibles, isForClient, noVendedor, isInvestorSellerMode, includeSellerCommission } = req.body;
         const huespedesNum = Number(huespedes);
         const shouldFilterByOccupancy = Number.isFinite(huespedesNum) && huespedesNum > 0;
@@ -3390,8 +3456,28 @@ async function cotizadorChaletsyPrecios(req, res) {
         }
 
 
-        const chalets = await Habitacion.find(filtro).lean();
-        const chaletIds = chalets.map(chalet => chalet._id);
+        const chalets = await Habitacion.find(filtro)
+            .select({
+                'propertyDetails.name': 1,
+                'propertyDetails.minOccupancy': 1,
+                'propertyDetails.maxOccupancy': 1,
+                'propertyDetails.accomodationType': 1,
+                'others.basePrice': 1,
+                'others.basePrice2nights': 1,
+                'others.baseCost': 1,
+                'others.baseCost2nights': 1,
+                images: 1,
+                accommodationFeatures: 1,
+                accomodationDescription: 1,
+                'additionalInfo.nBeds': 1,
+                'additionalInfo.nRestrooms': 1,
+                'location.latitude': 1,
+                'location.longitude': 1,
+                isGrouped: 1,
+                roomGroup: 1,
+                roomNumber: 1,
+            })
+            .lean();
         if (!chalets) {
             throw new Error('No se encontraron habitaciones');
         }
@@ -3564,6 +3650,60 @@ async function cotizadorChaletsyPrecios(req, res) {
             throw new Error("No se encontró al usuario");
         }
 
+        const pricingGuestCount = Number.isFinite(huespedesNum) ? huespedesNum : huespedes;
+        const mappedChaletIds = mappedChalets.map((chalet) => chalet.id);
+        const precioRangeStart = new Date(startDate);
+        const precioRangeEnd = new Date(endDate);
+        precioRangeStart.setUTCHours(6, 0, 0, 0);
+        precioRangeEnd.setUTCHours(6, 0, 0, 0);
+
+        const [preciosEspecialesEnRango, preciosBaseEnRango] = await Promise.all([
+            PreciosEspeciales.find(
+                {
+                    habitacionId: { $in: mappedChaletIds },
+                    fecha: { $gte: precioRangeStart, $lte: precioRangeEnd },
+                    noPersonas: pricingGuestCount
+                },
+                {
+                    habitacionId: 1,
+                    fecha: 1,
+                    noPersonas: 1,
+                    precio_modificado: 1,
+                    precio_base_2noches: 1,
+                    costo_base: 1,
+                    costo_base_2noches: 1
+                }
+            ).lean(),
+            PrecioBaseXDia.find(
+                {
+                    habitacionId: { $in: mappedChaletIds },
+                    fecha: { $gte: precioRangeStart, $lte: precioRangeEnd }
+                },
+                {
+                    habitacionId: 1,
+                    fecha: 1,
+                    precio_modificado: 1,
+                    precio_base_2noches: 1,
+                    costo_base: 1,
+                    costo_base_2noches: 1
+                }
+            ).lean()
+        ]);
+
+        const preciosEspecialesMap = new Map(
+            preciosEspecialesEnRango.map((precioEspecial) => [
+                buildCotizadorPriceKey(precioEspecial.habitacionId, precioEspecial.fecha, precioEspecial.noPersonas),
+                precioEspecial
+            ])
+        );
+
+        const preciosBaseMap = new Map(
+            preciosBaseEnRango.map((precioBase) => [
+                buildCotizadorPriceKey(precioBase.habitacionId, precioBase.fecha),
+                precioBase
+            ])
+        );
+
 
         if (startDate > endDate) {
             throw new Error("La fecha de llegada debe ser anterior a la fecha de salida");
@@ -3577,24 +3717,30 @@ async function cotizadorChaletsyPrecios(req, res) {
             //Calculando precio para:  2025-09-03T00:00:00.000Z  - Hasta:  2025-09-05T00:00:00.000Z
             while (currentDate <= endDate) {
                 currentDate.setUTCHours(6);
-                precio = await PreciosEspeciales.findOne({ fecha: currentDate, habitacionId: chalet.id, noPersonas: huespedes });
-                if (precio) {
+                const precioEspecial = preciosEspecialesMap.get(
+                    buildCotizadorPriceKey(chalet.id, currentDate, pricingGuestCount)
+                );
+
+                if (precioEspecial) {
                     if (nNights > 1) {
-                        precioTotal += precio.precio_base_2noches;
-                        costoBaseTotal += precio.costo_base_2noches;
+                        precioTotal += precioEspecial.precio_base_2noches;
+                        costoBaseTotal += precioEspecial.costo_base_2noches;
                     } else {
-                        precioTotal += precio.precio_modificado;
-                        costoBaseTotal += precio.costo_base;
+                        precioTotal += precioEspecial.precio_modificado;
+                        costoBaseTotal += precioEspecial.costo_base;
                     }
                 } else {
-                    precio = await PrecioBaseXDia.findOne({ fecha: currentDate, habitacionId: chalet.id });
-                    if (precio) {
+                    const precioBase = preciosBaseMap.get(
+                        buildCotizadorPriceKey(chalet.id, currentDate)
+                    );
+
+                    if (precioBase) {
                         if (nNights > 1) {
-                            precioTotal += precio.precio_base_2noches;
-                            costoBaseTotal += precio.costo_base_2noches;
+                            precioTotal += precioBase.precio_base_2noches;
+                            costoBaseTotal += precioBase.costo_base_2noches;
                         } else {
-                            precioTotal += precio.precio_modificado;
-                            costoBaseTotal += precio.costo_base;
+                            precioTotal += precioBase.precio_modificado;
+                            costoBaseTotal += precioBase.costo_base;
                         }
                     } else {
                         if (nNights > 1) {
