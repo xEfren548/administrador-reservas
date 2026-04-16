@@ -4081,6 +4081,9 @@ async function getIncomingReservations(req, res) {
         // ---------- Determinar universo permitido de resourceIds según privilegio ----------
         // allowedResourceIds: null => sin restricción (Administrador)
         let allowedResourceIds = null; // Set<string>
+        let investorOwnedResourceIds = null; // Set<string>
+        let investorAssignedOnlyResourceIds = null; // Set<string>
+        let investorCreatorId = null;
 
         if (privilege === "Vendedor") {
             const asObjectIds = assignedChalets.map(id =>
@@ -4126,13 +4129,36 @@ async function getIncomingReservations(req, res) {
             allowedResourceIds = null; // sin restricción
         } else if (privilege === "Inversionistas") {
             const investorId = sessionUserId;
+            investorCreatorId = ObjectId.isValid(investorId)
+                ? new ObjectId(investorId)
+                : investorId;
+
             const investedChalets = await Habitacion.find(
                 { "others.investors.investor": investorId },
                 { _id: 1 }
             ).lean();
-            allowedResourceIds = new Set(investedChalets.map(c => c._id.toString()));
+
+            investorOwnedResourceIds = new Set(
+                investedChalets.map(c => c._id.toString())
+            );
+
+            const normalizedAssignedChalets = assignedChalets.map(id =>
+                ObjectId.isValid(id) ? new ObjectId(id).toString() : id.toString()
+            );
+
+            investorAssignedOnlyResourceIds = new Set(
+                normalizedAssignedChalets.filter(id => !investorOwnedResourceIds.has(id))
+            );
+
+            allowedResourceIds = new Set([
+                ...investorOwnedResourceIds,
+                ...investorAssignedOnlyResourceIds
+            ]);
+
+            endDate.setDate(endDate.getDate() + 60); // 60 días adelante para inversionistas
         }
 
+        console.log("allowedResourceIds:", allowedResourceIds ? Array.from(allowedResourceIds) : "sin restricción");
         // ---------- Filtro base para reservas ----------
         const filtro = {
             status: { $nin: ["no-show", "cancelled"] },
@@ -4142,18 +4168,60 @@ async function getIncomingReservations(req, res) {
         // Aplicar chaletId si se solicitó uno específico
         if (chaletId) {
             const targetId = ObjectId.isValid(chaletId) ? new ObjectId(chaletId) : chaletId;
+            const targetIdString = targetId.toString();
 
             // Si hay restricción por privilegio, validar que pertenezca al universo permitido
             if (allowedResourceIds instanceof Set) {
-                if (!allowedResourceIds.has(targetId.toString())) {
+                if (!allowedResourceIds.has(targetIdString)) {
                     return res.json([]); // fuera de alcance
                 }
             }
             filtro.resourceId = targetId;
 
+            if (
+                privilege === "Inversionistas" &&
+                investorAssignedOnlyResourceIds instanceof Set &&
+                investorAssignedOnlyResourceIds.has(targetIdString)
+            ) {
+                filtro.createdBy = investorCreatorId;
+            }
+
         } else {
             // Sin chaletId: si hay restricción (Vendedor / Dueño), limitar al universo permitido
-            if (allowedResourceIds instanceof Set) {
+            if (privilege === "Inversionistas") {
+                if (allowedResourceIds instanceof Set && allowedResourceIds.size === 0) {
+                    return res.json([]);
+                }
+
+                const reservationScopeClauses = [];
+
+                if (investorOwnedResourceIds instanceof Set && investorOwnedResourceIds.size > 0) {
+                    reservationScopeClauses.push({
+                        resourceId: {
+                            $in: Array.from(investorOwnedResourceIds).map(id =>
+                                ObjectId.isValid(id) ? new ObjectId(id) : id
+                            )
+                        }
+                    });
+                }
+
+                if (investorAssignedOnlyResourceIds instanceof Set && investorAssignedOnlyResourceIds.size > 0) {
+                    reservationScopeClauses.push({
+                        resourceId: {
+                            $in: Array.from(investorAssignedOnlyResourceIds).map(id =>
+                                ObjectId.isValid(id) ? new ObjectId(id) : id
+                            )
+                        },
+                        createdBy: investorCreatorId
+                    });
+                }
+
+                if (reservationScopeClauses.length === 0) {
+                    return res.json([]);
+                }
+
+                filtro.$or = reservationScopeClauses;
+            } else if (allowedResourceIds instanceof Set) {
                 if (allowedResourceIds.size === 0) {
                     return res.json([]);
                 }
