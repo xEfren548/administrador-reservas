@@ -56,6 +56,10 @@ const swSolicitudTransaccionSchema = new Schema({
         trim: true,
         maxlength: 30
     },
+    proveedorExternoCatalogado: {
+        type: Schema.Types.ObjectId,
+        ref: 'SWProveedorExterno'
+    },
     // Para transferencias: cuenta destino (solo para solicitudes de tipo Transferencia)
     cuentaDestino: {
         type: Schema.Types.ObjectId,
@@ -213,6 +217,7 @@ swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comenta
             true,                // Omitir validaciones de acceso (solicitud ya fue validada)
             {
                 esProveedorExterno: this.esProveedorExterno,
+                proveedorExternoCatalogado: this.proveedorExternoCatalogado,
                 proveedor: this.esProveedorExterno
                     ? {
                         nombre: this.proveedorNombre,
@@ -266,6 +271,7 @@ swSolicitudTransaccionSchema.methods.aprobar = async function(usuarioId, comenta
             aprobada: true,
             aprobadaPor: usuarioId,
             fechaAprobacion: new Date(),
+            proveedorExternoCatalogado: this.proveedorExternoCatalogado,
             solicitudOriginal: this._id,
             archivosAdjuntos: this.archivosAdjuntos,
             imagenes: this.imagenes,

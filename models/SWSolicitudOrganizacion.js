@@ -54,6 +54,7 @@ async function crearTransaccionDesdeSolicitud(solicitud, usuarioId, comprobanteC
             true,
             {
                 esProveedorExterno: solicitud.esProveedorExterno,
+                proveedorExternoCatalogado: solicitud.proveedorExternoCatalogado,
                 proveedor: solicitud.esProveedorExterno
                     ? {
                         nombre: solicitud.proveedorNombre,
@@ -103,6 +104,7 @@ async function crearTransaccionDesdeSolicitud(solicitud, usuarioId, comprobanteC
             imagenes: solicitud.imagenes,
             etiquetas: solicitud.etiquetas,
             notas: solicitud.notas,
+            proveedorExternoCatalogado: solicitud.proveedorExternoCatalogado,
             esProveedorExterno: solicitud.esProveedorExterno,
             proveedor: solicitud.esProveedorExterno
                 ? {
@@ -186,6 +188,10 @@ const swSolicitudOrganizacionSchema = new Schema({
         type: String,
         trim: true,
         maxlength: 30
+    },
+    proveedorExternoCatalogado: {
+        type: Schema.Types.ObjectId,
+        ref: 'SWProveedorExterno'
     },
     cuentaDestino: {
         type: Schema.Types.ObjectId,

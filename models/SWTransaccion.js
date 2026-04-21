@@ -58,6 +58,10 @@ const swTransaccionSchema = new Schema({
             maxlength: 30
         }
     },
+    proveedorExternoCatalogado: {
+        type: Schema.Types.ObjectId,
+        ref: 'SWProveedorExterno'
+    },
     fecha: {
         type: Date,
         required: true,
@@ -415,6 +419,7 @@ swTransaccionSchema.statics.crearTransferencia = async function(cuentaOrigenId, 
             fechaAprobacion: fecha,
             cuentaDestino: cuentaDestinoId,
             esProveedorExterno: Boolean(proveedorData),
+            proveedorExternoCatalogado: options.proveedorExternoCatalogado || undefined,
             proveedor: proveedorData
         });
         
@@ -432,6 +437,7 @@ swTransaccionSchema.statics.crearTransferencia = async function(cuentaOrigenId, 
             aprobadaPor: userId,
             fechaAprobacion: fecha,
             esProveedorExterno: Boolean(proveedorData),
+            proveedorExternoCatalogado: options.proveedorExternoCatalogado || undefined,
             proveedor: proveedorData
         });
         

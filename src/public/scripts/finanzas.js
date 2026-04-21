@@ -5,6 +5,7 @@ let transacciones = [];
 let solicitudes = [];
 let solicitudesOrganizacion = [];
 let solicitudesPendientesConfirmacionDueno = [];
+let proveedoresExternosOrganizacion = [];
 let cuentaSeleccionada = null;
 let usuarios = []; // Lista de usuarios disponibles
 let participantes = []; // Lista de participantes de la cuenta actual
@@ -14,8 +15,10 @@ let vistaSolicitudesActiva = 'cuenta';
 let categoriasFinancieras = [];
 let categoriasFijas = ['Otro', 'Transferencia'];
 let categoriasEnEdicion = [];
+let proveedoresExternosGestion = [];
 
 const MEXICO_CENTRO_TIMEZONE = 'America/Mexico_City';
+const NUEVO_PROVEEDOR_EXTERNO_VALUE = '__nuevo__';
 
 const CATEGORIAS_FALLBACK = [
     'Otro',
@@ -223,6 +226,234 @@ function renderizarCategoriasEnModal() {
     });
 }
 
+function actualizarSelectOrganizacionesProveedores() {
+    const select = $('#proveedor-externo-organizacion');
+    if (!select.length) return;
+
+    const currentValue = select.val();
+    select.empty().append('<option value="">Seleccione...</option>');
+
+    organizaciones
+        .filter((organizacion) => organizacion.activa)
+        .forEach((organizacion) => {
+            select.append(`<option value="${organizacion._id}">${organizacion.nombre}</option>`);
+        });
+
+    if (currentValue && organizaciones.some((organizacion) => organizacion._id === currentValue && organizacion.activa)) {
+        select.val(currentValue);
+    } else if (organizaciones.filter((organizacion) => organizacion.activa).length === 1) {
+        select.val(organizaciones.find((organizacion) => organizacion.activa)._id);
+    }
+}
+
+function limpiarFormularioProveedorExterno() {
+    $('#proveedor-externo-id').val('');
+    $('#proveedor-externo-nombre').val('');
+    $('#proveedor-externo-beneficiario').val('');
+    $('#proveedor-externo-banco').val('');
+    $('#proveedor-externo-cuenta-clabe').val('');
+    $('#btnGuardarProveedorExterno').html('<i class="fas fa-save me-1"></i> Guardar proveedor');
+    $('#btnCancelarEdicionProveedorExterno').hide();
+}
+
+function renderizarProveedoresExternosGestion() {
+    const container = $('#lista-proveedores-externos');
+    if (!container.length) return;
+
+    container.empty();
+
+    if (!$('#proveedor-externo-organizacion').val()) {
+        container.html('<p class="text-gray-500 text-center py-3">Selecciona una organización para ver sus proveedores</p>');
+        return;
+    }
+
+    if (proveedoresExternosGestion.length === 0) {
+        container.html('<p class="text-gray-500 text-center py-3">No hay proveedores registrados para esta organización</p>');
+        return;
+    }
+
+    proveedoresExternosGestion.forEach((proveedor) => {
+        container.append(`
+            <div class="border rounded px-3 py-3 bg-gray-50">
+                <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                    <div>
+                        <div class="fw-semibold text-gray-800 mb-1">${proveedor.nombre}</div>
+                        <div class="text-gray-600 small">Beneficiario: ${proveedor.beneficiario}</div>
+                        <div class="text-gray-600 small">Banco: ${proveedor.banco}</div>
+                        <div class="text-gray-600 small">Cuenta / CLABE: ${proveedor.cuentaClabe}</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="editarProveedorExternoGestion('${proveedor._id}')">
+                            <i class="fas fa-pen me-1"></i> Editar
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarProveedorExternoGestion('${proveedor._id}')">
+                            <i class="fas fa-trash me-1"></i> Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `);
+    });
+}
+
+function editarProveedorExternoGestion(proveedorId) {
+    const proveedor = proveedoresExternosGestion.find((item) => item._id === proveedorId);
+    if (!proveedor) {
+        mostrarError('Proveedor no encontrado');
+        return;
+    }
+
+    $('#proveedor-externo-id').val(proveedor._id);
+    $('#proveedor-externo-nombre').val(proveedor.nombre || '');
+    $('#proveedor-externo-beneficiario').val(proveedor.beneficiario || '');
+    $('#proveedor-externo-banco').val(proveedor.banco || '');
+    $('#proveedor-externo-cuenta-clabe').val(proveedor.cuentaClabe || '');
+    $('#btnGuardarProveedorExterno').html('<i class="fas fa-save me-1"></i> Guardar cambios');
+    $('#btnCancelarEdicionProveedorExterno').show();
+}
+
+async function sincronizarCatalogoProveedoresConSolicitud(organizacionId) {
+    if ($('#solicitud-modo').val() === 'organizacion' && $('#solicitud-organizacion').val() === organizacionId) {
+        await cargarProveedoresExternosOrganizacion(organizacionId);
+    }
+}
+
+async function cargarProveedoresExternosGestion(organizacionId, options = {}) {
+    proveedoresExternosGestion = [];
+    renderizarProveedoresExternosGestion();
+
+    if (!organizacionId) {
+        return;
+    }
+
+    const shouldShowSpinner = options.showSpinner !== false;
+
+    try {
+        if (shouldShowSpinner) {
+            mostrarSpinner();
+        }
+
+        const response = await fetch(`/api/sw/proveedores-externos/organizacion/${organizacionId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            proveedoresExternosGestion = Array.isArray(data.data)
+                ? data.data.sort((a, b) => compararTextoAlfabeticamente(a.nombre, b.nombre))
+                : [];
+            renderizarProveedoresExternosGestion();
+        } else {
+            mostrarError(data.message || 'Error al cargar proveedores externos');
+        }
+    } catch (error) {
+        console.error('Error al cargar proveedores externos para gestión:', error);
+        mostrarError('Error al cargar proveedores externos');
+    } finally {
+        if (shouldShowSpinner) {
+            ocultarSpinner();
+        }
+    }
+}
+
+async function guardarProveedorExterno() {
+    const proveedorId = $('#proveedor-externo-id').val();
+    const organizacionId = $('#proveedor-externo-organizacion').val();
+    const nombre = $('#proveedor-externo-nombre').val().trim();
+    const beneficiario = $('#proveedor-externo-beneficiario').val().trim();
+    const banco = $('#proveedor-externo-banco').val().trim();
+    const cuentaClabe = $('#proveedor-externo-cuenta-clabe').val().trim();
+
+    if (!organizacionId || !nombre || !beneficiario || !banco || !cuentaClabe) {
+        mostrarError('Completa organización, nombre, beneficiario, banco y cuenta/CLABE');
+        return;
+    }
+
+    try {
+        mostrarSpinner();
+
+        const response = await fetch(proveedorId ? `/api/sw/proveedores-externos/${proveedorId}` : '/api/sw/proveedores-externos', {
+            method: proveedorId ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ organizacionId, nombre, beneficiario, banco, cuentaClabe })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            mostrarError(data.message || 'No se pudo guardar el proveedor');
+            return;
+        }
+
+        limpiarFormularioProveedorExterno();
+        await cargarProveedoresExternosGestion(organizacionId, { showSpinner: false });
+
+        await sincronizarCatalogoProveedoresConSolicitud(organizacionId);
+
+        if (data.reused) {
+            mostrarExito('Proveedor ya existente cargado correctamente');
+        } else {
+            mostrarExito(proveedorId ? 'Proveedor actualizado exitosamente' : 'Proveedor guardado exitosamente');
+        }
+    } catch (error) {
+        console.error('Error al guardar proveedor externo:', error);
+        mostrarError('Error al guardar proveedor externo');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
+async function eliminarProveedorExternoGestion(proveedorId) {
+    const organizacionId = $('#proveedor-externo-organizacion').val();
+
+    if (!organizacionId) {
+        mostrarError('Selecciona una organización');
+        return;
+    }
+
+    const confirmacion = await Swal.fire({
+        title: '¿Eliminar proveedor?',
+        text: 'El proveedor dejará de estar disponible para futuras solicitudes.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc3545'
+    });
+
+    if (!confirmacion.isConfirmed) {
+        return;
+    }
+
+    try {
+        mostrarSpinner();
+
+        const response = await fetch(`/api/sw/proveedores-externos/${proveedorId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ organizacionId })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            mostrarError(data.message || 'No se pudo eliminar el proveedor');
+            return;
+        }
+
+        if ($('#proveedor-externo-id').val() === proveedorId) {
+            limpiarFormularioProveedorExterno();
+        }
+
+        await cargarProveedoresExternosGestion(organizacionId, { showSpinner: false });
+        await sincronizarCatalogoProveedoresConSolicitud(organizacionId);
+        mostrarExito('Proveedor eliminado exitosamente');
+    } catch (error) {
+        console.error('Error al eliminar proveedor externo:', error);
+        mostrarError('Error al eliminar proveedor externo');
+    } finally {
+        ocultarSpinner();
+    }
+}
+
 function agregarCategoriaEdicion() {
     const input = $('#input-nueva-categoria');
     const categoriaNueva = input.val().trim();
@@ -321,6 +552,8 @@ function inicializarEventos() {
     $('#btnGuardarTransaccion').on('click', guardarTransaccion);
     $('#btnAgregarCategoriaFinanciera').on('click', agregarCategoriaEdicion);
     $('#btnGuardarCategoriasFinancieras').on('click', guardarCategoriasFinancieras);
+    $('#btnGuardarProveedorExterno').on('click', guardarProveedorExterno);
+    $('#btnCancelarEdicionProveedorExterno').on('click', limpiarFormularioProveedorExterno);
 
     $('#input-nueva-categoria').on('keypress', function(event) {
         if (event.key === 'Enter') {
@@ -348,6 +581,10 @@ function inicializarEventos() {
         await cargarSolicitudesOrganizacion(organizacionId);
     });
 
+    $('#proveedor-externo-organizacion').on('change', async function() {
+        await cargarProveedoresExternosGestion($(this).val());
+    });
+
     // Modal de solicitudes híbrido
     $('#solicitud-modo').on('change', async function() {
         await actualizarModoSolicitud($(this).val());
@@ -355,11 +592,18 @@ function inicializarEventos() {
 
     $('#solicitud-organizacion').on('change', async function() {
         const organizacionId = $(this).val();
+        limpiarCamposProveedorSolicitud();
+        $('#solicitud-guardar-proveedor').prop('checked', false);
         await cargarCuentasPorOrganizacionParaSolicitud(organizacionId);
+        await cargarProveedoresExternosOrganizacion(organizacionId);
     });
 
     $('#solicitud-es-proveedor-externo').on('change', function() {
         actualizarCamposProveedorSolicitud($(this).is(':checked'));
+    });
+
+    $('#solicitud-proveedor-catalogado').on('change', function() {
+        aplicarProveedorCatalogadoSolicitud();
     });
 
     // Listener para cuando se abre el modal de organización
@@ -401,6 +645,12 @@ function inicializarEventos() {
         renderizarCategoriasEnModal();
     });
 
+    $('#modalProveedoresExternos').on('show.bs.modal', async function() {
+        actualizarSelectOrganizacionesProveedores();
+        limpiarFormularioProveedorExterno();
+        await cargarProveedoresExternosGestion($('#proveedor-externo-organizacion').val());
+    });
+
     // Listener para cuando se abre el modal de solicitud
     $('#modalSolicitud').on('show.bs.modal', function(e) {
         if ($(e.relatedTarget).attr('id') === 'btn-nueva-solicitud') {
@@ -413,6 +663,9 @@ function inicializarEventos() {
             $('#solicitud-campo-categoria').show();
             $('#solicitud-campo-imagenes').show();
             $('#solicitud-es-proveedor-externo').prop('checked', false);
+            $('#solicitud-guardar-proveedor').prop('checked', false);
+            proveedoresExternosOrganizacion = [];
+            popularSelectProveedoresExternosSolicitud();
             actualizarCamposProveedorSolicitud(false);
             popularSelectCategorias('#solicitud-categoria', 'Otro');
             $('#solicitud-cuenta-origen').val('');
@@ -585,6 +838,7 @@ async function cargarOrganizaciones() {
             actualizarSelectOrganizaciones();
             actualizarSelectOrganizacionesSolicitud();
             actualizarFiltroSolicitudesOrganizacion();
+            actualizarSelectOrganizacionesProveedores();
         }
     } catch (error) {
         console.error('Error al cargar organizaciones:', error);
@@ -1602,9 +1856,102 @@ function actualizarFiltroSolicitudesOrganizacion() {
         select.append(`<option value="${org._id}">${org.nombre}</option>`);
     });
 
-    const nuevoValor = currentValue || organizaciones[0]?._id;
+    const existeValorActual = currentValue && organizaciones.some((org) => org._id === currentValue);
+    const nuevoValor = existeValorActual ? currentValue : organizaciones[0]?._id;
     if (nuevoValor) {
         select.val(nuevoValor);
+    }
+}
+
+function limpiarCamposProveedorSolicitud() {
+    $('#solicitud-proveedor-nombre').val('');
+    $('#solicitud-proveedor-beneficiario').val('');
+    $('#solicitud-proveedor-banco').val('');
+    $('#solicitud-proveedor-cuenta-clabe').val('');
+}
+
+function popularSelectProveedoresExternosSolicitud(selectedValue = NUEVO_PROVEEDOR_EXTERNO_VALUE) {
+    const select = $('#solicitud-proveedor-catalogado');
+    if (!select.length) return;
+
+    select.empty();
+    select.append(`<option value="${NUEVO_PROVEEDOR_EXTERNO_VALUE}">Nuevo proveedor</option>`);
+
+    proveedoresExternosOrganizacion.forEach((proveedor) => {
+        const etiqueta = `${proveedor.nombre} · ${proveedor.beneficiario}`;
+        select.append(`<option value="${proveedor._id}">${etiqueta}</option>`);
+    });
+
+    const existeSeleccion = proveedoresExternosOrganizacion.some((proveedor) => proveedor._id === selectedValue);
+    select.val(existeSeleccion ? selectedValue : NUEVO_PROVEEDOR_EXTERNO_VALUE);
+}
+
+function actualizarVisibilidadProveedorCatalogadoSolicitud() {
+    const esProveedorExterno = $('#solicitud-es-proveedor-externo').is(':checked');
+    const esModoOrganizacion = $('#solicitud-modo').val() === 'organizacion';
+    const seleccionActual = $('#solicitud-proveedor-catalogado').val() || NUEVO_PROVEEDOR_EXTERNO_VALUE;
+    const mostrarCatalogo = esProveedorExterno && esModoOrganizacion;
+    const mostrarGuardar = mostrarCatalogo && seleccionActual === NUEVO_PROVEEDOR_EXTERNO_VALUE;
+
+    $('#solicitud-campo-proveedor-catalogo').toggle(mostrarCatalogo);
+    $('#solicitud-guardar-proveedor-wrapper').toggle(mostrarGuardar);
+
+    if (!mostrarGuardar) {
+        $('#solicitud-guardar-proveedor').prop('checked', false);
+    }
+}
+
+function aplicarProveedorCatalogadoSolicitud() {
+    const proveedorId = $('#solicitud-proveedor-catalogado').val();
+
+    if (!proveedorId || proveedorId === NUEVO_PROVEEDOR_EXTERNO_VALUE) {
+        limpiarCamposProveedorSolicitud();
+        actualizarVisibilidadProveedorCatalogadoSolicitud();
+        return;
+    }
+
+    const proveedor = proveedoresExternosOrganizacion.find((item) => item._id === proveedorId);
+    if (!proveedor) {
+        limpiarCamposProveedorSolicitud();
+        actualizarVisibilidadProveedorCatalogadoSolicitud();
+        return;
+    }
+
+    $('#solicitud-proveedor-nombre').val(proveedor.nombre || '');
+    $('#solicitud-proveedor-beneficiario').val(proveedor.beneficiario || '');
+    $('#solicitud-proveedor-banco').val(proveedor.banco || '');
+    $('#solicitud-proveedor-cuenta-clabe').val(proveedor.cuentaClabe || '');
+    actualizarVisibilidadProveedorCatalogadoSolicitud();
+}
+
+async function cargarProveedoresExternosOrganizacion(organizacionId) {
+    proveedoresExternosOrganizacion = [];
+    popularSelectProveedoresExternosSolicitud();
+    actualizarVisibilidadProveedorCatalogadoSolicitud();
+
+    if (!organizacionId) {
+        return;
+    }
+
+    try {
+        mostrarSpinner();
+        const response = await fetch(`/api/sw/proveedores-externos/organizacion/${organizacionId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            proveedoresExternosOrganizacion = Array.isArray(data.data)
+                ? data.data.sort((a, b) => compararTextoAlfabeticamente(a.nombre, b.nombre))
+                : [];
+            popularSelectProveedoresExternosSolicitud();
+            actualizarVisibilidadProveedorCatalogadoSolicitud();
+        } else {
+            mostrarError(data.message || 'Error al cargar proveedores externos');
+        }
+    } catch (error) {
+        console.error('Error al cargar proveedores externos:', error);
+        mostrarError('Error al cargar proveedores externos');
+    } finally {
+        ocultarSpinner();
     }
 }
 
@@ -1620,8 +1967,12 @@ async function actualizarModoSolicitud(modo) {
             $('#solicitud-organizacion').val(organizaciones[0]._id);
         }
         await cargarCuentasPorOrganizacionParaSolicitud($('#solicitud-organizacion').val());
+        await cargarProveedoresExternosOrganizacion($('#solicitud-organizacion').val());
     } else {
         $('#solicitud-campo-organizacion').hide();
+        proveedoresExternosOrganizacion = [];
+        popularSelectProveedoresExternosSolicitud();
+        $('#solicitud-guardar-proveedor').prop('checked', false);
         await cargarCuentasParaSolicitudes();
     }
 
@@ -1639,17 +1990,20 @@ async function actualizarModoSolicitud(modo) {
         $('#solicitud-campo-categoria').show();
         $('#solicitud-campo-imagenes').show();
     }
+
+    actualizarVisibilidadProveedorCatalogadoSolicitud();
 }
 
 function actualizarCamposProveedorSolicitud(esProveedorExterno) {
     if (esProveedorExterno) {
         $('#solicitud-campo-proveedor-externo').show();
+        actualizarVisibilidadProveedorCatalogadoSolicitud();
     } else {
         $('#solicitud-campo-proveedor-externo').hide();
-        $('#solicitud-proveedor-nombre').val('');
-        $('#solicitud-proveedor-beneficiario').val('');
-        $('#solicitud-proveedor-banco').val('');
-        $('#solicitud-proveedor-cuenta-clabe').val('');
+        $('#solicitud-proveedor-catalogado').val(NUEVO_PROVEEDOR_EXTERNO_VALUE);
+        $('#solicitud-guardar-proveedor').prop('checked', false);
+        limpiarCamposProveedorSolicitud();
+        actualizarVisibilidadProveedorCatalogadoSolicitud();
     }
 }
 
@@ -2429,6 +2783,8 @@ async function guardarSolicitud() {
     const modo = $('#solicitud-modo').val();
     const tipo = $('#solicitud-tipo').val();
     const esProveedorExterno = $('#solicitud-es-proveedor-externo').is(':checked');
+    const proveedorCatalogadoSeleccionado = $('#solicitud-proveedor-catalogado').val();
+    const esProveedorNuevo = !proveedorCatalogadoSeleccionado || proveedorCatalogadoSeleccionado === NUEVO_PROVEEDOR_EXTERNO_VALUE;
     const proveedorNombre = $('#solicitud-proveedor-nombre').val().trim();
     const proveedorBeneficiario = $('#solicitud-proveedor-beneficiario').val().trim();
     const proveedorBanco = $('#solicitud-proveedor-banco').val().trim();
@@ -2441,6 +2797,8 @@ async function guardarSolicitud() {
         descripcion: $('#solicitud-descripcion').val().trim(),
         fecha: $('#solicitud-fecha').val(),
         esProveedorExterno,
+        proveedorExternoId: esProveedorExterno && modo === 'organizacion' && !esProveedorNuevo ? proveedorCatalogadoSeleccionado : '',
+        guardarProveedorExterno: esProveedorExterno && modo === 'organizacion' && esProveedorNuevo && $('#solicitud-guardar-proveedor').is(':checked'),
         proveedorNombre: esProveedorExterno ? proveedorNombre : '',
         proveedorBeneficiario: esProveedorExterno ? proveedorBeneficiario : '',
         proveedorBanco: esProveedorExterno ? proveedorBanco : '',
@@ -2516,7 +2874,12 @@ async function guardarSolicitud() {
         const data = await response.json();
 
         if (data.success) {
-            const solicitudId = data.data._id;
+            const esFlujoOrganizacion = modo === 'organizacion';
+            const esTransaccionDirecta = esFlujoOrganizacion && data.mode === 'directa';
+            const solicitudCreada = esFlujoOrganizacion && data.mode === 'solicitud'
+                ? (data.data?.solicitud || data.data)
+                : data.data;
+            const solicitudId = solicitudCreada?._id;
             
             // Si hay imágenes seleccionadas, subirlas
             const archivosInput = document.getElementById('solicitud-imagenes');
@@ -2536,6 +2899,10 @@ async function guardarSolicitud() {
                     console.error('Error al subir imágenes organizacionales:', errorImg);
                     mostrarError('Solicitud organizacional creada, pero hubo un error al subir las imágenes');
                 }
+            } else if (esTransaccionDirecta) {
+                mostrarExito(data.message || 'La operación se creó directamente como transacción, no como solicitud');
+            } else if (esFlujoOrganizacion) {
+                mostrarExito(data.message || 'Solicitud organizacional creada exitosamente');
             } else {
                 mostrarExito('Solicitud creada exitosamente');
             }
@@ -2549,10 +2916,19 @@ async function guardarSolicitud() {
             $('#solicitud-campo-imagenes').show();
             $('#solicitud-campo-organizacion').hide();
             $('#solicitud-es-proveedor-externo').prop('checked', false);
+            $('#solicitud-guardar-proveedor').prop('checked', false);
+            proveedoresExternosOrganizacion = [];
+            popularSelectProveedoresExternosSolicitud();
             actualizarCamposProveedorSolicitud(false);
             $('#solicitud-modo').val('cuenta');
             await cargarSolicitudes();
-            await cargarSolicitudesOrganizacion();
+            if ($('#filtro-solicitudes-organizacion').val()) {
+                await cargarSolicitudesOrganizacion();
+            }
+            if (esTransaccionDirecta) {
+                await cargarTransacciones();
+                await cargarMisCuentas();
+            }
         } else {
             mostrarError(data.message);
         }

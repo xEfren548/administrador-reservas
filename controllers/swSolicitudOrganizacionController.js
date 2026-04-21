@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const SWSolicitudOrganizacion = require('../models/SWSolicitudOrganizacion');
 const SWCuenta = require('../models/SWCuenta');
 const SWOrganizacion = require('../models/SWOrganizacion');
+const SWProveedorExterno = require('../models/SWProveedorExterno');
 const SWTransaccion = require('../models/SWTransaccion');
 const { check, validationResult } = require('express-validator');
 const moment = require('moment-timezone');
@@ -88,6 +89,97 @@ function esWorkflowOwnerConfirmation(solicitud) {
 
 function puedeAccederComoPropietarioCuenta(solicitud, userId) {
     return esWorkflowOwnerConfirmation(solicitud) && esMismoId(solicitud.propietarioCuenta, userId);
+}
+
+function construirSnapshotProveedor(payload = {}) {
+    return {
+        nombre: payload.proveedorNombre?.trim(),
+        beneficiario: payload.proveedorBeneficiario?.trim(),
+        banco: payload.proveedorBanco?.trim(),
+        cuentaClabe: payload.proveedorCuentaClabe?.trim()
+    };
+}
+
+async function resolverProveedorExternoOrganizacion({
+    organizacionId,
+    esPagoProveedorExterno,
+    proveedorExternoId,
+    guardarProveedorExterno,
+    proveedorNombre,
+    proveedorBeneficiario,
+    proveedorBanco,
+    proveedorCuentaClabe,
+    userId
+}) {
+    if (!esPagoProveedorExterno) {
+        return {
+            proveedorExternoCatalogado: undefined,
+            proveedorSnapshot: null
+        };
+    }
+
+    let proveedorCatalogado = null;
+
+    if (proveedorExternoId) {
+        proveedorCatalogado = await SWProveedorExterno.findOne({
+            _id: proveedorExternoId,
+            organizacion: organizacionId,
+            activa: true
+        });
+
+        if (!proveedorCatalogado) {
+            const error = new Error('Proveedor externo no encontrado para esta organización');
+            error.statusCode = 404;
+            throw error;
+        }
+    }
+
+    const snapshotManual = construirSnapshotProveedor({
+        proveedorNombre,
+        proveedorBeneficiario,
+        proveedorBanco,
+        proveedorCuentaClabe
+    });
+
+    const proveedorSnapshot = {
+        nombre: snapshotManual.nombre || proveedorCatalogado?.nombre,
+        beneficiario: snapshotManual.beneficiario || proveedorCatalogado?.beneficiario,
+        banco: snapshotManual.banco || proveedorCatalogado?.banco,
+        cuentaClabe: snapshotManual.cuentaClabe || proveedorCatalogado?.cuentaClabe
+    };
+
+    if (!proveedorSnapshot.nombre || !proveedorSnapshot.beneficiario || !proveedorSnapshot.banco || !proveedorSnapshot.cuentaClabe) {
+        const error = new Error('Debe capturar o seleccionar un proveedor externo válido');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (guardarProveedorExterno && !proveedorCatalogado) {
+        proveedorCatalogado = await SWProveedorExterno.findOne({
+            organizacion: organizacionId,
+            activa: true,
+            cuentaClabe: proveedorSnapshot.cuentaClabe,
+            beneficiario: proveedorSnapshot.beneficiario
+        });
+
+        if (!proveedorCatalogado) {
+            proveedorCatalogado = new SWProveedorExterno({
+                organizacion: organizacionId,
+                nombre: proveedorSnapshot.nombre,
+                beneficiario: proveedorSnapshot.beneficiario,
+                banco: proveedorSnapshot.banco,
+                cuentaClabe: proveedorSnapshot.cuentaClabe,
+                createdBy: userId
+            });
+
+            await proveedorCatalogado.save();
+        }
+    }
+
+    return {
+        proveedorExternoCatalogado: proveedorCatalogado?._id,
+        proveedorSnapshot
+    };
 }
 
 function poblarSolicitudOrganizacion(query) {
@@ -181,6 +273,12 @@ const createSolicitudOrganizacionValidators = [
     check('esProveedorExterno')
         .optional()
         .isBoolean().withMessage('El indicador de proveedor externo debe ser booleano'),
+    check('proveedorExternoId')
+        .optional({ checkFalsy: true })
+        .isMongoId().withMessage('ID de proveedor externo inválido'),
+    check('guardarProveedorExterno')
+        .optional()
+        .isBoolean().withMessage('El indicador para guardar proveedor debe ser booleano'),
     check('proveedorNombre')
         .if((value, { req }) => req.body.esProveedorExterno === true || req.body.esProveedorExterno === 'true')
         .notEmpty().withMessage('El nombre del proveedor es requerido')
@@ -284,6 +382,8 @@ const createSolicitudOrganizacion = async (req, res) => {
             imagenes,
             cuentaDestinoId,
             esProveedorExterno,
+            proveedorExternoId,
+            guardarProveedorExterno,
             proveedorNombre,
             proveedorBeneficiario,
             proveedorBanco,
@@ -294,6 +394,7 @@ const createSolicitudOrganizacion = async (req, res) => {
 
         const userId = req.session.userId;
         const fechaSolicitud = normalizarFechaSolicitud(fecha);
+    const debeGuardarProveedor = guardarProveedorExterno === true || guardarProveedorExterno === 'true';
 
         const { participanteActual, adminCount } = await getOrganizacionContext(organizacionId, userId);
 
@@ -357,6 +458,17 @@ const createSolicitudOrganizacion = async (req, res) => {
         }
 
         const esPropietarioConfirmador = esMismoId(propietarioCuentaId, userId);
+        const proveedorResuelto = await resolverProveedorExternoOrganizacion({
+            organizacionId,
+            esPagoProveedorExterno,
+            proveedorExternoId,
+            guardarProveedorExterno: debeGuardarProveedor,
+            proveedorNombre,
+            proveedorBeneficiario,
+            proveedorBanco,
+            proveedorCuentaClabe,
+            userId
+        });
 
         if (participanteActual.rol === 'Administrador' && adminCount <= 1 && esPropietarioConfirmador) {
             let resultadoDirecto;
@@ -372,12 +484,13 @@ const createSolicitudOrganizacion = async (req, res) => {
                     false,
                     {
                         esProveedorExterno: esPagoProveedorExterno,
+                        proveedorExternoCatalogado: proveedorResuelto.proveedorExternoCatalogado,
                         proveedor: esPagoProveedorExterno
                             ? {
-                                nombre: proveedorNombre,
-                                beneficiario: proveedorBeneficiario,
-                                banco: proveedorBanco,
-                                cuentaClabe: proveedorCuentaClabe
+                                nombre: proveedorResuelto.proveedorSnapshot.nombre,
+                                beneficiario: proveedorResuelto.proveedorSnapshot.beneficiario,
+                                banco: proveedorResuelto.proveedorSnapshot.banco,
+                                cuentaClabe: proveedorResuelto.proveedorSnapshot.cuentaClabe
                             }
                             : undefined
                     }
@@ -409,13 +522,14 @@ const createSolicitudOrganizacion = async (req, res) => {
                 etiquetas,
                 notas,
                 imagenes: imagenes || [],
+                proveedorExternoCatalogado: proveedorResuelto.proveedorExternoCatalogado,
                 esProveedorExterno: esPagoProveedorExterno,
                 proveedor: esPagoProveedorExterno
                     ? {
-                        nombre: proveedorNombre,
-                        beneficiario: proveedorBeneficiario,
-                        banco: proveedorBanco,
-                        cuentaClabe: proveedorCuentaClabe
+                        nombre: proveedorResuelto.proveedorSnapshot.nombre,
+                        beneficiario: proveedorResuelto.proveedorSnapshot.beneficiario,
+                        banco: proveedorResuelto.proveedorSnapshot.banco,
+                        cuentaClabe: proveedorResuelto.proveedorSnapshot.cuentaClabe
                     }
                     : undefined
             });
@@ -449,11 +563,12 @@ const createSolicitudOrganizacion = async (req, res) => {
             etiquetas,
             notas,
             imagenes: imagenes || [],
+            proveedorExternoCatalogado: proveedorResuelto.proveedorExternoCatalogado,
             esProveedorExterno: esPagoProveedorExterno,
-            proveedorNombre: esPagoProveedorExterno ? proveedorNombre : undefined,
-            proveedorBeneficiario: esPagoProveedorExterno ? proveedorBeneficiario : undefined,
-            proveedorBanco: esPagoProveedorExterno ? proveedorBanco : undefined,
-            proveedorCuentaClabe: esPagoProveedorExterno ? proveedorCuentaClabe : undefined,
+            proveedorNombre: esPagoProveedorExterno ? proveedorResuelto.proveedorSnapshot.nombre : undefined,
+            proveedorBeneficiario: esPagoProveedorExterno ? proveedorResuelto.proveedorSnapshot.beneficiario : undefined,
+            proveedorBanco: esPagoProveedorExterno ? proveedorResuelto.proveedorSnapshot.banco : undefined,
+            proveedorCuentaClabe: esPagoProveedorExterno ? proveedorResuelto.proveedorSnapshot.cuentaClabe : undefined,
             confirmacionDueno: {
                 requerida: !esPropietarioConfirmador
             }
