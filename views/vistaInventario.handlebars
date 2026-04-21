@@ -15,6 +15,9 @@
                 <p class="mt-1 text-sm text-gray-500">Control por habitacion, stock por bodega y consumo automatico por checkout</p>
             </div>
             <div class="flex flex-wrap gap-2">
+                <button id="btn-open-barcode-scan" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-barcode me-1"></i> Escanear Producto
+                </button>
                 {{#if canManageInventory}}
                 <button id="btn-open-warehouse" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalWarehouse">
                     <i class="fas fa-warehouse me-1"></i> Nueva Bodega
@@ -135,7 +138,7 @@
                         <thead>
                             <tr>
                                 <th>Item</th>
-                                <th>No. parte</th>
+                                <th>No. parte / codigo</th>
                                 <th>Tipo</th>
                                 <th>Unidad</th>
                                 <th>Stock</th>
@@ -227,7 +230,7 @@
                                 <thead>
                                     <tr>
                                         <th>Item</th>
-                                        <th>No. parte</th>
+                                        <th>No. parte / codigo</th>
                                         <th>Tipo</th>
                                         <th>Unidad</th>
                                         <th>Stock Bodega</th>
@@ -416,7 +419,7 @@
             <form id="form-item">
                 <div class="modal-body space-y-3">
                     <input class="form-control" name="name" placeholder="Nombre del item" required>
-                    <input class="form-control" name="partNumber" placeholder="Numero de parte (opcional)">
+                    <input class="form-control" name="partNumber" placeholder="Numero de parte o codigo de barras (opcional)">
                     <textarea class="form-control" name="description" placeholder="Descripción"></textarea>
                     <select class="form-select" name="itemType" required>
                         <option value="directo">Directo</option>
@@ -697,6 +700,47 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-dark">Aplicar ajuste</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalBarcodeScanner" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Escaneo Rapido de Productos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-barcode-scan">
+                <div class="modal-body space-y-3">
+                    <div class="rounded border border-sky-200 bg-sky-50 p-3">
+                        <p class="text-sm font-semibold text-sky-800 mb-1">Compatible con pistola tipo teclado</p>
+                        <p class="text-xs text-sky-700 mb-0">Escanea el codigo aqui o directamente con la vista abierta. Si el lector envia Enter al final, la busqueda se procesa automaticamente.</p>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-3 items-start">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 mb-1">Codigo escaneado</label>
+                            <input id="inventory-scan-input" type="text" class="form-control" placeholder="Escanea o escribe un codigo y presiona Enter" autocomplete="off" inputmode="search">
+                            <p id="inventory-scan-status" class="text-xs text-gray-500 mt-2 mb-0">Escanea un producto para ver que accion quieres ejecutar.</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                            <p class="text-xs uppercase tracking-wide text-gray-500 mb-1">Ultimo codigo</p>
+                            <p id="inventory-scan-last-code" class="text-sm font-semibold text-gray-900 mb-0 break-all">Sin lectura</p>
+                        </div>
+                    </div>
+
+                    <div id="inventory-scan-result" class="space-y-3">
+                        <div class="border border-dashed border-gray-300 rounded-lg p-4 text-sm text-gray-500 bg-gray-50">
+                            Esperando un escaneo para mostrar el item y las acciones disponibles.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Buscar Codigo</button>
                 </div>
             </form>
         </div>

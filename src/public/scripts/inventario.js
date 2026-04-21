@@ -14,12 +14,24 @@
         editingWarehouseId: null,
         editingItemId: null,
         editingBOMId: null,
-        bomRoomSelectionLocked: false
+        bomRoomSelectionLocked: false,
+        scannerBuffer: '',
+        scannerBufferStartedAt: 0,
+        scannerBufferUpdatedAt: 0,
+        scannerBufferTimerId: null,
+        lastScannedCode: ''
     };
 
     const dashboardCharts = {
         stockByCabin: null,
         stockHealth: null
+    };
+
+    const scannerConfig = {
+        minLength: 4,
+        maxInterKeyDelayMs: 80,
+        idleCommitMs: 160,
+        maxSequenceMs: 1200
     };
 
     const el = {
@@ -61,6 +73,7 @@
         formRoomTransfer: document.getElementById('form-room-transfer'),
         formRoomAdjustment: document.getElementById('form-room-adjustment'),
         formBOMTemplate: document.getElementById('form-bom-template'),
+        formBarcodeScan: document.getElementById('form-barcode-scan'),
         modalWarehouse: document.getElementById('modalWarehouse'),
         modalItem: document.getElementById('modalItem'),
         modalPurchase: document.getElementById('modalPurchase'),
@@ -68,6 +81,7 @@
         modalRoomTransfer: document.getElementById('modalRoomTransfer'),
         modalRoomAdjustment: document.getElementById('modalRoomAdjustment'),
         modalBOMTemplate: document.getElementById('modalBOMTemplate'),
+        modalBarcodeScanner: document.getElementById('modalBarcodeScanner'),
         modalWarehouseTitle: document.getElementById('modal-warehouse-title'),
         modalWarehouseSubmit: document.getElementById('modal-warehouse-submit'),
         modalItemTitle: document.getElementById('modal-item-title'),
@@ -104,6 +118,10 @@
         roomAdjustmentRoomResults: document.getElementById('room-adjustment-room-results'),
         roomAdjustmentItemSelect: document.getElementById('room-adjustment-item-select'),
         roomAdjustmentStockHint: document.getElementById('room-adjustment-stock-hint'),
+        scanInput: document.getElementById('inventory-scan-input'),
+        scanStatus: document.getElementById('inventory-scan-status'),
+        scanLastCode: document.getElementById('inventory-scan-last-code'),
+        scanResult: document.getElementById('inventory-scan-result'),
         warehouseRoomFilter: document.getElementById('warehouse-room-filter'),
         warehouseRoomChecklist: document.getElementById('warehouse-room-checklist'),
         bomRoomFilter: document.getElementById('bom-room-filter'),
@@ -112,7 +130,8 @@
         btnAddPurchaseLine: document.getElementById('btn-add-purchase-line'),
         adjustmentItemSelect: document.getElementById('adjustment-item-select'),
         bomLinesContainer: document.getElementById('bom-lines-container'),
-        btnAddBomLine: document.getElementById('btn-add-bom-line')
+        btnAddBomLine: document.getElementById('btn-add-bom-line'),
+        btnOpenBarcodeScan: document.getElementById('btn-open-barcode-scan')
     };
 
     const isMasterAdmin = Boolean(window.isMasterAdmin);
@@ -858,6 +877,323 @@
         getBootstrapModal(element)?.hide();
     };
 
+    const runAfterModalHidden = (element, callback) => {
+        if (!element || !element.classList.contains('show')) {
+            callback();
+            return;
+        }
+
+        element.addEventListener('hidden.bs.modal', () => {
+            callback();
+        }, { once: true });
+
+        hideModal(element);
+    };
+
+    const scanStatusToneClassMap = {
+        neutral: 'text-gray-500',
+        success: 'text-emerald-700',
+        warning: 'text-amber-700',
+        error: 'text-rose-700'
+    };
+
+    const setScanStatus = (message, tone = 'neutral') => {
+        if (!el.scanStatus) return;
+        el.scanStatus.textContent = message;
+        el.scanStatus.className = `text-xs mt-2 mb-0 ${scanStatusToneClassMap[tone] || scanStatusToneClassMap.neutral}`;
+    };
+
+    const setLastScannedCode = (code = '') => {
+        state.lastScannedCode = String(code || '').trim();
+        if (el.scanLastCode) {
+            el.scanLastCode.textContent = state.lastScannedCode || 'Sin lectura';
+        }
+    };
+
+    const getDefaultScanResultMarkup = () => `
+        <div class="border border-dashed border-gray-300 rounded-lg p-4 text-sm text-gray-500 bg-gray-50">
+            Esperando un escaneo para mostrar el item y las acciones disponibles.
+        </div>
+    `;
+
+    const normalizeScanCode = (value) => normalizeSearchText(value).replace(/\s+/g, '');
+
+    const findItemById = (itemId) => state.items.find((item) => String(item._id) === String(itemId || '')) || null;
+
+    const findItemsByScannedCode = (code) => {
+        const normalizedCode = normalizeScanCode(code);
+        if (!normalizedCode) return [];
+
+        const partNumberMatches = state.items.filter((item) => normalizeScanCode(item.partNumber) === normalizedCode);
+        if (partNumberMatches.length > 0) {
+            return sortAlphabetically(partNumberMatches, (item) => `${item.name} ${warehouseDisplayName(item.warehouse)}`);
+        }
+
+        return sortAlphabetically(
+            state.items.filter((item) => normalizeSearchText(item.name) === normalizeSearchText(code)),
+            (item) => `${item.name} ${warehouseDisplayName(item.warehouse)}`
+        );
+    };
+
+    const buildScanActionButtons = (item) => {
+        const buttons = [];
+
+        if (canManageInventory) {
+            buttons.push(`
+                <button type="button" class="btn btn-success btn-sm" data-scan-action="purchase" data-item-id="${item._id}">
+                    <i class="fas fa-cart-plus me-1"></i> Registrar Recompra
+                </button>
+            `);
+        }
+
+        if (canAdjustInventory) {
+            buttons.push(`
+                <button type="button" class="btn btn-outline-dark btn-sm" data-scan-action="adjust-in" data-item-id="${item._id}">
+                    <i class="fas fa-arrow-up me-1"></i> Ajuste +
+                </button>
+            `);
+            buttons.push(`
+                <button type="button" class="btn btn-outline-dark btn-sm" data-scan-action="adjust-out" data-item-id="${item._id}">
+                    <i class="fas fa-arrow-down me-1"></i> Ajuste -
+                </button>
+            `);
+        }
+
+        if (buttons.length === 0) {
+            return '<p class="text-xs text-gray-500 mb-0">No tienes permisos para operar este item desde el escaner.</p>';
+        }
+
+        return `<div class="flex flex-wrap gap-2 mt-3">${buttons.join('')}</div>`;
+    };
+
+    const buildScanResultCard = (item) => {
+        const isLowStock = Number(item.stockCurrent || 0) <= Number(item.stockMin || 0);
+
+        return `
+            <div class="border border-gray-200 rounded-xl p-4 bg-white shadow-sm">
+                <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                    <div>
+                        <p class="text-base font-semibold text-gray-900 mb-1">${escapeHtml(item.name || 'Item')}</p>
+                        <div class="flex flex-wrap gap-2 text-xs">
+                            <span class="px-2 py-1 rounded bg-gray-100 text-gray-700">Codigo ${escapeHtml(item.partNumber || 'Sin codigo')}</span>
+                            <span class="px-2 py-1 rounded bg-sky-100 text-sky-700">${escapeHtml(warehouseDisplayName(item.warehouse))}</span>
+                            <span class="px-2 py-1 rounded bg-emerald-100 text-emerald-700">Stock ${escapeHtml(String(item.stockCurrent ?? 0))} ${escapeHtml(item.unit || '')}</span>
+                            <span class="px-2 py-1 rounded bg-indigo-100 text-indigo-700">${escapeHtml(item.itemType || '-')}</span>
+                            ${isLowStock ? '<span class="px-2 py-1 rounded bg-rose-100 text-rose-700">Bajo stock</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        <p class="mb-1">Minimo: ${escapeHtml(String(item.stockMin ?? 0))}</p>
+                        <p class="mb-0">Costo ultimo: ${money(item.lastPurchaseUnitCost || 0)}</p>
+                    </div>
+                </div>
+                ${buildScanActionButtons(item)}
+            </div>
+        `;
+    };
+
+    const attachScanResultActions = () => {
+        if (!el.scanResult) return;
+
+        el.scanResult.querySelectorAll('[data-scan-action]').forEach((button) => {
+            button.addEventListener('click', async () => {
+                try {
+                    const action = button.getAttribute('data-scan-action');
+                    const itemId = button.getAttribute('data-item-id');
+
+                    if (action === 'purchase') {
+                        openPurchaseFromScan(itemId);
+                        return;
+                    }
+
+                    if (action === 'adjust-in') {
+                        openAdjustmentFromScan(itemId, 'in');
+                        return;
+                    }
+
+                    if (action === 'adjust-out') {
+                        openAdjustmentFromScan(itemId, 'out');
+                    }
+                } catch (error) {
+                    await showError(error);
+                }
+            });
+        });
+
+        el.scanResult.querySelectorAll('[data-scan-create-item]').forEach((button) => {
+            button.addEventListener('click', async () => {
+                try {
+                    openItemCreationFromScan(button.getAttribute('data-scan-create-item') || '');
+                } catch (error) {
+                    await showError(error);
+                }
+            });
+        });
+    };
+
+    const renderScanMatches = (code = '', matches = []) => {
+        if (!el.scanResult) return;
+
+        setLastScannedCode(code);
+
+        if (!code) {
+            setScanStatus('Escanea un producto para ver que accion quieres ejecutar.', 'neutral');
+            el.scanResult.innerHTML = getDefaultScanResultMarkup();
+            return;
+        }
+
+        if (matches.length === 0) {
+            setScanStatus('No encontramos coincidencias para ese codigo.', 'error');
+            el.scanResult.innerHTML = `
+                <div class="border border-rose-200 bg-rose-50 rounded-xl p-4">
+                    <p class="text-sm font-semibold text-rose-800 mb-1">No encontramos el codigo ${escapeHtml(code)}</p>
+                    <p class="text-xs text-rose-700 mb-0">Verifica que el item tenga capturado el numero de parte o codigo de barras en su ficha.</p>
+                    ${canManageInventory ? `
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-primary btn-sm" data-scan-create-item="${escapeHtml(code)}">
+                                <i class="fas fa-plus me-1"></i> Crear item con este codigo
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            attachScanResultActions();
+            return;
+        }
+
+        setScanStatus(
+            matches.length === 1
+                ? 'Item encontrado. Elige la accion que quieres ejecutar.'
+                : `Se encontraron ${matches.length} coincidencias. Elige la bodega correcta.`,
+            matches.length === 1 ? 'success' : 'warning'
+        );
+
+        el.scanResult.innerHTML = matches.map((item) => buildScanResultCard(item)).join('');
+        attachScanResultActions();
+    };
+
+    const processScannedCode = (rawCode, { openModal = true } = {}) => {
+        const code = String(rawCode || '').trim();
+        if (!code) {
+            renderScanMatches('', []);
+            return [];
+        }
+
+        if (el.scanInput) {
+            el.scanInput.value = code;
+        }
+
+        if (openModal) {
+            showModal(el.modalBarcodeScanner);
+        }
+
+        const matches = findItemsByScannedCode(code);
+        renderScanMatches(code, matches);
+        return matches;
+    };
+
+    const clearScannerBuffer = () => {
+        if (state.scannerBufferTimerId) {
+            window.clearTimeout(state.scannerBufferTimerId);
+        }
+
+        state.scannerBuffer = '';
+        state.scannerBufferStartedAt = 0;
+        state.scannerBufferUpdatedAt = 0;
+        state.scannerBufferTimerId = null;
+    };
+
+    const queueScannerBufferCommit = () => {
+        if (state.scannerBufferTimerId) {
+            window.clearTimeout(state.scannerBufferTimerId);
+        }
+
+        state.scannerBufferTimerId = window.setTimeout(() => {
+            const bufferedCode = state.scannerBuffer;
+            clearScannerBuffer();
+            if (bufferedCode.length >= scannerConfig.minLength) {
+                processScannedCode(bufferedCode, { openModal: true });
+            }
+        }, scannerConfig.idleCommitMs);
+    };
+
+    const focusScanInput = () => {
+        window.setTimeout(() => {
+            el.scanInput?.focus();
+            el.scanInput?.select();
+        }, 120);
+    };
+
+    const resetBarcodeScanMode = () => {
+        clearScannerBuffer();
+        el.formBarcodeScan?.reset();
+        renderScanMatches('', []);
+    };
+
+    const handleGlobalScannerKeydown = (event) => {
+        const target = event.target;
+        const targetTag = target?.tagName;
+        const isTypingInField = Boolean(
+            target?.isContentEditable
+            || ['INPUT', 'TEXTAREA', 'SELECT'].includes(targetTag)
+            || target?.closest?.('.swal2-container')
+        );
+
+        if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || isTypingInField) {
+            return;
+        }
+
+        const now = Date.now();
+
+        if (event.key === 'Escape') {
+            clearScannerBuffer();
+            return;
+        }
+
+        if (event.key === 'Enter') {
+            if (
+                state.scannerBuffer.length >= scannerConfig.minLength
+                && state.scannerBufferStartedAt > 0
+                && (now - state.scannerBufferStartedAt) <= scannerConfig.maxSequenceMs
+            ) {
+                const scannedCode = state.scannerBuffer;
+                clearScannerBuffer();
+                event.preventDefault();
+                processScannedCode(scannedCode, { openModal: true });
+                return;
+            }
+
+            clearScannerBuffer();
+            return;
+        }
+
+        if (event.key.length !== 1) {
+            return;
+        }
+
+        if (!state.scannerBuffer || (now - state.scannerBufferUpdatedAt) > scannerConfig.maxInterKeyDelayMs) {
+            clearScannerBuffer();
+            state.scannerBuffer = event.key;
+            state.scannerBufferStartedAt = now;
+            state.scannerBufferUpdatedAt = now;
+            queueScannerBufferCommit();
+            return;
+        }
+
+        if ((now - state.scannerBufferStartedAt) > scannerConfig.maxSequenceMs) {
+            clearScannerBuffer();
+            state.scannerBuffer = event.key;
+            state.scannerBufferStartedAt = now;
+            state.scannerBufferUpdatedAt = now;
+            queueScannerBufferCommit();
+            return;
+        }
+
+        state.scannerBuffer += event.key;
+        state.scannerBufferUpdatedAt = now;
+        queueScannerBufferCommit();
+    };
+
     const destroyDashboardChart = (chartKey) => {
         if (dashboardCharts[chartKey]) {
             dashboardCharts[chartKey].destroy();
@@ -1268,6 +1604,86 @@
         el.formAdjustment?.reset();
     };
 
+    const openPurchaseFromScan = (itemId) => {
+        if (!canManageInventory) {
+            throw new Error('No tienes permisos para registrar compras desde el escaner');
+        }
+
+        const item = findItemById(itemId);
+        if (!item) {
+            throw new Error('No pudimos encontrar el item escaneado en la lista actual');
+        }
+
+        resetPurchaseFormMode();
+        runAfterModalHidden(el.modalBarcodeScanner, () => {
+            if (el.purchaseWarehouseSelect) {
+                el.purchaseWarehouseSelect.value = item.warehouse?._id || item.warehouse || '';
+                el.purchaseWarehouseSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            ensureOnePurchaseLine();
+
+            const firstRow = el.purchaseLinesContainer?.firstElementChild;
+            const itemSelect = firstRow?.querySelector('.purchase-line-item');
+            const quantityInput = firstRow?.querySelector('.purchase-line-qty');
+
+            if (itemSelect) {
+                itemSelect.value = item._id;
+            }
+
+            showModal(el.modalPurchase);
+            window.setTimeout(() => {
+                quantityInput?.focus();
+                quantityInput?.select();
+            }, 180);
+        });
+    };
+
+    const openAdjustmentFromScan = (itemId, direction = 'in') => {
+        if (!canAdjustInventory) {
+            throw new Error('No tienes permisos para aplicar ajustes manuales desde el escaner');
+        }
+
+        const item = findItemById(itemId);
+        if (!item) {
+            throw new Error('No pudimos encontrar el item escaneado en la lista actual');
+        }
+
+        resetAdjustmentFormMode();
+        runAfterModalHidden(el.modalBarcodeScanner, () => {
+            if (el.adjustmentItemSelect) {
+                el.adjustmentItemSelect.value = item._id;
+            }
+            if (el.formAdjustment?.elements.direction) {
+                el.formAdjustment.elements.direction.value = direction;
+            }
+
+            showModal(el.modalAdjustment);
+            window.setTimeout(() => {
+                el.formAdjustment?.elements.quantity?.focus();
+                el.formAdjustment?.elements.quantity?.select();
+            }, 180);
+        });
+    };
+
+    const openItemCreationFromScan = (code) => {
+        if (!canManageInventory) {
+            throw new Error('No tienes permisos para crear items desde el escaner');
+        }
+
+        resetItemFormMode();
+        runAfterModalHidden(el.modalBarcodeScanner, () => {
+            if (el.formItem?.elements.partNumber) {
+                el.formItem.elements.partNumber.value = String(code || '').trim();
+            }
+
+            showModal(el.modalItem);
+            window.setTimeout(() => {
+                el.formItem?.elements.name?.focus();
+            }, 180);
+        });
+    };
+
     const updateRoomTransferHint = () => {
         if (!el.roomTransferStockHint) return;
         const selectedItem = state.roomInventoryTransferCandidates.find((item) => String(item._id) === String(el.roomTransferItemSelect?.value || ''));
@@ -1476,6 +1892,10 @@
             });
             ensureOneBomLine();
             syncBomLineOptions();
+        }
+
+        if (state.lastScannedCode) {
+            renderScanMatches(state.lastScannedCode, findItemsByScannedCode(state.lastScannedCode));
         }
     };
 
@@ -1994,6 +2414,16 @@
         bindRoomPicker('inventory');
         bindRoomPicker('transfer');
         bindRoomPicker('adjustment');
+        el.formBarcodeScan?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            processScannedCode(el.scanInput?.value || '', { openModal: false });
+        });
+        el.btnOpenBarcodeScan?.addEventListener('click', () => {
+            showModal(el.modalBarcodeScanner);
+        });
+        el.modalBarcodeScanner?.addEventListener('shown.bs.modal', focusScanInput);
+        el.modalBarcodeScanner?.addEventListener('hidden.bs.modal', resetBarcodeScanMode);
+        document.addEventListener('keydown', handleGlobalScannerKeydown);
         el.itemUnitSelect?.addEventListener('change', toggleItemUnitCustom);
         el.roomInventoryRoomSelect?.addEventListener('change', async () => {
             state.selectedRoomInventoryId = el.roomInventoryRoomSelect.value || '';
