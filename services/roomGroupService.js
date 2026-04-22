@@ -13,17 +13,38 @@ const Documento = require('../models/Evento');
 const BloqueoFechas = require('../models/BloqueoFechas');
 const BloqueoInversionistas = require('../models/BloqueoInversionistas');
 
+function shuffleArray(items) {
+    const shuffledItems = [...items];
+
+    for (let index = shuffledItems.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        [shuffledItems[index], shuffledItems[randomIndex]] = [shuffledItems[randomIndex], shuffledItems[index]];
+    }
+
+    return shuffledItems;
+}
+
+function pickRandomItem(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+        return null;
+    }
+
+    return items[Math.floor(Math.random() * items.length)];
+}
+
 /**
  * Obtiene todas las habitaciones de un grupo
  * @param {string} groupName - Nombre del grupo (ej: "Milan")
  * @returns {Promise<Array>} - Lista de habitaciones del grupo
  */
 async function getRoomsInGroup(groupName) {
-    return await Habitacion.find({
+    const rooms = await Habitacion.find({
         roomGroup: groupName,
         isGrouped: true,
         isActive: true
-    }).sort({ roomNumber: 1 });
+    });
+
+    return shuffleArray(rooms);
 }
 
 /**
@@ -149,8 +170,7 @@ async function getGroupAvailability(groupName, arrivalDate, departureDate) {
     const roomsInGroup = await getRoomsInGroup(groupName);
     const availableRooms = await findAvailableRoomsInGroup(groupName, arrivalDate, departureDate);
     
-    // Obtener información de la primera habitación del grupo (representativa)
-    const representativeRoom = roomsInGroup[0];
+    const representativeRoom = pickRandomItem(availableRooms.length > 0 ? availableRooms : roomsInGroup);
     
     return {
         groupName: groupName,
@@ -204,7 +224,7 @@ async function getAllGroups() {
     return groups.map(group => ({
         groupName: group._id,
         totalRooms: group.totalRooms,
-        rooms: group.rooms.sort((a, b) => a.roomNumber - b.roomNumber),
+        rooms: group.rooms.sort((leftRoom, rightRoom) => leftRoom.name.localeCompare(rightRoom.name, 'es', { numeric: true, sensitivity: 'base' })),
         groupInfo: {
             accomodationType: group.representativeRoom.propertyDetails?.accomodationType,
             maxOccupancy: group.representativeRoom.propertyDetails?.maxOccupancy,

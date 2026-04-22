@@ -249,6 +249,8 @@ document.addEventListener('DOMContentLoaded', function () {
             option.dataset.id = room.id;
             option.dataset.pax = room.maxPax;
             option.dataset.minPax = room.minPax;
+            option.dataset.groupName = room.groupName || '';
+            option.dataset.isGroup = room.isGroup ? 'true' : 'false';
             roomSelect.appendChild(option);
         });
 
@@ -265,6 +267,8 @@ document.addEventListener('DOMContentLoaded', function () {
     async function recalculateSelectedRoomPrice() {
         const selectedRoomId = roomIdInput.value;
         const selectedPax = Number(paxSelect.value);
+        const selectedGroupName = roomIdInput.dataset.groupName || '';
+        const isGroupedSelection = roomIdInput.dataset.isGrouped === 'true';
 
         if (!selectedRoomId || !selectedPax) {
             resetPricing();
@@ -275,7 +279,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             const data = await fetchQuote(selectedPax);
-            const room = (data.chalets || []).find((chalet) => String(chalet.id) === String(selectedRoomId));
+            let room = (data.chalets || []).find((chalet) => String(chalet.id) === String(selectedRoomId));
+
+            if (!room && isGroupedSelection && selectedGroupName) {
+                room = (data.chalets || []).find((chalet) => chalet.isGroup && chalet.groupName === selectedGroupName);
+
+                if (room) {
+                    roomIdInput.value = room.id;
+                    const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+                    if (selectedOption) {
+                        selectedOption.dataset.id = room.id;
+                    }
+                }
+            }
 
             if (!room) {
                 throw new Error('La habitación no coincide con la ocupación seleccionada para esta cotización. Ajusta huéspedes o elige otra habitación.');
@@ -493,6 +509,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const minPax = Number(selectedOption?.dataset?.minPax || 1);
 
         roomIdInput.value = roomId;
+        roomIdInput.dataset.groupName = selectedOption?.dataset?.groupName || '';
+        roomIdInput.dataset.isGrouped = selectedOption?.dataset?.isGroup || 'false';
         maxOccupancyInput.value = maxPax || '';
         buildPaxOptions(maxPax, minPax);
         resetPricing();

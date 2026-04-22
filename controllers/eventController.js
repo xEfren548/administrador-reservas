@@ -104,6 +104,14 @@ function getUtcDayBounds(dateValue) {
     return { start, end };
 }
 
+function pickRandomItem(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+        return null;
+    }
+
+    return items[Math.floor(Math.random() * items.length)];
+}
+
 async function hasAdjacentReservationForMinNights(resourceId, checkInDate, checkOutDate) {
     const excludedStatuses = ['playground', 'no-show', 'cancelled'];
     const { start: checkInStart, end: checkInEnd } = getUtcDayBounds(checkInDate);
@@ -3538,12 +3546,12 @@ async function cotizadorChaletsyPrecios(req, res) {
             }
 
             for (const groupName in groupedChalets) {
-                groupedChalets[groupName].sort((a, b) => (a.roomNumber || 0) - (b.roomNumber || 0));
-            }
-
-            for (const groupName in groupedChalets) {
                 const groupRooms = groupedChalets[groupName];
-                const representativeChalet = groupRooms[0];
+                const representativeChalet = pickRandomItem(groupRooms);
+
+                if (!representativeChalet) {
+                    continue;
+                }
 
                 representativeChalet._groupInfo = {
                     isGroup: true,

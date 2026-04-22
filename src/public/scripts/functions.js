@@ -241,7 +241,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     displayName: room.displayName || room.name,
                     maxPax: room.maxPax,
                     isGrouped: !!room.isGroup,
-                    availableCount: room.availableCount || 1
+                    availableCount: room.availableCount || 1,
+                    groupName: room.groupName || ''
                 }));
             } else {
                 let queryParams = `fechaLlegada=${arrivalDateStr}&fechaSalida=${departureDateStr}`;
@@ -275,6 +276,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 option.value = room.displayName; // Nombre que se muestra (puede ser nombre de grupo)
                 option.setAttribute('data-bs-id', room.id); // ID específico de la habitación
                 option.setAttribute('data-bs-pax', room.maxPax);
+                option.setAttribute('data-group-name', room.groupName || room.roomGroup || '');
+                option.setAttribute('data-grouped', room.isGrouped ? 'true' : 'false');
                 option.setAttribute('data-available', 'true');
                 
                 // Configurar texto del option
@@ -293,6 +296,9 @@ document.addEventListener("DOMContentLoaded", function () {
             
             // Resetear el select a vacío para que no tenga ninguna opción seleccionada por defecto
             tipologiaHabitacionInput.value = '';
+            document.getElementById('id_cabana').value = '';
+            document.getElementById('id_cabana').dataset.groupName = '';
+            document.getElementById('id_cabana').dataset.grouped = 'false';
             
             // Limpiar campos de precio, ocupación y huéspedes
             document.getElementById('ocupacion_habitacion').value = '';
@@ -687,6 +693,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Guardar el ID de la habitación específica
         idHabitacionInput.value = idHabitacion;
+        idHabitacionInput.dataset.groupName = selectedOption.getAttribute('data-group-name') || '';
+        idHabitacionInput.dataset.grouped = selectedOption.getAttribute('data-grouped') || 'false';
         
         console.log('ID guardado:', idHabitacionInput.value);
 
@@ -831,7 +839,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     const cotizacionData = await cotizacionResponse.json();
                     const selectedChaletId = idHabitacionInput.value;
-                    const selectedChalet = (cotizacionData.chalets || []).find((chalet) => String(chalet.id) === String(selectedChaletId));
+                    const selectedGroupName = idHabitacionInput.dataset.groupName || '';
+                    const isGroupedSelection = idHabitacionInput.dataset.grouped === 'true';
+
+                    let selectedChalet = (cotizacionData.chalets || []).find((chalet) => String(chalet.id) === String(selectedChaletId));
+
+                    if (!selectedChalet && isGroupedSelection && selectedGroupName) {
+                        selectedChalet = (cotizacionData.chalets || []).find((chalet) => chalet.isGroup && chalet.groupName === selectedGroupName);
+
+                        if (selectedChalet) {
+                            idHabitacionInput.value = selectedChalet.id;
+                            const selectedOption = tipologiaSelect.options[tipologiaSelect.selectedIndex];
+                            if (selectedOption) {
+                                selectedOption.setAttribute('data-bs-id', selectedChalet.id);
+                            }
+                        }
+                    }
 
                     if (!selectedChalet) {
                         throw new Error('La habitación seleccionada no está disponible en esta cotización');

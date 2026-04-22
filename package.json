@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon .",
     "dev:api": "nodemon . --api",
+    "report:reservas-bosque-imperial": "node .\\scripts\\reporteReservasAbrilBosqueImperial.js",
     "start": "node index.js"
   },
   "author": "efren alvarez",
