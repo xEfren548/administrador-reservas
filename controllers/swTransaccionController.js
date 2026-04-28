@@ -451,6 +451,15 @@ const getResumen = async (req, res) => {
         const { fechaInicio, fechaFin } = req.query;
 
         const userId = req.session.userId;
+        const cuenta = await SWCuenta.findById(cuentaId)
+            .select('nombre saldoInicial saldoActual moneda propietario');
+
+        if (!cuenta) {
+            return res.status(404).json({
+                success: false,
+                message: 'Cuenta no encontrada'
+            });
+        }
 
         const acceso = await usuarioTieneAccesoTransaccionesCuenta(cuentaId, userId);
         if (!acceso.tieneAcceso) {
@@ -460,7 +469,16 @@ const getResumen = async (req, res) => {
             });
         }
 
-        if (!participante.permisos.puedeVerSaldo && participante.rol !== 'Propietario') {
+        const esPropietario = cuenta.propietario.toString() === userId.toString();
+        const participante = esPropietario
+            ? null
+            : await SWParticipante.findOne({
+                cuenta: cuentaId,
+                usuario: userId,
+                activo: true
+            }).select('permisos');
+
+        if (!esPropietario && !participante?.permisos?.puedeVerSaldo) {
             return res.status(403).json({
                 success: false,
                 message: 'No tiene permisos para ver el saldo'
@@ -472,8 +490,6 @@ const getResumen = async (req, res) => {
             fechaInicio ? new Date(fechaInicio) : null,
             fechaFin ? new Date(fechaFin) : null
         );
-
-        const cuenta = await SWCuenta.findById(cuentaId);
 
         res.status(200).json({
             success: true,
