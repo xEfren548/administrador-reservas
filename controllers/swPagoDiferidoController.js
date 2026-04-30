@@ -15,8 +15,8 @@ const createPagoDiferidoValidators = [
     check('interes').optional().isFloat({ min: 0 }).withMessage('Interés debe ser mayor o igual a 0'),
     check('categoria')
         .optional()
-        .custom((value) => {
-            if (!isCategoriaValida(value)) {
+        .custom(async (value) => {
+            if (!(await isCategoriaValida(value))) {
                 throw new Error('Categoría inválida');
             }
             return true;

@@ -13,8 +13,8 @@ const createRecurrenteValidators = [
     check('concepto').trim().notEmpty().withMessage('El concepto es requerido'),
     check('categoria')
         .notEmpty().withMessage('La categoría es requerida')
-        .custom((value) => {
-            if (!isCategoriaValida(value)) {
+        .custom(async (value) => {
+            if (!(await isCategoriaValida(value))) {
                 throw new Error('Categoría inválida');
             }
             return true;

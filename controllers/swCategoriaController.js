@@ -21,7 +21,7 @@ const getCategoriasFinancieras = async (req, res) => {
         return res.status(200).json({
             success: true,
             data: {
-                categorias: getCategorias(),
+                categorias: await getCategorias(),
                 categoriasFijas: CATEGORIAS_FIJAS
             }
         });
@@ -56,8 +56,8 @@ const updateCategoriasFinancieras = async (req, res) => {
             });
         }
 
-        const categoriasAntes = getCategorias();
-        const categoriasActualizadas = saveCategorias(categorias);
+        const categoriasAntes = await getCategorias();
+        const categoriasActualizadas = await saveCategorias(categorias);
         const huboCambios = JSON.stringify(categoriasAntes) !== JSON.stringify(categoriasActualizadas);
 
         if (huboCambios) {

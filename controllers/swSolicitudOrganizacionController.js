@@ -247,8 +247,8 @@ const createSolicitudOrganizacionValidators = [
         .trim(),
     check('categoria')
         .optional()
-        .custom((value) => {
-            if (!isCategoriaValida(value)) {
+        .custom(async (value) => {
+            if (!(await isCategoriaValida(value))) {
                 throw new Error('Categoría inválida');
             }
             return true;
