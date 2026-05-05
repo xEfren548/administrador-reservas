@@ -7,6 +7,12 @@ let solicitudesOrganizacion = [];
 let solicitudesPendientesConfirmacionDueno = [];
 let proveedoresExternosOrganizacion = [];
 let cuentaSeleccionada = null;
+let paginacionSolicitudesOrganizacion = {
+    page: 1,
+    limit: 20,
+    total: 0,
+    pages: 1
+};
 let usuarios = []; // Lista de usuarios disponibles
 let participantes = []; // Lista de participantes de la cuenta actual
 let participantesOrganizacion = []; // Lista temporal de participantes para nueva organización
@@ -578,7 +584,29 @@ function inicializarEventos() {
     });
     $('#filtro-solicitudes-organizacion').on('change', async function() {
         const organizacionId = $(this).val();
+        paginacionSolicitudesOrganizacion.page = 1;
         await cargarSolicitudesOrganizacion(organizacionId);
+    });
+    $('#solicitudes-organizacion-limit').on('change', async function() {
+        const nuevoLimite = Number.parseInt($(this).val(), 10);
+
+        if (!Number.isInteger(nuevoLimite) || nuevoLimite <= 0) {
+            return;
+        }
+
+        paginacionSolicitudesOrganizacion.limit = nuevoLimite;
+        paginacionSolicitudesOrganizacion.page = 1;
+        await cargarSolicitudesOrganizacion();
+    });
+    $(document).on('click', '.btn-pagina-solicitudes-organizacion', async function() {
+        const nuevaPagina = Number.parseInt($(this).data('page'), 10);
+
+        if (!Number.isInteger(nuevaPagina) || nuevaPagina < 1 || nuevaPagina === paginacionSolicitudesOrganizacion.page) {
+            return;
+        }
+
+        paginacionSolicitudesOrganizacion.page = nuevaPagina;
+        await cargarSolicitudesOrganizacion();
     });
 
     $('#proveedor-externo-organizacion').on('change', async function() {
@@ -1863,6 +1891,112 @@ function actualizarFiltroSolicitudesOrganizacion() {
     }
 }
 
+function actualizarEstadoPaginacionSolicitudesOrganizacion(pagination = {}) {
+    paginacionSolicitudesOrganizacion = {
+        page: Number.isInteger(pagination.page) && pagination.page > 0 ? pagination.page : 1,
+        limit: Number.isInteger(pagination.limit) && pagination.limit > 0 ? pagination.limit : paginacionSolicitudesOrganizacion.limit,
+        total: Number.isInteger(pagination.total) && pagination.total >= 0 ? pagination.total : 0,
+        pages: Number.isInteger(pagination.pages) && pagination.pages > 0 ? pagination.pages : 1
+    };
+
+    $('#solicitudes-organizacion-limit').val(String(paginacionSolicitudesOrganizacion.limit));
+}
+
+function construirBotonPaginacionSolicitudesOrganizacion(label, page, opciones = {}) {
+    const disabled = Boolean(opciones.disabled);
+    const active = Boolean(opciones.active);
+    const clasesEstado = active
+        ? 'border-teal-500 bg-teal-500 text-white'
+        : disabled
+            ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
+            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100';
+    const atributosPagina = disabled ? '' : ` data-page="${page}"`;
+    const atributoDisabled = disabled ? ' disabled' : '';
+
+    return `<button type="button" class="btn-pagina-solicitudes-organizacion rounded-md border px-3 py-1.5 text-sm font-medium transition ${clasesEstado}"${atributosPagina}${atributoDisabled}>${label}</button>`;
+}
+
+function obtenerPaginasVisiblesSolicitudesOrganizacion(page, pages, maximo = 5) {
+    let inicio = Math.max(1, page - Math.floor(maximo / 2));
+    let fin = Math.min(pages, inicio + maximo - 1);
+
+    inicio = Math.max(1, fin - maximo + 1);
+
+    return Array.from({ length: fin - inicio + 1 }, (_, index) => inicio + index);
+}
+
+function renderizarPaginacionSolicitudesOrganizacion() {
+    const contenedor = $('#paginacion-solicitudes-organizacion');
+    const resumen = $('#paginacion-solicitudes-organizacion-resumen');
+    const controles = $('#paginacion-solicitudes-organizacion-controles');
+    const organizacionId = $('#filtro-solicitudes-organizacion').val();
+
+    if (!contenedor.length || !resumen.length || !controles.length) return;
+
+    if (!organizacionId) {
+        contenedor.addClass('hidden');
+        resumen.text('');
+        controles.empty();
+        return;
+    }
+
+    contenedor.removeClass('hidden');
+
+    const { page, limit, total, pages } = paginacionSolicitudesOrganizacion;
+
+    if (total === 0) {
+        resumen.text('0 solicitudes');
+        controles.empty();
+        return;
+    }
+
+    const inicio = ((page - 1) * limit) + 1;
+    const fin = Math.min(total, page * limit);
+    resumen.text(`Mostrando ${inicio}-${fin} de ${total} solicitudes`);
+
+    const paginasVisibles = obtenerPaginasVisiblesSolicitudesOrganizacion(page, pages);
+    const controlesHtml = [];
+
+    controlesHtml.push(construirBotonPaginacionSolicitudesOrganizacion('Anterior', page - 1, {
+        disabled: page <= 1
+    }));
+
+    const primeraPaginaVisible = paginasVisibles[0];
+    const ultimaPaginaVisible = paginasVisibles[paginasVisibles.length - 1];
+
+    if (primeraPaginaVisible > 1) {
+        controlesHtml.push(construirBotonPaginacionSolicitudesOrganizacion('1', 1, {
+            active: page === 1
+        }));
+
+        if (primeraPaginaVisible > 2) {
+            controlesHtml.push('<span class="px-1 text-sm text-gray-400">...</span>');
+        }
+    }
+
+    paginasVisibles.forEach((numeroPagina) => {
+        controlesHtml.push(construirBotonPaginacionSolicitudesOrganizacion(String(numeroPagina), numeroPagina, {
+            active: numeroPagina === page
+        }));
+    });
+
+    if (ultimaPaginaVisible < pages) {
+        if (ultimaPaginaVisible < pages - 1) {
+            controlesHtml.push('<span class="px-1 text-sm text-gray-400">...</span>');
+        }
+
+        controlesHtml.push(construirBotonPaginacionSolicitudesOrganizacion(String(pages), pages, {
+            active: page === pages
+        }));
+    }
+
+    controlesHtml.push(construirBotonPaginacionSolicitudesOrganizacion('Siguiente', page + 1, {
+        disabled: page >= pages
+    }));
+
+    controles.html(controlesHtml.join(''));
+}
+
 function limpiarCamposProveedorSolicitud() {
     $('#solicitud-proveedor-nombre').val('');
     $('#solicitud-proveedor-beneficiario').val('');
@@ -2177,16 +2311,33 @@ async function cargarSolicitudesOrganizacion(organizacionId) {
 
         if (!filtroOrganizacionId) {
             solicitudesOrganizacion = [];
+            actualizarEstadoPaginacionSolicitudesOrganizacion({
+                page: 1,
+                limit: paginacionSolicitudesOrganizacion.limit,
+                total: 0,
+                pages: 1
+            });
             renderizarSolicitudesOrganizacion();
             return;
         }
 
         mostrarSpinner();
-        const response = await fetch(`/api/sw/solicitudes-organizacion/organizacion/${filtroOrganizacionId}`);
+        const queryParams = new URLSearchParams({
+            page: String(paginacionSolicitudesOrganizacion.page),
+            limit: String(paginacionSolicitudesOrganizacion.limit)
+        });
+        const response = await fetch(`/api/sw/solicitudes-organizacion/organizacion/${filtroOrganizacionId}?${queryParams.toString()}`);
         const data = await response.json();
 
         if (data.success) {
+            if (data.pagination?.pages > 0 && data.pagination.page > data.pagination.pages) {
+                paginacionSolicitudesOrganizacion.page = data.pagination.pages;
+                await cargarSolicitudesOrganizacion(filtroOrganizacionId);
+                return;
+            }
+
             solicitudesOrganizacion = data.data || [];
+            actualizarEstadoPaginacionSolicitudesOrganizacion(data.pagination);
             renderizarSolicitudesOrganizacion();
         } else {
             mostrarError(data.message || 'Error al cargar solicitudes organizacionales');
@@ -2204,6 +2355,7 @@ function renderizarSolicitudesOrganizacion() {
     if (!tbody.length) return;
 
     tbody.empty();
+    renderizarPaginacionSolicitudesOrganizacion();
 
     if (solicitudesOrganizacion.length === 0) {
         tbody.html(`

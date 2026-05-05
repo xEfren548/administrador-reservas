@@ -478,11 +478,23 @@
 
                 <div id="solicitudes-vista-organizacion" class="hidden">
                     <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                        <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
                             <label for="filtro-solicitudes-organizacion" class="text-sm text-gray-700">Organización:</label>
                             <select id="filtro-solicitudes-organizacion" class="form-select form-select-sm bg-gray-100 border-gray-300 text-gray-800 w-auto">
                                 <option value="">Seleccione...</option>
                             </select>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                                <label for="solicitudes-organizacion-limit" class="text-sm text-gray-700">Mostrar:</label>
+                                <select id="solicitudes-organizacion-limit" class="form-select form-select-sm bg-gray-100 border-gray-300 text-gray-800 w-auto">
+                                    <option value="10">10</option>
+                                    <option value="20" selected>20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <span class="text-sm text-gray-500">por página</span>
+                            </div>
                         </div>
                     </div>
                     <div class="overflow-x-auto">
@@ -504,6 +516,12 @@
                                 <!-- Se llenará dinámicamente -->
                             </tbody>
                         </table>
+                    </div>
+                    <div id="paginacion-solicitudes-organizacion" class="hidden border-t border-gray-200 bg-white px-4 py-3">
+                        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <span id="paginacion-solicitudes-organizacion-resumen" class="text-sm text-gray-500"></span>
+                            <div id="paginacion-solicitudes-organizacion-controles" class="flex flex-wrap items-center gap-2"></div>
+                        </div>
                     </div>
                 </div>
 

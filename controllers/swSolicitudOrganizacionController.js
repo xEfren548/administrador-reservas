@@ -639,7 +639,7 @@ const createSolicitudOrganizacion = async (req, res) => {
 const getSolicitudesOrganizacion = async (req, res) => {
     try {
         const { organizacionId } = req.params;
-        const { estado, page = 1, limit = 20 } = req.query;
+        const { estado, page = 1, limit } = req.query;
         const userId = req.session.userId;
 
         await getOrganizacionContext(organizacionId, userId);
@@ -647,13 +647,20 @@ const getSolicitudesOrganizacion = async (req, res) => {
         const filter = { organizacion: organizacionId };
         if (estado) filter.estado = estado;
 
-        const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+        const parsedPage = Number.parseInt(page, 10) || 1;
+        const parsedLimit = limit !== undefined ? Number.parseInt(limit, 10) : null;
+        const aplicarPaginacion = Number.isInteger(parsedLimit) && parsedLimit > 0;
+
+        const query = SWSolicitudOrganizacion.find(filter)
+            .sort({ createdAt: -1 });
+
+        if (aplicarPaginacion) {
+            const skip = (parsedPage - 1) * parsedLimit;
+            query.skip(skip).limit(parsedLimit);
+        }
 
         const solicitudes = await poblarSolicitudOrganizacion(
-            SWSolicitudOrganizacion.find(filter)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(parseInt(limit, 10))
+            query
         );
 
         const total = await SWSolicitudOrganizacion.countDocuments(filter);
@@ -663,9 +670,9 @@ const getSolicitudesOrganizacion = async (req, res) => {
             data: solicitudes,
             pagination: {
                 total,
-                page: parseInt(page, 10),
-                limit: parseInt(limit, 10),
-                pages: Math.ceil(total / parseInt(limit, 10))
+                page: parsedPage,
+                limit: aplicarPaginacion ? parsedLimit : total,
+                pages: aplicarPaginacion ? Math.ceil(total / parsedLimit) : 1
             }
         });
     } catch (error) {
