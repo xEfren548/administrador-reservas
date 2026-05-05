@@ -3909,7 +3909,9 @@ async function guardarParticipante() {
     const permisos = {
         puedeVerTransacciones: $('#checkVerTransacciones').is(':checked'),
         puedeCrearSolicitudes: $('#checkCrearSolicitudes').is(':checked'),
-        puedeVerSaldo: $('#checkVerSaldo').is(':checked')
+        puedeVerSaldo: $('#checkVerSaldo').is(':checked'),
+        puedeCrearTransacciones: $('#checkCrearProgramados').is(':checked'),
+        puedeEditarTransacciones: $('#checkEditarProgramados').is(':checked')
     };
 
     try {

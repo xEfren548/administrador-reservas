@@ -63,6 +63,7 @@ const cronTasksRoutes = require('./cronTasksRoutes');
 const finanzasRoutes = require('./finanzasRoutes');
 const inventarioRoutes = require('./inventarioRoutes');
 const inventoryRoutes = require('./inventoryRoutes');
+const pushDeviceRoutes = require('./pushDeviceRoutes');
 
 // Rutas del módulo de Cupones y Referidos
 const cuponesRoutes = require('./cuponesRoutes');
@@ -164,6 +165,7 @@ router.use('/api', costosRoutes);
 router.use('/api/channex', channexRoutes);
 router.use('/api/cartera-dueno', carteraDuenoRoutes);
 router.use('/api/reservas', notasDuenoRoutes);
+router.use('/api', pushDeviceRoutes);
 
 // Rutas del módulo Splitwise (Finanzas)
 router.use('/api/sw', swOrganizacionRoutes);

@@ -107,13 +107,16 @@ Los participantes de cuenta manejan dos roles:
 
 ### 3.6 Particularidad importante de recurrentes y diferidos
 
-Las rutas de recurrentes y pagos diferidos dicen aceptar propietario o participante con permisos, pero el modelo de participante de cuenta solo expone:
+Las rutas de recurrentes y pagos diferidos aceptan propietario o participante con permisos.
 
-- `puedeVerTransacciones`
-- `puedeCrearSolicitudes`
-- `puedeVerSaldo`
+El modelo de participante de cuenta ahora puede persistir tambien:
 
-No existe un permiso persistido llamado `puedeCrearTransacciones` ni `puedeEditarTransacciones` en el modelo actual. En la practica, estas operaciones quedan alineadas al propietario, salvo que se extienda el modelo o existan datos legacy.
+- `puedeCrearTransacciones`
+- `puedeEditarTransacciones`
+
+Compatibilidad con participantes legacy:
+
+- Si un participante antiguo no tiene esos flags persistidos, el backend toma `puedeCrearSolicitudes` como permiso de compatibilidad para crear recurrentes, ejecutar recurrencias y operar pagos diferidos.
 
 ## 4. Mapa funcional de la interfaz
 
@@ -362,6 +365,8 @@ Campos:
 - Checkbox `Puede ver transacciones`
 - Checkbox `Puede crear solicitudes de transaccion`
 - Checkbox `Puede ver saldo de la cuenta`
+- Checkbox `Puede crear recurrentes y diferidos`
+- Checkbox `Puede editar recurrentes y diferidos`
 
 #### Endpoints que consume
 
@@ -824,7 +829,7 @@ Reglas:
 | `cuenta` | string o `CuentaResumen` | Cuenta asociada |
 | `usuario` | `UsuarioResumen` | Participante |
 | `rol` | `Propietario` \| `Participante` | Rol dentro de la cuenta |
-| `permisos` | objeto | `puedeVerTransacciones`, `puedeCrearSolicitudes`, `puedeVerSaldo` |
+| `permisos` | objeto | `puedeVerTransacciones`, `puedeCrearSolicitudes`, `puedeVerSaldo`, `puedeCrearTransacciones`, `puedeEditarTransacciones` |
 | `activo` | boolean | Estado del participante |
 | `fechaIngreso` | string/date | Alta |
 | `agregadoPor` | `UsuarioResumen` o string | Quien lo agrego |
@@ -1886,7 +1891,8 @@ Reglas:
 #### `POST /api/sw/recurrentes`
 
 - Uso: crear transaccion recurrente.
-- Acceso: propietario de la cuenta en el comportamiento real actual.
+- Acceso: propietario de la cuenta o participante con `permisos.puedeCrearTransacciones = true`.
+- Compatibilidad legacy: si ese permiso no existe en el participante, el backend usa `permisos.puedeCrearSolicitudes` como fallback.
 - Content-Type: `application/json`.
 - Body:
   - `cuentaId`
@@ -1931,7 +1937,8 @@ Reglas:
 #### `PUT /api/sw/recurrentes/:id`
 
 - Uso: actualizar o pausar/reanudar una transaccion recurrente.
-- Acceso: comportamiento real sujeto a permiso de propietario o a un permiso no persistido en el modelo.
+- Acceso: propietario de la cuenta o participante con `permisos.puedeEditarTransacciones = true`.
+- Compatibilidad legacy: si ese permiso no existe en el participante, el backend usa `permisos.puedeCrearTransacciones` y luego `permisos.puedeCrearSolicitudes` como fallback.
 - Content-Type: `application/json`.
 - Body posible:
   - `monto`
@@ -1957,7 +1964,8 @@ Reglas:
 #### `POST /api/sw/recurrentes/:id/ejecutar`
 
 - Uso: ejecutar manualmente una recurrencia.
-- Acceso: comportamiento real alineado al propietario en el estado actual del modelo.
+- Acceso: propietario de la cuenta o participante con `permisos.puedeCrearTransacciones = true`.
+- Compatibilidad legacy: si ese permiso no existe en el participante, el backend usa `permisos.puedeCrearSolicitudes` como fallback.
 - Respuesta exitosa: `ApiSuccess<{ transaccion: Transaccion, proximaEjecucion: string/date }>` con `message = "Transaccion ejecutada exitosamente"`.
 - Uso en la app actual: si.
 
@@ -1966,7 +1974,8 @@ Reglas:
 #### `POST /api/sw/pagos-diferidos`
 
 - Uso: crear un pago diferido con cuotas.
-- Acceso: comportamiento real alineado al propietario en el estado actual del modelo.
+- Acceso: propietario de la cuenta o participante con `permisos.puedeCrearTransacciones = true`.
+- Compatibilidad legacy: si ese permiso no existe en el participante, el backend usa `permisos.puedeCrearSolicitudes` como fallback.
 - Content-Type: `application/json`.
 - Body:
   - `cuentaId`
@@ -2006,7 +2015,8 @@ Reglas:
 #### `POST /api/sw/pagos-diferidos/:id/cuotas/:cuotaNumero/pagar`
 
 - Uso: pagar una cuota puntual.
-- Acceso: comportamiento real alineado al propietario en el estado actual del modelo.
+- Acceso: propietario de la cuenta o participante con `permisos.puedeCrearTransacciones = true`.
+- Compatibilidad legacy: si ese permiso no existe en el participante, el backend usa `permisos.puedeCrearSolicitudes` como fallback.
 - Path:
   - `id`
   - `cuotaNumero`

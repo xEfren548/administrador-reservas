@@ -4,6 +4,15 @@ const SWParticipante = require('../models/SWParticipante');
 const Usuario = require('../models/Usuario');
 const { check, validationResult } = require('express-validator');
 
+const buildParticipantePermisos = (permisos = {}, { esPropietario = false } = {}) => ({
+    puedeVerTransacciones: true,
+    puedeCrearSolicitudes: true,
+    puedeVerSaldo: true,
+    puedeCrearTransacciones: esPropietario,
+    puedeEditarTransacciones: esPropietario,
+    ...permisos
+});
+
 // Validadores
 const createCuentaValidators = [
     check('nombre')
@@ -93,6 +102,12 @@ const addParticipanteValidators = [
         .isBoolean().withMessage('El permiso debe ser booleano'),
     check('permisos.puedeVerSaldo')
         .optional()
+        .isBoolean().withMessage('El permiso debe ser booleano'),
+    check('permisos.puedeCrearTransacciones')
+        .optional()
+        .isBoolean().withMessage('El permiso debe ser booleano'),
+    check('permisos.puedeEditarTransacciones')
+        .optional()
         .isBoolean().withMessage('El permiso debe ser booleano')
 ];
 
@@ -173,11 +188,7 @@ const createCuenta = async (req, res) => {
             cuenta: cuenta._id,
             usuario: userId,
             rol: 'Propietario',
-            permisos: {
-                puedeVerTransacciones: true,
-                puedeCrearSolicitudes: true,
-                puedeVerSaldo: true
-            },
+            permisos: buildParticipantePermisos({}, { esPropietario: true }),
             agregadoPor: userId
         });
 
@@ -486,7 +497,12 @@ const addParticipante = async (req, res) => {
                 // Reactivar participante
                 yaParticipa.activo = true;
                 yaParticipa.agregadoPor = propietarioId;
-                if (permisos) yaParticipa.permisos = { ...yaParticipa.permisos, ...permisos };
+                if (permisos) {
+                    yaParticipa.permisos = buildParticipantePermisos(
+                        { ...yaParticipa.permisos, ...permisos },
+                        { esPropietario: yaParticipa.rol === 'Propietario' }
+                    );
+                }
                 await yaParticipa.save();
 
                 return res.status(200).json({
@@ -502,11 +518,9 @@ const addParticipante = async (req, res) => {
             cuenta: id,
             usuario: usuarioId,
             rol: rol || 'Participante',
-            permisos: permisos || {
-                puedeVerTransacciones: true,
-                puedeCrearSolicitudes: true,
-                puedeVerSaldo: true
-            },
+            permisos: buildParticipantePermisos(permisos, {
+                esPropietario: (rol || 'Participante') === 'Propietario'
+            }),
             agregadoPor: propietarioId
         });
 
@@ -616,7 +630,10 @@ const updateParticipantePermisos = async (req, res) => {
             });
         }
 
-        participante.permisos = { ...participante.permisos, ...permisos };
+        participante.permisos = buildParticipantePermisos(
+            { ...participante.permisos, ...permisos },
+            { esPropietario: participante.rol === 'Propietario' }
+        );
         await participante.save();
 
         res.status(200).json({

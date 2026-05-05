@@ -7,9 +7,16 @@ const moment = require('moment-timezone');
 const ftp = require('basic-ftp');
 const fs = require('fs');
 const { isCategoriaValida } = require('../services/swCategoriasService');
+const swSolicitudPushService = require('../services/swSolicitudPushService');
 
 const MEXICO_CENTRO_TIMEZONE = 'America/Mexico_City';
 const FECHA_SOLO_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+function notificarEnSegundoPlano(notificationPromise, contexto) {
+    notificationPromise.catch((error) => {
+        console.error(`Error al enviar notificacion push (${contexto}):`, error);
+    });
+}
 
 function crearErrorFechaInvalida() {
     const error = new Error('Fecha inválida');
@@ -380,6 +387,11 @@ const createSolicitud = async (req, res) => {
             .populate('solicitadoPor', 'firstName lastName email')
             .populate('propietarioCuenta', 'firstName lastName email')
             .populate('cuenta', 'nombre');
+
+        notificarEnSegundoPlano(
+            swSolicitudPushService.notifySolicitudCuentaCreada({ solicitudId: solicitud._id }),
+            'solicitud de cuenta creada'
+        );
 
         res.status(201).json({
             success: true,
@@ -788,6 +800,14 @@ const procesarSolicitud = async (req, res) => {
                 .populate('cuenta', 'nombre saldoActual moneda')
                 .populate('cuentaDestino', 'nombre saldoActual moneda')
                 .populate('transaccionCreada');
+
+            notificarEnSegundoPlano(
+                swSolicitudPushService.notifySolicitudCuentaResuelta({
+                    solicitudId: solicitud._id,
+                    resolution: 'approved'
+                }),
+                'solicitud de cuenta aprobada'
+            );
             
             res.status(200).json({
                 success: true,
@@ -813,6 +833,14 @@ const procesarSolicitud = async (req, res) => {
                     console.log(`Pago ${pagoRechazado._id} rechazado automáticamente tras rechazar solicitud`);
                 }
             }
+
+            notificarEnSegundoPlano(
+                swSolicitudPushService.notifySolicitudCuentaResuelta({
+                    solicitudId: solicitud._id,
+                    resolution: 'rejected'
+                }),
+                'solicitud de cuenta rechazada'
+            );
             
             res.status(200).json({
                 success: true,

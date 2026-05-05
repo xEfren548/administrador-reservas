@@ -5,6 +5,20 @@ const SWTransaccion = require('../models/SWTransaccion');
 const SWParticipante = require('../models/SWParticipante');
 const { isCategoriaValida } = require('../services/swCategoriasService');
 
+const puedeCrearAutomatizaciones = (participante) => {
+    const permisos = participante?.permisos;
+
+    if (!permisos) {
+        return false;
+    }
+
+    if (typeof permisos.puedeCrearTransacciones === 'boolean') {
+        return permisos.puedeCrearTransacciones;
+    }
+
+    return permisos.puedeCrearSolicitudes === true;
+};
+
 // Validadores
 const createPagoDiferidoValidators = [
     check('cuentaId').isMongoId().withMessage('ID de cuenta inválido'),
@@ -66,7 +80,7 @@ const createPagoDiferido = async (req, res) => {
             activo: true
         });
 
-        if (!esPropietario && (!participante || !participante.permisos.puedeCrearTransacciones)) {
+        if (!esPropietario && !puedeCrearAutomatizaciones(participante)) {
             return res.status(403).json({
                 success: false,
                 message: 'No tiene permisos para crear pagos diferidos en esta cuenta'
@@ -298,7 +312,7 @@ const pagarCuota = async (req, res) => {
             activo: true
         });
 
-        if (!esPropietario && (!participante || !participante.permisos.puedeCrearTransacciones)) {
+        if (!esPropietario && !puedeCrearAutomatizaciones(participante)) {
             return res.status(403).json({
                 success: false,
                 message: 'No tiene permisos para pagar cuotas en esta cuenta'

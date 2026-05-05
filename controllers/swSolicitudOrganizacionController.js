@@ -9,11 +9,18 @@ const moment = require('moment-timezone');
 const ftp = require('basic-ftp');
 const fs = require('fs');
 const { isCategoriaValida } = require('../services/swCategoriasService');
+const swSolicitudPushService = require('../services/swSolicitudPushService');
 
 const MEXICO_CENTRO_TIMEZONE = 'America/Mexico_City';
 const FECHA_SOLO_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const WORKFLOW_VERSION_OWNER_CONFIRMATION = 2;
 const ESTADO_PENDIENTE_CONFIRMACION_DUENO = 'PendienteConfirmacionDueno';
+
+function notificarEnSegundoPlano(notificationPromise, contexto) {
+    notificationPromise.catch((error) => {
+        console.error(`Error al enviar notificacion push (${contexto}):`, error);
+    });
+}
 
 function crearErrorFechaInvalida() {
     const error = new Error('Fecha inválida');
@@ -586,6 +593,11 @@ const createSolicitudOrganizacion = async (req, res) => {
                 SWSolicitudOrganizacion.findById(solicitud._id)
             );
 
+            notificarEnSegundoPlano(
+                swSolicitudPushService.notifySolicitudOrganizacionPendienteDueno({ solicitudId: solicitud._id }),
+                'solicitud organizacional pendiente de confirmacion del dueno'
+            );
+
             return res.status(201).json({
                 success: true,
                 mode: 'solicitud',
@@ -600,6 +612,11 @@ const createSolicitudOrganizacion = async (req, res) => {
 
         const solicitudPopulada = await poblarSolicitudOrganizacion(
             SWSolicitudOrganizacion.findById(solicitud._id)
+        );
+
+        notificarEnSegundoPlano(
+            swSolicitudPushService.notifySolicitudOrganizacionCreada({ solicitudId: solicitud._id }),
+            'solicitud organizacional creada'
         );
 
         return res.status(201).json({
@@ -825,6 +842,14 @@ const procesarSolicitudOrganizacion = async (req, res) => {
                         SWSolicitudOrganizacion.findById(id)
                     );
 
+                    notificarEnSegundoPlano(
+                        swSolicitudPushService.notifySolicitudOrganizacionResuelta({
+                            solicitudId: solicitud._id,
+                            resolution: 'approved'
+                        }),
+                        'solicitud organizacional aprobada por administrador y dueno'
+                    );
+
                     return res.status(200).json({
                         success: true,
                         message: 'Solicitud organizacional aprobada y confirmada por el dueño de la cuenta',
@@ -838,6 +863,11 @@ const procesarSolicitudOrganizacion = async (req, res) => {
                 await solicitud.aprobarAdministrativamente(userId, comentario);
                 const solicitudActualizada = await poblarSolicitudOrganizacion(
                     SWSolicitudOrganizacion.findById(id)
+                );
+
+                notificarEnSegundoPlano(
+                    swSolicitudPushService.notifySolicitudOrganizacionPendienteDueno({ solicitudId: solicitud._id }),
+                    'solicitud organizacional aprobada administrativamente'
                 );
 
                 return res.status(200).json({
@@ -856,6 +886,14 @@ const procesarSolicitudOrganizacion = async (req, res) => {
                 SWSolicitudOrganizacion.findById(id)
             );
 
+            notificarEnSegundoPlano(
+                swSolicitudPushService.notifySolicitudOrganizacionResuelta({
+                    solicitudId: solicitud._id,
+                    resolution: 'approved'
+                }),
+                'solicitud organizacional aprobada'
+            );
+
             return res.status(200).json({
                 success: true,
                 message: 'Solicitud organizacional aprobada exitosamente',
@@ -867,6 +905,15 @@ const procesarSolicitudOrganizacion = async (req, res) => {
         }
 
         const resultado = await solicitud.rechazar(userId, motivoRechazo || comentario);
+
+        notificarEnSegundoPlano(
+            swSolicitudPushService.notifySolicitudOrganizacionResuelta({
+                solicitudId: solicitud._id,
+                resolution: 'rejected'
+            }),
+            'solicitud organizacional rechazada'
+        );
+
         return res.status(200).json({
             success: true,
             message: 'Solicitud organizacional rechazada',
@@ -943,6 +990,14 @@ const confirmarSolicitudOrganizacionDueno = async (req, res) => {
             SWSolicitudOrganizacion.findById(id)
         );
 
+        notificarEnSegundoPlano(
+            swSolicitudPushService.notifySolicitudOrganizacionResuelta({
+                solicitudId: solicitud._id,
+                resolution: 'approved'
+            }),
+            'solicitud organizacional confirmada por el dueno'
+        );
+
         return res.status(200).json({
             success: true,
             message: 'Solicitud confirmada por el dueño de la cuenta',
@@ -990,6 +1045,11 @@ const rechazarSolicitudOrganizacionDueno = async (req, res) => {
         }
 
         await solicitud.rechazarPorDueno(userId, motivoRechazo);
+
+        notificarEnSegundoPlano(
+            swSolicitudPushService.notifySolicitudOrganizacionRechazadaPorDueno({ solicitudId: solicitud._id }),
+            'solicitud organizacional rechazada por el dueno'
+        );
 
         return res.status(200).json({
             success: true,

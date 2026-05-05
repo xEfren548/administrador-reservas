@@ -30,6 +30,14 @@ const swParticipanteSchema = new Schema({
         puedeVerSaldo: {
             type: Boolean,
             default: true
+        },
+        puedeCrearTransacciones: {
+            type: Boolean,
+            default: false
+        },
+        puedeEditarTransacciones: {
+            type: Boolean,
+            default: false
         }
     },
     activo: {

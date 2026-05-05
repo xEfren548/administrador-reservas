@@ -5,6 +5,39 @@ const SWTransaccion = require('../models/SWTransaccion');
 const SWParticipante = require('../models/SWParticipante');
 const { isCategoriaValida } = require('../services/swCategoriasService');
 
+const puedeCrearAutomatizaciones = (participante) => {
+    const permisos = participante?.permisos;
+
+    if (!permisos) {
+        return false;
+    }
+
+    if (typeof permisos.puedeCrearTransacciones === 'boolean') {
+        return permisos.puedeCrearTransacciones;
+    }
+
+    // Compatibilidad con participantes existentes antes del permiso explícito.
+    return permisos.puedeCrearSolicitudes === true;
+};
+
+const puedeEditarAutomatizaciones = (participante) => {
+    const permisos = participante?.permisos;
+
+    if (!permisos) {
+        return false;
+    }
+
+    if (typeof permisos.puedeEditarTransacciones === 'boolean') {
+        return permisos.puedeEditarTransacciones;
+    }
+
+    if (typeof permisos.puedeCrearTransacciones === 'boolean') {
+        return permisos.puedeCrearTransacciones;
+    }
+
+    return permisos.puedeCrearSolicitudes === true;
+};
+
 // Validadores para crear transacción recurrente
 const createRecurrenteValidators = [
     check('cuentaId').isMongoId().withMessage('ID de cuenta inválido'),
@@ -70,7 +103,7 @@ const createRecurrente = async (req, res) => {
             activo: true
         });
 
-        if (!esPropietario && (!participante || !participante.permisos.puedeCrearTransacciones)) {
+        if (!esPropietario && !puedeCrearAutomatizaciones(participante)) {
             return res.status(403).json({
                 success: false,
                 message: 'No tiene permisos para crear transacciones recurrentes en esta cuenta'
@@ -248,7 +281,7 @@ const updateRecurrente = async (req, res) => {
             activo: true
         });
 
-        if (!esPropietario && (!participante || !participante.permisos.puedeEditarTransacciones)) {
+        if (!esPropietario && !puedeEditarAutomatizaciones(participante)) {
             return res.status(403).json({
                 success: false,
                 message: 'No tiene permisos para editar esta transacción recurrente'
@@ -374,7 +407,7 @@ const ejecutarManual = async (req, res) => {
             activo: true
         });
 
-        if (!esPropietario && (!participante || !participante.permisos.puedeCrearTransacciones)) {
+        if (!esPropietario && !puedeCrearAutomatizaciones(participante)) {
             return res.status(403).json({
                 success: false,
                 message: 'No tiene permisos para ejecutar esta transacción recurrente'
