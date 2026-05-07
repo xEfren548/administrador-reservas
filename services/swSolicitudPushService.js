@@ -56,6 +56,7 @@ function createBaseData({
 }) {
     return {
         module: 'finanzas',
+        screen: 'finanzas',
         entity: 'solicitud',
         eventType,
         action,
