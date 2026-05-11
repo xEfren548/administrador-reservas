@@ -63,6 +63,11 @@ const sendTestPushValidators = [
         .optional()
         .isString().withMessage('La pantalla destino debe ser texto')
         .isLength({ min: 1, max: 80 }).withMessage('La pantalla destino no puede exceder 80 caracteres')
+        .trim(),
+    check('requestView')
+        .optional()
+        .isString().withMessage('La vista de solicitud debe ser texto')
+        .isLength({ min: 1, max: 40 }).withMessage('La vista de solicitud no puede exceder 40 caracteres')
         .trim()
 ];
 
@@ -132,6 +137,8 @@ async function sendTestPush(req, res) {
         const title = req.body.title || 'Prueba de notificaciones';
         const body = req.body.body || 'Si ves esto, FCM y el backend ya quedaron conectados.';
         const screen = req.body.screen || 'finanzas';
+        const requestId = req.body.requestId || req.body.solicitudId || null;
+        const requestView = req.body.requestView || 'account';
 
         const tokens = await pushDeviceService.getActiveTokensByUserIds([userId]);
 
@@ -153,6 +160,8 @@ async function sendTestPush(req, res) {
                 eventType: 'push_test',
                 navigationTarget: screen,
                 screen,
+                ...(requestId ? { requestView: String(requestView) } : {}),
+                ...(requestId ? { requestId: String(requestId), solicitudId: String(requestId) } : {}),
                 userId: String(userId)
             },
             android: {

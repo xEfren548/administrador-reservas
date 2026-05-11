@@ -16,6 +16,12 @@ const FECHA_SOLO_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const WORKFLOW_VERSION_OWNER_CONFIRMATION = 2;
 const ESTADO_PENDIENTE_CONFIRMACION_DUENO = 'PendienteConfirmacionDueno';
 
+function debeOcultarSolicitudPendienteAlPropietario(solicitud, userId) {
+    return solicitud?.estado === 'Pendiente'
+        && esMismoId(solicitud?.propietarioCuenta, userId)
+        && !esMismoId(solicitud?.solicitadoPor, userId);
+}
+
 function notificarEnSegundoPlano(notificationPromise, contexto) {
     notificationPromise.catch((error) => {
         console.error(`Error al enviar notificacion push (${contexto}):`, error);
@@ -642,10 +648,18 @@ const getSolicitudesOrganizacion = async (req, res) => {
         const { estado, page = 1, limit } = req.query;
         const userId = req.session.userId;
 
-        await getOrganizacionContext(organizacionId, userId);
+        const { participanteActual } = await getOrganizacionContext(organizacionId, userId);
 
         const filter = { organizacion: organizacionId };
         if (estado) filter.estado = estado;
+
+        if (participanteActual.rol !== 'Administrador') {
+            filter.$nor = [{
+                propietarioCuenta: userId,
+                solicitadoPor: { $ne: userId },
+                estado: 'Pendiente'
+            }];
+        }
 
         const parsedPage = Number.parseInt(page, 10) || 1;
         const parsedLimit = limit !== undefined ? Number.parseInt(limit, 10) : null;
@@ -767,8 +781,21 @@ const getSolicitudOrganizacionById = async (req, res) => {
             });
         }
 
+        const { participanteActual } = await getOrganizacionContext(solicitud.organizacion._id, userId);
+
+        if (
+            participanteActual.rol !== 'Administrador'
+            && debeOcultarSolicitudPendienteAlPropietario(solicitud, userId)
+        ) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tiene acceso a esta solicitud organizacional'
+            });
+        }
+
         if (!puedeAccederComoPropietarioCuenta(solicitud, userId)) {
-            await getOrganizacionContext(solicitud.organizacion._id, userId);
+            // Ya se validó que el usuario pertenece a la organización; el detalle solo se oculta
+            // al propietario objetivo mientras la solicitud sigue pendiente de aprobación administrativa.
         }
 
         return res.status(200).json({

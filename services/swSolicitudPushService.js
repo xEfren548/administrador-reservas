@@ -52,16 +52,19 @@ function createBaseData({
     action,
     scope,
     solicitud,
-    targetTab
+    targetTab,
+    requestView
 }) {
     return {
         module: 'finanzas',
         screen: 'finanzas',
+        requestView: requestView || (scope === 'cuenta' ? 'account' : 'organization'),
         entity: 'solicitud',
         eventType,
         action,
         scope,
         estado: solicitud.estado,
+        requestId: asId(solicitud._id),
         solicitudId: asId(solicitud._id),
         cuentaId: asId(solicitud.cuenta),
         cuentaDestinoId: asId(solicitud.cuentaDestino),
@@ -267,7 +270,8 @@ async function notifySolicitudOrganizacionPendienteDueno({ solicitudId }) {
                 action: 'owner_confirmation_requested',
                 scope: 'organizacion',
                 solicitud,
-                targetTab: 'confirmacionDueno'
+                targetTab: 'confirmacionDueno',
+                requestView: 'ownerConfirmation'
             })
         }
     );

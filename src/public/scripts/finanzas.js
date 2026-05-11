@@ -3925,7 +3925,7 @@ function obtenerBadgeEstado(estado) {
         'Aprobada': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-900 text-green-300">Aprobada</span>',
         'Rechazada': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-900 text-red-300">Rechazada</span>',
         'RechazadaPorDueno': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Rechazada Dueño</span>',
-        'Cancelada': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-600 text-gray-600">Cancelada</span>'
+        'Cancelada': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Cancelada</span>'
     };
     return badges[estado] || estado;
 }
