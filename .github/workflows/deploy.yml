@@ -46,6 +46,7 @@ jobs:
             STRIPE_SECRET_KEY_ISRA=${{ secrets.STRIPE_SECRET_KEY_ISRA }}
             STRIPE_SECRET_KEY_FERNANDO=${{ secrets.STRIPE_SECRET_KEY_FERNANDO }}
             STRIPE_SECRET_KEY_CARLOS=${{ secrets.STRIPE_SECRET_KEY_CARLOS }}
+            FIREBASE_SERVICE_ACCOUNT_JSON=${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
 
             EOL
             
