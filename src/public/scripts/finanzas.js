@@ -2593,6 +2593,20 @@ function buscarSolicitudOrganizacionPorId(solicitudId) {
     return [...solicitudesOrganizacion, ...solicitudesPendientesConfirmacionDueno].find(s => s._id === solicitudId);
 }
 
+function sincronizarSolicitudOrganizacionLocal(solicitudActualizada) {
+    if (!solicitudActualizada?._id) {
+        return;
+    }
+
+    solicitudesOrganizacion = solicitudesOrganizacion.map((solicitud) => (
+        solicitud._id === solicitudActualizada._id ? solicitudActualizada : solicitud
+    ));
+
+    solicitudesPendientesConfirmacionDueno = solicitudesPendientesConfirmacionDueno
+        .map((solicitud) => (solicitud._id === solicitudActualizada._id ? solicitudActualizada : solicitud))
+        .filter((solicitud) => solicitud.estado === 'PendienteConfirmacionDueno');
+}
+
 async function confirmarSolicitudOrganizacionDueno(solicitudId) {
     const solicitud = buscarSolicitudOrganizacionPorId(solicitudId);
     if (!solicitud) {
@@ -2672,6 +2686,9 @@ async function confirmarSolicitudOrganizacionDueno(solicitudId) {
         const data = await response.json();
 
         if (data.success) {
+            sincronizarSolicitudOrganizacionLocal(data.data?.solicitud);
+            renderizarSolicitudesOrganizacion();
+            renderizarSolicitudesPendientesConfirmacionDueno();
             mostrarExito('Solicitud confirmada por el dueño de la cuenta');
             await cargarSolicitudesPendientesConfirmacionDueno();
             if ($('#filtro-solicitudes-organizacion').val()) {
@@ -2723,6 +2740,9 @@ async function rechazarSolicitudOrganizacionDueno(solicitudId) {
         const data = await response.json();
 
         if (data.success) {
+            sincronizarSolicitudOrganizacionLocal(data.data);
+            renderizarSolicitudesOrganizacion();
+            renderizarSolicitudesPendientesConfirmacionDueno();
             mostrarExito('Solicitud rechazada por el dueño de la cuenta');
             await cargarSolicitudesPendientesConfirmacionDueno();
             if ($('#filtro-solicitudes-organizacion').val()) {
