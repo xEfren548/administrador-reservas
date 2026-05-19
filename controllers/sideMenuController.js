@@ -133,7 +133,7 @@ async function generateSideMenu(req, res, next) {
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="/api/cabanas/editar-cabana" class="nav-link px-5" title="Editar Propiedad">
+                                    <a href="/api/cabanas/editar-cabana-opt" class="nav-link px-5" title="Editar Propiedad">
                                         <i class="fas fa-pencil-alt "></i><span class="d-none d-sm-inline"
                                             style="margin-left: 8px;">Editar propiedad</span>
                                     </a>

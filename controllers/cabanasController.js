@@ -16,6 +16,141 @@ const Roles = require("../models/Roles");
 const permissions = require('../models/permissions');
 const Plataformas = require('../models/Plataformas');
 const SWCuenta = require('../models/SWCuenta');
+const { TIME_PATTERN, normalizeStoredTime } = require('../utils/time');
+
+function formatUserDisplay(user, valueField = '_id') {
+    if (!user) {
+        return null;
+    }
+
+    const value = user[valueField];
+    return [value?.toString?.() || value, `${user.firstName} ${user.lastName}`];
+}
+
+async function ensureEditCabinsPermission(req) {
+    const userRole = req.session.role;
+    const userPermissions = await Roles.findById(userRole);
+    if (!userPermissions) {
+        throw new Error('El usuario no tiene un rol definido, contacte al administrador');
+    }
+
+    const permittedRole = 'EDIT_CABINS';
+    if (!userPermissions.permissions.includes(permittedRole)) {
+        throw new Error('El usuario no tiene permiso para editar cabañas');
+    }
+}
+
+async function getEditChaletOptions() {
+    const chaletOptionsDocs = await Habitacion.find()
+        .select('_id propertyDetails.name')
+        .lean()
+        .sort({ 'propertyDetails.name': 1 });
+
+    return chaletOptionsDocs.map(chalet => ({
+        _id: chalet._id.toString(),
+        propertyDetails: {
+            name: chalet.propertyDetails.name
+        }
+    }));
+}
+
+async function getEditChaletLookups({ includeChaletOptions = true } = {}) {
+    const [chaletOptionsDocs, admins, janitors, owners, tipologias, investors, plataformas, cuentasFinancieras, bosqueImperial] = await Promise.all([
+        includeChaletOptions
+            ? Habitacion.find().select('_id propertyDetails.name').lean().sort({ 'propertyDetails.name': 1 })
+            : Promise.resolve([]),
+        Usuario.find({ privilege: 'Administrador' }).select('email firstName lastName').lean(),
+        Usuario.find({ privilege: 'Limpieza' }).select('email firstName lastName').lean(),
+        Usuario.find({ privilege: 'Dueño de cabañas' }).select('firstName lastName').lean(),
+        TipologiasCabana.find().lean(),
+        Usuario.find({ privilege: 'Inversionistas' }).select('firstName lastName').lean(),
+        Plataformas.find().lean(),
+        SWCuenta.find({
+            activa: true,
+            'datosBancarios.beneficiario': { $exists: true, $ne: '' },
+            'datosBancarios.banco': { $exists: true, $ne: '' },
+            $or: [
+                { 'datosBancarios.clabe': { $exists: true, $ne: '' } },
+                { 'datosBancarios.numeroCuenta': { $exists: true, $ne: '' } }
+            ]
+        }).select('nombre datosBancarios.clabe datosBancarios.numeroCuenta').lean(),
+        Usuario.findById('66a7c2f2915b94d6630b67f2').select('firstName lastName').lean()
+    ]);
+
+    if (bosqueImperial && !owners.some(owner => owner._id.toString() === bosqueImperial._id.toString())) {
+        owners.push(bosqueImperial);
+    }
+
+    return {
+        chaletOptions: chaletOptionsDocs.map(chalet => ({
+            _id: chalet._id.toString(),
+            propertyDetails: {
+                name: chalet.propertyDetails.name
+            }
+        })),
+        admins,
+        janitors,
+        owners,
+        tipologias,
+        investors,
+        plataformas,
+        cuentasFinancieras
+    };
+}
+
+async function hydrateEditableChalet(chalet) {
+    if (!chalet) {
+        return null;
+    }
+
+    const [admin, janitor, owner, maintenance] = await Promise.all([
+        chalet.others?.admin ? Usuario.findById(chalet.others.admin).select('email firstName lastName').lean() : null,
+        chalet.others?.janitor ? Usuario.findById(chalet.others.janitor).select('email firstName lastName').lean() : null,
+        chalet.others?.owner ? Usuario.findById(chalet.others.owner).select('firstName lastName').lean() : null,
+        chalet.others?.maintenance ? Usuario.findById(chalet.others.maintenance).select('email firstName lastName').lean() : null
+    ]);
+
+    chalet._id = chalet._id.toString();
+    chalet.others.admin = formatUserDisplay(admin, 'email') || ['', 'Sin administrador asignado'];
+    chalet.others.janitor = formatUserDisplay(janitor, 'email') || ['', 'Sin personal de limpieza asignado'];
+    chalet.others.owner = formatUserDisplay(owner) || ['', 'Sin dueño asignado'];
+    chalet.others.maintenance = formatUserDisplay(maintenance, 'email') || ['', 'Sin personal de mantenimiento asignado'];
+    chalet.others.arrivalTime = normalizeStoredTime(chalet.others.arrivalTime, '15:00');
+    chalet.others.departureTime = normalizeStoredTime(chalet.others.departureTime, '11:00');
+    chalet.images = Array.isArray(chalet.images) ? chalet.images : [];
+    chalet.files = Array.isArray(chalet.files) ? chalet.files : [];
+
+    return chalet;
+}
+
+async function getEditableChaletById(chaletId) {
+    if (!mongoose.Types.ObjectId.isValid(chaletId)) {
+        throw new BadRequestError('La cabaña seleccionada no es válida');
+    }
+
+    const chalet = await Habitacion.findById(chaletId).lean();
+    if (!chalet) {
+        throw new NotFoundError('Chalet not found');
+    }
+
+    return hydrateEditableChalet(chalet);
+}
+
+async function resolveUploadTargetChalet(req) {
+    if (req.body?.chaletId && mongoose.Types.ObjectId.isValid(req.body.chaletId)) {
+        const chaletById = await Habitacion.findById(req.body.chaletId).select('_id propertyDetails.name');
+        if (chaletById) {
+            return chaletById;
+        }
+    }
+
+    const chaletName = req.session.chaletUpdated || req.session.chaletAdded;
+    if (!chaletName) {
+        return null;
+    }
+
+    return Habitacion.findOne({ 'propertyDetails.name': chaletName }).select('_id propertyDetails.name');
+}
 
 const showCreateChaletViewValidators = [
     check()
@@ -161,6 +296,12 @@ const createChaletValidators = [
     check('others.baseCost2nights')
         .notEmpty().withMessage('Base cost for 2 nights is required')
         .isNumeric().withMessage('Base cost must be a number'),
+    check('others.arrivalTime')
+        .notEmpty().withMessage('Arrival time is required')
+        .matches(TIME_PATTERN).withMessage('Arrival time must use HH:mm format'),
+    check('others.departureTime')
+        .notEmpty().withMessage('Departure time is required')
+        .matches(TIME_PATTERN).withMessage('Departure time must use HH:mm format'),
     check("others.admin")
         .notEmpty().withMessage("Administrator's name is required")
         .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
@@ -331,10 +472,10 @@ const editChaletValidators = [
         .isNumeric().withMessage('Base cost must be a number'),
     check('others.arrivalTime')
         .optional({ checkFalsy: true })
-        .toDate(),
+        .matches(TIME_PATTERN).withMessage('Arrival time must use HH:mm format'),
     check('others.departureTime')
         .optional({ checkFalsy: true })
-        .toDate(),
+        .matches(TIME_PATTERN).withMessage('Departure time must use HH:mm format'),
     check("others.admin")
         .optional({ checkFalsy: true })
         .isLength({ max: 255 }).withMessage("Administrator's name must be less than 255 characters")
@@ -499,17 +640,8 @@ async function createChalet(req, res, next) {
             return next(new BadRequestError("El total de tickets de inversionistas debe ser igual a 10."));  ;
         }
 
-        const arrivalTimeHours = parseInt(others.arrivalTimeHours);
-        const arrivalTimeMinutes = parseInt(others.arrivalTimeMinutes);
-        const departureTimeHours = parseInt(others.departureTimeHours);
-        const departureTimeMinutes = parseInt(others.departureTimeMinutes);
-
-        const newArrivalTime = new Date();
-        newArrivalTime.setHours(arrivalTimeHours);
-        newArrivalTime.setMinutes(arrivalTimeMinutes);
-        const newDepartureTime = new Date();
-        newDepartureTime.setHours(departureTimeMinutes);
-        newDepartureTime.setMinutes(departureTimeHours);
+        const arrivalTime = normalizeStoredTime(others.arrivalTime, '15:00');
+        const departureTime = normalizeStoredTime(others.departureTime, '11:00');
 
         const chaletToAdd = {
             propertyDetails,
@@ -525,8 +657,8 @@ async function createChalet(req, res, next) {
                 basePrice2nights: others.basePrice2nights,
                 baseCost: others.baseCost,
                 baseCost2nights: others.baseCost2nights,
-                arrivalTime: newArrivalTime,
-                departureTime: newDepartureTime,
+                arrivalTime,
+                departureTime,
                 admin: admin._id,
                 janitor: janitor._id,
                 owner: owner._id,
@@ -583,22 +715,7 @@ async function uploadChaletFiles(req, res, next) {
     const client = new ftp.Client();
 
     try {
-        // const chalets = await Habitacion.findOne();
-        
-        var chalet = "";
-        console.log(req.session)
-        if (req.session.chaletAdded) {
-            console.log("entra")
-            //console.log(req.session.chaletAdded)
-            chalet = await Habitacion.findOne({ "propertyDetails.name": req.session.chaletAdded }).lean();
-            // chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
-            //console.log(chalets)
-        } else if (req.session.chaletUpdated) {
-            chalet = await Habitacion.findOne({ "propertyDetails.name": req.session.chaletUpdated }).lean();
-            // chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
-            console.log("Entra")
-        }
-        //console.log(chalet)
+        const chalet = await resolveUploadTargetChalet(req);
         if (!chalet) {
             throw new NotFoundError('Chalet does not exists');
         }
@@ -614,13 +731,13 @@ async function uploadChaletFiles(req, res, next) {
         for (let i = 0; i < req.files.length; i++) {
             //console.log(req.files[i].path);
             const localFilePath = req.files[i].path;
-            const remoteFileName = req.session.chaletAdded + '-' + req.files[i].filename;
+            const remoteFileName = `${chalet.propertyDetails.name}-${req.files[i].filename}`;
             await client.uploadFrom(localFilePath, remoteFileName);
             console.log(`Archivo '${remoteFileName}' subido con éxito`);
             //console.log(chalet.images)
 
             await Habitacion.updateOne(
-                { "propertyDetails.name": req.session.chaletAdded || req.session.chaletUpdated },
+                { _id: chalet._id },
                 { $push: { images: remoteFileName } }
             );
 
@@ -639,6 +756,7 @@ async function uploadChaletFiles(req, res, next) {
         res.status(200).json({ success: true, message: "Archivos subidos con éxito" });
     } catch (error) {
         console.log("Error:", error);
+        res.status(500).json({ success: false, message: "Error uploading files", error: error.message });
     } finally {
         client.close();
     }
@@ -651,18 +769,7 @@ async function uploadChaletPdf(req, res, next) {
     const client = new ftp.Client();
 
     try {
-        // const chalets = await Habitacion.find();
-        var chalet = "";
-        console.log(req.session)
-        if (req.session.chaletAdded) {
-            chalet = await Habitacion.findOne({ "propertyDetails.name": req.session.chaletAdded });
-            // chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletAdded);
-            //console.log(chalets)
-        } else if (req.session.chaletUpdated) {
-            // chalet = chalets.resources.find(chalet => chalet.propertyDetails.name === req.session.chaletUpdated);
-            chalet = await Habitacion.findOne({ "propertyDetails.name": req.session.chaletUpdated });
-        }
-        //console.log(chalet)
+        const chalet = await resolveUploadTargetChalet(req);
         if (!chalet) {
             throw new NotFoundError('Chalet does not exists');
         }
@@ -679,13 +786,11 @@ async function uploadChaletPdf(req, res, next) {
             console.log("Entra a req.file")
             const file = req.file;
             const localFilePath = file.path;
-            const remoteFileName = req.session.chaletAdded + '-' + file.filename;
+            const remoteFileName = `${chalet.propertyDetails.name}-${file.filename}`;
             await client.uploadFrom(localFilePath, remoteFileName);
             console.log(`Archivo '${remoteFileName}' subido con éxito`);
             //console.log(chalet.images)
-            chalet.files = [];
-            chalet.files.push(remoteFileName);
-            await chalet.save();
+            await Habitacion.updateOne({ _id: chalet._id }, { $set: { files: [remoteFileName] } });
 
             fs.unlink(localFilePath, (err) => {
                 if (err) {
@@ -811,19 +916,8 @@ async function showEditChaletsView(req, res, next) {
             chalet.others.owner = [owner._id, owner.firstName + " " + owner.lastName];
         }
         for (const chalet of chalets) {
-            // Convertir arrivalTime a un objeto moment y ajustar a UTC
-            let arrivalStr = chalet.others.arrivalTime; // Asume que es un objeto Date
-            let arrivalUtc = moment(arrivalStr).utc(); // Ajusta el objeto Date a UTC
-            let arrival = arrivalUtc.tz('America/Mexico_City').format("HH:mm"); // Formatear solo hora
-            // Convertir departureTime a un objeto moment y ajustar a UTC
-            let departureStr = chalet.others.departureTime; // Asume que es un objeto Date
-            let departureUtc = moment(departureStr).utc(); // Ajusta el objeto Date a UTC
-                
-            // Convertir a la zona horaria de 'America/Mexico_City' y extraer solo la hora
-            let departure = departureUtc.tz('America/Mexico_City').format("HH:mm"); // Formatear solo hora
-    
-            chalet.others.arrivalTime = arrival;
-            chalet.others.departureTime = departure;
+            chalet.others.arrivalTime = normalizeStoredTime(chalet.others.arrivalTime, '15:00');
+            chalet.others.departureTime = normalizeStoredTime(chalet.others.departureTime, '11:00');
         }
         const admins = await Usuario.find({ privilege: "Administrador" }).lean();
         const janitors = await Usuario.find({ privilege: "Limpieza" }).lean();
@@ -885,6 +979,51 @@ async function showEditChaletsView(req, res, next) {
     }
 }
 
+async function showEditChaletsViewOpt(req, res, next) {
+    try {
+        await ensureEditCabinsPermission(req);
+
+        const chaletOptions = await getEditChaletOptions();
+        const selectedChaletId = req.query.chaletId?.trim() || '';
+
+        res.render('vistaEditarCabanaOpt', {
+            chaletOptions,
+            selectedChalet: null,
+            selectedChaletId
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        return next(error);
+    }
+}
+
+async function showEditChaletsViewOptDetail(req, res, next) {
+    try {
+        await ensureEditCabinsPermission(req);
+
+        const selectedChaletId = req.query.chaletId?.trim();
+        if (!selectedChaletId) {
+            throw new BadRequestError('La cabaña seleccionada es obligatoria');
+        }
+
+        const [lookups, selectedChalet] = await Promise.all([
+            getEditChaletLookups({ includeChaletOptions: false }),
+            getEditableChaletById(selectedChaletId)
+        ]);
+
+        res.render('vistaEditarCabanaOpt', {
+            layout: false,
+            fragmentMode: true,
+            ...lookups,
+            selectedChalet,
+            selectedChaletId
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        return next(error);
+    }
+}
+
 async function editChalet(req, res, next) {
     const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images, txtChaletId, activePlatforms } = req.body;
     console.log('Entrando a edit chalet');
@@ -937,15 +1076,8 @@ async function editChalet(req, res, next) {
             return res.status(400).json({ message: "La suma de tickets debe ser 0 o 10" });
         }
 
-        console.log(others.departureTime);
-        console.log(others.arrivalTime);
-        const newArrivalTime = new Date();
-        newArrivalTime.setHours(parseInt(others.arrivalTime.split(':')[0], 10));
-        newArrivalTime.setMinutes(parseInt(others.arrivalTime.split(':')[1], 10));
-        const newDepartureTime = new Date();
-        newDepartureTime.setHours(parseInt(others.departureTime.split(':')[0], 10));
-        newDepartureTime.setMinutes(parseInt(others.departureTime.split(':')[1], 10));
-        console.log(newDepartureTime);
+        const arrivalTime = normalizeStoredTime(others.arrivalTime, '15:00');
+        const departureTime = normalizeStoredTime(others.departureTime, '11:00');
 
         console.log('investors: ')
         console.log(newInvestors);
@@ -965,8 +1097,8 @@ async function editChalet(req, res, next) {
                 basePrice2nights: others.basePrice2nights,
                 baseCost: others.baseCost,
                 baseCost2nights: others.baseCost2nights,
-                arrivalTime: newArrivalTime,
-                departureTime: newDepartureTime,
+                arrivalTime,
+                departureTime,
                 admin: admin._id,
                 janitor: janitor._id,
                 owner: owner._id,
@@ -1202,6 +1334,8 @@ module.exports = {
     uploadChaletFiles,
     uploadChaletPdf,
     showEditChaletsView,
+    showEditChaletsViewOpt,
+    showEditChaletsViewOptDetail,
     editChalet,
     showChaletsData,
     renderCalendarPerChalet,

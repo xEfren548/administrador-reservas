@@ -5,6 +5,7 @@ const Reservation = require('../models/Evento');
 const Habitacion = require('../models/Habitacion');
 const Cliente = require('../models/Cliente');
 const moment = require('moment');
+const { normalizeStoredTime } = require('../utils/time');
 
 const getViewValidators = [
     check('')
@@ -142,8 +143,8 @@ async function showInstructionsView(req, res, next) {
         console.log("Departure Date:", formattedDepartureDate); // "10-11-2024"
 
 
-        const arrivalTime = moment(chalet.others.arrivalTime).tz("America/Mexico_City").format("HH:mm");
-        const departureTime = moment(chalet.others.departureTime).tz("America/Mexico_City").format("HH:mm");
+        const arrivalTime = normalizeStoredTime(chalet.others.arrivalTime, '15:00');
+        const departureTime = normalizeStoredTime(chalet.others.departureTime, '11:00');
 
         reservation.arrivalDate = `${formattedArrivalDate} a las ${arrivalTime}`
         reservation.departureDate = `${formattedDepartureDate} a las ${departureTime}`;

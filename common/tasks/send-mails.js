@@ -4,6 +4,7 @@ const moment = require('moment-timezone');
 const Evento = require('../../models/Evento');
 const Habitacion = require('../../models/Habitacion');
 const Cliente = require('../../models/Cliente');
+const { normalizeStoredTime } = require('../../utils/time');
 
 
 async function sendEmail(email, reservationId) {
@@ -17,8 +18,8 @@ async function sendEmail(email, reservationId) {
         const chalet = await Habitacion.findById(reservation.resourceId).lean();
         // const chalet = allChalets.resources.find(chalet => chalet._id.toString() === reservation.resourceId.toString());
         const client = await Cliente.findById(reservation.client.toString());
-        const arrivalTime = moment(chalet.others.arrivalTime).tz("America/Mexico_City").format("HH:mm");
-        const departureTime = moment(chalet.others.departureTime).tz("America/Mexico_City").format("HH:mm");
+        const arrivalTime = normalizeStoredTime(chalet.others.arrivalTime, '15:00');
+        const departureTime = normalizeStoredTime(chalet.others.departureTime, '11:00');
 
         let htmlContent  = fs.readFileSync("views/templates/reservationTemplate.html", 'utf8');
         

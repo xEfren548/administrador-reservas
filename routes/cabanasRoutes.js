@@ -11,6 +11,8 @@ router.post('/cabanas/subir-imagenes-cabana', uploadImg,  validationRequest, cab
 router.post('/cabanas/subir-pdf-cabana', uploadPdf,  validationRequest, cabanasController.uploadChaletPdf);
 
 router.get('/cabanas/editar-cabana', cabanasController.showEditChaletsView);
+router.get('/cabanas/editar-cabana-opt', cabanasController.showEditChaletsViewOpt);
+router.get('/cabanas/editar-cabana-opt/detalle', cabanasController.showEditChaletsViewOptDetail);
 router.post('/cabanas/editar-cabana', /*cabanasController.createChaletValidators, validationRequest,*/ cabanasController.editChalet);
 router.put('/cabanas/status', cabanasController.changeChaletStatus);
 router.get('/cabanas/calendar', cabanasController.renderCalendarPerChalet)

@@ -273,11 +273,11 @@ const othersSchema = new mongoose.Schema({
         //required: true
     },
     arrivalTime: {
-        type: Date,
+        type: String,
         //required: true
     },
     departureTime: {
-        type: Date,
+        type: String,
         //required: true
     },
     admin: {
@@ -326,6 +326,10 @@ const preSchema = new mongoose.Schema({
     additionalInfo: additionalInfoSchema,
     location: locationSchema,
     accomodationDescription: {
+        type: String,
+        //required: true
+    },
+    additionalAccomodationDescription: {
         type: String,
         //required: true
     },
