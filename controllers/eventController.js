@@ -1522,9 +1522,8 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
 
         console.log("Departure date before: ")
         console.log(departureDate)
-
-        arrivalDate.setHours(arrivalDate.getHours() + chalet.others.arrivalTime.getHours());
-        departureDate.setHours(departureDate.getHours() + chalet.others.departureTime.getHours());
+        setTimeOnDate(arrivalDate, chalet.others.arrivalTime, { useUtc: true, fallback: '15:00' });
+        setTimeOnDate(departureDate, chalet.others.departureTime, { useUtc: true, fallback: '11:00' });
 
         console.log("Arrival date after: ")
         console.log(arrivalDate)
