@@ -1231,11 +1231,11 @@ async function createReservationForClient(reservationData, status, paymentStatus
         const arrivalDate = moment(reservationData.checkIn).toDate();
         const departureDate = moment(reservationData.checkOut).toDate();
 
-        const arrivalTime = getTimeParts(chalet.others.arrivalTime, '15:00');
-        arrivalDate.setUTCHours(arrivalTime.hours, arrivalTime.minutes, 0, 0);
+        const cabinArrivalHour = chalet.others.arrivalTime?.getHours();
+        arrivalDate.setUTCHours(cabinArrivalHour || 15, 0, 0, 0);
 
-        const departureTime = getTimeParts(chalet.others.departureTime, '11:00');
-        departureDate.setUTCHours(departureTime.hours, departureTime.minutes, 0, 0);
+        const cabinDepartureHour = chalet.others.departureTime?.getHours();
+        departureDate.setUTCHours(cabinDepartureHour || 11, 0, 0, 0);
 
         let client = null;
         let isWebClient = false;
