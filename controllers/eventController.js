@@ -1523,8 +1523,8 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         console.log("Departure date before: ")
         console.log(departureDate)
 
-        setTimeOnDate(arrivalDate, chalet.others.arrivalTime, { fallback: '15:00' });
-        setTimeOnDate(departureDate, chalet.others.departureTime, { fallback: '11:00' });
+        arrivalDate.setHours(arrivalDate.getHours() + chalet.others.arrivalTime.getHours());
+        departureDate.setHours(departureDate.getHours() + chalet.others.departureTime.getHours());
 
         console.log("Arrival date after: ")
         console.log(arrivalDate)
@@ -1879,21 +1879,23 @@ async function createOTAReservation(data) {
         // arrivalDate.setHours(chalet.others.arrivalTime.getHours());
         // departureDate.setHours(chalet.others.departureTime.getHours());
 
-        const arrivalTime = getTimeParts(chalet.others.arrivalTime, '15:00');
-        const departureTime = getTimeParts(chalet.others.departureTime, '11:00');
+        const arrivalHour = chalet.others.arrivalTime.getHours();
+        const arrivalMinute = chalet.others.arrivalTime.getMinutes();
+        const departureHour = chalet.others.departureTime.getHours();
+        const departureMinute = chalet.others.departureTime.getMinutes();
 
         // 3) Parsear y setear hora en CDMX
         const arrivalMoment = moment
             .utc(arrivalDate, 'YYYY-MM-DD')
-            .hour(arrivalTime.hours)
-            .minute(arrivalTime.minutes)
+            .hour(arrivalHour)
+            .minute(arrivalMinute)
             .second(0)
             .millisecond(0);
 
         const departureMoment = momentTz
             .utc(departureDate, 'YYYY-MM-DD')
-            .hour(departureTime.hours)
-            .minute(departureTime.minutes)
+            .hour(departureHour)
+            .minute(departureMinute)
             .second(0)
             .millisecond(0);
 
@@ -2078,8 +2080,8 @@ async function createOwnerReservation(req, res, next) {
         }
 
 
-        setTimeOnDate(arrivalDate, chalet.others.arrivalTime, { useUtc: true, fallback: '15:00' });
-        setTimeOnDate(departureDate, chalet.others.departureTime, { useUtc: true, fallback: '11:00' });
+        arrivalDate.setUTCHours(chalet.others.arrivalTime.getHours());
+        departureDate.setUTCHours(chalet.others.departureTime.getHours());
 
         if (privilege === "Inversionistas") {
             // Definicion de reglas de inversionistas
@@ -2258,21 +2260,23 @@ async function editarEvento(req, res) {
 
         const chalet = await Habitacion.findById(eventoOriginal.resourceId);
 
-        const arrivalTime = getTimeParts(chalet.others.arrivalTime, '15:00');
-        const departureTime = getTimeParts(chalet.others.departureTime, '11:00');
+        const arrivalHour = chalet.others.arrivalTime.getHours();
+        const arrivalMinute = chalet.others.arrivalTime.getMinutes();
+        const departureHour = chalet.others.departureTime.getHours();
+        const departureMinute = chalet.others.departureTime.getMinutes();
 
         // 3) Parsear y setear hora en CDMX
         const arrivalMoment = moment
             .utc(arrivalDate, 'YYYY-MM-DD')
-            .hour(arrivalTime.hours)
-            .minute(arrivalTime.minutes)
+            .hour(arrivalHour)
+            .minute(arrivalMinute)
             .second(0)
             .millisecond(0);
 
         const departureMoment = momentTz
             .utc(departureDate, 'YYYY-MM-DD')
-            .hour(departureTime.hours)
-            .minute(departureTime.minutes)
+            .hour(departureHour)
+            .minute(departureMinute)
             .second(0)
             .millisecond(0);
 
