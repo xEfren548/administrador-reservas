@@ -1875,26 +1875,21 @@ async function createOTAReservation(data) {
 
         const comisionVendedor = costosVendedor.amount * nNights;
 
-        // arrivalDate.setHours(chalet.others.arrivalTime.getHours());
-        // departureDate.setHours(chalet.others.departureTime.getHours());
-
-        const arrivalHour = chalet.others.arrivalTime.getHours();
-        const arrivalMinute = chalet.others.arrivalTime.getMinutes();
-        const departureHour = chalet.others.departureTime.getHours();
-        const departureMinute = chalet.others.departureTime.getMinutes();
+        const arrivalTime = getTimeParts(chalet.others.arrivalTime, '15:00');
+        const departureTime = getTimeParts(chalet.others.departureTime, '11:00');
 
         // 3) Parsear y setear hora en CDMX
         const arrivalMoment = moment
             .utc(arrivalDate, 'YYYY-MM-DD')
-            .hour(arrivalHour)
-            .minute(arrivalMinute)
+            .hour(arrivalTime.hours)
+            .minute(arrivalTime.minutes)
             .second(0)
             .millisecond(0);
 
         const departureMoment = momentTz
             .utc(departureDate, 'YYYY-MM-DD')
-            .hour(departureHour)
-            .minute(departureMinute)
+            .hour(departureTime.hours)
+            .minute(departureTime.minutes)
             .second(0)
             .millisecond(0);
 
@@ -2079,8 +2074,8 @@ async function createOwnerReservation(req, res, next) {
         }
 
 
-        arrivalDate.setUTCHours(chalet.others.arrivalTime.getHours());
-        departureDate.setUTCHours(chalet.others.departureTime.getHours());
+        setTimeOnDate(arrivalDate, chalet.others.arrivalTime, { useUtc: true, fallback: '15:00' });
+        setTimeOnDate(departureDate, chalet.others.departureTime, { useUtc: true, fallback: '11:00' });
 
         if (privilege === "Inversionistas") {
             // Definicion de reglas de inversionistas
@@ -2090,10 +2085,6 @@ async function createOwnerReservation(req, res, next) {
             reservasDeInversionista.sort((a, b) => new Date(a.departureDate) - new Date(b.departureDate));
 
             const reservaActiva = reservasDeInversionista.find(reserva => new Date(reserva.departureDate) > new Date());
-
-            // arrivalDate.setUTCHours(chalet.others.arrivalTime.getHours());
-            // departureDate.setUTCHours(chalet.others.departureTime.getHours());
-
 
             if (reservaActiva) {
                 if (reservaActiva.status !== "cancelled") {
@@ -2259,23 +2250,21 @@ async function editarEvento(req, res) {
 
         const chalet = await Habitacion.findById(eventoOriginal.resourceId);
 
-        const arrivalHour = chalet.others.arrivalTime.getHours();
-        const arrivalMinute = chalet.others.arrivalTime.getMinutes();
-        const departureHour = chalet.others.departureTime.getHours();
-        const departureMinute = chalet.others.departureTime.getMinutes();
+        const arrivalTime = getTimeParts(chalet.others.arrivalTime, '15:00');
+        const departureTime = getTimeParts(chalet.others.departureTime, '11:00');
 
         // 3) Parsear y setear hora en CDMX
         const arrivalMoment = moment
             .utc(arrivalDate, 'YYYY-MM-DD')
-            .hour(arrivalHour)
-            .minute(arrivalMinute)
+            .hour(arrivalTime.hours)
+            .minute(arrivalTime.minutes)
             .second(0)
             .millisecond(0);
 
         const departureMoment = momentTz
             .utc(departureDate, 'YYYY-MM-DD')
-            .hour(departureHour)
-            .minute(departureMinute)
+            .hour(departureTime.hours)
+            .minute(departureTime.minutes)
             .second(0)
             .millisecond(0);
 
