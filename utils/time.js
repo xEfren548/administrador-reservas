@@ -3,6 +3,28 @@ const moment = require('moment-timezone');
 const MEXICO_TZ = 'America/Mexico_City';
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
+function toValidDate(value) {
+    if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? null : new Date(value.getTime());
+    }
+
+    if (typeof value === 'number') {
+        const parsedDate = new Date(value);
+        return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+    }
+
+    if (typeof value === 'string') {
+        const parsedDate = new Date(value);
+        return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+    }
+
+    if (moment.isMoment(value) && value.isValid()) {
+        return value.toDate();
+    }
+
+    return null;
+}
+
 function normalizeStoredTime(value, fallback = null) {
     if (value === null || value === undefined || value === '') {
         return fallback;
@@ -14,23 +36,23 @@ function normalizeStoredTime(value, fallback = null) {
             return trimmedValue;
         }
 
-        const parsedTime = moment.utc(trimmedValue);
-        if (parsedTime.isValid()) {
-            return parsedTime.tz(MEXICO_TZ).format('HH:mm');
+        const parsedDate = toValidDate(trimmedValue);
+        if (parsedDate) {
+            return moment(parsedDate).tz(MEXICO_TZ).format('HH:mm');
         }
 
         return fallback;
     }
 
     if (value instanceof Date || typeof value === 'number') {
-        const parsedTime = moment.utc(value);
-        if (parsedTime.isValid()) {
-            return parsedTime.tz(MEXICO_TZ).format('HH:mm');
+        const parsedDate = toValidDate(value);
+        if (parsedDate) {
+            return moment(parsedDate).tz(MEXICO_TZ).format('HH:mm');
         }
     }
 
     if (moment.isMoment(value) && value.isValid()) {
-        return value.format('HH:mm');
+        return value.clone().tz(MEXICO_TZ).format('HH:mm');
     }
 
     return fallback;
