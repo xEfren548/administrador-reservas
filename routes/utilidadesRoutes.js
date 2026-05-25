@@ -24,11 +24,14 @@ router.delete('/utilidades', utilidadesController.eliminarComision);
 
 // Render Reporte Todo en Uno
 router.get('/reportes-personalizados', utilidadesController.renderReporteTodoEnUno);
+router.get('/reportes-comisiones-vendedor', utilidadesController.renderReporteComisionesVendedor);
 
 // Generar Reporte Todo en Uno
 router.get('/reportes/datos', utilidadesController.reporteTodoEnUno);
 // Generar Reporte de Inversionistas
 router.get('/reportes/inversionistas', utilidadesController.reporteDeInversionistas);
+router.get('/reportes/comisiones-vendedor', utilidadesController.reporteComisionesVendedor);
+router.post('/reportes/comisiones-vendedor/solicitudes', utilidadesController.crearSolicitudComisionVendedor);
 
 
 module.exports = router
