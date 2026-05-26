@@ -270,6 +270,24 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const tipologiaHabitacionSelect = document.querySelector('#tipologia_habitacion');
+    let calendarAvailabilityChecksInFlight = 0;
+
+    function bloquearSelectorCalendario(locked) {
+        if (!tipologiaHabitacionSelect) return;
+        tipologiaHabitacionSelect.disabled = locked;
+    }
+
+    function iniciarVerificacionDisponibilidadCalendario() {
+        calendarAvailabilityChecksInFlight += 1;
+        bloquearSelectorCalendario(true);
+    }
+
+    function finalizarVerificacionDisponibilidadCalendario() {
+        calendarAvailabilityChecksInFlight = Math.max(calendarAvailabilityChecksInFlight - 1, 0);
+        if (calendarAvailabilityChecksInFlight === 0) {
+            bloquearSelectorCalendario(false);
+        }
+    }
 
     tipologiaHabitacionSelect.addEventListener('change', function () {
         const selectedOption = tipologiaHabitacionSelect.options[tipologiaHabitacionSelect.selectedIndex];
@@ -422,6 +440,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const fechaSalida = document.getElementById('edit-ext-fechaSalida');
                     const noches = document.getElementById('edit-ext-noches');
                     const disponibilidadStatus = document.getElementById('edit-ext-disponibilidad-status');
+                    let availabilityRequestId = 0;
 
                     async function validarDisponibilidad() {
                         if (fechaLlegada.value && fechaSalida.value) {
@@ -441,10 +460,16 @@ document.addEventListener('DOMContentLoaded', function () {
                             disponibilidadStatus.className = 'alert alert-info';
                             disponibilidadStatus.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>Verificando disponibilidad...';
                             disponibilidadStatus.classList.remove('d-none');
+                            const requestId = ++availabilityRequestId;
+                            iniciarVerificacionDisponibilidadCalendario();
 
                             try {
                                 const response = await fetch(`/api/check-availability/?resourceId=${reserva.resourceId}&arrivalDate=${fechaLlegada.value}&departureDate=${fechaSalida.value}&isForOwner=true&eventId=${reserva._id}`);
                                 const result = await response.json();
+
+                                if (requestId !== availabilityRequestId) {
+                                    return false;
+                                }
 
                                 if (result.available) {
                                     disponibilidadStatus.className = 'alert alert-success';
@@ -456,9 +481,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                     return false;
                                 }
                             } catch (error) {
+                                if (requestId !== availabilityRequestId) {
+                                    return false;
+                                }
                                 disponibilidadStatus.className = 'alert alert-warning';
                                 disponibilidadStatus.innerHTML = '<i class="fa fa-exclamation-triangle me-2"></i>Error al verificar disponibilidad';
                                 return false;
+                            } finally {
+                                finalizarVerificacionDisponibilidadCalendario();
                             }
                         }
                     }
@@ -617,6 +647,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const fechaSalida = document.getElementById('edit-dueno-fechaSalida');
                     const noches = document.getElementById('edit-dueno-noches');
                     const disponibilidadStatus = document.getElementById('edit-dueno-disponibilidad-status');
+                    let availabilityRequestId = 0;
 
                     async function validarDisponibilidad() {
                         if (fechaLlegada.value && fechaSalida.value) {
@@ -636,10 +667,16 @@ document.addEventListener('DOMContentLoaded', function () {
                             disponibilidadStatus.className = 'alert alert-info';
                             disponibilidadStatus.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>Verificando disponibilidad...';
                             disponibilidadStatus.classList.remove('d-none');
+                            const requestId = ++availabilityRequestId;
+                            iniciarVerificacionDisponibilidadCalendario();
 
                             try {
                                 const response = await fetch(`/api/check-availability/?resourceId=${reserva.resourceId}&arrivalDate=${fechaLlegada.value}&departureDate=${fechaSalida.value}&isForOwner=true&eventId=${reserva._id}`);
                                 const result = await response.json();
+
+                                if (requestId !== availabilityRequestId) {
+                                    return false;
+                                }
 
                                 if (result.available) {
                                     disponibilidadStatus.className = 'alert alert-success';
@@ -651,9 +688,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                     return false;
                                 }
                             } catch (error) {
+                                if (requestId !== availabilityRequestId) {
+                                    return false;
+                                }
                                 disponibilidadStatus.className = 'alert alert-warning';
                                 disponibilidadStatus.innerHTML = '<i class="fa fa-exclamation-triangle me-2"></i>Error al verificar disponibilidad';
                                 return false;
+                            } finally {
+                                finalizarVerificacionDisponibilidadCalendario();
                             }
                         }
                     }

@@ -4430,12 +4430,12 @@ async function createOwnerExternalReservation(req, res) {
             });
         }
 
-        // Validar disponibilidad
+        // Validar disponibilidad usando el mismo horario configurado del chalet
         const arrivalDateObj = new Date(arrivalDate);
         const departureDateObj = new Date(departureDate);
 
-        arrivalDateObj.setUTCHours(17, 30, 0, 0);
-        departureDateObj.setUTCHours(14, 30, 0, 0);
+        setTimeOnDate(arrivalDateObj, chalet.others.arrivalTime, { useUtc: true, fallback: '15:00' });
+        setTimeOnDate(departureDateObj, chalet.others.departureTime, { useUtc: true, fallback: '11:00' });
 
         const arrivalDateISO = arrivalDateObj.toISOString();
         const departureDateISO = departureDateObj.toISOString();
@@ -4613,8 +4613,8 @@ async function editOwnerExternalReservation(req, res) {
             const arrivalDateObj = new Date(arrivalDate);
             const departureDateObj = new Date(departureDate);
 
-            arrivalDateObj.setUTCHours(17, 30, 0, 0);
-            departureDateObj.setUTCHours(12, 30, 0, 0);
+            setTimeOnDate(arrivalDateObj, chalet.others.arrivalTime, { useUtc: true, fallback: '15:00' });
+            setTimeOnDate(departureDateObj, chalet.others.departureTime, { useUtc: true, fallback: '11:00' });
 
             if (arrivalDateObj >= departureDateObj) {
                 return res.status(400).json({
@@ -4643,9 +4643,7 @@ async function editOwnerExternalReservation(req, res) {
                 });
             }
 
-            // Actualizar fechas
-            arrivalDateObj.setUTCHours(17, 30, 0, 0);
-            departureDateObj.setUTCHours(14, 30, 0, 0);
+            // Actualizar fechas con el horario configurado del chalet
             reserva.arrivalDate = arrivalDateObj;
             reserva.departureDate = departureDateObj;
             reserva.nNights = parseInt(nNights);
