@@ -5,7 +5,7 @@
                 <p class="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-700">Reportes</p>
                 <h1 class="mt-2 text-3xl font-bold text-slate-900">Corte de Comisiones por Vendedor</h1>
                 <p class="mt-2 max-w-3xl text-sm text-slate-600">
-                    Consulta a los vendedores con comisión positiva por reserva, revisa su detalle individual y genera la solicitud correspondiente en finanzas.
+                    Consulta a los vendedores con comisión positiva por reserva, revisa su detalle individual y genera la solicitud correspondiente en finanzas. Las reservas no liquidadas o con un estatus distinto de active se muestran, pero no suman al monto pagable.
                 </p>
             </div>
         </div>
@@ -64,13 +64,17 @@
             </div>
         </div>
 
-        <div id="resumenCards" class="hidden grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div id="resumenCards" class="hidden grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
             <div class="rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-lg shadow-slate-200/60">
                 <p class="text-sm font-medium text-slate-500">Vendedores con comisión</p>
                 <p id="resumenTotalVendedores" class="mt-3 text-3xl font-bold text-slate-900">0</p>
             </div>
             <div class="rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-lg shadow-slate-200/60">
-                <p class="text-sm font-medium text-slate-500">Monto acumulado</p>
+                <p class="text-sm font-medium text-slate-500">Monto pagable</p>
+                <p id="resumenTotalComisionesPagables" class="mt-3 text-3xl font-bold text-emerald-700">$0.00</p>
+            </div>
+            <div class="rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-lg shadow-slate-200/60">
+                <p class="text-sm font-medium text-slate-500">Comisiones reportadas</p>
                 <p id="resumenTotalComisiones" class="mt-3 text-3xl font-bold text-slate-900">$0.00</p>
             </div>
             <div class="rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-lg shadow-slate-200/60">
@@ -88,7 +92,7 @@
                 <div>
                     <h2 class="text-xl font-bold text-slate-900">Resultado por vendedor</h2>
                     <p class="mt-1 text-sm text-slate-500">
-                        Las cuentas disponibles se infieren con base en las cuentas activas de finanzas donde el vendedor aparece como propietario.
+                        Las cuentas disponibles se infieren con base en las cuentas activas de finanzas donde el vendedor aparece como propietario. La solicitud a finanzas sólo toma el monto pagable.
                     </p>
                 </div>
                 <span id="resumenPeriodo" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600">Sin consulta</span>
@@ -100,7 +104,8 @@
                         <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                             <tr>
                                 <th class="px-4 py-4">Vendedor</th>
-                                <th class="px-4 py-4">Comisión total</th>
+                                <th class="px-4 py-4">Comisión reportada</th>
+                                <th class="px-4 py-4">Comisión pagable</th>
                                 <th class="px-4 py-4">Reservas</th>
                                 <th class="px-4 py-4">Cuenta destino</th>
                                 <th class="px-4 py-4">Estatus</th>
@@ -109,7 +114,7 @@
                         </thead>
                         <tbody id="tablaVendedoresBody" class="divide-y divide-slate-200 bg-white">
                             <tr>
-                                <td colspan="6" class="px-4 py-12 text-center text-slate-500">
+                                <td colspan="7" class="px-4 py-12 text-center text-slate-500">
                                     Selecciona el mes a consultar para generar el corte de comisiones.
                                 </td>
                             </tr>
@@ -292,6 +297,7 @@ function workbookToBlob(workbook) {
 function updateSummary(totales, periodoTexto) {
     document.getElementById('resumenCards').classList.remove('hidden');
     document.getElementById('resumenTotalVendedores').textContent = totales.totalVendedores || 0;
+    document.getElementById('resumenTotalComisionesPagables').textContent = formatCurrency(totales.totalComisionesPagables || 0);
     document.getElementById('resumenTotalComisiones').textContent = formatCurrency(totales.totalComisiones || 0);
     document.getElementById('resumenCuentasListas').textContent = totales.vendedoresConCuentaLista || 0;
     document.getElementById('resumenCuentasPendientes').textContent = totales.vendedoresSinCuenta || 0;
@@ -348,6 +354,22 @@ function buildStatusBadge(vendedor) {
     return '<span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Configurar cuenta</span>';
 }
 
+function formatReservationStatus(status) {
+    if (!status) {
+        return 'Sin estatus';
+    }
+
+    return String(status).charAt(0).toUpperCase() + String(status).slice(1);
+}
+
+function buildReservationPayoutBadge(reserva) {
+    if (reserva.esPagable) {
+        return '<span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Suma al pago</span>';
+    }
+
+    return '<span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Visible, no suma al pago</span>';
+}
+
 function buildReservationDetail(vendedor) {
     return vendedor.reservas.map((reserva) => {
         const detalles = reserva.detalles.map((detalle) => `
@@ -364,10 +386,22 @@ function buildReservationDetail(vendedor) {
                         <p class="text-sm font-semibold text-slate-900">${escapeHtml(reserva.cabana)}</p>
                         <p class="mt-1 text-xs text-slate-500">Reserva ${escapeHtml(reserva.idReserva)}</p>
                         <p class="mt-2 text-xs text-slate-500">${escapeHtml(reserva.fechaEntrada)} al ${escapeHtml(reserva.fechaSalida)} · ${escapeHtml(reserva.noches)} noches</p>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">Status: ${escapeHtml(formatReservationStatus(reserva.statusReserva))}</span>
+                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">Pagado: ${escapeHtml(formatCurrency(reserva.totalPagado))} de ${escapeHtml(formatCurrency(reserva.totalReserva))}</span>
+                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">Pendiente: ${escapeHtml(formatCurrency(reserva.restanteReserva))}</span>
+                            ${buildReservationPayoutBadge(reserva)}
+                        </div>
                     </div>
-                    <div class="rounded-2xl bg-cyan-50 px-4 py-3 text-right">
-                        <p class="text-xs uppercase tracking-[0.2em] text-cyan-700">Total reserva</p>
-                        <p class="mt-1 text-lg font-bold text-cyan-900">${formatCurrency(reserva.totalComision)}</p>
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <div class="rounded-2xl bg-cyan-50 px-4 py-3 text-right">
+                            <p class="text-xs uppercase tracking-[0.2em] text-cyan-700">Comisión reportada</p>
+                            <p class="mt-1 text-lg font-bold text-cyan-900">${formatCurrency(reserva.totalComision)}</p>
+                        </div>
+                        <div class="rounded-2xl ${reserva.esPagable ? 'bg-emerald-50' : 'bg-amber-50'} px-4 py-3 text-right">
+                            <p class="text-xs uppercase tracking-[0.2em] ${reserva.esPagable ? 'text-emerald-700' : 'text-amber-700'}">Comisión pagable</p>
+                            <p class="mt-1 text-lg font-bold ${reserva.esPagable ? 'text-emerald-900' : 'text-amber-900'}">${formatCurrency(reserva.totalComisionPagable)}</p>
+                        </div>
                     </div>
                 </div>
                 <ul class="mt-4 space-y-2">${detalles}</ul>
@@ -382,7 +416,7 @@ function renderTable() {
     if (!reporteActual.length) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="6" class="px-4 py-12 text-center text-slate-500">
+                <td colspan="7" class="px-4 py-12 text-center text-slate-500">
                     No se encontraron vendedores con comisión positiva en el mes seleccionado.
                 </td>
             </tr>
@@ -392,7 +426,8 @@ function renderTable() {
 
     tableBody.innerHTML = reporteActual.map((vendedor) => {
         const cuentaId = cuentasSeleccionadas[vendedor.vendedorId] || vendedor.cuentaDestinoSugerida?._id || '';
-        const canCreateRequest = Boolean(cuentaId) && !vendedor.solicitudCreada;
+        const hasPayableAmount = Number(vendedor.totalComisionesPagables || 0) > 0;
+        const canCreateRequest = Boolean(cuentaId) && !vendedor.solicitudCreada && hasPayableAmount;
         const detalleOpen = detallesAbiertos.has(vendedor.vendedorId);
 
         return `
@@ -402,6 +437,10 @@ function renderTable() {
                     <p class="mt-1 text-xs text-slate-500">${escapeHtml(vendedor.vendedorId)}</p>
                 </td>
                 <td class="px-4 py-4 font-semibold text-slate-900">${formatCurrency(vendedor.totalComisiones)}</td>
+                <td class="px-4 py-4">
+                    <p class="font-semibold text-slate-900">${formatCurrency(vendedor.totalComisionesPagables)}</p>
+                    <p class="mt-1 text-xs ${hasPayableAmount ? 'text-slate-500' : 'text-amber-600'}">${vendedor.reservasPagables || 0} de ${vendedor.totalReservas} reservas suman al pago</p>
+                </td>
                 <td class="px-4 py-4 text-slate-600">${vendedor.totalReservas}</td>
                 <td class="px-4 py-4">${buildAccountCell(vendedor)}</td>
                 <td class="px-4 py-4">${buildStatusBadge(vendedor)}</td>
@@ -427,13 +466,13 @@ function renderTable() {
                             class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
                             ${canCreateRequest ? '' : 'disabled'}
                         >
-                            ${vendedor.solicitudCreada ? 'Solicitud creada' : 'Crear solicitud en finanzas'}
+                            ${vendedor.solicitudCreada ? 'Solicitud creada' : (hasPayableAmount ? 'Crear solicitud en finanzas' : 'Sin monto pagable')}
                         </button>
                     </div>
                 </td>
             </tr>
             <tr class="${detalleOpen ? '' : 'hidden'}" id="detalle-${escapeHtml(vendedor.vendedorId)}">
-                <td colspan="6" class="bg-slate-50 px-4 py-5">
+                <td colspan="7" class="bg-slate-50 px-4 py-5">
                     <div class="space-y-3">
                         ${buildReservationDetail(vendedor)}
                     </div>
@@ -885,6 +924,11 @@ async function crearSolicitudFinanzas(vendedorId) {
 
     if (!cuentaId) {
         showMessage(`Selecciona una cuenta destino para ${vendedor.vendedorNombre}.`, 'warning');
+        return;
+    }
+
+    if (Number(vendedor.totalComisionesPagables || 0) <= 0) {
+        showMessage(`${vendedor.vendedorNombre} no tiene comisiones pagables para el periodo seleccionado.`, 'warning');
         return;
     }
 
