@@ -590,7 +590,31 @@
         }
     });
 
+    let showAvailableChaletsRequestId = 0;
+    let isCheckingAvailability = false;
+
+    function limpiarSeleccionHabitacion() {
+        const tipologiaHabitacionInput = document.querySelector('#tipologia_habitacion');
+        const ocupacionInput = document.getElementById('ocupacion_habitacion');
+        const idHabitacionInput = document.getElementById('id_cabana');
+
+        if (tipologiaHabitacionInput) {
+            tipologiaHabitacionInput.value = '';
+        }
+
+        if (ocupacionInput) {
+            ocupacionInput.value = '';
+        }
+
+        if (idHabitacionInput) {
+            idHabitacionInput.value = '';
+            idHabitacionInput.dataset.groupName = '';
+            idHabitacionInput.dataset.grouped = 'false';
+        }
+    }
+
     async function showAvailableChalets() {
+        const currentRequestId = ++showAvailableChaletsRequestId;
 
         const arrivalValue = new Date(`${arrivalDate.value}T00:00:00`);
         const departureValue = new Date(`${departureDate.value}T00:00:00`);
@@ -604,11 +628,22 @@
 
         try {
             if (!isNaN(arrivalValue) && !isNaN(departureValue) && departureValue >= arrivalValue) {
+                isCheckingAvailability = true;
 
                 console.log(arrivalValue)
                 console.log(departureValue)
 
                 verificarDisponibilidadElement.style.display = 'block';
+                tipologiaHabitacionInput.disabled = true;
+                limpiarSeleccionHabitacion();
+
+                options.forEach(option => {
+                    if (option.value !== '') {
+                        option.disabled = true;
+                        option.style.backgroundColor = '';
+                        option.removeAttribute('data-available');
+                    }
+                });
 
                 const arrivalYear = arrivalValue.getFullYear();
                 const arrivalMonth = (arrivalValue.getMonth() + 1).toString().padStart(2, '0'); // Asegura que el mes tenga dos dígitos
@@ -636,10 +671,17 @@
                 for (const idHabitacion of dataBsIds) {
                     const response = await fetch(`/api/check-availability/?resourceId=${idHabitacion}&arrivalDate=${arrivalDate}&departureDate=${departureDate}&isForOwner=true`);
                     const result = await response.json();
+                    if (currentRequestId !== showAvailableChaletsRequestId) {
+                        return;
+                    }
                     results.push({ idHabitacion, available: result.available });
                 }
 
                 console.log(results);
+
+                if (currentRequestId !== showAvailableChaletsRequestId) {
+                    return;
+                }
 
                 results.forEach(result => {
                     const option = document.querySelector(`option[data-bs-id="${result.idHabitacion}"]`);
@@ -651,6 +693,17 @@
                         option.disabled = true;
                     }
                 });
+            } else {
+                isCheckingAvailability = false;
+                tipologiaHabitacionInput.disabled = true;
+                limpiarSeleccionHabitacion();
+                options.forEach(option => {
+                    if (option.value !== '') {
+                        option.disabled = true;
+                        option.style.backgroundColor = '';
+                        option.removeAttribute('data-available');
+                    }
+                });
             }
         } catch (error) {
             Swal.fire({
@@ -660,7 +713,19 @@
                 confirmButtonText: 'Aceptar'
             });
         } finally {
-            verificarDisponibilidadElement.style.display = 'none';
+            if (currentRequestId === showAvailableChaletsRequestId) {
+                if (isCheckingAvailability) {
+                    isCheckingAvailability = false;
+                }
+
+                if (tipologiaHabitacionInput.disabled) {
+                    const hasAvailableOption = Array.from(tipologiaHabitacionInput.querySelectorAll('option[data-bs-id]'))
+                        .some(option => !option.disabled);
+                    tipologiaHabitacionInput.disabled = !hasAvailableOption;
+                }
+
+                verificarDisponibilidadElement.style.display = 'none';
+            }
         }
 
 
@@ -672,6 +737,11 @@
 
 
     tipologiaSelect.addEventListener('change', function () {
+        if (isCheckingAvailability) {
+            limpiarSeleccionHabitacion();
+            return;
+        }
+
         const selectedOption = tipologiaSelect.options[tipologiaSelect.selectedIndex];
         const pax = selectedOption.getAttribute('data-bs-pax');
         const idHabitacion = selectedOption.getAttribute('data-bs-id');

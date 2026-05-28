@@ -57,18 +57,20 @@ document.addEventListener('DOMContentLoaded', function () {
     let allClientOptions = clientOptionsContainer
         ? Array.from(clientOptionsContainer.querySelectorAll('.inv-select-option'))
         : [];
+    let isSearching = false;
     let isPricing = false;
     let isSaving = false;
 
     function syncSaveButtonState() {
         if (!saveBtn) return;
-        saveBtn.disabled = isPricing || isSaving;
+        saveBtn.disabled = isSearching || isPricing || isSaving;
     }
 
     function syncPricingInteractiveControls() {
-        if (roomSelect) roomSelect.disabled = isPricing;
-        if (paxSelect) paxSelect.disabled = isPricing;
-        if (includeSellerCommissionSwitch) includeSellerCommissionSwitch.disabled = isPricing;
+        if (roomSelect) roomSelect.disabled = isSearching || isPricing || availableRoomsCache.length === 0;
+        if (paxSelect) paxSelect.disabled = isSearching || isPricing || !roomIdInput.value;
+        if (includeSellerCommissionSwitch) includeSellerCommissionSwitch.disabled = isSearching || isPricing;
+        if (tipologiaFilter) tipologiaFilter.disabled = isSearching;
     }
 
     function setError(message) {
@@ -128,9 +130,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function setLoadingState(target, isLoading) {
         if (target === 'search') {
+            isSearching = isLoading;
             if (searchAvailabilityBtnText) searchAvailabilityBtnText.classList.toggle('d-none', isLoading);
             if (searchAvailabilityBtnSpinner) searchAvailabilityBtnSpinner.classList.toggle('d-none', !isLoading);
             if (disponibilidadLoading) disponibilidadLoading.style.display = isLoading ? 'block' : 'none';
+            syncPricingInteractiveControls();
+            syncSaveButtonState();
         }
 
         if (target === 'save') {
@@ -183,10 +188,14 @@ document.addEventListener('DOMContentLoaded', function () {
     function resetRoomSelection() {
         roomSelect.innerHTML = '<option value="" selected disabled>Primero busca disponibilidad</option>';
         roomIdInput.value = '';
+        delete roomIdInput.dataset.groupName;
+        delete roomIdInput.dataset.isGrouped;
         maxOccupancyInput.value = '';
         paxSelect.innerHTML = '<option value="" selected disabled>Personas</option>';
         availableRoomsCache = [];
         resetPricing();
+        syncPricingInteractiveControls();
+        syncSaveButtonState();
     }
 
     function getSelectedCategory() {
@@ -237,6 +246,8 @@ document.addEventListener('DOMContentLoaded', function () {
             throw new Error('La fecha de salida debe ser posterior a la de llegada');
         }
 
+        resetRoomSelection();
+
         const data = await fetchQuote(0);
         availableRoomsCache = Array.isArray(data.chalets) ? data.chalets : [];
 
@@ -257,6 +268,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!availableRoomsCache.length) {
             throw new Error('No hay habitaciones disponibles para esas fechas');
         }
+
+        syncPricingInteractiveControls();
 
         roomIdInput.value = '';
         maxOccupancyInput.value = '';
@@ -327,6 +340,8 @@ document.addEventListener('DOMContentLoaded', function () {
             option.textContent = String(value);
             paxSelect.appendChild(option);
         }
+
+        syncPricingInteractiveControls();
     }
 
     function clearInvestorModal() {
@@ -502,6 +517,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     roomSelect.addEventListener('change', function () {
+        if (isSearching) {
+            resetRoomSelection();
+            return;
+        }
+
         setError('');
         const selectedOption = roomSelect.options[roomSelect.selectedIndex];
         const roomId = selectedOption?.dataset?.id || '';
@@ -514,6 +534,7 @@ document.addEventListener('DOMContentLoaded', function () {
         maxOccupancyInput.value = maxPax || '';
         buildPaxOptions(maxPax, minPax);
         resetPricing();
+        syncSaveButtonState();
     });
 
     paxSelect.addEventListener('change', async function () {
@@ -566,6 +587,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     tipologiaFilter.addEventListener('change', function () {
+        if (isSearching) {
+            return;
+        }
         resetRoomSelection();
     });
 
@@ -574,6 +598,10 @@ document.addEventListener('DOMContentLoaded', function () {
         dateFormat: 'd-m-Y',
         onChange: function (selectedDates) {
             if (selectedDates.length !== 2) {
+                startDateInput.value = '';
+                endDateInput.value = '';
+                nightsInput.value = '';
+                resetRoomSelection();
                 return;
             }
 
