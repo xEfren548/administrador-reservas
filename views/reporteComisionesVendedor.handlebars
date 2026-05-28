@@ -3,15 +3,34 @@
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <p class="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-700">Reportes</p>
-                <h1 class="mt-2 text-3xl font-bold text-slate-900">Corte de Comisiones por Vendedor</h1>
-                <p class="mt-2 max-w-3xl text-sm text-slate-600">
+                <h1 id="reportTitle" class="mt-2 text-3xl font-bold text-slate-900">Corte de Comisiones por Vendedor</h1>
+                <p id="reportDescription" class="mt-2 max-w-3xl text-sm text-slate-600">
                     Consulta a los vendedores con comisión positiva por reserva, revisa su detalle individual y genera la solicitud correspondiente en finanzas. Las reservas no liquidadas o con un estatus distinto de active se muestran, pero no suman al monto pagable.
                 </p>
             </div>
         </div>
 
         <div class="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-200/60">
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-end">
+            <div class="mb-5 flex flex-wrap gap-3">
+                <button
+                    id="tabSeller"
+                    type="button"
+                    onclick="setBeneficiaryType('seller')"
+                    class="inline-flex items-center justify-center rounded-2xl px-4 py-2 text-sm font-semibold transition"
+                >
+                    Vendedores
+                </button>
+                <button
+                    id="tabOwner"
+                    type="button"
+                    onclick="setBeneficiaryType('owner')"
+                    class="inline-flex items-center justify-center rounded-2xl px-4 py-2 text-sm font-semibold transition"
+                >
+                    Dueños
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] md:items-end">
                 <div>
                     <label for="mesReporte" class="mb-2 block text-sm font-medium text-slate-700">Mes</label>
                     <input
@@ -29,7 +48,7 @@
                     onclick="consultarReporteComisiones()"
                     class="inline-flex items-center justify-center rounded-2xl bg-cyan-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-300"
                 >
-                    Consultar vendedores
+                    <span id="btnConsultarReporteText">Consultar vendedores</span>
                 </button>
 
                 <button
@@ -38,7 +57,16 @@
                     onclick="descargarReportesMasivos()"
                     class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
-                    Descargar reportes masivos
+                    <span id="btnDescargarReporteCompletoText">Descargar reportes masivos</span>
+                </button>
+
+                <button
+                    id="btnCuentasLigadas"
+                    type="button"
+                    onclick="openLinkedAccountsModal()"
+                    class="inline-flex items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 px-5 py-3 text-sm font-semibold text-cyan-800 transition hover:bg-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-300"
+                >
+                    Cuentas ligadas
                 </button>
 
                 <button
@@ -59,22 +87,22 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                     </svg>
-                    <span>Consultando comisiones por vendedor...</span>
+                    <span id="loadingText">Consultando comisiones por vendedor...</span>
                 </div>
             </div>
         </div>
 
         <div id="resumenCards" class="hidden grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
             <div class="rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-lg shadow-slate-200/60">
-                <p class="text-sm font-medium text-slate-500">Vendedores con comisión</p>
+                <p id="summaryCountLabel" class="text-sm font-medium text-slate-500">Vendedores con comisión</p>
                 <p id="resumenTotalVendedores" class="mt-3 text-3xl font-bold text-slate-900">0</p>
             </div>
             <div class="rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-lg shadow-slate-200/60">
-                <p class="text-sm font-medium text-slate-500">Monto pagable</p>
+                <p id="summaryPayableLabel" class="text-sm font-medium text-slate-500">Monto pagable</p>
                 <p id="resumenTotalComisionesPagables" class="mt-3 text-3xl font-bold text-emerald-700">$0.00</p>
             </div>
             <div class="rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-lg shadow-slate-200/60">
-                <p class="text-sm font-medium text-slate-500">Comisiones reportadas</p>
+                <p id="summaryReportedLabel" class="text-sm font-medium text-slate-500">Comisiones reportadas</p>
                 <p id="resumenTotalComisiones" class="mt-3 text-3xl font-bold text-slate-900">$0.00</p>
             </div>
             <div class="rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-lg shadow-slate-200/60">
@@ -90,9 +118,9 @@
         <div class="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-200/60">
             <div class="flex flex-col gap-3 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h2 class="text-xl font-bold text-slate-900">Resultado por vendedor</h2>
-                    <p class="mt-1 text-sm text-slate-500">
-                        Las cuentas disponibles se infieren con base en las cuentas activas de finanzas donde el vendedor aparece como propietario. La solicitud a finanzas sólo toma el monto pagable.
+                    <h2 id="resultsTitle" class="text-xl font-bold text-slate-900">Resultado por vendedor</h2>
+                    <p id="resultsDescription" class="mt-1 text-sm text-slate-500">
+                        Las cuentas disponibles se infieren con base en las cuentas activas de finanzas donde el vendedor aparece como propietario. La cuenta ligada por defecto se administra desde Cuentas ligadas y la solicitud a finanzas sólo toma el monto pagable.
                     </p>
                 </div>
                 <span id="resumenPeriodo" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600">Sin consulta</span>
@@ -103,9 +131,9 @@
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                             <tr>
-                                <th class="px-4 py-4">Vendedor</th>
-                                <th class="px-4 py-4">Comisión reportada</th>
-                                <th class="px-4 py-4">Comisión pagable</th>
+                                <th id="columnBeneficiaryLabel" class="px-4 py-4">Vendedor</th>
+                                <th id="columnReportedLabel" class="px-4 py-4">Comisión reportada</th>
+                                <th id="columnPayableLabel" class="px-4 py-4">Comisión pagable</th>
                                 <th class="px-4 py-4">Reservas</th>
                                 <th class="px-4 py-4">Cuenta destino</th>
                                 <th class="px-4 py-4">Estatus</th>
@@ -126,6 +154,64 @@
     </div>
 </div>
 
+<div id="linkedAccountsModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-slate-950/45" onclick="closeLinkedAccountsModal()"></div>
+    <div class="relative flex min-h-full items-center justify-center p-3 sm:p-6">
+        <div class="relative flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-2xl shadow-slate-900/20">
+            <div class="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">Configuración</p>
+                    <h2 id="linkedAccountsModalTitle" class="mt-2 text-2xl font-bold text-slate-900">Cuentas ligadas</h2>
+                    <p id="linkedAccountsModalDescription" class="mt-2 max-w-3xl text-sm text-slate-500">
+                        Administra la cuenta por defecto que se sugerirá en el corte actual.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    onclick="closeLinkedAccountsModal()"
+                    class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                    aria-label="Cerrar modal de cuentas ligadas"
+                >
+                    <span class="text-xl leading-none">&times;</span>
+                </button>
+            </div>
+
+            <div class="border-b border-slate-200 bg-slate-50/70 px-6 py-4">
+                <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <p id="linkedAccountsModalCount" class="text-sm font-medium text-slate-600">Sin datos cargados</p>
+                    <p class="text-xs text-slate-500">Sólo se muestran cuentas activas de finanzas que pertenecen al beneficiario.</p>
+                </div>
+                <div id="linkedAccountsMessage" class="mt-3 hidden rounded-2xl border px-4 py-3 text-sm"></div>
+            </div>
+
+            <div class="flex-1 overflow-auto px-6 py-5">
+                <div class="overflow-hidden rounded-3xl border border-slate-200">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                            <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                <tr>
+                                    <th id="linkedAccountsColumnBeneficiary" class="px-4 py-4">Vendedor</th>
+                                    <th class="px-4 py-4">Cuenta ligada actual</th>
+                                    <th class="px-4 py-4">Cuenta disponible</th>
+                                    <th class="px-4 py-4">Estatus</th>
+                                    <th class="px-4 py-4 text-right">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="linkedAccountsTableBody" class="divide-y divide-slate-200 bg-white">
+                                <tr>
+                                    <td colspan="5" class="px-4 py-12 text-center text-slate-500">
+                                        Abre Cuentas ligadas para cargar la configuración disponible.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
@@ -138,12 +224,174 @@ const currencyFormatter = new Intl.NumberFormat('es-MX', {
 let reporteActual = [];
 const cuentasSeleccionadas = {};
 const detallesAbiertos = new Set();
+let totalesReporteActual = null;
+let periodoReporteActual = 'Sin consulta';
+let cuentasLigadasActuales = [];
+const cuentasLigadasSeleccionadas = {};
+const cuentasLigadasGuardando = new Set();
+let activeBeneficiaryType = 'seller';
+
+const BENEFICIARY_CONTENT = {
+    seller: {
+        title: 'Corte de Comisiones por Vendedor',
+        description: 'Consulta a los vendedores con comisión positiva por reserva, revisa su detalle individual y genera la solicitud correspondiente en finanzas. Las reservas no liquidadas o con un estatus distinto de active se muestran, pero no suman al monto pagable.',
+        consultButtonText: 'Consultar vendedores',
+        bulkDownloadText: 'Descargar reportes masivos',
+        loadingText: 'Consultando comisiones por vendedor...',
+        summaryCountLabel: 'Vendedores con comisión',
+        summaryPayableLabel: 'Monto pagable',
+        summaryReportedLabel: 'Comisiones reportadas',
+        resultsTitle: 'Resultado por vendedor',
+        resultsDescription: 'Las cuentas disponibles se infieren con base en las cuentas activas de finanzas donde el vendedor aparece como propietario. La cuenta ligada por defecto se administra desde Cuentas ligadas y la solicitud a finanzas sólo toma el monto pagable.',
+        columnBeneficiaryLabel: 'Vendedor',
+        columnReportedLabel: 'Comisión reportada',
+        columnPayableLabel: 'Comisión pagable',
+        initialEmptyText: 'Selecciona el mes a consultar para generar el corte de comisiones.',
+        emptyResultsText: 'No se encontraron vendedores con comisión positiva en el mes seleccionado.',
+        noRecordsMessage: 'No se encontraron vendedores con comisión positiva en el mes consultado.',
+        successMessage: (count) => `Consulta completada. Se encontraron ${count} vendedores con comisiones.`,
+        notFoundRowMessage: 'No se encontró el vendedor seleccionado en la consulta actual.',
+        noReportMessage: (name) => `No se encontraron reservas para ${name} en el mes seleccionado.`,
+        reportDownloadedMessage: (name) => `Reporte descargado para ${name}.`,
+        reportDownloadError: 'Error al obtener el reporte individual del vendedor',
+        bulkDownloadWarning: 'Primero consulta los vendedores para generar la descarga masiva.',
+        bulkDownloadEmpty: 'No se encontraron reportes individuales para incluir en la descarga masiva.',
+        bulkDownloadSuccess: (count) => `Descarga masiva completada. Se incluyeron ${count} reportes individuales.`,
+        bulkDownloadError: 'Error al descargar los reportes masivos',
+        bulkZipName: (fechaInicio, fechaFin) => `Reportes_Comisiones_Vendedores_${fechaInicio}_${fechaFin}.zip`,
+        rowActionDownload: 'Descargar reporte',
+        rowActionCreateRequest: 'Crear solicitud en finanzas',
+        rowActionNoPayable: 'Sin monto pagable',
+        requestNoAccount: (name) => `Selecciona una cuenta destino para ${name}.`,
+        requestNoPayable: (name) => `${name} no tiene comisiones pagables para el periodo seleccionado.`,
+        requestSuccess: (name) => `Solicitud creada en finanzas para ${name}.`,
+        payableHint: (payableReservations, totalReservations) => `${payableReservations || 0} de ${totalReservations} reservas suman al pago`,
+        detailReportedLabel: 'Comisión reportada',
+        detailPayableLabel: 'Comisión pagable',
+        reportFileName: (name, fechaInicio, fechaFin) => `Reporte_TodoEnUno_${sanitizeFileName(name)}_${fechaInicio}_${fechaFin}.xlsx`,
+        reportQueryParam: 'sellerId'
+    },
+    owner: {
+        title: 'Corte de Pagos a Dueño',
+        description: 'Consulta a los dueños con utilidad directa por reserva desde la misma vista. En esta pestaña, el monto pagable descuenta lo que el dueño ya recibió directo y sólo suma reservas activas y liquidadas al 100%.',
+        consultButtonText: 'Consultar dueños',
+        bulkDownloadText: 'Descargar reportes masivos',
+        loadingText: 'Consultando pagos a dueño...',
+        summaryCountLabel: 'Dueños con pago',
+        summaryPayableLabel: 'Pago pagable',
+        summaryReportedLabel: 'Monto reportado',
+        resultsTitle: 'Resultado por dueño',
+        resultsDescription: 'Las cuentas disponibles se infieren con base en las cuentas activas de finanzas donde el dueño aparece como propietario. La cuenta ligada por defecto se administra desde Cuentas ligadas y el monto pagable descuenta lo ya cobrado por el dueño en la reserva.',
+        columnBeneficiaryLabel: 'Dueño',
+        columnReportedLabel: 'Monto reportado',
+        columnPayableLabel: 'Pago pagable',
+        initialEmptyText: 'Selecciona el mes a consultar para generar el corte de pagos a dueño.',
+        emptyResultsText: 'No se encontraron dueños con utilidad positiva en el mes seleccionado.',
+        noRecordsMessage: 'No se encontraron dueños con utilidad positiva en el mes consultado.',
+        successMessage: (count) => `Consulta completada. Se encontraron ${count} dueños con pagos reportados.`,
+        notFoundRowMessage: 'No se encontró el dueño seleccionado en la consulta actual.',
+        noReportMessage: (name) => `No se encontraron reservas para ${name} en el mes seleccionado.`,
+        reportDownloadedMessage: (name) => `Reporte descargado para ${name}.`,
+        reportDownloadError: 'Error al obtener el reporte individual del dueño',
+        bulkDownloadWarning: 'Primero consulta los dueños para generar la descarga masiva.',
+        bulkDownloadEmpty: 'No se encontraron reportes individuales de dueños para incluir en la descarga masiva.',
+        bulkDownloadSuccess: (count) => `Descarga masiva completada. Se incluyeron ${count} reportes individuales.`,
+        bulkDownloadError: 'Error al descargar los reportes masivos',
+        bulkZipName: (fechaInicio, fechaFin) => `Reportes_Pagos_Duenos_${fechaInicio}_${fechaFin}.zip`,
+        rowActionDownload: 'Descargar reporte',
+        rowActionCreateRequest: 'Crear solicitud en finanzas',
+        rowActionNoPayable: 'Sin monto pagable',
+        requestNoAccount: (name) => `Selecciona una cuenta destino para ${name}.`,
+        requestNoPayable: (name) => `${name} no tiene pagos pagables para el periodo seleccionado.`,
+        requestSuccess: (name) => `Solicitud creada en finanzas para ${name}.`,
+        payableHint: (payableReservations, totalReservations) => `${payableReservations || 0} de ${totalReservations} reservas suman al pago`,
+        detailReportedLabel: 'Monto reportado',
+        detailPayableLabel: 'Pago pagable',
+        reportFileName: (name, fechaInicio, fechaFin) => `Reporte_TodoEnUno_Dueno_${sanitizeFileName(name)}_${fechaInicio}_${fechaFin}.xlsx`,
+        reportQueryParam: 'ownerId'
+    }
+};
 
 const monthFormatter = new Intl.DateTimeFormat('es-MX', {
     month: 'long',
     year: 'numeric',
     timeZone: 'UTC'
 });
+
+function getActiveBeneficiaryContent() {
+    return BENEFICIARY_CONTENT[activeBeneficiaryType] || BENEFICIARY_CONTENT.seller;
+}
+
+function getActiveBeneficiaryLabel() {
+    return activeBeneficiaryType === 'owner' ? 'dueño' : 'vendedor';
+}
+
+function getActiveBeneficiaryPluralLabel() {
+    return activeBeneficiaryType === 'owner' ? 'dueños' : 'vendedores';
+}
+
+function isLinkedAccountsModalOpen() {
+    return !document.getElementById('linkedAccountsModal').classList.contains('hidden');
+}
+
+function resetCurrentReport() {
+    reporteActual = [];
+    totalesReporteActual = null;
+    periodoReporteActual = 'Sin consulta';
+    detallesAbiertos.clear();
+    Object.keys(cuentasSeleccionadas).forEach((key) => delete cuentasSeleccionadas[key]);
+    document.getElementById('resumenCards').classList.add('hidden');
+    document.getElementById('resumenPeriodo').textContent = 'Sin consulta';
+}
+
+function updateBeneficiaryTypeUI() {
+    const content = getActiveBeneficiaryContent();
+    document.getElementById('reportTitle').textContent = content.title;
+    document.getElementById('reportDescription').textContent = content.description;
+    document.getElementById('btnConsultarReporteText').textContent = content.consultButtonText;
+    document.getElementById('btnDescargarReporteCompletoText').textContent = content.bulkDownloadText;
+    document.getElementById('loadingText').textContent = content.loadingText;
+    document.getElementById('summaryCountLabel').textContent = content.summaryCountLabel;
+    document.getElementById('summaryPayableLabel').textContent = content.summaryPayableLabel;
+    document.getElementById('summaryReportedLabel').textContent = content.summaryReportedLabel;
+    document.getElementById('resultsTitle').textContent = content.resultsTitle;
+    document.getElementById('resultsDescription').textContent = content.resultsDescription;
+    document.getElementById('columnBeneficiaryLabel').textContent = content.columnBeneficiaryLabel;
+    document.getElementById('columnReportedLabel').textContent = content.columnReportedLabel;
+    document.getElementById('columnPayableLabel').textContent = content.columnPayableLabel;
+    updateLinkedAccountsModalCopy();
+
+    const sellerTab = document.getElementById('tabSeller');
+    const ownerTab = document.getElementById('tabOwner');
+    const activeTabClasses = ['bg-cyan-700', 'text-white', 'shadow-sm'];
+    const inactiveTabClasses = ['border', 'border-slate-200', 'bg-slate-50', 'text-slate-600', 'hover:bg-slate-100'];
+
+    [sellerTab, ownerTab].forEach((tab) => {
+        tab.classList.remove(...activeTabClasses, ...inactiveTabClasses);
+        tab.classList.add(...inactiveTabClasses);
+    });
+
+    const activeTab = activeBeneficiaryType === 'owner' ? ownerTab : sellerTab;
+    activeTab.classList.remove(...inactiveTabClasses);
+    activeTab.classList.add(...activeTabClasses);
+}
+
+function setBeneficiaryType(type) {
+    const normalizedType = type === 'owner' ? 'owner' : 'seller';
+    if (normalizedType === activeBeneficiaryType) {
+        return;
+    }
+
+    activeBeneficiaryType = normalizedType;
+    resetCurrentReport();
+    updateBeneficiaryTypeUI();
+    renderTable();
+    hideMessage();
+
+    if (isLinkedAccountsModalOpen()) {
+        openLinkedAccountsModal();
+    }
+}
 
 function formatMonthInputValue(date) {
     const year = date.getFullYear();
@@ -304,23 +552,47 @@ function updateSummary(totales, periodoTexto) {
     document.getElementById('resumenPeriodo').textContent = periodoTexto || 'Sin consulta';
 }
 
+function refreshReportSummaryFromCurrentState() {
+    if (!totalesReporteActual) {
+        return;
+    }
+
+    updateSummary({
+        ...totalesReporteActual,
+        vendedoresSinCuenta: reporteActual.filter((vendedor) => vendedor.estadoCuenta === 'sin-cuenta').length,
+        vendedoresConCuentaLista: reporteActual.filter((vendedor) => vendedor.estadoCuenta === 'lista').length
+    }, periodoReporteActual);
+}
+
 function buildAccountCell(vendedor) {
+    const linkedBadge = vendedor.cuentaLigada
+        ? '<span class="inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">Cuenta ligada</span>'
+        : '';
+
     if (!vendedor.cuentasDestino || vendedor.cuentasDestino.length === 0) {
-        return '<span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Sin cuenta ligada</span>';
+        return `
+            <div class="space-y-2">
+                ${linkedBadge}
+                <span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Sin cuenta ligada</span>
+            </div>
+        `;
     }
 
     if (vendedor.cuentasDestino.length === 1) {
         const cuenta = vendedor.cuentasDestino[0];
         cuentasSeleccionadas[vendedor.vendedorId] = cuenta._id;
         return `
-            <div>
-                <p class="font-semibold text-slate-900">${escapeHtml(cuenta.nombre)}</p>
-                <p class="text-xs text-slate-500">${escapeHtml(cuenta.organizacion)} · ${escapeHtml(cuenta.moneda)}</p>
+            <div class="space-y-2">
+                ${linkedBadge}
+                <div>
+                    <p class="font-semibold text-slate-900">${escapeHtml(cuenta.nombre)}</p>
+                    <p class="text-xs text-slate-500">${escapeHtml(cuenta.organizacion)} · ${escapeHtml(cuenta.moneda)}</p>
+                </div>
             </div>
         `;
     }
 
-    const selectedValue = cuentasSeleccionadas[vendedor.vendedorId] || '';
+    const selectedValue = cuentasSeleccionadas[vendedor.vendedorId] || vendedor.cuentaDestinoSugerida?._id || '';
     const options = vendedor.cuentasDestino.map((cuenta) => `
         <option value="${escapeHtml(cuenta._id)}" ${cuenta._id === selectedValue ? 'selected' : ''}>
             ${escapeHtml(cuenta.nombre)} · ${escapeHtml(cuenta.organizacion)}
@@ -328,13 +600,16 @@ function buildAccountCell(vendedor) {
     `).join('');
 
     return `
-        <select
-            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
-            onchange="seleccionarCuenta('${escapeHtml(vendedor.vendedorId)}', this.value)"
-        >
-            <option value="">Selecciona una cuenta</option>
-            ${options}
-        </select>
+        <div class="space-y-2">
+            ${linkedBadge}
+            <select
+                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+                onchange="seleccionarCuenta('${escapeHtml(vendedor.vendedorId)}', this.value)"
+            >
+                <option value="">Selecciona una cuenta</option>
+                ${options}
+            </select>
+        </div>
     `;
 }
 
@@ -371,6 +646,8 @@ function buildReservationPayoutBadge(reserva) {
 }
 
 function buildReservationDetail(vendedor) {
+    const content = getActiveBeneficiaryContent();
+
     return vendedor.reservas.map((reserva) => {
         const detalles = reserva.detalles.map((detalle) => `
             <li class="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
@@ -378,6 +655,9 @@ function buildReservationDetail(vendedor) {
                 <span class="font-semibold text-slate-900">${formatCurrency(detalle.monto)}</span>
             </li>
         `).join('');
+        const ownerPaymentsBadge = activeBeneficiaryType === 'owner'
+            ? `<span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">Cobrado por dueño: ${escapeHtml(formatCurrency(reserva.pagosRecibioDueno || 0))}</span>`
+            : '';
 
         return `
             <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -390,16 +670,17 @@ function buildReservationDetail(vendedor) {
                             <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">Status: ${escapeHtml(formatReservationStatus(reserva.statusReserva))}</span>
                             <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">Pagado: ${escapeHtml(formatCurrency(reserva.totalPagado))} de ${escapeHtml(formatCurrency(reserva.totalReserva))}</span>
                             <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">Pendiente: ${escapeHtml(formatCurrency(reserva.restanteReserva))}</span>
+                            ${ownerPaymentsBadge}
                             ${buildReservationPayoutBadge(reserva)}
                         </div>
                     </div>
                     <div class="grid gap-3 md:grid-cols-2">
                         <div class="rounded-2xl bg-cyan-50 px-4 py-3 text-right">
-                            <p class="text-xs uppercase tracking-[0.2em] text-cyan-700">Comisión reportada</p>
+                            <p class="text-xs uppercase tracking-[0.2em] text-cyan-700">${escapeHtml(content.detailReportedLabel)}</p>
                             <p class="mt-1 text-lg font-bold text-cyan-900">${formatCurrency(reserva.totalComision)}</p>
                         </div>
                         <div class="rounded-2xl ${reserva.esPagable ? 'bg-emerald-50' : 'bg-amber-50'} px-4 py-3 text-right">
-                            <p class="text-xs uppercase tracking-[0.2em] ${reserva.esPagable ? 'text-emerald-700' : 'text-amber-700'}">Comisión pagable</p>
+                            <p class="text-xs uppercase tracking-[0.2em] ${reserva.esPagable ? 'text-emerald-700' : 'text-amber-700'}">${escapeHtml(content.detailPayableLabel)}</p>
                             <p class="mt-1 text-lg font-bold ${reserva.esPagable ? 'text-emerald-900' : 'text-amber-900'}">${formatCurrency(reserva.totalComisionPagable)}</p>
                         </div>
                     </div>
@@ -412,12 +693,13 @@ function buildReservationDetail(vendedor) {
 
 function renderTable() {
     const tableBody = document.getElementById('tablaVendedoresBody');
+    const content = getActiveBeneficiaryContent();
 
     if (!reporteActual.length) {
         tableBody.innerHTML = `
             <tr>
                 <td colspan="7" class="px-4 py-12 text-center text-slate-500">
-                    No se encontraron vendedores con comisión positiva en el mes seleccionado.
+                    ${escapeHtml(document.getElementById('resumenCards').classList.contains('hidden') ? content.initialEmptyText : content.emptyResultsText)}
                 </td>
             </tr>
         `;
@@ -439,7 +721,7 @@ function renderTable() {
                 <td class="px-4 py-4 font-semibold text-slate-900">${formatCurrency(vendedor.totalComisiones)}</td>
                 <td class="px-4 py-4">
                     <p class="font-semibold text-slate-900">${formatCurrency(vendedor.totalComisionesPagables)}</p>
-                    <p class="mt-1 text-xs ${hasPayableAmount ? 'text-slate-500' : 'text-amber-600'}">${vendedor.reservasPagables || 0} de ${vendedor.totalReservas} reservas suman al pago</p>
+                    <p class="mt-1 text-xs ${hasPayableAmount ? 'text-slate-500' : 'text-amber-600'}">${content.payableHint(vendedor.reservasPagables, vendedor.totalReservas)}</p>
                 </td>
                 <td class="px-4 py-4 text-slate-600">${vendedor.totalReservas}</td>
                 <td class="px-4 py-4">${buildAccountCell(vendedor)}</td>
@@ -458,7 +740,7 @@ function renderTable() {
                             onclick="descargarReporteVendedor('${escapeHtml(vendedor.vendedorId)}')"
                             class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
                         >
-                            Descargar reporte
+                            ${content.rowActionDownload}
                         </button>
                         <button
                             type="button"
@@ -466,7 +748,7 @@ function renderTable() {
                             class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
                             ${canCreateRequest ? '' : 'disabled'}
                         >
-                            ${vendedor.solicitudCreada ? 'Solicitud creada' : (hasPayableAmount ? 'Crear solicitud en finanzas' : 'Sin monto pagable')}
+                            ${vendedor.solicitudCreada ? 'Solicitud creada' : (hasPayableAmount ? content.rowActionCreateRequest : content.rowActionNoPayable)}
                         </button>
                     </div>
                 </td>
@@ -480,6 +762,242 @@ function renderTable() {
             </tr>
         `;
     }).join('');
+}
+
+function updateLinkedAccountsModalCopy() {
+    const singularLabel = getActiveBeneficiaryLabel();
+    const pluralLabel = getActiveBeneficiaryPluralLabel();
+    document.getElementById('linkedAccountsModalTitle').textContent = `Cuentas ligadas de ${pluralLabel}`;
+    document.getElementById('linkedAccountsModalDescription').textContent = `Administra la cuenta por defecto que se sugerirá para cada ${singularLabel} en el corte actual.`;
+    document.getElementById('linkedAccountsColumnBeneficiary').textContent = singularLabel.charAt(0).toUpperCase() + singularLabel.slice(1);
+}
+
+function showLinkedAccountsMessage(message, type = 'info') {
+    const messageBox = document.getElementById('linkedAccountsMessage');
+    const styles = {
+        success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+        error: 'border-rose-200 bg-rose-50 text-rose-800',
+        warning: 'border-amber-200 bg-amber-50 text-amber-800',
+        info: 'border-cyan-200 bg-cyan-50 text-cyan-800'
+    };
+
+    messageBox.className = `mt-3 rounded-2xl border px-4 py-3 text-sm ${styles[type] || styles.info}`;
+    messageBox.textContent = message;
+    messageBox.classList.remove('hidden');
+}
+
+function hideLinkedAccountsMessage() {
+    document.getElementById('linkedAccountsMessage').classList.add('hidden');
+}
+
+function setLinkedAccountsLoadingState(isLoading) {
+    const button = document.getElementById('btnCuentasLigadas');
+    button.disabled = isLoading;
+    button.classList.toggle('opacity-60', isLoading);
+}
+
+function buildLinkedAccountStatusBadge(beneficiario) {
+    if (beneficiario.cuentaLigada) {
+        return '<span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Cuenta ligada</span>';
+    }
+
+    if (beneficiario.estadoCuenta === 'seleccion-requerida') {
+        return '<span class="inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">Selecciona una cuenta</span>';
+    }
+
+    return '<span class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Sin cuenta ligada</span>';
+}
+
+function renderLinkedAccountsTable() {
+    const tableBody = document.getElementById('linkedAccountsTableBody');
+    const pluralLabel = getActiveBeneficiaryPluralLabel();
+
+    if (!cuentasLigadasActuales.length) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="px-4 py-12 text-center text-slate-500">
+                    No se encontraron ${escapeHtml(pluralLabel)} para configurar en este módulo.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tableBody.innerHTML = cuentasLigadasActuales.map((beneficiario) => {
+        const selectedValue = Object.prototype.hasOwnProperty.call(cuentasLigadasSeleccionadas, beneficiario.beneficiarioId)
+            ? cuentasLigadasSeleccionadas[beneficiario.beneficiarioId]
+            : (beneficiario.cuentaLigada?._id || '');
+        const cuentaActual = beneficiario.cuentaLigada
+            ? `
+                <div>
+                    <p class="font-semibold text-slate-900">${escapeHtml(beneficiario.cuentaLigada.nombre)}</p>
+                    <p class="text-xs text-slate-500">${escapeHtml(beneficiario.cuentaLigada.organizacion)} · ${escapeHtml(beneficiario.cuentaLigada.moneda)}</p>
+                </div>
+            `
+            : '<span class="text-slate-400">Sin cuenta ligada</span>';
+        const options = beneficiario.cuentasDestino.map((cuenta) => `
+            <option value="${escapeHtml(cuenta._id)}" ${cuenta._id === selectedValue ? 'selected' : ''}>
+                ${escapeHtml(cuenta.nombre)} · ${escapeHtml(cuenta.organizacion)}
+            </option>
+        `).join('');
+        const isSaving = cuentasLigadasGuardando.has(beneficiario.beneficiarioId);
+        const hasChanges = selectedValue !== (beneficiario.cuentaLigada?._id || '');
+
+        return `
+            <tr class="align-top">
+                <td class="px-4 py-4">
+                    <p class="font-semibold text-slate-900">${escapeHtml(beneficiario.beneficiarioNombre)}</p>
+                    <p class="mt-1 text-xs text-slate-500">${escapeHtml(beneficiario.beneficiarioId)}</p>
+                </td>
+                <td class="px-4 py-4">${cuentaActual}</td>
+                <td class="px-4 py-4">
+                    <select
+                        class="w-full min-w-[280px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+                        onchange="seleccionarCuentaLigada('${escapeHtml(beneficiario.beneficiarioId)}', this.value)"
+                        ${isSaving ? 'disabled' : ''}
+                    >
+                        <option value="">Sin cuenta ligada</option>
+                        ${options}
+                    </select>
+                </td>
+                <td class="px-4 py-4">${buildLinkedAccountStatusBadge(beneficiario)}</td>
+                <td class="px-4 py-4">
+                    <div class="flex justify-end">
+                        <button
+                            type="button"
+                            onclick="guardarCuentaLigada('${escapeHtml(beneficiario.beneficiarioId)}')"
+                            class="inline-flex items-center justify-center rounded-xl bg-cyan-700 px-4 py-2 text-xs font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                            ${isSaving || !hasChanges ? 'disabled' : ''}
+                        >
+                            ${isSaving ? 'Guardando...' : 'Guardar'}
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function openLinkedAccountsModal() {
+    updateLinkedAccountsModalCopy();
+    document.getElementById('linkedAccountsModal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    await cargarCuentasLigadas();
+}
+
+function closeLinkedAccountsModal() {
+    document.getElementById('linkedAccountsModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+    hideLinkedAccountsMessage();
+}
+
+function seleccionarCuentaLigada(beneficiarioId, cuentaId) {
+    cuentasLigadasSeleccionadas[beneficiarioId] = cuentaId;
+    renderLinkedAccountsTable();
+}
+
+function syncLinkedAccountWithCurrentReport(data) {
+    const beneficiario = reporteActual.find((item) => item.vendedorId === data.beneficiarioId);
+    if (!beneficiario) {
+        return;
+    }
+
+    beneficiario.cuentasDestino = data.cuentasDestino || [];
+    beneficiario.cuentaLigada = data.cuentaLigada || null;
+    beneficiario.cuentaDestinoSugerida = data.cuentaDestinoSugerida || null;
+    beneficiario.estadoCuenta = data.estadoCuenta || 'sin-cuenta';
+
+    if (data.cuentaDestinoSugerida?._id) {
+        cuentasSeleccionadas[beneficiario.vendedorId] = data.cuentaDestinoSugerida._id;
+    } else {
+        delete cuentasSeleccionadas[beneficiario.vendedorId];
+    }
+
+    renderTable();
+    refreshReportSummaryFromCurrentState();
+}
+
+async function cargarCuentasLigadas() {
+    hideLinkedAccountsMessage();
+    setLinkedAccountsLoadingState(true);
+    document.getElementById('linkedAccountsModalCount').textContent = 'Cargando configuración...';
+    document.getElementById('linkedAccountsTableBody').innerHTML = `
+        <tr>
+            <td colspan="5" class="px-4 py-12 text-center text-slate-500">Cargando cuentas ligadas...</td>
+        </tr>
+    `;
+
+    try {
+        const response = await fetch(`/api/reportes/comisiones-vendedor/cuentas-ligadas?beneficiaryType=${encodeURIComponent(activeBeneficiaryType)}`);
+        const payload = await response.json();
+
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.message || payload.error || 'No fue posible obtener las cuentas ligadas.');
+        }
+
+        cuentasLigadasActuales = payload.data || [];
+        Object.keys(cuentasLigadasSeleccionadas).forEach((key) => delete cuentasLigadasSeleccionadas[key]);
+        cuentasLigadasActuales.forEach((beneficiario) => {
+            cuentasLigadasSeleccionadas[beneficiario.beneficiarioId] = beneficiario.cuentaLigada?._id || '';
+        });
+
+        document.getElementById('linkedAccountsModalCount').textContent = `Se encontraron ${payload.totales?.totalBeneficiarios || cuentasLigadasActuales.length} ${getActiveBeneficiaryPluralLabel()}.`;
+        renderLinkedAccountsTable();
+    } catch (error) {
+        cuentasLigadasActuales = [];
+        document.getElementById('linkedAccountsModalCount').textContent = 'No fue posible cargar la configuración';
+        document.getElementById('linkedAccountsTableBody').innerHTML = `
+            <tr>
+                <td colspan="5" class="px-4 py-12 text-center text-rose-600">${escapeHtml(error.message)}</td>
+            </tr>
+        `;
+        showLinkedAccountsMessage(error.message, 'error');
+    } finally {
+        setLinkedAccountsLoadingState(false);
+    }
+}
+
+async function guardarCuentaLigada(beneficiarioId) {
+    hideLinkedAccountsMessage();
+    cuentasLigadasGuardando.add(beneficiarioId);
+    renderLinkedAccountsTable();
+
+    try {
+        const cuentaId = cuentasLigadasSeleccionadas[beneficiarioId] || '';
+        const response = await fetch(`/api/reportes/comisiones-vendedor/cuentas-ligadas/${encodeURIComponent(beneficiarioId)}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                beneficiaryType: activeBeneficiaryType,
+                cuentaId
+            })
+        });
+        const payload = await response.json();
+
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.message || payload.error || 'No fue posible guardar la cuenta ligada.');
+        }
+
+        const rowIndex = cuentasLigadasActuales.findIndex((beneficiario) => beneficiario.beneficiarioId === beneficiarioId);
+        if (rowIndex >= 0) {
+            cuentasLigadasActuales[rowIndex] = {
+                ...cuentasLigadasActuales[rowIndex],
+                ...payload.data
+            };
+        }
+
+        cuentasLigadasSeleccionadas[beneficiarioId] = payload.data?.cuentaLigada?._id || '';
+        syncLinkedAccountWithCurrentReport(payload.data || {});
+        renderLinkedAccountsTable();
+        showLinkedAccountsMessage(payload.message || 'Cuenta ligada actualizada con éxito.', 'success');
+    } catch (error) {
+        showLinkedAccountsMessage(error.message, 'error');
+    } finally {
+        cuentasLigadasGuardando.delete(beneficiarioId);
+        renderLinkedAccountsTable();
+    }
 }
 
 function seleccionarCuenta(vendedorId, cuentaId) {
@@ -500,6 +1018,7 @@ function toggleDetalle(vendedorId) {
 async function consultarReporteComisiones() {
     hideMessage();
     const dateRange = getDateRangeOrNotify();
+    const content = getActiveBeneficiaryContent();
 
     if (!dateRange) {
         return;
@@ -510,7 +1029,7 @@ async function consultarReporteComisiones() {
     toggleLoading(true);
 
     try {
-        const response = await fetch(`/api/reportes/comisiones-vendedor?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`);
+        const response = await fetch(`/api/reportes/comisiones-vendedor?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}&beneficiaryType=${encodeURIComponent(activeBeneficiaryType)}`);
         const payload = await response.json();
 
         if (!response.ok || !payload.success) {
@@ -518,6 +1037,8 @@ async function consultarReporteComisiones() {
         }
 
         reporteActual = payload.data || [];
+        totalesReporteActual = payload.totales || {};
+        periodoReporteActual = periodoTexto;
         Object.keys(cuentasSeleccionadas).forEach((key) => delete cuentasSeleccionadas[key]);
         detallesAbiertos.clear();
 
@@ -531,9 +1052,9 @@ async function consultarReporteComisiones() {
         renderTable();
 
         if (!reporteActual.length) {
-            showMessage('No se encontraron vendedores con comisión positiva en el mes consultado.', 'info');
+            showMessage(content.noRecordsMessage, 'info');
         } else {
-            showMessage(`Consulta completada. Se encontraron ${reporteActual.length} vendedores con comisiones.`, 'success');
+            showMessage(content.successMessage(reporteActual.length), 'success');
         }
     } catch (error) {
         reporteActual = [];
@@ -547,6 +1068,7 @@ async function consultarReporteComisiones() {
 async function descargarReporteVendedor(vendedorId) {
     hideMessage();
     const dateRange = getDateRangeOrNotify();
+    const content = getActiveBeneficiaryContent();
     if (!dateRange) {
         return;
     }
@@ -555,12 +1077,12 @@ async function descargarReporteVendedor(vendedorId) {
     const vendedor = reporteActual.find((item) => item.vendedorId === vendedorId);
 
     if (!vendedor) {
-        showMessage('No se encontró el vendedor seleccionado en la consulta actual.', 'error');
+        showMessage(content.notFoundRowMessage, 'error');
         return;
     }
 
     try {
-        const response = await fetch(`/api/reportes/datos?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}&sellerId=${encodeURIComponent(vendedorId)}`);
+        const response = await fetch(`/api/reportes/datos?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}&${content.reportQueryParam}=${encodeURIComponent(vendedorId)}`);
 
         if (!response.ok) {
             throw new Error(`Error en la respuesta del servidor: ${response.status}`);
@@ -569,19 +1091,18 @@ async function descargarReporteVendedor(vendedorId) {
         const data = await response.json();
 
         if (!data.success) {
-            throw new Error(data.error || 'Error al obtener el reporte individual del vendedor');
+            throw new Error(data.error || content.reportDownloadError);
         }
 
         if (!data.data || data.data.length === 0) {
-            showMessage(`No se encontraron reservas para ${vendedor.vendedorNombre} en el mes seleccionado.`, 'warning');
+            showMessage(content.noReportMessage(vendedor.vendedorNombre), 'warning');
             return;
         }
 
         const workbook = buildWorkbookReporteCompleto(data, fechaInicio, fechaFin);
         const blob = workbookToBlob(workbook);
-        const sellerLabel = sanitizeFileName(vendedor.vendedorNombre);
-        downloadBlob(blob, `Reporte_TodoEnUno_${sellerLabel}_${fechaInicio}_${fechaFin}.xlsx`);
-        showMessage(`Reporte descargado para ${vendedor.vendedorNombre}.`, 'success');
+        downloadBlob(blob, content.reportFileName(vendedor.vendedorNombre, fechaInicio, fechaFin));
+        showMessage(content.reportDownloadedMessage(vendedor.vendedorNombre), 'success');
     } catch (error) {
         console.error('Error al descargar el reporte individual:', error);
         showMessage(`Error al descargar el reporte individual: ${error.message}`, 'error');
@@ -591,12 +1112,13 @@ async function descargarReporteVendedor(vendedorId) {
 async function descargarReportesMasivos() {
     hideMessage();
     const dateRange = getDateRangeOrNotify();
+    const content = getActiveBeneficiaryContent();
     if (!dateRange) {
         return;
     }
 
     if (!reporteActual.length) {
-        showMessage('Primero consulta los vendedores para generar la descarga masiva.', 'warning');
+        showMessage(content.bulkDownloadWarning, 'warning');
         return;
     }
 
@@ -611,7 +1133,7 @@ async function descargarReportesMasivos() {
         let reportesAgregados = 0;
 
         for (const vendedor of reporteActual) {
-            const response = await fetch(`/api/reportes/datos?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}&sellerId=${encodeURIComponent(vendedor.vendedorId)}`);
+            const response = await fetch(`/api/reportes/datos?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}&${content.reportQueryParam}=${encodeURIComponent(vendedor.vendedorId)}`);
 
             if (!response.ok) {
                 throw new Error(`Error en la descarga de ${vendedor.vendedorNombre}: ${response.status}`);
@@ -624,22 +1146,21 @@ async function descargarReportesMasivos() {
 
             const workbook = buildWorkbookReporteCompleto(data, fechaInicio, fechaFin);
             const blob = workbookToBlob(workbook);
-            const sellerLabel = sanitizeFileName(vendedor.vendedorNombre);
-            zip.file(`Reporte_TodoEnUno_${sellerLabel}_${fechaInicio}_${fechaFin}.xlsx`, blob);
+            zip.file(content.reportFileName(vendedor.vendedorNombre, fechaInicio, fechaFin), blob);
             reportesAgregados += 1;
         }
 
         if (!reportesAgregados) {
-            showMessage('No se encontraron reportes individuales para incluir en la descarga masiva.', 'warning');
+            showMessage(content.bulkDownloadEmpty, 'warning');
             return;
         }
 
         const zipBlob = await zip.generateAsync({ type: 'blob' });
-        downloadBlob(zipBlob, `Reportes_Comisiones_Vendedores_${fechaInicio}_${fechaFin}.zip`);
-        showMessage(`Descarga masiva completada. Se incluyeron ${reportesAgregados} reportes individuales.`, 'success');
+        downloadBlob(zipBlob, content.bulkZipName(fechaInicio, fechaFin));
+        showMessage(content.bulkDownloadSuccess(reportesAgregados), 'success');
     } catch (error) {
         console.error('Error al descargar los reportes masivos:', error);
-        showMessage(`Error al descargar los reportes masivos: ${error.message}`, 'error');
+        showMessage(`${content.bulkDownloadError}: ${error.message}`, 'error');
     } finally {
         downloadButton.disabled = false;
         downloadButton.classList.remove('opacity-60', 'cursor-not-allowed');
@@ -910,6 +1431,7 @@ async function crearSolicitudFinanzas(vendedorId) {
     const vendedor = reporteActual.find((item) => item.vendedorId === vendedorId);
     const dateRange = getDateRangeOrNotify();
     const cuentaId = cuentasSeleccionadas[vendedorId] || vendedor?.cuentaDestinoSugerida?._id;
+    const content = getActiveBeneficiaryContent();
 
     if (!dateRange) {
         return;
@@ -918,17 +1440,17 @@ async function crearSolicitudFinanzas(vendedorId) {
     const { fechaInicio, fechaFin } = dateRange;
 
     if (!vendedor) {
-        showMessage('No se encontró el vendedor seleccionado en la consulta actual.', 'error');
+        showMessage(content.notFoundRowMessage, 'error');
         return;
     }
 
     if (!cuentaId) {
-        showMessage(`Selecciona una cuenta destino para ${vendedor.vendedorNombre}.`, 'warning');
+        showMessage(content.requestNoAccount(vendedor.vendedorNombre), 'warning');
         return;
     }
 
     if (Number(vendedor.totalComisionesPagables || 0) <= 0) {
-        showMessage(`${vendedor.vendedorNombre} no tiene comisiones pagables para el periodo seleccionado.`, 'warning');
+        showMessage(content.requestNoPayable(vendedor.vendedorNombre), 'warning');
         return;
     }
 
@@ -943,6 +1465,8 @@ async function crearSolicitudFinanzas(vendedorId) {
             body: JSON.stringify({
                 fechaInicio,
                 fechaFin,
+                beneficiaryType: activeBeneficiaryType,
+                beneficiarioId: vendedorId,
                 vendedorId,
                 cuentaId
             })
@@ -956,7 +1480,7 @@ async function crearSolicitudFinanzas(vendedorId) {
 
         vendedor.solicitudCreada = true;
         renderTable();
-        showMessage(`Solicitud creada en finanzas para ${vendedor.vendedorNombre}.`, 'success');
+        showMessage(content.requestSuccess(vendedor.vendedorNombre), 'success');
     } catch (error) {
         showMessage(error.message, 'error');
     }
@@ -964,17 +1488,20 @@ async function crearSolicitudFinanzas(vendedorId) {
 
 function limpiarFiltrosComisiones() {
     setDefaultDates();
-    reporteActual = [];
-    detallesAbiertos.clear();
-    Object.keys(cuentasSeleccionadas).forEach((key) => delete cuentasSeleccionadas[key]);
-    document.getElementById('resumenCards').classList.add('hidden');
-    document.getElementById('resumenPeriodo').textContent = 'Sin consulta';
+    resetCurrentReport();
     renderTable();
     hideMessage();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     setDefaultDates();
+    updateBeneficiaryTypeUI();
     renderTable();
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && isLinkedAccountsModalOpen()) {
+            closeLinkedAccountsModal();
+        }
+    });
 });
 </script>

@@ -31,6 +31,8 @@ router.get('/reportes/datos', utilidadesController.reporteTodoEnUno);
 // Generar Reporte de Inversionistas
 router.get('/reportes/inversionistas', utilidadesController.reporteDeInversionistas);
 router.get('/reportes/comisiones-vendedor', utilidadesController.reporteComisionesVendedor);
+router.get('/reportes/comisiones-vendedor/cuentas-ligadas', utilidadesController.obtenerCuentasLigadasComisiones);
+router.put('/reportes/comisiones-vendedor/cuentas-ligadas/:usuarioId', utilidadesController.actualizarCuentaLigadaComisiones);
 router.post('/reportes/comisiones-vendedor/solicitudes', utilidadesController.crearSolicitudComisionVendedor);
 
 

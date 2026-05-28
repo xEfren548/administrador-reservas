@@ -65,6 +65,11 @@ const userSchema = new Schema({
         ref: 'Roles',
         required: true
     },
+    cuentaFinancieraDefault: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'SWCuenta',
+        default: null
+    },
     assignedChalets: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'Habitacion'

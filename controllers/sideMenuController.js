@@ -283,9 +283,9 @@ async function generateSideMenu(req, res, next) {
                             </ul>
                             <ul class="collapse nav flex-column ms-1" id="submenu6" data-bs-parent="#menu">
                                 <li class="w-100">
-                                    <a href="/api/reportes-comisiones-vendedor" class="nav-link px-5" title="Comisiones Vendedor">
+                                    <a href="/api/reportes-comisiones-vendedor" class="nav-link px-5" title="">
                                         <i class="fas fa-coins"></i><span class="d-none d-sm-inline"
-                                            style="margin-left: 8px;">Comisiones Vendedor</span>
+                                            style="margin-left: 8px;">Corte de comisiones</span>
                                     </a>
                                 </li>
                             </ul>

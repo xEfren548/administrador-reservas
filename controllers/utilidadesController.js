@@ -29,6 +29,8 @@ const DATE_FILTER_TZ = 'America/Mexico_City';
 const DATE_INPUT_FORMATS = ['YYYY-MM-DD', 'DD/MM/YYYY'];
 const SELLER_COMMISSION_CATEGORY = 'Pago comisiones';
 const SELLER_COMMISSION_TAG = 'reporte-comisiones-vendedor';
+const OWNER_PAYOUT_CATEGORY = 'Pago a dueño';
+const OWNER_PAYOUT_TAG = 'reporte-pagos-dueno';
 
 function parseDateFilter(rawDate, boundary) {
     const parsedDate = momentTz.tz(rawDate, DATE_INPUT_FORMATS, true, DATE_FILTER_TZ);
@@ -91,12 +93,115 @@ function roundCurrencyAmount(amount) {
     return Math.round((Number(amount) || 0) * 100) / 100;
 }
 
+function normalizeBeneficiaryType(type) {
+    return type === 'owner' ? 'owner' : 'seller';
+}
+
+function getStringId(value) {
+    if (!value) {
+        return '';
+    }
+
+    if (typeof value === 'string') {
+        return value;
+    }
+
+    if (value instanceof mongoose.Types.ObjectId || value?._bsontype === 'ObjectId') {
+        return value.toString();
+    }
+
+    if (typeof value === 'object' && value._id && value._id !== value) {
+        return getStringId(value._id);
+    }
+
+    return typeof value.toString === 'function' ? value.toString() : '';
+}
+
+function getBeneficiaryPrivileges(beneficiaryType) {
+    return normalizeBeneficiaryType(beneficiaryType) === 'owner'
+        ? ['Dueño de cabañas']
+        : ['Vendedor'];
+}
+
+function formatFinanceAccount(cuenta) {
+    if (!cuenta?._id) {
+        return null;
+    }
+
+    return {
+        _id: cuenta._id.toString(),
+        nombre: cuenta.nombre,
+        moneda: cuenta.moneda,
+        organizacion: cuenta.organizacion?.nombre || 'Sin organización'
+    };
+}
+
+function buildAccountsByOwnerMap(cuentasDestino = []) {
+    const cuentasPorPropietario = new Map();
+    const cuentasPorId = new Map();
+
+    cuentasDestino.forEach((cuenta) => {
+        const cuentaFormateada = formatFinanceAccount(cuenta);
+        if (!cuentaFormateada) {
+            return;
+        }
+
+        cuentasPorId.set(cuentaFormateada._id, cuentaFormateada);
+
+        const propietarioId = getStringId(cuenta.propietario);
+        if (!propietarioId) {
+            return;
+        }
+
+        if (!cuentasPorPropietario.has(propietarioId)) {
+            cuentasPorPropietario.set(propietarioId, []);
+        }
+
+        cuentasPorPropietario.get(propietarioId).push(cuentaFormateada);
+    });
+
+    return {
+        cuentasPorPropietario,
+        cuentasPorId
+    };
+}
+
+function resolveBeneficiaryAccountState(beneficiaryId, usuario, cuentasPorPropietario, cuentasPorId) {
+    const cuentasDisponibles = [...(cuentasPorPropietario.get(beneficiaryId) || [])];
+    const cuentaLigadaId = getStringId(usuario?.cuentaFinancieraDefault);
+    const cuentaLigada = cuentaLigadaId ? (cuentasPorId.get(cuentaLigadaId) || null) : null;
+
+    if (cuentaLigada && !cuentasDisponibles.some((cuenta) => cuenta._id === cuentaLigada._id)) {
+        cuentasDisponibles.unshift(cuentaLigada);
+    }
+
+    const cuentaDestinoSugerida = cuentaLigada || (cuentasDisponibles.length === 1 ? cuentasDisponibles[0] : null);
+    const estadoCuenta = cuentasDisponibles.length === 0
+        ? 'sin-cuenta'
+        : (cuentaDestinoSugerida ? 'lista' : 'seleccion-requerida');
+
+    return {
+        cuentasDestino: cuentasDisponibles,
+        cuentaLigada,
+        cuentaDestinoSugerida,
+        estadoCuenta
+    };
+}
+
 function buildSellerCommissionMarker({ vendedorId, fechaInicio, fechaFin }) {
     return `${SELLER_COMMISSION_TAG}:${vendedorId}:${fechaInicio}:${fechaFin}`;
 }
 
 function buildSellerCommissionConcept(vendedorNombre, fechaInicio, fechaFin) {
     return `Pago comisiones ${vendedorNombre} ${fechaInicio} a ${fechaFin}`;
+}
+
+function buildOwnerPayoutMarker({ ownerId, fechaInicio, fechaFin }) {
+    return `${OWNER_PAYOUT_TAG}:${ownerId}:${fechaInicio}:${fechaFin}`;
+}
+
+function buildOwnerPayoutConcept(ownerName, fechaInicio, fechaFin) {
+    return `Pago a dueño ${ownerName} ${fechaInicio} a ${fechaFin}`;
 }
 
 function isSellerCommissionUtility(utilidad, reserva) {
@@ -132,6 +237,16 @@ function isSellerCommissionUtility(utilidad, reserva) {
     return !isManagerCommission;
 }
 
+function isOwnerPayoutUtility(utilidad) {
+    const monto = Number(utilidad?.monto) || 0;
+    if (monto <= 0 || !utilidad?.idReserva) {
+        return false;
+    }
+
+    const concepto = normalizeReportText(utilidad?.concepto || '');
+    return concepto.includes('comision dueno de cabana');
+}
+
 async function ensureFinanceCategoryExists(categoryName) {
     const categorias = await getCategorias();
     const alreadyExists = categorias.some((categoria) => categoria.toLowerCase() === categoryName.toLowerCase());
@@ -144,6 +259,20 @@ async function ensureFinanceCategoryExists(categoryName) {
 function getReservationAppliedPaymentsTotal(pagos = []) {
     return roundCurrencyAmount(pagos.reduce((sum, pago) => {
         if (pago?.status && pago.status !== 'Aplicado') {
+            return sum;
+        }
+
+        return sum + (Number(pago?.importe) || 0);
+    }, 0));
+}
+
+function getReservationReceivedByOwnerTotal(pagos = []) {
+    return roundCurrencyAmount(pagos.reduce((sum, pago) => {
+        if (pago?.status && pago.status !== 'Aplicado') {
+            return sum;
+        }
+
+        if (normalizeReportText(pago?.metodoPago || '') !== 'recibio dueno') {
             return sum;
         }
 
@@ -237,26 +366,8 @@ async function buildSellerCommissionReport(fechaInicio, fechaFin) {
 
     const habitacionesMap = new Map(habitaciones.map((habitacion) => [habitacion._id.toString(), habitacion]));
     const usuariosMap = new Map(usuarios.map((usuario) => [usuario._id.toString(), usuario]));
-    const cuentasPorPropietario = new Map();
     const pagosPorReserva = new Map();
-
-    cuentasDestino.forEach((cuenta) => {
-        const propietarioId = cuenta.propietario?.toString();
-        if (!propietarioId) {
-            return;
-        }
-
-        if (!cuentasPorPropietario.has(propietarioId)) {
-            cuentasPorPropietario.set(propietarioId, []);
-        }
-
-        cuentasPorPropietario.get(propietarioId).push({
-            _id: cuenta._id.toString(),
-            nombre: cuenta.nombre,
-            moneda: cuenta.moneda,
-            organizacion: cuenta.organizacion?.nombre || 'Sin organización'
-        });
-    });
+    const { cuentasPorPropietario, cuentasPorId } = buildAccountsByOwnerMap(cuentasDestino);
 
     const utilidadesPorReserva = new Map();
     utilidades.forEach((utilidad) => {
@@ -371,8 +482,8 @@ async function buildSellerCommissionReport(fechaInicio, fechaFin) {
                 .sort((a, b) => moment(a.fechaEntrada, 'DD/MM/YYYY').valueOf() - moment(b.fechaEntrada, 'DD/MM/YYYY').valueOf());
 
             const reservasPagables = reservasVendedor.filter((reserva) => reserva.esPagable && reserva.totalComisionPagable > 0).length;
-
-            const cuentasVendedor = cuentasPorPropietario.get(vendedor.vendedorId) || [];
+            const vendedorUsuario = usuariosMap.get(vendedor.vendedorId);
+            const accountState = resolveBeneficiaryAccountState(vendedor.vendedorId, vendedorUsuario, cuentasPorPropietario, cuentasPorId);
 
             return {
                 vendedorId: vendedor.vendedorId,
@@ -381,11 +492,7 @@ async function buildSellerCommissionReport(fechaInicio, fechaFin) {
                 totalComisionesPagables: roundCurrencyAmount(vendedor.totalComisionesPagables),
                 totalReservas: reservasVendedor.length,
                 reservasPagables,
-                cuentasDestino: cuentasVendedor,
-                cuentaDestinoSugerida: cuentasVendedor.length === 1 ? cuentasVendedor[0] : null,
-                estadoCuenta: cuentasVendedor.length === 0
-                    ? 'sin-cuenta'
-                    : (cuentasVendedor.length === 1 ? 'lista' : 'seleccion-requerida'),
+                ...accountState,
                 reservas: reservasVendedor
             };
         })
@@ -414,6 +521,270 @@ async function buildSellerCommissionReport(fechaInicio, fechaFin) {
             fechaGeneracion: momentTz.tz(new Date(), DATE_FILTER_TZ).format('DD/MM/YYYY HH:mm:ss'),
             totalRegistros: data.length
         }
+    };
+}
+
+async function buildOwnerPayoutReport(fechaInicio, fechaFin) {
+    const newFechaInicio = momentTz.tz(fechaInicio, DATE_FILTER_TZ).startOf('day').toDate();
+    const newFechaFin = momentTz.tz(fechaFin, DATE_FILTER_TZ).endOf('day').toDate();
+
+    const [reservas, habitaciones, usuarios, cuentasDestino] = await Promise.all([
+        Documento.find({
+            arrivalDate: {
+                $gte: newFechaInicio,
+                $lte: newFechaFin
+            },
+            status: { $nin: ['cancelled', 'reserva de dueño'] }
+        }).lean(),
+        Habitacion.find().lean(),
+        usersController.getAllUsersMongo(),
+        SWCuenta.find({ activa: true })
+            .select('_id nombre moneda propietario organizacion')
+            .populate('organizacion', 'nombre')
+            .lean()
+    ]);
+
+    if (!reservas || reservas.length === 0) {
+        return {
+            data: [],
+            totales: {
+                totalVendedores: 0,
+                totalComisiones: 0,
+                totalComisionesPagables: 0,
+                totalReservas: 0,
+                totalReservasPagables: 0,
+                vendedoresSinCuenta: 0,
+                vendedoresConCuentaLista: 0
+            },
+            metadata: {
+                fechaInicio,
+                fechaFin,
+                fechaGeneracion: momentTz.tz(new Date(), DATE_FILTER_TZ).format('DD/MM/YYYY HH:mm:ss'),
+                totalRegistros: 0
+            }
+        };
+    }
+
+    const reservaIds = reservas.map((reserva) => reserva._id);
+    const [utilidades, pagos] = await Promise.all([
+        Utilidades.find({
+            idReserva: { $in: reservaIds },
+            monto: { $gt: 0 }
+        }).lean(),
+        Pago.find({
+            reservacionId: { $in: reservaIds }
+        })
+            .select('reservacionId importe status metodoPago')
+            .lean()
+    ]);
+
+    const habitacionesMap = new Map(habitaciones.map((habitacion) => [habitacion._id.toString(), habitacion]));
+    const usuariosMap = new Map(usuarios.map((usuario) => [usuario._id.toString(), usuario]));
+    const pagosPorReserva = new Map();
+    const { cuentasPorPropietario, cuentasPorId } = buildAccountsByOwnerMap(cuentasDestino);
+
+    const utilidadesPorReserva = new Map();
+    utilidades.forEach((utilidad) => {
+        const reservaId = utilidad.idReserva?.toString();
+        if (!reservaId) {
+            return;
+        }
+
+        if (!utilidadesPorReserva.has(reservaId)) {
+            utilidadesPorReserva.set(reservaId, []);
+        }
+
+        utilidadesPorReserva.get(reservaId).push(utilidad);
+    });
+
+    pagos.forEach((pago) => {
+        const reservaId = pago.reservacionId?.toString();
+        if (!reservaId) {
+            return;
+        }
+
+        if (!pagosPorReserva.has(reservaId)) {
+            pagosPorReserva.set(reservaId, []);
+        }
+
+        pagosPorReserva.get(reservaId).push(pago);
+    });
+
+    const duenosMap = new Map();
+
+    reservas.forEach((reserva) => {
+        const reservaId = reserva._id.toString();
+        const utilidadesReserva = utilidadesPorReserva.get(reservaId) || [];
+        const pagosReserva = pagosPorReserva.get(reservaId) || [];
+        const resumenReserva = evaluateSellerCommissionReservation(reserva, pagosReserva);
+        const pagosRecibioDueno = getReservationReceivedByOwnerTotal(pagosReserva);
+        const habitacion = habitacionesMap.get(reserva.resourceId?.toString());
+        const cabana = habitacion?.propertyDetails?.name || 'N/A';
+
+        utilidadesReserva.forEach((utilidad) => {
+            if (!isOwnerPayoutUtility(utilidad)) {
+                return;
+            }
+
+            const duenoId = utilidad.idUsuario?.toString();
+            if (!duenoId) {
+                return;
+            }
+
+            const dueno = usuariosMap.get(duenoId);
+            if (dueno?.privilege && dueno.privilege !== 'Dueño de cabañas') {
+                return;
+            }
+
+            const duenoNombre = dueno
+                ? `${dueno.firstName || ''} ${dueno.lastName || ''}`.trim()
+                : 'Usuario no encontrado';
+            const monto = roundCurrencyAmount(utilidad.monto);
+
+            if (!duenosMap.has(duenoId)) {
+                duenosMap.set(duenoId, {
+                    vendedorId: duenoId,
+                    vendedorNombre: duenoNombre,
+                    totalComisiones: 0,
+                    reservasMap: new Map()
+                });
+            }
+
+            const reporteDueno = duenosMap.get(duenoId);
+            reporteDueno.totalComisiones += monto;
+
+            if (!reporteDueno.reservasMap.has(reservaId)) {
+                reporteDueno.reservasMap.set(reservaId, {
+                    idReserva: reservaId,
+                    cabana,
+                    fechaEntrada: momentTz.tz(reserva.arrivalDate, DATE_FILTER_TZ).format('DD/MM/YYYY'),
+                    fechaSalida: momentTz.tz(reserva.departureDate, DATE_FILTER_TZ).format('DD/MM/YYYY'),
+                    noches: reserva.nNights || 0,
+                    huespedes: reserva.pax || 0,
+                    statusReserva: resumenReserva.statusReserva,
+                    paymentStatusReserva: resumenReserva.paymentStatusReserva,
+                    totalReserva: resumenReserva.totalReserva,
+                    totalPagado: resumenReserva.totalPagado,
+                    restanteReserva: resumenReserva.restanteReserva,
+                    pagosRecibioDueno,
+                    esPagable: resumenReserva.esPagable,
+                    totalComision: 0,
+                    totalComisionPagable: 0,
+                    detalles: []
+                });
+            }
+
+            const reservaDueno = reporteDueno.reservasMap.get(reservaId);
+            reservaDueno.totalComision += monto;
+            reservaDueno.detalles.push({
+                concepto: utilidad.concepto,
+                monto,
+                fecha: momentTz.tz(utilidad.fecha, DATE_FILTER_TZ).format('DD/MM/YYYY')
+            });
+        });
+    });
+
+    const data = Array.from(duenosMap.values())
+        .map((dueno) => {
+            const reservasDueno = Array.from(dueno.reservasMap.values())
+                .map((reserva) => {
+                    const totalComision = roundCurrencyAmount(reserva.totalComision);
+                    const totalComisionPagable = reserva.esPagable
+                        ? roundCurrencyAmount(Math.max(totalComision - (Number(reserva.pagosRecibioDueno) || 0), 0))
+                        : 0;
+
+                    return {
+                        ...reserva,
+                        totalComision,
+                        totalComisionPagable
+                    };
+                })
+                .sort((a, b) => moment(a.fechaEntrada, 'DD/MM/YYYY').valueOf() - moment(b.fechaEntrada, 'DD/MM/YYYY').valueOf());
+
+            const totalComisionesPagables = roundCurrencyAmount(
+                reservasDueno.reduce((sum, reserva) => sum + reserva.totalComisionPagable, 0)
+            );
+            const reservasPagables = reservasDueno.filter((reserva) => reserva.totalComisionPagable > 0).length;
+            const duenoUsuario = usuariosMap.get(dueno.vendedorId);
+            const accountState = resolveBeneficiaryAccountState(dueno.vendedorId, duenoUsuario, cuentasPorPropietario, cuentasPorId);
+
+            return {
+                vendedorId: dueno.vendedorId,
+                vendedorNombre: dueno.vendedorNombre,
+                totalComisiones: roundCurrencyAmount(dueno.totalComisiones),
+                totalComisionesPagables,
+                totalReservas: reservasDueno.length,
+                reservasPagables,
+                ...accountState,
+                reservas: reservasDueno
+            };
+        })
+        .sort((a, b) => {
+            if (b.totalComisionesPagables !== a.totalComisionesPagables) {
+                return b.totalComisionesPagables - a.totalComisionesPagables;
+            }
+
+            return a.vendedorNombre.localeCompare(b.vendedorNombre, 'es', { sensitivity: 'base' });
+        });
+
+    return {
+        data,
+        totales: {
+            totalVendedores: data.length,
+            totalComisiones: roundCurrencyAmount(data.reduce((sum, dueno) => sum + dueno.totalComisiones, 0)),
+            totalComisionesPagables: roundCurrencyAmount(data.reduce((sum, dueno) => sum + dueno.totalComisionesPagables, 0)),
+            totalReservas: data.reduce((sum, dueno) => sum + dueno.totalReservas, 0),
+            totalReservasPagables: data.reduce((sum, dueno) => sum + dueno.reservasPagables, 0),
+            vendedoresSinCuenta: data.filter((dueno) => dueno.estadoCuenta === 'sin-cuenta').length,
+            vendedoresConCuentaLista: data.filter((dueno) => dueno.estadoCuenta === 'lista').length
+        },
+        metadata: {
+            fechaInicio,
+            fechaFin,
+            fechaGeneracion: momentTz.tz(new Date(), DATE_FILTER_TZ).format('DD/MM/YYYY HH:mm:ss'),
+            totalRegistros: data.length
+        }
+    };
+}
+
+async function buildBeneficiaryCommissionReport(beneficiaryType, fechaInicio, fechaFin) {
+    const normalizedBeneficiaryType = normalizeBeneficiaryType(beneficiaryType);
+    return normalizedBeneficiaryType === 'owner'
+        ? buildOwnerPayoutReport(fechaInicio, fechaFin)
+        : buildSellerCommissionReport(fechaInicio, fechaFin);
+}
+
+function getBeneficiaryFinanceRequestConfig(beneficiaryType) {
+    const normalizedBeneficiaryType = normalizeBeneficiaryType(beneficiaryType);
+
+    if (normalizedBeneficiaryType === 'owner') {
+        return {
+            category: OWNER_PAYOUT_CATEGORY,
+            tag: OWNER_PAYOUT_TAG,
+            beneficiaryLabel: 'Dueño',
+            notFoundMessage: 'No se encontró información de pagos para el dueño seleccionado',
+            invalidAccountMessage: 'La cuenta seleccionada no está disponible para este dueño',
+            duplicateMessage: 'Ya existe una solicitud o movimiento previo para este dueño y periodo',
+            zeroPayableMessage: 'El dueño no tiene pagos pagables para el periodo seleccionado',
+            successMessage: 'Solicitud creada exitosamente en finanzas',
+            buildMarker: ({ beneficiaryId, fechaInicio, fechaFin }) => buildOwnerPayoutMarker({ ownerId: beneficiaryId, fechaInicio, fechaFin }),
+            buildConcept: buildOwnerPayoutConcept,
+            buildDescription: (beneficiary) => `Corte de pagos a dueño generado desde reportes. Reservas pagables: ${beneficiary.reservasPagables} de ${beneficiary.totalReservas}`
+        };
+    }
+
+    return {
+        category: SELLER_COMMISSION_CATEGORY,
+        tag: SELLER_COMMISSION_TAG,
+        beneficiaryLabel: 'Vendedor',
+        notFoundMessage: 'No se encontró información de comisiones para el vendedor seleccionado',
+        invalidAccountMessage: 'La cuenta seleccionada no está disponible para este vendedor',
+        duplicateMessage: 'Ya existe una solicitud o movimiento previo para este vendedor y periodo',
+        zeroPayableMessage: 'El vendedor no tiene comisiones pagables para el periodo seleccionado',
+        successMessage: 'Solicitud creada exitosamente en finanzas',
+        buildMarker: ({ beneficiaryId, fechaInicio, fechaFin }) => buildSellerCommissionMarker({ vendedorId: beneficiaryId, fechaInicio, fechaFin }),
+        buildConcept: buildSellerCommissionConcept,
+        buildDescription: (beneficiary) => `Corte de comisiones por vendedor generado desde reportes. Reservas pagables: ${beneficiary.reservasPagables} de ${beneficiary.totalReservas}`
     };
 }
 
@@ -3589,7 +3960,7 @@ async function renderReporteTodoEnUno(req, res) {
 
 async function reporteTodoEnUno(req, res) {
     try {
-        const { fechaInicio, fechaFin, sellerId } = req.query;
+        const { fechaInicio, fechaFin, sellerId, ownerId } = req.query;
 
         // Validar parámetros
         if (!fechaInicio || !fechaFin) {
@@ -3599,10 +3970,24 @@ async function reporteTodoEnUno(req, res) {
             });
         }
 
+        if (sellerId && ownerId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Use solo uno de los filtros: sellerId u ownerId'
+            });
+        }
+
         if (sellerId && !mongoose.Types.ObjectId.isValid(sellerId)) {
             return res.status(400).json({
                 success: false,
                 error: 'sellerId inválido'
+            });
+        }
+
+        if (ownerId && !mongoose.Types.ObjectId.isValid(ownerId)) {
+            return res.status(400).json({
+                success: false,
+                error: 'ownerId inválido'
             });
         }
 
@@ -3683,6 +4068,13 @@ async function reporteTodoEnUno(req, res) {
                     return utilidad.idUsuario?.toString() === sellerId && isSellerCommissionUtility(utilidad, reserva);
                 });
             })
+            : ownerId
+                ? reservas.filter((reserva) => {
+                    const utilidadesReserva = utilidadesPorReserva.get(reserva._id.toString()) || [];
+                    return utilidadesReserva.some((utilidad) => {
+                        return utilidad.idUsuario?.toString() === ownerId && isOwnerPayoutUtility(utilidad);
+                    });
+                })
             : reservas;
 
         if (!reservasFiltradas.length) {
@@ -3691,11 +4083,14 @@ async function reporteTodoEnUno(req, res) {
                 data: [],
                 message: sellerId
                     ? 'No se encontraron reservas con comisión para el vendedor en el rango de fechas especificado'
+                    : ownerId
+                        ? 'No se encontraron reservas con pago para el dueño en el rango de fechas especificado'
                     : 'No se encontraron reservas en el rango de fechas especificado',
                 metadata: {
                     fechaInicio,
                     fechaFin,
                     sellerId: sellerId || null,
+                    ownerId: ownerId || null,
                     totalReservas: 0
                 }
             });
@@ -3956,6 +4351,7 @@ async function reporteTodoEnUno(req, res) {
                 fechaInicio,
                 fechaFin,
                 sellerId: sellerId || null,
+                ownerId: ownerId || null,
                 fechaGeneracion: momentTz.tz(new Date(), 'America/Mexico_City').format('DD/MM/YYYY HH:mm:ss'),
                 totalRegistros: reporteData.length
             }
@@ -4157,7 +4553,8 @@ async function renderReporteComisionesVendedor(req, res) {
 
 async function reporteComisionesVendedor(req, res) {
     try {
-        const { fechaInicio, fechaFin } = req.query;
+        const { fechaInicio, fechaFin, beneficiaryType } = req.query;
+        const normalizedBeneficiaryType = normalizeBeneficiaryType(beneficiaryType);
 
         if (!fechaInicio || !fechaFin) {
             return res.status(400).json({
@@ -4166,17 +4563,159 @@ async function reporteComisionesVendedor(req, res) {
             });
         }
 
-        const reporte = await buildSellerCommissionReport(fechaInicio, fechaFin);
+        const reporte = await buildBeneficiaryCommissionReport(normalizedBeneficiaryType, fechaInicio, fechaFin);
 
         return res.status(200).json({
             success: true,
+            beneficiaryType: normalizedBeneficiaryType,
             ...reporte
         });
     } catch (error) {
         console.error('Error en reporteComisionesVendedor:', error);
         return res.status(500).json({
             success: false,
-            error: 'Error generando reporte de comisiones por vendedor',
+            error: 'Error generando reporte de beneficiarios',
+            message: error.message
+        });
+    }
+}
+
+async function obtenerCuentasLigadasComisiones(req, res) {
+    try {
+        const normalizedBeneficiaryType = normalizeBeneficiaryType(req.query.beneficiaryType);
+        const privileges = getBeneficiaryPrivileges(normalizedBeneficiaryType);
+
+        const [beneficiarios, cuentasDestino] = await Promise.all([
+            User.find({ privilege: { $in: privileges } })
+                .select('_id firstName lastName privilege cuentaFinancieraDefault')
+                .lean(),
+            SWCuenta.find({ activa: true })
+                .select('_id nombre moneda propietario organizacion')
+                .populate('organizacion', 'nombre')
+                .lean()
+        ]);
+
+        const { cuentasPorPropietario, cuentasPorId } = buildAccountsByOwnerMap(cuentasDestino);
+
+        const data = beneficiarios
+            .map((beneficiario) => {
+                const beneficiarioId = beneficiario._id.toString();
+                const accountState = resolveBeneficiaryAccountState(beneficiarioId, beneficiario, cuentasPorPropietario, cuentasPorId);
+
+                return {
+                    beneficiarioId,
+                    beneficiarioNombre: `${beneficiario.firstName || ''} ${beneficiario.lastName || ''}`.trim() || 'Usuario sin nombre',
+                    privilegio: beneficiario.privilege,
+                    ...accountState
+                };
+            })
+            .sort((a, b) => a.beneficiarioNombre.localeCompare(b.beneficiarioNombre, 'es', { sensitivity: 'base' }));
+
+        return res.status(200).json({
+            success: true,
+            beneficiaryType: normalizedBeneficiaryType,
+            data,
+            totales: {
+                totalBeneficiarios: data.length,
+                conCuentaLigada: data.filter((beneficiario) => Boolean(beneficiario.cuentaLigada)).length,
+                sinCuentaLigada: data.filter((beneficiario) => !beneficiario.cuentaLigada).length
+            }
+        });
+    } catch (error) {
+        console.error('Error obteniendo cuentas ligadas del reporte de comisiones:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Error obteniendo cuentas ligadas',
+            message: error.message
+        });
+    }
+}
+
+async function actualizarCuentaLigadaComisiones(req, res) {
+    try {
+        const { usuarioId } = req.params;
+        const { cuentaId, beneficiaryType } = req.body;
+        const normalizedBeneficiaryType = normalizeBeneficiaryType(beneficiaryType);
+        const privileges = getBeneficiaryPrivileges(normalizedBeneficiaryType);
+        const cuentaIdNormalizada = typeof cuentaId === 'string' ? cuentaId.trim() : '';
+
+        if (!mongoose.Types.ObjectId.isValid(usuarioId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'beneficiarioId inválido'
+            });
+        }
+
+        const beneficiario = await User.findOne({
+            _id: usuarioId,
+            privilege: { $in: privileges }
+        }).select('_id firstName lastName privilege cuentaFinancieraDefault');
+
+        if (!beneficiario) {
+            return res.status(404).json({
+                success: false,
+                message: 'No se encontró el beneficiario seleccionado'
+            });
+        }
+
+        if (cuentaIdNormalizada) {
+            if (!mongoose.Types.ObjectId.isValid(cuentaIdNormalizada)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'cuentaId inválido'
+                });
+            }
+
+            const cuenta = await SWCuenta.findById(cuentaIdNormalizada)
+                .select('_id activa propietario');
+
+            if (!cuenta || !cuenta.activa) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'La cuenta seleccionada no existe o está inactiva'
+                });
+            }
+
+            if (getStringId(cuenta.propietario) !== usuarioId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'La cuenta seleccionada no pertenece al beneficiario'
+                });
+            }
+        }
+
+        beneficiario.cuentaFinancieraDefault = cuentaIdNormalizada || null;
+        await beneficiario.save();
+
+        const cuentasDestino = await SWCuenta.find({
+            activa: true,
+            propietario: beneficiario._id
+        })
+            .select('_id nombre moneda propietario organizacion')
+            .populate('organizacion', 'nombre')
+            .lean();
+
+        const { cuentasPorPropietario, cuentasPorId } = buildAccountsByOwnerMap(cuentasDestino);
+        const accountState = resolveBeneficiaryAccountState(usuarioId, beneficiario, cuentasPorPropietario, cuentasPorId);
+        const beneficiarioNombre = `${beneficiario.firstName || ''} ${beneficiario.lastName || ''}`.trim() || 'Usuario sin nombre';
+
+        return res.status(200).json({
+            success: true,
+            message: cuentaIdNormalizada
+                ? 'Cuenta ligada actualizada con éxito'
+                : 'Cuenta ligada removida con éxito',
+            data: {
+                beneficiarioId: usuarioId,
+                beneficiarioNombre,
+                privilegio: beneficiario.privilege,
+                ...accountState
+            }
+        });
+    } catch (error) {
+        console.error('Error actualizando cuenta ligada del reporte de comisiones:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Error actualizando cuenta ligada',
             message: error.message
         });
     }
@@ -4184,30 +4723,33 @@ async function reporteComisionesVendedor(req, res) {
 
 async function crearSolicitudComisionVendedor(req, res) {
     try {
-        const { fechaInicio, fechaFin, vendedorId, cuentaId } = req.body;
+        const { fechaInicio, fechaFin, vendedorId, beneficiarioId, cuentaId, beneficiaryType } = req.body;
+        const normalizedBeneficiaryType = normalizeBeneficiaryType(beneficiaryType);
+        const targetBeneficiaryId = beneficiarioId || vendedorId;
+        const financeRequestConfig = getBeneficiaryFinanceRequestConfig(normalizedBeneficiaryType);
         const sessionUserId = req.session.userId || req.session.id;
 
-        if (!fechaInicio || !fechaFin || !vendedorId || !cuentaId) {
+        if (!fechaInicio || !fechaFin || !targetBeneficiaryId || !cuentaId) {
             return res.status(400).json({
                 success: false,
-                message: 'fechaInicio, fechaFin, vendedorId y cuentaId son requeridos'
+                message: 'fechaInicio, fechaFin, beneficiarioId y cuentaId son requeridos'
             });
         }
 
-        if (!mongoose.Types.ObjectId.isValid(vendedorId) || !mongoose.Types.ObjectId.isValid(cuentaId)) {
+        if (!mongoose.Types.ObjectId.isValid(targetBeneficiaryId) || !mongoose.Types.ObjectId.isValid(cuentaId)) {
             return res.status(400).json({
                 success: false,
-                message: 'vendedorId o cuentaId inválidos'
+                message: 'beneficiarioId o cuentaId inválidos'
             });
         }
 
-        const reporte = await buildSellerCommissionReport(fechaInicio, fechaFin);
-        const vendedor = reporte.data.find((item) => item.vendedorId === vendedorId);
+        const reporte = await buildBeneficiaryCommissionReport(normalizedBeneficiaryType, fechaInicio, fechaFin);
+        const vendedor = reporte.data.find((item) => item.vendedorId === targetBeneficiaryId);
 
         if (!vendedor) {
             return res.status(404).json({
                 success: false,
-                message: 'No se encontró información de comisiones para el vendedor seleccionado'
+                message: financeRequestConfig.notFoundMessage
             });
         }
 
@@ -4215,13 +4757,13 @@ async function crearSolicitudComisionVendedor(req, res) {
         if (!cuentaSeleccionada) {
             return res.status(400).json({
                 success: false,
-                message: 'La cuenta seleccionada no está disponible para este vendedor'
+                message: financeRequestConfig.invalidAccountMessage
             });
         }
 
-        await ensureFinanceCategoryExists(SELLER_COMMISSION_CATEGORY);
+        await ensureFinanceCategoryExists(financeRequestConfig.category);
 
-        const marker = buildSellerCommissionMarker({ vendedorId, fechaInicio, fechaFin });
+        const marker = financeRequestConfig.buildMarker({ beneficiaryId: targetBeneficiaryId, fechaInicio, fechaFin });
         const [existingSolicitud, existingTransaccion, cuenta] = await Promise.all([
             SWSolicitudTransaccion.findOne({
                 cuenta: cuentaId,
@@ -4246,7 +4788,7 @@ async function crearSolicitudComisionVendedor(req, res) {
         if (existingSolicitud || existingTransaccion) {
             return res.status(409).json({
                 success: false,
-                message: 'Ya existe una solicitud o movimiento previo para este vendedor y periodo'
+                message: financeRequestConfig.duplicateMessage
             });
         }
 
@@ -4256,15 +4798,15 @@ async function crearSolicitudComisionVendedor(req, res) {
         if (totalComisionesPagables <= 0) {
             return res.status(400).json({
                 success: false,
-                message: 'El vendedor no tiene comisiones pagables para el periodo seleccionado'
+                message: financeRequestConfig.zeroPayableMessage
             });
         }
 
-        const concepto = buildSellerCommissionConcept(vendedor.vendedorNombre, fechaInicio, fechaFin);
+        const concepto = financeRequestConfig.buildConcept(vendedor.vendedorNombre, fechaInicio, fechaFin);
         const notas = [
             marker,
             `Periodo: ${fechaInicio} a ${fechaFin}`,
-            `Vendedor: ${vendedor.vendedorNombre}`,
+            `${financeRequestConfig.beneficiaryLabel}: ${vendedor.vendedorNombre}`,
             `Reservas reportadas: ${vendedor.reservas.map((reserva) => reserva.idReserva).join(', ')}`,
             `Reservas pagables: ${vendedor.reservas.filter((reserva) => reserva.totalComisionPagable > 0).map((reserva) => reserva.idReserva).join(', ') || 'Ninguna'}`
         ].join('\n');
@@ -4274,12 +4816,12 @@ async function crearSolicitudComisionVendedor(req, res) {
             tipo: 'Ingreso',
             monto: totalComisionesPagables,
             concepto,
-            descripcion: `Corte de comisiones por vendedor generado desde reportes. Reservas pagables: ${vendedor.reservasPagables} de ${vendedor.totalReservas}`,
-            categoria: SELLER_COMMISSION_CATEGORY,
+            descripcion: financeRequestConfig.buildDescription(vendedor),
+            categoria: financeRequestConfig.category,
             fecha: new Date(),
             solicitadoPor: sessionUserId,
             propietarioCuenta: cuenta.propietario,
-            etiquetas: [SELLER_COMMISSION_TAG, marker, vendedorId],
+            etiquetas: [financeRequestConfig.tag, marker, targetBeneficiaryId],
             notas
         });
 
@@ -4292,12 +4834,13 @@ async function crearSolicitudComisionVendedor(req, res) {
 
         return res.status(201).json({
             success: true,
-            message: 'Solicitud creada exitosamente en finanzas',
+            message: financeRequestConfig.successMessage,
             data: {
                 solicitud: solicitudPopulada,
-                vendedor: {
-                    vendedorId: vendedor.vendedorId,
-                    vendedorNombre: vendedor.vendedorNombre,
+                beneficiario: {
+                    beneficiaryType: normalizedBeneficiaryType,
+                    beneficiarioId: vendedor.vendedorId,
+                    beneficiarioNombre: vendedor.vendedorNombre,
                     totalComisiones,
                     totalComisionesPagables
                 }
@@ -4340,5 +4883,7 @@ module.exports = {
     reporteDeInversionistas,
     renderReporteComisionesVendedor,
     reporteComisionesVendedor,
+    obtenerCuentasLigadasComisiones,
+    actualizarCuentaLigadaComisiones,
     crearSolicitudComisionVendedor
 }
