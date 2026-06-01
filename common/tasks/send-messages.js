@@ -15,6 +15,49 @@ const { format } = require('date-fns');
 const { es } = require('date-fns/locale');
 const { normalizeStoredTime } = require('../../utils/time');
 
+const MEXICO_TZ = 'America/Mexico_City';
+
+function getChaletMessageTimes(chaletInfo) {
+    return {
+        arrivalTime: normalizeStoredTime(chaletInfo?.others?.arrivalTime, '15:00') || '15:00',
+        departureTime: normalizeStoredTime(chaletInfo?.others?.departureTime, '11:00') || '11:00'
+    };
+}
+
+function getReservationMoment(dateValue) {
+    const reservationMoment = moment.utc(dateValue);
+    return reservationMoment.isValid() ? reservationMoment : null;
+}
+
+function formatReservationDate(dateValue, formatString) {
+    const reservationMoment = getReservationMoment(dateValue);
+    if (reservationMoment) {
+        return reservationMoment.format(formatString);
+    }
+
+    return moment(dateValue).format(formatString);
+}
+
+function formatReservationTime(dateValue, fallback) {
+    const reservationMoment = getReservationMoment(dateValue);
+    if (reservationMoment) {
+        return reservationMoment.format('HH:mm');
+    }
+
+    return fallback;
+}
+
+function getMexicoUtcDayRange(dayOffset = 0) {
+    const mexicoDate = moment.tz(MEXICO_TZ).add(dayOffset, 'day');
+
+    return {
+        label: mexicoDate.format('DD [de] MMMM'),
+        isoDate: mexicoDate.format('YYYY-MM-DD'),
+        start: moment.utc(mexicoDate.format('YYYY-MM-DD')).startOf('day').toDate(),
+        end: moment.utc(mexicoDate.format('YYYY-MM-DD')).endOf('day').toDate()
+    };
+}
+
 function createParamsArray(params) {
     return params.map(param => {
         return {
@@ -121,15 +164,16 @@ async function sendReservationConfirmation(clientInfo, chaletInfo, reservationIn
     // const formatDepartureDate = moment(reservationInfo.departureDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
     console.log("sendReservationConfirmation");
 
-    const chaletArrivalHour = moment.tz(chaletInfo.others.arrivalTime, "America/Mexico_City").format("HH:mm");
-    const chaletDepartureHour = moment.tz(chaletInfo.others.departureTime, "America/Mexico_City").format("HH:mm");
+    const chaletTimes = getChaletMessageTimes(chaletInfo);
+    const chaletArrivalHour = formatReservationTime(reservationInfo?.arrivalDate, chaletTimes.arrivalTime);
+    const chaletDepartureHour = formatReservationTime(reservationInfo?.departureDate, chaletTimes.departureTime);
 
 
     console.log("chaletArrivalHour", chaletArrivalHour)
     console.log("chaletDepartureHour", chaletDepartureHour)
 
-    const formattedArrivalDate = moment(reservationInfo.arrivalDate).format("DD/MM/YYYY");
-    const formattedDepartureDate = moment(reservationInfo.departureDate).format("DD/MM/YYYY");
+    const formattedArrivalDate = formatReservationDate(reservationInfo?.arrivalDate, 'DD/MM/YYYY');
+    const formattedDepartureDate = formatReservationDate(reservationInfo?.departureDate, 'DD/MM/YYYY');
 
     const arrMsg = `${formattedArrivalDate} a las ${chaletArrivalHour}`
     const depMsg = `${formattedDepartureDate} a las ${chaletDepartureHour}`
@@ -146,8 +190,9 @@ async function sendReservationInstructions(clientInfo, chaletInfo, reservationIn
     // const formatDepartureDate = moment(reservationInfo.departureDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
     console.log("sendReservationInstructions");
 
-    const chaletArrivalHour = moment.tz(chaletInfo.others.arrivalTime, "America/Mexico_City").format("HH:mm");
-    const chaletDepartureHour = moment.tz(chaletInfo.others.departureTime, "America/Mexico_City").format("HH:mm");
+    const chaletTimes = getChaletMessageTimes(chaletInfo);
+    const chaletArrivalHour = formatReservationTime(reservationInfo?.arrivalDate, chaletTimes.arrivalTime);
+    const chaletDepartureHour = formatReservationTime(reservationInfo?.departureDate, chaletTimes.departureTime);
 
     const cuenta = await swCuentas.findById(chaletInfo.others.cuentaFinanciera).lean();
     if (!cuenta) {
@@ -158,8 +203,8 @@ async function sendReservationInstructions(clientInfo, chaletInfo, reservationIn
     console.log("chaletArrivalHour", chaletArrivalHour)
     console.log("chaletDepartureHour", chaletDepartureHour)
 
-    const formattedArrivalDate = moment(reservationInfo.arrivalDate).format("DD/MM/YYYY");
-    const formattedDepartureDate = moment(reservationInfo.departureDate).format("DD/MM/YYYY");
+    const formattedArrivalDate = formatReservationDate(reservationInfo?.arrivalDate, 'DD/MM/YYYY');
+    const formattedDepartureDate = formatReservationDate(reservationInfo?.departureDate, 'DD/MM/YYYY');
 
     const arrMsg = `${formattedArrivalDate} ${chaletArrivalHour}`
     const depMsg = `${formattedDepartureDate} ${chaletDepartureHour}`
@@ -325,12 +370,10 @@ async function sendCheckInMessage() {
 
     moment.locale('es');
 
-    const today = moment().startOf('day').toDate();
-    const tomorrow = moment().add(1, 'day').startOf('day').toDate();
-    const todayFormattedDate = moment().format("DD [de] MMMM");
+    const { start: todayStart, end: todayEnd, label: todayFormattedDate } = getMexicoUtcDayRange();
 
-    const reservas = await Evento.find({ status: { $nin: ["cancelled", "no-show"] }, arrivalDate: { $gte: today, $lt: tomorrow }, checkInSent: false });
-    console.log(`Found ${reservas.length} reservations for tomorrow.`);
+    const reservas = await Evento.find({ status: { $nin: ["cancelled", "no-show"] }, arrivalDate: { $gte: todayStart, $lte: todayEnd }, checkInSent: false });
+    console.log(`Found ${reservas.length} reservations for today.`);
 
     let clientName = '';
 
@@ -360,7 +403,7 @@ async function sendCheckInMessage() {
             phone: '523318411770' // Caseta
         };
 
-        const formattedCheckOut = moment(reserva.departureDate).format("DD [de] MMMM");
+        const formattedCheckOut = formatReservationDate(reserva.departureDate, 'DD [de] MMMM');
 
         const whatsappResponse = await sendTemplateMsg(receiver, 'automatizacion_checkin', [
             todayFormattedDate,
@@ -411,11 +454,9 @@ async function sendCheckInReminderDayBefore() {
 
     // Calcular rango de fechas para MAÑANA en UTC (las fechas en MongoDB se guardan en UTC)
     // Usamos la fecha de México pero convertimos a rango UTC para la consulta
-    const tomorrowInMexico = moment.tz("America/Mexico_City").add(1, 'day');
-    const tomorrowStart = moment.utc(tomorrowInMexico.format('YYYY-MM-DD')).startOf('day').toDate();
-    const tomorrowEnd = moment.utc(tomorrowInMexico.format('YYYY-MM-DD')).endOf('day').toDate();
+    const { start: tomorrowStart, end: tomorrowEnd, isoDate: tomorrowIsoDate } = getMexicoUtcDayRange(1);
     
-    console.log(`Buscando reservas para mañana: ${tomorrowInMexico.format('YYYY-MM-DD')}`);
+    console.log(`Buscando reservas para mañana: ${tomorrowIsoDate}`);
     console.log(`Rango UTC: ${tomorrowStart.toISOString()} - ${tomorrowEnd.toISOString()}`);
 
     // Consulta más eficiente directamente en la base de datos
@@ -461,8 +502,9 @@ async function sendCheckInReminderDayBefore() {
                 continue;
             }
 
-            const formattedArrivalDate = moment(reserva.arrivalDate).format("DD [de] MMMM");
-            const arrivalTime = moment.tz(chalet.others?.arrivalTime || "15:00", "HH:mm", "America/Mexico_City").format("HH:mm");
+            const chaletTimes = getChaletMessageTimes(chalet);
+            const formattedArrivalDate = formatReservationDate(reserva.arrivalDate, 'DD [de] MMMM');
+            const arrivalTime = formatReservationTime(reserva.arrivalDate, chaletTimes.arrivalTime);
             // Template para 1 día antes
             const whatsappResponse = await sendTemplateMsg(client, 'recordatorio_checkin_dia_antes', [
                 client.firstName,
@@ -500,11 +542,9 @@ async function sendCheckInReminderSameDay() {
 
     // Calcular rango de fechas para HOY en UTC (las fechas en MongoDB se guardan en UTC)
     // Usamos la fecha de México pero convertimos a rango UTC para la consulta
-    const todayInMexico = moment.tz("America/Mexico_City");
-    const todayStart = moment.utc(todayInMexico.format('YYYY-MM-DD')).startOf('day').toDate();
-    const todayEnd = moment.utc(todayInMexico.format('YYYY-MM-DD')).endOf('day').toDate();
+    const { start: todayStart, end: todayEnd, isoDate: todayIsoDate } = getMexicoUtcDayRange();
 
-    console.log(`Buscando reservas para hoy: ${todayInMexico.format('YYYY-MM-DD')}`);
+    console.log(`Buscando reservas para hoy: ${todayIsoDate}`);
     console.log(`Rango UTC: ${todayStart.toISOString()} - ${todayEnd.toISOString()}`);
 
     // Consulta más eficiente directamente en la base de datos
@@ -550,7 +590,8 @@ async function sendCheckInReminderSameDay() {
                 continue;
             }
 
-            const arrivalTime = moment.tz(chalet.others?.arrivalTime || "15:00", "HH:mm", "America/Mexico_City").format("HH:mm");
+            const chaletTimes = getChaletMessageTimes(chalet);
+            const arrivalTime = formatReservationTime(reserva.arrivalDate, chaletTimes.arrivalTime);
             // Template para mismo día
             const whatsappResponse = await sendTemplateMsg(client, 'recordatorio_checkin_mismo_dia', [
                 client.firstName,

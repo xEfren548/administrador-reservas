@@ -7,6 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon .",
     "dev:api": "nodemon . --api",
+    "migrate:chalet-times": "node .\\scripts\\migrateChaletTimesToStrings.js",
+    "migrate:chalet-times:write": "node .\\scripts\\migrateChaletTimesToStrings.js --write",
     "report:reservas-bosque-imperial": "node .\\scripts\\reporteReservasAbrilBosqueImperial.js",
     "start": "node index.js"
   },

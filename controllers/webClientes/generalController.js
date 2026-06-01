@@ -17,7 +17,7 @@ const channexController = require('../channexController');
 const sendEmail = require('../../common/tasks/send-mails');
 const rackLimpiezaController = require('../rackLimpiezaController');
 const SendMessages = require('../../common/tasks/send-messages');
-const { getTimeParts } = require('../../utils/time');
+const { setTimeOnDate } = require('../../utils/time');
 
 /**
  * Agrupa las habitaciones por roomGroup, seleccionando ALEATORIAMENTE una habitación de cada grupo disponible
@@ -1231,11 +1231,8 @@ async function createReservationForClient(reservationData, status, paymentStatus
         const arrivalDate = moment(reservationData.checkIn).toDate();
         const departureDate = moment(reservationData.checkOut).toDate();
 
-        const cabinArrivalHour = chalet.others.arrivalTime?.getHours();
-        arrivalDate.setUTCHours(cabinArrivalHour || 15, 0, 0, 0);
-
-        const cabinDepartureHour = chalet.others.departureTime?.getHours();
-        departureDate.setUTCHours(cabinDepartureHour || 11, 0, 0, 0);
+        setTimeOnDate(arrivalDate, chalet?.others?.arrivalTime, { useUtc: true, fallback: '15:00' });
+        setTimeOnDate(departureDate, chalet?.others?.departureTime, { useUtc: true, fallback: '11:00' });
 
         let client = null;
         let isWebClient = false;
