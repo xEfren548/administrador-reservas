@@ -166,6 +166,59 @@ function buildAccountsByOwnerMap(cuentasDestino = []) {
     };
 }
 
+function addFormattedAccountToMap(accountsMap, beneficiaryId, cuenta) {
+    if (!beneficiaryId || !cuenta?._id) {
+        return;
+    }
+
+    if (!accountsMap.has(beneficiaryId)) {
+        accountsMap.set(beneficiaryId, []);
+    }
+
+    const cuentasActuales = accountsMap.get(beneficiaryId);
+    if (cuentasActuales.some((currentCuenta) => currentCuenta._id === cuenta._id)) {
+        return;
+    }
+
+    cuentasActuales.push(cuenta);
+}
+
+function buildOwnerAccountsByChaletMap(habitaciones = [], cuentasPorId = new Map()) {
+    const cuentasPorDueno = new Map();
+
+    habitaciones.forEach((habitacion) => {
+        const duenoId = getStringId(habitacion?.others?.owner);
+        const cuentaId = getStringId(habitacion?.others?.cuentaFinanciera);
+        const cuenta = cuentaId ? cuentasPorId.get(cuentaId) : null;
+
+        if (!duenoId || !cuenta) {
+            return;
+        }
+
+        addFormattedAccountToMap(cuentasPorDueno, duenoId, cuenta);
+    });
+
+    return cuentasPorDueno;
+}
+
+function mergeAccountsMap(...maps) {
+    const mergedMap = new Map();
+
+    maps.forEach((accountsMap) => {
+        if (!(accountsMap instanceof Map)) {
+            return;
+        }
+
+        accountsMap.forEach((cuentas, beneficiaryId) => {
+            (cuentas || []).forEach((cuenta) => {
+                addFormattedAccountToMap(mergedMap, beneficiaryId, cuenta);
+            });
+        });
+    });
+
+    return mergedMap;
+}
+
 function resolveBeneficiaryAccountState(beneficiaryId, usuario, cuentasPorPropietario, cuentasPorId) {
     const cuentasDisponibles = [...(cuentasPorPropietario.get(beneficiaryId) || [])];
     const cuentaLigadaId = getStringId(usuario?.cuentaFinancieraDefault);
@@ -296,7 +349,9 @@ function evaluateSellerCommissionReservation(reserva, pagosReserva = []) {
     const restanteReserva = roundCurrencyAmount(Math.max(totalReserva - totalPagado, 0));
     const statusReserva = reserva?.status || 'sin estatus';
     const pagoCompleto = restanteReserva <= 0.01;
-    const statusValido = statusReserva === 'active';
+    const porcentajePagado = totalReserva > 0 ? (totalPagado / totalReserva) : 0;
+    const pagoMinimoNoShow = statusReserva === 'no-show' && porcentajePagado >= 0.5;
+    const statusValido = statusReserva === 'active' || pagoMinimoNoShow;
 
     return {
         statusReserva,
@@ -305,8 +360,10 @@ function evaluateSellerCommissionReservation(reserva, pagosReserva = []) {
         totalPagado,
         restanteReserva,
         pagoCompleto,
+        porcentajePagado,
+        pagoMinimoNoShow,
         statusValido,
-        esPagable: pagoCompleto && statusValido
+        esPagable: (statusReserva === 'active' && pagoCompleto) || pagoMinimoNoShow
     };
 }
 
@@ -582,6 +639,10 @@ async function buildOwnerPayoutReport(fechaInicio, fechaFin) {
     const usuariosMap = new Map(usuarios.map((usuario) => [usuario._id.toString(), usuario]));
     const pagosPorReserva = new Map();
     const { cuentasPorPropietario, cuentasPorId } = buildAccountsByOwnerMap(cuentasDestino);
+    const cuentasPorDueno = mergeAccountsMap(
+        cuentasPorPropietario,
+        buildOwnerAccountsByChaletMap(habitaciones, cuentasPorId)
+    );
 
     const utilidadesPorReserva = new Map();
     utilidades.forEach((utilidad) => {
@@ -706,7 +767,7 @@ async function buildOwnerPayoutReport(fechaInicio, fechaFin) {
             );
             const reservasPagables = reservasDueno.filter((reserva) => reserva.totalComisionPagable > 0).length;
             const duenoUsuario = usuariosMap.get(dueno.vendedorId);
-            const accountState = resolveBeneficiaryAccountState(dueno.vendedorId, duenoUsuario, cuentasPorPropietario, cuentasPorId);
+            const accountState = resolveBeneficiaryAccountState(dueno.vendedorId, duenoUsuario, cuentasPorDueno, cuentasPorId);
 
             return {
                 vendedorId: dueno.vendedorId,
@@ -4585,22 +4646,30 @@ async function obtenerCuentasLigadasComisiones(req, res) {
         const normalizedBeneficiaryType = normalizeBeneficiaryType(req.query.beneficiaryType);
         const privileges = getBeneficiaryPrivileges(normalizedBeneficiaryType);
 
-        const [beneficiarios, cuentasDestino] = await Promise.all([
+        const [beneficiarios, cuentasDestino, habitaciones] = await Promise.all([
             User.find({ privilege: { $in: privileges } })
                 .select('_id firstName lastName privilege cuentaFinancieraDefault')
                 .lean(),
             SWCuenta.find({ activa: true })
                 .select('_id nombre moneda propietario organizacion')
                 .populate('organizacion', 'nombre')
-                .lean()
+                .lean(),
+            normalizedBeneficiaryType === 'owner'
+                ? Habitacion.find({ 'others.owner': { $ne: null }, 'others.cuentaFinanciera': { $ne: null } })
+                    .select('others.owner others.cuentaFinanciera')
+                    .lean()
+                : []
         ]);
 
         const { cuentasPorPropietario, cuentasPorId } = buildAccountsByOwnerMap(cuentasDestino);
+        const cuentasDisponiblesPorBeneficiario = normalizedBeneficiaryType === 'owner'
+            ? mergeAccountsMap(cuentasPorPropietario, buildOwnerAccountsByChaletMap(habitaciones, cuentasPorId))
+            : cuentasPorPropietario;
 
         const data = beneficiarios
             .map((beneficiario) => {
                 const beneficiarioId = beneficiario._id.toString();
-                const accountState = resolveBeneficiaryAccountState(beneficiarioId, beneficiario, cuentasPorPropietario, cuentasPorId);
+                const accountState = resolveBeneficiaryAccountState(beneficiarioId, beneficiario, cuentasDisponiblesPorBeneficiario, cuentasPorId);
 
                 return {
                     beneficiarioId,
@@ -4666,8 +4735,21 @@ async function actualizarCuentaLigadaComisiones(req, res) {
                 });
             }
 
-            const cuenta = await SWCuenta.findById(cuentaIdNormalizada)
-                .select('_id activa propietario');
+            const [cuenta, cuentasDestinoDisponibles, habitacionesDueno] = await Promise.all([
+                SWCuenta.findById(cuentaIdNormalizada)
+                    .select('_id activa propietario organizacion nombre moneda')
+                    .populate('organizacion', 'nombre')
+                    .lean(),
+                SWCuenta.find({ activa: true })
+                    .select('_id nombre moneda propietario organizacion')
+                    .populate('organizacion', 'nombre')
+                    .lean(),
+                normalizedBeneficiaryType === 'owner'
+                    ? Habitacion.find({ 'others.owner': beneficiario._id, 'others.cuentaFinanciera': { $ne: null } })
+                        .select('others.owner others.cuentaFinanciera')
+                        .lean()
+                    : []
+            ]);
 
             if (!cuenta || !cuenta.activa) {
                 return res.status(404).json({
@@ -4676,10 +4758,20 @@ async function actualizarCuentaLigadaComisiones(req, res) {
                 });
             }
 
-            if (getStringId(cuenta.propietario) !== usuarioId) {
+            const { cuentasPorPropietario, cuentasPorId } = buildAccountsByOwnerMap(cuentasDestinoDisponibles);
+            const cuentasDisponiblesPorBeneficiario = normalizedBeneficiaryType === 'owner'
+                ? mergeAccountsMap(cuentasPorPropietario, buildOwnerAccountsByChaletMap(habitacionesDueno, cuentasPorId))
+                : cuentasPorPropietario;
+            const allowedAccountIds = new Set(
+                (cuentasDisponiblesPorBeneficiario.get(usuarioId) || []).map((availableCuenta) => availableCuenta._id)
+            );
+
+            if (!allowedAccountIds.has(cuentaIdNormalizada)) {
                 return res.status(400).json({
                     success: false,
-                    message: 'La cuenta seleccionada no pertenece al beneficiario'
+                    message: normalizedBeneficiaryType === 'owner'
+                        ? 'La cuenta seleccionada no está asociada al dueño ni a sus cabañas'
+                        : 'La cuenta seleccionada no pertenece al beneficiario'
                 });
             }
         }
@@ -4687,16 +4779,23 @@ async function actualizarCuentaLigadaComisiones(req, res) {
         beneficiario.cuentaFinancieraDefault = cuentaIdNormalizada || null;
         await beneficiario.save();
 
-        const cuentasDestino = await SWCuenta.find({
-            activa: true,
-            propietario: beneficiario._id
-        })
-            .select('_id nombre moneda propietario organizacion')
-            .populate('organizacion', 'nombre')
-            .lean();
+        const [cuentasDestino, habitacionesDueno] = await Promise.all([
+            SWCuenta.find({ activa: true })
+                .select('_id nombre moneda propietario organizacion')
+                .populate('organizacion', 'nombre')
+                .lean(),
+            normalizedBeneficiaryType === 'owner'
+                ? Habitacion.find({ 'others.owner': beneficiario._id, 'others.cuentaFinanciera': { $ne: null } })
+                    .select('others.owner others.cuentaFinanciera')
+                    .lean()
+                : []
+        ]);
 
         const { cuentasPorPropietario, cuentasPorId } = buildAccountsByOwnerMap(cuentasDestino);
-        const accountState = resolveBeneficiaryAccountState(usuarioId, beneficiario, cuentasPorPropietario, cuentasPorId);
+        const cuentasDisponiblesPorBeneficiario = normalizedBeneficiaryType === 'owner'
+            ? mergeAccountsMap(cuentasPorPropietario, buildOwnerAccountsByChaletMap(habitacionesDueno, cuentasPorId))
+            : cuentasPorPropietario;
+        const accountState = resolveBeneficiaryAccountState(usuarioId, beneficiario, cuentasDisponiblesPorBeneficiario, cuentasPorId);
         const beneficiarioNombre = `${beneficiario.firstName || ''} ${beneficiario.lastName || ''}`.trim() || 'Usuario sin nombre';
 
         return res.status(200).json({

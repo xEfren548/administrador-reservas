@@ -5,7 +5,7 @@
                 <p class="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-700">Reportes</p>
                 <h1 id="reportTitle" class="mt-2 text-3xl font-bold text-slate-900">Corte de Comisiones por Vendedor</h1>
                 <p id="reportDescription" class="mt-2 max-w-3xl text-sm text-slate-600">
-                    Consulta a los vendedores con comisión positiva por reserva, revisa su detalle individual y genera la solicitud correspondiente en finanzas. Las reservas no liquidadas o con un estatus distinto de active se muestran, pero no suman al monto pagable.
+                    Consulta a los vendedores con comisión positiva por reserva, revisa su detalle individual y genera la solicitud correspondiente en finanzas. Las reservas no liquidadas o con un estatus distinto de active se muestran, salvo reservas no-show con pagos del 50% o más, que sí suman al monto pagable.
                 </p>
             </div>
         </div>
@@ -179,7 +179,7 @@
             <div class="border-b border-slate-200 bg-slate-50/70 px-6 py-4">
                 <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <p id="linkedAccountsModalCount" class="text-sm font-medium text-slate-600">Sin datos cargados</p>
-                    <p class="text-xs text-slate-500">Sólo se muestran cuentas activas de finanzas que pertenecen al beneficiario.</p>
+                    <p id="linkedAccountsModalHint" class="text-xs text-slate-500">Sólo se muestran cuentas activas de finanzas disponibles para el beneficiario.</p>
                 </div>
                 <div id="linkedAccountsMessage" class="mt-3 hidden rounded-2xl border px-4 py-3 text-sm"></div>
             </div>
@@ -234,7 +234,7 @@ let activeBeneficiaryType = 'seller';
 const BENEFICIARY_CONTENT = {
     seller: {
         title: 'Corte de Comisiones por Vendedor',
-        description: 'Consulta a los vendedores con comisión positiva por reserva, revisa su detalle individual y genera la solicitud correspondiente en finanzas. Las reservas no liquidadas o con un estatus distinto de active se muestran, pero no suman al monto pagable.',
+        description: 'Consulta a los vendedores con comisión positiva por reserva, revisa su detalle individual y genera la solicitud correspondiente en finanzas. Las reservas no liquidadas o con un estatus distinto de active se muestran, salvo reservas no-show con pagos del 50% o más, que sí suman al monto pagable.',
         consultButtonText: 'Consultar vendedores',
         bulkDownloadText: 'Descargar reportes masivos',
         loadingText: 'Consultando comisiones por vendedor...',
@@ -273,7 +273,7 @@ const BENEFICIARY_CONTENT = {
     },
     owner: {
         title: 'Corte de Pagos a Dueño',
-        description: 'Consulta a los dueños con utilidad directa por reserva desde la misma vista. En esta pestaña, el monto pagable descuenta lo que el dueño ya recibió directo y sólo suma reservas activas y liquidadas al 100%.',
+        description: 'Consulta a los dueños con utilidad directa por reserva desde la misma vista. En esta pestaña, el monto pagable descuenta lo que el dueño ya recibió directo y sólo suma reservas activas liquidadas al 100% o reservas no-show con pagos del 50% o más.',
         consultButtonText: 'Consultar dueños',
         bulkDownloadText: 'Descargar reportes masivos',
         loadingText: 'Consultando pagos a dueño...',
@@ -281,7 +281,7 @@ const BENEFICIARY_CONTENT = {
         summaryPayableLabel: 'Pago pagable',
         summaryReportedLabel: 'Monto reportado',
         resultsTitle: 'Resultado por dueño',
-        resultsDescription: 'Las cuentas disponibles se infieren con base en las cuentas activas de finanzas donde el dueño aparece como propietario. La cuenta ligada por defecto se administra desde Cuentas ligadas y el monto pagable descuenta lo ya cobrado por el dueño en la reserva.',
+        resultsDescription: 'Las cuentas disponibles se infieren con base en las cuentas activas de finanzas asociadas al dueño, incluyendo cuentas ligadas a sus cabañas. La cuenta ligada por defecto se administra desde Cuentas ligadas y el monto pagable descuenta lo ya cobrado por el dueño en la reserva.',
         columnBeneficiaryLabel: 'Dueño',
         columnReportedLabel: 'Monto reportado',
         columnPayableLabel: 'Pago pagable',
@@ -770,6 +770,9 @@ function updateLinkedAccountsModalCopy() {
     document.getElementById('linkedAccountsModalTitle').textContent = `Cuentas ligadas de ${pluralLabel}`;
     document.getElementById('linkedAccountsModalDescription').textContent = `Administra la cuenta por defecto que se sugerirá para cada ${singularLabel} en el corte actual.`;
     document.getElementById('linkedAccountsColumnBeneficiary').textContent = singularLabel.charAt(0).toUpperCase() + singularLabel.slice(1);
+    document.getElementById('linkedAccountsModalHint').textContent = activeBeneficiaryType === 'owner'
+        ? 'Para dueños se muestran cuentas activas asociadas al propio dueño o ligadas a sus cabañas.'
+        : 'Sólo se muestran cuentas activas de finanzas donde el vendedor aparece como propietario.';
 }
 
 function showLinkedAccountsMessage(message, type = 'info') {
