@@ -9,8 +9,15 @@ const Roles = require('../models/Roles');
 const moment = require('moment');
 const SWSolicitudTransaccion = require('../models/SWSolicitudTransaccion');
 const SWCuenta = require('../models/SWCuenta');
+const swSolicitudPushService = require('../services/swSolicitudPushService');
 const ftp = require('basic-ftp');
 const fs = require('fs');
+
+function notificarEnSegundoPlano(notificationPromise, contexto) {
+    notificationPromise.catch((error) => {
+        console.error(`Error al enviar notificacion push (${contexto}):`, error);
+    });
+}
 
 async function obtenerPagos(idReservacion) {
     try {
@@ -185,6 +192,11 @@ async function registrarPago(req, res, next) {
 
                 await solicitud.save();
                 console.log('Solicitud de transacción creada exitosamente:', solicitud._id);
+
+                notificarEnSegundoPlano(
+                    swSolicitudPushService.notifySolicitudCuentaCreada({ solicitudId: solicitud._id }),
+                    'solicitud de pago de reserva creada'
+                );
 
                 // Crear el pago con status PENDIENTE y ligado a la solicitud
                 const pago = new Pago({
