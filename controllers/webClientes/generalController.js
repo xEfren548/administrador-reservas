@@ -225,28 +225,11 @@ function getDomainDisplayName(req) {
 async function mostrarUnaHabitacion(req, res) {
     try {
         const { id } = req.params;
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                message: 'El identificador de la habitación no es válido'
-            });
-        }
-
         const habitacion = await Habitacion.findById(id).lean();
-
-        if (!habitacion) {
-            return res.status(404).json({
-                message: 'Habitación no encontrada'
-            });
-        }
-
-        return res.status(200).json(habitacion);
+        res.send(habitacion);
     } catch (error) {
-        console.error('Error al obtener habitación:', error);
-
-        return res.status(500).json({
-            message: 'Error al obtener la habitación'
-        });
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener habitaciones' });
     }
 }
 
