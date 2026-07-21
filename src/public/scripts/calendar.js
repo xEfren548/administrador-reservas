@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         return response.json()
                     })
                     .then(function (data) {
-                        // console.log(data);
+                        console.log(data);
                         let events = data
                             // .filter(event => (event.status !== 'cancelled') && (event.status !== 'no-show'))
                             .map(function (event) {
@@ -90,7 +90,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     creadaPor: event.creadaPor,
                                     fechaCreacion: event.fechaCreacion,
                                     horaCreacion: event.horaCreacion,
-                                    allDay: true
+                                    allDay: true,
+                                    pax: event.pax
                                 }
                             })
                         successCallback(events);
@@ -265,11 +266,18 @@ document.addEventListener('DOMContentLoaded', async function () {
             const { DateTime } = luxon;
 
             const event = info.event;
+            console.log("Event dropped: ", event);
             idReserva = event.id;
             const eventStatus = info.event.extendedProps.status;
             const newEventStart = info.event.start;
             const eventDateStart = new Date(newEventStart);
             eventDateStart.setHours(eventDateStart.getHours() + 6);
+
+            const pax = info.event.extendedProps.pax;
+            console.log("pax: ", pax);
+            if (pax === undefined || pax === null) {
+                return Swal.fire('Error', 'No se pudo actualizar la reserva. Por favor, inténtalo de nuevo.', 'error');
+            }
             // const eventDateStart = moment.tz(newEventStart, "America/Mexico_City").toDate();
 
 
@@ -293,7 +301,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             let diferencia;
 
             if (eventStatus !== "reserva de dueño") {
-                nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor);
+                console.log("resource id: ", resourceId);
+                console.log("eventDateStart: ", eventDateStart);
+                console.log("eventDateEnd: ", eventDateEnd);
+                console.log("comisionVendedor: ", comisionVendedor);
+                console.log("totalViejo: ", totalViejo);
+                nuevoTotal = await obtenerNuevoTotal(resourceId, eventDateStart, eventDateEnd, comisionVendedor, pax);
                 diferencia = nuevoTotal - totalViejo; // 2650 - 3250 
 
             } else {
@@ -783,7 +796,7 @@ async function availableDate(resourceId, arrivalDate, departureDate, idReserva) 
 
 }
 
-async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisionVendedor) {
+async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisionVendedor, pax) {
     // const fechaInicio = new Date(`${arrivalDate.value}T00:00:00`); // Agregar la hora en formato UTC
     // const fechaFin = new Date(`${departureDate.value}T00:00:00`); // Agregar la hora en formato UTC
     const arrivalYear = arrivalDate.getFullYear();
@@ -812,7 +825,7 @@ async function obtenerNuevoTotal(resourceId, arrivalDate, departureDate, comisio
                 const day = fecha.getDate().toString().padStart(2, '0'); // Asegura que el día tenga dos dígitos
                 const formatedDate = `${year}-${month}-${day}`;
 
-                const response = await fetch(`/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}`);
+                const response = await fetch(`/api/consulta-fechas?fecha=${formatedDate}&habitacionid=${habitacionId}&pax=${pax}`);
 
                 // Verificar el estado de la respuesta
                 if (!response.ok) {
