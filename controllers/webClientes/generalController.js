@@ -721,8 +721,10 @@ async function cotizarReserva(habitacionId, checkIn, checkOut, guests, req = nul
         // Validar fechas
         const fechaLlegada = new Date(checkIn);
         const fechaSalida = new Date(checkOut);
-        const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
+        // ponytail: checkIn "YYYY-MM-DD" se parsea como medianoche UTC, así que "hoy"
+        // debe ser el día calendario local expresado también en UTC, no hoy.setHours(0,0,0,0)
+        const ahora = new Date();
+        const hoy = new Date(Date.UTC(ahora.getFullYear(), ahora.getMonth(), ahora.getDate()));
 
         if (fechaLlegada < hoy) {
             return {
