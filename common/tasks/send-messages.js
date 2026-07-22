@@ -638,13 +638,10 @@ async function cancelReservation() {
                 pagos.forEach(pago => {
                     pagoTotal += pago.importe;
                 })
-                const totalReserva = reservation.total;
-                const montoPendiente = totalReserva - pagoTotal;
-
-                const pagoDel50 = (montoPendiente <= totalReserva / 2) ? true : false;
+                const hayPago = (pagoTotal > 0) ? true : false;
 
                 if (isDeposit) {
-                    if (pagoDel50) {
+                    if (hayPago) {
                         // const payment = await Pago.findOne({ reservationId: reservation._id });
                         // console.log(reservation.resourceId, ': Reservation has no payment recorded');
                         // console.log("Current date: ", new Date());
@@ -713,7 +710,7 @@ async function cancelReservation() {
                     }
 
                 } else {
-                    if (pagoDel50) {
+                    if (hayPago) {
                         reservation.status = 'active';
                         console.log('reserva movida a activa')
                         const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(reservation._id);

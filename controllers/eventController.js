@@ -2623,6 +2623,7 @@ async function modificarEvento(req, res) {
         console.log("Fechas anteriores a liberar: ", datesResponseBefore.length, "días");
         console.log("Fechas nuevas a ocupar: ", datesResponseAfter.length, "días");
 
+        let channexError = null;
         try {
             // First, free up the old dates
             if (datesResponseBefore.length > 0) {
@@ -2635,19 +2636,17 @@ async function modificarEvento(req, res) {
                 console.log("Disponibilidad actualizada en Channex (fechas nuevas ocupadas).");
             }
         } catch (error) {
+            // ponytail: Channex es best-effort, no bloquea la respuesta. La reserva ya está guardada en BD.
             console.error("Error al actualizar disponibilidad en Channex: ", error.message);
-
-            // TODO: Consider implementing rollback logic here
-            // This could involve reverting the database changes if Channex update fails
             console.warn("La reserva fue modificada en la base de datos pero falló la actualización en Channex");
-            error.message = "La reserva fue modificada en la base de datos pero falló la actualización en Channex";
-
-            throw error;
+            channexError = error.message;
         }
 
-
-
-        res.status(200).json({ mensaje: 'Evento modificado correctamente', evento: evento });
+        res.status(200).json({
+            mensaje: 'Evento modificado correctamente',
+            evento: evento,
+            ...(channexError && { advertencia: 'La reserva se modificó pero falló la actualización de disponibilidad en Channex' })
+        });
     } catch (error) {
         console.error('Error al modificar el evento:', error);
         res.status(500).json({ error });
