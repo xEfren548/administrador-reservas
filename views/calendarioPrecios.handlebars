@@ -263,7 +263,7 @@
 								<option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
 							</select>
 						</div>
-						<div class="col-2">
+						<div class="col-4">
 							<div class="input-group">
 								<input type="number" name="valor-accion" id="valor-accion" class="form-control"
 									value="0" min="0">
@@ -296,7 +296,7 @@
 								<option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
 							</select>
 						</div>
-						<div class="col-2">
+						<div class="col-4">
 							<div class="input-group">
 								<input type="number" name="valor-preciobase2noches" id="valor-preciobase2noches"
 									class="form-control" value="0" min="0">
@@ -328,7 +328,7 @@
 								<option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
 							</select>
 						</div>
-						<div class="col-2">
+						<div class="col-4">
 							<div class="input-group">
 								<input type="number" name="valor-costobase" id="valor-costobase" class="form-control"
 									value="0" min="0">
@@ -360,7 +360,7 @@
 								<option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
 							</select>
 						</div>
-						<div class="col-2">
+						<div class="col-4">
 							<div class="input-group">
 								<input type="number" name="valor-costobase2noches" id="valor-costobase2noches"
 									class="form-control" value="0" min="0">
@@ -598,7 +598,7 @@
 								<option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
 							</select>
 						</div>
-						<div class="col-2">
+						<div class="col-4">
 							<div class="input-group">
 								<input type="number" name="valor-pbase" id="valor-pbase" class="form-control" value="0"
 									min="0">
@@ -632,7 +632,7 @@
 								<option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
 							</select>
 						</div>
-						<div class="col-2">
+						<div class="col-4">
 							<div class="input-group">
 								<input type="number" name="valor-pbase2n" id="valor-pbase2n" class="form-control"
 									value="0" min="0">
@@ -665,7 +665,7 @@
 								<option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
 							</select>
 						</div>
-						<div class="col-2">
+						<div class="col-4">
 							<div class="input-group">
 								<input type="number" name="valor-cbase" id="valor-cbase" class="form-control" value="0"
 									min="0">
@@ -697,7 +697,7 @@
 								<option value="disminuir-porcentual">Disminuir precio en valor porcentual</option>
 							</select>
 						</div>
-						<div class="col-2">
+						<div class="col-4">
 							<div class="input-group">
 								<input type="number" name="valor-cbase2n" id="valor-cbase2n" class="form-control"
 									value="0" min="0">
@@ -1558,7 +1558,7 @@
 		async function consultarprecio(url, fecha, habitacionId) {
 			try {
 				const formattedDate = formatDate(fecha); // Formatear la fecha para la URL
-				const formattedUrl = `${urlfechas}?fecha=${formattedDate}&habitacionid=${habitacionId}`
+				const formattedUrl = `${urlfechas}?fecha=${formattedDate}&habitacionid=${habitacionId}&pax=0`;
 				const response = await fetch(formattedUrl, {
 					method: 'GET'
 				});
