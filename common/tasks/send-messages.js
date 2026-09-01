@@ -400,20 +400,20 @@ async function sendCheckInMessage() {
         }
 
         const receiver2 = {
-            phone: '523318411770' // Caseta
+            phone: '523321713049' // Caseta
         };
 
         const formattedCheckOut = formatReservationDate(reserva.departureDate, 'DD [de] MMMM');
 
-        const whatsappResponse = await sendTemplateMsg(receiver, 'automatizacion_checkin', [
-            todayFormattedDate,
-            clientName,
-            chalet.propertyDetails.name,
-            reserva.pax.toString(),
-            todayFormattedDate,
-            formattedCheckOut
+        // const whatsappResponse = await sendTemplateMsg(receiver, 'automatizacion_checkin', [
+        //     todayFormattedDate,
+        //     clientName,
+        //     chalet.propertyDetails.name,
+        //     reserva.pax.toString(),
+        //     todayFormattedDate,
+        //     formattedCheckOut
 
-        ]);
+        // ]);
 
         const whatsappResponse2 = await sendTemplateMsg(receiver2, 'automatizacion_checkin', [
             todayFormattedDate,
