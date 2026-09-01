@@ -1,5 +1,6 @@
 const SWSolicitudTransaccion = require('../models/SWSolicitudTransaccion');
 const SWCuenta = require('../models/SWCuenta');
+const Pago = require('../models/Pago');
 const SWParticipante = require('../models/SWParticipante');
 const SWOrganizacion = require('../models/SWOrganizacion');
 const { check, validationResult } = require('express-validator');
@@ -721,6 +722,31 @@ const procesarSolicitud = async (req, res) => {
 
         let resultado;
 
+        // El pago del PMS pudo eliminarse mientras la solicitud esperaba: aprobar crearía
+        // un ingreso sin respaldo en la reserva. Verificar ANTES de mover dinero.
+        const pagoLigado = await Pago.findOne({ solicitudId: solicitud._id });
+
+        if (accion === 'aprobar' && !pagoLigado) {
+            if (solicitud.origenPago) {
+                if (req.file) {
+                    fs.unlink(req.file.path, (err) => {
+                        if (err) console.error('Error al eliminar archivo temporal:', err);
+                    });
+                }
+
+                return res.status(409).json({
+                    success: false,
+                    message: 'El pago de la reserva ligado a esta solicitud ya no existe. Recházala en lugar de aprobarla.'
+                });
+            }
+
+            if (solicitud.reservaAsociada) {
+                // ponytail: solicitudes anteriores al flag origenPago no se pueden distinguir de las
+                //           manuales con reserva asociada, así que solo se avisa. Limpiar en cuanto no queden.
+                console.warn(`Solicitud ${solicitud._id} con reserva asociada y sin pago ligado: se aprueba sin actualizar ningún pago.`);
+            }
+        }
+
         if (accion === 'aprobar') {
             // Procesar comprobante de confirmación si se subió
             let comprobanteConfirmacion = null;
@@ -782,13 +808,12 @@ const procesarSolicitud = async (req, res) => {
             
             // NUEVO: Si es una solicitud de pago de reserva, aplicar el pago
             if (solicitud.reservaAsociada) {
-                const Pago = require('../models/Pago');
                 const pagoActualizado = await Pago.findOneAndUpdate(
                     { solicitudId: solicitud._id },
                     { status: 'Aplicado' },
                     { new: true }
                 );
-                
+
                 if (pagoActualizado) {
                     console.log(`Pago ${pagoActualizado._id} aplicado automáticamente tras aprobar solicitud`);
                 }
@@ -822,15 +847,16 @@ const procesarSolicitud = async (req, res) => {
             
             // NUEVO: Si es una solicitud de pago de reserva, rechazar el pago
             if (solicitud.reservaAsociada) {
-                const Pago = require('../models/Pago');
                 const pagoRechazado = await Pago.findOneAndUpdate(
                     { solicitudId: solicitud._id },
                     { status: 'Rechazado' },
                     { new: true }
                 );
-                
+
                 if (pagoRechazado) {
                     console.log(`Pago ${pagoRechazado._id} rechazado automáticamente tras rechazar solicitud`);
+                } else {
+                    console.warn(`Solicitud ${solicitud._id} rechazada sin pago ligado (el pago ya no existe).`);
                 }
             }
 

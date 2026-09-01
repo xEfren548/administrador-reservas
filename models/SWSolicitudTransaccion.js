@@ -106,6 +106,12 @@ const swSolicitudTransaccionSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Documento'
     },
+    // true = la solicitud nacio de un pago registrado en el PMS (Pago.solicitudId apunta aqui).
+    // Distingue estas solicitudes de las manuales que solo llevan reservaAsociada.
+    origenPago: {
+        type: Boolean,
+        default: false
+    },
     etiquetas: [{
         type: String,
         trim: true

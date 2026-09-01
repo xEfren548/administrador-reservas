@@ -12,6 +12,7 @@ const SWCuenta = require('../models/SWCuenta');
 const swSolicitudPushService = require('../services/swSolicitudPushService');
 const ftp = require('basic-ftp');
 const fs = require('fs');
+const { accionSobreSolicitudLigada } = require('../utils/validations');
 
 function notificarEnSegundoPlano(notificationPromise, contexto) {
     notificationPromise.catch((error) => {
@@ -186,6 +187,7 @@ async function registrarPago(req, res, next) {
                     solicitadoPor: req.session.id,
                     propietarioCuenta: cuenta.propietario,
                     reservaAsociada: reservacionId,
+                    origenPago: true,
                     imagenes: rutaComprobante ? [rutaComprobante] : [],
                     notas: `Código de operación: ${codigoOperacion || 'N/A'}\nMétodo: ${metodoPago}`
                 });
@@ -292,6 +294,31 @@ async function editarPago(req, res) {
             return res.status(404).json({ mensaje: 'Pago no encontrado.' });
         }
 
+        // Mantener en linea la solicitud SW ligada antes de tocar utilidades o el pago.
+        if (pagoActual.solicitudId) {
+            const solicitud = await SWSolicitudTransaccion.findById(pagoActual.solicitudId);
+            const accion = accionSobreSolicitudLigada(solicitud && solicitud.estado);
+
+            if (accion === 'bloquear') {
+                return res.status(409).json({ mensaje: 'Este pago ya fue aprobado en finanzas y generó una transacción. Reversa la transacción en el módulo SW antes de editarlo.' });
+            }
+
+            if (accion === 'sincronizar') {
+                // ponytail: solo se sincroniza monto/fecha/notas. Si cambian el metodo de pago a algo
+                //           distinto de Transferencia la solicitud sigue viva; separarla si eso pasa seguido.
+                await SWSolicitudTransaccion.updateOne(
+                    { _id: solicitud._id },
+                    {
+                        monto: parseFloat(importe),
+                        fecha: new Date(fechaPago),
+                        descripcion: notas || 'Pago registrado desde el sistema de reservas',
+                        notas: `Código de operación: ${codigoOperacion || 'N/A'}\nMétodo: ${metodoPago}`,
+                        updatedAt: Date.now()
+                    }
+                );
+            }
+        }
+
         // if (pagoActual.metodoPago === "Recibio dueño" && metodoPago !== "Recibio dueño") {
 
         // }
@@ -385,6 +412,24 @@ async function eliminarPago(req, res) {
         }
 
         const reservacionId = pagoActual.reservacionId;
+
+        // Sin esto la solicitud SW queda en la bandeja del dueño apuntando a un pago inexistente.
+        if (pagoActual.solicitudId) {
+            const solicitud = await SWSolicitudTransaccion.findById(pagoActual.solicitudId);
+            const accion = accionSobreSolicitudLigada(solicitud && solicitud.estado);
+
+            if (accion === 'bloquear') {
+                return res.status(409).json({ mensaje: 'Este pago ya fue aprobado en finanzas y generó una transacción. Reversa la transacción en el módulo SW antes de eliminarlo.' });
+            }
+
+            if (accion === 'sincronizar') {
+                await SWSolicitudTransaccion.updateOne(
+                    { _id: solicitud._id },
+                    { estado: 'Cancelada', updatedAt: Date.now() }
+                );
+                console.log(`Solicitud ${solicitud._id} cancelada al eliminar el pago ${id}`);
+            }
+        }
 
         if (pagoActual.metodoPago === "Recibio dueño") {
             if (!mongoose.Types.ObjectId.isValid(reservacionId)) {

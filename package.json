@@ -10,7 +10,8 @@
     "migrate:chalet-times": "node .\\scripts\\migrateChaletTimesToStrings.js",
     "migrate:chalet-times:write": "node .\\scripts\\migrateChaletTimesToStrings.js --write",
     "report:reservas-bosque-imperial": "node .\\scripts\\reporteReservasAbrilBosqueImperial.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "check:pago-solicitud": "node ./scripts/checkPagoSolicitud.js"
   },
   "author": "efren alvarez",
   "license": "ISC",
