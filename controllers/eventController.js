@@ -2964,6 +2964,22 @@ async function moveToPlayground(req, res) {
             }
         }
 
+        // Una reserva 'pending' sin pago nunca pasa por el bloque de arriba, asi que sus
+        // comisiones quedaban vivas colgando de una reserva cancelada.
+        if (evento.status === 'pending' && status === 'cancelled') {
+            const pagos = await pagoController.obtenerPagos(idReserva);
+            // Cuenta Aplicado, Pendiente de aprobacion y pagos viejos sin status. Solo ignora Rechazado.
+            const pagoTotal = pagos.reduce((total, pago) => total + (pago.status === 'Rechazado' ? 0 : pago.importe), 0);
+
+            if (pagoTotal < 1) {
+                const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
+                for (const comision of comisionesReserva) {
+                    await utilidadesController.eliminarComisionReturn(comision._id);
+                }
+                console.log(`Comisiones eliminadas al cancelar reserva pending sin pago: ${comisionesReserva.length}`);
+            }
+        }
+
         if (status === 'no-show') {
             const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
 
