@@ -4,6 +4,7 @@ const NotFoundError = require("../common/error/not-found-error");
 const { check } = require("express-validator");
 const Evento = require('../models/Evento');
 const Cliente = require('../models/Cliente');
+const Habitacion = require('../models/Habitacion');
 const Encuesta = require('../models/Encuesta');
 const Roles = require('../models/Roles');
 const habitacionController = require('../controllers/habitacionController')
@@ -194,11 +195,24 @@ async function showClientsResponses(req, res, next) {
 
         const clientsSurveyResponses = await RespuestasUsuario.find().lean();
         if (!clientsSurveyResponses) { throw new NotFoundError("Survey does not exist"); }
-        console.log("clientsSurveyResponses:", clientsSurveyResponses);
 
-        // var reservations = await Evento.findOne().lean();
-        const reservations = await Evento.find().lean();
-        
+        // ponytail: 4 queries en lote en vez de 2 por encuesta. Antes eran 544 round trips secuenciales
+        // (~370ms c/u = ~5 min) mas traer los 4218 eventos completos sin filtrar.
+        const reservations = await Evento.find({
+            _id: { $in: clientsSurveyResponses.map(s => s.reservation).filter(Boolean) }
+        }, 'resourceId client').lean();
+        const reservationsById = new Map(reservations.map(r => [r._id.toString(), r]));
+
+        const habitaciones = await Habitacion.find({
+            _id: { $in: reservations.map(r => r.resourceId).filter(Boolean) }
+        }, 'propertyDetails.name').lean();
+        const habitacionesById = new Map(habitaciones.map(h => [h._id.toString(), h]));
+
+        const clientes = await Cliente.find({
+            _id: { $in: reservations.map(r => r.client).filter(Boolean) }
+        }, 'firstName lastName email').lean();
+        const clientesById = new Map(clientes.map(c => [c._id.toString(), c]));
+
         const totalP1 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
         const totalP2 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
         const totalP3 = Array(5).fill(0); // Inicializa un array con 5 elementos, todos con valor 0
@@ -223,13 +237,16 @@ async function showClientsResponses(req, res, next) {
         let totalPromedios = 0
 
         for (const clientSurveyResponses of clientsSurveyResponses) {
-            const reservation = reservations.find(reservation => reservation._id.toString() === clientSurveyResponses.reservation.toString());
+            const reservation = reservationsById.get(clientSurveyResponses.reservation?.toString());
+            if (!reservation) { continue; }
 
-            const habitacion = await habitacionController.obtenerHabitacionPorId(reservation.resourceId.toString());
+            // ponytail: lookup en el Map en vez de obtenerHabitacionPorId, que lanza si no existe.
+            // Una habitacion borrada ya no debe tumbar la pagina entera; mismo criterio que el guard de client abajo.
+            const habitacion = habitacionesById.get(reservation.resourceId?.toString());
 
-            const nombreHabitacion = habitacion.propertyDetails.name;
+            const nombreHabitacion = habitacion?.propertyDetails?.name ?? 'Habitación eliminada';
 
-            const client = await Cliente.findById(reservation.client);
+            const client = clientesById.get(reservation.client?.toString());
             // if (!client) { throw new NotFoundError("Client does not exist."); }
             if (!client) {
                 continue;
@@ -262,9 +279,7 @@ async function showClientsResponses(req, res, next) {
 
             let sumatoria = newAnswers[0] + newAnswers[1] + newAnswers[2] + newAnswers[3] + newAnswers[4] + newAnswers[5] + newAnswers[6] + newAnswers[7] + newAnswers[9];
             let promedio = (sumatoria / 9).toFixed(2);
-            console.log("promedio: ", promedio)
             totalPromedios += parseFloat(promedio);
-            console.log("total promedios: " + totalPromedios);
 
             clientSurveyInfo.promedio = promedio;
 
