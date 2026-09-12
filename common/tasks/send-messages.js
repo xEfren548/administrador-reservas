@@ -620,12 +620,12 @@ async function sendCheckInReminderSameDay() {
 async function cancelReservation() {
     console.log("--------------------------------------------------------------------------------");
     console.log("SENDING CANCELATION");
-    var evento = await Evento.find();
+    var evento = await Evento.find({ status: "pending" });
     var reservations = evento;
 
     if (reservations) {
         for (const reservation of reservations) {
-            if (reservation.status === "pending") {
+            try {
                 const client = await Cliente.findById(reservation.client);
                 if (!client) {
                     continue;
@@ -730,8 +730,11 @@ async function cancelReservation() {
                     }
                 }
 
+                // ponytail: guardar solo si cambió, y dentro del try: un doc roto ya no aborta el resto del barrido
+                if (reservation.isModified()) await reservation.save();
+            } catch (error) {
+                console.error(`cancelReservation falló en la reserva ${reservation._id}:`, error.message);
             }
-            await reservation.save();
         }
 
     }

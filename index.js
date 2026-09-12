@@ -267,10 +267,12 @@ mongoose.connect(db_url).then(async () => {
     // const job = schedule.scheduleJob('* * * * *', async () => {       
     
     // Se ejecuta todos los minutos, todos los dias
-    const job = schedule.scheduleJob('* * * * *', async () => {         
-        await SendMessages.sendReminders();
-        await SendMessages.sendThanks();
+    const job = schedule.scheduleJob('* * * * *', async () => {
+        // ponytail: cancelReservation va primero; con el filtro {status:'pending'} son ~46 docs, no 4218.
+        // sendReminders() se quitó: era no-op (comparaba Dates con === y leía reservation.chalet, campo inexistente)
+        // y costaba ~52 min por vuelta barriendo toda la coleccion, bloqueando las cancelaciones detras de el.
         await SendMessages.cancelReservation();
+        await SendMessages.sendThanks();
     });
 
     // Recordatorio de check-in 1 día antes - Se ejecuta a las 10:00 AM
