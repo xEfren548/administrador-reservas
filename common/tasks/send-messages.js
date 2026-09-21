@@ -415,7 +415,7 @@ async function sendCheckInMessage() {
 
         // ]);
 
-        const whatsappResponse2 = await sendTemplateMsg(receiver2, 'automatizacion_checkin', [
+        const whatsappResponse = await sendTemplateMsg(receiver2, 'automatizacion_checkin', [
             todayFormattedDate,
             `${client.firstName} ${client.lastName}`,
             chalet.propertyDetails.name,
