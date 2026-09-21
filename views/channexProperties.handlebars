@@ -47,6 +47,7 @@
     </tbody>
 </table>
 
+<script src="/scripts/channexUi.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const altaButtons = document.querySelectorAll('.alta-btn');
@@ -54,6 +55,7 @@
             button.addEventListener('click', async function (event) {
                 event.preventDefault();
                 const propertyId = this.getAttribute('data-id');
+                await bloquearMientras(this, async () => {
                 try {
                     const response = await fetch(`/api/channex/properties/${propertyId}/create`, {
                         method: 'POST',
@@ -78,6 +80,7 @@
                         confirmButtonText: 'Aceptar'
                     });
                 }
+                });
             });
         });
     });

@@ -22,6 +22,7 @@ const backupController = require('./controllers/backupController');
 const { iniciarCronTransaccionesRecurrentes } = require('./common/tasks/ejecutarTransaccionesRecurrentes');
 const { iniciarCronPagosDiferidos } = require('./common/tasks/verificarPagosDiferidos');
 const { iniciarCronInventarioCheckout } = require('./common/tasks/inventoryCheckoutConsumption');
+const { iniciarCronChannex } = require('./common/tasks/channexSync');
 require('./models/InventoryItem');
 require('./models/InventoryMovement');
 
@@ -318,6 +319,9 @@ mongoose.connect(db_url).then(async () => {
     iniciarCronPagosDiferidos();
     iniciarCronInventarioCheckout();
     console.log('✓ Todas las tareas programadas del módulo de finanzas iniciadas');
+
+    // Channex: poller del feed (respaldo del webhook) + push completo diario
+    iniciarCronChannex();
 
     
     

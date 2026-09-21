@@ -179,6 +179,7 @@
 
 
 
+<script src="/scripts/channexUi.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const altaButtons = document.querySelectorAll('.alta-btn');
@@ -186,6 +187,7 @@
             button.addEventListener('click', async function (event) {
                 event.preventDefault();
                 const propertyId = this.getAttribute('data-id');
+                await bloquearMientras(this, async () => {
                 try {
                     // 1 Crear la propiedad
                     const response = await fetch(`/api/channex/properties/${propertyId}/create`, {
@@ -239,6 +241,7 @@
                         confirmButtonText: 'Aceptar'
                     });
                 }
+                });
             });
         });
 
@@ -256,6 +259,7 @@
 
         document.querySelectorAll('.editar-tarifa-btn').forEach(btn => {
             btn.addEventListener('click', async function () {
+                await bloquearMientras(this, async () => {
                 try {
                     const pmsId = this.getAttribute('data-id');
                     if (!pmsId) {
@@ -297,12 +301,14 @@
                     })
                     return;
                 }
+                });
             });
         })
 
         // Maneja el submit del formulario
         document.getElementById('tarifaForm').addEventListener('submit', async function (e) {
             e.preventDefault();
+            await bloquearMientras(botonSubmit(this), async () => {
             const property_id = document.getElementById('inputPropertyId').value;
             //const room_title = document.getElementById('roomTitle').value;
             const rate_title = document.getElementById('rateTitle').value;
@@ -358,6 +364,7 @@
                     confirmButtonText: 'Aceptar'
                 });
             }
+            });
         });
 
         // Abre el modal de mapeo
@@ -375,6 +382,7 @@
         // Envía el mapeo
         document.getElementById('mapForm').addEventListener('submit', async function (e) {
             e.preventDefault();
+            await bloquearMientras(botonSubmit(this), async () => {
             const property_id = document.getElementById('mapPropertyId').value;
             const rate_plan_id = document.getElementById('mapRateId').value;
             const listing_id = document.getElementById('listingSelect').value;
@@ -410,11 +418,13 @@
                     confirmButtonText: 'Aceptar'
                 });
             }
+            });
         });
 
-        
+
         document.querySelector('#btnActivateChannel').addEventListener('click', async function () {
             const channelId = '{{channelId}}';
+            await bloquearMientras(this, async () => {
             try {
                 const response = await fetch(`/api/channex/channels/${channelId}/activate`, {
                     method: 'POST',
@@ -438,6 +448,7 @@
                     confirmButtonText: 'Aceptar'
                 });
             }
+            });
         });
 
     });

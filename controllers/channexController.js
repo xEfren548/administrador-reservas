@@ -13,6 +13,9 @@ const pagoController = require('./pagoController');
 // Configuración de Channex API
 const CHANNEX_BASE_URL = process.env.NODE_ENV === 'development' ? process.env.DEV_CHANNEX_API_URL : process.env.CHANNEX_API_URL;
 const USER_API_KEY = process.env.CHANNEX_USER_API_KEY;
+// El group_id pertenece a la cuenta de la API key, por eso viaja junto a ella en el .env
+const GROUP_ID = process.env.CHANNEX_GROUP_ID;
+const WEBHOOK_URL = process.env.CHANNEX_WEBHOOK_URL || `${process.env.URL}/api/channex/webhooks`;
 
 const channex = axios.create({
     baseURL: CHANNEX_BASE_URL,
@@ -48,7 +51,7 @@ async function mapProperties(req, res) {
                 "address": location.address,
                 "longitude": location.longitude ? dmsToDecimal(location.longitude) : null,
                 "latitude": location.latitude ? dmsToDecimal(location.latitude) : null,
-                "group_id": "df5c3392-2eb0-4dc9-ae05-08b0ffc36d2e"
+                "group_id": GROUP_ID
             }
         };
     });
@@ -303,190 +306,155 @@ async function dashboardBooking(req, res) {
     }
 }
 
+/** Revisiones pendientes de ack. Cubre toda la cuenta en una sola llamada. */
+async function obtenerFeedRevisiones(limit = 10) {
+    const response = await channex.get('/api/v1/booking_revisions/feed', { params: { 'pagination[limit]': limit } });
+    return response.data.data || [];
+}
+
+/**
+ * Ack de una revisión que no podemos aplicar (sin habitación o sin canal mapeado).
+ * Se hace ack para no atorar el feed, pero se deja ruido en el log: la ventana de
+ * revisiones es de 30 min y después la reserva desaparece para siempre.
+ */
+async function descartarRevision(revisionId, motivo) {
+    console.error(`[CHANNEX][ALERTA] Revisión ${revisionId} descartada: ${motivo}`);
+    if (revisionId) {
+        await channex.post(`/api/v1/booking_revisions/${revisionId}/ack`);
+    }
+}
+
 async function webhookReceptor(req, res) {
     try {
         console.log(req.body);
-        // const event = req.body.data[0];
-        const body = req.body;
-        const eventType = body.event;
+        await procesarEventoBooking(req.body);
+        return res.status(200).send('Evento procesado correctamente');
+    } catch (err) {
+        console.error('Webhook error:', err.response ? err.response.data : err.message);
+        return res.status(500).send('Error al procesar evento: ' + err.message);
+    }
+}
 
-        const revisionId = body.payload?.booking_revision_id;
+/**
+ * Aplica una revisión de reserva y hace ack. Lo usan tanto el webhook como el
+ * poller del feed, así que no puede tocar req/res.
+ */
+async function procesarEventoBooking(body) {
+    const eventType = body.event;
 
-        let payload;
-        if (eventType === 'booking_new') {
-            // Pre-approval por defecto (bloquea instant booking)
-            // payload = { resolution: { type: 'preapproval', block_instant_booking: true } };
-            // Aceptar reserva regularmente
+    const revisionId = body.payload?.booking_revision_id;
 
-            const booking_id = body.payload.booking_id;
-            const nNights = body.payload.count_of_nights;
+    let payload;
+    if (eventType === 'booking_new') {
+        // Pre-approval por defecto (bloquea instant booking)
+        // payload = { resolution: { type: 'preapproval', block_instant_booking: true } };
+        // Aceptar reserva regularmente
 
-            console.log("Aceptando reserva regularmente");
+        const booking_id = body.payload.booking_id;
+        const nNights = body.payload.count_of_nights;
 
-            const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
-            const data = response.data.data.attributes;
+        console.log("Aceptando reserva regularmente");
 
-            const propertyId = data.property_id;
-            const listingId = data.meta.listing_id;
-            const bookingId = data.booking_id;
-            const channelId = data.channel_id;
-            const ota_name = data.ota_name;
+        const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
+        const data = response.data.data.attributes;
 
-            const habitacion = await Habitacion.findOne({ 'channexPropertyId': propertyId });
-            if (!habitacion) {
-                return res.status(404).json({ message: 'No se encontró una habitacion con ese ID de channex' });
-            }
+        const propertyId = data.property_id;
+        const listingId = data.meta.listing_id;
+        const bookingId = data.booking_id;
+        const channelId = data.channel_id;
+        const ota_name = data.ota_name;
 
-            let canal = habitacion.channels.find(channel => channel.listingId === listingId);
-            if (!canal) {
-                canal = habitacion.channels.find(channel => channel.channelId === channelId);
-            }
+        const habitacion = await Habitacion.findOne({ 'channexPropertyId': propertyId });
+        if (!habitacion) {
+            return descartarRevision(revisionId, `sin habitación para property_id ${propertyId}`);
+        }
 
-            if (!canal) {
-                return res.status(404).json({ message: 'No se encontró un canal con ese ID' });
-            }
+        let canal = habitacion.channels.find(channel => channel.listingId === listingId);
+        if (!canal) {
+            canal = habitacion.channels.find(channel => channel.channelId === channelId);
+        }
 
-            const arrivalDate = data.arrival_date;
-            const departureDate = data.departure_date;
-            const reservationDate = data.inserted_at;
+        if (!canal) {
+            return descartarRevision(revisionId, `habitación ${habitacion._id} sin canal para listing ${listingId} / channel ${channelId}`);
+        }
 
-            const customerName = data.customer.name;
-            const customerSurname = data.customer.surname || '';
-            const customerFullName = customerName + ' ' + customerSurname;
-            const customerPhone = data.customer.phone || null;
-            const customerMail = data.customer.email || null;
+        const arrivalDate = data.arrival_date;
+        const departureDate = data.departure_date;
+        const reservationDate = data.inserted_at;
 
-            const rooms = data.rooms[0];
-            const adults = rooms.occupancy.adults || 0;
-            const children = rooms.occupancy.children || 0;
-            const infants = rooms.occupancyinfants || 0;
-            const totalGuests = adults + children + infants;
+        const customerName = data.customer.name;
+        const customerSurname = data.customer.surname || '';
+        const customerFullName = customerName + ' ' + customerSurname;
+        const customerPhone = data.customer.phone || null;
+        const customerMail = data.customer.mail || data.customer.email || null;
 
-            const nights = nNights;
-            // const amount = data.amount;
-            const amount = body.payload.amount;
+        const rooms = data.rooms[0];
+        const adults = rooms.occupancy.adults || 0;
+        const children = rooms.occupancy.children || 0;
+        const infants = rooms.occupancy.infants || 0;
+        const totalGuests = adults + children + infants;
 
-            const resourceId = habitacion._id;
-            const isDeposit = false;
-            const createdBy = habitacion.others.admin;
-            const maxOccupation = habitacion.propertyDetails.maxOccupancy;
+        const nights = nNights;
+        // const amount = data.amount;
+        const amount = body.payload.amount;
 
-            const channelInfo = {
-                ota_name,
-                propertyId,
-                listingId,
-                channelId,
-                bookingId
-            }
+        const resourceId = habitacion._id;
+        const isDeposit = false;
+        const createdBy = habitacion.others.admin;
+        const maxOccupation = habitacion.propertyDetails.maxOccupancy;
+
+        const channelInfo = {
+            ota_name,
+            propertyId,
+            listingId,
+            channelId,
+            bookingId
+        }
 
 
-            const reservaPayload = {
-                resourceId,
-                arrivalDate,
-                departureDate,
-                maxOccupation,
-                pax: totalGuests,
-                nNights: nights,
-                total: amount,
-                isDeposit,
-                createdBy,
-                reservationDate,
-                propertyId,
-                customerFullName,
-                customerPhone,
-                customerMail,
-                channelInfo
-            };
-            const eventController = require('../controllers/eventController');
-            const reservaPms = await eventController.createOTAReservation(reservaPayload);
+        const reservaPayload = {
+            resourceId,
+            arrivalDate,
+            departureDate,
+            maxOccupation,
+            pax: totalGuests,
+            nNights: nights,
+            total: amount,
+            isDeposit,
+            createdBy,
+            reservationDate,
+            propertyId,
+            customerFullName,
+            customerPhone,
+            customerMail,
+            channelInfo
+        };
+        const eventController = require('../controllers/eventController');
+        const reservaPms = await eventController.createOTAReservation(reservaPayload);
 
-            if (!reservaPms.success) {
-                throw new Error(reservaPms.message);
-            }
+        if (!reservaPms.success) {
+            throw new Error(reservaPms.message);
+        }
 
-            const { reserva } = reservaPms;
+        const { reserva } = reservaPms;
 
-            const { costoBase, precioBase } = await calcularCostoBaseTotal(habitacion, reserva.arrivalDate, reserva.departureDate);
-            const utilidadesInfo = {
-                idReserva: reserva._id,
-                arrivalDate: reserva.arrivalDate,
-                nNights: reserva.nNights,
-                chaletName: habitacion.propertyDetails.name,
-                costoBase: costoBase,
-                totalSinComisiones: precioBase,
-                totalPagado: amount
-            }
+        const { costoBase, precioBase } = await calcularCostoBaseTotal(habitacion, reserva.arrivalDate, reserva.departureDate);
+        const utilidadesInfo = {
+            idReserva: reserva._id,
+            arrivalDate: reserva.arrivalDate,
+            nNights: reserva.nNights,
+            chaletName: habitacion.propertyDetails.name,
+            costoBase: costoBase,
+            totalSinComisiones: precioBase,
+            totalPagado: amount
+        }
 
-            const crearUtilidades = await utilidadesController.generarComisionOTA(utilidadesInfo);
-            if (crearUtilidades instanceof Error) {
-                throw new Error(crearUtilidades.message);
-            }
+        const crearUtilidades = await utilidadesController.generarComisionOTA(utilidadesInfo);
+        if (crearUtilidades instanceof Error) {
+            throw new Error(crearUtilidades.message);
+        }
 
-            if (habitacion.channels?.length > 0) {
-
-                const arrivalDate = new Date(reserva.arrivalDate);
-                const departureDate = new Date(reserva.departureDate);
-                
-                // Generate all dates between arrival and departure (excluding departure date)
-                const datesResponse = [];
-                const currentDate = new Date(arrivalDate);
-                
-                while (currentDate < departureDate) {
-                    datesResponse.push({ 
-                        date: { 
-                            date: new Date(currentDate)
-                        } 
-                    });
-                    currentDate.setDate(currentDate.getDate() + 1);
-                }
-
-                updateChannexAvailabilitySingle(habitacion._id, datesResponse)
-                    .then(() => {
-                        console.log("Disponibilidad actualizada en Channex.");
-                    })
-                    .catch(err => {
-                        // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
-                        console.error("Error al actualizar disponibilidad en Channex: ", err.message);
-                    });
-            }
-
-        } else if (eventType === 'booking_cancellation') {
-            const bookingId = body.payload.booking_id;
-
-            const reserva = await Reservas.findOne({ 'channels.bookingId': bookingId });
-            if (!reserva) {
-                console.log(`No se encontró la reserva con el airbnbBookingId ${bookingId} en la base de datos.`);
-                throw new Error('La reserva no fue encontrada');
-            }
-
-            const idReserva = reserva._id;
-
-            const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
-
-            // const pagos = await pagoController.obtenerPagos(idReserva);
-            // let pagoTotal = 0
-            // pagos.forEach(pago => {
-            //     pagoTotal += pago.importe;
-            // })
-
-            for (const comisiones of comisionesReserva) {
-                const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
-                if (utilidadEliminada) {
-                    console.log('Utilidad eliminada correctamente');
-                } else {
-                    throw new Error('Error al eliminar comision.');
-                }
-            }
-
-            reserva.status = 'cancelled';
-            const confirmacion = await reserva.save();
-
-            if (!confirmacion) {
-                throw new Error('Error al cancelar reserva');
-            }
-
-            const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
-            const data = response.data.data.attributes;
+        if (habitacion.channels?.length > 0) {
 
             const arrivalDate = new Date(reserva.arrivalDate);
             const departureDate = new Date(reserva.departureDate);
@@ -503,7 +471,8 @@ async function webhookReceptor(req, res) {
                 });
                 currentDate.setDate(currentDate.getDate() + 1);
             }
-            updateChannexAvailabilitySingle(reserva.resourceId, datesResponse, true)
+
+            updateChannexAvailabilitySingle(habitacion._id, datesResponse)
                 .then(() => {
                     console.log("Disponibilidad actualizada en Channex.");
                 })
@@ -511,124 +480,179 @@ async function webhookReceptor(req, res) {
                     // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
                     console.error("Error al actualizar disponibilidad en Channex: ", err.message);
                 });
-
-            // Actualizar disponibilidad y cancelar reservacion en PMS
-
-        } else if (eventType === 'booking_modification') {
-            const bookingId = body.payload.booking_id;
-
-            const reserva = await Reservas.findOne({ 'channels.bookingId': bookingId });
-            if (!reserva) {
-                console.log(`No se encontró la reserva con el airbnbBookingId ${bookingId} en la base de datos.`);
-                throw new Error('La reserva no fue encontrada');
-            }
-
-            const reservaCopia = reserva.toObject();
-
-            const reservationId = reserva._id;
-
-            const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
-            const data = response.data.data.attributes;
-
-            const ota_name = data.ota_name;
-            const listingId = data.meta.listing_id;
-            const propertyId = body.payload.propertyId;
-
-            const habitacion = await Habitacion.findById(reserva.resourceId);
-            if (!habitacion) {
-                console.log(`No se encontró la habitación en la base de datos.`);
-            }
-
-            console.log(reserva)
-
-            const nNights = body.payload.count_of_nights;
-            const arrivalDate = new Date(data.arrival_date);
-            arrivalDate.setUTCHours(reserva.arrivalDate.getUTCHours(), 0, 0, 0);
-            const departureDate = new Date(data.departure_date);
-            departureDate.setUTCHours(reserva.departureDate.getUTCHours(), 0, 0, 0);
-            const newPrice = body.payload.amount;
-
-            const infoReserva = {
-                reservationId,
-                nNights,
-                arrivalDate,
-                departureDate,
-                newPrice
-            }
-
-            const infoSession = {
-                id: reserva.createdBy,
-                firstName: ota_name
-            }
-
-            const originalArrivalDate = new Date(reservaCopia.arrivalDate);
-            const originalDepartureDate = new Date(reservaCopia.departureDate);
-
-            const eventController = require('../controllers/eventController');
-            console.log("infoReserva: ", infoReserva);
-            const eventoEditado = await eventController.editarEventoBackend(infoReserva, infoSession);
-
-            const { costoBase, precioBase } = await calcularCostoBaseTotal(habitacion, eventoEditado.arrivalDate, eventoEditado.departureDate);
-
-            const utilidadesInfo = {
-                idReserva: eventoEditado._id,
-                arrivalDate: eventoEditado.arrivalDate,
-                nNights: eventoEditado.nNights,
-                chaletName: habitacion.propertyDetails.name,
-                costoBase: costoBase,
-                totalSinComisiones: precioBase,
-                totalPagado: newPrice
-            }
-            const nuevasComisiones = await utilidadesController.generarComisionOTA(utilidadesInfo);
-
-            // Generate date arrays for old and new periods
-            const datesResponseBefore = generateDateArray(originalArrivalDate, originalDepartureDate);
-            const datesResponseAfter = generateDateArray(eventoEditado.arrivalDate, eventoEditado.departureDate);
-
-            console.log("Fechas anteriores a liberar: ", datesResponseBefore.length, "días");
-            console.log("Fechas nuevas a ocupar: ", datesResponseAfter.length, "días");
-
-            try {
-                // First, free up the old dates
-                if (datesResponseBefore.length > 0) {
-                    await updateChannexAvailabilitySingle(eventoEditado.resourceId, datesResponseBefore, true);
-                    console.log("Disponibilidad actualizada en Channex (fechas anteriores liberadas).");
-                }
-
-                // Then, occupy the new dates
-                if (datesResponseAfter.length > 0) {
-                    await updateChannexAvailabilitySingle(eventoEditado.resourceId, datesResponseAfter, false);
-                    console.log("Disponibilidad actualizada en Channex (fechas nuevas ocupadas).");
-                }
-
-            } catch (error) {
-                console.error("Error al actualizar disponibilidad en Channex: ", error.message);
-                
-                // TODO: Consider implementing rollback logic here
-                // This could involve reverting the database changes if Channex update fails
-                console.warn("La reserva fue modificada en la base de datos pero falló la actualización en Channex");
-                
-                throw error;
-            }
-
-            console.log("Modificación de reserva procesada exitosamente");
-
-        } else if (eventType === 'test') {
-
-            return res.status(200).send('Evento test');
-        } else {
-            return res.status(400).send('Evento no reconocido');
         }
 
-        await channex.post(`/api/v1/booking_revisions/${revisionId}/ack`);
+    } else if (eventType === 'booking_cancellation') {
+        const bookingId = body.payload.booking_id;
 
-        return res.status(200).send('Evento procesado correctamente');
+        const reserva = await Reservas.findOne({ 'channels.bookingId': bookingId });
+        if (!reserva) {
+            console.log(`No se encontró la reserva con el airbnbBookingId ${bookingId} en la base de datos.`);
+            throw new Error('La reserva no fue encontrada');
+        }
 
-        // await channex.post(`/api/v1/live_feed/${liveFeedId}/resolve`, payload);
-    } catch (err) {
-        console.error('Webhook error:', err.response ? err.response.data : err.message);
-        res.status(500).send('Error al procesar evento: ' + err.message);
+        const idReserva = reserva._id;
+
+        const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(idReserva);
+
+        // const pagos = await pagoController.obtenerPagos(idReserva);
+        // let pagoTotal = 0
+        // pagos.forEach(pago => {
+        //     pagoTotal += pago.importe;
+        // })
+
+        for (const comisiones of comisionesReserva) {
+            const utilidadEliminada = await utilidadesController.eliminarComisionReturn(comisiones._id);
+            if (utilidadEliminada) {
+                console.log('Utilidad eliminada correctamente');
+            } else {
+                throw new Error('Error al eliminar comision.');
+            }
+        }
+
+        reserva.status = 'cancelled';
+        const confirmacion = await reserva.save();
+
+        if (!confirmacion) {
+            throw new Error('Error al cancelar reserva');
+        }
+
+        const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
+        const data = response.data.data.attributes;
+
+        const arrivalDate = new Date(reserva.arrivalDate);
+        const departureDate = new Date(reserva.departureDate);
+        
+        // Generate all dates between arrival and departure (excluding departure date)
+        const datesResponse = [];
+        const currentDate = new Date(arrivalDate);
+        
+        while (currentDate < departureDate) {
+            datesResponse.push({ 
+                date: { 
+                    date: new Date(currentDate)
+                } 
+            });
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        updateChannexAvailabilitySingle(reserva.resourceId, datesResponse, true)
+            .then(() => {
+                console.log("Disponibilidad actualizada en Channex.");
+            })
+            .catch(err => {
+                // Aquí puedes: loggear a archivo, mandar notificación, email, etc.
+                console.error("Error al actualizar disponibilidad en Channex: ", err.message);
+            });
+
+        // Actualizar disponibilidad y cancelar reservacion en PMS
+
+    } else if (eventType === 'booking_modification') {
+        const bookingId = body.payload.booking_id;
+
+        const reserva = await Reservas.findOne({ 'channels.bookingId': bookingId });
+        if (!reserva) {
+            console.log(`No se encontró la reserva con el airbnbBookingId ${bookingId} en la base de datos.`);
+            throw new Error('La reserva no fue encontrada');
+        }
+
+        const reservaCopia = reserva.toObject();
+
+        const reservationId = reserva._id;
+
+        const response = await channex.get(`/api/v1/booking_revisions/${revisionId}`);
+        const data = response.data.data.attributes;
+
+        const ota_name = data.ota_name;
+        const listingId = data.meta.listing_id;
+        const propertyId = body.payload.propertyId;
+
+        const habitacion = await Habitacion.findById(reserva.resourceId);
+        if (!habitacion) {
+            console.log(`No se encontró la habitación en la base de datos.`);
+        }
+
+        console.log(reserva)
+
+        const nNights = body.payload.count_of_nights;
+        const arrivalDate = new Date(data.arrival_date);
+        arrivalDate.setUTCHours(reserva.arrivalDate.getUTCHours(), 0, 0, 0);
+        const departureDate = new Date(data.departure_date);
+        departureDate.setUTCHours(reserva.departureDate.getUTCHours(), 0, 0, 0);
+        const newPrice = body.payload.amount;
+
+        const infoReserva = {
+            reservationId,
+            nNights,
+            arrivalDate,
+            departureDate,
+            newPrice
+        }
+
+        const infoSession = {
+            id: reserva.createdBy,
+            firstName: ota_name
+        }
+
+        const originalArrivalDate = new Date(reservaCopia.arrivalDate);
+        const originalDepartureDate = new Date(reservaCopia.departureDate);
+
+        const eventController = require('../controllers/eventController');
+        console.log("infoReserva: ", infoReserva);
+        const eventoEditado = await eventController.editarEventoBackend(infoReserva, infoSession);
+
+        const { costoBase, precioBase } = await calcularCostoBaseTotal(habitacion, eventoEditado.arrivalDate, eventoEditado.departureDate);
+
+        const utilidadesInfo = {
+            idReserva: eventoEditado._id,
+            arrivalDate: eventoEditado.arrivalDate,
+            nNights: eventoEditado.nNights,
+            chaletName: habitacion.propertyDetails.name,
+            costoBase: costoBase,
+            totalSinComisiones: precioBase,
+            totalPagado: newPrice
+        }
+        const nuevasComisiones = await utilidadesController.generarComisionOTA(utilidadesInfo);
+
+        // Generate date arrays for old and new periods
+        const datesResponseBefore = generateDateArray(originalArrivalDate, originalDepartureDate);
+        const datesResponseAfter = generateDateArray(eventoEditado.arrivalDate, eventoEditado.departureDate);
+
+        console.log("Fechas anteriores a liberar: ", datesResponseBefore.length, "días");
+        console.log("Fechas nuevas a ocupar: ", datesResponseAfter.length, "días");
+
+        try {
+            // First, free up the old dates
+            if (datesResponseBefore.length > 0) {
+                await updateChannexAvailabilitySingle(eventoEditado.resourceId, datesResponseBefore, true);
+                console.log("Disponibilidad actualizada en Channex (fechas anteriores liberadas).");
+            }
+
+            // Then, occupy the new dates
+            if (datesResponseAfter.length > 0) {
+                await updateChannexAvailabilitySingle(eventoEditado.resourceId, datesResponseAfter, false);
+                console.log("Disponibilidad actualizada en Channex (fechas nuevas ocupadas).");
+            }
+
+        } catch (error) {
+            console.error("Error al actualizar disponibilidad en Channex: ", error.message);
+            
+            // TODO: Consider implementing rollback logic here
+            // This could involve reverting the database changes if Channex update fails
+            console.warn("La reserva fue modificada en la base de datos pero falló la actualización en Channex");
+            
+            throw error;
+        }
+
+        console.log("Modificación de reserva procesada exitosamente");
+
+    } else if (eventType === 'test') {
+
+        return;
+    } else {
+        throw new Error(`Evento no reconocido: ${eventType}`);
     }
+
+    await channex.post(`/api/v1/booking_revisions/${revisionId}/ack`);
 }
 
 async function airbnbConnection(req, res) {
@@ -638,28 +662,23 @@ async function airbnbConnection(req, res) {
         if (typeof properties === 'string') {
             // ya es JSON válido
             propsParam = properties;
-        } else {
+        } else if (properties) {
             // si viniera como array, lo serializamos
             propsParam = JSON.stringify(properties);
+        } else {
+            // sin parámetro: la propiedad por defecto de la cuenta (ver .env)
+            propsParam = JSON.stringify([process.env.CHANNEX_CONNECT_PROPERTY_ID]);
         }
         const params = {
             properties: propsParam,
             min_stay_type: minStayType,
-            group_id: groupId,
+            group_id: groupId || GROUP_ID,
             redirect_uri: redirect_uri,
             token,
             state
         }
 
-        const response = await channex.get('/api/v1/meta/airbnb/connection_link', {
-            params: {
-                properties: propsParam,
-                min_stay_type: minStayType,
-                group_id: groupId,
-                redirect_uri: redirect_uri,
-                token
-            }
-        });
+        const response = await channex.get('/api/v1/meta/airbnb/connection_link', { params });
         const { url } = response.data.data.attributes;
         // res.redirect(url);
         res.json({ url });
@@ -687,7 +706,7 @@ async function oauthAirbnb(req, res) {
         await AirbnbChannel.findOneAndUpdate(
             { channelId: channel_id },
             {
-                internalUserId,
+                userId: internalUserId,
                 accessToken: access_token,
                 refreshToken: refresh_token,
                 // expires_at es UNIX timestamp en segundos
@@ -718,12 +737,15 @@ async function mapPropertiesAirbnb(req, res) {
             return res.status(404).json({ message: 'No se encontró una habitacion con ese ID de channex' });
         }
 
-        const response = await channex.post(`/api/v1/channels/${channelIdSession}/mappings`, mappingData);
-
+        // Se valida el canal ANTES de mandar el mapeo: si no, un usuario ajeno deja el
+        // mapeo vivo en Channex aunque el PMS después responda 404.
         const canal = habitacion.channels.find(channel => channel.channelId === channelIdSession);
         if (!canal) {
             return res.status(404).json({ message: 'No se encontró un canal con ese ID' });
         }
+
+        const response = await channex.post(`/api/v1/channels/${channelIdSession}/mappings`, mappingData);
+
         canal.listingId = mappingData.mapping.settings.listing_id;
         await habitacion.save();
         res.json(response.data);
@@ -780,7 +802,7 @@ async function createChannexProperty(req, res) {
             property: {
                 title: propertyDetails.name,
                 currency: 'MXN',
-                property_tipe: 'apartment',
+                property_type: 'apartment',
                 content: { description },
                 email: propertyDetails.email,
                 phone: propertyDetails.phoneNumber,
@@ -792,7 +814,7 @@ async function createChannexProperty(req, res) {
                 address: location.address,
                 longitude: location.longitude ? dmsToDecimal(location.longitude) : null,
                 latitude: location.latitude ? dmsToDecimal(location.latitude) : null,
-                group_id: 'df5c3392-2eb0-4dc9-ae05-08b0ffc36d2e',
+                group_id: GROUP_ID,
                 settings: {
                     "allow_availability_autoupdate_on_confirmation": false,
                     "allow_availability_autoupdate_on_modification": false,
@@ -979,7 +1001,7 @@ async function createChannelBooking(req, res) {
         const payload = {
             channel: {
                 channel: "BookingCom",
-                group_id: "df5c3392-2eb0-4dc9-ae05-08b0ffc36d2e",
+                group_id: GROUP_ID,
                 is_active: true,
                 title: `${habitacion.propertyDetails.name} - BOOKING`,
                 known_mappings_list: [],
@@ -1043,7 +1065,18 @@ async function createRateChannex(req, res) {
         }
         if ((!habitacion.channexPropertyId || habitacion.channels.length === 0) && !habitacion.channexRoomId)
             throw new Error('La habitación no está creada en Channex');
-        
+
+        // Una habitación sólo puede estar conectada a UNA cuenta de la misma OTA: si ya
+        // tiene canal de otra cuenta, publicarla otra vez la pondría a la venta en dos
+        // Airbnb distintos a la vez. Se valida antes del POST para no dejar un rate plan
+        // huérfano en Channex al rechazar. Otra OTA (BOOKING) sí es válida en paralelo.
+        const canalDeOtraCuenta = habitacion.channels.find(c => c.ota_name === ota_name && c.channelId && c.channelId !== channelId);
+        if (canalDeOtraCuenta) {
+            return res.status(409).json({
+                error: `Esta habitación ya está conectada a otra cuenta de ${ota_name} (canal ${canalDeOtraCuenta.channelId}). Desconéctala primero para volver a mapearla.`
+            });
+        }
+
         // req.body.room_type.occ_adults = habitacion.propertyDetails.maxOccupancy;
         const default_occupancy = habitacion.propertyDetails.maxOccupancy;
         // req.body.room_type.title = `ROOM ${habitacion.propertyDetails.name}`;
@@ -1057,11 +1090,17 @@ async function createRateChannex(req, res) {
         // }
 
         
-        habitacion.channels.push({
-            channelId: channelId,
-            ota_name: ota_name,
-            rateListingId: resp.data.data.attributes.id
-        })
+        // Reintentar no debe duplicar el canal: si ya existe, se actualiza la tarifa
+        const canalExistente = habitacion.channels.find(c => c.channelId === channelId && c.ota_name === ota_name);
+        if (canalExistente) {
+            canalExistente.rateListingId = resp.data.data.attributes.id;
+        } else {
+            habitacion.channels.push({
+                channelId: channelId,
+                ota_name: ota_name,
+                rateListingId: resp.data.data.attributes.id
+            })
+        }
 
         // canal.rateListingId = resp.data.data.attributes.id;
         await habitacion.save();
@@ -1383,7 +1422,7 @@ async function validatePropertyBooking(req, res) {
 
 
 async function createPropertyWebhook(propertyId) {
-    const base_url = process.env.NODE_ENV === 'development' ? 'https://e7e377bc9a31.ngrok-free.app/api/channex/webhooks' : `${process.env.URL}/api/channex/webhooks`;
+    const base_url = WEBHOOK_URL;
     try {
 
         const habitacion = await Habitacion.findOne({ channexPropertyId: propertyId });
@@ -1393,15 +1432,21 @@ async function createPropertyWebhook(propertyId) {
             throw error;
         }
 
-        if (habitacion.channels.length > 1) {
-            console.log('La habitación tiene mas de un canal, no se puede crear el webhook');
-            return true;
+        // El webhook es por PROPIEDAD, no por canal: se pregunta a Channex si ya existe
+        // en vez de deducirlo del número de canales. Antes, una segunda conexión dejaba
+        // la propiedad sin webhook y la función reportaba éxito igual.
+        const existentes = await channex.get('/api/v1/webhooks', { params: { 'filter[property_id]': propertyId } });
+        const yaRegistrado = existentes.data.data.find(w => w.attributes.callback_url === base_url);
+        if (yaRegistrado) {
+            console.log(`Webhook ya registrado para la propiedad ${propertyId}`);
+            return { data: yaRegistrado };
         }
+
         const payload = {
             webhook: {
                 property_id: propertyId,
                 callback_url: base_url,
-                event_mask: 'booking_new,booking_modification,booking_cancellation,alteration_request',
+                event_mask: 'booking_new;booking_modification;booking_cancellation;alteration_request',
                 request_params: {},
                 headers: {
                     "api-key": "channex"
@@ -1537,6 +1582,10 @@ module.exports = {
     showCreatedPropertiesAirbnb,
     createChannexProperty,
     webhookReceptor,
+    procesarEventoBooking,
+    descartarRevision,
+    obtenerFeedRevisiones,
+    createPropertyWebhook,
     airbnbConnection,
     oauthAirbnb,
     mapPropertiesAirbnb,

@@ -38,8 +38,8 @@
                 const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
                 const host = window.location.host;
                 const redirect_uri = `${protocol}://${host}/api/channex/auth/airbnb/callback&token=123`
-                const channexProperty = '213ef1c8-6eba-4496-ba0a-318b1841efc1'; // Cualquier ID del canal
-                const response = await fetch(`/api/channex/connect/airbnb?properties=["${channexProperty}"]&minStayType=Arrival&groupId=6d7fb08d-8d09-485e-a809-fda052006d5f&redirect_uri=${redirect_uri}`)
+                // properties y groupId los pone el servidor desde el .env (van con la API key de la cuenta)
+                const response = await fetch(`/api/channex/connect/airbnb?minStayType=Arrival&redirect_uri=${redirect_uri}`)
                 const data = await response.json()
                 const url = data.url
                 window.location.href = url

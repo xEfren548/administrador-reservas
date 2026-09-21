@@ -160,6 +160,7 @@
     </div>
 </div>
 
+<script src="/scripts/channexUi.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // Activar todos los canales
@@ -167,6 +168,7 @@
         // Dar de alta propiedad
         document.querySelectorAll('.alta-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
+                await bloquearMientras(btn, async () => {
                 try {
                     // 1. Crea propiedad
                     const pmsId = btn.dataset.id;
@@ -203,6 +205,7 @@
                 } catch (err) {
                     Swal.fire('Error', err.message, 'error');
                 }
+                });
             });
         });
 
@@ -223,6 +226,7 @@
         // Sincronizar tarifa
         document.querySelectorAll('.sincronizar-tarifa-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
+                await bloquearMientras(btn, async () => {
                 try {
                     const pmsId = btn.dataset.pmsid;
                     Swal.fire({ title: 'Sincronizando...', didOpen: () => Swal.showLoading() });
@@ -235,6 +239,7 @@
                 } catch (err) {
                     Swal.fire('Error', err.message, 'error');
                 }
+                });
             });
         });
 
@@ -253,6 +258,7 @@
 
         document.getElementById('tarifaForm').addEventListener('submit', async function (e) {
             e.preventDefault();
+            await bloquearMientras(botonSubmit(this), async () => {
 
             const property_id = document.getElementById('inputPropertyId').value;
             //const room_title = document.getElementById('roomTitle').value;
@@ -310,10 +316,12 @@
                     confirmButtonText: 'Aceptar'
                 });
             }
+            });
         });
 
         document.getElementById('bookingMapForm').addEventListener('submit', async function (e) {
             e.preventDefault();
+            await bloquearMientras(botonSubmit(this), async () => {
             const property_id = document.getElementById('inputPropertyId').value;
             const pms_id = document.getElementById('inputPmsId').value;
             const tarifa_id = document.getElementById('inputTarifaId').value;
@@ -349,11 +357,12 @@
             } catch (err) {
                 Swal.fire('Error', err.message, 'error');
             }
-
+            });
         });
 
         document.querySelectorAll('.desconectar-booking-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
+                await bloquearMientras(btn, async () => {
                 try {
                     const { channelid } = btn.dataset;
                     const res = await fetch(`/api/booking/channels/${channelid}/disconnect`, { method: 'POST' });
@@ -363,6 +372,7 @@
                 } catch (err) {
                     Swal.fire('Error', err.message, 'error');
                 }
+                });
             });
         });
 
