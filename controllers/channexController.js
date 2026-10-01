@@ -25,6 +25,16 @@ const channex = axios.create({
     }
 });
 
+/** GET paginado completo: Channex corta en 10 por página por defecto (máx. 100). */
+async function listarTodo(path) {
+    const todos = [];
+    for (let page = 1; ; page++) {
+        const { data } = await channex.get(path, { params: { 'pagination[limit]': 100, 'pagination[page]': page } });
+        todos.push(...data.data);
+        if (data.data.length === 0 || todos.length >= (data.meta?.total ?? 0)) return todos;
+    }
+}
+
 
 /** Función para mapear las propiedades de NyN a Channex */
 async function mapProperties(req, res) {
@@ -143,8 +153,7 @@ async function dashboardChannexFull(req, res) {
         }
 
         // 5. Tarifas (rate plans)
-        const respRates = await channex.get('/api/v1/rate_plans');
-        const ratePlans = respRates.data.data;
+        const ratePlans = await listarTodo('/api/v1/rate_plans');
 
         // 6. Marca cada propiedad con flags útiles y mapping de listing
         const propiedadesMarcadas = propiedades.map(hab => {
@@ -252,10 +261,7 @@ async function dashboardBooking(req, res) {
         }
 
         // 5. Tarifas (rate plans)
-        const respRates = await channex.get('/api/v1/rate_plans');
-        const ratePlans = respRates.data.data;
-
-        console.log(ratePlans)
+        const ratePlans = await listarTodo('/api/v1/rate_plans');
 
         // 3. Marca cada habitación según su propio canal de Booking
         const propiedadesMarcadas = propiedades.map(hab => {
@@ -362,7 +368,8 @@ async function procesarEventoBooking(body) {
         const data = response.data.data.attributes;
 
         const propertyId = data.property_id;
-        const listingId = data.meta.listing_id;
+        // listing_id solo existe en Airbnb; en Booking meta puede venir null
+        const listingId = data.meta?.listing_id;
         const bookingId = data.booking_id;
         const channelId = data.channel_id;
         const ota_name = data.ota_name;
@@ -566,7 +573,7 @@ async function procesarEventoBooking(body) {
         const data = response.data.data.attributes;
 
         const ota_name = data.ota_name;
-        const listingId = data.meta.listing_id;
+        const listingId = data.meta?.listing_id;
         const propertyId = body.payload.propertyId;
 
         const habitacion = await Habitacion.findById(reserva.resourceId);
@@ -782,8 +789,10 @@ async function createChannexProperty(req, res) {
             return res.status(404).json({ error: 'Habitación no encontrada' });
         }
 
+        // Idempotente: si un alta anterior creó la propiedad pero falló el room,
+        // se devuelve la existente para que el cliente pueda terminar el alta.
         if (hab.channexPropertyId) {
-            return res.status(400).json({ error: 'La habitación ya fue mapeada' });
+            return res.json({ data: { id: hab.channexPropertyId } });
         }
 
         const plataformas = await Plataformas.find({
@@ -877,7 +886,8 @@ async function createRoomChannex(req, res) {
         req.body.room_type.default_occupancy = habitacion.propertyDetails.maxOccupancy;
         req.body.room_type.title = `ROOM ${habitacion.propertyDetails.name}`;
 
-        const sameChannel = habitacion.channels.find(channel => channel.channelId === req.session.channelId);
+        // Solo aplica al flujo Airbnb; en Booking no hay channelId en sesión
+        const sameChannel = req.session.channelId && habitacion.channels.find(channel => channel.channelId === req.session.channelId);
         if (sameChannel) return res.status(400).json({ error: 'La habitación ya fue mapeada en este canal' });
 
         const resp = await channex.post('/api/v1/room_types', req.body);
@@ -951,6 +961,12 @@ async function createRateBooking(req, res) {
         }
         if (!habitacion.channexPropertyId || !habitacion.channexRoomId)
             throw new Error('La habitación no está creada en Channex');
+
+        // Validar antes de crear la tarifa: sin plataforma activa sus precios nunca se publican
+        const plataformaActiva = await Plataformas.exists({ _id: { $in: habitacion.activePlatforms }, nombre: ota_name });
+        if (!plataformaActiva) {
+            return res.status(400).json({ error: `La plataforma ${ota_name} no está activa en la habitación. Actívala desde Editar Cabaña` });
+        }
 
         const default_occupancy = habitacion.propertyDetails.maxOccupancy;
 
@@ -1170,9 +1186,12 @@ async function updateChannexPrices(habitacionId) {
     const canales = habitacion.channels
 
     for (const canal of canales) {
+        // Un canal mal configurado no debe tumbar el push de los demás
+        if (!canal.rateListingId) continue;
         const plataforma = plataformas.find(plat => plat.nombre === canal.ota_name);
         if (!plataforma) {
-            throw new Error(`No se encontraron plataformas con el nombre ${canal.ota_name}`);
+            console.error(`[CHANNEX][ALERTA] ${habitacion.propertyDetails.name}: plataforma ${canal.ota_name} no está activa, se omiten sus precios`);
+            continue;
         }
 
         const daily = [];
@@ -1221,6 +1240,10 @@ async function updateChannexPrices(habitacionId) {
         }
 
 
+    }
+
+    if (values.length === 0) {
+        throw new Error(`${habitacion.propertyDetails.name}: ningún canal tiene plataforma activa y tarifa, no hay precios que enviar`);
     }
 
     const payload = { values };
@@ -1329,6 +1352,27 @@ async function updateChannexAvailability(habitacionId) {
     const response = await channex.post('/api/v1/availability', payload);
 
     return response.data;
+}
+
+/**
+ * Recalcula y publica la disponibilidad completa de la habitación (reservas + bloqueos).
+ * Para cambios hechos en el PMS fuera del flujo de reservas normales: reservas de dueño,
+ * reservas externas y bloqueos. Best-effort, no lanza: si falla, el push de las 4 AM corrige.
+ */
+async function sincronizarDisponibilidad(habitacionId) {
+    try {
+        const mapeada = await Habitacion.exists({
+            _id: habitacionId,
+            channexPropertyId: { $ne: null },
+            channexRoomId: { $ne: null },
+            'channels.0': { $exists: true }
+        });
+        if (!mapeada) return;
+        await updateChannexAvailability(habitacionId);
+        console.log(`[CHANNEX] Disponibilidad sincronizada para habitación ${habitacionId}`);
+    } catch (err) {
+        console.error(`[CHANNEX][ALERTA] No se pudo sincronizar disponibilidad de ${habitacionId}:`, err.response?.data || err.message);
+    }
 }
 
 async function updateChannexAvailabilitySingle(habitacionId, datesResponse, deletion = false) {
@@ -1597,6 +1641,7 @@ module.exports = {
     createRateChannex,
     updateChannexPrices,
     updateChannexAvailability,
+    sincronizarDisponibilidad,
     updateChannexAvailabilitySingle,
     createBookingRoom,
     createRateBooking,

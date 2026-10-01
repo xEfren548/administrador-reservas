@@ -51,12 +51,15 @@
                 {{#if tarifa}}
                 <button type="button" class="btn btn-sm btn-info sincronizar-tarifa-btn"
                     data-pmsid="{{_id}}">Sincronizar precios y disponibilidad</button>
-                {{else}}
+                {{else if channexRoomId}}
                 <button type="button" class="btn btn-sm btn-info crear-tarifa-btn"
                     data-propertyid="{{channexPropertyId}}" data-pmsid="{{_id}}"
                     data-propertyname="{{propertyDetails.name}}" data-roomid="{{channexRoomId}}">
                     Crear tarifa
                 </button>
+                {{else}}
+                {{!-- Alta a medias: propiedad creada pero falló el room --}}
+                <button type="button" class="btn btn-sm btn-warning alta-btn" data-id="{{_id}}">Terminar alta</button>
                 {{/if}}
                 {{else}}
                 <button type="button" class="btn btn-sm btn-warning alta-btn" data-id="{{_id}}">Dar de alta</button>

@@ -114,6 +114,7 @@ async function crearFechaBloqueada(req, res){
                 existeFecha.date = fechaFormatted
             }
             await existeFecha.save();
+            if (type === 'bloqueo') channexController.sincronizarDisponibilidad(habitacionId);
             return res.status(201).send({ message: 'Date modified successfully', date: existeFecha});
     
         }
@@ -149,11 +150,13 @@ async function crearFechaBloqueada(req, res){
         if (!newFechaBloqueada) {
             return res.status(400).send({ message: 'Invalid type value' });
         }
-    
+
         const agregarFecha = await newFechaBloqueada.save();
         if (!agregarFecha){
             return res.status(400).send({ message: 'Failed to create date' });
         }
+
+        if (type === 'bloqueo') channexController.sincronizarDisponibilidad(habitacionId);
 
         res.status(200).send({ message: 'Date created successfully', date: agregarFecha});
     } catch (error) {
@@ -275,6 +278,8 @@ async function crearBloqueosRango(req, res){
                 fechasCreadas.push(...resultados);
             }
 
+            channexController.sincronizarDisponibilidad(habitacionId);
+
             totalCreadas += fechasCreadas.length;
             totalActualizadas += fechasActualizadas.length;
 
@@ -318,6 +323,7 @@ async function eliminarFechaBloqueada(req, res){
                 return res.status(200).json({});
             }
 
+            channexController.sincronizarDisponibilidad(habitacionId);
             return res.status(200).json({ message: 'Registro eliminado correctamente', date: resultado });
 
         } else if (type === "bloqueo_capacidad") {

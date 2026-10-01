@@ -1805,6 +1805,15 @@ async function createOTAReservation(data) {
             });
         }
 
+        // Idempotente por bookingId: el webhook y el poller del feed reintentan la misma
+        // revisión hasta hacer ack, y un reintento no debe duplicar la reserva.
+        if (channelInfo.bookingId) {
+            const yaExiste = await Documento.findOne({ 'channels.bookingId': channelInfo.bookingId });
+            if (yaExiste) {
+                return { success: true, reserva: yaExiste, message: "La reservación ya existía" };
+            }
+        }
+
         const mongooseChaletId = new mongoose.Types.ObjectId(chalet._id);
         const overlappingReservation = await Documento.findOne({
             resourceId: mongooseChaletId,
@@ -1815,8 +1824,10 @@ async function createOTAReservation(data) {
             ],
         });
 
+        // La OTA ya cobró al huésped: rechazarla aquí solo la pierde (sin ack, el feed la
+        // borra a los 30 min). Se guarda igual y se alerta para resolver el overbooking.
         if (overlappingReservation) {
-            throw new Error("La habitación está ocupada en la fecha seleccionada");
+            console.error(`[CHANNEX][ALERTA] OVERBOOKING: reserva ${channelInfo.ota_name} ${channelInfo.bookingId} en ${chalet.propertyDetails.name} (${arrivalDate} → ${departureDate}) choca con la reserva ${overlappingReservation._id}`);
         }
 
         // const fechasBloqueadasPorRestriccion = await BloqueoFechas.findOne({ date: fechaAjustada, habitacionId: mongooseChaletId, type: { $nin: ['bloqueo', 'capacidad_minima'] } });
@@ -1986,7 +1997,9 @@ async function createOTAReservation(data) {
             idUsuario: createdBy,
             type: 'reservation',
             idReserva: idReserva,
-            acciones: `Reservación creada OTA`,
+            acciones: overlappingReservation
+                ? `Reservación creada OTA - OVERBOOKING con reserva ${overlappingReservation._id}`
+                : `Reservación creada OTA`,
             nombreUsuario: `${channelInfo.ota_name}`
         }
 
@@ -2169,6 +2182,8 @@ async function createOwnerReservation(req, res, next) {
 
         newReservation.url = url;
         await newReservation.save();
+
+        channexController.sincronizarDisponibilidad(newReservation.resourceId);
 
         await utilidadesController.altaComisionReturn({
             monto: 0,
@@ -4521,6 +4536,8 @@ async function createOwnerExternalReservation(req, res) {
         reservaExterna.url = `${process.env.URL}/api/eventos/${reservaExterna._id}`;
         await reservaExterna.save();
 
+        channexController.sincronizarDisponibilidad(reservaExterna.resourceId);
+
         // Crear servicio de limpieza
         await rackLimpiezaController.createServiceForReservation({
             id_reserva: reservaExterna._id,
@@ -4731,6 +4748,8 @@ async function editOwnerExternalReservation(req, res) {
 
         await reserva.save();
 
+        channexController.sincronizarDisponibilidad(reserva.resourceId);
+
         // Log
         await logController.createBackendLog({
             fecha: Date.now(),
@@ -4813,6 +4832,8 @@ async function deleteOwnerReservation(req, res) {
 
         // Eliminar reserva
         await Documento.findByIdAndDelete(id);
+
+        channexController.sincronizarDisponibilidad(reserva.resourceId);
 
         // Log
         await logController.createBackendLog({
@@ -4923,6 +4944,8 @@ async function updateOwnerReservation(req, res) {
         reserva.nNights = parseInt(nNights);
 
         await reserva.save();
+
+        channexController.sincronizarDisponibilidad(reserva.resourceId);
 
         // Log
         await logController.createBackendLog({
