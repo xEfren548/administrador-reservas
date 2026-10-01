@@ -40,6 +40,9 @@ jobs:
             DB_PORT=${{ secrets.PORT }}
             CHANNEX_USER_API_KEY=${{ secrets.CHANNEX_USER_API_KEY }}
             CHANNEX_API_URL=${{ secrets.CHANNEX_API_URL }}
+            CHANNEX_GROUP_ID=${{ secrets.CHANNEX_GROUP_ID }}
+            CHANNEX_WEBHOOK_URL=${{ secrets.CHANNEX_WEBHOOK_URL }}
+            CHANNEX_CONNECT_PROPERTY_ID=${{ secrets.CHANNEX_CONNECT_PROPERTY_ID }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             DEV_STRIPE_SECRET_KEY=${{ secrets.DEV_STRIPE_SECRET_KEY }}
             DEV_STRIPE_WEBHOOK_SECRET=${{ secrets.DEV_STRIPE_WEBHOOK_SECRET }}
@@ -51,4 +54,6 @@ jobs:
             EOL
             
             npm install
+            # Solo diagnóstico en el log del deploy: no bloquea el arranque
+            npm run channex:doctor || true
             pm2 start index.js --wait-ready

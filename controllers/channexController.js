@@ -280,7 +280,7 @@ async function dashboardBooking(req, res) {
 
             // Busca en hab.channels el canal tipo Booking.com
             const bookingChannel = Array.isArray(hab.channels)
-                ? hab.channels.some(c => c.channelId && c.ota_name === 'BOOKING')
+                ? hab.channels.find(c => c.channelId && c.ota_name === 'BOOKING')
                 : null;
 
             // Si existe el canal y la habitación ya está creada en Channex
@@ -302,6 +302,9 @@ async function dashboardBooking(req, res) {
 
     } catch (err) {
         console.error('Error en dashboardBooking:', err.response?.data || err.message);
+        if (err.response?.status === 401) {
+            return res.redirect('/api/channex/home?error=La+API+key+de+Channex+no+es+v%C3%A1lida+o+la+cuenta+est%C3%A1+deshabilitada.+Revisa+CHANNEX_USER_API_KEY');
+        }
         return res.redirect('/api/channex/home?error=Error+inesperado+obteniendo+propiedades+Booking');
     }
 }
