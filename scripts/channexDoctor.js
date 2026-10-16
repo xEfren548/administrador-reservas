@@ -211,8 +211,10 @@ async function revisarHabitaciones(propiedadesChannex) {
                 fail(`${nombre} / ${canal.ota_name}: el rate plan ${canal.rateListingId} no existe en Channex`);
                 continue;
             }
-            if (!canal.listingId) warn(`${nombre} / ${canal.ota_name}: sin listing mapeado`);
-            else ok(`${nombre} / ${canal.ota_name}: rate plan y listing ${canal.listingId}`);
+            // Airbnb mapea a un listing; Booking sólo guarda el channelId
+            const mapeo = canal.listingId || canal.channelId;
+            if (!mapeo) warn(`${nombre} / ${canal.ota_name}: sin listing/canal mapeado`);
+            else ok(`${nombre} / ${canal.ota_name}: rate plan mapeado a ${mapeo}`);
         }
 
         // Rate plans que quedaron en Channex y el PMS ya no sigue: reciben precios de

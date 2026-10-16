@@ -985,6 +985,11 @@ async function createChannelBooking(req, res) {
 
         const { pms_id, rateListingId, bookingPropertyId, roomTypeCode, ratePlanCode } = req.body;
 
+        // Vacíos llegan a Channex como ""/0 y chocan con otros canales ("same settings already exists")
+        if (![bookingPropertyId, roomTypeCode, ratePlanCode].every(v => /^\d+$/.test(String(v ?? '').trim()))) {
+            return res.status(400).json({ error: 'Los 3 IDs de Booking (propiedad, room y rate) son obligatorios y numéricos' });
+        }
+
         const habitacion = await Habitacion.findById(pms_id);
         if (!habitacion) {
             return res.status(404).json({ error: 'Habitación no encontrada' });
@@ -1015,7 +1020,7 @@ async function createChannelBooking(req, res) {
         // el panel de Channex o por otra cabaña del mismo hotel) se le agrega este rate.
         const { data: lista } = await channex.get('/api/v1/channels', { params: { 'pagination[limit]': 100 } });
         const existente = lista.data.find(c =>
-            c.attributes.channel === 'BookingCom' && String(c.attributes.settings?.hotel_id) === String(bookingPropertyId)
+            c.attributes.channel === 'BookingCom' && String(c.attributes.settings?.hotel_id) === String(bookingPropertyId).trim()
         );
 
         let resp;
@@ -1040,13 +1045,22 @@ async function createChannelBooking(req, res) {
                     known_mappings_list: [],
                     properties: [habitacion.channexPropertyId],
                     rate_plans: [ratePlan],
-                    settings: { hotel_id: bookingPropertyId }
+                    settings: { hotel_id: String(bookingPropertyId).trim() }
                 }
             });
         }
 
         canal.channelId = resp.data.data.id;
         await habitacion.save();
+
+        // Channex ignora is_active al crear: el canal nace inactivo y no sincroniza hasta activarlo
+        try {
+            await channex.post(`/api/v1/channels/${canal.channelId}/activate`);
+        } catch (err) {
+            const motivo = JSON.stringify(err.response?.data?.errors || err.message);
+            console.error('Canal Booking creado pero no se pudo activar:', motivo);
+            return res.status(400).json({ error: `Canal creado pero no se pudo activar: ${motivo}` });
+        }
         res.json(resp.data);
 
 
