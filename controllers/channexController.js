@@ -998,39 +998,54 @@ async function createChannelBooking(req, res) {
             throw new Error('No se pudo encontrar el canal');
         }
 
-        const payload = {
-            channel: {
-                channel: "BookingCom",
-                group_id: GROUP_ID,
-                is_active: true,
-                title: `${habitacion.propertyDetails.name} - BOOKING`,
-                known_mappings_list: [],
-                properties: [
-                    habitacion.channexPropertyId
-                ],
-                rate_plans: [
-                    {
-                        rate_plan_id: rateListingId,
-                        settings: {
-                            occ_changed: false,
-                            occupancy: habitacion.propertyDetails.maxOccupancy,
-                            pricing_type: "MXN",
-                            primary_occ: true,
-                            rate_plan_code: Number(ratePlanCode),
-                            readonly: false,
-                            room_type_code: Number(roomTypeCode)
-                        }
-                    }
-                ],
-                settings: {
-                    hotel_id: bookingPropertyId
-                }
+        const ratePlan = {
+            rate_plan_id: rateListingId,
+            settings: {
+                occ_changed: false,
+                occupancy: habitacion.propertyDetails.maxOccupancy,
+                pricing_type: "MXN",
+                primary_occ: true,
+                rate_plan_code: Number(ratePlanCode),
+                readonly: false,
+                room_type_code: Number(roomTypeCode)
             }
+        };
+
+        // Channex sólo admite un canal BookingCom por hotel_id: si ya existe (creado desde
+        // el panel de Channex o por otra cabaña del mismo hotel) se le agrega este rate.
+        const { data: lista } = await channex.get('/api/v1/channels', { params: { 'pagination[limit]': 100 } });
+        const existente = lista.data.find(c =>
+            c.attributes.channel === 'BookingCom' && String(c.attributes.settings?.hotel_id) === String(bookingPropertyId)
+        );
+
+        let resp;
+        if (existente) {
+            const { data: { data: { attributes: actual } } } = await channex.get(`/api/v1/channels/${existente.id}`);
+            const properties = [...new Set([...(actual.properties || []), habitacion.channexPropertyId])];
+            // Fuera el mapeo previo de este rate o de este mismo room/rate de Booking (no pueden ir a dos rates)
+            const rate_plans = (actual.rate_plans || []).filter(rp =>
+                rp.rate_plan_id !== rateListingId &&
+                !(Number(rp.settings?.room_type_code) === ratePlan.settings.room_type_code &&
+                  Number(rp.settings?.rate_plan_code) === ratePlan.settings.rate_plan_code)
+            );
+            rate_plans.push(ratePlan);
+            resp = await channex.put(`/api/v1/channels/${existente.id}`, { channel: { properties, rate_plans } });
+        } else {
+            resp = await channex.post('/api/v1/channels', {
+                channel: {
+                    channel: "BookingCom",
+                    group_id: GROUP_ID,
+                    is_active: true,
+                    title: `${habitacion.propertyDetails.name} - BOOKING`,
+                    known_mappings_list: [],
+                    properties: [habitacion.channexPropertyId],
+                    rate_plans: [ratePlan],
+                    settings: { hotel_id: bookingPropertyId }
+                }
+            });
         }
 
-        const resp = await channex.post('/api/v1/channels', payload);
-        const newChannelId = resp.data.data.attributes.id;
-        canal.channelId = newChannelId;
+        canal.channelId = resp.data.data.id;
         await habitacion.save();
         res.json(resp.data);
 
