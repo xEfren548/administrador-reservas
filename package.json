@@ -12,11 +12,14 @@
     "report:reservas-bosque-imperial": "node .\\scripts\\reporteReservasAbrilBosqueImperial.js",
     "start": "node index.js",
     "check:pago-solicitud": "node ./scripts/checkPagoSolicitud.js",
-    "channex:doctor": "node ./scripts/channexDoctor.js"
+    "channex:doctor": "node ./scripts/channexDoctor.js",
+    "bot:simular": "node ./scripts/botSimulator.js",
+    "bot:check": "node ./services/bot/bot.check.js"
   },
   "author": "efren alvarez",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1",
     "add-to-calendar-button": "^2.6.12",
     "axios": "^1.8.4",
     "basic-ftp": "^5.0.5",
