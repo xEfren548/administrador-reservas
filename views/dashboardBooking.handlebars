@@ -79,10 +79,19 @@
                     data-pmsid="{{_id}}">
                     Desconectar
                 </button> --}}
-                <button class="btn btn-sm btn-success mapear-booking-btn" data-pmsid="{{_id}}"
-                    data-propertyid="{{channexPropertyId}}">
-                    Canal listo!
+                {{#if canalActivo}}
+                <span class="badge bg-success mb-1">Canal activo</span><br>
+                <button class="btn btn-sm btn-outline-danger toggle-canal-btn" data-channelid="{{bookingChannelId}}"
+                    data-accion="deactivate" data-nombre="{{propertyDetails.name}}">
+                    Desactivar
                 </button>
+                {{else}}
+                <span class="badge bg-secondary mb-1">Canal inactivo</span><br>
+                <button class="btn btn-sm btn-success toggle-canal-btn" data-channelid="{{bookingChannelId}}"
+                    data-accion="activate" data-nombre="{{propertyDetails.name}}">
+                    Activar
+                </button>
+                {{/if}}
                 {{else if tarifa}}
                 <button class="btn btn-sm btn-success conectar-booking-btn" data-pmsid="{{_id}}"
                     data-propertyid="{{channexPropertyId}}" data-tarifaid="{{tarifa.id}}">
@@ -360,15 +369,29 @@
             });
         });
 
-        document.querySelectorAll('.desconectar-booking-btn').forEach(btn => {
+        // Activar / desactivar canal de Booking en Channex
+        document.querySelectorAll('.toggle-canal-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
+                const { channelid, accion, nombre } = btn.dataset;
+                const activar = accion === 'activate';
+                if (!activar) {
+                    const { isConfirmed } = await Swal.fire({
+                        icon: 'warning',
+                        title: `¿Desactivar ${nombre} en Booking?`,
+                        text: 'Mientras esté inactivo no se enviarán precios ni disponibilidad, ni se recibirán reservas de Booking.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Desactivar',
+                        cancelButtonText: 'Cancelar'
+                    });
+                    if (!isConfirmed) return;
+                }
                 await bloquearMientras(btn, async () => {
                 try {
-                    const { channelid } = btn.dataset;
-                    const res = await fetch(`/api/booking/channels/${channelid}/disconnect`, { method: 'POST' });
+                    const res = await fetch(`/api/channex/channels/${channelid}/${accion}`, { method: 'POST' });
                     const data = await res.json();
-                    if (!res.ok) throw new Error(data.error || 'Error desconectando Booking');
-                    Swal.fire('Desconectado', 'Booking desconectado', 'success').then(() => location.reload());
+                    if (!res.ok) throw new Error(data.error || 'Error cambiando el estado del canal');
+                    Swal.fire(activar ? 'Activado' : 'Desactivado', `Canal de ${nombre} ${activar ? 'activado' : 'desactivado'}`, 'success')
+                        .then(() => location.reload());
                 } catch (err) {
                     Swal.fire('Error', err.message, 'error');
                 }

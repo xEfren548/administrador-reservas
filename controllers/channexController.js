@@ -252,10 +252,12 @@ async function dashboardBooking(req, res) {
         }
 
         // 5. Tarifas (rate plans)
-        const respRates = await channex.get('/api/v1/rate_plans');
+        const respRates = await channex.get('/api/v1/rate_plans', { params: { 'pagination[limit]': 100 } });
         const ratePlans = respRates.data.data;
 
-        console.log(ratePlans)
+        // Estado de cada canal (activo/inactivo) para el botón de activar/desactivar
+        const respCanales = await channex.get('/api/v1/channels', { params: { 'pagination[limit]': 100 } });
+        const canalActivo = new Map(respCanales.data.data.map(c => [c.id, c.attributes.is_active]));
 
         // 3. Marca cada habitación según su propio canal de Booking
         const propiedadesMarcadas = propiedades.map(hab => {
@@ -280,7 +282,7 @@ async function dashboardBooking(req, res) {
 
             // Busca en hab.channels el canal tipo Booking.com
             const bookingChannel = Array.isArray(hab.channels)
-                ? hab.channels.some(c => c.channelId && c.ota_name === 'BOOKING')
+                ? hab.channels.find(c => c.channelId && c.ota_name === 'BOOKING')
                 : null;
 
             // Si existe el canal y la habitación ya está creada en Channex
@@ -291,7 +293,8 @@ async function dashboardBooking(req, res) {
                 existeEnChannex,
                 tarifa,
                 mapeadoBooking,
-                bookingChannelId: bookingChannel?.channelId
+                bookingChannelId: bookingChannel?.channelId,
+                canalActivo: Boolean(bookingChannel && canalActivo.get(bookingChannel.channelId))
             };
         });
 
@@ -838,15 +841,25 @@ async function createChannexProperty(req, res) {
     }
 }
 
-async function activateChannel(req, res) {
-    const { channelId } = req.params;
-    try {
-        const response = await channex.post(`/api/v1/channels/${channelId}/activate`);
-        res.json(response.data);
-    } catch (err) {
-        console.error('Error activando canal:', err.response ? err.response.data : err.message);
-        res.status(500).json({ error: 'No se pudo activar el canal' });
-    }
+const activateChannel = cambiarEstadoCanal('activate');
+const deactivateChannel = cambiarEstadoCanal('deactivate');
+
+function cambiarEstadoCanal(accion) {
+    return async (req, res) => {
+        const { channelId } = req.params;
+        try {
+            // Sólo canales que el PMS creó; evita tocar canales ajenos con un id arbitrario
+            if (!await Habitacion.exists({ 'channels.channelId': channelId })) {
+                return res.status(404).json({ error: 'Canal no encontrado en el PMS' });
+            }
+            const response = await channex.post(`/api/v1/channels/${channelId}/${accion}`);
+            res.json(response.data);
+        } catch (err) {
+            console.error(`Error (${accion}) canal:`, err.response ? err.response.data : err.message);
+            const motivo = err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message;
+            res.status(500).json({ error: `No se pudo ${accion === 'activate' ? 'activar' : 'desactivar'} el canal: ${motivo}` });
+        }
+    };
 }
 
 // Rooms and Rates
@@ -1619,6 +1632,7 @@ module.exports = {
     oauthAirbnb,
     mapPropertiesAirbnb,
     activateChannel,
+    deactivateChannel,
     createRoomChannex,
     createRateChannex,
     updateChannexPrices,
