@@ -261,7 +261,12 @@ async function dashboardBooking(req, res) {
         }
 
         // 5. Tarifas (rate plans)
-        const ratePlans = await listarTodo('/api/v1/rate_plans');
+        const respRates = await channex.get('/api/v1/rate_plans', { params: { 'pagination[limit]': 100 } });
+        const ratePlans = respRates.data.data;
+
+        // Estado de cada canal (activo/inactivo) para el botón de activar/desactivar
+        const respCanales = await channex.get('/api/v1/channels', { params: { 'pagination[limit]': 100 } });
+        const canalActivo = new Map(respCanales.data.data.map(c => [c.id, c.attributes.is_active]));
 
         // 3. Marca cada habitación según su propio canal de Booking
         const propiedadesMarcadas = propiedades.map(hab => {
@@ -297,7 +302,8 @@ async function dashboardBooking(req, res) {
                 existeEnChannex,
                 tarifa,
                 mapeadoBooking,
-                bookingChannelId: bookingChannel?.channelId
+                bookingChannelId: bookingChannel?.channelId,
+                canalActivo: Boolean(bookingChannel && canalActivo.get(bookingChannel.channelId))
             };
         });
 
@@ -850,15 +856,25 @@ async function createChannexProperty(req, res) {
     }
 }
 
-async function activateChannel(req, res) {
-    const { channelId } = req.params;
-    try {
-        const response = await channex.post(`/api/v1/channels/${channelId}/activate`);
-        res.json(response.data);
-    } catch (err) {
-        console.error('Error activando canal:', err.response ? err.response.data : err.message);
-        res.status(500).json({ error: 'No se pudo activar el canal' });
-    }
+const activateChannel = cambiarEstadoCanal('activate');
+const deactivateChannel = cambiarEstadoCanal('deactivate');
+
+function cambiarEstadoCanal(accion) {
+    return async (req, res) => {
+        const { channelId } = req.params;
+        try {
+            // Sólo canales que el PMS creó; evita tocar canales ajenos con un id arbitrario
+            if (!await Habitacion.exists({ 'channels.channelId': channelId })) {
+                return res.status(404).json({ error: 'Canal no encontrado en el PMS' });
+            }
+            const response = await channex.post(`/api/v1/channels/${channelId}/${accion}`);
+            res.json(response.data);
+        } catch (err) {
+            console.error(`Error (${accion}) canal:`, err.response ? err.response.data : err.message);
+            const motivo = err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message;
+            res.status(500).json({ error: `No se pudo ${accion === 'activate' ? 'activar' : 'desactivar'} el canal: ${motivo}` });
+        }
+    };
 }
 
 // Rooms and Rates
@@ -1004,6 +1020,11 @@ async function createChannelBooking(req, res) {
 
         const { pms_id, rateListingId, bookingPropertyId, roomTypeCode, ratePlanCode } = req.body;
 
+        // Vacíos llegan a Channex como ""/0 y chocan con otros canales ("same settings already exists")
+        if (![bookingPropertyId, roomTypeCode, ratePlanCode].every(v => /^\d+$/.test(String(v ?? '').trim()))) {
+            return res.status(400).json({ error: 'Los 3 IDs de Booking (propiedad, room y rate) son obligatorios y numéricos' });
+        }
+
         const habitacion = await Habitacion.findById(pms_id);
         if (!habitacion) {
             return res.status(404).json({ error: 'Habitación no encontrada' });
@@ -1017,40 +1038,64 @@ async function createChannelBooking(req, res) {
             throw new Error('No se pudo encontrar el canal');
         }
 
-        const payload = {
-            channel: {
-                channel: "BookingCom",
-                group_id: GROUP_ID,
-                is_active: true,
-                title: `${habitacion.propertyDetails.name} - BOOKING`,
-                known_mappings_list: [],
-                properties: [
-                    habitacion.channexPropertyId
-                ],
-                rate_plans: [
-                    {
-                        rate_plan_id: rateListingId,
-                        settings: {
-                            occ_changed: false,
-                            occupancy: habitacion.propertyDetails.maxOccupancy,
-                            pricing_type: "MXN",
-                            primary_occ: true,
-                            rate_plan_code: Number(ratePlanCode),
-                            readonly: false,
-                            room_type_code: Number(roomTypeCode)
-                        }
-                    }
-                ],
-                settings: {
-                    hotel_id: bookingPropertyId
-                }
+        const ratePlan = {
+            rate_plan_id: rateListingId,
+            settings: {
+                occ_changed: false,
+                occupancy: habitacion.propertyDetails.maxOccupancy,
+                pricing_type: "MXN",
+                primary_occ: true,
+                rate_plan_code: Number(ratePlanCode),
+                readonly: false,
+                room_type_code: Number(roomTypeCode)
             }
+        };
+
+        // Channex sólo admite un canal BookingCom por hotel_id: si ya existe (creado desde
+        // el panel de Channex o por otra cabaña del mismo hotel) se le agrega este rate.
+        const { data: lista } = await channex.get('/api/v1/channels', { params: { 'pagination[limit]': 100 } });
+        const existente = lista.data.find(c =>
+            c.attributes.channel === 'BookingCom' && String(c.attributes.settings?.hotel_id) === String(bookingPropertyId).trim()
+        );
+
+        let resp;
+        if (existente) {
+            const { data: { data: { attributes: actual } } } = await channex.get(`/api/v1/channels/${existente.id}`);
+            const properties = [...new Set([...(actual.properties || []), habitacion.channexPropertyId])];
+            // Fuera el mapeo previo de este rate o de este mismo room/rate de Booking (no pueden ir a dos rates)
+            const rate_plans = (actual.rate_plans || []).filter(rp =>
+                rp.rate_plan_id !== rateListingId &&
+                !(Number(rp.settings?.room_type_code) === ratePlan.settings.room_type_code &&
+                  Number(rp.settings?.rate_plan_code) === ratePlan.settings.rate_plan_code)
+            );
+            rate_plans.push(ratePlan);
+            resp = await channex.put(`/api/v1/channels/${existente.id}`, { channel: { properties, rate_plans } });
+        } else {
+            resp = await channex.post('/api/v1/channels', {
+                channel: {
+                    channel: "BookingCom",
+                    group_id: GROUP_ID,
+                    is_active: true,
+                    title: `${habitacion.propertyDetails.name} - BOOKING`,
+                    known_mappings_list: [],
+                    properties: [habitacion.channexPropertyId],
+                    rate_plans: [ratePlan],
+                    settings: { hotel_id: String(bookingPropertyId).trim() }
+                }
+            });
         }
 
-        const resp = await channex.post('/api/v1/channels', payload);
-        const newChannelId = resp.data.data.attributes.id;
-        canal.channelId = newChannelId;
+        canal.channelId = resp.data.data.id;
         await habitacion.save();
+
+        // Channex ignora is_active al crear: el canal nace inactivo y no sincroniza hasta activarlo
+        try {
+            await channex.post(`/api/v1/channels/${canal.channelId}/activate`);
+        } catch (err) {
+            const motivo = JSON.stringify(err.response?.data?.errors || err.message);
+            console.error('Canal Booking creado pero no se pudo activar:', motivo);
+            return res.status(400).json({ error: `Canal creado pero no se pudo activar: ${motivo}` });
+        }
         res.json(resp.data);
 
 
@@ -1637,6 +1682,7 @@ module.exports = {
     oauthAirbnb,
     mapPropertiesAirbnb,
     activateChannel,
+    deactivateChannel,
     createRoomChannex,
     createRateChannex,
     updateChannexPrices,
