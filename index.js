@@ -35,6 +35,7 @@ app.use(express.static(path.join(__dirname, 'src', 'public')));
 // IMPORTANTE: El webhook de Stripe necesita el body raw para verificar la firma
 // Este middleware DEBE ir ANTES de express.json()
 app.use('/webhooks/stripe', express.raw({ type: 'application/json' }));
+app.use('/api/bot/ycloud/webhook', express.raw({ type: 'application/json' })); // firma de YCloud
 
 app.use(express.json())
 

@@ -119,4 +119,4 @@ async function respond(conv, userText) {
     return HANDOFF_MSG;
 }
 
-module.exports = { reply, newConversation, getBrand };
+module.exports = { reply, newConversation, getBrand, HANDOFF_MSG };

@@ -40,6 +40,7 @@ const channexRoutes = require('./channexRoutes');
 const generalRoutes = require('./webClientesRoutes/generalRoutes');
 const paymentsRoutes = require('./paymentsRoutes');
 const webhooksRoutes = require('./webhooksRoutes');
+const botRoutes = require('./botRoutes');
 const carteraDuenoRoutes = require('./carteraDuenoRoutes');
 const notasDuenoRoutes = require('./notasDuenoRoutes');
 const gruposHabitacionesRoutes = require('./gruposHabitacionesRoutes');
@@ -101,6 +102,7 @@ router.use('/api/client', generalRoutes);
 router.use('/payments', paymentsRoutes);
 router.use('/api/payments', paymentsRoutes); // También disponible en /api/payments (público)
 router.use('/webhooks', webhooksRoutes);
+router.use('/api/bot', botRoutes); // webhook de YCloud (público, valida firma)
 
 // Ruta para verificar version de app
 router.get('/app/version', (req, res) => {
