@@ -982,6 +982,7 @@ async function createRateBooking(req, res) {
 
         const updatePrices = await updateChannexPrices(pmsId, ota_name);
         const updateAvailability = await updateChannexAvailability(pmsId);
+        await updateChannexMinStay(pmsId);
         const createWebhook = await createPropertyWebhook(habitacion.channexPropertyId);
         if (!updatePrices || !updateAvailability) {
             throw new Error('No se pudo actualizar precios o disponibilidad');
@@ -1149,6 +1150,7 @@ async function createRateChannex(req, res) {
 
         const updatePrices = await updateChannexPrices(pmsId, ota_name);
         const updateAvailability = await updateChannexAvailability(pmsId);
+        await updateChannexMinStay(pmsId);
         const createWebhook = await createPropertyWebhook(habitacion.channexPropertyId);
         if (!updatePrices || !updateAvailability) {
             throw new Error('No se pudo actualizar precios o disponibilidad');
@@ -1449,6 +1451,58 @@ async function updateChannexAvailabilitySingle(habitacionId, datesResponse, dele
     return response.data;
 }
 
+// Envía la estancia mínima (BloqueoFechas type 'restriccion') a todos los rate plans, hoy a 1 año.
+// Días sin restricción se mandan con 1 para que al eliminar una restricción también se quite en las OTAs.
+async function updateChannexMinStay(habitacionId) {
+    const habitacion = await Habitacion.findById(habitacionId);
+    if (!habitacion) throw new Error('Habitación no encontrada');
+    const canales = (habitacion.channels || []).filter(c => c.rateListingId);
+    if (!habitacion.channexPropertyId || canales.length === 0) {
+        return { warning: true, code: 'NO_CHANNELS' };
+    }
+
+    const startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(startDate);
+    endDate.setFullYear(endDate.getFullYear() + 1);
+
+    const restricciones = await BloqueoFechas.find({ habitacionId: habitacion._id, type: 'restriccion' }).lean();
+    const minPorFecha = new Map(
+        restricciones.map(r => [new Date(r.date).toISOString().slice(0, 10), Number(r.min) || 1])
+    );
+
+    // Agrupar días consecutivos con el mismo mínimo
+    const ranges = [];
+    let curr = null;
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const iso = d.toISOString().slice(0, 10);
+        const min = minPorFecha.get(iso) || 1;
+        if (!curr || curr.min !== min) {
+            if (curr) ranges.push(curr);
+            curr = { start: iso, end: iso, min };
+        } else {
+            curr.end = iso;
+        }
+    }
+    if (curr) ranges.push(curr);
+
+    const values = [];
+    for (const canal of canales) {
+        for (const { start, end, min } of ranges) {
+            values.push({
+                property_id: habitacion.channexPropertyId,
+                rate_plan_id: canal.rateListingId,
+                date_from: start,
+                date_to: end,
+                min_stay_arrival: min
+            });
+        }
+    }
+
+    const response = await channex.post('/api/v1/restrictions', { values });
+    return response.data;
+}
+
 // Aqui irá todo lo de booking
 
 async function validatePropertyBooking(req, res) {
@@ -1638,6 +1692,7 @@ module.exports = {
     updateChannexPrices,
     updateChannexAvailability,
     updateChannexAvailabilitySingle,
+    updateChannexMinStay,
     createBookingRoom,
     createRateBooking,
     createChannelBooking,
