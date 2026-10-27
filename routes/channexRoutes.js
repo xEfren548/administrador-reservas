@@ -45,7 +45,8 @@ router.post('/availability-rates', async (req, res) => {
         // La disponibilidad siempre cubrirá ese mismo rango (hoy a 1 año)
         const availability = await channexController.updateChannexAvailability(pmsId);
         console.log("Respuesta de disponibilidad:", availability);
-        res.status(200).json({ prices, availability, fechaLimite });
+        const minStay = await channexController.updateChannexMinStay(pmsId);
+        res.status(200).json({ prices, availability, minStay, fechaLimite });
     } catch (err) {
         console.error('Error al actualizar precios en Channex:', err.response ? err.response.data : err.message);
         res.status(500).json({ error: err.response?.data?.error || err.message });
@@ -62,6 +63,17 @@ router.post('/availability-rates/single', async (req, res) => {
         res.status(200).json({ availability });
     } catch (err) {
         console.error('Error al actualizar disponibilidad en Channex:', err.response ? err.response.data : err.message);
+        res.status(500).json({ error: err.response?.data?.error || err.message });
+    }
+});
+
+router.post('/min-stay', async (req, res) => {
+    const { pmsId } = req.body;
+    try {
+        const minStay = await channexController.updateChannexMinStay(pmsId);
+        res.status(200).json(minStay);
+    } catch (err) {
+        console.error('Error al actualizar estancia mínima en Channex:', err.response ? err.response.data : err.message);
         res.status(500).json({ error: err.response?.data?.error || err.message });
     }
 });

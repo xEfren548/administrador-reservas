@@ -177,6 +177,22 @@ window.addEventListener("load", () => {
     });
 });
 
+// Las restricciones ya quedaron guardadas en BD; si falla Channex solo se registra, no se bloquea el flujo
+async function sincronizarMinStayChannex(habitacionId) {
+    try {
+        const response = await fetch('/api/channex/min-stay', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pmsId: habitacionId }),
+        });
+        const data = await response.json();
+        if (!response.ok) console.error('Error al sincronizar estancia mínima en Channex:', data.error);
+        else if (data.warning && data.code === "NO_CHANNELS") console.log("Habitacion sin canales, se omite ");
+    } catch (error) {
+        console.error('Error al sincronizar estancia mínima en Channex:', error);
+    }
+}
+
 const agregarFechasBtn = document.querySelector('#add-bloqueadas-btn');
 
 agregarFechasBtn.addEventListener("click", async (e) => {
@@ -230,9 +246,9 @@ agregarFechasBtn.addEventListener("click", async (e) => {
             if (resultados.length === 0) {
                 throw new Error('No hay fechas seleccionadas para actualizar.');
             }
-    
-            
-    
+
+            await sincronizarMinStayChannex(chaletId);
+
         } catch (error) {
             console.error(error)
             const agregarFechasBtn = document.querySelector('#add-bloqueadas-btn');
@@ -435,6 +451,8 @@ $('#delete-prices-btn').on('click', async () => {
                     console.log("Habitacion sin canales, se omite ")
                     return;
                 }
+            } else if (tipoBloqueo === 'restriccion') {
+                await sincronizarMinStayChannex(chaletId);
             }
         Swal.fire({
             icon: 'success',
