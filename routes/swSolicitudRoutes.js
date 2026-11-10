@@ -101,6 +101,16 @@ router.put(
 );
 
 /**
+ * @route   PATCH /api/sw/solicitudes/:id/categoria
+ * @desc    Cambiar la categoría (sincroniza la transacción creada)
+ * @access  Dueño de la cuenta, o solicitante si está pendiente
+ */
+router.patch(
+    '/solicitudes/:id/categoria',
+    swSolicitudController.updateSolicitudCategoria
+);
+
+/**
  * @route   GET /api/sw/solicitudes/cuenta/:cuentaId/estadisticas
  * @desc    Obtener estadísticas de solicitudes
  * @access  Propietario de la cuenta

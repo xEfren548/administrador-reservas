@@ -3482,7 +3482,7 @@ function mostrarDetalleSolicitudGeneral(solicitud, modo = 'cuenta') {
                 </div>
                 <div>
                     <p class="text-gray-500 text-sm">Categoría</p>
-                    <p class="text-gray-900">${solicitud.categoria || '-'}</p>
+                    <p class="text-gray-900">${solicitud.categoria || '-'}${puedeEditarCategoriaSolicitud(solicitud, modo) ? botonEditarCategoria(modo, solicitud._id, solicitud.categoria) : ''}</p>
                 </div>
             </div>
             
@@ -3654,6 +3654,87 @@ function mostrarDetalleSolicitudGeneral(solicitud, modo = 'cuenta') {
         background: '#ffffff',
         color: '#1f2937'
     });
+}
+
+// ===== EDITAR CATEGORÍA =====
+// El servidor valida los permisos; esto solo decide si mostrar el botón.
+function puedeEditarCategoriaSolicitud(solicitud, modo) {
+    if (solicitud.tipo === 'Transferencia') return false;
+    const yo = window.currentUserId;
+    const propietarioId = solicitud.propietarioCuenta?._id || solicitud.propietarioCuenta;
+    const solicitanteId = solicitud.solicitadoPor?._id || solicitud.solicitadoPor;
+    if (propietarioId === yo) return true;
+    if (solicitanteId === yo && solicitud.estado === 'Pendiente') return true;
+    if (modo === 'organizacion') {
+        const orgId = solicitud.organizacion?._id || solicitud.organizacion;
+        const org = organizaciones.find(o => o._id === orgId);
+        return Boolean(org?.participantes?.some(p => (p.usuario?._id || p.usuario) === yo && p.rol === 'Administrador'));
+    }
+    return false;
+}
+
+function botonEditarCategoria(entidad, id, actual) {
+    return ` <button type="button" class="btn btn-sm btn-link p-0 ms-2 align-baseline" title="Cambiar categoría"
+        onclick="editarCategoria('${entidad}', '${id}', '${encodeURIComponent(actual || '')}')">
+        <i class="fas fa-pen"></i></button>`;
+}
+
+const ENDPOINTS_CATEGORIA = {
+    transaccion: (id) => `/api/sw/transacciones/${id}/categoria`,
+    cuenta: (id) => `/api/sw/solicitudes/${id}/categoria`,
+    organizacion: (id) => `/api/sw/solicitudes-organizacion/${id}/categoria`
+};
+
+async function editarCategoria(entidad, id, actualCodificada) {
+    const actual = decodeURIComponent(actualCodificada || '');
+    const opciones = categoriasFinancieras
+        .filter(c => c !== 'Transferencia')
+        .sort(compararTextoAlfabeticamente);
+    if (actual && actual !== 'Transferencia' && !opciones.includes(actual)) opciones.push(actual);
+
+    const { value: categoria } = await Swal.fire({
+        title: 'Cambiar categoría',
+        input: 'select',
+        inputOptions: Object.fromEntries(opciones.map(c => [c, c])),
+        inputValue: actual,
+        showCancelButton: true,
+        confirmButtonText: 'Guardar',
+        cancelButtonText: 'Cancelar',
+        background: '#ffffff',
+        color: '#1f2937'
+    });
+
+    if (!categoria || categoria === actual) return;
+
+    try {
+        mostrarSpinner();
+        const response = await fetch(ENDPOINTS_CATEGORIA[entidad](id), {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ categoria })
+        });
+        const data = await response.json();
+
+        if (!data.success) {
+            mostrarError(data.message || 'No se pudo cambiar la categoría');
+            return;
+        }
+
+        mostrarExito('Categoría actualizada');
+        // Solicitud y transacción se sincronizan en el servidor: refrescar lo que esté cargado.
+        if (entidad === 'organizacion') {
+            await cargarSolicitudesOrganizacion();
+            await cargarSolicitudesPendientesConfirmacionDueno();
+        } else {
+            await cargarSolicitudes();
+        }
+        if ($('#filtro-cuenta-transacciones').val()) await cargarTransacciones();
+    } catch (error) {
+        console.error('Error al cambiar categoría:', error);
+        mostrarError('Error al cambiar la categoría');
+    } finally {
+        ocultarSpinner();
+    }
 }
 
 // ===== TRANSACCIONES =====
@@ -3864,6 +3945,9 @@ function renderizarTransacciones() {
         return;
     }
 
+    const cuentaFiltrada = cuentas.find(c => c._id === $('#filtro-cuenta-transacciones').val());
+    const soyDuenoCuentaTransacciones = (cuentaFiltrada?.propietario?._id || cuentaFiltrada?.propietario) === window.currentUserId;
+
     transacciones.forEach(trans => {
         const fecha = formatearFechaMexico(trans.fecha);
         const monto = formatearMoneda(trans.monto, 'MXN');
@@ -3915,7 +3999,7 @@ function renderizarTransacciones() {
                 <td class="px-6 py-4">${fecha} ${iconoComprobantes}</td>
                 <td class="px-6 py-4 ${tipoColor}">${tipoTexto}</td>
                 <td class="px-6 py-4 font-medium text-gray-900">${conceptoMostrar}</td>
-                <td class="px-6 py-4">${trans.categoria}</td>
+                <td class="px-6 py-4">${trans.categoria}${soyDuenoCuentaTransacciones && trans.tipo !== 'Transferencia' ? botonEditarCategoria('transaccion', trans._id, trans.categoria) : ''}</td>
                 <td class="px-6 py-4 text-right font-semibold ${tipoColor}">${monto}</td>
                 <td class="px-6 py-4">${estadoBadge}</td>
                 <td class="px-6 py-4 text-center">
@@ -4538,7 +4622,7 @@ async function verDetalleTransaccion(transaccionId) {
                     <div class="row g-3">
                         <div class="col-md-6">
                             <p class="text-gray-500 mb-1 text-sm">Categoría</p>
-                            <p class="text-gray-900 mb-0"><i class="fas fa-tag me-2"></i>${trans.categoria}</p>
+                            <p class="text-gray-900 mb-0"><i class="fas fa-tag me-2"></i>${trans.categoria}${trans.tipo !== 'Transferencia' && trans.cuenta?.propietario === window.currentUserId ? botonEditarCategoria('transaccion', trans._id, trans.categoria) : ''}</p>
                         </div>
                         <div class="col-md-6">
                             <p class="text-gray-500 mb-1 text-sm">Estado</p>

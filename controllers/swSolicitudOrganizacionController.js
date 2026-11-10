@@ -8,7 +8,7 @@ const { check, validationResult } = require('express-validator');
 const moment = require('moment-timezone');
 const ftp = require('basic-ftp');
 const fs = require('fs');
-const { isCategoriaValida } = require('../services/swCategoriasService');
+const { isCategoriaValida, resolverCategoriaEditable, aplicarCategoria } = require('../services/swCategoriasService');
 const swSolicitudPushService = require('../services/swSolicitudPushService');
 
 const MEXICO_CENTRO_TIMEZONE = 'America/Mexico_City';
@@ -812,6 +812,56 @@ const getSolicitudOrganizacionById = async (req, res) => {
     }
 };
 
+/**
+ * Cambiar la categoría de una solicitud organizacional (y de la transacción que generó).
+ * Dueño de la cuenta o admin de la organización: cualquier estado. Solicitante: solo pendiente.
+ */
+const updateSolicitudOrganizacionCategoria = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.session.userId.toString();
+
+        const categoria = await resolverCategoriaEditable(req.body.categoria);
+        if (!categoria) {
+            return res.status(400).json({ success: false, message: 'Categoría inválida' });
+        }
+
+        const solicitud = await SWSolicitudOrganizacion.findById(id);
+        if (!solicitud) {
+            return res.status(404).json({ success: false, message: 'Solicitud organizacional no encontrada' });
+        }
+
+        if (solicitud.tipo === 'Transferencia') {
+            return res.status(400).json({ success: false, message: 'La categoría de una transferencia no se puede cambiar' });
+        }
+
+        const [cuenta, organizacion] = await Promise.all([
+            SWCuenta.findById(solicitud.cuenta),
+            SWOrganizacion.findById(solicitud.organizacion)
+        ]);
+        const esDueno = cuenta?.propietario?.toString() === userId;
+        const esAdmin = (organizacion?.participantes || []).some(
+            (p) => p.usuario.toString() === userId && p.rol === 'Administrador'
+        );
+        const esSolicitantePendiente = solicitud.solicitadoPor.toString() === userId && solicitud.estado === 'Pendiente';
+
+        if (!esDueno && !esAdmin && !esSolicitantePendiente) {
+            return res.status(403).json({ success: false, message: 'No tiene permiso para cambiar la categoría de esta solicitud' });
+        }
+
+        if (solicitud.transaccionCreada) {
+            await aplicarCategoria({ transaccionId: solicitud.transaccionCreada, categoria });
+        } else {
+            await SWSolicitudOrganizacion.updateOne({ _id: solicitud._id }, { categoria, updatedAt: Date.now() });
+        }
+
+        return res.status(200).json({ success: true, message: 'Categoría actualizada', data: { categoria } });
+    } catch (error) {
+        console.error('Error al cambiar categoría de solicitud organizacional:', error);
+        return res.status(500).json({ success: false, message: 'Error al cambiar la categoría', error: error.message });
+    }
+};
+
 const procesarSolicitudOrganizacion = async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -1386,6 +1436,7 @@ module.exports = {
     getMisSolicitudesOrganizacion,
     getSolicitudOrganizacionById,
     procesarSolicitudOrganizacion,
+    updateSolicitudOrganizacionCategoria,
     confirmarSolicitudOrganizacionDueno,
     rechazarSolicitudOrganizacionDueno,
     cancelarSolicitudOrganizacion,

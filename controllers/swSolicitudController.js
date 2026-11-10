@@ -7,7 +7,7 @@ const { check, validationResult } = require('express-validator');
 const moment = require('moment-timezone');
 const ftp = require('basic-ftp');
 const fs = require('fs');
-const { isCategoriaValida } = require('../services/swCategoriasService');
+const { isCategoriaValida, resolverCategoriaEditable, aplicarCategoria } = require('../services/swCategoriasService');
 const swSolicitudPushService = require('../services/swSolicitudPushService');
 
 const MEXICO_CENTRO_TIMEZONE = 'America/Mexico_City';
@@ -990,6 +990,50 @@ const updateSolicitud = async (req, res) => {
 };
 
 /**
+ * Cambiar la categoría de una solicitud (y de la transacción que generó).
+ * Dueño de la cuenta: cualquier estado. Solicitante: solo pendiente.
+ */
+const updateSolicitudCategoria = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.session.userId.toString();
+
+        const categoria = await resolverCategoriaEditable(req.body.categoria);
+        if (!categoria) {
+            return res.status(400).json({ success: false, message: 'Categoría inválida' });
+        }
+
+        const solicitud = await SWSolicitudTransaccion.findById(id);
+        if (!solicitud) {
+            return res.status(404).json({ success: false, message: 'Solicitud no encontrada' });
+        }
+
+        if (solicitud.tipo === 'Transferencia') {
+            return res.status(400).json({ success: false, message: 'La categoría de una transferencia no se puede cambiar' });
+        }
+
+        const cuenta = await SWCuenta.findById(solicitud.cuenta);
+        const esDueno = cuenta?.propietario?.toString() === userId;
+        const esSolicitantePendiente = solicitud.solicitadoPor.toString() === userId && solicitud.estado === 'Pendiente';
+
+        if (!esDueno && !esSolicitantePendiente) {
+            return res.status(403).json({ success: false, message: 'No tiene permiso para cambiar la categoría de esta solicitud' });
+        }
+
+        if (solicitud.transaccionCreada) {
+            await aplicarCategoria({ transaccionId: solicitud.transaccionCreada, categoria });
+        } else {
+            await SWSolicitudTransaccion.updateOne({ _id: solicitud._id }, { categoria, updatedAt: Date.now() });
+        }
+
+        res.status(200).json({ success: true, message: 'Categoría actualizada', data: { categoria } });
+    } catch (error) {
+        console.error('Error al cambiar categoría de solicitud:', error);
+        res.status(500).json({ success: false, message: 'Error al cambiar la categoría', error: error.message });
+    }
+};
+
+/**
  * Obtener estadísticas de solicitudes de una cuenta
  */
 const getEstadisticasSolicitudes = async (req, res) => {
@@ -1278,6 +1322,7 @@ module.exports = {
     procesarSolicitud,
     cancelarSolicitud,
     updateSolicitud,
+    updateSolicitudCategoria,
     getEstadisticasSolicitudes,
     uploadSolicitudImages,
     deleteSolicitudImage

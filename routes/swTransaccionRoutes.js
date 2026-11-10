@@ -83,6 +83,16 @@ router.put(
 );
 
 /**
+ * @route   PATCH /api/sw/transacciones/:id/categoria
+ * @desc    Cambiar la categoría (sincroniza la solicitud de origen)
+ * @access  Propietario de la cuenta (validado en el controller)
+ */
+router.patch(
+    '/transacciones/:id/categoria',
+    swTransaccionController.updateTransaccionCategoria
+);
+
+/**
  * @route   DELETE /api/sw/transacciones/:id
  * @desc    Eliminar transacción (solo si no está aprobada)
  * @access  Propietario de la cuenta únicamente

@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const SWCategoriaFinancieraConfig = require('../models/SWCategoriaFinancieraConfig');
+const SWTransaccion = require('../models/SWTransaccion');
+const SWSolicitudTransaccion = require('../models/SWSolicitudTransaccion');
+const SWSolicitudOrganizacion = require('../models/SWSolicitudOrganizacion');
 
 const CATEGORIAS_FILE_PATH = path.join(__dirname, '..', 'config', 'swCategorias.json');
 const CATEGORIAS_CONFIG_CLAVE = 'finanzas';
@@ -166,7 +169,35 @@ async function isCategoriaValida(categoria) {
     return categorias.some((cat) => cat.toLowerCase() === categoriaNormalizada);
 }
 
+/**
+ * Devuelve la categoría tal como está en el catálogo, o null si no existe
+ * o es 'Transferencia' (la asigna el sistema, no se elige a mano).
+ */
+async function resolverCategoriaEditable(categoria) {
+    if (typeof categoria !== 'string' || !categoria.trim()) return null;
+    const llave = categoria.trim().toLowerCase();
+    if (llave === 'transferencia') return null;
+    const categorias = await getCategorias();
+    return categorias.find((cat) => cat.toLowerCase() === llave) || null;
+}
+
+/**
+ * Cambia la categoría de una transacción y de todas las solicitudes que la generaron,
+ * para que solicitud y transacción nunca difieran.
+ * ponytail: updateOne/updateMany saltan a propósito los pre('save') que bloquean registros
+ *           aprobados; la categoría es el único campo que se abre así.
+ */
+async function aplicarCategoria({ transaccionId, categoria }) {
+    await Promise.all([
+        SWTransaccion.updateOne({ _id: transaccionId, tipo: { $ne: 'Transferencia' } }, { categoria, updatedAt: Date.now() }),
+        SWSolicitudTransaccion.updateMany({ transaccionCreada: transaccionId }, { categoria, updatedAt: Date.now() }),
+        SWSolicitudOrganizacion.updateMany({ transaccionCreada: transaccionId }, { categoria, updatedAt: Date.now() })
+    ]);
+}
+
 module.exports = {
+    resolverCategoriaEditable,
+    aplicarCategoria,
     CATEGORIAS_POR_DEFECTO,
     CATEGORIAS_FIJAS,
     getCategorias,

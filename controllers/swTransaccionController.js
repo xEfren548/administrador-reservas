@@ -8,6 +8,7 @@ const { check, validationResult } = require('express-validator');
 const { Parser } = require('json2csv');
 const ftp = require('basic-ftp');
 const fs = require('fs');
+const { resolverCategoriaEditable, aplicarCategoria } = require('../services/swCategoriasService');
 const { isCategoriaValida } = require('../services/swCategoriasService');
 
 const usuarioEsParticipanteOrganizacion = async (organizacionId, userId) => {
@@ -347,7 +348,7 @@ const getTransaccionById = async (req, res) => {
         const { id } = req.params;
 
         const transaccion = await SWTransaccion.findById(id)
-            .populate('cuenta', 'nombre')
+            .populate('cuenta', 'nombre propietario')
             .populate('creadoPor', 'firstName lastName email')
             .populate('aprobadaPor', 'firstName lastName email')
             .populate('solicitudOriginal')
@@ -439,6 +440,42 @@ const updateTransaccionNotas = async (req, res) => {
             message: error.message || 'Error al actualizar la transacción',
             error: error.message
         });
+    }
+};
+
+/**
+ * Cambiar la categoría de una transacción (también la de su solicitud de origen)
+ */
+const updateTransaccionCategoria = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.session.userId;
+
+        const categoria = await resolverCategoriaEditable(req.body.categoria);
+        if (!categoria) {
+            return res.status(400).json({ success: false, message: 'Categoría inválida' });
+        }
+
+        const transaccion = await SWTransaccion.findById(id);
+        if (!transaccion) {
+            return res.status(404).json({ success: false, message: 'Transacción no encontrada' });
+        }
+
+        if (transaccion.tipo === 'Transferencia') {
+            return res.status(400).json({ success: false, message: 'La categoría de una transferencia no se puede cambiar' });
+        }
+
+        const cuenta = await SWCuenta.findById(transaccion.cuenta);
+        if (!cuenta || cuenta.propietario.toString() !== userId.toString()) {
+            return res.status(403).json({ success: false, message: 'Solo el dueño de la cuenta puede cambiar la categoría' });
+        }
+
+        await aplicarCategoria({ transaccionId: transaccion._id, categoria });
+
+        res.status(200).json({ success: true, message: 'Categoría actualizada', data: { categoria } });
+    } catch (error) {
+        console.error('Error al cambiar categoría de transacción:', error);
+        res.status(500).json({ success: false, message: 'Error al cambiar la categoría', error: error.message });
     }
 };
 
@@ -1224,6 +1261,7 @@ module.exports = {
     getTransacciones,
     getTransaccionById,
     updateTransaccionNotas,
+    updateTransaccionCategoria,
     getResumen,
     getPorCategoria,
     getEstadoCuentaMovimientos,

@@ -66,6 +66,11 @@ router.post(
     swSolicitudOrganizacionController.rechazarSolicitudOrganizacionDueno
 );
 
+router.patch(
+    '/solicitudes-organizacion/:id/categoria',
+    swSolicitudOrganizacionController.updateSolicitudOrganizacionCategoria
+);
+
 router.post(
     '/solicitudes-organizacion/:id/cancelar',
     swSolicitudOrganizacionController.cancelarSolicitudOrganizacion
