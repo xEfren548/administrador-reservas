@@ -8,6 +8,7 @@ const utilidadesController = require('../../controllers/utilidadesController');
 const logController = require('../../controllers/logController');
 const channexController = require('../../controllers/channexController');
 const swCuentas = require('../../models/SWCuenta');
+const Usuario = require('../../models/Usuario');
 
 
 const moment = require('moment-timezone');
@@ -183,6 +184,23 @@ async function sendReservationConfirmation(clientInfo, chaletInfo, reservationIn
         arrMsg,
         depMsg
     ])
+}
+
+// Reserva que pasa de pending a active: mismos 2 mensajes que createReservation manda al crear una
+// reserva confirmada (al cliente y al usuario que la creó). Nunca lanza: un fallo de envío no debe frenar la activación.
+async function sendActivationConfirmation(reservation) {
+    try {
+        const [client, chalet, agente] = await Promise.all([
+            Cliente.findById(reservation.client).lean(),
+            Habitacion.findById(reservation.resourceId).lean(),
+            reservation.createdBy ? Usuario.findById(reservation.createdBy).lean() : null,
+        ]);
+        if (!chalet) return;
+        if (client?.phone) await sendReservationConfirmation(client, chalet, reservation);
+        if (agente?.phone) await sendReservationConfirmation(agente, chalet, reservation);
+    } catch (error) {
+        console.error(`No se pudo enviar la confirmación de la reserva activada ${reservation._id}:`, error.message);
+    }
 }
 
 async function sendReservationInstructions(clientInfo, chaletInfo, reservationInfo, cancelationHour, noAgente) { // Enviar instrucciones de pago en las tentativas de reserva
@@ -625,6 +643,7 @@ async function cancelReservation() {
 
     if (reservations) {
         for (const reservation of reservations) {
+            let activated = false;
             try {
                 const client = await Cliente.findById(reservation.client);
                 if (!client) {
@@ -648,6 +667,7 @@ async function cancelReservation() {
                         // console.log("Cancelation date: ", reservation.paymentCancelation);
 
                         reservation.status = 'active';
+                        activated = true;
                         console.log('reserva movida a activa')
                         const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(reservation._id);
 
@@ -712,6 +732,7 @@ async function cancelReservation() {
                 } else {
                     if (hayPago) {
                         reservation.status = 'active';
+                        activated = true;
                         console.log('reserva movida a activa')
                         const comisionesReserva = await utilidadesController.obtenerComisionesPorReserva(reservation._id);
 
@@ -732,6 +753,8 @@ async function cancelReservation() {
 
                 // ponytail: guardar solo si cambió, y dentro del try: un doc roto ya no aborta el resto del barrido
                 if (reservation.isModified()) await reservation.save();
+                // Solo tras guardar: si el save falla, la reserva sigue pending y no se manda nada.
+                if (activated) await sendActivationConfirmation(reservation);
             } catch (error) {
                 console.error(`cancelReservation falló en la reserva ${reservation._id}:`, error.message);
             }
@@ -744,6 +767,7 @@ async function cancelReservation() {
 
 module.exports = {
     sendReservationConfirmation,
+    sendActivationConfirmation,
     sendReservationInstructions,
     sendInstructions,
     sendSurveyToClient,

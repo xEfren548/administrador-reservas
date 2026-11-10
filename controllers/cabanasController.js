@@ -275,6 +275,9 @@ const createChaletValidators = [
     check('additionalAccomodationDescription')
         .notEmpty().withMessage('Additional accommodation description is required'),
 
+    check('salesInfo')
+        .optional({ checkFalsy: true }),
+
     // // touristicRate validations.
     // check('touristicRate')
     //     .notEmpty().withMessage('Touristic rate is required'),
@@ -449,6 +452,9 @@ const editChaletValidators = [
     check('additionalAccomodationDescription')
         .optional({ checkFalsy: true }),
 
+    check('salesInfo')
+        .optional({ checkFalsy: true }),
+
     // // touristicRate validations.
     // check('touristicRate')
     //     .optional({ checkFalsy: true }),
@@ -598,7 +604,7 @@ async function showChaletsView(req, res, next) {
 async function createChalet(req, res, next) {
     //console.log(req.body);
     
-    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images, files, activePlatforms } = req.body;
+    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, salesInfo, touristicRate, legalNotice, location, others, images, files, activePlatforms } = req.body;
     
     try {
         const admin = await Usuario.findOne({ email: others.admin, privilege: "Administrador" });
@@ -649,6 +655,7 @@ async function createChalet(req, res, next) {
             additionalInfo,
             accomodationDescription,
             additionalAccomodationDescription,
+            salesInfo,
             touristicRate,
             legalNotice,
             location,
@@ -1025,7 +1032,7 @@ async function showEditChaletsViewOptDetail(req, res, next) {
 }
 
 async function editChalet(req, res, next) {
-    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, touristicRate, legalNotice, location, others, images, txtChaletId, activePlatforms } = req.body;
+    const { propertyDetails, accommodationFeatures, additionalInfo, accomodationDescription, additionalAccomodationDescription, salesInfo, touristicRate, legalNotice, location, others, images, txtChaletId, activePlatforms } = req.body;
     console.log('Entrando a edit chalet');
 
     console.log(others.admin);
@@ -1089,6 +1096,7 @@ async function editChalet(req, res, next) {
             additionalInfo,
             accomodationDescription,
             additionalAccomodationDescription,
+            salesInfo,
             touristicRate,
             legalNotice,
             location,

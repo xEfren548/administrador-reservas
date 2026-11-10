@@ -3074,10 +3074,15 @@ async function moveToPlayground(req, res) {
 
         }
 
+        const previousStatus = evento.status;
         evento.status = status;
         const confirmation = await evento.save();
         if (!confirmation) {
             throw new Error('No se pudo actualizar el evento');
+        }
+
+        if (previousStatus === 'pending' && status === 'active') {
+            await SendMessages.sendActivationConfirmation(evento);
         }
 
         const logBody = {

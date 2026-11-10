@@ -818,6 +818,15 @@
         </div>
     </div>
 
+    <button type="button" class="toggle-collpase-section-button" data-toggle="collapse"
+        data-target="#salesDetails">+ Información para ventas (chatbot)</button>
+    <div id="salesDetails" class="chalet-details collapse">
+        <div class="input-group">
+            <textarea id="txtSalesInfo" name="txtSalesInfo" rows="10"
+                placeholder="Uso interno: el chatbot de WhatsApp lo usa para responder. Ej.: recámaras y tamaño de camas, jacuzzi interior/exterior, minutos al centro y si se puede caminar, bosque o pueblo, fraccionamiento y si piden placas/QR en caseta, acceso (terracería, autobús), entrega de llaves, red, privacidad, mascotas (tamaño, cuántas, depósito), si la suite admite bebé.">{{salesInfo}}</textarea>
+        </div>
+    </div>
+
     <button type="button" class="toggle-collpase-section-button" data-toggle="collapse" data-target="#legalNote">+
         Terminos y condiciones</button>
     <div id="legalNote" class="chalet-details collapse">
@@ -1423,6 +1432,7 @@
                     },
                     accomodationDescription: form.querySelector("#txtAccomodationDetails").value.trim(),
                     additionalAccomodationDescription: form.querySelector("#txtAdditionalDetails").value.trim(),
+                    salesInfo: form.querySelector("#txtSalesInfo").value.trim(),
                     legalNotice: form.querySelector("#txtLegalNote").value.trim(),
                     location: {
                         state: form.querySelector("#txtState").value.trim(),
