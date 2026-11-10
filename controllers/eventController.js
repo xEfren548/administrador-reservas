@@ -1672,17 +1672,19 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
         // }
 
         // Si es por depo, envia instrucciones de pago
+        let depositInstructions = null;
         if (isDeposit) {
             const cancelationHour = format(paymentCancelation, "eeee d 'de' MMMM 'de' yyyy 'a las' HH:mm 'hrs'", { locale: es });
             if (chalet.others.cuentaFinanciera) {
+                documentoToAdd.total = (total/2).toFixed(2);
+                // Texto para que el vendedor lo copie si la plantilla no llega al cliente
+                depositInstructions = (await SendMessages.buildReservationInstructions(chalet, documentoToAdd, cancelationHour, agenteQueReserva?.phone))?.text || null;
                 if (client.phone) {
-                    documentoToAdd.total = (total/2).toFixed(2);
                     await SendMessages.sendReservationInstructions(client, chalet, documentoToAdd, cancelationHour, agenteQueReserva?.phone);
                 }
                 if (agenteQueReserva && agenteQueReserva.phone) {
                     console.log("Enviando mensaje al agente que reserva: ");
                     console.log(agenteQueReserva);
-                    documentoToAdd.total = (total/2).toFixed(2);
                     await SendMessages.sendReservationInstructions(agenteQueReserva, chalet, documentoToAdd, cancelationHour, agenteQueReserva?.phone);
                 }
             } else {
@@ -1754,7 +1756,7 @@ async function createReservation(req, res, next) { // Reserva web (legacy)
                 });
         }
 
-        res.status(200).json({ success: true, reservationId: idReserva, message, assignedChaletName: actualChaletName, displayName: displayName });
+        res.status(200).json({ success: true, reservationId: idReserva, message, assignedChaletName: actualChaletName, displayName: displayName, depositInstructions });
 
 
     } catch (err) {

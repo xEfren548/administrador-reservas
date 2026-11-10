@@ -474,12 +474,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(utilidadesData.message || utilidadesData?.error?.[0]?.message || 'Error al generar utilidades');
             }
 
-            await Swal.fire({
-                icon: 'success',
-                title: 'Reserva creada',
-                text: reservationData.message || 'La reserva se creó correctamente',
-                confirmButtonText: 'Aceptar'
-            });
+            await showReservationCreatedAlert(reservationData.message || 'La reserva se creó correctamente', reservationData.depositInstructions);
 
             clearInvestorModal();
             $('#investor_reservation_modal').modal('hide');

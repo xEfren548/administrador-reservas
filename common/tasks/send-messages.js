@@ -203,23 +203,16 @@ async function sendActivationConfirmation(reservation) {
     }
 }
 
-async function sendReservationInstructions(clientInfo, chaletInfo, reservationInfo, cancelationHour, noAgente) { // Enviar instrucciones de pago en las tentativas de reserva
-    // const formatArrivalDate = moment(reservationInfo.arrivalDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
-    // const formatDepartureDate = moment(reservationInfo.departureDate).tz("America/Mexico_City").format("DD-MM-YYYY HH:mm");
-    console.log("sendReservationInstructions");
+// Arma los params de la plantilla tentativa_reserva_mx y el mismo texto plano (para que el vendedor lo copie si la plantilla no llega)
+async function buildReservationInstructions(chaletInfo, reservationInfo, cancelationHour, noAgente) {
+    const cuenta = await swCuentas.findById(chaletInfo?.others?.cuentaFinanciera).lean();
+    if (!cuenta) {
+        return null;
+    }
 
     const chaletTimes = getChaletMessageTimes(chaletInfo);
     const chaletArrivalHour = formatReservationTime(reservationInfo?.arrivalDate, chaletTimes.arrivalTime);
     const chaletDepartureHour = formatReservationTime(reservationInfo?.departureDate, chaletTimes.departureTime);
-
-    const cuenta = await swCuentas.findById(chaletInfo.others.cuentaFinanciera).lean();
-    if (!cuenta) {
-        return;
-    }
-
-
-    console.log("chaletArrivalHour", chaletArrivalHour)
-    console.log("chaletDepartureHour", chaletDepartureHour)
 
     const formattedArrivalDate = formatReservationDate(reservationInfo?.arrivalDate, 'DD/MM/YYYY');
     const formattedDepartureDate = formatReservationDate(reservationInfo?.departureDate, 'DD/MM/YYYY');
@@ -227,7 +220,7 @@ async function sendReservationInstructions(clientInfo, chaletInfo, reservationIn
     const arrMsg = `${formattedArrivalDate} ${chaletArrivalHour}`
     const depMsg = `${formattedDepartureDate} ${chaletDepartureHour}`
 
-    await sendTemplateMsg(clientInfo, "tentativa_reserva_mx", [
+    const params = [
         chaletInfo.propertyDetails.name, // {{1}}
         arrMsg,// {{2}}
         depMsg, // {{3}}
@@ -237,8 +230,35 @@ async function sendReservationInstructions(clientInfo, chaletInfo, reservationIn
         cuenta.datosBancarios.clabe || cuenta.datosBancarios.numeroCuenta, // {{7}}
         cuenta.datosBancarios.beneficiario, // {{8}}
         noAgente // {{9}}
-        
-    ])
+    ];
+
+    // ponytail: copia del cuerpo de la plantilla en Meta; si cambia la plantilla, actualizar aquí también
+    const text = `Último paso para tu estancia
+Hemos recibido tu solicitud para reservar ${params[0]} del ${params[1]} al ${params[2]}.
+
+Para confirmar tu reserva, debes realizar la transferencia bancaria por la cantidad de por lo menos $${params[4]} antes del ${params[3]}
+
+A continuación los datos de depósito:
+
+Banco: ${params[5]}
+Cuenta/CLABE: ${params[6]}
+Beneficiario: ${params[7]}
+
+Una vez confirmado el pago, te enviaremos la confirmación de tu reserva.`;
+
+    return { params, text };
+}
+
+async function sendReservationInstructions(clientInfo, chaletInfo, reservationInfo, cancelationHour, noAgente) { // Enviar instrucciones de pago en las tentativas de reserva
+    console.log("sendReservationInstructions");
+
+    const instructions = await buildReservationInstructions(chaletInfo, reservationInfo, cancelationHour, noAgente);
+    if (!instructions) {
+        return null;
+    }
+
+    await sendTemplateMsg(clientInfo, "tentativa_reserva_mx", instructions.params);
+    return instructions.text;
 }
 
 async function sendInstructions(clientInfo, chaletInfo, idReserva) {
@@ -769,6 +789,7 @@ module.exports = {
     sendReservationConfirmation,
     sendActivationConfirmation,
     sendReservationInstructions,
+    buildReservationInstructions,
     sendInstructions,
     sendSurveyToClient,
     sendReminders,

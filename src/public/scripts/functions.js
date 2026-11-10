@@ -622,15 +622,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-            Swal.fire({
-                icon: 'success',
-                title: 'Reserva creada',
-                text: data.message,
-                showCancelButton: false,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Aceptar'
-            }).then((result) => {
+            showReservationCreatedAlert(data.message, data.depositInstructions).then((result) => {
                 if (result.isConfirmed) {
                     clearModal(document.getElementById("event_entry_modal"));
                     $('#event_entry_modal').modal('hide');
