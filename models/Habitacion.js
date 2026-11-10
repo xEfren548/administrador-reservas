@@ -333,6 +333,10 @@ const preSchema = new mongoose.Schema({
         type: String,
         //required: true
     },
+    // Información interna que usa el chatbot de WhatsApp al responder (distribución, acceso, mascotas, etc.)
+    salesInfo: {
+        type: String,
+    },
     legalNotice: {
         type: String,
         //required: true

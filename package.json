@@ -14,7 +14,8 @@
     "check:pago-solicitud": "node ./scripts/checkPagoSolicitud.js",
     "channex:doctor": "node ./scripts/channexDoctor.js",
     "bot:simular": "node ./scripts/botSimulator.js",
-    "bot:check": "node ./services/bot/bot.check.js && node ./services/bot/ycloud.check.js"
+    "bot:check": "node ./services/bot/bot.check.js && node ./services/bot/ycloud.check.js",
+    "bot:eval": "node ./scripts/botEval.js"
   },
   "author": "efren alvarez",
   "license": "ISC",

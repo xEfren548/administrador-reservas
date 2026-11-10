@@ -2,6 +2,7 @@
 // autenticadas con un JWT del usuario técnico de la marca (authMiddleware ya acepta Bearer).
 const jwt = require('jsonwebtoken');
 
+// Defaults; cada marca puede definir los suyos en BOT_BRANDS (imagesUrl, cabinUrl).
 const IMAGES_URL = 'https://navarro.integradev.site/navarro/';
 const CABIN_URL = 'https://rentravel.com.mx/cabin/'; // mismo link que comparte la app móvil al cotizar
 const TZ = 'America/Mexico_City';
@@ -20,8 +21,8 @@ function dateRange(llegada, salida) {
 }
 
 // Mismo formato que la cotización de la app móvil.
-function quoteMessage({ fecha_llegada, fecha_salida, huespedes, noches, rooms }) {
-    const lines = rooms.map((c) => `${c.displayName} - ${money(c.totalPrice)}\n${CABIN_URL}${c.id}?view=1`);
+function quoteMessage({ fecha_llegada, fecha_salida, huespedes, noches, rooms }, cabinUrl = CABIN_URL) {
+    const lines = rooms.map((c) => `${c.displayName} - ${money(c.totalPrice)}\n${cabinUrl}${c.id}?view=1`);
     return `Cotizacion ${dateRange(fecha_llegada, fecha_salida)} - \n${noches} noches · ${huespedes} huespedes\n\n${lines.join('\n')}`;
 }
 
@@ -62,6 +63,26 @@ function amenities(features = {}) {
         .flatMap((group) => Object.keys(group).filter((k) => group[k] === true));
 }
 
+// Algunas coordenadas están guardadas ×10,000; se normalizan igual que en eventController.
+const coord = (n) => (Math.abs(n) > 1000 ? n / 10000 : n);
+function mapsLink(room) {
+    if (!Number.isFinite(room.latitude) || !Number.isFinite(room.longitude)) return undefined;
+    const [lat, lng] = [coord(room.latitude), coord(room.longitude)];
+    if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return undefined; // coordenadas de relleno o mal capturadas
+    return `https://www.google.com/maps?q=${lat},${lng}`;
+}
+
+// Lo que más filtran los clientes ("con alberca", "pet friendly"), para no consultar cabaña por cabaña.
+// Solo lo que está marcado: una casilla sin marcar puede ser dato faltante, no un "no".
+function keyFeatures(f = {}) {
+    const a = f.activities || {};
+    return [
+        (a.privatePool || a.heatedPool || a.indoorPool || a.outdoorPool) && (a.heatedPool ? 'alberca climatizada' : 'alberca'),
+        (a.jacuzzi || f.restroomFeatures?.jacuzzi) && 'jacuzzi',
+        f.generalFeatures?.petsAllowed && 'acepta mascotas',
+    ].filter(Boolean);
+}
+
 function quotedRoom(conv, habitacionId) {
     const room = conv.quote?.rooms.find((r) => String(r.id) === String(habitacionId));
     if (!room) throw new Error('Esa habitación no está en la última búsqueda; vuelve a buscar disponibilidad');
@@ -86,7 +107,7 @@ const handlers = {
         const rooms = data.chalets.sort((a, b) => b.totalPrice - a.totalPrice); // de mayor a menor, como la app móvil
         conv.quote = { fecha_llegada, fecha_salida, huespedes: pax, noches: data.evento.nights, rooms };
         // La cotización la envía el código como mensaje propio; el LLM no la reescribe (cambiaba formato y podría cambiar precios).
-        if (rooms.length) (conv.outbox ??= []).push(quoteMessage(conv.quote));
+        if (rooms.length) (conv.outbox ??= []).push(quoteMessage(conv.quote, conv.brand.cabinUrl));
         return {
             noches: data.evento.nights,
             cotizacion_enviada_al_cliente: rooms.length > 0,
@@ -97,19 +118,26 @@ const handlers = {
                     camas: c.nBeds,
                     banos: c.nRestrooms,
                     precio_total_mxn: c.totalPrice,
+                    destacados: keyFeatures(c.accomodationFeatures),
                 })),
         };
     },
 
     async detalle_propiedad(conv, { habitacion_id }) {
         const room = quotedRoom(conv, habitacion_id);
+        // Horarios e "Información para ventas" no vienen en la cotización. Si la consulta falla, se responde con lo que hay.
+        const hab = await api(conv, 'GET', `/api/habitaciones/${room.id}`).catch(() => null);
         return {
             nombre: room.displayName,
             descripcion: room.accomodationDescription || '',
+            informacion_para_ventas: hab?.salesInfo || undefined,
             amenidades: amenities(room.accomodationFeatures),
             camas: room.nBeds,
             banos: room.nRestrooms,
-            fotos: (room.images || []).slice(0, 5).map((img) => IMAGES_URL + img),
+            hora_entrada: hab?.others?.arrivalTime || undefined,
+            hora_salida: hab?.others?.departureTime || undefined,
+            ubicacion_google_maps: mapsLink(room),
+            fotos: (room.images || []).slice(0, 5).map((img) => (conv.brand.imagesUrl || IMAGES_URL) + img),
         };
     },
 
@@ -227,7 +255,7 @@ const definitions = [
     },
     {
         name: 'detalle_propiedad',
-        description: 'Descripción, amenidades y fotos de una propiedad de la última búsqueda de disponibilidad.',
+        description: 'Información de una propiedad de la última búsqueda de disponibilidad: descripción, información para ventas (distribución, acceso, ubicación, mascotas, etc.), amenidades, horas de entrada y salida, enlace de Google Maps y fotos.',
         input_schema: {
             type: 'object',
             properties: { habitacion_id: { type: 'string' } },

@@ -10,13 +10,13 @@ global.fetch = async (url, opts) => {
     const body = opts.body instanceof FormData ? Object.fromEntries(opts.body) : opts.body && JSON.parse(opts.body);
     calls.push({ url, body });
     const replies = {
-        'http://test/api/habitaciones/b': { others: { cuentaFinanciera: 'cta1' } },
+        'http://test/api/habitaciones/b': { others: { cuentaFinanciera: 'cta1', arrivalTime: '14:30', departureTime: '12:00' }, salesInfo: 'Jacuzzi exterior; 5 min al centro en auto' },
         'http://test/api/habitaciones/a': { others: {} },
         'http://test/api/eventos/cotizaciones': {
             evento: { nights: 2 },
             chalets: [
-                { id: 'b', displayName: 'Cabaña B', minPax: 2, maxPax: 6, totalPrice: 5000, totalPriceNoComs: 4500, totalCost: 3000, nBeds: 2, nRestrooms: 1, images: ['b1.jpg'], accomodationFeatures: { generalFeatures: { wifi: true, iron: false }, activities: { jacuzzi: true } } },
-                { id: 'a', displayName: 'Cabaña A', minPax: 1, maxPax: 4, totalPrice: 3250, totalPriceNoComs: 3000, totalCost: 2000, nBeds: 1, nRestrooms: 1, images: [] },
+                { id: 'b', displayName: 'Cabaña B', minPax: 2, maxPax: 6, totalPrice: 5000, totalPriceNoComs: 4500, totalCost: 3000, nBeds: 2, nRestrooms: 1, images: ['b1.jpg'], latitude: 198700, longitude: -1029800, accomodationFeatures: { generalFeatures: { wifi: true, iron: false }, activities: { jacuzzi: true } } },
+                { id: 'a', displayName: 'Cabaña A', minPax: 1, maxPax: 4, totalPrice: 3250, totalPriceNoComs: 3000, totalCost: 2000, nBeds: 1, nRestrooms: 1, images: [], latitude: -12121212, longitude: 12121212 },
             ],
         },
         'http://test/api/eventos': { reservationId: 'r1', message: 'ok', assignedChaletName: 'Cabaña B' },
@@ -47,9 +47,22 @@ global.fetch = async (url, opts) => {
     assert.ok(!JSON.stringify(busq).includes('3000') && !JSON.stringify(busq).includes('4500'), 'no expone costo ni precio sin comisiones');
     assert.strictEqual(calls[0].body.fechaLlegada, iso(10).split('-').reverse().join('/'));
 
+    assert.deepStrictEqual(busq.opciones.map((o) => o.destacados), [['jacuzzi'], []], 'solo lo marcado, sin "no" por casillas vacías');
+
     const det = await tools.run(conv, 'detalle_propiedad', { habitacion_id: 'b' });
     assert.deepStrictEqual(det.amenidades, ['wifi', 'jacuzzi']);
     assert.strictEqual(det.fotos[0], 'https://navarro.integradev.site/navarro/b1.jpg');
+    assert.strictEqual(det.ubicacion_google_maps, 'https://www.google.com/maps?q=19.87,-102.98', 'coordenadas ×10,000 normalizadas');
+    assert.deepStrictEqual([det.hora_entrada, det.hora_salida], ['14:30', '12:00']);
+    assert.match(det.informacion_para_ventas, /Jacuzzi exterior/);
+    const detA = await tools.run(conv, 'detalle_propiedad', { habitacion_id: 'a' });
+    assert.strictEqual(detA.ubicacion_google_maps, undefined, 'coordenadas fuera de rango: no hay link');
+
+    // Enlaces por marca (BOT_BRANDS.cabinUrl / imagesUrl)
+    const convMarca = { brand: { name: 'Otra', userId: 'u2', cabinUrl: 'https://otra.mx/c/', imagesUrl: 'https://img.otra.mx/' }, customerPhone: '523300000000' };
+    await tools.run(convMarca, 'buscar_disponibilidad', { fecha_llegada: iso(10), fecha_salida: iso(12), huespedes: 4 });
+    assert.ok(convMarca.outbox[0].includes('https://otra.mx/c/b?view=1'));
+    assert.strictEqual((await tools.run(convMarca, 'detalle_propiedad', { habitacion_id: 'b' })).fotos[0], 'https://img.otra.mx/b1.jpg');
 
     await assert.rejects(tools.run(conv, 'crear_reserva', { habitacion_id: 'zzz', nombre: 'Ana', apellido: 'Paz' }), /última búsqueda/);
     const res = await tools.run(conv, 'crear_reserva', { habitacion_id: 'b', nombre: 'Ana', apellido: 'Paz', total: 1 });
@@ -106,6 +119,14 @@ async function engineCheck() {
     assert.strictEqual(conv.escalated, true);
     assert.deepStrictEqual(await engine.reply(conv, '¿hola?'), [], 'escalada: ya no responde');
     assert.strictEqual(requests.length, 3);
+    assert.ok(requests[0].system.includes('El anticipo no es reembolsable'), 'conocimiento común en el prompt');
+    assert.ok(!requests[0].system.includes('<!--'), 'sin comentarios internos');
+
+    // Conocimiento de la marca: comun.md + <key>.md
+    const convNav = engine.newConversation({ name: 'Cabañas Mazamitla Navarro', userId: 'u1', key: 'navarro' }, '523312345678');
+    scripted.push({ stop_reason: 'end_turn', content: [{ type: 'text', text: 'Hola' }] });
+    await engine.reply(convNav, 'hola');
+    assert.ok(requests.at(-1).system.includes('mazamitlaseguro.com') && requests.at(-1).system.includes('no es reembolsable'));
 
     const conv2 = engine.newConversation({ name: 'Test', userId: 'u1' }, '523312345678');
     scripted.push({ stop_reason: 'refusal', content: [] });

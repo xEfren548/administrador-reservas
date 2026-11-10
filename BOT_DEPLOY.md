@@ -36,6 +36,19 @@ BOT_BRANDS=[{"key":"rentravel","name":"Rentravel","phone":"5233XXXXXXXX","userId
 - `name`: el nombre que el bot usa al presentarse.
 - `phone`: el número del bot de esa marca, con lada de país y sin `+`.
 - `userId`: el `_id` (Mongo) del usuario técnico de la marca.
+- `cabinUrl` *(opcional)*: base del enlace de cada cabaña en la cotización. Por defecto `https://rentravel.com.mx/cabin/`.
+- `imagesUrl` *(opcional)*: base de las URLs de fotos. Por defecto `https://navarro.integradev.site/navarro/`.
+
+### Conocimiento del negocio
+
+Lo que el bot sabe de políticas, reglas y la marca está en `services/bot/conocimiento/`:
+
+- `comun.md`: políticas y reglas, iguales para las 3 marcas.
+- `<key>.md`: lo propio de cada marca (verificación, redes, números). El nombre del archivo es el `key` de `BOT_BRANDS`.
+
+Los comentarios `<!-- ... -->` son notas internas y no le llegan al bot. Los archivos se leen una vez: **después de editarlos, reinicia el servidor**.
+
+Lo específico de cada cabaña sale del panel: casillas de amenidades, horas de entrada y salida, coordenadas, y el campo **"Información para ventas (chatbot)"** en alta y edición de cabaña.
 
 ### Usuario técnico por marca (en el panel)
 
@@ -66,6 +79,22 @@ Corre dos pruebas con todo simulado:
 - `ycloud.check.js`: firma del webhook, ruteo de eventos, comprobantes, echoes y cola por conversación.
 
 Debe imprimir `bot.check OK` y `ycloud.check OK`.
+
+### Prueba con el FAQ (usa Claude de verdad)
+
+```bash
+npm run bot:eval -- <marca> "<ruta>/FAQ_chatbot_Cabanas_Mazamitla.xlsx"
+# opciones: --ids C01,C03-05   --limit 20   --concurrency 6   --pendientes
+```
+
+- **Qué hace:** manda cada variante del Excel (~350 frases reales) como primer mensaje de una conversación nueva y califica la respuesta.
+  - Las preguntas que deben ir a humano pasan si el bot llamó a `escalar_a_humano`.
+  - Las demás las califica un modelo (`BOT_EVAL_MODEL`, por defecto `claude-opus-5-5`) contra la "Respuesta sugerida" y la información del negocio.
+  - Los temas pendientes de decisión del cliente se omiten, salvo con `--pendientes`.
+- **Requiere** el servidor corriendo (`npm run dev`): la disponibilidad y los datos de cabaña se consultan de verdad. `crear_reserva` y `registrar_pago` se simulan, así que no crea reservas ni pagos.
+- **Reporte:** queda en `eval-resultados/<marca>-<fecha>.md`, ignorado por git, con las fallas primero.
+- **Costo:** ~US$2 por corrida completa de una marca.
+- **Cuándo correrlo:** después de cada cambio al prompt, al conocimiento o a los datos de cabañas, para comparar contra la corrida anterior.
 
 ### Conversación manual
 
@@ -166,5 +195,5 @@ cliente ─► número del bot (YCloud) ─► POST /api/bot/ycloud/webhook
 2. Pon las variables de la sección 1 en el `.env` de producción, con `BOT_BRANDS` y los tres números/usuarios técnicos reales.
 3. Apunta el webhook de YCloud al dominio de producción: `https://<dominio>/api/bot/ycloud/webhook`, con los mismos dos eventos.
 4. Corre **una sola instancia** del servidor. La cola por conversación vive en memoria; con varias instancias, dos mensajes seguidos del mismo cliente podrían procesarse a la vez.
-5. Piloto con **una marca** durante unos días. Revisa las conversaciones y ajusta el prompt (`systemPrompt` en `services/bot/engine.js`). Después agrega las otras dos marcas a `BOT_BRANDS`.
+5. Piloto con **una marca** durante unos días. Revisa las conversaciones y ajusta el prompt (`systemPrompt` en `services/bot/engine.js`) o el conocimiento (`services/bot/conocimiento/`); corre `npm run bot:eval` tras cada ajuste. Después agrega las otras dos marcas a `BOT_BRANDS`.
 6. Pendiente del cliente antes del piloto: políticas (cancelación, check-in/out, mascotas, depósito), tono del bot, horario de la torre de control y revisión del aviso de privacidad (los mensajes pasan por YCloud y Anthropic).
