@@ -6,6 +6,7 @@ process.env.BOT_BRANDS = JSON.stringify([{ key: 'rt', name: 'Rentravel', phone: 
 process.env.BOT_IGNORE_PHONES = '+52 33 9999 9999';
 process.env.YCLOUD_API_KEY = 'key';
 process.env.BOT_DEBOUNCE_MS = '30';
+process.env.BOT_TYPING_PAUSE_MS = '5';
 
 const engine = require('./engine');
 const BotConversation = require('../../models/BotConversation');
@@ -23,7 +24,13 @@ BotConversation.updateOne = async ({ _id }, { $set }) => Object.assign(db.get(_i
 
 const sent = [];
 const downloads = [];
+const typings = []; // ids de mensajes marcados como leídos con "escribiendo…"
 global.fetch = async (url, opts) => {
+    const t = url.match(/inboundMessages\/([^/]+)\/typing$/);
+    if (t) {
+        typings.push(t[1]);
+        return { ok: true, json: async () => ({ success: true }) };
+    }
     if (url.endsWith('/sendDirectly')) {
         sent.push(JSON.parse(opts.body));
         return { ok: true, json: async () => ({ id: `y${sent.length}`, wamid: `w${sent.length}`, status: 'accepted' }) };
@@ -67,6 +74,7 @@ const inbound = (id, from, message) => ({
     ]);
     const conv = db.get('rt:523312345678');
     assert.strictEqual(conv.messages.length, 1, 'historial guardado');
+    assert.deepStrictEqual(typings, ['m1', 'm1'], 'visto + escribiendo al contestar, y otra vez antes del segundo mensaje');
     assert.deepStrictEqual(conv.sentIds, ['y1', 'w1', 'y2', 'w2']);
 
     // Comprobante: se descarga con X-API-Key y queda como Buffer en la conversación
@@ -89,6 +97,7 @@ const inbound = (id, from, message) => ({
     assert.strictEqual(conv.escalated, true);
     await handleEvent(inbound('5', '+5213312345678', { type: 'text', text: { body: '¿sigues ahí?' } }));
     assert.strictEqual(replies.length, 2, 'escalada: el bot ya no responde');
+    assert.ok(!typings.includes('m5'), 'escalada: no se marca como leído, la torre de control debe verlo sin leer');
 
     // Mensajes seguidos se agrupan en un solo turno (en orden de sendTime); lo que llega mientras contesta, en el siguiente.
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -108,6 +117,7 @@ const inbound = (id, from, message) => ({
     await Promise.all([...first, ...second]);
     assert.strictEqual(maxActive, 1, 'un turno a la vez por conversación');
     assert.deepStrictEqual(db.get('rt:523311111111').messages.map((m) => m.content), ['hola\nquiero\nreservar', 'para 4\npersonas']);
+    assert.ok(typings.includes('mc') && !typings.includes('ma') && !typings.includes('mb'), 'se marca solo el último del grupo (marca los anteriores)');
 
     // Si el engine falla, el cliente recibe el mensaje de traspaso y la conversación pasa a humano
     engine.reply = async () => { throw new Error('Anthropic caído'); };

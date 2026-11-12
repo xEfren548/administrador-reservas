@@ -26,6 +26,7 @@ Arquitectura y decisiones del bot: [plan_chatbot.md](plan_chatbot.md). Este arch
 | `YCLOUD_API_KEY` | Para WhatsApp | API key de YCloud (Developers → API Keys). Sirve para enviar mensajes y descargar comprobantes. |
 | `YCLOUD_WEBHOOK_SECRET` | Para WhatsApp | Secreto de firma del endpoint de webhook en YCloud. Sin él, el webhook rechaza todo con 401. |
 | `BOT_DEBOUNCE_MS` | No | Cuánto espera el bot (ms) por más mensajes antes de contestar. Por defecto `5000`. Con `0` contesta cada mensaje por separado. |
+| `BOT_TYPING_PAUSE_MS` | No | Pausa (ms) con "escribiendo…" entre dos mensajes seguidos del bot. Por defecto `1500`; `0` la quita. |
 | `BOT_IGNORE_PHONES` | Para WhatsApp | Números separados por coma a los que el bot nunca contesta. Pon aquí **el número oficial de Meta**: su copia de la plantilla `tentativa_reserva_mx` llega al número del bot. |
 
 ```env
@@ -142,6 +143,7 @@ cliente ─► número del bot (YCloud) ─► POST /api/bot/ycloud/webhook
 
 - **Una conversación por marca + cliente**, en la colección `botconversations`. Los mensajes del mismo cliente se procesan uno a la vez, en orden.
 - **Mensajes seguidos se agrupan**: si el cliente manda "hola" / "quiero" / "reservar", el bot espera a que deje de escribir (`BOT_DEBOUNCE_MS`, 5 s por defecto; máximo 20 s desde el primero) y contesta una sola vez a "hola quiero reservar". Lo que llegue mientras el bot está contestando forma el siguiente grupo.
+- **Visto y "escribiendo…"**: al empezar a contestar, el bot marca el mensaje como leído (palomitas azules) y muestra "escribiendo…", que renueva cada 20 s si tarda (WhatsApp lo quita a los 25 s). Entre dos mensajes seguidos del bot (la cotización y su comentario) hace una pausa corta con "escribiendo…" (`BOT_TYPING_PAUSE_MS`, 1500 por defecto). En conversaciones que ya pasaron a una persona no marca nada como leído, para que la torre de control las vea sin leer en la app.
 - **Imagen o PDF** del cliente: se descarga de YCloud y queda como comprobante para `registrar_pago`. Audios, stickers y ubicaciones no se procesan; el bot pide que lo escriba.
 - **Escalada** (comprobante recibido, `escalar_a_humano`, error del bot o un humano contestó desde la app): el bot deja de contestar a ese cliente.
 - **Tras 7 días sin actividad**, el siguiente mensaje del cliente empieza una conversación nueva, aunque la anterior estuviera escalada.

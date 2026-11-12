@@ -11,6 +11,8 @@ const API = 'https://api.ycloud.com/v2';
 const IDLE_RESET_MS = 7 * 24 * 60 * 60 * 1000; // tras 7 días sin actividad, el cliente empieza conversación nueva
 const MAX_RECEIPT_BYTES = 10 * 1024 * 1024;
 const RECEIPT_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+const TYPING_REFRESH_MS = 20000; // WhatsApp quita el "escribiendo…" a los 25 s
+const TYPING_PAUSE_MS = Number(process.env.BOT_TYPING_PAUSE_MS ?? 1500); // pausa entre mensajes seguidos del bot
 const PERSISTED = ['messages', 'quote', 'reservation', 'receipt', 'escalated', 'escalationReason', 'sentIds'];
 
 // YCloud-Signature: "t=<unix seg>,s=<hex>"; firma = HMAC-SHA256(secreto, `${t}.${body crudo}`).
@@ -43,6 +45,21 @@ async function sendText(from, to, body) {
         throw new Error(`YCloud sendDirectly ${res.status}: ${data.error?.message || data.errorMessage || JSON.stringify(data)}`);
     }
     return data;
+}
+
+// Visto (palomitas azules) + "escribiendo…" sobre el mensaje del cliente. WhatsApp lo quita al responder o a los 25 s.
+// Nunca frena el flujo: si falla, solo se registra.
+async function typing(msg) {
+    if (!msg?.id) return;
+    try {
+        const res = await fetch(`${API}/whatsapp/inboundMessages/${encodeURIComponent(msg.id)}/typing`, {
+            method: 'POST',
+            headers: { 'X-API-Key': process.env.YCLOUD_API_KEY },
+        });
+        if (!res.ok) console.warn(`[bot] YCloud typing ${res.status} para ${msg.id}`);
+    } catch (err) {
+        console.warn(`[bot] YCloud typing para ${msg.id}:`, err.message);
+    }
 }
 
 // Texto que recibe el engine por cada mensaje del cliente. Imagen/PDF se descarga y queda como comprobante.
@@ -91,24 +108,35 @@ const save = (conv) => BotConversation.updateOne(
 
 // msgs: mensajes seguidos del cliente agrupados por enqueueInbound; el engine los recibe como un solo turno.
 async function onInbound(conv, msgs) {
-    if (conv.escalated) return; // la torre de control ya tiene la conversación
+    // La torre de control ya tiene la conversación. Tampoco se marca como leída: en la app debe seguir apareciendo sin leer.
+    if (conv.escalated) return;
+    const last = msgs.at(-1); // marcar el último marca también los anteriores
     let out;
+    let keepTyping;
     try {
         const texts = [];
         for (const msg of msgs) {
             const text = await inboundText(conv, msg);
             if (text) texts.push(text);
         }
-        if (!texts.length) return;
+        if (!texts.length) return; // p. ej. solo una reacción: no habrá respuesta, así que no se muestra "escribiendo…"
+        typing(last);
+        keepTyping = setInterval(() => typing(last), TYPING_REFRESH_MS); // el LLM con herramientas puede pasar de 25 s
         out = await engine.reply(conv, texts.join('\n'));
     } catch (err) {
         console.error(`[bot] Error con ${conv.customerPhone} (${conv.brand.key}):`, err.message);
         conv.escalated = true;
         conv.escalationReason = `Error del bot: ${err.message}`;
         out = [engine.HANDOFF_MSG];
+    } finally {
+        clearInterval(keepTyping);
     }
     try {
-        for (const text of out) {
+        for (const [i, text] of out.entries()) {
+            if (i > 0 && TYPING_PAUSE_MS > 0) { // entre la cotización y el comentario, como lo haría una persona
+                typing(last);
+                await new Promise((r) => setTimeout(r, TYPING_PAUSE_MS));
+            }
             const sent = await sendText(conv.brand.phone, conv.waId, text);
             conv.sentIds = [...(conv.sentIds || []), sent.id, sent.wamid].filter(Boolean).slice(-40);
         }
