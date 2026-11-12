@@ -21,20 +21,20 @@ function getBrand(key) {
     return brands.find((b) => b.key === key);
 }
 
-// Conocimiento del negocio: conocimiento/comun.md + conocimiento/<key>.md, sin comentarios HTML (son notas para el
-// cliente, no para el modelo). Se lee una vez por proceso: al editar los .md hay que reiniciar el servidor.
-const knowledgeCache = new Map();
-function knowledge(key) {
-    if (!knowledgeCache.has(key)) {
-        const read = (name) => {
-            try { return fs.readFileSync(path.join(__dirname, 'conocimiento', name), 'utf8'); } catch { return ''; }
-        };
-        const text = [read('comun.md'), key ? read(`${key}.md`) : '']
-            .join('\n\n').replace(/<!--[\s\S]*?-->/g, '').replace(/\n{3,}/g, '\n\n').trim();
-        knowledgeCache.set(key, text);
+// Archivos de conocimiento/ sin comentarios HTML (son notas para el cliente, no para el modelo).
+// Se leen una vez por proceso: al editar los .md hay que reiniciar el servidor.
+const docCache = new Map();
+function doc(name) {
+    if (!docCache.has(name)) {
+        let text = '';
+        try { text = fs.readFileSync(path.join(__dirname, 'conocimiento', name), 'utf8'); } catch { /* archivo opcional */ }
+        docCache.set(name, text.replace(/<!--[\s\S]*?-->/g, '').replace(/\n{3,}/g, '\n\n').trim());
     }
-    return knowledgeCache.get(key);
+    return docCache.get(name);
 }
+
+// Conocimiento del negocio: comun.md + <key>.md de la marca. El tono (tono.md) va aparte: es estilo, no datos.
+const knowledge = (key) => [doc('comun.md'), key ? doc(`${key}.md`) : ''].filter(Boolean).join('\n\n');
 
 function newConversation(brand, customerPhone) {
     return { brand, customerPhone, messages: [], quote: null, reservation: null, receipt: null, escalated: false };
@@ -54,7 +54,7 @@ Cómo hablas: como un vendedor que conoce las cabañas, no como alguien que cons
 - Cierra con una pregunta solo si ayuda a avanzar (por ejemplo, pedir fechas si aún no las da o preguntar si quiere reservar). No preguntes cosas cuya respuesta no cambia nada de lo que ya le dijiste.
 - Si algo no lo sabes, dilo corto, como lo diría una persona del equipo: "Eso te lo confirmo con el encargado de la cabaña, ¿te parece?". Sin rodeos ni frases como "no lo tengo confirmado" o "no quiero darte una respuesta que no sea segura". Si dice que sí, usa escalar_a_humano.
 - Si el cliente pregunta directamente si habla con un bot o con una persona, no lo niegues: dile que eres el asistente del equipo y ofrécele pasarlo con una persona si lo prefiere.
-
+${doc('tono.md') ? `\n${doc('tono.md')}\n` : ''}
 Hoy es ${hoy} (hora de Ciudad de México).
 
 Para cotizar necesitas tres datos exactos que el cliente debe decirte: fecha de llegada, fecha de salida y cuántas personas son. Si falta alguno, pregúntalo de forma natural y espera la respuesta; nunca supongas ni rellenes un dato que el cliente no te dio. Si una fecha es ambigua ("el puente", "el próximo fin"), confírmala antes de buscar.

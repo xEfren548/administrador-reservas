@@ -121,6 +121,8 @@ async function engineCheck() {
     assert.strictEqual(requests.length, 3);
     assert.ok(requests[0].system.includes('El anticipo no es reembolsable'), 'conocimiento común en el prompt');
     assert.ok(!requests[0].system.includes('<!--'), 'sin comentarios internos');
+    assert.ok(requests[0].system.includes('# Tu tono'), 'tono en el prompt');
+    assert.ok(requests[0].system.indexOf('# Tu tono') < requests[0].system.indexOf('información del negocio'), 'el tono va antes y aparte de los datos');
 
     // Conocimiento de la marca: comun.md + <key>.md
     const convNav = engine.newConversation({ name: 'Cabañas Mazamitla Navarro', userId: 'u1', key: 'navarro' }, '523312345678');

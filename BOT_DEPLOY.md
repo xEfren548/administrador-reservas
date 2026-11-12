@@ -45,6 +45,7 @@ Lo que el bot sabe de políticas, reglas y la marca está en `services/bot/conoc
 
 - `comun.md`: políticas y reglas, iguales para las 3 marcas.
 - `<key>.md`: lo propio de cada marca (verificación, redes, números). El nombre del archivo es el `key` de `BOT_BRANDS`.
+- `tono.md`: cómo suenan los asesores (estilo, modismos, emojis, ejemplos cortos). Solo estilo: los datos nunca salen de aquí. Es el mismo para las 3 marcas.
 
 Los comentarios `<!-- ... -->` son notas internas y no le llegan al bot. Los archivos se leen una vez: **después de editarlos, reinicia el servidor**.
 
